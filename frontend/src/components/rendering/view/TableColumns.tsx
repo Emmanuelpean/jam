@@ -520,7 +520,7 @@ export const tableColumns = {
 		label: "Jobs",
 		sortable: true,
 		searchable: false,
-		render: (param: RenderParams) => renderFunctions._jobCount(param, "source_id"),
+		render: (param: RenderParams) => renderFunctions._jobCount(param, "source_aggregator_id"),
 		...overrides,
 	}),
 

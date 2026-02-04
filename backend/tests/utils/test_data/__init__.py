@@ -56,7 +56,7 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
         "JOB_DATA": [
             ("company_id", "COMPANY_DATA", "optional"),
             ("location_id", "LOCATION_DATA", "optional"),
-            ("source_id", "AGGREGATOR_DATA", "optional"),
+            ("source_aggregator_id", "AGGREGATOR_DATA", "optional"),
             ("cv_id", "FILE_DATA", "optional"),
             ("cover_letter_id", "FILE_DATA", "optional"),
             ("application_aggregator_id", "AGGREGATOR_DATA", "optional"),

@@ -112,7 +112,10 @@ export interface JobDataTransform {
 	personal_rating: number | null;
 	deadline: Date | string | null;
 	company_id: number | null;
-	source_id: number | null;
+	source_aggregator_id: number | null;
+	source_type: string | null;
+	recruiter_id: number | null;
+	recruitment_company_id: number | null;
 	location_id: number | null;
 	application_date: Date | string | null;
 	application_status: string | null;
@@ -137,7 +140,8 @@ export interface JobData extends OwnedOut {
 	personal_rating: number | null;
 	deadline: Date | string | null;
 	company_id: number | null;
-	source_id: number | null;
+	source_aggregator_id: number | null;
+	source_type: string | null;
 	location_id: number | null;
 	followup_snooze_datetime: Date | string | null;
 	application_date: Date | string | null;

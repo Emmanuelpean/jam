@@ -1,5 +1,4 @@
 import React, { JSX } from "react";
-import { Theme, THEMES } from "../../../utils/Theme";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 import {
 	applicationStatusOptions,
@@ -11,6 +10,7 @@ import {
 	scrapingFilterOperatorOptions,
 	scrapingFilterTypeOptions,
 	SelectOption,
+	sourceTypeOptions,
 	updateTypeOptions,
 } from "./FormOptions";
 import { DataModalHandle } from "../../DataModal/DataModal";
@@ -502,6 +502,23 @@ export const formFields = {
 		...overrides,
 	}),
 
+	recruiter: (
+		options: SelectOption[] = [],
+		modalRef: React.RefObject<DataModalHandle | null>,
+		transformParentData?: ((parentData: any) => any) | null,
+		previewConfig: SelectWidgetPreviewConfig | null = null,
+		overrides: FormFieldOverride = {}
+	): ModalFormField => ({
+		name: "recruiter_id",
+		label: "Recruiter",
+		type: "select",
+		isSearchable: true,
+		previewConfig: previewConfig,
+		options: options,
+		addButton: { modalRef, transformParentData },
+		...overrides,
+	}),
+
 	job: (options: SelectOption[] = [], overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "job_id",
 		label: "Job",
@@ -530,6 +547,17 @@ export const formFields = {
 		previewConfig: previewConfig,
 		options: options,
 		addButton: { modalRef, transformParentData },
+		...overrides,
+	}),
+
+	sourceType: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		options: sourceTypeOptions,
+		name: "source_type",
+		label: "Source",
+		type: "select",
+		placeholder: "Select source",
+		isSearchable: true,
+		isClearable: true,
 		...overrides,
 	}),
 
