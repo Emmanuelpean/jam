@@ -35,6 +35,7 @@ jobs:
       MIN_PASSWORD_LENGTH: ${{ vars.MIN_PASSWORD_LENGTH }}
       APP_DEMO_USERNAME: ${{ vars.APP_DEMO_USERNAME }}
       APP_DEMO_PASSWORD: ${{ vars.APP_DEMO_PASSWORD }}
+      MONTHLY_SCRAPE_QUOTA: ${{ vars.MONTHLY_SCRAPE_QUOTA }}
 
       # Email Configuration
       MAIN_EMAIL_USERNAME: ${{ secrets.MAIN_EMAIL_USERNAME }}
