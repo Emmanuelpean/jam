@@ -2,7 +2,6 @@ import React, { ReactNode, useEffect, useState } from "react";
 import { DataContextValue, JamData, useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../DataTable/InterviewTable";
 import JobApplicationUpdateTable from "../../DataTable/JobApplicationUpdateTable";
-import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../Maps/LocationMap";
 import JobRatingCard from "./JobRatingCard";
 import {
@@ -29,7 +28,6 @@ import {
 	getUpdateTypeIcon,
 } from "./Icons";
 import { capitalise, ensureHttpPrefix } from "../../../utils/StringUtils";
-import { findItemByKey } from "../../../utils/Utils";
 import {
 	applicationStatusOptions,
 	appliedViaOptions,
@@ -38,6 +36,7 @@ import {
 	scrapingFilterOperatorOptions,
 	scrapingFilterTypeOptions,
 	SelectOption,
+	sourceTypeOptions,
 	updateTypeOptions,
 } from "../form/FormOptions";
 import { scrapedJobApi } from "../../../services/api/Services";
@@ -154,14 +153,6 @@ export const renderFunctions = {
 
 	value: (param: RenderParams): ReactNode => {
 		return renderFunctions._longText(param, "value");
-	},
-
-	appTheme: (param: RenderParams): ReactNode => {
-		const themeKey: string | undefined = param.item?.theme;
-		if (themeKey) {
-			return findItemByKey(THEMES, themeKey)?.name;
-		}
-		return null;
 	},
 
 	updateType: (param: RenderParams): ReactNode => {
@@ -378,6 +369,15 @@ export const renderFunctions = {
 		}
 	},
 
+	sourceType: (param: RenderParams): ReactNode => {
+		const sourceType: string | null =
+			sourceTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.source_type)[0]
+				?.label || null;
+		if (sourceType) {
+			return <span className={`bg-primary badge`}>{sourceType}</span>;
+		}
+	},
+
 	locationMap: (param: RenderParams): ReactNode => {
 		const location: LocationData = param.item;
 		const locations: LocationData[] = location ? [location] : [];
@@ -549,7 +549,7 @@ export const renderFunctions = {
 	},
 
 	SourceBadge: (param: RenderParams): ReactNode => {
-		return renderFunctions._aggregatorBadge(param, "source_id");
+		return renderFunctions._aggregatorBadge(param, "source_aggregator_id");
 	},
 
 	KeywordBadges: (param: RenderParams): ReactNode => {
@@ -601,6 +601,26 @@ export const renderFunctions = {
 		const ctx: DataContextValue = param.dataContext;
 		const job: EnrichedJobData = getJamData(ctx.jobs, param.item?.job_id)!;
 		return renderFunctions._personBadges(param, "interviewers", job);
+	},
+
+	recruiterBadge: (param: RenderParams): ReactNode => {
+		const ctx: DataContextValue = param.dataContext;
+		const person: PersonData | undefined = getJamData(ctx.persons, param.item?.recruiter_id);
+
+		if (person) {
+			return <PersonBadge item={person} badgeId={param.id} />;
+		}
+		return null;
+	},
+
+	recruitmentCompanyBadge: (param: RenderParams): ReactNode => {
+		const ctx: DataContextValue = param.dataContext;
+		const company: CompanyData | undefined = getJamData(ctx.companies, param.item?.recruitment_company_id);
+
+		if (company) {
+			return <CompanyBadge item={company} badgeId={param.id} />;
+		}
+		return null;
 	},
 
 	// ----------------------------------------------------- TABLES ----------------------------------------------------

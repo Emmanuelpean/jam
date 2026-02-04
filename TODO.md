@@ -2,8 +2,7 @@
 
 ### Bugs
 * [ ] Modals darken when a help bubble is displayed.
-* [ ] the sidebar is not expanding properly on small screens on the job page.
-* [ ] Log out the user when their token expires
+* [X] the sidebar is not expanding properly on small screens on the job page.
 
 ### TOAST
 * [ ] If no currency is found, use the default currency
@@ -61,4 +60,4 @@
 * [X] Withdrawn, rejected or offered jobs are not shown in the needs chase dashboard anymore.
 * [X] Fix the password reset bug
 * [ ] Review what is_scraped stand for (add is_processed?)
-* [ ] Add a button to kick everyone out
+* [X] Add a button to kick everyone out

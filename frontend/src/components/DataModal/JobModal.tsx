@@ -41,11 +41,27 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 			[formFields.attendanceType(), formFields.location(locations, locationModalRef)],
 			[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
 			[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
+			[formFields.personalRating(), formFields.deadline()],
 			[
-				formFields.personalRating(),
-				formFields.deadline(),
+				formFields.sourceType(),
 				formFields.aggregator(aggregators, aggregatorModalRef, null, null, {
-					name: "source_id",
+					name: "source_aggregator_id",
+					displayCondition: (formData: JobDataTransform): boolean => {
+						return ["aggregator", "aggregator_email"].includes(
+							formData.source_type ? formData.source_type : ""
+						);
+					},
+				}),
+				formFields.recruiter(persons, personModalRef, null, null, {
+					displayCondition: (formData: JobDataTransform): boolean => {
+						return formData.source_type ? formData.source_type === "recruiter" : false;
+					},
+				}),
+				formFields.company(companies, companyModalRef, null, null, {
+					name: "recruitment_company_id",
+					displayCondition: (formData: JobDataTransform): boolean => {
+						return formData.source_type ? formData.source_type === "recruitment_agency" : false;
+					},
 				}),
 			],
 			formFields.description({
@@ -66,7 +82,29 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 			modalViewFields.description(),
 			modalViewFields.note(),
 			[modalViewFields.salaryRange(), modalViewFields.personalRating()],
-			[modalViewFields.sourceBadge(), modalViewFields.url({ label: "Job URL" })],
+			[
+				modalViewFields.sourceBadge({
+					displayCondition: (data: JobData): boolean => {
+						return ["aggregator", "aggregator_email"].includes(data.source_type ? data.source_type : "");
+					},
+				}),
+				modalViewFields.recruiterBadge({
+					displayCondition: (data: JobData): boolean => {
+						return data.source_type === "recruiter";
+					},
+				}),
+				modalViewFields.recruitmentCompanyBadge({
+					displayCondition: (data: JobData): boolean => {
+						return data.source_type === "recruitment_company";
+					},
+				}),
+				modalViewFields.sourceType({
+					displayCondition: (data: JobData): boolean => {
+						return data.source_type ? data.source_type === "other" : false;
+					},
+				}),
+				modalViewFields.url({ label: "Job URL" }),
+			],
 			[modalViewFields.keywordBadges(), modalViewFields.personBadges({}, ["view", "edit", "delete", "followup"])],
 			[modalViewFields.deadline()],
 		];
@@ -114,7 +152,10 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				company_id: jobData.company_id || null,
 				location_id: jobData.location_id || null,
 				deadline: jobData.deadline ? convertToEndOfDay(jobData.deadline) : null,
-				source_id: jobData.source_id || null,
+				source_aggregator_id: jobData.source_aggregator_id || null,
+				source_type: jobData.source_type?.trim() || null,
+				recruiter_id: jobData.recruiter_id || null,
+				recruitment_company_id: jobData.recruitment_company_id || null,
 				keywords: jobData.keywords || [],
 				contacts: jobData.contacts || [],
 				application_date: jobData.application_date ? new Date(jobData.application_date) : null,

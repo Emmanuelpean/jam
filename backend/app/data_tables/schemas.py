@@ -72,6 +72,7 @@ class CompanyOut(CompanyCreate, OwnedOut):
 
     jobs: list[OwnedOut] = []
     persons: list[OwnedOut] = []
+    recruited_jobs: list[OwnedOut] = []
 
 
 class CompanyUpdate(CompanyCreate):
@@ -168,6 +169,7 @@ class PersonOut(PersonCreate, OwnedOut):
 
     interviews: list[OwnedOut] = []
     jobs: list[OwnedOut] = []
+    recruited_jobs: list[OwnedOut] = []
     name: str | None = None
 
 
@@ -199,14 +201,17 @@ class JobCreate(BaseModel):
     application_status: str | None = None
     application_note: str | None = None
     applied_via: str | None = None
+    source_type: str | None = None
     followup_snooze_datetime: datetime | None = None
 
     # Foreign keys
     company_id: int | None = None
     location_id: int | None = None
     duplicate_id: int | None = None
-    source_id: int | None = None
+    source_aggregator_id: int | None = None
     application_aggregator_id: int | None = None
+    recruiter_id: int | None = None
+    recruitment_company_id: int | None = None
     cv_id: int | None = None
     cover_letter_id: int | None = None
     keywords: list[int] = []

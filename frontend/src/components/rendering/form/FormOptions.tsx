@@ -261,3 +261,11 @@ export const scrapingFilterOperatorOptions: SelectOption[] = [
 	{ value: "not_contains", label: "Does Not Contain" },
 	{ value: "not_equals", label: "Is Not Equal To" },
 ];
+
+export const sourceTypeOptions: SelectOption[] = [
+	{ value: "aggregator", label: "Aggregator" },
+	{ value: "aggregator_email", label: "Aggregator Email Alert" },
+	{ value: "recruiter", label: "Recruiter" },
+	{ value: "recruitment_company", label: "Recruitment Company" },
+	{ value: "other", label: "Other" },
+];

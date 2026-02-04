@@ -42,7 +42,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 			personal_rating: formData.personal_rating || null,
 			company_id: formData.company_id || null,
 			location_id: formData.location_id || null,
-			source_id: formData.source_id || null,
+			source_aggregator_id: formData.source_aggregator_id || null,
 			deadline: formData.deadline ? convertToEndOfDay(formData.deadline) : null,
 			keywords: formData.keywords || [],
 			contacts: formData.contacts || [],

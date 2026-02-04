@@ -140,9 +140,10 @@ class Company(Owned, Base):
     url = Column(String, nullable=True)
 
     # Relationships
-    jobs = relationship("Job", back_populates="company")
+    jobs = relationship("Job", back_populates="company", foreign_keys="[Job.company_id]")
     persons = relationship("Person", back_populates="company")
     speculative_applications = relationship("SpeculativeApplication", back_populates="company")
+    recruited_jobs = relationship("Job", back_populates="recruitment_company", foreign_keys="[Job.recruitment_company_id]")
 
     # Constraints
     __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_owner_company_name"),)
@@ -288,6 +289,7 @@ class Person(Owned, Base):
     speculative_applications = relationship(
         "SpeculativeApplication", secondary=speculative_application_contact_mapping, back_populates="contacts"
     )
+    recruited_jobs = relationship("Job", back_populates="recruiter")
 
     @hybrid_property
     def name(self) -> str:
@@ -377,11 +379,13 @@ class Job(Owned, Base):
     application_aggregator_id = Column(
         Integer, ForeignKey("aggregator.id", ondelete="SET NULL"), nullable=True, index=True
     )
+    recruiter_id = Column(Integer, ForeignKey("person.id", ondelete="SET NULL"), nullable=True, index=True)
+    recruitment_company_id = Column(Integer, ForeignKey("company.id", ondelete="SET NULL"), nullable=True, index=True)
     cv_id = Column(Integer, ForeignKey("file.id", ondelete="SET NULL"), nullable=True, index=True)
     cover_letter_id = Column(Integer, ForeignKey("file.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Relationships
-    company = relationship("Company", back_populates="jobs")
+    company = relationship("Company", back_populates="jobs", foreign_keys=[company_id])
     location = relationship("Location", back_populates="jobs")
     keywords = relationship("Keyword", secondary=job_keyword_mapping, back_populates="jobs", lazy="selectin")
     contacts = relationship("Person", secondary=job_contact_mapping, back_populates="jobs", lazy="selectin")
@@ -390,6 +394,10 @@ class Job(Owned, Base):
     updates = relationship("JobApplicationUpdate", back_populates="job")
     application_aggregator = relationship(
         "Aggregator", foreign_keys=[application_aggregator_id], back_populates="job_applications"
+    )
+    recruiter = relationship("Person", foreign_keys=[recruiter_id], back_populates="recruited_jobs")
+    recruitment_company = relationship(
+        "Company", foreign_keys=[recruitment_company_id], back_populates="recruited_jobs"
     )
     application_cv = relationship("File", foreign_keys=[cv_id], lazy="select")
     application_cover_letter = relationship("File", foreign_keys=[cover_letter_id], lazy="select")

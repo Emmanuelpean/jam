@@ -83,7 +83,7 @@ def create_jobs(
         ("owner_id", users),
         ("company_id", companies),
         ("location_id", locations),
-        ("source_id", aggregators),
+        ("source_aggregator_id", aggregators),
         ("application_aggregator_id", aggregators),
         ("cv_id", files),
         ("cover_letter_id", files),

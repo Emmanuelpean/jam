@@ -110,13 +110,6 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	appTheme: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "theme",
-		label: "Theme",
-		render: renderFunctions.appTheme,
-		...overrides,
-	}),
-
 	isAdmin: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "is_admin",
 		label: "Admin",
@@ -180,6 +173,13 @@ export const modalViewFields = {
 		key: "name",
 		label: "Filter Name",
 		render: renderFunctions.scrapingFilterName,
+		...overrides,
+	}),
+
+	sourceType: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "source_type",
+		label: "Source Type",
+		render: renderFunctions.sourceType,
 		...overrides,
 	}),
 
@@ -281,6 +281,20 @@ export const modalViewFields = {
 		key: "source",
 		label: "Source Aggregator",
 		render: renderFunctions.SourceBadge,
+		...overrides,
+	}),
+
+	recruiterBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "recruiter_id",
+		label: "Recruiter",
+		render: renderFunctions.recruiterBadge,
+		...overrides,
+	}),
+
+	recruitmentCompanyBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "recruiter_company_id",
+		label: "Recruitment Company",
+		render: renderFunctions.recruitmentCompanyBadge,
 		...overrides,
 	}),
 
@@ -389,7 +403,7 @@ export const modalViewFields = {
 
 	accordionJobTableAggregator: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "jobs",
-		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "source_id"),
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "source_aggregator_id"),
 		...overrides,
 	}),
 
