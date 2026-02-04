@@ -12,6 +12,23 @@ import threading
 from pathlib import Path
 from typing import Generator, Any
 
+# Override log directory BEFORE any app imports
+# Import only config first, modify it, then import the rest
+from app.config import settings
+
+_test_log_dir = settings.log_directory.replace("logs", "test_logs")
+settings.__dict__["log_directory"] = _test_log_dir
+
+# Create and clear the test log directory
+_test_log_path = Path(_test_log_dir)
+_test_log_path.mkdir(parents=True, exist_ok=True)
+for _log_file in _test_log_path.glob("*"):
+    if _log_file.is_file():
+        _log_file.unlink()
+    elif _log_file.is_dir():
+        shutil.rmtree(_log_file)
+
+# Now import the rest
 import psutil
 import pytest
 import requests
@@ -20,7 +37,6 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.support.select import Select
 
 from app import models
-from app.config import settings
 
 backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
@@ -44,10 +60,6 @@ pytest_plugins = [
     "tests.fixtures.job_scraping",
     "tests.fixtures.job_rating",
 ]
-
-
-LOGS_DIR = Path(os.path.join(os.path.dirname(settings.log_directory), "test_logs"))
-LOGS_DIR.mkdir(exist_ok=True)
 
 
 def kill_process_on_port(port) -> bool:
@@ -169,6 +181,7 @@ def test_backend_server(database_url, worker_id, engine, frontend_url) -> Genera
     env = os.environ.copy()
     env["SQLALCHEMY_DATABASE_URL"] = database_url
     env["TEST_MODE"] = "true"
+    env["LOG_DIRECTORY"] = settings.log_directory
     env["FRONTEND_URL"] = frontend_url + "/jam"
     print(f"Using database URL: {database_url}")
     print(f"Backend path: {backend_path}")
@@ -179,8 +192,8 @@ def test_backend_server(database_url, worker_id, engine, frontend_url) -> Genera
         env["PYTHONPATH"] = backend_path
 
     # CREATE LOG FILES FOR BACKEND OUTPUT
-    backend_log_file = LOGS_DIR / f"backend_server_{worker_id}.log"
-    backend_error_file = LOGS_DIR / f"backend_errors_{worker_id}.log"
+    backend_log_file = settings.log_directory + f"/backend_server_{worker_id}.log"
+    backend_error_file = settings.log_directory + f"/backend_errors_{worker_id}.log"
 
     with open(backend_log_file, "w") as log_out, open(backend_error_file, "w") as log_err:
         print(f"Backend logs will be saved to: {backend_log_file}")
@@ -242,7 +255,7 @@ def test_backend_server(database_url, worker_id, engine, frontend_url) -> Genera
         print(f"Cleaning up backend server on port {port}...")
         kill_process_tree(process.pid)
         print("✅ Backend server cleanup completed.")
-        print(f"Backend logs saved in: {LOGS_DIR}")
+        print(f"Backend logs saved in: {settings.log_directory}")
         print_backend_pid()
 
 
@@ -288,7 +301,7 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
         print("⚠️  node_modules not found, you may need to run 'npm install' first")
 
     # CREATE LOG FILES FOR FRONTEND OUTPUT
-    frontend_log_file = LOGS_DIR / f"frontend_server_{worker_id}.log"
+    frontend_log_file = settings.log_directory + f"/frontend_server_{worker_id}.log"
     print(f"Frontend logs will be saved to: {frontend_log_file}")
 
     # Start the frontend server
@@ -394,7 +407,7 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     if kill_process_on_port(port):
         print(f"Found and killed additional process on port {port}")
     print("✅ Frontend server cleanup completed.")
-    print(f"Frontend logs saved in: {LOGS_DIR}")
+    print(f"Frontend logs saved in: {settings.log_directory}")
 
 
 def contiguous_subdicts(dictionary: dict) -> list[dict]:
@@ -434,8 +447,10 @@ class BaseUtils(object):
     def wait_for_page(self, page_url: str) -> None:
         """Wait for the dashboard to load"""
 
-        self.wait.until(ec.url_to_be(f"{self.frontend_base_url}/{page_url}"))
-        print("Failed to wait for URL", self.driver.current_url)
+        try:
+            self.wait.until(ec.url_to_be(f"{self.frontend_base_url}/{page_url}"))
+        except:
+            raise AssertionError("Failed to wait for URL. Current URL: " + self.driver.current_url)
 
     def advance_browser_clock_days(self, days: int) -> None:
         self.driver.execute_script(
@@ -2068,7 +2083,7 @@ class BaseTest(BaseUtils):
             safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
 
             # Save browser console logs
-            browser_log_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}_browser.log"
+            browser_log_file = settings.log_directory + f"/{safe_test_name}_{status_string}_{timestamp}_browser.log"
             with open(browser_log_file, "w") as f:
                 f.write(f"Test: {self._test_name}\n")
                 f.write(f"Status: {status_string}\n")
@@ -2080,7 +2095,7 @@ class BaseTest(BaseUtils):
                     f.write(f"[{entry['level']}] {entry['timestamp']}: {entry['message']}\n")
 
             # Save performance logs (network requests)
-            perf_log_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}_network.log"
+            perf_log_file = settings.log_directory + f"/{safe_test_name}_{status_string}_{timestamp}_network.log"
             with open(perf_log_file, "w") as f:
                 f.write(f"Test: {self._test_name}\n")
                 f.write(f"Network Performance Logs\n")
@@ -2107,7 +2122,7 @@ class BaseTest(BaseUtils):
             status_string = "FAILED" if failed else "PASSED"
             safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
 
-            screenshot_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}.png"
+            screenshot_file = settings.log_directory + f"/{safe_test_name}_{status_string}_{timestamp}.png"
             self.driver.save_screenshot(str(screenshot_file))
             print(f"✅ Saved screenshot to {screenshot_file}")
 
@@ -2161,12 +2176,12 @@ def _save_page_screenshot(self, failed: bool = False) -> None:
         safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
 
         # Save screenshot
-        screenshot_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}.png"
+        screenshot_file = settings.log_directory + f"/{safe_test_name}_{status_string}_{timestamp}.png"
         self.driver.save_screenshot(str(screenshot_file))
         print(f"✅ Saved screenshot to {screenshot_file}")
 
         # Save page HTML source
-        html_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}.html"
+        html_file = settings.log_directory + f"/{safe_test_name}_{status_string}_{timestamp}.html"
         with open(html_file, "w", encoding="utf-8") as f:
             f.write(self.driver.page_source)
         print(f"✅ Saved page source to {html_file}")
