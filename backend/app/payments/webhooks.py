@@ -28,6 +28,11 @@ async def process_subscription_event(
     user = db.query(User).filter(User.stripe_details.has(customer_id=customer_id)).first()
     logger.info(f"Received event: {event_type} for customer {customer_id}")
 
+    # If user not found (e.g., user was deleted), log and return early
+    if not user:
+        logger.warning(f"User not found for customer {customer_id}, skipping event {event_type}")
+        return
+
     # Handle subscription creation
     if event_type == "customer.subscription.created":
         user.stripe_details.subscription_id = subscription_id

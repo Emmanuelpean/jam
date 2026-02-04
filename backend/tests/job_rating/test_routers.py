@@ -6,7 +6,7 @@ import pytest
 from starlette import status
 
 from app.job_rating import schemas
-from conftest import CRUDTestBase
+from tests.conftest import CRUDTestBase
 
 
 # ----------------------------------------------------- JOB RATINGS ----------------------------------------------------

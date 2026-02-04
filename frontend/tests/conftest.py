@@ -242,7 +242,7 @@ def test_backend_server(database_url, worker_id, engine, frontend_url) -> Genera
         print_backend_pid()
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="session")
 def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Generator[str, None, None]:
     """Start a test frontend server for integration tests"""
     print("=" * 60)
