@@ -9,26 +9,8 @@ import shutil
 import subprocess
 import sys
 import threading
-from pathlib import Path
 from typing import Generator, Any
 
-# Override log directory BEFORE any app imports
-# Import only config first, modify it, then import the rest
-from app.config import settings
-
-_test_log_dir = settings.log_directory.replace("logs", "test_logs")
-settings.__dict__["log_directory"] = _test_log_dir
-
-# Create and clear the test log directory
-_test_log_path = Path(_test_log_dir)
-_test_log_path.mkdir(parents=True, exist_ok=True)
-for _log_file in _test_log_path.glob("*"):
-    if _log_file.is_file():
-        _log_file.unlink()
-    elif _log_file.is_dir():
-        shutil.rmtree(_log_file)
-
-# Now import the rest
 import psutil
 import pytest
 import requests
@@ -37,6 +19,7 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.support.select import Select
 
 from app import models
+from app.config import settings
 
 backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)

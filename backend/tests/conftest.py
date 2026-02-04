@@ -1,7 +1,7 @@
 """
 Test configuration and pytest hooks.
 
-Fixtures are organized in the tests/fixtures/ directory:
+Fixtures are organised in the tests/fixtures/ directory:
 - database.py: Database session and engine fixtures
 - clients.py: API test client fixtures
 - users.py: User-related fixtures
@@ -12,34 +12,14 @@ The CRUDTestBase class is in tests/utils/crud_test_base.py
 
 import datetime as dt
 import os
-import shutil
-from pathlib import Path
 from typing import Any
 
-# Override log directory BEFORE any app imports
-# Import only config first, modify it, then import the rest
-from app.config import settings
-
-_test_log_dir = settings.log_directory.replace("logs", "test_logs")
-settings.__dict__["log_directory"] = _test_log_dir
-
-# Create and clear the test log directory
-_test_log_path = Path(_test_log_dir)
-_test_log_path.mkdir(parents=True, exist_ok=True)
-for _log_file in _test_log_path.glob("*"):
-    if _log_file.is_file():
-        _log_file.unlink()
-    elif _log_file.is_dir():
-        shutil.rmtree(_log_file)
-
-# Now import the rest of the app modules
 import pytest
 from requests import Response
 from starlette import status
 from starlette.testclient import TestClient
 
 from app import models
-from app.utils import AppLogger
 from tests.utils import test_data as td
 
 # Load fixtures from separate modules
@@ -116,8 +96,7 @@ class CRUDTestBase:
     - get_unauthorised_fixture: str - name of pytest fixture providing data for access tests with incorrect ownership
     - unauthorised_data_fixture: str - name of pytest fixture providing data for creation tests with incorrect ownership
     - admin_only: bool - if True, only admin users can access the endpoint
-    - actions_to_test: list[str] - which CRUD actions to test (any subset of ["get", "post", "put", "delete"])
-    """
+    - actions_to_test: list[str] - which CRUD actions to test (any subset of ["get", "post", "put", "delete"])"""
 
     endpoint: str = ""
     create_schema = None
@@ -263,7 +242,7 @@ class CRUDTestBase:
         authorised_clients,
         test_data,
     ) -> None:
-        """Test that an authorised users can successfully retrieve all items from the endpoint."""
+        """Test that authorised users can successfully retrieve all items from the endpoint."""
         client = self._get_authorised_client(authorised_clients)
         response = self.get_all(client)
         assert response.status_code == status.HTTP_200_OK
@@ -285,7 +264,7 @@ class CRUDTestBase:
         authorised_clients,
         test_data,
     ) -> None:
-        """Test that non admin user requests to get all items are rejected for admin_only endpoints."""
+        """Test that non-admin users requests to get all items are rejected for admin_only endpoints."""
         if self.admin_only:
             client = self._get_admin_unauthorised_client(authorised_clients)
             response = self.get_all(client)
@@ -315,7 +294,7 @@ class CRUDTestBase:
         authorised_clients,
         test_data,
     ) -> None:
-        """Test that an authorised users can successfully retrieve a specific item by ID."""
+        """Test that authorised users can successfully retrieve a specific item by ID."""
         client = self._get_authorised_client(authorised_clients)
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_200_OK
