@@ -345,13 +345,19 @@ textarea.form-control {
     border-color: var(--primary-mid);
 }
 
-.btn-outline-primary {
+.btn-outline-primary,
+.btn-outline-danger {
     transition: all 0.3s;
     color: var(--primary-mid);
     border: 2px solid var(--primary-mid);
     background: transparent;
     background-clip: padding-box;
     text-shadow: none;
+}
+
+.btn-outline-danger {
+    color: var(--danger-color);
+    border-color: var(--danger-color);
 }
 
 .btn-outline-primary:hover {

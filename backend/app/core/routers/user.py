@@ -8,7 +8,7 @@ from app import utils, models, database
 from app.core import oauth2, schemas
 from app.core.utils import send_email_change_email
 from app.emails.email_service import email_service
-from app.routers import generate_data_table_crud_router
+from app.routers import generate_data_table_crud_router, assert_admin
 from app.payments import stripe
 
 
@@ -38,6 +38,26 @@ user_router = generate_data_table_crud_router(
     admin_only=True,
     transform=transform_user_data,
 )
+
+
+@user_router.post("/invalidate-all-sessions", response_model=base_schemas.GenericResponse)
+def invalidate_all_sessions(
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+) -> dict[str, str | bool]:
+    """Invalidate all user sessions by incrementing token_version for all users.
+    This will force all users to log in again.
+    :param db: The database session.
+    :param current_user: The current authenticated admin user.
+    :returns: A message indicating the result of the operation."""
+
+    assert_admin(current_user)
+
+    # Increment token_version for all users
+    db.query(models.User).update({models.User.token_version: models.User.token_version + 1})
+    db.commit()
+
+    return {"message": "All user sessions have been invalidated.", "success": True}
 
 
 # ------------------------------------------------- USER QUALIFICATIONS ------------------------------------------------

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Card, Col, Row } from "react-bootstrap";
+import { Col, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import "./DashboardPage.scss";
 import {
@@ -11,7 +11,7 @@ import JobsToChase from "../../components/DataTable/JobsToChase";
 import UpcomingDeadlinesTable from "../../components/DataTable/UpcomingDeadlines";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { StatCard } from "./StatCard";
-import { CardHeader } from "./CardHeader";
+import { DashboardCard } from "./DashboardCard";
 import {
 	ActivityFeedCard,
 	RecentActivity,
@@ -170,32 +170,38 @@ const Dashboard: React.FC = () => {
 					/>
 				</Col>
 				<Col xs={12} lg={8} className="table-column order-lg-2">
-					<Card className="shadow-sm border-0 h-100 d-flex flex-column">
-						<CardHeader
-							icon="telephone"
-							title="Applications Requiring Follow-up"
-							badgeValue={needsChase.length}
-						/>
-						<Card.Body className="p-0 flex-grow-1 overflow-auto">
-							<div className="px-3">
-								<JobsToChase data={needsChase} />
-							</div>
-						</Card.Body>
-					</Card>
+					<DashboardCard
+						icon="telephone"
+						title="Applications Requiring Follow-up"
+						badgeValue={needsChase.length}
+						isEmpty={needsChase.length === 0}
+						emptyState={{
+							icon: "telephone-x",
+							title: "No follow-ups needed",
+							description: "All your applications are up to date",
+						}}
+					>
+						<JobsToChase data={needsChase} />
+					</DashboardCard>
 				</Col>
 			</Row>
 
 			{/* Second section: Upcoming Deadlines (left on desktop) and Upcoming Interviews */}
 			<Row className="g-4 mb-4">
 				<Col xs={12} lg={8} className="table-column order-lg-1">
-					<Card className="shadow-sm border-0 h-100 d-flex flex-column">
-						<CardHeader icon="clock" title="Upcoming Deadlines" badgeValue={upcomingDeadlines.length} />
-						<Card.Body className="p-0 flex-grow-1 overflow-auto">
-							<div className="px-3">
-								<UpcomingDeadlinesTable data={upcomingDeadlines} />
-							</div>
-						</Card.Body>
-					</Card>
+					<DashboardCard
+						icon="clock"
+						title="Upcoming Deadlines"
+						badgeValue={upcomingDeadlines.length}
+						isEmpty={upcomingDeadlines.length === 0}
+						emptyState={{
+							icon: "calendar-check",
+							title: "No upcoming deadlines",
+							description: "You have no application deadlines approaching",
+						}}
+					>
+						<UpcomingDeadlinesTable data={upcomingDeadlines} />
+					</DashboardCard>
 				</Col>
 				<Col xs={12} lg={4} className="activity-column order-lg-2">
 					<ActivityFeedCard
@@ -213,36 +219,23 @@ const Dashboard: React.FC = () => {
 			{currentUser?.premium.is_active && (
 				<Row className="g-4 mb-4">
 					<Col lg={12} className="toast-table order-lg-1">
-						<Card
-							className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
-							style={{ height: "100%", minHeight: 0 }}
+						<DashboardCard
+							icon={getEntityIcon("scrapedJob")}
+							title="Job Alerts"
+							subtitle="Jobs that you received from job boards"
+							badgeValue={scrapedJobCount}
+							path="/scraped-jobs"
+							isEmpty={scrapedJobCount === 0}
+							emptyState={{
+								icon: "bell-slash",
+								title: "No job alerts",
+								description: "Job alerts from your scrapers will appear here",
+							}}
 						>
-							<CardHeader
-								icon={getEntityIcon("scrapedJob")}
-								title="Job Alerts"
-								subtitle="Jobs that you received from job boards"
-								badgeValue={scrapedJobCount}
-								path={"/scraped-jobs"}
-							/>
-							<Card.Body
-								className="p-0 flex-grow-1 d-flex flex-column"
-								style={{ height: "100%", minHeight: 0 }}
-							>
-								<div
-									style={{
-										flexGrow: 1,
-										overflowY: "auto",
-										minHeight: 0,
-										paddingTop: "10px",
-										paddingBottom: "20px",
-									}}
-								>
-									<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
-										<ScrapedJobsTable />
-									</div>
-								</div>
-							</Card.Body>
-						</Card>
+							<div style={{ paddingTop: "10px", paddingBottom: "20px" }}>
+								<ScrapedJobsTable />
+							</div>
+						</DashboardCard>
 					</Col>
 				</Row>
 			)}

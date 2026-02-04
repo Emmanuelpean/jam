@@ -1,7 +1,7 @@
 import React from "react";
-import DataTable from "../components/DataTable/DataTable";
-import { PersonModal } from "../components/DataModal/PersonModal";
-import { tableColumns } from "../components/rendering/view/TableColumns";
+import DataTable from "../../components/DataTable/DataTable";
+import { PersonModal } from "../../components/DataModal/PersonModal";
+import { tableColumns } from "../../components/rendering/view/TableColumns";
 
 const PersonsPage = () => {
 	const columns = [

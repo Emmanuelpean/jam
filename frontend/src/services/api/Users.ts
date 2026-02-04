@@ -26,7 +26,13 @@ export interface RegisterData {
 	last_name: string;
 }
 
-export const userApi: CrudApi<UserData> = createCrudApi("users");
+export const userApi: CrudApi<UserData> & {
+	invalidateAllSessions: (token: string) => ApiResponsePromise<GenericResponse>;
+} = {
+	...createCrudApi("users"),
+	invalidateAllSessions: (token: string): ApiResponsePromise<GenericResponse> =>
+		baseApi.post("users/invalidate-all-sessions", {}, token),
+};
 
 export interface AuthApi {
 	login: (email: string, password: string) => ApiResponsePromise<LoginResponse>;
