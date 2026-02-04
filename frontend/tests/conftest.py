@@ -1958,6 +1958,7 @@ class BaseTest(BaseUtils):
                 "password_manager_enabled": False,
                 "profile.password_manager_enabled": False,
                 "protocol_handler": {"excluded_schemes": {"mailto": True}},
+                "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
             chrome_options.add_argument("--headless=new")
