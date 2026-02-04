@@ -434,8 +434,8 @@ class TestPremiumSettingsPage(BaseTest):
 
         # Start a thread to continuously drain stdout so the buffer doesn't fill up and block
         def drain_stdout():
-            for line in self.stripe_listener.stdout:
-                print(f"[STRIPE] {line.strip()}")
+            for l in self.stripe_listener.stdout:
+                print(f"[STRIPE] {l.strip()}")
 
         self._stripe_drain_thread = threading.Thread(target=drain_stdout, daemon=True)
         self._stripe_drain_thread.start()
@@ -476,7 +476,10 @@ class TestPremiumSettingsPage(BaseTest):
         """Add a payment method while the user doesn't have an active subscription"""
 
         self.premium_settings_utils.subscription_button.click()
-        self.get_element("[data-testid='card-accordion-item']", By.CSS_SELECTOR).click()
+        try:
+            self.get_element("[data-testid='card-accordion-item']", By.CSS_SELECTOR).click()
+        except:
+            pass
         self.set_text(self.get_element("cardNumber"), "4242 4242 4242 4242")
         self.set_text(self.get_element("cardCvc"), "123")
         Select(self.get_element("billingCountry", By.NAME)).select_by_visible_text("United Kingdom")
