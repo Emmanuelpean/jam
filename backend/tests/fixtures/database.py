@@ -8,8 +8,8 @@ from sqlalchemy import create_engine, orm, Engine
 from sqlalchemy_utils import database_exists, create_database, drop_database
 
 from app.config import settings
-from tests.geolocation import mock_geocoding_side_effect
 from tests.utils.seed_database import reset_database
+from tests.utils.test_data.geolocation import mock_geocoding_side_effect
 
 
 @pytest.fixture(autouse=True)
@@ -19,12 +19,10 @@ def mock_geocoding_for_all_tests() -> Generator[None, Any, None]:
         yield
 
 
-DATABASE_NAME = "jam_test"
-
-
 @pytest.fixture(scope="session")
 def worker_database_name(worker_id) -> str:
     """Generate unique database name for each worker."""
+    DATABASE_NAME = "jam_test"
     if worker_id == "master":
         return DATABASE_NAME
     else:
