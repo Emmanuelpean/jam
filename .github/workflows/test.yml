@@ -129,7 +129,7 @@ jobs:
         run: |
           pytest -n auto ./backend \
             --cov=backend \
-            --cov-config=backend/pyproject.toml \
+            --cov-config=backend/app/pyproject.toml \
             --cov-report=term-missing \
             --cov-report=html \
             --cov-report=xml \
