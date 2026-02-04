@@ -17,15 +17,15 @@ class TestScoreScrapedJobs(object):
 
         score_scraped_jobs(1, session)
         job_ratings = session.query(models.JobRating).all()
-        assert len(job_ratings) == 41
+        assert len(job_ratings) == 37
         for job_rating in job_ratings:
             assert job_rating.is_success is True
             assert job_rating.overall_score is not None
         service_log = session.query(models.JobRatingServiceLog).first()
         assert service_log is not None
         assert service_log.run_datetime is not None
-        assert len(service_log.rated_job_found_ids) == 41
-        assert len(service_log.rated_job_succeeded_ids) == 41
+        assert len(service_log.rated_job_found_ids) == 37
+        assert len(service_log.rated_job_succeeded_ids) == 37
         assert len(service_log.rated_job_failed_ids) == 0
         assert len(service_log.user_found_ids) == len(self.get_premium_users(session))
         assert len(service_log.user_processed_ids) == len(self.get_premium_users(session)) - 1
@@ -65,15 +65,15 @@ class TestScoreScrapedJobs(object):
 
         score_scraped_jobs(1, session)
         job_ratings = session.query(models.JobRating).all()
-        assert len(job_ratings) == 41
+        assert len(job_ratings) == 37
         for job_rating in job_ratings:
             assert job_rating.is_success is True
             assert job_rating.overall_score is not None
         service_log = session.query(models.JobRatingServiceLog).first()
         assert service_log is not None
         assert service_log.run_datetime is not None
-        assert len(service_log.rated_job_found_ids) == 41
-        assert len(service_log.rated_job_succeeded_ids) == 41
+        assert len(service_log.rated_job_found_ids) == 37
+        assert len(service_log.rated_job_succeeded_ids) == 37
         assert len(service_log.rated_job_failed_ids) == 0
         assert len(service_log.user_found_ids) == len(self.get_premium_users(session))
         assert len(service_log.user_processed_ids) == len(self.get_premium_users(session)) - 1

@@ -66,6 +66,12 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
             ("job_id", "JOB_DATA", "required"),  # Should always have a job
         ],
         "JOB_APPLICATION_UPDATE_DATA": [("job_id", "JOB_DATA", "required")],  # Should always reference a job
+        "SPECULATIVE_APPLICATION_DATA": [("company_id", "COMPANY_DATA", "optional")],  # Can have a company
+        "JOB_RATING_DATA": [
+            ("scraped_job_id", "JOB_SCRAPED_DATA", "required"),  # Must reference a scraped job
+            ("user_qualification_id", "USER_QUALIFICATION_DATA", "required"),  # Must reference user qualification
+        ],
+        "SCRAPING_FILTER_DATA": [],  # Has owner_id but no FKs to other owned tables
     }
 
     print("=== OWNERSHIP INTEGRITY VALIDATION ===\n")
@@ -169,6 +175,13 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
             "secondary_ids_field": "scraped_job_ids",
             "description": "Email-Scraped job associations",
         },
+        "SPECULATIVE_APPLICATION_CONTACTS_MAPPING": {
+            "primary_table": "SPECULATIVE_APPLICATION_DATA",
+            "primary_id_field": "speculative_application_id",
+            "secondary_table": "PERSON_DATA",
+            "secondary_ids_field": "contact_ids",
+            "description": "Speculative application-Contact person associations",
+        },
     }
 
     for mapping_name, config in mapping_relationships.items():
@@ -268,6 +281,11 @@ analysis_results = validate_ownership_integrity_detailed(
         "JOB_CONTACT_MAPPINGS": JOB_CONTACT_MAPPINGS,
         "INTERVIEW_INTERVIEWER_MAPPINGS": INTERVIEW_INTERVIEWER_MAPPINGS,
         "EMAIL_SCRAPEDJOB_MAPPINGS": EMAIL_SCRAPEDJOB_MAPPINGS,
+        "SPECULATIVE_APPLICATION_DATA": SPECULATIVE_APPLICATION_DATA,
+        "SPECULATIVE_APPLICATION_CONTACTS_MAPPING": SPECULATIVE_APPLICATION_CONTACTS_MAPPING,
+        "JOB_RATING_DATA": JOB_RATING_DATA,
+        "SCRAPING_FILTER_DATA": SCRAPING_FILTER_DATA,
+        "USER_QUALIFICATION_DATA": USER_QUALIFICATION_DATA,
     }
 )
 
