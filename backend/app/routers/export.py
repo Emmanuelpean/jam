@@ -149,7 +149,7 @@ def export_all(
                 + [
                     job.company.name if job.company else "",
                     job.location.name if job.location else "",
-                    job.source.name if job.source else "",
+                    job.source_aggregator.name if job.source_aggregator else "",
                     job.application_aggregator.name if job.application_aggregator else "",
                     "; ".join(k.name for k in job.keywords),
                     "; ".join(f"{p.first_name} {p.last_name}" for p in job.contacts),

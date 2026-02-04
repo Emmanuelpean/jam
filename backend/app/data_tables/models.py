@@ -108,7 +108,7 @@ class Aggregator(Owned, Base):
     url = Column(String, nullable=False)
 
     # Relationships
-    jobs = relationship("Job", foreign_keys="Job.source_id", back_populates="source")
+    jobs = relationship("Job", foreign_keys="Job.source_aggregator_id", back_populates="source_aggregator")
     job_applications = relationship(
         "Job", foreign_keys="Job.application_aggregator_id", back_populates="application_aggregator"
     )
@@ -309,6 +309,7 @@ class Job(Owned, Base):
     - `personal_rating` (int, optional): Personalised rating given to the job.
     - `note` (str, optional): Additional note about the job posting.
     - `deadline` (datetime, optional): Deadline for the job application.
+    - `source_type` (str): Type of source used to post the job (e.g. job board, company website, etc.).
     - `followup_snooze_datetime` (datetime, optional): Date and time to snooze follow-up reminders.
     - `attendance_type` (str, optional): Type of attendance offered for the job (on-site, remote, hybrid).
     - `application_date` (datetime, optional): Date when the application was submitted.
@@ -322,7 +323,7 @@ class Job(Owned, Base):
     - `company_id` (int, optional): Identifier for the company offering the job.
     - `location_id` (int, optional): Identifier for the geographical location where the job is located.
     - `duplicate_id` (int, optional): Identifier for a duplicate job posting.
-    - `source_id` (int, optional): Identifier for the aggregator website where the job was posted.
+    - `source_aggregator_id` (int, optional): Identifier for the aggregator website where the job was posted.
     - `application_aggregator_id` (int, optional): Identifier for the aggregator website used to apply for the job.
     - `cv_id` (int, optional): Identifier for the CV file used in the job application.
     - `cover_letter_id` (int, optional): Identifier for the cover letter file used in the job application.
@@ -333,7 +334,7 @@ class Job(Owned, Base):
     - `location` (Location): Location object associated with the job posting.
     - `keywords` (list of Keyword): List of keywords associated with the job posting.
     - `contacts` (list of Person): List of people linked to the company that may be interested in the job posting.
-    - `source` (Aggregator): Source of the job posting (e.g. LinkedIn, Indeed, etc.).
+    - `source_aggregator` (Aggregator): Source of the job posting (e.g. LinkedIn, Indeed, etc.).
     - `interviews` (list of Interview): List of interviews associated with the job application.
     - `updates` (list of JobApplicationUpdate): List of updates associated with the job application.
     - `application_aggregator` (Aggregator): Source used to apply for the job.
@@ -359,8 +360,9 @@ class Job(Owned, Base):
     deadline = Column(TIMESTAMP(timezone=True), nullable=True)
     followup_snooze_datetime = Column(TIMESTAMP(timezone=True), nullable=True)
     attendance_type = Column(String, nullable=True)
+    source_type = Column(String, nullable=True)
 
-    # Application specific fields
+    # Application-specific fields
     application_date = Column(TIMESTAMP(timezone=True), nullable=True)
     application_url = Column(String, nullable=True)
     application_status = Column(String, nullable=True)
@@ -371,7 +373,7 @@ class Job(Owned, Base):
     company_id = Column(Integer, ForeignKey("company.id", ondelete="SET NULL"), nullable=True, index=True)
     location_id = Column(Integer, ForeignKey("location.id", ondelete="SET NULL"), nullable=True, index=True)
     duplicate_id = Column(Integer, ForeignKey("job.id", ondelete="SET NULL"), nullable=True, index=True)
-    source_id = Column(Integer, ForeignKey("aggregator.id", ondelete="SET NULL"), nullable=True, index=True)
+    source_aggregator_id = Column(Integer, ForeignKey("aggregator.id", ondelete="SET NULL"), nullable=True, index=True)
     application_aggregator_id = Column(
         Integer, ForeignKey("aggregator.id", ondelete="SET NULL"), nullable=True, index=True
     )
@@ -383,7 +385,7 @@ class Job(Owned, Base):
     location = relationship("Location", back_populates="jobs")
     keywords = relationship("Keyword", secondary=job_keyword_mapping, back_populates="jobs", lazy="selectin")
     contacts = relationship("Person", secondary=job_contact_mapping, back_populates="jobs", lazy="selectin")
-    source = relationship("Aggregator", foreign_keys=[source_id], back_populates="jobs")
+    source_aggregator = relationship("Aggregator", foreign_keys=[source_aggregator_id], back_populates="jobs")
     interviews = relationship("Interview", back_populates="job")
     updates = relationship("JobApplicationUpdate", back_populates="job")
     application_aggregator = relationship(

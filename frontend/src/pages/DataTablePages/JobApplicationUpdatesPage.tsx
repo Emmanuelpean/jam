@@ -1,7 +1,7 @@
 import React from "react";
-import { JobApplicationUpdateModal } from "../components/DataModal/JobApplicationUpdateModal";
-import { DataTable } from "../components/DataTable/DataTable";
-import { tableColumns } from "../components/rendering/view/TableColumns";
+import { JobApplicationUpdateModal } from "../../components/DataModal/JobApplicationUpdateModal";
+import { DataTable } from "../../components/DataTable/DataTable";
+import { tableColumns } from "../../components/rendering/view/TableColumns";
 
 const JobApplicationUpdatesPage = () => {
 	const columns = [

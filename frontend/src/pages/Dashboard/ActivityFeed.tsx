@@ -1,5 +1,4 @@
 import React, { JSX, ReactNode } from "react";
-import { Card } from "react-bootstrap";
 import "./DashboardPage.scss";
 import {
 	renderFunctions,
@@ -10,7 +9,7 @@ import {
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, JobData } from "../../services/schemas/DataTables";
 import { formatActivityDate } from "../../utils/TimeUtils";
-import { CardHeader } from "./CardHeader";
+import { DashboardCard } from "./DashboardCard";
 
 const getActivityColor = (type: string): string => {
 	const colorMap: { [key: string]: string } = {
@@ -61,28 +60,24 @@ export const ActivityFeedCard = <T,>({
 	emptyDescription,
 	items,
 	renderItem,
-}: ActivityFeedCardProps<T>) => (
-	<Card className="h-100 shadow-sm border-0 d-flex flex-column">
-		<CardHeader icon={icon} title={title} subtitle={subtitle} badgeValue={badgeValue} />
-		<Card.Body className="p-0 flex-grow-1 d-flex flex-column" style={{ minHeight: 0 }}>
-			{items.length === 0 ? (
-				<div className="text-center py-5 px-4 flex-grow-1 d-flex flex-column justify-content-center">
-					<div className="mb-3">
-						<i className={`bi bi-${emptyIcon} text-muted`} style={{ fontSize: "3.5rem" }}></i>
-					</div>
-					<h6 className="text-muted fw-semibold">{emptyTitle}</h6>
-					<p className="text-muted small mb-0">{emptyDescription}</p>
-				</div>
-			) : (
-				<div
-					className="activity-timeline px-4 flex-grow-1"
-					style={{ overflowY: "auto", height: "100%", minHeight: 0 }}
-				>
-					{items.map((item, index) => renderItem(item, index, index === items.length - 1))}
-				</div>
-			)}
-		</Card.Body>
-	</Card>
+}: ActivityFeedCardProps<T>): JSX.Element => (
+	<DashboardCard
+		icon={icon}
+		title={title}
+		subtitle={subtitle}
+		badgeValue={badgeValue}
+		isEmpty={items.length === 0}
+		emptyState={{
+			icon: emptyIcon,
+			title: emptyTitle,
+			description: emptyDescription,
+		}}
+		bodyPadding={false}
+	>
+		<div className="activity-timeline px-4 flex-grow-1" style={{ overflowY: "auto", height: "100%", minHeight: 0 }}>
+			{items.map((item, index) => renderItem(item, index, index === items.length - 1))}
+		</div>
+	</DashboardCard>
 );
 
 export interface RecentActivity {

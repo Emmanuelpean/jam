@@ -1140,7 +1140,7 @@ class DataModalUtils(BaseUtilsClass):
         if not entry.personal_rating:
             expected += "Not Provided\n"
 
-        source = entry.source.name.upper() if entry.source else None
+        source = entry.source_aggregator.name.upper() if entry.source_aggregator else None
         expected += format_field("Source Aggregator", source)
 
         url = entry.url.replace("https://", "") if entry.url else None

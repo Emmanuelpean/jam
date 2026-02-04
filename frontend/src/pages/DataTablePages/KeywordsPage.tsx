@@ -1,8 +1,8 @@
 import React, { JSX } from "react";
-import DataTable from "../components/DataTable/DataTable";
-import { KeywordModal } from "../components/DataModal/KeywordModal";
-import { TableColumn, tableColumns } from "../components/rendering/view/TableColumns";
-import { DataContextValue, useDataContext } from "../contexts/DataContext";
+import DataTable from "../../components/DataTable/DataTable";
+import { KeywordModal } from "../../components/DataModal/KeywordModal";
+import { TableColumn, tableColumns } from "../../components/rendering/view/TableColumns";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
 const KeywordsPage = (): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
