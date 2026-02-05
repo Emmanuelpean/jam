@@ -1,5 +1,12 @@
 import React, { forwardRef, ReactNode, useRef } from "react";
-import DataModal, { DataModalHandle, Fields, JamDataModalProps, TabConfig, ValidationErrors } from "./DataModal";
+import DataModal, {
+	DataModalHandle,
+	Fields,
+	JamDataModalProps,
+	SectionConfig,
+	TabConfig,
+	ValidationErrors,
+} from "./DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { getApplicationStatusBadgeClass } from "../rendering/view/Icons";
@@ -30,110 +37,228 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 		const { companies, locations, keywords, persons, aggregators } = useFormOptions();
 
 		const jobFormFields: Fields = [
-			formFields.jobTitle({ placeholder: "Python Software Engineer" }),
-			[
-				formFields.company(companies, companyModalRef),
-				formFields.url({
-					label: "Job URL",
-					placeholder: "https://linkedin.com/jobs/453635",
-				}),
-			],
-			[formFields.attendanceType(), formFields.location(locations, locationModalRef)],
-			[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
-			[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
-			[formFields.personalRating(), formFields.deadline()],
-			[
-				formFields.sourceType(),
-				formFields.aggregator(aggregators, aggregatorModalRef, null, null, {
-					name: "source_aggregator_id",
-					displayCondition: (formData: JobDataTransform): boolean => {
-						return ["aggregator", "aggregator_email"].includes(
-							formData.source_type ? formData.source_type : ""
-						);
-					},
-				}),
-				formFields.recruiter(persons, personModalRef, null, null, {
-					displayCondition: (formData: JobDataTransform): boolean => {
-						return formData.source_type ? formData.source_type === "recruiter" : false;
-					},
-				}),
-				formFields.company(companies, companyModalRef, null, null, {
-					name: "recruitment_company_id",
-					displayCondition: (formData: JobDataTransform): boolean => {
-						return formData.source_type ? formData.source_type === "recruitment_company" : false;
-					},
-				}),
-			],
-			formFields.description({
-				placeholder:
-					"We are seeking a Python Software Engineer to develop, optimise, and maintain scalable software " +
-					"solutions that drive innovation and support our growing business needs.",
-			}),
-			formFields.note({
-				placeholder:
-					"This role offers a chance to apply Python expertise to build scalable solutions " +
-					"while exploring opportunities for growth in automation, data analysis, and collaborative software development.",
-			}),
+			{
+				type: "section",
+				key: "basic-info",
+				title: "Basic Information",
+				icon: "bi-briefcase",
+				fields: [
+					formFields.jobTitle({ placeholder: "Python Software Engineer" }),
+					[
+						formFields.company(companies, companyModalRef),
+						formFields.url({
+							label: "Job URL",
+							placeholder: "https://linkedin.com/jobs/453635",
+						}),
+					],
+				],
+			} as SectionConfig,
+			{
+				type: "section",
+				key: "location-schedule",
+				title: "Location & Schedule",
+				icon: "bi-geo-alt",
+				fields: [[formFields.attendanceType(), formFields.location(locations, locationModalRef)]],
+			} as SectionConfig,
+			{
+				type: "section",
+				key: "compensation",
+				title: "Compensation & Priority",
+				icon: "bi-currency-pound",
+				fields: [
+					[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
+					[formFields.personalRating(), formFields.deadline()],
+				],
+			} as SectionConfig,
+			{
+				type: "section",
+				key: "source",
+				title: "Source",
+				icon: "bi-search",
+				fields: [
+					[
+						formFields.sourceType(),
+						formFields.aggregator(aggregators, aggregatorModalRef, null, null, {
+							name: "source_aggregator_id",
+							displayCondition: (formData: JobDataTransform): boolean => {
+								return ["aggregator", "aggregator_email"].includes(
+									formData.source_type ? formData.source_type : ""
+								);
+							},
+						}),
+						formFields.recruiter(persons, personModalRef, null, null, {
+							displayCondition: (formData: JobDataTransform): boolean => {
+								return formData.source_type ? formData.source_type === "recruiter" : false;
+							},
+						}),
+						formFields.company(companies, companyModalRef, null, null, {
+							name: "recruitment_company_id",
+							displayCondition: (formData: JobDataTransform): boolean => {
+								return formData.source_type ? formData.source_type === "recruitment_company" : false;
+							},
+						}),
+					],
+				],
+			} as SectionConfig,
+			{
+				type: "section",
+				key: "tags-contacts",
+				title: "Keywords & Contacts",
+				icon: "bi-tags",
+				fields: [
+					[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
+				],
+			} as SectionConfig,
+			{
+				type: "section",
+				key: "details",
+				title: "Details",
+				icon: "bi-card-text",
+				fields: [
+					formFields.description({
+						placeholder:
+							"We are seeking a Python Software Engineer to develop, optimise, and maintain scalable software " +
+							"solutions that drive innovation and support our growing business needs.",
+					}),
+					formFields.note({
+						placeholder:
+							"This role offers a chance to apply Python expertise to build scalable solutions " +
+							"while exploring opportunities for growth in automation, data analysis, and collaborative software development.",
+					}),
+				],
+			} as SectionConfig,
 		];
 
 		const jobViewFields: Fields = [
-			[modalViewFields.title({ isTitle: true })],
-			[modalViewFields.companyBadge(), modalViewFields.locationBadge()],
-			modalViewFields.description(),
-			modalViewFields.note(),
-			[modalViewFields.salaryRange(), modalViewFields.personalRating()],
-			[
-				modalViewFields.sourceBadge({
-					displayCondition: (data: JobData): boolean => {
-						return ["aggregator", "aggregator_email"].includes(data.source_type ? data.source_type : "");
-					},
-				}),
-				modalViewFields.recruiterBadge({
-					displayCondition: (data: JobData): boolean => {
-						return data.source_type === "recruiter";
-					},
-				}),
-				modalViewFields.recruitmentCompanyBadge({
-					displayCondition: (data: JobData): boolean => {
-						return data.source_type === "recruitment_company";
-					},
-				}),
-				modalViewFields.sourceType({
-					displayCondition: (data: JobData): boolean => {
-						return data.source_type ? data.source_type === "other" : false;
-					},
-				}),
-				modalViewFields.url({ label: "Job URL" }),
-			],
-			[modalViewFields.keywordBadges(), modalViewFields.personBadges({}, ["view", "edit", "delete", "followup"])],
-			[modalViewFields.deadline()],
+			{
+				type: "section",
+				key: "overview",
+				title: "Overview",
+				icon: "bi-briefcase",
+				fields: [
+					[modalViewFields.title({ isTitle: true })],
+					[modalViewFields.companyBadge(), modalViewFields.locationBadge()],
+				],
+			} as SectionConfig,
+			{
+				type: "section",
+				key: "details",
+				title: "Details",
+				icon: "bi-card-text",
+				fields: [modalViewFields.description(), modalViewFields.note()],
+			} as SectionConfig,
+			{
+				type: "section",
+				key: "compensation",
+				title: "Compensation & Priority",
+				icon: "bi-currency-pound",
+				fields: [
+					[modalViewFields.salaryRange(), modalViewFields.personalRating()],
+					[modalViewFields.deadline()],
+				],
+			} as SectionConfig,
+			{
+				type: "section",
+				key: "source",
+				title: "Source & Links",
+				icon: "bi-search",
+				fields: [
+					[
+						modalViewFields.sourceBadge({
+							displayCondition: (data: JobData): boolean => {
+								return ["aggregator", "aggregator_email"].includes(
+									data.source_type ? data.source_type : ""
+								);
+							},
+						}),
+						modalViewFields.recruiterBadge({
+							displayCondition: (data: JobData): boolean => {
+								return data.source_type === "recruiter";
+							},
+						}),
+						modalViewFields.recruitmentCompanyBadge({
+							displayCondition: (data: JobData): boolean => {
+								return data.source_type === "recruitment_company";
+							},
+						}),
+						modalViewFields.sourceType({
+							displayCondition: (data: JobData): boolean => {
+								return data.source_type ? data.source_type === "other" : false;
+							},
+						}),
+						modalViewFields.url({ label: "Job URL" }),
+					],
+				],
+			} as SectionConfig,
+			{
+				type: "section",
+				key: "tags-contacts",
+				title: "Keywords & Contacts",
+				icon: "bi-tags",
+				fields: [
+					[
+						modalViewFields.keywordBadges(),
+						modalViewFields.personBadges({}, ["view", "edit", "delete", "followup"]),
+					],
+				],
+			} as SectionConfig,
 		];
 
 		const applicationFormFields: Fields = [
-			[formFields.applicationDate(), formFields.applicationStatus()],
-			[
-				formFields.applicationVia(),
-				formFields.aggregator(aggregators, aggregatorModalRef, null, null, {
-					name: "application_aggregator_id",
-					displayCondition: (formData: JobDataTransform): boolean => {
-						return formData.applied_via ? formData.applied_via === "aggregator" : true;
-					},
-				}),
-			],
-			formFields.applicationUrl({ placeholder: "https://linkedin.com/application/453635" }),
-			formFields.note({
-				placeholder:
-					"The application process involves submitting an online application, followed by technical " +
-					"assessments and interviews to evaluate coding skills, problem-solving ability, and cultural fit.",
-				name: "application_note",
-			}),
+			{
+				type: "section",
+				key: "application-details",
+				title: "Application Details",
+				icon: "bi-send",
+				fields: [
+					[formFields.applicationDate(), formFields.applicationStatus()],
+					[
+						formFields.applicationVia(),
+						formFields.aggregator(aggregators, aggregatorModalRef, null, null, {
+							name: "application_aggregator_id",
+							displayCondition: (formData: JobDataTransform): boolean => {
+								return formData.applied_via ? formData.applied_via === "aggregator" : true;
+							},
+						}),
+					],
+					formFields.applicationUrl({ placeholder: "https://linkedin.com/application/453635" }),
+				],
+			} as SectionConfig,
+			{
+				type: "section",
+				key: "application-notes",
+				title: "Notes",
+				icon: "bi-journal-text",
+				fields: [
+					formFields.note({
+						placeholder:
+							"The application process involves submitting an online application, followed by technical " +
+							"assessments and interviews to evaluate coding skills, problem-solving ability, and cultural fit.",
+						name: "application_note",
+					}),
+				],
+			} as SectionConfig,
 		];
 
 		const applicationViewFields: Fields = [
-			[modalViewFields.applicationDate(), modalViewFields.applicationStatus()],
-			[modalViewFields.appliedViaBadge()],
-			[modalViewFields.applicationUrl()],
-			modalViewFields.applicationNote(),
+			{
+				type: "section",
+				key: "application-details",
+				title: "Application Details",
+				icon: "bi-send",
+				fields: [
+					[modalViewFields.applicationDate(), modalViewFields.applicationStatus()],
+					[modalViewFields.appliedViaBadge()],
+					[modalViewFields.applicationUrl()],
+				],
+			} as SectionConfig,
+			{
+				type: "section",
+				key: "application-notes",
+				title: "Notes",
+				icon: "bi-journal-text",
+				fields: [modalViewFields.applicationNote()],
+			} as SectionConfig,
 			modalViewFields.interviewTable(),
 			modalViewFields.updateTable(),
 			modalViewFields.followupSnoozeDateTime(),

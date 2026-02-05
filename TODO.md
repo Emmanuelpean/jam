@@ -11,9 +11,9 @@
 * [ ] Display the entry associated with the hovered option
 
 ### Job Modal
-* [ ] Add option to select the source (recruiter, aggregator, other)
+* [X] Add option to select the source (recruiter, aggregator, other)
 
-### Active Jobs Widget
+### Advanced Dashboard
 * [ ] Add a "active jobs" log showing jobs with the most activity
 * [ ] Add a "favourite" column to the job table
 
@@ -22,7 +22,7 @@
 * [ ] Add the ability to filter by columns and hide rejected jobs
 
 * [ ] Rewrite the test data for the test user
-* [ ] Add payment system for toast
+* [X] Add payment system for toast
 * [X] Change the service runner to work with multiple workers
 * [X] Limit the number of scraped jobs per user per month, and set limits for AI rating
 * [X] finish adding configs endpoint
@@ -47,7 +47,6 @@
 * [X] Finish the dark mode - Missing dark mode in select widget in time selector
 * [X] Fix the settings table column and modal active states
 * [X] Redo the users table
-* [ ] Add tests for the user table
 * [ ] Add toggle to hide scraped jobs with past deadline
 * [X] Display the AI prompt in the user settings
 * [X] Display reason why scraped job was not rated
@@ -61,3 +60,5 @@
 * [X] Fix the password reset bug
 * [ ] Review what is_scraped stand for (add is_processed?)
 * [X] Add a button to kick everyone out
+* [ ] Add popup to show the new stuff
+* [ ] Set the scraped job source_type to aggregator_email

@@ -10,6 +10,7 @@ import "./AboutPage.scss";
 import v100 from "../../releaseNotes/V1_0_0";
 import v110 from "../../releaseNotes/V1_1_0";
 import v120 from "../../releaseNotes/V1_2_0";
+import { useWhatsNew } from "../../contexts/WhatsNewContext";
 
 interface Feature {
 	icon: string;
@@ -57,6 +58,7 @@ const ReleaseNoteAccordion = ({ version, content, isOpen, onToggle }: ReleaseNot
 const AboutPage = (): JSX.Element => {
 	const [openVersion, setOpenVersion] = useState<string | null>(null);
 	const [acknowledgementsOpen, setAcknowledgementsOpen] = useState<boolean>(false);
+	const { showWhatsNew } = useWhatsNew();
 	const releaseNotes: Record<string, any> = {
 		"1.2": v120,
 		"1.1": v110,
@@ -199,6 +201,20 @@ const AboutPage = (): JSX.Element => {
 					<Row className="justify-content-center mb-2">
 						<Col lg={8} className="text-center mb-2">
 							<h2 className="display-5 fw-bold">Release Notes</h2>
+							<button
+								onClick={showWhatsNew}
+								className="glass-badge mt-3"
+								style={{
+									cursor: "pointer",
+									border: "none",
+									transition: "transform 0.2s ease",
+								}}
+								onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+								onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+							>
+								<i className="bi bi-stars me-2" style={{ color: "var(--primary-mid)" }} />
+								View What's New in {packageJson.version}
+							</button>
 						</Col>
 					</Row>
 					<Row className="justify-content-center">
