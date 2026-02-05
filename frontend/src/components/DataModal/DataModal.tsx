@@ -1,13 +1,4 @@
-import React, {
-	forwardRef,
-	JSX,
-	ReactNode,
-	useEffect,
-	useImperativeHandle,
-	useLayoutEffect,
-	useRef,
-	useState,
-} from "react";
+import React, { forwardRef, JSX, ReactNode, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -36,6 +27,7 @@ import "./DataModal.scss";
 import { toKey } from "../../utils/StringUtils";
 import { getModalSize, ModalSize } from "../AlertModal/AlertModal";
 import { ModalSection } from "./ModalSection/ModalSection";
+import { IsViewNull, ViewField } from "../rendering/view/ViewRenders";
 
 export type Field = ModalViewField | ModalFormField;
 
@@ -135,14 +127,14 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				const processedData = transformInputData ? transformInputData(data) : data;
 				setEffectiveData(processedData);
 				setMode("view");
-				resetExpandedStates(processedData, "view");
+				resetExpandedStates();
 				setInternalShow(true);
 			},
 			showEdit: (data: JamData): void => {
 				const processedData = transformInputData ? transformInputData(data) : data;
 				setEffectiveData(processedData);
 				setMode("edit");
-				resetExpandedStates(processedData, "edit");
+				resetExpandedStates();
 				setInternalShow(true);
 			},
 			showAdd: (data: JamData, successCallback?: (newData: JamData) => void) => {
@@ -150,14 +142,14 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				setEffectiveData(processedData);
 				setMode("add");
 				setOnSuccessCallback(() => successCallback || null);
-				resetExpandedStates(processedData, "add");
+				resetExpandedStates();
 				setInternalShow(true);
 			},
 			showImport: (data: JamData) => {
 				const processedData = transformInputData ? transformInputData(data) : data;
 				setEffectiveData(processedData);
 				setMode("import");
-				resetExpandedStates(processedData, "import");
+				resetExpandedStates();
 				setInternalShow(true);
 			},
 		}));
@@ -177,7 +169,6 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			}
 			return null;
 		});
-		const [containerHeight, setContainerHeight] = useState("auto");
 		const contentRef = useRef<HTMLDivElement>(null);
 		const { showDelete } = useAlert();
 		const entityName: string = entityTypeToGenericName(entityType);
@@ -193,43 +184,27 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		};
 
 		const isSectionExpanded = (sectionKey: string): boolean => {
-			return expandedSections[sectionKey] ?? true; // Default to expanded
+			// If we have an explicit state for this section (user toggled), use it
+			if (sectionKey in expandedSections) {
+				return expandedSections[sectionKey]!;
+			}
+
+			// Compute default based on mode
+			if (!isEditing) {
+				// In view mode, collapse sections without data
+				const allFields = getAllSectionFields();
+				const section = allFields.find((f): f is SectionConfig => isSectionConfig(f) && f.key === sectionKey);
+				return section ? sectionHasData(section, effectiveData) : true;
+			}
+
+			// In edit mode, default to expanded
+			return true;
 		};
 
 		// Check if a field has displayable data
 		const fieldHasData = (field: Field, data: any): boolean => {
 			if (!data) return false;
-
-			// For view fields, check the key property
-			if ("key" in field && field.key) {
-				const keys = Array.isArray(field.key) ? field.key : [field.key];
-				return keys.some((key: string) => {
-					const value = get(data, key);
-					return (
-						value !== null &&
-						value !== undefined &&
-						value !== "" &&
-						!(Array.isArray(value) && value.length === 0)
-					);
-				});
-			}
-
-			// For form fields, check the name property
-			if ("name" in field && field.name) {
-				const names = Array.isArray(field.name) ? field.name : [field.name];
-				return names.some((name: string) => {
-					const value = get(data, name);
-					return (
-						value !== null &&
-						value !== undefined &&
-						value !== "" &&
-						!(Array.isArray(value) && value.length === 0)
-					);
-				});
-			}
-
-			// If field has a render function, assume it has data (can't easily determine)
-			return "render" in field;
+			return !IsViewNull(dataContext, "", field as ViewField, data, "check");
 		};
 
 		// Check if a section has any fields with data
@@ -246,17 +221,6 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			return false;
 		};
 
-		// Compute expanded states for view mode (collapse empty sections)
-		const computeViewExpandedStates = (data: any, allFields: Fields): ExpandedStates => {
-			const states: ExpandedStates = {};
-			for (const item of allFields) {
-				if (isSectionConfig(item)) {
-					states[item.key] = sectionHasData(item, data);
-				}
-			}
-			return states;
-		};
-
 		// Get all fields from all tabs or current fields
 		const getAllSectionFields = (): Fields => {
 			if (hasTabs && tabs) {
@@ -271,16 +235,8 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			return [...(fieldsConfig?.view || []), ...(fieldsConfig?.form || [])];
 		};
 
-		// Reset expanded states when modal opens
-		const resetExpandedStates = (data: any, openMode: modalModes): void => {
-			if (openMode === "view") {
-				// For view mode, collapse sections without data
-				const allFields = getAllSectionFields();
-				setExpandedSections(computeViewExpandedStates(data, allFields));
-			} else {
-				// For edit/add modes, expand all sections
-				setExpandedSections({});
-			}
+		const resetExpandedStates = (): void => {
+			setExpandedSections({});
 		};
 
 		// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
@@ -467,45 +423,19 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			setFormData({ ...effectiveData });
 			setOriginalFormData({ ...effectiveData });
 			setErrors({});
+			// Clear expanded sections to trigger recomputation based on view mode defaults
+			setExpandedSections({});
 		};
 
-		const handleEdit = () => {
+		const handleEdit = (): void => {
 			setIsEditing(true);
 			setFormData({ ...effectiveData });
 			setOriginalFormData({ ...effectiveData });
+			setExpandedSections({});
 		};
 
 		const editState: ButtonState = getEditDisabledState();
 		const deleteState: ButtonState = getDeleteDisabledState();
-
-		// ----------------------------------------------------- LAYOUT ----------------------------------------------------
-
-		useLayoutEffect(() => {
-			if (!contentRef.current) return;
-
-			const updateHeight = (): void => {
-				if (contentRef.current?.scrollHeight) {
-					setContainerHeight(String(Number(contentRef.current.scrollHeight) + 10) + "px");
-				}
-			};
-
-			updateHeight();
-
-			const resizeObserver = new ResizeObserver(() => {
-				updateHeight();
-			});
-
-			resizeObserver.observe(contentRef.current);
-
-			const childElements = contentRef.current.querySelectorAll("*");
-			childElements.forEach((el: Element) => {
-				resizeObserver.observe(el);
-			});
-
-			return (): void => {
-				resizeObserver.disconnect();
-			};
-		}, [isEditing, activeTab, effectiveData]);
 
 		// ------------------------------------------------- MODAL CONTENT -------------------------------------------------
 
@@ -903,7 +833,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			);
 
 			return (
-				<div className="modal-content-animated" style={{ height: containerHeight }}>
+				<div className="modal-content-animated">
 					<div className="modal-content-animated-inner">
 						<div ref={contentRef}>{renderContentInner()}</div>
 					</div>

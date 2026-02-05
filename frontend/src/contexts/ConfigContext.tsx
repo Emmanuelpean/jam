@@ -28,7 +28,6 @@ export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 			try {
 				const response: ApiResponse<Config> = await baseApi.get("config/", null);
 				setConfig(response.data);
-				console.log(response.data);
 			} catch (e: any) {
 				setError(e);
 			} finally {

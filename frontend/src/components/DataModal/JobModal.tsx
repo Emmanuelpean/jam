@@ -56,7 +56,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 			{
 				type: "section",
 				key: "location-schedule",
-				title: "Location & Schedule",
+				title: "Location",
 				icon: "bi-geo-alt",
 				fields: [[formFields.attendanceType(), formFields.location(locations, locationModalRef)]],
 			} as SectionConfig,

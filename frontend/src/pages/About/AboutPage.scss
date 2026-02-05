@@ -131,12 +131,3 @@ body[data-mode="dark"] .link-gradient-purple:hover {
         grid-template-columns: repeat(2, 1fr);
     }
 }
-
-.simple-accordion-content {
-    overflow: hidden;
-    animation: slideDown 0.3s ease-out;
-}
-
-.simple-accordion-header {
-    border-bottom: 1px solid var(--placeholder-text-color) !important;
-}

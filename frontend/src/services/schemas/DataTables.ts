@@ -143,6 +143,8 @@ export interface JobData extends OwnedOut {
 	source_aggregator_id: number | null;
 	source_type: string | null;
 	location_id: number | null;
+	recruiter_id: number | null;
+	recruitment_company_id: number | null;
 	followup_snooze_datetime: Date | string | null;
 	application_date: Date | string | null;
 	application_status: string | null;
