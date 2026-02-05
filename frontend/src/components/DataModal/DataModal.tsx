@@ -19,7 +19,7 @@ import {
 } from "../../contexts/DataContext";
 import { Errors, renderFormField, SyntheticEvent } from "../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../rendering/form/ActionButton";
-import { areDifferent, findItemByKey, flattenArray, getColumnClass, normaliseArray } from "../../utils/Utils";
+import { areDifferent, findItemByKey, getColumnClass, normaliseArray } from "../../utils/Utils";
 import { ModalViewField, renderModalViewField } from "../rendering/view/ModalFields";
 import { ModalFormField } from "../rendering/form/FormRenders";
 import {
@@ -35,9 +35,21 @@ import get from "lodash/get";
 import "./DataModal.scss";
 import { toKey } from "../../utils/StringUtils";
 import { getModalSize, ModalSize } from "../AlertModal/AlertModal";
+import { ModalSection } from "./ModalSection/ModalSection";
 
 export type Field = ModalViewField | ModalFormField;
-export type Fields = (Field | Field[])[];
+
+export interface SectionConfig {
+	type: "section";
+	key: string;
+	title: string;
+	icon?: string;
+	fields: (Field | Field[])[];
+	displayCondition?: (data: any) => boolean;
+}
+
+export type FieldItem = Field | Field[] | SectionConfig;
+export type Fields = FieldItem[];
 
 export interface TabConfig {
 	key: string;
@@ -91,6 +103,8 @@ export interface DataModalHandle {
 	showImport: (data: any) => void;
 }
 
+type ExpandedStates = Record<string, boolean>;
+
 const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 	(
 		{
@@ -113,33 +127,37 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		ref
 	) => {
 		const hasTabs = tabs && tabs.length > 0;
-
 		const [internalShow, setInternalShow] = useState(false);
 		const [mode, setMode] = useState<modalModes>("view");
 		const [effectiveData, setEffectiveData] = useState<any>(null);
-		const [_id, setId] = useState<number | null>(null);
 		useImperativeHandle(ref, () => ({
 			showView: (data: JamData): void => {
-				setId(data.id);
-				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
+				const processedData = transformInputData ? transformInputData(data) : data;
+				setEffectiveData(processedData);
 				setMode("view");
+				resetExpandedStates(processedData, "view");
 				setInternalShow(true);
 			},
 			showEdit: (data: JamData): void => {
-				setId(data.id);
-				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
+				const processedData = transformInputData ? transformInputData(data) : data;
+				setEffectiveData(processedData);
 				setMode("edit");
+				resetExpandedStates(processedData, "edit");
 				setInternalShow(true);
 			},
 			showAdd: (data: JamData, successCallback?: (newData: JamData) => void) => {
-				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
+				const processedData = transformInputData ? transformInputData(data) : data;
+				setEffectiveData(processedData);
 				setMode("add");
 				setOnSuccessCallback(() => successCallback || null);
+				resetExpandedStates(processedData, "add");
 				setInternalShow(true);
 			},
 			showImport: (data: JamData) => {
-				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
+				const processedData = transformInputData ? transformInputData(data) : data;
+				setEffectiveData(processedData);
 				setMode("import");
+				resetExpandedStates(processedData, "import");
 				setInternalShow(true);
 			},
 		}));
@@ -153,7 +171,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		const [isEditing, setIsEditing] = useState<boolean>(false);
 		const { currentUser } = useAuth();
 		const dataContext: DataContextValue = useDataContext();
-		const [activeTab, setActiveTab] = useState<string | null>(() => {
+		const [activeTab, setActiveTab] = useState<string | null>((): string | null => {
 			if (hasTabs) {
 				return defaultActiveTab || tabs[0]!.key;
 			}
@@ -163,11 +181,107 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		const contentRef = useRef<HTMLDivElement>(null);
 		const { showDelete } = useAlert();
 		const entityName: string = entityTypeToGenericName(entityType);
+		const [expandedSections, setExpandedSections] = useState<ExpandedStates>({});
 
-		// useEffect(() => {
-		// 	const data = dataContext.getEntityData(entityType).filter((item: JamData): boolean => item.id === id)[0];
-		// 	setEffectiveData(data);
-		// }, [dataContext.getEntityData(entityType).filter((item: JamData): boolean => item.id === id)[0]]);
+		const handleSectionToggle = (sectionKey: string, isExpanded: boolean): void => {
+			setExpandedSections(
+				(prev: ExpandedStates): ExpandedStates => ({
+					...prev,
+					[sectionKey]: isExpanded,
+				})
+			);
+		};
+
+		const isSectionExpanded = (sectionKey: string): boolean => {
+			return expandedSections[sectionKey] ?? true; // Default to expanded
+		};
+
+		// Check if a field has displayable data
+		const fieldHasData = (field: Field, data: any): boolean => {
+			if (!data) return false;
+
+			// For view fields, check the key property
+			if ("key" in field && field.key) {
+				const keys = Array.isArray(field.key) ? field.key : [field.key];
+				return keys.some((key: string) => {
+					const value = get(data, key);
+					return (
+						value !== null &&
+						value !== undefined &&
+						value !== "" &&
+						!(Array.isArray(value) && value.length === 0)
+					);
+				});
+			}
+
+			// For form fields, check the name property
+			if ("name" in field && field.name) {
+				const names = Array.isArray(field.name) ? field.name : [field.name];
+				return names.some((name: string) => {
+					const value = get(data, name);
+					return (
+						value !== null &&
+						value !== undefined &&
+						value !== "" &&
+						!(Array.isArray(value) && value.length === 0)
+					);
+				});
+			}
+
+			// If field has a render function, assume it has data (can't easily determine)
+			return "render" in field;
+		};
+
+		// Check if a section has any fields with data
+		const sectionHasData = (section: SectionConfig, data: any): boolean => {
+			for (const item of section.fields) {
+				if (Array.isArray(item)) {
+					for (const field of item) {
+						if (fieldHasData(field, data)) return true;
+					}
+				} else {
+					if (fieldHasData(item, data)) return true;
+				}
+			}
+			return false;
+		};
+
+		// Compute expanded states for view mode (collapse empty sections)
+		const computeViewExpandedStates = (data: any, allFields: Fields): ExpandedStates => {
+			const states: ExpandedStates = {};
+			for (const item of allFields) {
+				if (isSectionConfig(item)) {
+					states[item.key] = sectionHasData(item, data);
+				}
+			}
+			return states;
+		};
+
+		// Get all fields from all tabs or current fields
+		const getAllSectionFields = (): Fields => {
+			if (hasTabs && tabs) {
+				const allFields: Fields = [];
+				for (const tab of tabs) {
+					allFields.push(...tab.fields.view);
+					allFields.push(...tab.fields.form);
+				}
+				return allFields;
+			}
+			const fieldsConfig = typeof fields === "function" ? fields(effectiveData, mode) : fields;
+			return [...(fieldsConfig?.view || []), ...(fieldsConfig?.form || [])];
+		};
+
+		// Reset expanded states when modal opens
+		const resetExpandedStates = (data: any, openMode: modalModes): void => {
+			if (openMode === "view") {
+				// For view mode, collapse sections without data
+				const allFields = getAllSectionFields();
+				setExpandedSections(computeViewExpandedStates(data, allFields));
+			} else {
+				// For edit/add modes, expand all sections
+				setExpandedSections({});
+			}
+		};
 
 		// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
 
@@ -178,6 +292,66 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 		const isViewField = (field: Field): field is ModalViewField => {
 			return !("name" in field) || "render" in field || "isTitle" in field;
+		};
+
+		const isSectionConfig = (item: FieldItem): item is SectionConfig => {
+			return typeof item === "object" && !Array.isArray(item) && "type" in item && item.type === "section";
+		};
+
+		// Helper to get field name as string (handles string[] case)
+		const getFieldName = (field: Field): string | null => {
+			if (!("name" in field)) return null;
+			return Array.isArray(field.name) ? (field.name[0] ?? null) : field.name;
+		};
+
+		// Flatten all fields including those inside sections for validation
+		const flattenFieldsWithSections = (fieldItems: FieldItem[]): Field[] => {
+			const result: Field[] = [];
+			for (const item of fieldItems) {
+				if (isSectionConfig(item)) {
+					// Recursively flatten section fields
+					result.push(...flattenFieldsWithSections(item.fields));
+				} else if (Array.isArray(item)) {
+					result.push(...item);
+				} else {
+					result.push(item);
+				}
+			}
+			return result;
+		};
+
+		// Find section keys containing fields with errors
+		const findSectionsWithErrors = (fieldItems: FieldItem[], errorFieldNames: string[]): string[] => {
+			const sectionsWithErrors: string[] = [];
+
+			const checkFieldsForErrors = (fields: (Field | Field[])[]): boolean => {
+				for (const field of fields) {
+					if (Array.isArray(field)) {
+						for (const f of field) {
+							const fieldName = getFieldName(f);
+							if (fieldName && errorFieldNames.includes(fieldName)) {
+								return true;
+							}
+						}
+					} else {
+						const fieldName = getFieldName(field);
+						if (fieldName && errorFieldNames.includes(fieldName)) {
+							return true;
+						}
+					}
+				}
+				return false;
+			};
+
+			for (const item of fieldItems) {
+				if (isSectionConfig(item)) {
+					if (checkFieldsForErrors(item.fields)) {
+						sectionsWithErrors.push(item.key);
+					}
+				}
+			}
+
+			return sectionsWithErrors;
 		};
 
 		const getCurrentFields = (): { view: Fields; form: Fields } => {
@@ -311,7 +485,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 			const updateHeight = (): void => {
 				if (contentRef.current?.scrollHeight) {
-					setContainerHeight(String(Number(contentRef.current.scrollHeight) + 1) + "px");
+					setContainerHeight(String(Number(contentRef.current.scrollHeight) + 10) + "px");
 				}
 			};
 
@@ -358,13 +532,12 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 			return (
 				<div key={index} className="row mb-3" style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}>
-					{itemList.map((field: Field, fieldIndex: number) => {
-						const fieldKey =
+					{itemList.map((field: Field, fieldIndex: number): JSX.Element => {
+						const fieldKey: string | string[] =
 							("key" in field ? field.key : null) ||
 							("name" in field ? field.name : null) ||
 							`field_${index}_${fieldIndex}`;
 
-						// Always render based on field type, not mode
 						return (
 							<div key={toKey(fieldKey)} className={columnClass}>
 								{isViewField(field)
@@ -381,6 +554,31 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 					})}
 				</div>
 			);
+		};
+
+		const renderSection = (section: SectionConfig, index: number, isFormMode = true): JSX.Element => {
+			return (
+				<ModalSection
+					key={section.key || index}
+					sectionKey={section.key}
+					title={section.title}
+					icon={section.icon}
+					expanded={isSectionExpanded(section.key)}
+					onToggle={handleSectionToggle}
+				>
+					{section.fields.map(
+						(item: Field | Field[], fieldIndex: number): JSX.Element =>
+							renderFieldGroup(item, fieldIndex, isFormMode)
+					)}
+				</ModalSection>
+			);
+		};
+
+		const renderFieldItem = (item: FieldItem, index: number, isFormMode = true): JSX.Element => {
+			if (isSectionConfig(item)) {
+				return renderSection(item, index, isFormMode);
+			}
+			return renderFieldGroup(item as Field | Field[], index, isFormMode);
 		};
 
 		// ----------------------------------------------------- DELETE ----------------------------------------------------
@@ -429,11 +627,26 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
 		};
 
-		const filterConditionalFields = <T extends Field>(fieldsToFilter: (T | T[])[]): (T | T[])[] => {
+		const filterConditionalFields = (fieldsToFilter: FieldItem[]): FieldItem[] => {
 			return fieldsToFilter
-				.map((item: T | T[]): T | T[] | null => {
+				.map((item: FieldItem): FieldItem | null => {
+					// Handle sections
+					if (isSectionConfig(item)) {
+						// Check section's own display condition
+						if (item.displayCondition && !item.displayCondition(formData)) {
+							return null;
+						}
+						// Filter fields within the section
+						const filteredSectionFields = filterConditionalFields(item.fields) as (Field | Field[])[];
+						if (filteredSectionFields.length === 0) {
+							return null;
+						}
+						return { ...item, fields: filteredSectionFields };
+					}
+
+					// Handle arrays of fields
 					if (Array.isArray(item)) {
-						const filteredArray: T[] = item.filter((field: T): boolean => {
+						const filteredArray = item.filter((field: Field): boolean => {
 							if (!field.displayCondition) {
 								return true;
 							} else {
@@ -441,37 +654,39 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 							}
 						});
 						return filteredArray.length > 0 ? filteredArray : null;
+					}
+
+					// Handle single fields
+					if (!item.displayCondition) {
+						return item;
 					} else {
-						if (!item.displayCondition) {
-							return item;
-						} else {
-							return item.displayCondition(formData) ? item : null;
-						}
+						return item.displayCondition(formData) ? item : null;
 					}
 				})
-				.filter((item: T | T[] | null): boolean => item !== null) as (T | T[])[];
+				.filter((item: FieldItem | null): item is FieldItem => item !== null);
 		};
 
 		const validateFormFields = async (): Promise<Errors> => {
 			const newErrors: Errors = {};
 			const currentFields = getAllFields();
-			const allFields = flattenArray(currentFields.form);
+			const allFields = flattenFieldsWithSections(currentFields.form);
 
 			// 1) Required field validation
-			allFields.forEach((field): void => {
-				if (field.required && !formData[field.name]) {
-					newErrors[field.name] = `${field.label} is required`;
+			allFields.forEach((field: Field): void => {
+				const fieldName: string | null = getFieldName(field);
+				if ("required" in field && field.required && fieldName && !formData[fieldName]) {
+					newErrors[fieldName] = `${field.label} is required`;
 				}
 			});
 
 			// 2) Field custom validation
 			for (const field of allFields) {
-				if (field.validation) {
-					let result = field.validation(formData[field.name], formData);
-					result = result instanceof Promise ? await result : result;
+				const fieldName: string | null = getFieldName(field);
+				if ("validation" in field && field.validation && fieldName) {
+					let result = field.validation(formData[fieldName]);
 					const { isValid = true, message } = result || {};
-					if (!isValid) {
-						newErrors[field.name] = message;
+					if (!isValid && message) {
+						newErrors[fieldName] = message;
 					}
 				}
 			}
@@ -488,14 +703,48 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				}
 			}
 
-			// Switch to the tab containing the first error
+			// Switch to the tab containing the first error and expand sections with errors
+			const errorFieldNames = Object.keys(newErrors);
 			if (hasTabs && tabs) {
 				for (const tab of tabs) {
-					const tabFields = flattenArray(filterConditionalFields(tab.fields.form));
-					if (tabFields.some((field: ModalFormField) => get(newErrors, field.name))) {
+					const tabFields: Field[] = flattenFieldsWithSections(filterConditionalFields(tab.fields.form));
+					if (
+						tabFields.some((field: Field): string | null => {
+							const fieldName: string | null = getFieldName(field);
+							return fieldName && get(newErrors, fieldName);
+						})
+					) {
 						setActiveTab(tab.key);
+
+						// Expand sections containing errors in this tab
+						const sectionsToExpand = findSectionsWithErrors(
+							filterConditionalFields(tab.fields.form),
+							errorFieldNames
+						);
+						if (sectionsToExpand.length > 0) {
+							setExpandedSections((prev: ExpandedStates): ExpandedStates => {
+								const updated = { ...prev };
+								sectionsToExpand.forEach((key: string): void => {
+									updated[key] = true;
+								});
+								return updated;
+							});
+						}
 						break;
 					}
+				}
+			} else {
+				// No tabs - expand sections with errors in current fields
+				const currentFields = getCurrentFields();
+				const sectionsToExpand = findSectionsWithErrors(currentFields.form, errorFieldNames);
+				if (sectionsToExpand.length > 0) {
+					setExpandedSections((prev: ExpandedStates): ExpandedStates => {
+						const updated = { ...prev };
+						sectionsToExpand.forEach((key: string): void => {
+							updated[key] = true;
+						});
+						return updated;
+					});
 				}
 			}
 			return newErrors;
@@ -592,27 +841,31 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 		const renderBodyContent = (): JSX.Element => {
 			const currentFields = getCurrentFields();
-			const currentAdditionalFields = getCurrentAdditionalFields();
-			const warnings = warningMessage ? warningMessage(effectiveData) : null;
+			const currentAdditionalFields: ModalViewField[] = getCurrentAdditionalFields();
+			const warnings: WarningMessageConfig[] | null = warningMessage ? warningMessage(effectiveData) : null;
 
-			const renderContentInner = () => (
+			const renderContentInner = (): JSX.Element => (
 				<div className={`modal-content-visible`}>
 					{warnings && warnings.length > 0 && (
 						<>
-							{warnings.map(({ key, message, variant }, idx) => (
-								<Alert key={key ?? idx} variant={variant} className="mb-3">
-									{message}
-								</Alert>
-							))}
+							{warnings.map(
+								({ key, message, variant }: WarningMessageConfig, idx: number): JSX.Element => (
+									<Alert key={key ?? idx} variant={variant} className="mb-3">
+										{message}
+									</Alert>
+								)
+							)}
 						</>
 					)}
 					{isEditing ? (
 						<div>
 							{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
 							<div>
-								{currentFields.form.map((item, index: number) => (
-									<div key={`form-field-${index}`}>{renderFieldGroup(item, index, true)}</div>
-								))}
+								{currentFields.form.map(
+									(item: FieldItem, index: number): JSX.Element => (
+										<div key={`form-field-${index}`}>{renderFieldItem(item, index, true)}</div>
+									)
+								)}
 							</div>
 						</div>
 					) : (
@@ -621,11 +874,13 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 								<Card>
 									<Card.Body>
 										<div>
-											{currentFields.view.map((item, index: number) => (
-												<div key={`view-field-${index}`}>
-													{renderFieldGroup(item, index, false)}
-												</div>
-											))}
+											{currentFields.view.map(
+												(item: FieldItem, index: number): JSX.Element => (
+													<div key={`view-field-${index}`}>
+														{renderFieldItem(item, index, false)}
+													</div>
+												)
+											)}
 										</div>
 									</Card.Body>
 								</Card>
@@ -633,11 +888,13 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 							{currentAdditionalFields && currentAdditionalFields.length > 0 && (
 								<div className="outside-card-content mt-3">
-									{currentAdditionalFields.map((item: ModalViewField, index: number) => (
-										<div key={`outside-field-${index}`} className="mb-3">
-											{renderModalViewField(item, effectiveData, getModalId())}
-										</div>
-									))}
+									{currentAdditionalFields.map(
+										(item: ModalViewField, index: number): JSX.Element => (
+											<div key={`outside-field-${index}`} className="mb-3">
+												{renderModalViewField(item, effectiveData, getModalId())}
+											</div>
+										)
+									)}
 								</div>
 							)}
 						</div>

@@ -36,6 +36,7 @@ import { StyleGuidePage } from "./pages/StylePage";
 import { ConfigProvider } from "./contexts/ConfigContext";
 import { MaintenanceBanner } from "./components/MaintenanceBanner/MaintenanceBanner";
 import { MaintenancePage } from "./pages/MaintenancePage/MaintenancePage";
+import { WhatsNewProvider } from "./contexts/WhatsNewContext";
 
 declare global {
 	interface Window {
@@ -242,15 +243,17 @@ function AppContent(): JSX.Element {
 							<AlertProvider>
 								<ProgressOverlayProvider>
 									<ThemeProvider>
-										{maintenanceMode ? (
-											<MaintenancePage />
-										) : (
-											<ContextMenuProvider>
-												<AppLayout>
-													<AppRoutes />
-												</AppLayout>
-											</ContextMenuProvider>
-										)}
+										<WhatsNewProvider>
+											{maintenanceMode ? (
+												<MaintenancePage />
+											) : (
+												<ContextMenuProvider>
+													<AppLayout>
+														<AppRoutes />
+													</AppLayout>
+												</ContextMenuProvider>
+											)}
+										</WhatsNewProvider>
 									</ThemeProvider>
 									<ToastStack
 										toasts={toastMethods.toasts}

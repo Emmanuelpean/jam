@@ -1,13 +1,5 @@
 export default `<h4>Version 1.2.0</h4>
 
-<h5>Quality of Life Improvements</h5>
-<ul>
-    <li>You can now update your first and last name directly in the user settings page.</li>
-    <li>A new option has been added to the person details page, allowing you to mark individual contacts as recruiters.</li>
-    <li>Badge data (e.g. company) can now be edited or deleted directly via right-click</li>
-    <li>Data export in the user settings now exports scpeculative application data and scraped job data.</li>
-</ul>
-
 <h5>Job Scraping Filters</h5>
 <ul>
     <li>Jobs that are scraped from job alert emails through TOAST can now be filtered out by creating custom filtering rules.</li>
@@ -32,4 +24,28 @@ export default `<h4>Version 1.2.0</h4>
     <li>You can then choose which person you would like to send the email to, and the system will automatically generate a personalised email for that individual.</li>
     <li>The job title is automatically pre-filled in the email content. If the contact you have selected is marked as a recruiter, the company name will also be included in the email.</li>
     <li>All generated emails are automatically signed using the first and last name stored in your user settings.</li>
+</ul>
+
+<h5>TOAST</h5>
+<ul>
+    <li>TOAST (Turn Opportunity Alerts into Structured Tracking) is a premium feature that automates the extraction and organisation of job alert data from various platforms.</li>
+    <li>By automatically forwarding or redirecting job alert emails to a designated address, TOAST parses the content to extract key details such as job title, company, location, and salary.</li>
+    <li>The extracted data is then structured and presented in an easy-to-navigate table on the main dashboard.</li>
+    <li>Furthermore, each job is rated by an LLM based on the user qualifications set on their user page.</li>
+    <li>You can now subscribe to TOAST in your user settings under "Premium". New users can try TOAST for 14 days for free.</li>
+</ul>
+
+<h5>Quality of Life Improvements</h5>
+<ul>
+    <li>You can now update your first and last name directly in the user settings page.</li>
+    <li>A new option has been added to the person details page, allowing you to mark individual contacts as recruiters.</li>
+    <li>Badge data (e.g. company) can now be edited or deleted directly via right-click</li>
+    <li>Data export in the user settings now exports speculative application data and scraped job data.</li>
+    <li>The source of a job can now be specified as Recruiter, Recruitment Company, Aggregator, Aggregator Email or Other.</li>
+    <li>Error message have been improved. Right clicking on error toast messages allows the user to send an email to JAM support.</li>
+    <li>Dark mode has been added.</li>
+    <li>The user settings have been reworked.</li>
+    <li>The AI prompt used to rate scraped jobs is now displayed in the scraped job modal.</li>
+    <li>User accounts can now be deleted in the user settings.</li>
+    <li>Jobs with a Rejected, Offered, or Withdrawn application status are not shown in the Needs Chase table</li>
 </ul>`;
