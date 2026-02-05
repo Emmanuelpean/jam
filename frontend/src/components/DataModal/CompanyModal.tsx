@@ -1,13 +1,13 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, ValidationErrors } from "./DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
-import { tableColumns } from "../rendering/view/TableColumns";
+import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { CompanyData, CompanyDataTransform } from "../../services/schemas/DataTables";
 
 export const CompanyModal = forwardRef<DataModalHandle, JamDataModalProps>(
-	({ size = "lg" }: JamDataModalProps, ref) => {
+	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 
 		const fields = {
@@ -24,21 +24,23 @@ export const CompanyModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			view: [modalViewFields.name({ isTitle: true }), modalViewFields.url(), [modalViewFields.description()]],
 		};
 
+		const jobTableColumns: TableColumn[] = [
+			tableColumns.titleColumn(),
+			tableColumns.locationBadgeColumn(),
+			tableColumns.applicationStatusColumn(),
+			tableColumns.createdAtColumn(),
+		];
 		const additionalFields: ModalViewField[] = [
 			modalViewFields.accordionJobTableCompany({
-				columns: [
-					tableColumns.titleColumn(),
-					tableColumns.locationBadgeColumn(),
-					tableColumns.applicationStatusColumn(),
-					tableColumns.createdAtColumn(),
-				],
-				helpText: "List of jobs from this company.",
+				columns: jobTableColumns,
+				helpText: "Jobs from this company.",
 			}),
 			modalViewFields.accordionPersonTable({
-				helpText: "List of persons working at this company.",
+				helpText: "Persons working at this company.",
 			}),
 			modalViewFields.accordionRecruitedJobTableCompany({
-				helpText: "List of jobs recruited by this company.",
+				columns: jobTableColumns,
+				helpText: "Jobs shared with you by this recruitment company.",
 			}),
 		];
 
