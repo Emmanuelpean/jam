@@ -8,7 +8,7 @@ import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { LocationData, LocationDataTransform } from "../../services/schemas/DataTables";
 
 export const LocationModal = forwardRef<DataModalHandle, JamDataModalProps>(
-	({ size = "lg" }: JamDataModalProps, ref) => {
+	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const { countries } = useFormOptions();
 		const dataContext: DataContextValue = useDataContext();
 
@@ -38,7 +38,7 @@ export const LocationModal = forwardRef<DataModalHandle, JamDataModalProps>(
 					tableColumns.typeColumn(),
 					tableColumns.noteColumn(),
 				],
-				helpText: "List of interviews at this location.",
+				helpText: "Interviews at this location.",
 			}),
 		];
 
@@ -57,7 +57,7 @@ export const LocationModal = forwardRef<DataModalHandle, JamDataModalProps>(
 						"Please fill in at least one field (city, postcode, or country)";
 			}
 
-			// Check if the location already exist
+			// Check if the location already exists
 			if (Object.keys(errors).length === 0) {
 				const duplicates: LocationData[] = dataContext.locations.filter((location: LocationData): boolean => {
 					const cityMatch: boolean =
@@ -70,7 +70,7 @@ export const LocationModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				});
 
 				if (duplicates.length > 0) {
-					const duplicateName = duplicates[0]!.name;
+					const duplicateName: string = duplicates[0]!.name;
 					errors.city =
 						errors.postcode =
 						errors.country =

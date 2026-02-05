@@ -19,10 +19,10 @@ export const AggregatorModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 		const additionalFields: ModalViewField[] = [
 			modalViewFields.accordionJobTableAggregator({
-				helpText: "List of jobs found with this job aggregator.",
+				helpText: "Jobs found with this job aggregator.",
 			}),
 			modalViewFields.accordionJobApplicationTable({
-				helpText: "List of job applications made using this job aggregator.",
+				helpText: "Job applications made using this job aggregator.",
 			}),
 		];
 

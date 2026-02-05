@@ -35,13 +35,13 @@ export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 		const additionalFields: ModalViewField[] = [
 			modalViewFields.accordionInterviewTablePerson({
-				helpText: "List of interviews attended by this person.",
+				helpText: "Interviews attended by this person.",
 			}),
 			modalViewFields.accordionJobTablePerson({
-				helpText: "List of jobs associated with this person.",
+				helpText: "Jobs associated with this person as a contact.",
 			}),
 			modalViewFields.accordionRecruitedJobTablePerson({
-				helpText: "List of jobs recruited by this person.",
+				helpText: "Jobs shared with you by this person.",
 			}),
 		];
 
