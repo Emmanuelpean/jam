@@ -745,6 +745,32 @@ export const RenderViewFieldWithContext: React.FC<{
 	}
 };
 
+export const IsViewNull = (
+	dataContext: DataContextValue,
+	token: string,
+	field: ViewField,
+	item: any,
+	id: string
+): boolean => {
+	let rendered: ReactNode;
+	if (field.render) {
+		const renderParams: RenderParams = {
+			item: item,
+			view: false,
+			id: `${id}-${field.key}`,
+			columns: field.columns,
+			helpText: field.helpText,
+			dataContext: dataContext,
+			token: token,
+		};
+		rendered = field.render(renderParams);
+	} else {
+		rendered = item?.[field.key];
+	}
+
+	return rendered == null;
+};
+
 const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 	const [data, setData] = useState<ScrapedJobData[] | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);

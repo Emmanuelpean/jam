@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, JSX } from "react";
 import { HelpBubble } from "../widgets/HelpBubble";
+import "./Accordion.scss";
 
 interface GenericAccordionProps<T = any> {
 	title: string;
@@ -17,8 +18,8 @@ export const Accordion = <T,>({
 	icon,
 	defaultOpen = false,
 	helpText,
-}: GenericAccordionProps<T>) => {
-	const [isOpen, setIsOpen] = React.useState(defaultOpen);
+}: GenericAccordionProps<T>): JSX.Element => {
+	const [isOpen, setIsOpen] = useState(defaultOpen);
 
 	return (
 		<div className="simple-accordion" style={{ paddingLeft: "10px", paddingRight: "10px" }}>

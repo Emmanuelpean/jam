@@ -78,9 +78,6 @@ export interface GenericTableProps {
 	showSearch?: boolean;
 	showAdd?: boolean;
 
-	// Import mode configuration
-	onImportSuccess?: (importedItem: any) => Promise<any>;
-
 	// Additional content
 	children?: (data: any[]) => ReactNode;
 	toolbarAddon?: React.ReactNode;
@@ -104,7 +101,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	showSearch = true,
 	showAdd = true,
 	initialData = {},
-	onImportSuccess,
 	children,
 	menuItems,
 	toolbarAddon,
@@ -329,13 +325,11 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		return result;
 	};
 
-	const handleSuccess = (importedItem: any): void => {
-		onImportSuccess?.(importedItem).then((): void => {
-			if (isServerPagination) {
-				fetchData().then((): null => null);
-			}
-			showToastSuccess("Job imported successfully.");
-		});
+	const handleSuccess = (): void => {
+		if (isServerPagination) {
+			fetchData().then((): null => null);
+		}
+		showToastSuccess("Job imported successfully.");
 	};
 
 	const handleDeleteSuccess = (): void => {
@@ -778,7 +772,13 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				)}
 
 				{children ? children(data) : null}
-				<Modal ref={modalRef} onSuccess={handleSuccess} onDelete={handleDeleteSuccess} size={modalSize} {...modalProps} />
+				<Modal
+					ref={modalRef}
+					onSuccess={handleSuccess}
+					onDelete={handleDeleteSuccess}
+					size={modalSize}
+					{...modalProps}
+				/>
 			</div>
 			<FollowUpModal ref={followUpModalRef} />
 		</>

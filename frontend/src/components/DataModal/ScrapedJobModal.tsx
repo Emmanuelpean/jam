@@ -3,6 +3,7 @@ import DataModal, {
 	DataModalHandle,
 	Fields,
 	JamDataModalProps,
+	SectionConfig,
 	ValidationErrors,
 	WarningMessageConfig,
 } from "./DataModal";
@@ -15,14 +16,17 @@ import { LocationModal } from "./LocationModal";
 import { KeywordModal } from "./KeywordModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
-import { DataContextValue, useDataContext } from "../../contexts/DataContext";
-import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
+import { DataContextValue, JamData, useDataContext } from "../../contexts/DataContext";
+import { EnrichedJobData, JobData, JobDataTransform, LocationDataTransform } from "../../services/schemas/DataTables";
 import { ScrapedJobData, ScrapedJobUpdate } from "../../services/schemas/Services";
 import { useConfig } from "../../contexts/ConfigContext";
+import { convertToEndOfDay } from "../../utils/TimeUtils";
+import { ApiResponse } from "../../services/api/Base";
 
 export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
-	({ size = "xl", onSuccess, onDelete, canEdit = true }: JamDataModalProps, ref): JSX.Element => {
+	({ size = "xl", onDelete, onSuccess: parentOnSuccess, canEdit = true }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
+		const { addEntity } = useDataContext();
 		const { config } = useConfig();
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const locationModalRef = useRef<DataModalHandle>(null);
@@ -37,50 +41,130 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				...data,
 				company_id: data.company ? findClosestOption(companies, data.company) : null,
 				location_id: data.location ? findClosestOption(locations, data.location) : null,
-				aggregator_id: data.platform ? findExactOption(aggregators, data.platform) : null,
+				source_aggregator_id: data.platform ? findExactOption(aggregators, data.platform) : null,
+				source_type: "aggregator_email",
 			};
 		};
 
 		const jobFormFields: Fields = [
-			modalViewFields.jobRating(),
-			formFields.jobTitle({ placeholder: "Python Software Engineer" }),
-			formFields.description({
-				placeholder: "",
-				autoHeight: true,
-			}),
-			[
-				formFields.scrapedCompany(companies, companyModalRef, (scrapedJob: ScrapedJobData) => ({
-					name: scrapedJob.company,
-				})),
-				formFields.url({
-					label: "Job URL",
-					placeholder: "https://linkedin.com/jobs/453635",
-					required: true,
-				}),
-			],
-			[
-				formFields.scrapedLocation(locations, locationModalRef, (scrapedJob: ScrapedJobData) => ({
-					postcode: scrapedJob.location_postcode,
-					city: scrapedJob.location_city,
-					country: scrapedJob.location_country,
-				})),
-				formFields.attendanceType(),
-			],
-			[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
-			[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
-			[
-				formFields.personalRating(),
-				formFields.deadline(),
-				formFields.aggregator(aggregators, aggregatorModalRef, (scrapedJob: ScrapedJobData) => ({
-					name: scrapedJob.platform ? capitalise(scrapedJob.platform) : undefined,
-				})),
-			],
-			formFields.note({
-				placeholder:
-					"This role offers a chance to apply Python expertise to build scalable solutions " +
-					"while exploring opportunities for growth in automation, data analysis, and collaborative software development.",
-			}),
-			modalViewFields.scrapedLocationMap(),
+			{
+				type: "section",
+				key: "basic-info",
+				title: "Basic Information",
+				icon: "bi-briefcase",
+				fields: [
+					modalViewFields.jobRating(),
+					formFields.jobTitle({ placeholder: "Python Software Engineer" }),
+					[
+						formFields.scrapedCompany(companies, companyModalRef, (scrapedJob: ScrapedJobData) => ({
+							name: scrapedJob.company,
+						})),
+						formFields.url({
+							label: "Job URL",
+							placeholder: "https://linkedin.com/jobs/453635",
+							required: true,
+						}),
+					],
+				],
+			} as SectionConfig,
+
+			{
+				type: "section",
+				key: "location",
+				title: "Location",
+				icon: "bi-geo-alt",
+				fields: [
+					formFields.scrapedLocation(
+						locations,
+						locationModalRef,
+						(scrapedJob: ScrapedJobData): LocationDataTransform => ({
+							postcode: scrapedJob.location_postcode,
+							city: scrapedJob.location_city,
+							country: scrapedJob.location_country,
+						})
+					),
+					formFields.attendanceType(),
+					modalViewFields.scrapedLocationMap(),
+				],
+			} as SectionConfig,
+
+			{
+				type: "section",
+				key: "compensation",
+				title: "Compensation & Priority",
+				icon: "bi-currency-pound",
+				fields: [
+					[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
+					[formFields.personalRating(), formFields.deadline()],
+				],
+			} as SectionConfig,
+
+			{
+				type: "section",
+				key: "source",
+				title: "Source",
+				icon: "bi-search",
+				fields: [
+					[
+						formFields.sourceType(),
+						formFields.aggregator(
+							aggregators,
+							aggregatorModalRef,
+							(scrapedJob: ScrapedJobData) => ({
+								name: scrapedJob.platform ? capitalise(scrapedJob.platform) : undefined,
+							}),
+							null,
+							{
+								name: "source_aggregator_id",
+								displayCondition: (formData: JobDataTransform): boolean => {
+									return ["aggregator", "aggregator_email"].includes(
+										formData.source_type ? formData.source_type : ""
+									);
+								},
+							}
+						),
+						formFields.recruiter(persons, personModalRef, null, null, {
+							displayCondition: (formData: JobDataTransform): boolean => {
+								return formData.source_type ? formData.source_type === "recruiter" : false;
+							},
+						}),
+						formFields.company(companies, companyModalRef, null, null, {
+							name: "recruitment_company_id",
+							displayCondition: (formData: JobDataTransform): boolean => {
+								return formData.source_type ? formData.source_type === "recruitment_company" : false;
+							},
+						}),
+					],
+				],
+			} as SectionConfig,
+
+			{
+				type: "section",
+				key: "tags-contacts",
+				title: "Keywords & Contacts",
+				icon: "bi-tags",
+				fields: [
+					[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
+				],
+			} as SectionConfig,
+
+			{
+				type: "section",
+				key: "details",
+				title: "Details",
+				icon: "bi-card-text",
+				fields: [
+					formFields.description({
+						placeholder: "",
+						autoHeight: true,
+					}),
+					formFields.note({
+						placeholder:
+							"This role offers a chance to apply Python expertise to build scalable solutions " +
+							"while exploring opportunities for growth in automation, data analysis, and collaborative software development.",
+					}),
+				],
+			} as SectionConfig,
 		];
 
 		const viewFields: Fields = [
@@ -163,6 +247,31 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 		const transformData = (_scrapedJob: ScrapedJobData): ScrapedJobUpdate => {
 			return { is_imported: true };
+		};
+
+		const onSuccess = async (formData: JobData): Promise<any> => {
+			const jobData: Partial<JobDataTransform> = {
+				title: formData.title.trim(),
+				description: formData.description?.trim() || null,
+				note: formData.note?.trim() || null,
+				url: formData.url?.trim() || null,
+				salary_min: formData.salary_min || null,
+				salary_max: formData.salary_max || null,
+				salary_currency: formData.salary_currency || null,
+				personal_rating: formData.personal_rating || null,
+				company_id: formData.company_id || null,
+				location_id: formData.location_id || null,
+				source_type: formData.source_type || null,
+				source_aggregator_id: formData.source_aggregator_id || null,
+				recruiter_id: formData.recruiter_id || null,
+				recruitment_company_id: formData.recruitment_company_id || null,
+				deadline: formData.deadline ? convertToEndOfDay(formData.deadline) : null,
+				keywords: formData.keywords || [],
+				contacts: formData.contacts || [],
+				attendance_type: formData.attendance_type?.trim() || null,
+			};
+			const result: ApiResponse<JamData> = await addEntity("job", jobData);
+			parentOnSuccess?.(result);
 		};
 
 		return (

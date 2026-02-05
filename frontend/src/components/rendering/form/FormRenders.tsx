@@ -98,6 +98,11 @@ export const formFields = {
 		label: "URL",
 		type: "url",
 		placeholder: "https://...",
+		validation: (value: string) => {
+			if (value && !value.includes(".")) {
+				return { isValid: false, message: "Please enter a valid URL" };
+			}
+		},
 		...overrides,
 	}),
 

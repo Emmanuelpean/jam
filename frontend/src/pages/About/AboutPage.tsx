@@ -1,4 +1,4 @@
-import React, { JSX, useState } from "react";
+import React, { JSX, useState, useRef } from "react";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import packageJson from "../../../package.json";
 import Container from "react-bootstrap/Container";
@@ -11,6 +11,7 @@ import v100 from "../../releaseNotes/V1_0_0";
 import v110 from "../../releaseNotes/V1_1_0";
 import v120 from "../../releaseNotes/V1_2_0";
 import { useWhatsNew } from "../../contexts/WhatsNewContext";
+import { HelpBubble } from "../../components/rendering/widgets/HelpBubble";
 
 interface Feature {
 	icon: string;
@@ -26,8 +27,6 @@ interface ReleaseNoteAccordionProps {
 }
 
 const ReleaseNoteAccordion = ({ version, content, isOpen, onToggle }: ReleaseNoteAccordionProps): JSX.Element => {
-	const contentRef = React.useRef<HTMLDivElement>(null);
-
 	return (
 		<div className="simple-accordion mb-2" style={{ paddingLeft: "10px", paddingRight: "10px" }}>
 			<div
@@ -41,20 +40,22 @@ const ReleaseNoteAccordion = ({ version, content, isOpen, onToggle }: ReleaseNot
 				<i className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"} text-muted`}></i>
 			</div>
 			<div
-				ref={contentRef}
 				style={{
-					maxHeight: isOpen ? `${contentRef.current?.scrollHeight}px` : "0",
-					overflow: "hidden",
-					transition: "max-height 0.3s ease-in-out",
+					display: "grid",
+					gridTemplateRows: isOpen ? "1fr" : "0fr",
+					transition: "grid-template-rows 0.3s ease-in-out",
 				}}
 			>
-				<div className="simple-accordion-content" style={{ margin: "10px" }}>
-					<div className="release-notes-content" dangerouslySetInnerHTML={{ __html: content }} />
+				<div style={{ overflow: "hidden" }}>
+					<div className="simple-accordion-content" style={{ margin: "10px" }}>
+						<div className="release-notes-content" dangerouslySetInnerHTML={{ __html: content }} />
+					</div>
 				</div>
 			</div>
 		</div>
 	);
 };
+
 const AboutPage = (): JSX.Element => {
 	const [openVersion, setOpenVersion] = useState<string | null>(null);
 	const [acknowledgementsOpen, setAcknowledgementsOpen] = useState<boolean>(false);
@@ -276,7 +277,10 @@ const AboutPage = (): JSX.Element => {
 													{ name: "React", url: "https://react.dev" },
 													{ name: "Bootstrap", url: "https://getbootstrap.com" },
 													{ name: "Bootstrap Icons", url: "https://icons.getbootstrap.com" },
-													{ name: "React Bootstrap", url: "https://react-bootstrap.github.io" },
+													{
+														name: "React Bootstrap",
+														url: "https://react-bootstrap.github.io",
+													},
 													{ name: "Recharts", url: "https://recharts.org" },
 													{ name: "Leaflet", url: "https://leafletjs.com" },
 													{ name: "React Router", url: "https://reactrouter.com" },
@@ -290,7 +294,10 @@ const AboutPage = (): JSX.Element => {
 													{ name: "FastAPI", url: "https://fastapi.tiangolo.com" },
 													{ name: "SQLAlchemy", url: "https://www.sqlalchemy.org" },
 													{ name: "Pydantic", url: "https://docs.pydantic.dev" },
-													{ name: "Beautiful Soup", url: "https://www.crummy.com/software/BeautifulSoup" },
+													{
+														name: "Beautiful Soup",
+														url: "https://www.crummy.com/software/BeautifulSoup",
+													},
 													{ name: "Gunicorn", url: "https://gunicorn.org" },
 													{ name: "PostgreSQL", url: "https://www.postgresql.org" },
 												],
@@ -306,10 +313,7 @@ const AboutPage = (): JSX.Element => {
 											},
 										].map((section) => (
 											<div key={section.title} className="mb-4">
-												<h5
-													className="fw-bold mb-3"
-													style={{ color: "var(--primary-mid)" }}
-												>
+												<h5 className="fw-bold mb-3" style={{ color: "var(--primary-mid)" }}>
 													{section.title}
 												</h5>
 												<div className="d-flex flex-wrap gap-2">

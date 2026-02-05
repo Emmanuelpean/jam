@@ -62,3 +62,4 @@
 * [X] Add a button to kick everyone out
 * [ ] Add popup to show the new stuff
 * [ ] Set the scraped job source_type to aggregator_email
+* [ ] Merge the custom accordions
