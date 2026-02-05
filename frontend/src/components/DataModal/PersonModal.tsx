@@ -40,6 +40,9 @@ export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			modalViewFields.accordionJobTablePerson({
 				helpText: "List of jobs associated with this person.",
 			}),
+			modalViewFields.accordionRecruitedJobTablePerson({
+				helpText: "List of jobs recruited by this person.",
+			}),
 		];
 
 		const customValidation = async (formData: PersonData): Promise<ValidationErrors> => {

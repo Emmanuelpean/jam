@@ -413,6 +413,19 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	accordionRecruitedJobTablePerson: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "recruited_jobs",
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "recruiter_id", "Recruited Jobs"),
+		...overrides,
+	}),
+
+	accordionRecruitedJobTableCompany: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "recruited_jobs",
+		render: (param: RenderParams) =>
+			renderFunctions._accordionJobTable(param, "recruitment_company_id", "Recruited Jobs"),
+		...overrides,
+	}),
+
 	accordionJobTableCompany: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "jobs",
 		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "company_id"),

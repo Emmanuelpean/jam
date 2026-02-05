@@ -60,7 +60,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				formFields.company(companies, companyModalRef, null, null, {
 					name: "recruitment_company_id",
 					displayCondition: (formData: JobDataTransform): boolean => {
-						return formData.source_type ? formData.source_type === "recruitment_agency" : false;
+						return formData.source_type ? formData.source_type === "recruitment_company" : false;
 					},
 				}),
 			],

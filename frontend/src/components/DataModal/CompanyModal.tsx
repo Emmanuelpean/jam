@@ -37,6 +37,9 @@ export const CompanyModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			modalViewFields.accordionPersonTable({
 				helpText: "List of persons working at this company.",
 			}),
+			modalViewFields.accordionRecruitedJobTableCompany({
+				helpText: "List of jobs recruited by this company.",
+			}),
 		];
 
 		const transformFormData = (data: CompanyData): CompanyDataTransform => {
