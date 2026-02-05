@@ -65,6 +65,7 @@ export interface RenderParams {
 	helpText?: string; // help text
 	dataContext: DataContextValue; // data context
 	token: string | null;
+	label?: string;
 }
 
 // Base class for Fields (Table or Modal fields)
@@ -639,49 +640,75 @@ export const renderFunctions = {
 
 	// ------------------------------------------------ ACCORDION TABLES -----------------------------------------------
 
-	_accordionJobTable: (param: RenderParams, key: string): ReactNode => {
+	_accordionJobTable: (param: RenderParams, key: string, label?: string): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
 		const jobs: EnrichedJobData[] = filterByKey(ctx.jobs, key, param.item?.id);
-		return (
-			<Accordion title="Jobs" data={jobs} icon={getTableIcon("Jobs")} helpText={param.helpText}>
-				{(data: EnrichedJobData[]) => <JobsTable data={data} columns={param.columns} />}
-			</Accordion>
-		);
+		if (jobs.length > 0) {
+			return (
+				<Accordion title={label || "Jobs"} data={jobs} icon={getTableIcon("Jobs")} helpText={param.helpText}>
+					{(data: EnrichedJobData[]) => <JobsTable data={data} columns={param.columns} />}
+				</Accordion>
+			);
+		} else {
+			return "";
+		}
 	},
 
-	AccordionInterviewTable: (param: RenderParams, key: string): ReactNode => {
+	AccordionInterviewTable: (param: RenderParams, key: string, label?: string): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
 		const interviews: InterviewData[] = filterByKey(ctx.interviews, key, param.item?.id);
-		return (
-			<Accordion title="Interviews" data={interviews} icon={getTableIcon("Interviews")} helpText={param.helpText}>
-				{(data: InterviewData[]) => <InterviewsTable data={data} showAdd={false} columns={param.columns} />}
-			</Accordion>
-		);
+		if (interviews.length > 0) {
+			return (
+				<Accordion
+					title={label || "Interviews"}
+					data={interviews}
+					icon={getTableIcon("Interviews")}
+					helpText={param.helpText}
+				>
+					{(data: InterviewData[]) => <InterviewsTable data={data} showAdd={false} columns={param.columns} />}
+				</Accordion>
+			);
+		} else {
+			return "";
+		}
 	},
 
 	accordionJobApplicationTable: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
 		const jobs: EnrichedJobData[] = filterByKey(ctx.jobs, "application_aggregator_id", param.item?.id);
-		return (
-			<Accordion
-				title="Job Applications"
-				data={jobs}
-				icon={getTableIcon("Job Applications")}
-				helpText={param.helpText}
-			>
-				{(data: EnrichedJobData[]) => <JobsTable data={data} columns={param.columns} />}
-			</Accordion>
-		);
+		if (jobs.length > 0) {
+			return (
+				<Accordion
+					title={param.label || "Job Applications"}
+					data={jobs}
+					icon={getTableIcon("Job Applications")}
+					helpText={param.helpText}
+				>
+					{(data: EnrichedJobData[]) => <JobsTable data={data} columns={param.columns} />}
+				</Accordion>
+			);
+		} else {
+			return "";
+		}
 	},
 
 	AccordionPersonTable: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
 		const persons: PersonData[] = filterByKey(ctx.persons, "company_id", param.item?.id);
-		return (
-			<Accordion title="Persons" data={persons} icon={getTableIcon("Persons")} helpText={param.helpText}>
-				{(data: PersonData[]) => <PersonTable data={data} columns={param.columns} />}
-			</Accordion>
-		);
+		if (persons.length > 0) {
+			return (
+				<Accordion
+					title={param.label || "Persons"}
+					data={persons}
+					icon={getTableIcon("People")}
+					helpText={param.helpText}
+				>
+					{(data: PersonData[]) => <PersonTable data={data} columns={param.columns} />}
+				</Accordion>
+			);
+		} else {
+			return "";
+		}
 	},
 
 	accordionScrapedJobTable: (param: RenderParams) => <AccordionScrapedJobTable param={param} />,
@@ -711,7 +738,7 @@ export const RenderViewFieldWithContext: React.FC<{
 		rendered = item?.[field.key];
 	}
 
-	if (rendered !== null && rendered !== undefined && rendered !== "") {
+	if (rendered !== null && rendered !== undefined) {
 		return <>{rendered}</>;
 	} else {
 		return <span className="text-muted">Not Provided</span>;
