@@ -28,7 +28,7 @@ sys.path.insert(0, backend_path)
 
 import time
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
@@ -500,34 +500,65 @@ class BaseUtils(object):
         timeout: float = 10.0,
         enabled=True,
     ) -> WebElement:
-        """Get an element by its ID.
+        """Get an element by its ID, with retry on stale element references.
         :param element_id: ID of the element to get
         :param selector: Selector to use for finding the element
         :param timeout: How long to wait before raising an error
         :param enabled: Whether to wait for the element to be enabled"""
 
         time.sleep(0.1)
-        try:
-            wait = WebDriverWait(self.driver, timeout)
-            if enabled:
-                element = wait.until(ec.element_to_be_clickable((selector, element_id)))
-            else:
-                element = wait.until(ec.presence_of_element_located((selector, element_id)))
-            ActionChains(self.driver).move_to_element(element).perform()
-            return element
-        except Exception:
-            all_ids = self.get_all_element_ids()
+        stale_retries = 3
+        for attempt in range(stale_retries):
+            try:
+                wait = WebDriverWait(self.driver, timeout, ignored_exceptions=[StaleElementReferenceException])
+                if enabled:
+                    element = wait.until(ec.element_to_be_clickable((selector, element_id)))
+                else:
+                    element = wait.until(ec.presence_of_element_located((selector, element_id)))
+                ActionChains(self.driver).move_to_element(element).perform()
+                return element
+            except StaleElementReferenceException:
+                if attempt < stale_retries - 1:
+                    print(f"  ⚠ Stale element '{element_id}', retrying ({attempt + 1}/{stale_retries})...")
+                    time.sleep(0.5)
+                    continue
+                raise
+            except Exception:
+                all_ids = self.get_all_element_ids()
 
-            # If element exists in DOM, provide diagnostic info
-            if element_id in all_ids:
-                element = self.driver.find_element(selector, element_id)
-                diagnostics = self._get_element_diagnostics(element)
-                raise AssertionError(
-                    f"Element '{element_id}' exists in DOM but failed to become clickable.\n"
-                    f"Diagnostics:\n{diagnostics}"
-                )
-            else:
-                raise AssertionError(f"Could not find element {element_id}\n" f"Possible IDs: {all_ids}")
+                # If element exists in DOM, provide diagnostic info
+                if element_id in all_ids:
+                    element = self.driver.find_element(selector, element_id)
+                    diagnostics = self._get_element_diagnostics(element)
+                    raise AssertionError(
+                        f"Element '{element_id}' exists in DOM but failed to become clickable.\n"
+                        f"Diagnostics:\n{diagnostics}"
+                    )
+                else:
+                    raise AssertionError(f"Could not find element {element_id}\n" f"Possible IDs: {all_ids}")
+
+    def click_element(
+        self,
+        element_id: str,
+        selector: str = By.ID,
+        timeout: float = 10.0,
+    ) -> None:
+        """Find and click an element, retrying if the element becomes stale between find and click.
+        :param element_id: ID of the element to click
+        :param selector: Selector to use for finding the element
+        :param timeout: How long to wait before raising an error"""
+
+        for attempt in range(3):
+            try:
+                element = self.get_element(element_id, selector, timeout)
+                element.click()
+                return
+            except StaleElementReferenceException:
+                if attempt < 2:
+                    print(f"  ⚠ Stale on click '{element_id}', retrying ({attempt + 1}/3)...")
+                    time.sleep(0.5)
+                    continue
+                raise
 
     def check_element_exists(
         self,
@@ -2202,19 +2233,15 @@ class BaseTest(BaseUtils):
         t1 = time.perf_counter()
         print(f"  ⏱ generate JWT: {t1 - login_start:.3f}s")
 
-        # Inject token into localStorage — must be on the same origin first
-        self.driver.get(self.frontend_base_url)
+        # Inject token into localStorage — browser is already on the same origin from setup_method
         self.driver.execute_script(f'window.localStorage.setItem("token", "{token}");')
         t2 = time.perf_counter()
-        print(f"  ⏱ inject token + initial page load: {t2 - t1:.3f}s")
+        print(f"  ⏱ inject token: {t2 - t1:.3f}s")
 
         # Navigate to the target page — React will pick up the token from localStorage
         self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
         self.wait_for_page(self.page_url)
-        t3 = time.perf_counter()
-        print(f"  ⏱ navigate to {self.page_url}: {t3 - t2:.3f}s")
-
-        print(f"  ⏱ login() TOTAL: {time.perf_counter() - login_start:.3f}s")
+        self.wait_for_disappear("loading-spinner")
 
     # ---------------------------------------------------- DATABASE ----------------------------------------------------
 
