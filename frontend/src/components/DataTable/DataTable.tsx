@@ -22,7 +22,7 @@ import {
 } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { MenuItem } from "../ContextMenu/ContextMenu";
-import LoadingSpinner from "../spinner/Spinner";
+import LoadingSpinner from "../Spinner/Spinner";
 import { DataModalHandle, modalModes } from "../DataModal/DataModal";
 import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
 import "./DataTable.scss";

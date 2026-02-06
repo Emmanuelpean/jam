@@ -1,3 +1,7 @@
+import followupGif from "../assets/demo_gifs/followup_email_demo.gif";
+import speculativeApplicationGif from "../assets/demo_gifs/speculative_application_demo.gif";
+import scrapingFilterGif from "../assets/demo_gifs/scraping_filter_demo.gif";
+
 export default `<h4>Version 1.2.0</h4>
 
 <h5>Job Scraping Filters</h5>
@@ -10,12 +14,14 @@ export default `<h4>Version 1.2.0</h4>
     <li><strong>Example:</strong> If you do not want to see jobs from a company called XYZ, you can create a filter with the following parameters: Company Name → Equals To → XYZ.</li>
     <li>Filters can be temporarily deactivated or permanently deleted as needed. However, filters that have already been used to exclude specific jobs can only be deactivated rather than deleted. You can view the complete list of jobs that have been filtered out by each filter in the filter details section.</li>
 </ul>
+<img src="${scrapingFilterGif}" alt="Follow-up email demo" width="100%" style="padding: 0 5rem;" />
 
 <h5>Speculative Applications</h5>
 <ul>
     <li>A new dedicated page has been added specifically for tracking speculative and spontaneous job applications.</li>
     <li>Each application entry stores comprehensive details including the company name, the date and time of submission, the email address used to contact the company, a list of relevant contacts at the organisation, and any additional notes you wish to record.</li>
 </ul>
+<img src="${speculativeApplicationGif}" alt="Follow-up email demo" width="100%" style="padding: 0 5rem;" />
 
 <h5>Follow-Up Email Generator</h5>
 <ul>
@@ -25,6 +31,7 @@ export default `<h4>Version 1.2.0</h4>
     <li>The job title is automatically pre-filled in the email content. If the contact you have selected is marked as a recruiter, the company name will also be included in the email.</li>
     <li>All generated emails are automatically signed using the first and last name stored in your user settings.</li>
 </ul>
+<img src="${followupGif}" alt="Follow-up email demo" width="100%" style="padding: 0 5rem;" />
 
 <h5>TOAST</h5>
 <ul>

@@ -430,10 +430,11 @@ class BaseUtils(object):
     def wait_for_page(self, page_url: str) -> None:
         """Wait for the dashboard to load"""
 
+        url = f"{self.frontend_base_url}/{page_url}"
         try:
-            self.wait.until(ec.url_to_be(f"{self.frontend_base_url}/{page_url}"))
+            self.wait.until(ec.url_to_be(url))
         except:
-            raise AssertionError("Failed to wait for URL. Current URL: " + self.driver.current_url)
+            raise AssertionError(f"Failed to wait for URL {url}. Current URL: {self.driver.current_url}")
 
     def advance_browser_clock_days(self, days: int) -> None:
         self.driver.execute_script(
@@ -1877,7 +1878,7 @@ class BaseTest(BaseUtils):
     base_utils = None  # base utils
 
     # Parameters needed
-    page_url = ""  # url of the page to test (not including the base url)
+    page_url = "dashboard"  # url of the page to test (not including the base url)
     user_index = 1  # index of the user to use for the test
 
     _test_name = ""
@@ -1961,7 +1962,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -2126,7 +2127,8 @@ class BaseTest(BaseUtils):
         except:
             pass
         self.wait_for_page("dashboard")
-        self.go_to_page(f"{self.page_url}")
+        if self.page_url != "dashboard":
+            self.wait_for_page(self.page_url)
 
     # ---------------------------------------------------- DATABASE ----------------------------------------------------
 
