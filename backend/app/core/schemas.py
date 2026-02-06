@@ -162,6 +162,7 @@ class UserOut(Out):
     is_demo: bool
     is_verified: bool
     last_login: dt.datetime | None
+    app_version: str | None
     first_name: str | None = None
     last_name: str | None = None
     name: str | None = None
@@ -194,6 +195,7 @@ class CurrentUserUpdate(BaseModel):
     password: str | None = None
     first_name: str | None = None
     last_name: str | None = None
+    app_version: str | None = None
     preferences: UserPreferencesUpdate | None = None
     premium: CurrentUserPremiumDetailsUpdate | None = None
 
