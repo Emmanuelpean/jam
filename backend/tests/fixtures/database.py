@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy import create_engine, orm, Engine
 from sqlalchemy_utils import database_exists, create_database, drop_database
 
-from app.config import settings
+from app.database import create_db_url
 from tests.utils.seed_database import reset_database
 from tests.utils.test_data.geolocation import mock_geocoding_side_effect
 
@@ -32,10 +32,8 @@ def worker_database_name(worker_id) -> str:
 @pytest.fixture(scope="session")
 def database_url(worker_database_name) -> str:
     """Generate database URL for the worker."""
-    return (
-        f"postgresql://{settings.database_username}:{settings.database_password}@"
-        f"{settings.database_hostname}:{settings.database_port}/{worker_database_name}"
-    )
+
+    return create_db_url(worker_database_name)
 
 
 @pytest.fixture(scope="session")
