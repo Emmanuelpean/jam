@@ -81,9 +81,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 						formFields.aggregator(aggregators, aggregatorModalRef, null, null, {
 							name: "source_aggregator_id",
 							displayCondition: (formData: JobDataTransform): boolean => {
-								return ["aggregator", "aggregator_email"].includes(
-									formData.source_type ? formData.source_type : ""
-								);
+								return ["aggregator", "aggregator_email"].includes(formData.source_type || "");
 							},
 						}),
 						formFields.recruiter(persons, personModalRef, null, null, {
@@ -103,7 +101,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 			{
 				type: "section",
 				key: "tags-contacts",
-				title: "Keywords & Contacts",
+				title: "Tags & Contacts",
 				icon: "bi-tags",
 				fields: [
 					[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
@@ -164,11 +162,9 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				icon: "bi-search",
 				fields: [
 					[
-						modalViewFields.sourceBadge({
+						modalViewFields.sourceAggregatorBadge({
 							displayCondition: (data: JobData): boolean => {
-								return ["aggregator", "aggregator_email"].includes(
-									data.source_type ? data.source_type : ""
-								);
+								return ["aggregator", "aggregator_email"].includes(data.source_type || "");
 							},
 						}),
 						modalViewFields.recruiterBadge({
@@ -183,7 +179,10 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 						}),
 						modalViewFields.sourceType({
 							displayCondition: (data: JobData): boolean => {
-								return data.source_type ? data.source_type === "other" : false;
+								return (
+									data.source_type === null ||
+									(data.source_type ? data.source_type === "other" : false)
+								);
 							},
 						}),
 						modalViewFields.url({ label: "Job URL" }),
@@ -193,7 +192,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 			{
 				type: "section",
 				key: "tags-contacts",
-				title: "Keywords & Contacts",
+				title: "Tags & Contacts",
 				icon: "bi-tags",
 				fields: [
 					[
@@ -235,6 +234,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 							"The application process involves submitting an online application, followed by technical " +
 							"assessments and interviews to evaluate coding skills, problem-solving ability, and cultural fit.",
 						name: "application_note",
+						label: "",
 					}),
 				],
 			} as SectionConfig,

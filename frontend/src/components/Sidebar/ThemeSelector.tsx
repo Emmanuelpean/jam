@@ -2,8 +2,8 @@ import React, { useState, JSX } from "react";
 import { Theme, THEMES } from "../../utils/Theme";
 import { useAuth } from "../../contexts/AuthContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
-import { DarkModeToggle } from "./DarkModeToggle";
 import { ThemeItem } from "./ThemeItem";
+import { DarkModeToggle } from "./DarkModeToggle";
 
 interface ThemeSelectorProps {
 	currentTheme: string;

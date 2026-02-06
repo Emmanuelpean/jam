@@ -29,7 +29,7 @@ class BaseTablePage(BaseTest):
     columns = []  # table column keys user for search and sorting
     sorting_columns = []  # columns which can be sorted, if empty assume all columns can be sorted
     test_entry_index = 0  # index of the test entry to use for view/edit/delete tests
-    model = None  # database model class for the entry typew
+    model = None  # database model class for the entry type
 
     def setup_function(self, request) -> None:
         """Function called during the setup"""

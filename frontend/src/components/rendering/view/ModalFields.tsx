@@ -98,7 +98,6 @@ export const modalViewFields = {
 
 	applicationNote: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_note",
-		label: "Notes",
 		render: (params: RenderParams) => renderFunctions.applicationNote({ ...params, view: true }),
 		...overrides,
 	}),
@@ -178,7 +177,7 @@ export const modalViewFields = {
 
 	sourceType: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "source_type",
-		label: "Source Type",
+		label: "Source",
 		render: renderFunctions.sourceType,
 		...overrides,
 	}),
@@ -277,7 +276,7 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	sourceBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	sourceAggregatorBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "source",
 		label: "Source Aggregator",
 		render: renderFunctions.SourceBadge,
@@ -286,14 +285,14 @@ export const modalViewFields = {
 
 	recruiterBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "recruiter_id",
-		label: "Recruiter",
+		label: "Source Recruiter",
 		render: renderFunctions.recruiterBadge,
 		...overrides,
 	}),
 
 	recruitmentCompanyBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "recruiter_company_id",
-		label: "Recruitment Company",
+		label: "Source Recruitment Company",
 		render: renderFunctions.recruitmentCompanyBadge,
 		...overrides,
 	}),

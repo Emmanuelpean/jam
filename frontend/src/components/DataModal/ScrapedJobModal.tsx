@@ -141,7 +141,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			{
 				type: "section",
 				key: "tags-contacts",
-				title: "Keywords & Contacts",
+				title: "Tags & Contacts",
 				icon: "bi-tags",
 				fields: [
 					[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],

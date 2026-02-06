@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import threading
+from contextlib import contextmanager
 from typing import Generator, Any
 
 import psutil
@@ -20,6 +21,7 @@ from selenium.webdriver.support.select import Select
 
 from app import models
 from app.config import settings
+from app.core.oauth2 import create_access_token
 
 backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
@@ -407,6 +409,17 @@ def contiguous_subdicts(dictionary: dict) -> list[dict]:
             subdict = {k: dictionary[k] for k in subkeys}
             results.append(subdict)
     return [dict()] + results
+
+
+@contextmanager
+def timed_step(label: str, timings: list | None = None):
+    """Context manager to time a step and optionally record it."""
+    start = time.perf_counter()
+    yield
+    elapsed = time.perf_counter() - start
+    print(f"  ⏱ {label}: {elapsed:.3f}s")
+    if timings is not None:
+        timings.append((label, elapsed))
 
 
 class BaseUtils(object):
@@ -798,13 +811,16 @@ class BaseUtilsClass(BaseUtils):
         self.client = client
 
 
-def format_field(label: str, value: str | None) -> str:
+def format_field(label: str | None, value: str | None) -> str:
     """Format a field for display in a view modal, showing 'Not Provided' for None values.
     :param label: The field label to display
     :param value: The value to display, or None
     :return: Formatted string with label and value or 'Not Provided'"""
 
-    return f"{label}\n{value if value else 'Not Provided'}\n"
+    if label:
+        return f"{label}\n{value if value else 'Not Provided'}\n"
+    else:
+        return f"{value if value else 'Not Provided'}\n"
 
 
 class DataModalUtils(BaseUtilsClass):
@@ -967,7 +983,10 @@ class DataModalUtils(BaseUtilsClass):
         modal = self.wait_for_view_modal()
 
         # Verify modal contains the entry information
-        expected = f"Tag Details\n{entry.name}\nJobs\n({len(entry.jobs)})\nClose\nEdit"
+        expected = f"Tag Details\n{entry.name}\n"
+        if entry.jobs:
+            expected += f"Jobs\n({len(entry.jobs)})\n"
+        expected += "Close\nEdit"
         assert modal.text == expected
 
         # Close modal
@@ -980,10 +999,12 @@ class DataModalUtils(BaseUtilsClass):
         modal = self.wait_for_view_modal()
 
         # Verify modal contains the entry information
-        expected = (
-            f"Aggregator Details\n{entry.name}\nWebsite\n{entry.url.replace('https://', '')}\nJobs\n({len(entry.jobs)})"
-            f"\nJob Applications\n({len(entry.job_applications)})\nClose\nEdit"
-        )
+        expected = f"Aggregator Details\n{entry.name}\nWebsite\n{entry.url.replace('https://', '')}\n"
+        if entry.jobs:
+            expected += f"Jobs\n({len(entry.jobs)})\n"
+        if entry.job_applications:
+            expected += f"Job Applications\n({len(entry.job_applications)})\n"
+        expected += "Close\nEdit"
         assert modal.text == expected
 
         # Close modal
@@ -1003,9 +1024,12 @@ class DataModalUtils(BaseUtilsClass):
             f"Location Details\nCity\n{entry.city}\nPostcode\n{entry.postcode}"
             f"\nCountry\n{entry.country}\n"
             f"Location on Map\n+\n−\nLeaflet | © OpenStreetMap contributors © CARTO\n"
-            f"Jobs\n({len(entry.jobs)})\nInterviews\n({len(entry.interviews)})\n"
-            f"Close\nEdit"
         )
+        if entry.jobs:
+            expected += f"Jobs\n({len(entry.jobs)})\n"
+        if entry.interviews:
+            expected += f"Interviews\n({len(entry.interviews)})\n"
+        expected += "Close\nEdit"
         assert modal.text == expected
 
         # Close modal
@@ -1021,8 +1045,13 @@ class DataModalUtils(BaseUtilsClass):
         # Verify modal contains the entry information
         expected = (
             f"Company Details\n{entry.name}\nWebsite\n{entry.url.replace("https://", "")}"
-            f"\nDescription\n{entry.description}\nJobs\n({len(entry.jobs)})\nPersons\n({len(entry.persons)})\nClose\nEdit"
+            f"\nDescription\n{entry.description}\n"
         )
+        if entry.jobs:
+            expected += f"Jobs\n({len(entry.jobs)})\n"
+        if entry.persons:
+            expected += f"Persons\n({len(entry.persons)})\n"
+        expected += "Close\nEdit"
         assert modal.text == expected
 
         # Close modal
@@ -1037,8 +1066,14 @@ class DataModalUtils(BaseUtilsClass):
             f"Person Details\n{entry.name}\n"
             f"Company\n{entry.company.name.upper()}\nRole\n{entry.role}\n"
             f"Email\n{entry.email}\nPhone\n{entry.phone}\nLinkedIn Profile\nProfile\nRecruiter\n"
-            f"Interviews\n({len(entry.interviews)})\nJobs\n({len(entry.jobs)})\nClose\nEdit"
         )
+        if entry.interviews:
+            expected += f"Interviews\n({len(entry.interviews)})\n"
+        if entry.jobs:
+            expected += f"Jobs\n({len(entry.jobs)})\n"
+        if entry.recruited_jobs:
+            expected += f"Recruited Jobs\n({len(entry.recruited_jobs)})\n"
+        expected += "Close\nEdit"
         assert modal.text == expected
 
         # Close modal
@@ -1119,6 +1154,7 @@ class DataModalUtils(BaseUtilsClass):
         expected = "Job Details\nJob Details\nJob Application"
         if entry.application_status:
             expected += f" {entry.application_status.upper()}"
+        expected += "\nOverview"
         expected += f"\n{entry.title}\n"
 
         company = entry.company.name.upper() if entry.company else None
@@ -1133,28 +1169,46 @@ class DataModalUtils(BaseUtilsClass):
         else:
             expected += format_field("Location", None)
 
+        expected += "Details\n"
         expected += format_field("Description", entry.description)
         expected += format_field("Notes", entry.note)
+
+        expected += "Compensation & Priority\n"
         expected += format_field("Salary Range", self.salary_range(entry))
 
         expected += "Personal Rating\n"
         if not entry.personal_rating:
             expected += "Not Provided\n"
 
-        source = entry.source_aggregator.name.upper() if entry.source_aggregator else None
-        expected += format_field("Source Aggregator", source)
+        deadline = entry.deadline.strftime("%d/%m/%Y") if entry.deadline else None
+        expected += format_field("Application Deadline", deadline)
+
+        expected += "Source & Links\n"
+        if entry.source_type in ["aggregator", "aggregator_email"]:
+            expected += format_field(
+                "Source Aggregator", entry.source_aggregator.name.upper() if entry.source_aggregator else None
+            )
+        elif entry.source_type == "recruiter":
+            expected += format_field("Source Recruiter", entry.recruiter.name.upper() if entry.recruiter else None)
+        elif entry.source_type == "recruitment_company":
+            expected += format_field(
+                "Source Recruitment Company",
+                entry.recruitment_company.name.upper() if entry.recruitment_company else None,
+            )
+        else:
+            expected += format_field("Source", entry.source_type.capitalize() if entry.source_type else None)
 
         url = entry.url.replace("https://", "") if entry.url else None
         expected += format_field("Job URL", url)
 
-        tags = "\n".join([tag.name.upper() for tag in entry.keywords]) if entry.keywords else None
-        expected += format_field("Tags", tags)
+        expected += "Tags & Contacts\n"
+        if entry.keywords:
+            tags = "\n".join([tag.name.upper() for tag in entry.keywords])
+            expected += format_field("Tags", tags)
 
-        contacts = "\n".join([person.name.upper() for person in entry.contacts]) if entry.contacts else None
-        expected += format_field("Contacts", contacts)
-
-        deadline = entry.deadline.strftime("%d/%m/%Y") if entry.deadline else None
-        expected += format_field("Application Deadline", deadline)
+        if entry.contacts:
+            contacts = "\n".join([person.name.upper() for person in entry.contacts])
+            expected += format_field("Contacts", contacts)
 
         expected += "Close\nEdit"
         assert modal.text == expected
@@ -1166,7 +1220,7 @@ class DataModalUtils(BaseUtilsClass):
             expected += f"Job Application {entry.application_status.upper()}\n"
         else:
             expected += "Job Application\n"
-
+        expected += "Application Details\n"
         app_date = entry.application_date.astimezone().strftime("%d/%m/%Y") if entry.application_date else None
         expected += format_field("Application Date" if entry.application_date else "Date", app_date)
 
@@ -1184,7 +1238,8 @@ class DataModalUtils(BaseUtilsClass):
         app_url = entry.application_url.replace("https://", "") if entry.application_url else None
         expected += format_field("Application URL", app_url)
 
-        expected += format_field("Notes", entry.application_note if entry.note else None)
+        expected += "Notes\n"
+        expected += format_field(None, entry.application_note if entry.note else None)
         expected += (
             "Add Interview\n"
             "Date\n"
@@ -1197,9 +1252,8 @@ class DataModalUtils(BaseUtilsClass):
             "Type\n"
             "Notes\n"
             "No Job Application Updates found\n"
-            "Close\n"
-            "Edit"
         )
+        expected += "Close\nEdit"
         assert modal.text == expected
 
         # Close modal
@@ -1217,8 +1271,9 @@ class DataModalUtils(BaseUtilsClass):
 
         expected += format_field("Contact Email", entry.contact_email)
 
-        contacts = "\n".join([person.name.upper() for person in entry.contacts]) if entry.contacts else None
-        expected += format_field("Contacts", contacts)
+        if entry.contacts:
+            contacts = "\n".join([person.name.upper() for person in entry.contacts])
+            expected += format_field("Contacts", contacts)
 
         expected += format_field("Notes", entry.note)
         expected += "Close\nEdit"
@@ -1950,82 +2005,102 @@ class BaseTest(BaseUtils):
         """Set up the test environment before each test with test data"""
 
         self._test_name = request.node.name
+        setup_timings = []
+        setup_start = time.perf_counter()
+        print(f"\n{'='*60}")
+        print(f"SETUP TIMING: {self._test_name}")
+        print(f"{'='*60}")
         try:
-            # Configure Chrome options to disable password prompts
-            chrome_options = Options()
-            prefs = {
-                "profile.password_manager_leak_detection": False,
-                "credentials_enable_service": False,
-                "password_manager_enabled": False,
-                "profile.password_manager_enabled": False,
-                "protocol_handler": {"excluded_schemes": {"mailto": True}},
-                "intl.accept_languages": "en-GB",
-            }
-            chrome_options.add_experimental_option("prefs", prefs)
-            # chrome_options.add_argument("--headless=new")
-            chrome_options.add_argument("--window-size=1960,1080")
-            chrome_options.add_argument("--disable-gpu")
-            chrome_options.add_argument("--no-sandbox")
-            chrome_options.add_argument("--ignore-certificate-errors")
-            chrome_options.add_argument("--disable-dev-shm-usage")
-            chrome_options.add_argument("--lang=en-GB")
+            with timed_step("Chrome options config", setup_timings):
+                # Configure Chrome options to disable password prompts
+                chrome_options = Options()
+                prefs = {
+                    "profile.password_manager_leak_detection": False,
+                    "credentials_enable_service": False,
+                    "password_manager_enabled": False,
+                    "profile.password_manager_enabled": False,
+                    "protocol_handler": {"excluded_schemes": {"mailto": True}},
+                    "intl.accept_languages": "en-GB",
+                }
+                chrome_options.add_experimental_option("prefs", prefs)
+                chrome_options.add_argument("--headless=new")
+                chrome_options.add_argument("--window-size=1960,1080")
+                chrome_options.add_argument("--disable-gpu")
+                chrome_options.add_argument("--no-sandbox")
+                chrome_options.add_argument("--ignore-certificate-errors")
+                chrome_options.add_argument("--disable-dev-shm-usage")
+                chrome_options.add_argument("--lang=en-GB")
 
-            # Enable verbose logging
-            chrome_options.add_argument("--enable-logging")
-            chrome_options.add_argument("--v=1")
-            chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
+                # Enable verbose logging
+                chrome_options.add_argument("--enable-logging")
+                chrome_options.add_argument("--v=1")
+                chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
 
-            self.driver = webdriver.Chrome(options=chrome_options)
-            self.wait = WebDriverWait(self.driver, 10)
-            # Set timezone using CDP
-            self.driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
+            with timed_step("Chrome driver launch", setup_timings):
+                self.driver = webdriver.Chrome(options=chrome_options)
+                self.wait = WebDriverWait(self.driver, 10)
 
-            # Set locale using CDP
-            self.driver.execute_cdp_cmd("Emulation.setLocaleOverride", {"locale": "en-GB"})
+            with timed_step("CDP commands (timezone/locale)", setup_timings):
+                # Set timezone using CDP
+                self.driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
+                # Set locale using CDP
+                self.driver.execute_cdp_cmd("Emulation.setLocaleOverride", {"locale": "en-GB"})
 
-            # Frontend/Backend
-            self.frontend_base_url = test_frontend_server
-            self.backend_base_url = test_backend_server
+            with timed_step("Assign URLs and user/client/db", setup_timings):
+                # Frontend/Backend
+                self.frontend_base_url = test_frontend_server
+                self.backend_base_url = test_backend_server
 
-            # Client/User
-            self.user = test_users[self.user_index]
-            self.client = authorised_clients[self.user_index]
-            self.db = session
+                # Client/User
+                self.user = test_users[self.user_index]
+                self.client = authorised_clients[self.user_index]
+                self.db = session
 
-            modal_entities = [
-                "company",
-                "aggregator",
-                "keyword",
-                "location",
-                "person",
-                "job",
-                "interview",
-                "jobApplicationUpdate",
-                "speculativeApplication",
-                "scrapedJob",
-                "scrapingFilter",
-                "setting",
-            ]
+            with timed_step("Instantiate utility classes (24 objects)", setup_timings):
+                modal_entities = [
+                    "company",
+                    "aggregator",
+                    "keyword",
+                    "location",
+                    "person",
+                    "job",
+                    "interview",
+                    "jobApplicationUpdate",
+                    "speculativeApplication",
+                    "scrapedJob",
+                    "scrapingFilter",
+                    "setting",
+                ]
 
-            shared_kwargs = {
-                "driver": self.driver,
-                "frontend_base_url": self.frontend_base_url,
-                "backend_base_url": self.backend_base_url,
-                "db": self.db,
-                "client": self.client,
-            }
-            for name in modal_entities:
-                setattr(self, f"{name}_modal_utils", DataModalUtils(entry_type=name, **shared_kwargs))
-            for name in modal_entities:
-                setattr(self, f"{name}_table_utils", DataTableUtils(entry_type=name, **shared_kwargs))
+                shared_kwargs = {
+                    "driver": self.driver,
+                    "frontend_base_url": self.frontend_base_url,
+                    "backend_base_url": self.backend_base_url,
+                    "db": self.db,
+                    "client": self.client,
+                }
+                for name in modal_entities:
+                    setattr(self, f"{name}_modal_utils", DataModalUtils(entry_type=name, **shared_kwargs))
+                for name in modal_entities:
+                    setattr(self, f"{name}_table_utils", DataTableUtils(entry_type=name, **shared_kwargs))
 
-            self.auth_utils = AuthentificationUtils(**shared_kwargs)
-            self.user_settings_utils = UserSettingsUtils(**shared_kwargs)
-            self.followup_modal = FollowUpEmailModalUtils(**shared_kwargs)
-            self.confirm_modal = ConfirmModalUtils(**shared_kwargs)
+                self.auth_utils = AuthentificationUtils(**shared_kwargs)
+                self.user_settings_utils = UserSettingsUtils(**shared_kwargs)
+                self.followup_modal = FollowUpEmailModalUtils(**shared_kwargs)
+                self.confirm_modal = ConfirmModalUtils(**shared_kwargs)
 
-            self.driver.get(self.frontend_base_url)
-            self.setup_function(request)
+            with timed_step("Initial page load (driver.get)", setup_timings):
+                self.driver.get(self.frontend_base_url)
+
+            with timed_step("setup_function (subclass hook)", setup_timings):
+                self.setup_function(request)
+
+            total = time.perf_counter() - setup_start
+            print(f"  {'─'*40}")
+            print(f"  ⏱ TOTAL SETUP: {total:.3f}s")
+            # Show top 3 slowest steps
+            sorted_timings = sorted(setup_timings, key=lambda x: x[1], reverse=True)
+            print(f"  Top slowest: {', '.join(f'{name} ({t:.3f}s)' for name, t in sorted_timings[:3])}")
 
         except Exception:
             if hasattr(self, "driver"):
@@ -2115,20 +2190,31 @@ class BaseTest(BaseUtils):
             print(f"⚠️ Could not save screenshot: {e}")
 
     def login(self) -> None:
-        """Helper method to log in to the application"""
+        """Log in by generating a JWT token directly and injecting it into localStorage."""
 
-        self.auth_utils.go_to_login()
-        self.auth_utils.set_email(self.user.email)
-        self.auth_utils.set_password(self.user.plain_password)
-        self.auth_utils.confirm()
-        try:
-            self.get_element("loading-spinner", timeout=2)
-            self.wait_for_disappear("loading-spinner", timeout=2)
-        except:
-            pass
-        self.wait_for_page("dashboard")
-        if self.page_url != "dashboard":
-            self.wait_for_page(self.page_url)
+        login_start = time.perf_counter()
+
+        # Generate JWT directly — no HTTP call, no bcrypt verification
+        token = create_access_token(
+            data={"user_id": self.user.id},
+            token_version=self.user.token_version,
+        )
+        t1 = time.perf_counter()
+        print(f"  ⏱ generate JWT: {t1 - login_start:.3f}s")
+
+        # Inject token into localStorage — must be on the same origin first
+        self.driver.get(self.frontend_base_url)
+        self.driver.execute_script(f'window.localStorage.setItem("token", "{token}");')
+        t2 = time.perf_counter()
+        print(f"  ⏱ inject token + initial page load: {t2 - t1:.3f}s")
+
+        # Navigate to the target page — React will pick up the token from localStorage
+        self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
+        self.wait_for_page(self.page_url)
+        t3 = time.perf_counter()
+        print(f"  ⏱ navigate to {self.page_url}: {t3 - t2:.3f}s")
+
+        print(f"  ⏱ login() TOTAL: {time.perf_counter() - login_start:.3f}s")
 
     # ---------------------------------------------------- DATABASE ----------------------------------------------------
 
