@@ -18,7 +18,7 @@ import { DataModalHandle } from "../../DataModal/DataModal";
 export interface ModalFormField {
 	name: string | string[];
 	secondaryName?: string;
-	label?: string | JSX.Element;
+	label?: string | JSX.Element | null;
 	icon?: string;
 	type: string;
 	required?: boolean;

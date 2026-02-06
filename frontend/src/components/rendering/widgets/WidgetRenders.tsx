@@ -114,12 +114,14 @@ export const renderFormField = (
 
 	return (
 		<Form.Group className="mb-3" id={`${field.name}-form-group`}>
-			<Form.Label>
-				{field.icon && <i className={`${field.icon} me-2 text-muted`}></i>}
-				{field.label}
-				{"required" in field && field.required && <span className="text-danger">*</span>}
-				{field.helpText && <HelpBubble helpText={field.helpText} />}
-			</Form.Label>
+			{field.label && (
+				<Form.Label>
+					{field.icon && <i className={`${field.icon} me-2 text-muted`} aria-hidden="true" />}
+					{field.label}
+					{"required" in field && field.required && <span className="text-danger">*</span>}
+					{field.helpText && <HelpBubble helpText={field.helpText} />}
+				</Form.Label>
+			)}
 			{(() => {
 				switch (field.type) {
 					case "textarea":

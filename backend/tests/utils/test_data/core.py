@@ -30,12 +30,14 @@ USER_DATA = [
         "password": "password3",
         "is_active": False,
         "is_verified": True,
+        "app_version": "10.0.0",
     },
     # Unverified user
     {
         "email": "user5@example.com",
         "password": "password5",
         "is_verified": False,
+        "app_version": "10.0.0",
     },
     # Demo user
     {
@@ -51,6 +53,7 @@ USER_DATA = [
         "password": "test_password",
         "is_verified": True,
         "premium": {"is_active": True},
+        "app_version": "10.0.0",
     },
     # Named users for specific tests
     {
@@ -58,6 +61,7 @@ USER_DATA = [
         "password": "test_password",
         "is_verified": True,
         "premium": {"is_active": True},
+        "app_version": "10.0.0",
     },
     # Demo user
     {
@@ -66,6 +70,7 @@ USER_DATA = [
         "is_verified": True,
         "premium": {"is_active": True},
         "is_demo": True,
+        "app_version": "10.0.0",
     },
     # User with stripe details
     {
@@ -73,6 +78,7 @@ USER_DATA = [
         "password": "password6",
         "is_verified": True,
         "stripe_details": {"customer_id": "cus_test_123", "subscription_id": "sub_id"},
+        "app_version": "10.0.0",
     },
 ]
 
