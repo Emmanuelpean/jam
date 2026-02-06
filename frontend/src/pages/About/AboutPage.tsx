@@ -1,4 +1,4 @@
-import React, { JSX, useState, useRef } from "react";
+import React, { JSX, useState } from "react";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import packageJson from "../../../package.json";
 import Container from "react-bootstrap/Container";
@@ -7,11 +7,8 @@ import Col from "react-bootstrap/Col";
 import Card from "react-bootstrap/Card";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.scss";
-import v100 from "../../releaseNotes/V1_0_0";
-import v110 from "../../releaseNotes/V1_1_0";
-import v120 from "../../releaseNotes/V1_2_0";
+import { releaseNotes as releaseNotesRegistry } from "../../releaseNotes/versions";
 import { useWhatsNew } from "../../contexts/WhatsNewContext";
-import { HelpBubble } from "../../components/rendering/widgets/HelpBubble";
 
 interface Feature {
 	icon: string;
@@ -60,12 +57,16 @@ const AboutPage = (): JSX.Element => {
 	const [openVersion, setOpenVersion] = useState<string | null>(null);
 	const [acknowledgementsOpen, setAcknowledgementsOpen] = useState<boolean>(false);
 	const { showWhatsNew } = useWhatsNew();
-	const releaseNotes: Record<string, any> = {
-		"1.2": v120,
-		"1.1": v110,
-		"1.0": v100,
-	};
-	const versions: string[] = Object.keys(releaseNotes);
+	const versions: string[] = Object.keys(releaseNotesRegistry).sort((a, b) => {
+		const pa = a.split(".").map(Number);
+		const pb = b.split(".").map(Number);
+		for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+			const na = pa[i] ?? 0;
+			const nb = pb[i] ?? 0;
+			if (na !== nb) return nb - na;
+		}
+		return 0;
+	});
 
 	const features: Feature[] = [
 		{
@@ -226,7 +227,7 @@ const AboutPage = (): JSX.Element => {
 										<ReleaseNoteAccordion
 											key={version}
 											version={version}
-											content={releaseNotes[version]}
+											content={releaseNotesRegistry[version]}
 											isOpen={openVersion === version}
 											onToggle={() => setOpenVersion(openVersion === version ? null : version)}
 										/>

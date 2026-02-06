@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
 import { BaseServiceApi, LogResponse, ServiceStatus } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
-import LoadingSpinner from "../../../components/spinner/Spinner";
+import LoadingSpinner from "../../../components/Spinner/Spinner";
 import "./LogViewer.scss";
 import { ApiResponse } from "../../../services/api/Base";
 

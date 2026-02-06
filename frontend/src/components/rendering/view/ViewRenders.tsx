@@ -42,7 +42,7 @@ import {
 import { scrapedJobApi } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import ScrapedJobsTableReadOnly from "../../DataTable/ScrapedJobTableReadOnly";
-import LoadingSpinner from "../../spinner/Spinner";
+import LoadingSpinner from "../../Spinner/Spinner";
 import {
 	AggregatorBadge,
 	CompanyBadge,

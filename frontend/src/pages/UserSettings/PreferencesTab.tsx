@@ -10,8 +10,8 @@ import { ApiResponse } from "../../services/api/Base";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { Theme, THEMES } from "../../utils/Theme";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
-import { DarkModeToggle } from "../../components/sidebar/DarkModeToggle";
-import { ThemeItem } from "../../components/sidebar/ThemeItem";
+import { DarkModeToggle } from "../../components/Sidebar/DarkModeToggle";
+import { ThemeItem } from "../../components/Sidebar/ThemeItem";
 
 interface PreferencesFormData {
 	default_currency: string;

@@ -12,7 +12,7 @@ import {
 	YAxis,
 } from "recharts";
 import { toDdMmYyyyHhMm } from "../../utils/TimeUtils";
-import LoadingSpinner from "../spinner/Spinner";
+import LoadingSpinner from "../Spinner/Spinner";
 
 interface DataPoint {
 	x: number | string | Date;

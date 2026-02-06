@@ -1,6 +1,6 @@
 import React, { JSX } from "react";
 import { ActionButton } from "../../../components/rendering/form/ActionButton";
-import Spinner from "../../../components/spinner/Spinner";
+import Spinner from "../../../components/Spinner/Spinner";
 import { FormData } from "./JobScraperDashboardPage";
 import {
 	getServiceStatus,

@@ -12,6 +12,7 @@ USER_DATA = [
         "is_verified": True,
         "first_name": "Regular",
         "last_name": "User",
+        "app_version": "10.0.0",
     },
     # Admin user
     {
@@ -21,6 +22,7 @@ USER_DATA = [
         "is_verified": True,
         "first_name": "Admin",
         "last_name": "User",
+        "app_version": "10.0.0",
     },
     # Inactive user
     {
@@ -41,6 +43,7 @@ USER_DATA = [
         "password": "password4",
         "is_verified": True,
         "is_demo": True,
+        "app_version": "10.0.0",
     },
     # Named users for specific tests
     {

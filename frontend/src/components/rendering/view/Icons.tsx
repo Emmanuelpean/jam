@@ -66,6 +66,7 @@ export function getEntityIcon(entityType: EntityType): string {
 		setting: "database-gear",
 		speculativeApplication: "envelope-paper",
 		scrapedJob: "inboxes",
+		scrapingFilter: "funnel",
 	};
 	return iconMap[entityType] || "";
 }
@@ -75,22 +76,6 @@ export const getAdminIcon = (isAdmin: boolean): string => {
 		return "bi bi-person-check text-success";
 	} else {
 		return "bi bi-person-x text-danger";
-	}
-};
-
-export const getToastIcon = (toastActive: boolean): string => {
-	if (toastActive) {
-		return "bi bi-cup-hot text-success";
-	} else {
-		return "bi bi-cup text-danger";
-	}
-};
-
-export const getActiveBadge = (isActive: boolean): ReactNode => {
-	if (isActive) {
-		return <span className="badge bg-success">Active</span>;
-	} else {
-		return <span className="badge bg-secondary">Inactive</span>;
 	}
 };
 
