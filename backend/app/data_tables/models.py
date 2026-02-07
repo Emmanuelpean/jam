@@ -143,7 +143,9 @@ class Company(Owned, Base):
     jobs = relationship("Job", back_populates="company", foreign_keys="[Job.company_id]")
     persons = relationship("Person", back_populates="company")
     speculative_applications = relationship("SpeculativeApplication", back_populates="company")
-    recruited_jobs = relationship("Job", back_populates="recruitment_company", foreign_keys="[Job.recruitment_company_id]")
+    recruited_jobs = relationship(
+        "Job", back_populates="recruitment_company", foreign_keys="[Job.recruitment_company_id]"
+    )
 
     # Constraints
     __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_owner_company_name"),)
@@ -511,7 +513,7 @@ class SpeculativeApplication(Owned, Base):
     - `company` (Company): Company object related to the application.
     - `contact` (Person): Persons object related to the application."""
 
-    date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=True)
+    date = Column(TIMESTAMP(timezone=True), nullable=True)
     note = Column(String, nullable=True)
     contact_email = Column(String, nullable=True)
 

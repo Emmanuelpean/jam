@@ -273,7 +273,7 @@ class DemoRecorder:
         width: int = 1500,
         height: int = 1000,
     ) -> None:
-        self.output_path = output_path
+        self.output_path = "../frontend/src/assets/demo_gifs/" + output_path
         self.fps = fps
         self.headless = headless
         self.width = width
@@ -337,8 +337,8 @@ class DemoRecorder:
             [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"],
             cwd=str(backend_path),
             env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
 
         for _ in range(30):
@@ -370,10 +370,9 @@ class DemoRecorder:
             f'"{npm_cmd}" start',
             cwd=str(frontend_path),
             env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
             shell=True,
-            text=True,
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
         )
 
