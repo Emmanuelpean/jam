@@ -18,7 +18,6 @@ import {
 import JobsTable from "../../DataTable/JobTable";
 import PersonTable from "../../DataTable/PersonTable";
 import { TableColumn } from "./TableColumns";
-import { Accordion } from "./Accordion";
 import { formatTimedelta, toDdMmYyyy, toDdMmYyyyHhMm } from "../../../utils/TimeUtils";
 import {
 	getAdminIcon,
@@ -55,6 +54,8 @@ import {
 } from "./DataBadge";
 import { JobRatingData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
 import { Currency } from "../../../services/schemas/Others";
+import { Accordion } from "./Accordion";
+import { HelpBubble } from "../widgets/HelpBubble";
 
 // Parameters passed to the view render functions
 export interface RenderParams {
@@ -645,9 +646,14 @@ export const renderFunctions = {
 		const jobs: EnrichedJobData[] = filterByKey(ctx.jobs, key, param.item?.id);
 		if (jobs.length > 0) {
 			return (
-				<Accordion title={label || "Jobs"} data={jobs} icon={getTableIcon("Jobs")} helpText={param.helpText}>
+				<AccordionTable
+					title={label || "Jobs"}
+					data={jobs}
+					icon={getTableIcon("Jobs")}
+					helpText={param.helpText}
+				>
 					{(data: EnrichedJobData[]) => <JobsTable data={data} columns={param.columns} />}
-				</Accordion>
+				</AccordionTable>
 			);
 		} else {
 			return "";
@@ -659,14 +665,14 @@ export const renderFunctions = {
 		const interviews: InterviewData[] = filterByKey(ctx.interviews, key, param.item?.id);
 		if (interviews.length > 0) {
 			return (
-				<Accordion
+				<AccordionTable
 					title={label || "Interviews"}
 					data={interviews}
 					icon={getTableIcon("Interviews")}
 					helpText={param.helpText}
 				>
 					{(data: InterviewData[]) => <InterviewsTable data={data} showAdd={false} columns={param.columns} />}
-				</Accordion>
+				</AccordionTable>
 			);
 		} else {
 			return "";
@@ -678,14 +684,14 @@ export const renderFunctions = {
 		const jobs: EnrichedJobData[] = filterByKey(ctx.jobs, "application_aggregator_id", param.item?.id);
 		if (jobs.length > 0) {
 			return (
-				<Accordion
+				<AccordionTable
 					title={param.label || "Job Applications"}
 					data={jobs}
 					icon={getTableIcon("Job Applications")}
 					helpText={param.helpText}
 				>
 					{(data: EnrichedJobData[]) => <JobsTable data={data} columns={param.columns} />}
-				</Accordion>
+				</AccordionTable>
 			);
 		} else {
 			return "";
@@ -697,14 +703,14 @@ export const renderFunctions = {
 		const persons: PersonData[] = filterByKey(ctx.persons, "company_id", param.item?.id);
 		if (persons.length > 0) {
 			return (
-				<Accordion
+				<AccordionTable
 					title={param.label || "Persons"}
 					data={persons}
 					icon={getTableIcon("People")}
 					helpText={param.helpText}
 				>
 					{(data: PersonData[]) => <PersonTable data={data} columns={param.columns} />}
-				</Accordion>
+				</AccordionTable>
 			);
 		} else {
 			return "";
@@ -771,6 +777,40 @@ export const IsViewNull = (
 	return rendered == null;
 };
 
+interface GenericAccordionProps<T = any> {
+	title: string;
+	data: T[];
+	children: (data: T[], onChange?: () => void) => React.ReactNode;
+	icon?: string;
+	defaultOpen?: boolean;
+	helpText?: string;
+}
+
+export const AccordionTable = <T,>({
+	title,
+	data,
+	children,
+	icon,
+	defaultOpen = false,
+	helpText,
+}: GenericAccordionProps<T>): JSX.Element => {
+	return (
+		<Accordion
+			defaultOpen={defaultOpen}
+			header={
+				<>
+					{icon && <i className={`bi-${icon} me-2`}></i>}
+					<span className="fw-medium">{title}</span>
+					<span className="text-muted ms-2">({data?.length || 0})</span>
+					{helpText && <HelpBubble helpText={helpText} size="17px" />}
+				</>
+			}
+		>
+			{children(data)}
+		</Accordion>
+	);
+};
+
 const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 	const [data, setData] = useState<ScrapedJobData[] | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
@@ -802,13 +842,13 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 	}
 
 	return (
-		<Accordion
+		<AccordionTable
 			title="Filtered Jobs"
 			data={data}
 			icon={getTableIcon("Scraped Jobs")}
 			helpText="Scraped Jobs that were filtered by this filter."
 		>
 			{(rows: ScrapedJobData[]) => <ScrapedJobsTableReadOnly data={rows} columns={param.columns} />}
-		</Accordion>
+		</AccordionTable>
 	);
 };

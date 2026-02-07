@@ -60,8 +60,8 @@
 * [X] Set the scraped job source_type to aggregator_email
 * [X] Fix the selenium tests
 
-* [ ] Add toggle to hide scraped jobs with past deadline
-* [ ] Merge the custom accordions
+* [X] Add toggle to hide scraped jobs with past deadline
+* [X] Merge the custom accordions
 * [ ] Review what is_scraped stand for (add is_processed?)
 * [ ] On database migration, automatically add the system prompt and job prompt template to their associated tables.
 * [ ] Create free coupons for TOAST for first few users for a couple months

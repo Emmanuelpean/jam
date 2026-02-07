@@ -9,6 +9,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.scss";
 import { releaseNotes as releaseNotesRegistry } from "../../releaseNotes/versions";
 import { useWhatsNew } from "../../contexts/WhatsNewContext";
+import { Accordion } from "../../components/rendering/view/Accordion";
 
 interface Feature {
 	icon: string;
@@ -16,53 +17,15 @@ interface Feature {
 	description: string;
 }
 
-interface ReleaseNoteAccordionProps {
-	version: string;
-	content: any;
-	isOpen: boolean;
-	onToggle: () => void;
-}
-
-const ReleaseNoteAccordion = ({ version, content, isOpen, onToggle }: ReleaseNoteAccordionProps): JSX.Element => {
-	return (
-		<div className="simple-accordion mb-2" style={{ paddingLeft: "10px", paddingRight: "10px" }}>
-			<div
-				className="simple-accordion-header d-flex align-items-center justify-content-between py-2 border-bottom"
-				onClick={onToggle}
-				style={{ cursor: "pointer" }}
-			>
-				<div className="d-flex align-items-center">
-					<span className="fw-medium">V{version}</span>
-				</div>
-				<i className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"} text-muted`}></i>
-			</div>
-			<div
-				style={{
-					display: "grid",
-					gridTemplateRows: isOpen ? "1fr" : "0fr",
-					transition: "grid-template-rows 0.3s ease-in-out",
-				}}
-			>
-				<div style={{ overflow: "hidden" }}>
-					<div className="simple-accordion-content" style={{ margin: "10px" }}>
-						<div className="release-notes-content" dangerouslySetInnerHTML={{ __html: content }} />
-					</div>
-				</div>
-			</div>
-		</div>
-	);
-};
-
 const AboutPage = (): JSX.Element => {
 	const [openVersion, setOpenVersion] = useState<string | null>(null);
-	const [acknowledgementsOpen, setAcknowledgementsOpen] = useState<boolean>(false);
 	const { showWhatsNew } = useWhatsNew();
-	const versions: string[] = Object.keys(releaseNotesRegistry).sort((a, b) => {
-		const pa = a.split(".").map(Number);
-		const pb = b.split(".").map(Number);
-		for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-			const na = pa[i] ?? 0;
-			const nb = pb[i] ?? 0;
+	const versions: string[] = Object.keys(releaseNotesRegistry).sort((a: string, b: string): number => {
+		const pa: number[] = a.split(".").map(Number);
+		const pb: number[] = b.split(".").map(Number);
+		for (let i: number = 0; i < Math.max(pa.length, pb.length); i++) {
+			const na: number = pa[i] ?? 0;
+			const nb: number = pb[i] ?? 0;
 			if (na !== nb) return nb - na;
 		}
 		return 0;
@@ -224,13 +187,22 @@ const AboutPage = (): JSX.Element => {
 							<div style={{ width: "100%", marginTop: "10px" }}>
 								{versions.map(
 									(version: string): JSX.Element => (
-										<ReleaseNoteAccordion
+										<Accordion
 											key={version}
-											version={version}
-											content={releaseNotesRegistry[version]}
+											className="mb-2"
 											isOpen={openVersion === version}
 											onToggle={() => setOpenVersion(openVersion === version ? null : version)}
-										/>
+											header={<span className="fw-medium">V{version}</span>}
+										>
+											<div style={{ margin: "10px" }}>
+												<div
+													className="release-notes-content"
+													dangerouslySetInnerHTML={{
+														__html: releaseNotesRegistry[version] as string,
+													}}
+												/>
+											</div>
+										</Accordion>
 									)
 								)}
 							</div>
@@ -245,100 +217,82 @@ const AboutPage = (): JSX.Element => {
 					</Row>
 					<Row className="justify-content-center">
 						<Col lg={10}>
-							<div
-								className="simple-accordion mb-2"
-								style={{ paddingLeft: "10px", paddingRight: "10px" }}
+							<Accordion
+								className="mb-2"
+								header={
+									<span className="fw-medium">
+										Open-source projects and services that make Jam possible
+									</span>
+								}
 							>
-								<div
-									className="simple-accordion-header d-flex align-items-center justify-content-between py-2 border-bottom"
-									onClick={() => setAcknowledgementsOpen(!acknowledgementsOpen)}
-									style={{ cursor: "pointer" }}
-								>
-									<div className="d-flex align-items-center">
-										<span className="fw-medium">
-											Open-source projects and services that make Jam possible
-										</span>
-									</div>
-									<i
-										className={`bi ${acknowledgementsOpen ? "bi-chevron-up" : "bi-chevron-down"} text-muted`}
-									></i>
-								</div>
-								<div
-									style={{
-										maxHeight: acknowledgementsOpen ? "1000px" : "0",
-										overflow: "hidden",
-										transition: "max-height 0.3s ease-in-out",
-									}}
-								>
-									<div className="simple-accordion-content" style={{ margin: "10px" }}>
-										{[
-											{
-												title: "Frontend",
-												packages: [
-													{ name: "React", url: "https://react.dev" },
-													{ name: "Bootstrap", url: "https://getbootstrap.com" },
-													{ name: "Bootstrap Icons", url: "https://icons.getbootstrap.com" },
-													{
-														name: "React Bootstrap",
-														url: "https://react-bootstrap.github.io",
-													},
-													{ name: "Recharts", url: "https://recharts.org" },
-													{ name: "Leaflet", url: "https://leafletjs.com" },
-													{ name: "React Router", url: "https://reactrouter.com" },
-													{ name: "React Select", url: "https://react-select.com" },
-													{ name: "Lodash", url: "https://lodash.com" },
-												],
-											},
-											{
-												title: "Backend",
-												packages: [
-													{ name: "FastAPI", url: "https://fastapi.tiangolo.com" },
-													{ name: "SQLAlchemy", url: "https://www.sqlalchemy.org" },
-													{ name: "Pydantic", url: "https://docs.pydantic.dev" },
-													{
-														name: "Beautiful Soup",
-														url: "https://www.crummy.com/software/BeautifulSoup",
-													},
-													{ name: "Gunicorn", url: "https://gunicorn.org" },
-													{ name: "PostgreSQL", url: "https://www.postgresql.org" },
-												],
-											},
-											{
-												title: "Services",
-												packages: [
-													{ name: "OpenAI", url: "https://openai.com" },
-													{ name: "Stripe", url: "https://stripe.com" },
-													{ name: "Apify", url: "https://apify.com" },
-													{ name: "Scrapfly", url: "https://scrapfly.io" },
-												],
-											},
-										].map((section) => (
-											<div key={section.title} className="mb-4">
-												<h5 className="fw-bold mb-3" style={{ color: "var(--primary-mid)" }}>
-													{section.title}
-												</h5>
-												<div className="d-flex flex-wrap gap-2">
-													{section.packages.map((pkg) => (
-														<a
-															key={pkg.name}
-															href={pkg.url}
-															target="_blank"
-															rel="noopener noreferrer"
-															className="glass-badge text-decoration-none"
-															style={{
-																fontSize: "0.875rem",
-																padding: "0.5rem 1rem",
-															}}
-														>
-															{pkg.name}
-														</a>
-													))}
-												</div>
+								<div style={{ margin: "10px" }}>
+									{[
+										{
+											title: "Frontend",
+											packages: [
+												{ name: "React", url: "https://react.dev" },
+												{ name: "Bootstrap", url: "https://getbootstrap.com" },
+												{ name: "Bootstrap Icons", url: "https://icons.getbootstrap.com" },
+												{
+													name: "React Bootstrap",
+													url: "https://react-bootstrap.github.io",
+												},
+												{ name: "Recharts", url: "https://recharts.org" },
+												{ name: "Leaflet", url: "https://leafletjs.com" },
+												{ name: "React Router", url: "https://reactrouter.com" },
+												{ name: "React Select", url: "https://react-select.com" },
+												{ name: "Lodash", url: "https://lodash.com" },
+											],
+										},
+										{
+											title: "Backend",
+											packages: [
+												{ name: "FastAPI", url: "https://fastapi.tiangolo.com" },
+												{ name: "SQLAlchemy", url: "https://www.sqlalchemy.org" },
+												{ name: "Pydantic", url: "https://docs.pydantic.dev" },
+												{
+													name: "Beautiful Soup",
+													url: "https://www.crummy.com/software/BeautifulSoup",
+												},
+												{ name: "Gunicorn", url: "https://gunicorn.org" },
+												{ name: "PostgreSQL", url: "https://www.postgresql.org" },
+											],
+										},
+										{
+											title: "Services",
+											packages: [
+												{ name: "OpenAI", url: "https://openai.com" },
+												{ name: "Stripe", url: "https://stripe.com" },
+												{ name: "Apify", url: "https://apify.com" },
+												{ name: "Scrapfly", url: "https://scrapfly.io" },
+											],
+										},
+									].map((section) => (
+										<div key={section.title} className="mb-4">
+											<h5 className="fw-bold mb-3" style={{ color: "var(--primary-mid)" }}>
+												{section.title}
+											</h5>
+											<div className="d-flex flex-wrap gap-2">
+												{section.packages.map((pkg) => (
+													<a
+														key={pkg.name}
+														href={pkg.url}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="glass-badge text-decoration-none"
+														style={{
+															fontSize: "0.875rem",
+															padding: "0.5rem 1rem",
+														}}
+													>
+														{pkg.name}
+													</a>
+												))}
 											</div>
-										))}
-									</div>
+										</div>
+									))}
 								</div>
-							</div>
+							</Accordion>
 						</Col>
 					</Row>
 				</Container>
