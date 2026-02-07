@@ -62,6 +62,7 @@ def get_all(
     sort_by: str = "scrape_datetime",
     sort_direction: Literal["asc", "desc"] = "desc",
     show_past_deadline: bool = False,
+    since_last_login: bool = False,
     search: str | None = None,
 ) -> dict:
     """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped.
@@ -73,6 +74,7 @@ def get_all(
     :param sort_by: sort key
     :param sort_direction: sort direction
     :param show_past_deadline: Show scraped jobs with past deadlines
+    :param since_last_login: Only show jobs created since last login
     :param search: Search term"""
 
     # Base query with eager loading of job_rating
@@ -95,6 +97,9 @@ def get_all(
             )
         )
 
+    if since_last_login and current_user.last_login:
+        query = query.filter(models.ScrapedJob.created_at >= current_user.last_login)
+
     # Apply search filter
     if search:
         search_term = f"%{search}%"
@@ -115,6 +120,8 @@ def get_all(
     filter_params.pop("sort_by", None)
     filter_params.pop("sort_direction", None)
     filter_params.pop("search", None)
+    filter_params.pop("show_past_deadline", None)
+    filter_params.pop("since_last_login", None)
     query = filter_query(query, models.ScrapedJob, filter_params)
 
     # Apply sorting

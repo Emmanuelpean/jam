@@ -30,7 +30,7 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 							{subtitle && <small className="text-muted">{subtitle}</small>}
 						</div>
 					</div>
-					{count && <div className="table-count-badge">{count}</div>}
+					{count !== undefined && <div className="table-count-badge">{count}</div>}
 				</div>
 			</Card>
 		</div>
