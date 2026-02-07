@@ -1930,6 +1930,9 @@ class ConfirmModalUtils(BaseUtilsClass):
 class BaseTest(BaseUtils):
     """Base class for selenium tests"""
 
+    _shared_backend_url = None
+    _shared_frontend_url = None
+    _shared_driver = None
     user = None  # user to use
     client = None  # authorised client
     base_utils = None  # base utils
@@ -1994,127 +1997,146 @@ class BaseTest(BaseUtils):
     followup_modal: FollowUpEmailModalUtils = None
     confirm_modal: ConfirmModalUtils = None
 
-    @pytest.fixture(autouse=True)
-    def setup_method(
+    @pytest.fixture(autouse=True, scope="class")
+    def class_driver(
         self,
         test_frontend_server,
         test_backend_server,
+        request,
+    ) -> Generator[None, None, None]:
+        """Launch Chrome once per test class and share it across all tests."""
+
+        print(f"\n{'='*60}")
+        print(f"LAUNCHING CLASS DRIVER: {request.node.name}")
+        print(f"{'='*60}")
+
+        # Configure Chrome options
+        chrome_options = Options()
+        prefs = {
+            "profile.password_manager_leak_detection": False,
+            "credentials_enable_service": False,
+            "password_manager_enabled": False,
+            "profile.password_manager_enabled": False,
+            "protocol_handler": {"excluded_schemes": {"mailto": True}},
+            "intl.accept_languages": "en-GB",
+        }
+        chrome_options.add_experimental_option("prefs", prefs)
+        chrome_options.add_argument("--headless=new")
+        chrome_options.add_argument("--window-size=1960,1080")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--ignore-certificate-errors")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--lang=en-GB")
+
+        # Enable verbose logging
+        chrome_options.add_argument("--enable-logging")
+        chrome_options.add_argument("--v=1")
+        chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
+
+        self.__class__._shared_driver = webdriver.Chrome(options=chrome_options)
+        self.__class__._shared_driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
+        self.__class__._shared_driver.execute_cdp_cmd("Emulation.setLocaleOverride", {"locale": "en-GB"})
+
+        # Load the frontend once so localStorage is accessible on the correct origin
+        self.__class__._shared_frontend_url = test_frontend_server
+        self.__class__._shared_backend_url = test_backend_server
+        self.__class__._shared_driver.get(test_frontend_server)
+
+        print(f"  ⏱ Chrome driver launched and initial page loaded")
+
+        yield
+
+        # Teardown: quit once after all tests in the class
+        try:
+            self.__class__._shared_driver.quit()
+        except Exception as e:
+            print(f"Error quitting class driver: {e}")
+
+    @pytest.fixture(autouse=True)
+    def setup_method(
+        self,
+        class_driver,
         request,
         test_users,
         authorised_clients,
         session,
     ) -> Generator[None, None, None]:
-        """Set up the test environment before each test with test data"""
+        """Per-test setup: reset browser state and reassign test-specific data."""
 
         self._test_name = request.node.name
-        setup_timings = []
         setup_start = time.perf_counter()
-        print(f"\n{'='*60}")
-        print(f"SETUP TIMING: {self._test_name}")
-        print(f"{'='*60}")
+
         try:
-            with timed_step("Chrome options config", setup_timings):
-                # Configure Chrome options to disable password prompts
-                chrome_options = Options()
-                prefs = {
-                    "profile.password_manager_leak_detection": False,
-                    "credentials_enable_service": False,
-                    "password_manager_enabled": False,
-                    "profile.password_manager_enabled": False,
-                    "protocol_handler": {"excluded_schemes": {"mailto": True}},
-                    "intl.accept_languages": "en-GB",
-                }
-                chrome_options.add_experimental_option("prefs", prefs)
-                chrome_options.add_argument("--headless=new")
-                chrome_options.add_argument("--window-size=1960,1080")
-                chrome_options.add_argument("--disable-gpu")
-                chrome_options.add_argument("--no-sandbox")
-                chrome_options.add_argument("--ignore-certificate-errors")
-                chrome_options.add_argument("--disable-dev-shm-usage")
-                chrome_options.add_argument("--lang=en-GB")
+            # Reuse the class-scoped driver
+            self.driver = self.__class__._shared_driver
+            self.wait = WebDriverWait(self.driver, 10)
+            self.frontend_base_url = self.__class__._shared_frontend_url
+            self.backend_base_url = self.__class__._shared_backend_url
 
-                # Enable verbose logging
-                chrome_options.add_argument("--enable-logging")
-                chrome_options.add_argument("--v=1")
-                chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
+            # Clear browser state between tests
+            self.driver.execute_script("window.localStorage.clear(); window.sessionStorage.clear();")
+            self.driver.delete_all_cookies()
 
-            with timed_step("Chrome driver launch", setup_timings):
-                self.driver = webdriver.Chrome(options=chrome_options)
-                self.wait = WebDriverWait(self.driver, 10)
+            # Close any extra tabs/windows from previous test
+            if len(self.driver.window_handles) > 1:
+                for handle in self.driver.window_handles[1:]:
+                    self.driver.switch_to.window(handle)
+                    self.driver.close()
+                self.driver.switch_to.window(self.driver.window_handles[0])
 
-            with timed_step("CDP commands (timezone/locale)", setup_timings):
-                # Set timezone using CDP
-                self.driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
-                # Set locale using CDP
-                self.driver.execute_cdp_cmd("Emulation.setLocaleOverride", {"locale": "en-GB"})
+            # Client/User
+            self.user = test_users[self.user_index]
+            self.client = authorised_clients[self.user_index]
+            self.db = session
 
-            with timed_step("Assign URLs and user/client/db", setup_timings):
-                # Frontend/Backend
-                self.frontend_base_url = test_frontend_server
-                self.backend_base_url = test_backend_server
+            modal_entities = [
+                "company",
+                "aggregator",
+                "keyword",
+                "location",
+                "person",
+                "job",
+                "interview",
+                "jobApplicationUpdate",
+                "speculativeApplication",
+                "scrapedJob",
+                "scrapingFilter",
+                "setting",
+            ]
 
-                # Client/User
-                self.user = test_users[self.user_index]
-                self.client = authorised_clients[self.user_index]
-                self.db = session
+            shared_kwargs = {
+                "driver": self.driver,
+                "frontend_base_url": self.frontend_base_url,
+                "backend_base_url": self.backend_base_url,
+                "db": self.db,
+                "client": self.client,
+            }
+            for name in modal_entities:
+                setattr(self, f"{name}_modal_utils", DataModalUtils(entry_type=name, **shared_kwargs))
+            for name in modal_entities:
+                setattr(self, f"{name}_table_utils", DataTableUtils(entry_type=name, **shared_kwargs))
 
-            with timed_step("Instantiate utility classes (24 objects)", setup_timings):
-                modal_entities = [
-                    "company",
-                    "aggregator",
-                    "keyword",
-                    "location",
-                    "person",
-                    "job",
-                    "interview",
-                    "jobApplicationUpdate",
-                    "speculativeApplication",
-                    "scrapedJob",
-                    "scrapingFilter",
-                    "setting",
-                ]
+            self.auth_utils = AuthentificationUtils(**shared_kwargs)
+            self.user_settings_utils = UserSettingsUtils(**shared_kwargs)
+            self.followup_modal = FollowUpEmailModalUtils(**shared_kwargs)
+            self.confirm_modal = ConfirmModalUtils(**shared_kwargs)
 
-                shared_kwargs = {
-                    "driver": self.driver,
-                    "frontend_base_url": self.frontend_base_url,
-                    "backend_base_url": self.backend_base_url,
-                    "db": self.db,
-                    "client": self.client,
-                }
-                for name in modal_entities:
-                    setattr(self, f"{name}_modal_utils", DataModalUtils(entry_type=name, **shared_kwargs))
-                for name in modal_entities:
-                    setattr(self, f"{name}_table_utils", DataTableUtils(entry_type=name, **shared_kwargs))
-
-                self.auth_utils = AuthentificationUtils(**shared_kwargs)
-                self.user_settings_utils = UserSettingsUtils(**shared_kwargs)
-                self.followup_modal = FollowUpEmailModalUtils(**shared_kwargs)
-                self.confirm_modal = ConfirmModalUtils(**shared_kwargs)
-
-            with timed_step("Initial page load (driver.get)", setup_timings):
-                self.driver.get(self.frontend_base_url)
-
-            with timed_step("setup_function (subclass hook)", setup_timings):
-                self.setup_function(request)
+            self.setup_function(request)
 
             total = time.perf_counter() - setup_start
-            print(f"  {'─'*40}")
-            print(f"  ⏱ TOTAL SETUP: {total:.3f}s")
-            # Show top 3 slowest steps
-            sorted_timings = sorted(setup_timings, key=lambda x: x[1], reverse=True)
-            print(f"  Top slowest: {', '.join(f'{name} ({t:.3f}s)' for name, t in sorted_timings[:3])}")
+            print(f"  ⏱ SETUP ({self._test_name}): {total:.3f}s")
 
         except Exception:
             if hasattr(self, "driver"):
                 try:
                     self._save_browser_logs(failed=True)
-                    self.driver.quit()
                 except:
                     pass
             raise
         yield  # This allows the test to run
 
-        # Teardown
+        # Per-test teardown (logs/screenshots only — driver stays alive)
         try:
             if hasattr(self, "driver"):
                 # Check if test failed
@@ -2124,7 +2146,6 @@ class BaseTest(BaseUtils):
                 if test_failed or os.getenv("CI"):
                     self._save_browser_logs(failed=test_failed)
                     self._save_page_screenshot(failed=test_failed)
-                self.driver.quit()
         except Exception as e:
             print(f"Error during teardown: {e}")
 
