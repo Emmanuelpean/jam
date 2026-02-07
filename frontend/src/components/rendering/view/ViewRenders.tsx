@@ -54,8 +54,8 @@ import {
 } from "./DataBadge";
 import { JobRatingData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
 import { Currency } from "../../../services/schemas/Others";
-import { Accordion } from "./Accordion";
-import { HelpBubble } from "../widgets/HelpBubble";
+import { Accordion } from "../../Accordion/Accordion";
+import { HelpBubble } from "../../HelpBubble/HelpBubble";
 
 // Parameters passed to the view render functions
 export interface RenderParams {

@@ -8,7 +8,7 @@ import { Checkbox } from "./Checkbox";
 import { SelectInput, SelectWidgetPreviewConfig } from "./SelectWidget";
 import { ModalFormField } from "../form/FormRenders";
 import React, { JSX } from "react";
-import { HelpBubble } from "./HelpBubble";
+import { HelpBubble } from "../../HelpBubble/HelpBubble";
 import { UrlInput } from "./UrlInput";
 import { CurrentUser } from "../../../contexts/AuthContext";
 import { Toggle } from "./Toggle";
