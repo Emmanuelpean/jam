@@ -37,6 +37,7 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 
 	// Show the appropriate modal automatically on login
 	useEffect(() => {
+		console.log(currentUser);
 		if (!currentUser) return;
 
 		if (currentUser.app_version === null) {

@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
 	aggregatorsApi,
 	companiesApi,
@@ -365,9 +365,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		const totalOperations: number = fetchOperations.length;
 		let completedOperations: number = 0;
 
-		// Show initial loading state
-		showLoading("Initialising Data Load...", 0);
-
 		try {
 			// Track progress for each promise
 			const trackedPromises = fetchOperations.map(({ promise, label }) =>
@@ -538,7 +535,14 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		]
 	);
 
-	useEffect(() => {
+	// Show loading immediately before paint to prevent flash of empty content
+	useLayoutEffect((): void => {
+		if (token && currentUser) {
+			showLoading("Initialising Data Load...", 0);
+		}
+	}, [token, currentUser?.is_admin]);
+
+	useEffect((): void => {
 		if (!token || !currentUser) return;
 		fetchAllData().then((): void => {});
 	}, [token, currentUser?.is_admin]);
