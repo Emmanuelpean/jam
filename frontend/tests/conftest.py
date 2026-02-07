@@ -1997,93 +1997,51 @@ class BaseTest(BaseUtils):
     followup_modal: FollowUpEmailModalUtils = None
     confirm_modal: ConfirmModalUtils = None
 
-    @pytest.fixture(autouse=True, scope="class")
-    def class_driver(
-        self,
-        test_frontend_server,
-        test_backend_server,
-        request,
-    ) -> Generator[None, None, None]:
-        """Launch Chrome once per test class and share it across all tests."""
-
-        print(f"\n{'='*60}")
-        print(f"LAUNCHING CLASS DRIVER: {request.node.name}")
-        print(f"{'='*60}")
-
-        # Configure Chrome options
-        chrome_options = Options()
-        prefs = {
-            "profile.password_manager_leak_detection": False,
-            "credentials_enable_service": False,
-            "password_manager_enabled": False,
-            "profile.password_manager_enabled": False,
-            "protocol_handler": {"excluded_schemes": {"mailto": True}},
-            "intl.accept_languages": "en-GB",
-        }
-        chrome_options.add_experimental_option("prefs", prefs)
-        chrome_options.add_argument("--headless=new")
-        chrome_options.add_argument("--window-size=1960,1080")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--ignore-certificate-errors")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--lang=en-GB")
-
-        # Enable verbose logging
-        chrome_options.add_argument("--enable-logging")
-        chrome_options.add_argument("--v=1")
-        chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
-
-        self.__class__._shared_driver = webdriver.Chrome(options=chrome_options)
-        self.__class__._shared_driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
-        self.__class__._shared_driver.execute_cdp_cmd("Emulation.setLocaleOverride", {"locale": "en-GB"})
-
-        # Load the frontend once so localStorage is accessible on the correct origin
-        self.__class__._shared_frontend_url = test_frontend_server
-        self.__class__._shared_backend_url = test_backend_server
-        self.__class__._shared_driver.get(test_frontend_server)
-
-        print(f"  ⏱ Chrome driver launched and initial page loaded")
-
-        yield
-
-        # Teardown: quit once after all tests in the class
-        try:
-            self.__class__._shared_driver.quit()
-        except Exception as e:
-            print(f"Error quitting class driver: {e}")
-
     @pytest.fixture(autouse=True)
     def setup_method(
         self,
-        class_driver,
+        test_frontend_server,
+        test_backend_server,
         request,
         test_users,
         authorised_clients,
         session,
     ) -> Generator[None, None, None]:
-        """Per-test setup: reset browser state and reassign test-specific data."""
+        """Set up the test environment before each test with test data"""
 
         self._test_name = request.node.name
-        setup_start = time.perf_counter()
-
         try:
-            # Reuse the class-scoped driver
-            self.driver = self.__class__._shared_driver
+
+            # Configure Chrome options to disable password prompts
+            chrome_options = Options()
+            prefs = {
+                "profile.password_manager_leak_detection": False,
+                "credentials_enable_service": False,
+                "password_manager_enabled": False,
+                "profile.password_manager_enabled": False,
+                "protocol_handler": {"excluded_schemes": {"mailto": True}},
+                "intl.accept_languages": "en-GB",
+            }
+            chrome_options.add_experimental_option("prefs", prefs)
+            chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--window-size=1960,1080")
+            chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--ignore-certificate-errors")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument("--lang=en-GB")
+
+            # Enable verbose logging
+            chrome_options.add_argument("--enable-logging")
+            chrome_options.add_argument("--v=1")
+            chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
+
+            self.driver = webdriver.Chrome(options=chrome_options)
             self.wait = WebDriverWait(self.driver, 10)
-            self.frontend_base_url = self.__class__._shared_frontend_url
-            self.backend_base_url = self.__class__._shared_backend_url
 
-            # Clear browser state between tests
-            self.driver.execute_script("window.localStorage.clear(); window.sessionStorage.clear();")
-            self.driver.delete_all_cookies()
-
-            # Close any extra tabs/windows from previous test
-            if len(self.driver.window_handles) > 1:
-                for handle in self.driver.window_handles[1:]:
-                    self.driver.switch_to.window(handle)
-                    self.driver.close()
-                self.driver.switch_to.window(self.driver.window_handles[0])
+            # Frontend/Backend
+            self.frontend_base_url = test_frontend_server
+            self.backend_base_url = test_backend_server
 
             # Client/User
             self.user = test_users[self.user_index]
@@ -2122,21 +2080,20 @@ class BaseTest(BaseUtils):
             self.followup_modal = FollowUpEmailModalUtils(**shared_kwargs)
             self.confirm_modal = ConfirmModalUtils(**shared_kwargs)
 
+            self.driver.get(self.frontend_base_url)
             self.setup_function(request)
-
-            total = time.perf_counter() - setup_start
-            print(f"  ⏱ SETUP ({self._test_name}): {total:.3f}s")
 
         except Exception:
             if hasattr(self, "driver"):
                 try:
                     self._save_browser_logs(failed=True)
+                    self.driver.quit()
                 except:
                     pass
             raise
         yield  # This allows the test to run
 
-        # Per-test teardown (logs/screenshots only — driver stays alive)
+        # Teardown
         try:
             if hasattr(self, "driver"):
                 # Check if test failed
@@ -2146,6 +2103,7 @@ class BaseTest(BaseUtils):
                 if test_failed or os.getenv("CI"):
                     self._save_browser_logs(failed=test_failed)
                     self._save_page_screenshot(failed=test_failed)
+                self.driver.quit()
         except Exception as e:
             print(f"Error during teardown: {e}")
 
@@ -2230,12 +2188,9 @@ class BaseTest(BaseUtils):
         t2 = time.perf_counter()
         print(f"  ⏱ inject token: {t2 - t1:.3f}s")
 
-        # Navigate to the target page — React will pick up the token from localStorage
         self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
-        # self.get_element("loading-spinner")
-        # self.wait_for_disappear("loading-spinner")
-        time.sleep(0.5)
         self.wait_for_page(self.page_url)
+        time.sleep(0.25)
 
     # ---------------------------------------------------- DATABASE ----------------------------------------------------
 
