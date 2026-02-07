@@ -1,42 +1,59 @@
 import React, { useState, JSX } from "react";
-import { HelpBubble } from "../widgets/HelpBubble";
 import "./Accordion.scss";
 
-interface GenericAccordionProps<T = any> {
-	title: string;
-	data: T[];
-	children: (data: T[], onChange?: () => void) => React.ReactNode;
-	icon?: string;
+interface BaseAccordionProps {
+	header: React.ReactNode;
+	children: React.ReactNode;
 	defaultOpen?: boolean;
-	helpText?: string;
+	isOpen?: boolean;
+	onToggle?: () => void;
+	className?: string;
 }
 
-export const Accordion = <T,>({
-	title,
-	data,
+export const Accordion = ({
+	header,
 	children,
-	icon,
 	defaultOpen = false,
-	helpText,
-}: GenericAccordionProps<T>): JSX.Element => {
-	const [isOpen, setIsOpen] = useState(defaultOpen);
+	isOpen: controlledIsOpen,
+	onToggle,
+	className,
+}: BaseAccordionProps): JSX.Element => {
+	const [internalIsOpen, setInternalIsOpen] = useState(defaultOpen);
+	const isControlled = controlledIsOpen !== undefined;
+	const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
+
+	const handleToggle = () => {
+		if (onToggle) {
+			onToggle();
+		}
+		if (!isControlled) {
+			setInternalIsOpen((prev) => !prev);
+		}
+	};
 
 	return (
-		<div className="simple-accordion" style={{ paddingLeft: "10px", paddingRight: "10px" }}>
+		<div className={`simple-accordion ${className || ""}`} style={{ paddingLeft: "10px", paddingRight: "10px" }}>
 			<div
 				className="simple-accordion-header d-flex align-items-center justify-content-between py-2 border-bottom"
-				onClick={() => setIsOpen(!isOpen)}
+				onClick={handleToggle}
 				style={{ cursor: "pointer" }}
 			>
-				<div className="d-flex align-items-center">
-					{icon && <i className={`bi-${icon} me-2`}></i>}
-					<span className="fw-medium">{title}</span>
-					<span className="text-muted ms-2">({data?.length || 0})</span>
-					{helpText && <HelpBubble helpText={helpText} size="17px" />}
-				</div>
-				<i className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"} text-muted`}></i>
+				<div className="d-flex align-items-center">{header}</div>
+				<i
+					className={`bi bi-chevron-down text-muted accordion-chevron ${isOpen ? "accordion-chevron-open" : ""}`}
+				></i>
 			</div>
-			{isOpen && <div className="simple-accordion-content">{children(data)}</div>}
+			<div
+				style={{
+					display: "grid",
+					gridTemplateRows: isOpen ? "1fr" : "0fr",
+					transition: "grid-template-rows 0.3s ease-in-out",
+				}}
+			>
+				<div style={{ overflow: "hidden" }}>
+					<div className="simple-accordion-content">{children}</div>
+				</div>
+			</div>
 		</div>
 	);
 };

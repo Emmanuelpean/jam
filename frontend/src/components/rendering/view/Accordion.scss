@@ -1,3 +1,11 @@
 .simple-accordion-header {
     border-bottom: 1px solid var(--placeholder-text-color) !important;
 }
+
+.accordion-chevron {
+    transition: transform 0.3s ease-in-out;
+}
+
+.accordion-chevron-open {
+    transform: rotate(-180deg);
+}
