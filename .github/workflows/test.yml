@@ -141,9 +141,11 @@ jobs:
           pytest -n auto --dist loadgroup ./frontend/tests \
             --junitxml=reports/tests/frontend.xml -v
 
+      - name: Install junitparser
+        run: pip install junitparser
+
       - name: Merge test reports
         run: |
-          run: pip install junitparser
           junitparser merge \
             reports/tests/backend.xml \
             reports/tests/frontend.xml \
