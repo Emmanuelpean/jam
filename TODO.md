@@ -1,7 +1,7 @@
 ## TODO
 
 ### Bugs
-* [ ] Modals darken when a help bubble is displayed.
+* [X] Modals darken when a help bubble is displayed.
 * [X] the sidebar is not expanding properly on small screens on the job page.
 
 ### TOAST
@@ -21,7 +21,7 @@
 * [ ] Move the scrollbar inside the tables so that the header is always visible
 * [ ] Add the ability to filter by columns and hide rejected jobs
 
-* [ ] Rewrite the test data for the test user
+
 * [X] Add payment system for toast
 * [X] Change the service runner to work with multiple workers
 * [X] Limit the number of scraped jobs per user per month, and set limits for AI rating
@@ -31,7 +31,6 @@
 * [X] Add loading to graphs on TOAST dashboard
 * [X] Add acknowledgements for open source libraries used
 * [X] Add acknowledgements for services
-* [ ] Add favourite filters for scraping
 * [X] Fix frontend packages incompatibility issues
 * [X] Add trial period for TOAST
 * [X] Run the service API on a different worker
@@ -42,7 +41,6 @@
 * [X] Non data modal should not be affected by the small screen full size
 * [X] Allow badges to collapse on small screens (...)
 * [X] Dropdowns styles are broken in dark mode (in light mode multiselect is not working as expected)
-* [ ] On Small screens, modal elements on multiple columns and rows are all on same column but spacing differs
 * [X] Finish the dark mode - Missing dark mode in select widget in time selector
 * [X] Fix the settings table column and modal active states
 * [X] Redo the users table
@@ -66,3 +64,6 @@
 * [ ] On database migration, automatically add the system prompt and job prompt template to their associated tables.
 * [ ] Create free coupons for TOAST for first few users for a couple months
 * [ ] Finish the gifs
+* [ ] Rewrite the test data for the test user
+* [ ] On Small screens, modal elements on multiple columns and rows are all on same column but spacing differs
+* [ ] Add favourite filters for scraping

@@ -15,7 +15,7 @@ export const WhatsNewModal = forwardRef<WhatsNewModalHandle, WhatsNewModalProps>
 			<SlideCarouselModal
 				ref={ref}
 				id="whats-new-modal"
-				title={`What's New in v${packageJson.version}`}
+				title={`What's New in Version ${packageJson.version}`}
 				titleIcon="bi-stars"
 				slides={slides}
 				finishText="Got it!"
