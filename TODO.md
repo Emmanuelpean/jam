@@ -33,7 +33,6 @@
 * [X] Add acknowledgements for services
 * [ ] Add favourite filters for scraping
 * [X] Fix frontend packages incompatibility issues
-* [ ] Create free coupons for TOAST for first few users for a couple months
 * [X] Add trial period for TOAST
 * [X] Run the service API on a different worker
 * [X] Add loading spinner when using the context menu
@@ -47,20 +46,23 @@
 * [X] Finish the dark mode - Missing dark mode in select widget in time selector
 * [X] Fix the settings table column and modal active states
 * [X] Redo the users table
-* [ ] Add toggle to hide scraped jobs with past deadline
 * [X] Display the AI prompt in the user settings
 * [X] Display reason why scraped job was not rated
 * [X] Display the AI prompt in the user settings
-* [ ] On database migration, automatically add the system prompt and job prompt template to their associated tables.
 * [X] Display reason why scraped job was not rated
 * [X] Update terms and conditions
 * [X] Fix demo mode drop down
 * [X] Add account deletion option (delete subscription in this case) (tests required)
 * [X] Withdrawn, rejected or offered jobs are not shown in the needs chase dashboard anymore.
 * [X] Fix the password reset bug
-* [ ] Review what is_scraped stand for (add is_processed?)
 * [X] Add a button to kick everyone out
-* [ ] Add popup to show the new stuff
+* [X] Add popup to show the new stuff
 * [X] Set the scraped job source_type to aggregator_email
+* [X] Fix the selenium tests
+
+* [ ] Add toggle to hide scraped jobs with past deadline
 * [ ] Merge the custom accordions
-* [ ] Fix the selenium tests
+* [ ] Review what is_scraped stand for (add is_processed?)
+* [ ] On database migration, automatically add the system prompt and job prompt template to their associated tables.
+* [ ] Create free coupons for TOAST for first few users for a couple months
+* [ ] Finish the gifs

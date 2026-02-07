@@ -82,6 +82,7 @@ export interface GenericTableProps {
 	children?: (data: any[]) => ReactNode;
 	toolbarAddon?: React.ReactNode;
 	reloadTrigger?: number;
+	queryParams?: Record<string, string>;
 }
 
 export const DataTable: React.FC<GenericTableProps> = ({
@@ -105,6 +106,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	menuItems,
 	toolbarAddon,
 	reloadTrigger,
+	queryParams,
 	defaultModalMode = "view",
 }: GenericTableProps): JSX.Element => {
 	const { token } = useAuth();
@@ -166,6 +168,12 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				search: debouncedSearchTerm,
 			});
 
+			if (queryParams) {
+				Object.entries(queryParams).forEach(([key, value]) => {
+					params.set(key, value);
+				});
+			}
+
 			const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
 			setFetchedData(response.data.items);
 			setTotalCount(response.data.total);
@@ -186,7 +194,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		if (isServerPagination) {
 			fetchData().then((_): null => null);
 		}
-	}, [endpoint, token, currentPage, pageSize, sortConfig, isServerPagination, debouncedSearchTerm]);
+	}, [endpoint, token, currentPage, pageSize, sortConfig, isServerPagination, debouncedSearchTerm, queryParams]);
 
 	const getData = (): JamData[] => {
 		if (providedData !== undefined) {
