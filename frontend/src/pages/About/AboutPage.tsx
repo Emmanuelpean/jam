@@ -9,7 +9,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.scss";
 import { releaseNotes as releaseNotesRegistry } from "../../releaseNotes/versions";
 import { useWhatsNew } from "../../contexts/WhatsNewContext";
-import { Accordion } from "../../components/rendering/view/Accordion";
+import { Accordion } from "../../components/Accordion/Accordion";
 
 interface Feature {
 	icon: string;

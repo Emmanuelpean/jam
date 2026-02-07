@@ -14,7 +14,7 @@ import {
 } from "react-bootstrap";
 import { ModalFormField } from "../components/rendering/form/FormRenders";
 import { Checkbox } from "../components/rendering/widgets/Checkbox";
-import { HelpBubble } from "../components/rendering/widgets/HelpBubble";
+import { HelpBubble } from "../components/HelpBubble/HelpBubble";
 import { PasswordInput } from "../components/rendering/widgets/PasswordInput";
 import { SalaryInput } from "../components/rendering/widgets/SalaryInput";
 import { LocalDatetimeInput } from "../components/rendering/widgets/Datetime";

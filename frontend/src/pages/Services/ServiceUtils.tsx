@@ -3,7 +3,7 @@ import { Form, InputGroup } from "react-bootstrap";
 import { ServiceStatus, ThreadStatus } from "../../services/api/Services";
 import { SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { formatDuration } from "../../utils/TimeUtils";
-import { HelpBubble } from "../../components/rendering/widgets/HelpBubble";
+import { HelpBubble } from "../../components/HelpBubble/HelpBubble";
 import { SeriesData } from "../../components/Chart/LineChart";
 
 export const successColor = "#22c55e";
