@@ -63,7 +63,8 @@ def login(
                 detail=result.message,
             )
 
-    # Update the user last login date
+    # Save the last login date and update the last login date
+    user.previous_login = user.last_login
     user.last_login = dt.datetime.now(dt.timezone.utc)
     db.commit()
 

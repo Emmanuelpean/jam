@@ -102,6 +102,36 @@ class TestLogIn(BaseTest):
         self.auth_utils.confirm()
         self.auth_utils.assert_toast_message("An unknown error occurred during login.\nRight-click to send email")
 
+    def test_heartbeat_updates_last_login(self):
+        """Test that heartbeat updates last login timestamp for authenticated users"""
+
+        assert self.user.last_login is None
+        assert self.user.previous_login is None
+
+        # Login
+        self.auth_utils.set_email(self.user.email)
+        self.auth_utils.set_password(self.user.plain_password)
+        self.auth_utils.confirm()
+        self.auth_utils.wait_for_dashboard()
+
+        self.db.expire_all()
+        login_dt = self.user.last_login
+        assert login_dt is not None
+        assert self.user.previous_login is None
+
+        # Travel to page and ensure no change in last_login and previous_login
+        self.go_to_page("jobs")
+        self.db.expire_all()
+        assert self.user.last_login == login_dt
+        assert self.user.previous_login is None
+
+        # Refresh the page
+        self.driver.get("https://google.com")
+        self.driver.get(self.frontend_base_url + "/jobs")
+        self.db.expire_all()
+        assert self.user.last_login > login_dt
+        assert self.user.previous_login == login_dt
+
 
 class TestSignUp(BaseTest):
 

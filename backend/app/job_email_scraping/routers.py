@@ -97,8 +97,8 @@ def get_all(
             )
         )
 
-    if since_last_login and current_user.last_login:
-        query = query.filter(models.ScrapedJob.created_at >= current_user.last_login)
+    if since_last_login and current_user.previous_login:
+        query = query.filter(models.ScrapedJob.created_at >= current_user.previous_login)
 
     # Apply search filter
     if search:

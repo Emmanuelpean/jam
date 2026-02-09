@@ -9,9 +9,9 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
+from app.base_models import CommonBase, Owned
 from app.config import settings
 from app.database import Base
-from app.base_models import CommonBase, Owned
 
 
 class Setting(CommonBase, Base):
@@ -55,6 +55,7 @@ class User(CommonBase, Base):
     - `is_demo` (bool): Indicates whether the user is a demo account.
     - `is_verified` (bool): Indicates whether the user's email is verified.
     - `last_login` (datetime, optional): The timestamp of the last login.
+    - `previous_login` (datetime, optional): The timestamp of the previous login.
     - `app_version` (str, optional): Version of the application used for the last login.
     - `first_name` (str, optional): User's first name.
     - `last_name` (str, optional): User's last name.
@@ -75,6 +76,7 @@ class User(CommonBase, Base):
     is_demo = Column(Boolean, nullable=False, server_default=expression.false())
     is_verified = Column(Boolean, nullable=False, server_default=expression.false())
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
+    previous_login = Column(TIMESTAMP(timezone=True), nullable=True)
     app_version = Column(String, nullable=True)
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)

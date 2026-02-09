@@ -35,8 +35,8 @@ frontend_path = Path(__file__).parent.parent / "frontend"
 sys.path.insert(0, str(backend_path))
 
 from app.database import create_db_url
-from tests.utils.seed_database import reset_database
-from tests.utils.create_data.core import create_users, create_settings
+from tests.utils.seed_database import reset_database, create_database_data
+from tests.utils.create_data.core import create_users
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -262,25 +262,44 @@ def kill_process_on_port(port: int) -> bool:
     return False
 
 
-class DemoRecorder:
+class DemoBuilder:
     """Records browser interactions and generates GIF demos."""
 
     def __init__(
         self,
-        output_path: str = "demo.gif",
+        output_dir: str = "../frontend/src/assets/",
+        output_name: str = "demo.gif",
         fps: int = 10,
         headless: bool = True,
-        width: int = 1500,
+        width: int = 1300,
         height: int = 1000,
+        scale_factor: int = 4,
+        dark_mode: bool = False,
     ) -> None:
-        self.output_path = "../frontend/src/assets/demo_gifs/" + output_path
+        """Object constructor
+        :param output_name: Name for the output GIF file.
+        :param fps: Frames per second for the GIF.
+        :param headless: Whether to run the browser in headless mode.
+        :param width: Width of the browser window.
+        :param height: Height of the browser window.
+        :param scale_factor: Scale factor for the browser window.
+        :param dark_mode: Whether to use dark mode for the browser."""
+
+        self.gif_output_path = Path(output_dir + "/demo_gifs/" + output_name)
+        self.screenshot_output_path = Path(output_dir + "/screenshots/")
         self.fps = fps
         self.headless = headless
         self.width = width
         self.height = height
+        self.scale_factor = scale_factor
+        self.dark_mode = dark_mode
+
+        # GIF parameters
         self.frames: list[Image.Image] = []
         self.driver = None
         self.wait = None
+
+        # App
         self.backend_process = None
         self.frontend_process = None
         self.backend_url = "http://localhost:8000"
@@ -289,7 +308,9 @@ class DemoRecorder:
     def create_demo_data(self, db, users) -> None:
         """Hook for subclasses to create additional demo data.
         Called by setup_database() after users and settings are created.
-        Default implementation does nothing."""
+        Default implementation loads all the data."""
+
+        create_database_data(db, excludes=["users"])
 
     def setup_database(self) -> tuple[str, str]:
         """Set up test database with fixtures"""
@@ -310,12 +331,14 @@ class DemoRecorder:
         db = TestSessionLocal()
         try:
             data = USER_DATA.copy()
-            data[0]["app_version"] = "10.0.0"
             users = create_users(db, data, rounds=4)
-            create_settings(db)
             self.create_demo_data(db, users)
 
-            print(f"Created {len(users)} test users")
+            if self.dark_mode:
+                for user in users:
+                    user.preferences.dark_mode = True
+                db.commit()
+
             return users[0].email, users[0].plain_password
         finally:
             db.close()
@@ -388,24 +411,21 @@ class DemoRecorder:
             time.sleep(1)
         raise Exception("Frontend failed to start")
 
-    def get_chrome_prefs(self) -> dict:
-        """Return Chrome preferences dict. Override in subclasses to add prefs."""
-        return {
-            "profile.password_manager_leak_detection": False,
-            "credentials_enable_service": False,
-            "password_manager_enabled": False,
-        }
-
     def setup_browser(self) -> None:
         """Set up Chrome browser with custom options"""
 
         print("Setting up browser...")
+        chrome_preferences = {
+            "profile.password_manager_leak_detection": False,
+            "credentials_enable_service": False,
+            "password_manager_enabled": False,
+        }
         chrome_options = Options()
-        chrome_options.add_experimental_option("prefs", self.get_chrome_prefs())
+        chrome_options.add_experimental_option("prefs", chrome_preferences)
         chrome_options.add_argument(f"--window-size={self.width},{self.height}")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--force-device-scale-factor=1")
+        chrome_options.add_argument(f"--force-device-scale-factor={self.scale_factor}")
         chrome_options.add_argument("--disable-dev-shm-usage")
 
         if self.headless:
@@ -446,7 +466,9 @@ class DemoRecorder:
             print(f"  Warning: Failed to capture frame: {e}")
 
     def capture_frames_for_duration(self, duration_seconds: float, interval: float = 0.1) -> None:
-        """Capture frames for a duration"""
+        """Capture frames for a duration
+        :param duration_seconds: Duration in seconds.
+        :param interval: Interval between frames in seconds."""
 
         end_time = time.time() + duration_seconds
         while time.time() < end_time:
@@ -454,14 +476,16 @@ class DemoRecorder:
             time.sleep(interval)
 
     def move_to_element(self, element_id: str, duration_ms: int = 500) -> None:
-        """Move cursor to element with animation"""
+        """Move cursor to element with animation
+        :param element_id: ID of the element.
+        :param duration_ms: Duration of the animation in milliseconds."""
 
         element = self.wait.until(ec.presence_of_element_located((By.ID, element_id)))
         rect = self.driver.execute_script(
             """
             const rect = arguments[0].getBoundingClientRect();
             return {x: rect.left + rect.width/2, y: rect.top + rect.height/2};
-        """,
+            """,
             element,
         )
 
@@ -470,7 +494,8 @@ class DemoRecorder:
         self.capture_frames_for_duration(duration_ms / 1000 + 0.1)
 
     def click_element(self, element_id: str) -> None:
-        """Click element with visual effect"""
+        """Click element with visual effect
+        :param element_id: ID of the element."""
 
         element = self.wait.until(ec.element_to_be_clickable((By.ID, element_id)))
         rect = self.driver.execute_script(
@@ -489,7 +514,10 @@ class DemoRecorder:
         self.capture_frames_for_duration(0.3)
 
     def type_text(self, element_id: str, text: str, delay: float = 0.08) -> None:
-        """Type text with visual typing effect"""
+        """Type text with visual typing effect
+        :param element_id: ID of the element.
+        :param text: Text to type.
+        :param delay: Delay between key presses in seconds."""
 
         element = self.wait.until(ec.presence_of_element_located((By.ID, element_id)))
 
@@ -501,7 +529,9 @@ class DemoRecorder:
         self.capture_frames_for_duration(0.3)
 
     def login_silently(self, email: str, password: str) -> None:
-        """Login without capturing frames"""
+        """Login without capturing frames
+        :param email: Email address.
+        :param password: Password."""
 
         print("Logging in silently...")
         self.driver.get(f"{self.frontend_url}/login")
@@ -520,7 +550,8 @@ class DemoRecorder:
         print("  Login complete")
 
     def right_click_element(self, element_id: str) -> None:
-        """Right-click an element to open context menu with visual effect"""
+        """Right-click an element to open context menu with visual effect
+        :param element_id: ID of the element."""
 
         element = self.wait.until(ec.presence_of_element_located((By.ID, element_id)))
         rect = self.driver.execute_script(
@@ -556,9 +587,9 @@ class DemoRecorder:
 
         duration = 1000 / self.fps  # milliseconds
 
-        iio.imwrite(self.output_path, frames_array, extension=".gif", duration=duration, loop=0)
+        iio.imwrite(self.gif_output_path, frames_array, extension=".gif", duration=duration, loop=0)
 
-        print(f"GIF saved to: {self.output_path}")
+        print(f"GIF saved to: {self.gif_output_path}")
         print(f"  - Frames: {len(self.frames)}")
         print(f"  - FPS: {self.fps}")
         print(f"  - Duration: {len(self.frames) / self.fps:.1f}s")
@@ -597,6 +628,7 @@ class DemoRecorder:
 
     def record(self, email: str, password: str) -> None:
         """Record the demo flow. Must be implemented by subclasses."""
+
         raise NotImplementedError("Subclasses must implement record()")
 
     def run(self) -> None:
@@ -612,6 +644,38 @@ class DemoRecorder:
             self.record(email, password)
 
             self.generate_gif()
+
+        finally:
+            self.cleanup()
+
+    def screenshot(self, pages: list[str]) -> None:
+        """Take screenshots of each page.
+        :param pages: List of page names to screenshot."""
+
+        try:
+            email, password = self.setup_database()
+
+            self.start_backend()
+            self.start_frontend()
+
+            self.setup_browser()
+
+            self.login_silently(email, password)
+
+            self.screenshot_output_path.mkdir(parents=True, exist_ok=True)
+
+            for page in pages:
+                url = f"{self.frontend_url}/{page}"
+                print(f"  Screenshotting: {page}...")
+
+                self.driver.get(url)
+                time.sleep(5)
+
+                screenshot_path = self.screenshot_output_path / f"{page}.png"
+                self.driver.save_screenshot(str(screenshot_path))
+                print(f"    Saved: {screenshot_path}")
+
+            print(f"Done. {len(pages)} screenshots saved to {self.screenshot_output_path}/")
 
         finally:
             self.cleanup()

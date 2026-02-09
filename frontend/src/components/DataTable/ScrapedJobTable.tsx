@@ -17,14 +17,14 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 	const { currentUser } = useAuth();
 	const [showFilters, setShowFilters] = useState(false);
 	const [showPastDeadline, setShowPastDeadline] = useState(false);
-	const [sinceLastLogin, setSinceLastLogin] = useState(false);
+	const [sincePreviousLogin, setSincePreviousLogin] = useState(false);
 
 	const queryParams = useMemo(
 		() => ({
 			show_past_deadline: showPastDeadline.toString(),
-			since_last_login: sinceLastLogin.toString(),
+			since_last_login: sincePreviousLogin.toString(),
 		}),
-		[showPastDeadline, sinceLastLogin]
+		[showPastDeadline, sincePreviousLogin]
 	);
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
@@ -74,14 +74,14 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 							id="show-past-deadline-toggle"
 							label="Show past deadline"
 							checked={showPastDeadline}
-							onChange={() => setShowPastDeadline((prev) => !prev)}
+							onChange={(): void => setShowPastDeadline((prev: boolean): boolean => !prev)}
 						/>
 						<ActionToggle
 							id="since-last-login-toggle"
 							label="Since last login"
-							checked={sinceLastLogin}
-							onChange={() => setSinceLastLogin((prev) => !prev)}
-							disabled={!currentUser?.last_login}
+							checked={sincePreviousLogin}
+							onChange={(): void => setSincePreviousLogin((prev: boolean): boolean => !prev)}
+							disabled={!currentUser?.previous_login}
 						/>
 					</div>
 				}
