@@ -45,7 +45,7 @@ dev = [
 ]
 
 [build-system]
-requires = ["setuptools==80.0.0", "wheel"]
+requires = ["setuptools==68.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project.urls]
