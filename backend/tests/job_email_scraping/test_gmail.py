@@ -4,7 +4,6 @@ import pytest
 
 from app.job_email_scraping.gmail import extract_forwarding_confirmation_link, extract_gmail_originator
 
-
 FORWARDING_EMAIL_BODY = (
     "user@gmail.com a demandé à transférer automatiquement ses messages vers votre adresse e-mail "
     "(jam.scraper@example.com). Pour autoriser user@gmail.com à transférer ses messages vers votre "

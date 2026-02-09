@@ -10,10 +10,10 @@ from app.config import settings
 from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.models import User
-from app.payments.checkout import build_checkout_params
 from app.payments import payment_router, logger, stripe
-from app.payments.webhooks import process_subscription_event
+from app.payments.checkout import build_checkout_params
 from app.payments.customer import get_or_create_stripe_customer
+from app.payments.webhooks import process_subscription_event
 
 
 @payment_router.post("/create-subscription-checkout")

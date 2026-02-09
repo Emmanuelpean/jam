@@ -3,7 +3,6 @@
 import datetime as dt
 from unittest.mock import patch, MagicMock, AsyncMock
 
-import pytest
 import stripe
 from starlette.testclient import TestClient
 
@@ -102,7 +101,7 @@ class TestProcessSubscriptionEvent:
     @patch("app.payments.webhooks.stripe.Subscription.retrieve_async", new_callable=AsyncMock)
     @patch("app.payments.webhooks.email_service.send_trial_end_notification", side_effect=Exception("SMTP error"))
     def test_trial_will_end_email_failure_does_not_crash(
-        self, mock_send_email, mock_retrieve, client: TestClient, session, test_stripe_user
+        self, _mock_send_email, mock_retrieve, client: TestClient, session, test_stripe_user
     ) -> None:
         """Email failure during trial_will_end is caught; webhook still returns 200."""
 

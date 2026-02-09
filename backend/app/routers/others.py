@@ -2,9 +2,10 @@
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
+
 from app.config import settings
-from app.utils import open_json
 from app.job_email_scraping.email_parsers import PLATFORM_SENDER_EMAILS
+from app.utils import open_json
 
 other_router = APIRouter(prefix="/others", tags=["others"])
 

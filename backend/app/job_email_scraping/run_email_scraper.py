@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+
 from app.job_email_scraping.email_scraper import JobEmailScraper
 
 

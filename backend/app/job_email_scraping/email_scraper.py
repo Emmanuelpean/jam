@@ -17,7 +17,6 @@ from app.job_email_scraping.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACT
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
 from app.job_email_scraping.filtering import is_job_filtered_out, is_job_favoured
 from app.job_email_scraping.gmail import extract_forwarding_confirmation_link, extract_gmail_originator
-from app.job_email_scraping.schemas import JobResult
 from app.job_email_scraping.job_scrapers import SCRAPERS
 from app.job_email_scraping.location_parser import LocationParser
 from app.job_email_scraping.models import (
@@ -27,6 +26,7 @@ from app.job_email_scraping.models import (
     JobEmailScrapingPlatformStat,
     JobEmailScrapingServiceError,
 )
+from app.job_email_scraping.schemas import JobResult
 from app.service_runner.service_runner import ServiceRunner
 from app.utils import AppLogger
 

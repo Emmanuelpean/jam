@@ -13,9 +13,7 @@ class TestBuildCheckoutParams:
     @pytest.mark.asyncio
     @patch("app.payments.checkout.settings")
     @patch("app.payments.checkout.stripe.Subscription.list_async", new_callable=AsyncMock)
-    async def test_returns_trial_params_for_new_customer(
-        self, mock_list, mock_settings
-    ) -> None:
+    async def test_returns_trial_params_for_new_customer(self, mock_list, mock_settings) -> None:
         """New customers get 14-day trial with optional payment method."""
 
         mock_settings.stripe_toast_price_id = "price_test123"
@@ -42,9 +40,7 @@ class TestBuildCheckoutParams:
     @pytest.mark.asyncio
     @patch("app.payments.checkout.settings")
     @patch("app.payments.checkout.stripe.Subscription.list_async", new_callable=AsyncMock)
-    async def test_returns_no_trial_params_for_returning_customer(
-        self, mock_list, mock_settings
-    ) -> None:
+    async def test_returns_no_trial_params_for_returning_customer(self, mock_list, mock_settings) -> None:
         """Returning customers do not get trial and must provide payment method."""
 
         mock_settings.stripe_toast_price_id = "price_test123"

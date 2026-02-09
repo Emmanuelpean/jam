@@ -7,9 +7,9 @@ from sqlalchemy.orm import Session
 
 from app import models, database
 from app.core import oauth2
+from app.data_tables import schemas
 from app.geolocation import geocode_location
 from app.routers import generate_data_table_crud_router
-from app.data_tables import schemas
 
 # ---------------------------------------------------- SIMPLE TABLES ---------------------------------------------------
 

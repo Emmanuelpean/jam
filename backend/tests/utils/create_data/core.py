@@ -2,8 +2,8 @@
 
 from app import models, utils
 from app.job_rating.prompts import seed_ai_prompts
-from tests.utils.test_data import core
 from tests.utils.create_data.utils import create_db_entries, override_properties
+from tests.utils.test_data import core
 
 
 def create_settings(db) -> list[models.Setting]:

@@ -1,10 +1,5 @@
 """Mock fixtures for geocoding API calls"""
 
-from typing import Any, Generator
-
-import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
-
 # Mock geocoding responses based on your test data
 MOCK_GEOCODING_RESPONSES = {
     "Cambridge": (

@@ -9,8 +9,8 @@ import pytest
 from app import models
 from app.config import settings
 from app.core import schemas
-from app.utils import hash_token
 from app.core.utils import send_password_reset_email
+from app.utils import hash_token
 
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
