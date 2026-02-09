@@ -61,8 +61,8 @@
 
 * [X] Add toggle to hide scraped jobs with past deadline
 * [X] Merge the custom accordions
-* [ ] Review what is_scraped stand for (add is_processed?)
-* [ ] On database migration, automatically add the system prompt and job prompt template to their associated tables.
+* [X] Review what is_scraped stand for (add is_processed?)
+* [X] On database migration, automatically add the system prompt and job prompt template to their associated tables.
 * [ ] Create free coupons for TOAST for first few users for a couple months
 * [X] Finish the gifs
 * [ ] Rewrite the test data for the test user
@@ -70,3 +70,4 @@
 * [X] Since last login button does not work as user last login is not recorded.
 * [X] Create guide on how to set up TOAST
 * [X] last_login should count when user returns to the page instead of only when they login.
+* [ ] Review what scraped jobs are displayed (is_scraped should be is_processed)
