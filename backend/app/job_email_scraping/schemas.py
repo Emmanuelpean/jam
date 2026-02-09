@@ -2,9 +2,10 @@
 Contains data models for job alert emails, scraped job postings, and service logs
 used in the external job scraping and notification system."""
 
+import datetime as dt
 from datetime import datetime
 
-from pydantic import field_validator
+from pydantic import field_validator, Field
 
 from app.base_schemas import BaseModel, OwnedOut, Out, serialise_relationships
 from app.data_tables.schemas import GeolocationOut
@@ -56,12 +57,15 @@ class ScrapedJob(BaseModel):
     external_job_id: str
     platform: str
     service_log_id: int
+    is_processed: bool = False
     is_scraped: bool = False
     is_failed: bool = False
     scrape_datetime: datetime | None = None
     scrape_error: str | None = None
     is_active: bool = True
     is_imported: bool = False
+    is_skipped: bool = False
+    skip_reason: str | None = None
 
     # Job data
     title: str | None = None
@@ -133,7 +137,7 @@ class JobEmailScrapingServiceLogOut(Out):
 
     # Jobs
     job_found_n: int = 0
-    job_to_scrape_n: int = 0
+    job_to_process_n: int = 0
     job_scrape_succeeded_n: int = 0
     job_scrape_failed_n: int = 0
     job_scrape_copied_n: int = 0
@@ -162,7 +166,7 @@ class JobEmailScrapingPlatformStatOut(Out):
 
     # Jobs
     job_found_ids: list[int] = []
-    job_to_scrape_ids: list[int] = []
+    job_to_process_ids: list[int] = []
     job_scrape_succeeded_ids: list[int] = []
     job_scrape_failed_ids: list[int] = []
     job_scrape_copied_ids: list[int] = []
@@ -243,3 +247,28 @@ class ForwardingConfirmationLinkUpdate(BaseModel):
     """Forwarding Confirmation Link update schema"""
 
     is_used: bool
+
+
+class Salary(BaseModel):
+    min_amount: float | None = None
+    max_amount: float | None = None
+    currency: str | None = None
+
+
+class JobInfo(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    url: str | None = None
+    raw_url: str | None = None
+    deadline: dt.datetime | None = None
+    salary: Salary = Field(default_factory=Salary)
+
+
+class JobResult(BaseModel):
+    platform: str | None = None
+    job_id: str | None = None
+    company: str | None = None
+    company_id: str | None = None
+    location: str | None = None
+    raw: str | None = None
+    job: JobInfo

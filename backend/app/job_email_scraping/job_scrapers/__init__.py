@@ -1,30 +1,14 @@
 """Job scraper module"""
 
-import datetime as dt
+from app.job_email_scraping.email_parsers.utils import Platform
+from app.job_email_scraping.job_scrapers.indeed import IndeedApifyJobScraper
+from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
+from app.job_email_scraping.job_scrapers.nhs import NhsJobScraper
+from app.job_email_scraping.job_scrapers.veganjobs import VeganJobsJobScraper
 
-from pydantic import BaseModel, Field
-
-
-class Salary(BaseModel):
-    min_amount: float | None = None
-    max_amount: float | None = None
-    currency: str | None = None
-
-
-class JobInfo(BaseModel):
-    title: str | None = None
-    description: str | None = None
-    url: str | None = None
-    raw_url: str | None = None
-    deadline: dt.datetime | None = None
-    salary: Salary = Field(default_factory=Salary)
-
-
-class JobResult(BaseModel):
-    platform: str | None = None
-    job_id: str | None = None
-    company: str | None = None
-    company_id: str | None = None
-    location: str | None = None
-    raw: str | None = None
-    job: JobInfo
+SCRAPERS = {
+    Platform.LINKEDIN: LinkedinBrightdataJobScraper,
+    Platform.NHS: NhsJobScraper,
+    Platform.INDEED: IndeedApifyJobScraper,
+    Platform.VEGANJOBS: VeganJobsJobScraper,
+}

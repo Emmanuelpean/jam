@@ -1,6 +1,6 @@
 """Mocks for platform scrapers"""
 
-from app.job_email_scraping.job_scrapers import JobResult
+from app.job_email_scraping.schemas import JobResult
 
 
 class MockLinkedinBrightdataJobScraper(object):

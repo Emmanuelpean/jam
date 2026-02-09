@@ -2,7 +2,7 @@
 
 import re
 
-from app.job_email_scraping.job_scrapers import JobResult, JobInfo, Salary
+from app.job_email_scraping.schemas import Salary, JobInfo, JobResult
 from app.job_email_scraping.job_scrapers.apify import ApifyJobScraper
 from app.job_email_scraping.job_scrapers.brightdata import BrightdataJobScraper
 

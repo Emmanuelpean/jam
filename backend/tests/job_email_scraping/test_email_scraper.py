@@ -8,7 +8,7 @@ import pytest
 from app import models
 from app.config import settings
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
-from app.job_email_scraping.job_scrapers import JobResult
+from app.job_email_scraping.schemas import JobResult
 from tests.job_email_scraping import resources
 from tests.utils.test_data import TOAST_USER_1_INDEX
 
@@ -823,6 +823,7 @@ class TestScrapeJobs:
                 owner_id=linkedin_scraped_jobs[0].owner_id,
                 external_job_id=str(i),
                 is_scraped=True,
+                is_processed=True,
                 is_failed=False,
                 platform="NotLinkedIn",
                 service_log_id=test_job_scraping_service_log.id,
