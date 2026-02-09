@@ -4,8 +4,8 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from app.job_email_scraping.schemas import JobInfo, JobResult
 from app.job_email_scraping.job_scrapers.brightdata import BrightdataJobScraper
+from app.job_email_scraping.schemas import JobInfo, JobResult
 
 
 class ConcreteBrightdataJobScraper(BrightdataJobScraper):

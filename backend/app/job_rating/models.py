@@ -10,8 +10,8 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 from sqlalchemy.orm import relationship
 
-from app.database import Base
 from app.base_models import Owned, CommonBase
+from app.database import Base
 from app.service_runner.models import ServiceLog
 
 

@@ -154,9 +154,7 @@ class TestGeocodeLocation:
 
     @patch("app.geolocation.call_geocoding_api")
     @patch("app.geolocation.utils.open_json")
-    def test_creates_new_geolocation_when_not_cached(
-        self, mock_open_json, mock_api
-    ) -> None:
+    def test_creates_new_geolocation_when_not_cached(self, mock_open_json, mock_api) -> None:
         """Calls API and creates new geolocation when query not in cache."""
 
         mock_session = MagicMock()
@@ -178,9 +176,7 @@ class TestGeocodeLocation:
 
     @patch("app.geolocation.call_geocoding_api")
     @patch("app.geolocation.utils.open_json")
-    def test_matches_country_name_case_insensitive(
-        self, mock_open_json, mock_api
-    ) -> None:
+    def test_matches_country_name_case_insensitive(self, mock_open_json, mock_api) -> None:
         """Matches country name in case-insensitive manner."""
 
         mock_session = MagicMock()

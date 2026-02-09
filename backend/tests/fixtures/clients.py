@@ -7,8 +7,8 @@ from sqlalchemy import orm
 from starlette.testclient import TestClient
 
 from app import database
-from app.main import app
 from app.core.oauth2 import create_access_token
+from app.main import app
 from tests.utils import test_data as td
 
 

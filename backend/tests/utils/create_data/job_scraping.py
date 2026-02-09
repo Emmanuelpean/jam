@@ -3,9 +3,9 @@
 import random
 
 from app import models
+from tests.utils.create_data.utils import create_db_entries, override_properties
 from tests.utils.test_data import job_scraping
 from tests.utils.test_data import utils as test_data_utils
-from tests.utils.create_data.utils import create_db_entries, override_properties
 
 
 def create_job_alert_emails(

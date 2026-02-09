@@ -26,6 +26,10 @@ from tests.utils.create_data.data_tables import (
     create_job_application_updates,
     create_speculative_applications,
 )
+from tests.utils.create_data.job_rating import (
+    create_job_rating_service_logs,
+    create_job_ratings,
+)
 from tests.utils.create_data.job_scraping import (
     create_job_scraping_service_logs,
     create_job_scraping_platform_stats,
@@ -33,10 +37,6 @@ from tests.utils.create_data.job_scraping import (
     create_job_alert_emails,
     create_scraping_filters,
     create_scraped_jobs,
-)
-from tests.utils.create_data.job_rating import (
-    create_job_rating_service_logs,
-    create_job_ratings,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))

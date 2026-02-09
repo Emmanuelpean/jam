@@ -20,8 +20,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
-from app.database import Base
 from app.base_models import CommonBase, Owned
+from app.database import Base
 
 # ------------------------------------------------------ MAPPINGS ------------------------------------------------------
 

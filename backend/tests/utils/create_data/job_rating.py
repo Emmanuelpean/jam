@@ -1,8 +1,8 @@
 """Functions for creating job rating service test data."""
 
 from app import models
-from tests.utils.test_data import job_rating
 from tests.utils.create_data.utils import create_db_entries, override_properties
+from tests.utils.test_data import job_rating
 
 
 def create_job_rating_service_logs(db) -> list[models.JobRatingServiceLog]:

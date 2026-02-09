@@ -1,6 +1,7 @@
 """Use Gemini LLM to rate how well scraped jobs match user qualifications."""
 
 from sqlalchemy.orm import Session
+
 from app.job_rating.chatgpt import openai_query
 from app.job_rating.models import AiSystemPrompt, AiJobPromptTemplate
 

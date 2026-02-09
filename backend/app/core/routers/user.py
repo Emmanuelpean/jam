@@ -10,8 +10,8 @@ from app import utils, models, database
 from app.core import oauth2, schemas
 from app.core.utils import send_email_change_email
 from app.emails.email_service import email_service
-from app.routers import generate_data_table_crud_router, assert_admin
 from app.payments import stripe
+from app.routers import generate_data_table_crud_router, assert_admin
 
 
 # -------------------------------------------------------- USERS -------------------------------------------------------
