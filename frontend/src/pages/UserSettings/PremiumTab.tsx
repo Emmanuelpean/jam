@@ -1,12 +1,16 @@
-import React, { JSX, ReactNode, useEffect, useState } from "react";
-import { Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
+import React, { JSX, ReactNode, useEffect, useRef, useState } from "react";
+import { Alert, Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { useConfig } from "../../contexts/ConfigContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { useAlert } from "../../contexts/AlertContext";
 import { ApiResponse } from "../../services/api/Base";
 import { ActionToggle } from "../../components/rendering/form/ActionToggle";
 import { paymentsApi, PortalSessionResponse } from "../../services/api/Payments";
+import { ScrapingGuideModal, ScrapingGuideModalHandle } from "../../components/ScrapingGuideModal/ScrapingGuideModal";
+import { forwardingConfirmationApi } from "../../services/api/Services";
+import { ForwardingConfirmationLinkData } from "../../services/schemas/Services";
 
 interface SubscriptionStatusDisplay {
 	title: string;
@@ -86,9 +90,12 @@ export const PremiumTab = (): JSX.Element => {
 	const { currentUser, token, updateCurrentUser, fetchUserInfo } = useAuth();
 	const { config } = useConfig();
 	const { showToastSuccess, showToastError } = useGlobalToast();
+	const { showConfirm } = useAlert();
+	const scrapingGuideRef = useRef<ScrapingGuideModalHandle>(null);
 	const [stripeLoading, setStripeLoading] = useState<boolean>(false);
 	const [jobRatingLoading, setJobRatingLoading] = useState<boolean>(false);
 	const [jobScrapingLoading, setJobScrapingLoading] = useState<boolean>(false);
+	const [confirmationLink, setConfirmationLink] = useState<ForwardingConfirmationLinkData | null>(null);
 
 	// Poll user data every 5 seconds while tab is active
 	useEffect(() => {
@@ -104,6 +111,46 @@ export const PremiumTab = (): JSX.Element => {
 			void clearInterval(intervalId);
 		};
 	}, [token, fetchUserInfo]);
+
+	// Fetch pending forwarding confirmation links
+	useEffect((): void => {
+		if (!token) return;
+		const fetchPending = async (): Promise<void> => {
+			try {
+				const response: ApiResponse<ForwardingConfirmationLinkData | null> =
+					await forwardingConfirmationApi.getPending(token);
+				setConfirmationLink(response.data ?? null);
+			} catch {
+				setConfirmationLink(null);
+			}
+		};
+		void fetchPending();
+	}, [token]);
+
+	const promptMarkAsUsed = async (): Promise<void> => {
+		if (!token || !confirmationLink) return;
+		const confirmed: boolean = await showConfirm({
+			title: "Mark as Used",
+			message: `Mark this ${confirmationLink.platform} confirmation link as used?`,
+			confirmText: "Yes, mark as used",
+			cancelText: "No, keep it",
+			id: "confirmation-link-prompt",
+		});
+		if (!confirmed) return;
+		try {
+			await forwardingConfirmationApi.markAsUsed(confirmationLink.id, token);
+			setConfirmationLink(null);
+			showToastSuccess("Confirmation link marked as used");
+		} catch {
+			showToastError("Failed to update confirmation link");
+		}
+	};
+
+	const handleConfirmationLinkClick = (): void => {
+		if (!confirmationLink) return;
+		window.open(confirmationLink.url, "_blank");
+		void promptMarkAsUsed();
+	};
 
 	const handleSubscribe = async (): Promise<void> => {
 		if (!token) return;
@@ -197,6 +244,40 @@ export const PremiumTab = (): JSX.Element => {
 
 	return (
 		<>
+			{/* Forwarding Confirmation Alert */}
+			{confirmationLink && (
+				<Alert
+					id="confirmation-link-alert"
+					variant="warning"
+					className="mb-4"
+					show
+					dismissible
+					onClose={() => void promptMarkAsUsed()}
+				>
+					<Alert.Heading style={{ fontSize: "0.95rem" }} id="confirmation-link-heading">
+						<i className="bi bi-exclamation-triangle me-2" />
+						{confirmationLink.platform} forwarding confirmation required
+					</Alert.Heading>
+					<p className="mb-2 small">
+						Click the link below to confirm email forwarding for {confirmationLink.platform}:
+					</p>
+					<a
+						href={confirmationLink.url}
+						target="_blank"
+						rel="noreferrer"
+						className="small"
+						id="confirmation-link-url"
+						onClick={(e) => {
+							e.preventDefault();
+							handleConfirmationLinkClick();
+						}}
+					>
+						Confirm forwarding
+						<i className="bi bi-box-arrow-up-right ms-1" />
+					</a>
+				</Alert>
+			)}
+
 			{/* Hero Card */}
 			<Card className="mb-4">
 				<Card.Body className={"premium-card"}>
@@ -303,17 +384,28 @@ export const PremiumTab = (): JSX.Element => {
 							</div>
 
 							<p>
-								Automatically scrape and import jobs from job boards by forwarding your job alert emails
-								to:
+								Automatically scrape and import jobs from job aggregator platforms (<i>e.g.</i> Linkedin
+								and Indeed) job alert emails.
 							</p>
 
-							<div className="email-highlight" onClick={copyScraperEmail}>
-								<code>{config?.scraper_email}</code>
-								<div className="copy-hint">Click to copy</div>
-							</div>
+							<h6 className="premium-feature-section-title">How It Works</h6>
 							<p>
-								Simply set up email forwarding rules in your inbox, and new job opportunities will be
-								automatically added to your dashboard.
+								<strong>Stage 1 - Email Scraping</strong>: When a job alert email is forwarded to the
+								JAM inbox, the system parses it to extract key details such as job title, salary,
+								location, and company, depending on what each job board provides.
+							</p>
+							<p className="mb-4">
+								<strong>Stage 2 - Deep Scraping</strong>: JAM then visits the corresponding job board
+								page to collect richer information like the full job description. This deeper scraping
+								is limited to XX jobs per month per user. After this limit is reached, new job alert
+								emails are still parsed, but their job pages are not scraped further.
+							</p>
+							<p>
+								Each scraped job appears in your dashboard, where you can review, import, or remove it.
+								The location and company fields are automatically suggested based on your existing
+								entries. You can also apply scraping filters to refine the results. For example, you can
+								exclude jobs posted by specific companies or filter by location, salary range, or
+								keywords.
 							</p>
 
 							<h6 className="premium-feature-section-title">Supported job boards:</h6>
@@ -358,25 +450,14 @@ export const PremiumTab = (): JSX.Element => {
 								</a>
 							</p>
 
-							<h6 className="premium-feature-section-title">How It Works</h6>
-							<p>
-								<strong>Stage 1 - Email Scraping</strong>: When a job alert email is forwarded to the
-								JAM inbox, the system parses it to extract key details such as job title, salary,
-								location, and company, depending on what each job board provides.
-							</p>
-							<p className="mb-4">
-								<strong>Stage 2 - Deep Scraping</strong>: JAM then visits the corresponding job board
-								page to collect richer information like the full job description. This deeper scraping
-								is limited to XX jobs per month per user. After this limit is reached, new job alert
-								emails are still parsed, but their job pages are not scraped further.
-							</p>
-							<p>
-								Each scraped job appears in your dashboard, where you can review, import, or remove it.
-								The location and company fields are automatically suggested based on your existing
-								entries. You can also apply scraping filters to refine the results. For example, you can
-								exclude jobs posted by specific companies or filter by location, salary range, or
-								keywords.
-							</p>
+							<ActionButton
+								onClick={() => scrapingGuideRef.current?.show()}
+								defaultIcon="bi-book"
+								defaultText="Setup Guide"
+								variant="outline-primary"
+								size="sm"
+								className="mb-3"
+							/>
 						</Card.Body>
 					</Card>
 				</Col>
@@ -448,6 +529,8 @@ export const PremiumTab = (): JSX.Element => {
 					</Card>
 				</Col>
 			</Row>
+
+			<ScrapingGuideModal ref={scrapingGuideRef} />
 		</>
 	);
 };

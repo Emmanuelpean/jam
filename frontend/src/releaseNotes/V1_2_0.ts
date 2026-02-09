@@ -1,6 +1,7 @@
-import followupGif from "../assets/demo_gifs/followup_email_demo.gif";
-import speculativeApplicationGif from "../assets/demo_gifs/speculative_application_demo.gif";
-import scrapingFilterGif from "../assets/demo_gifs/scraping_filter_demo.gif";
+import followupGif from "../assets/demo_gifs/followup_email.gif";
+import speculativeApplicationGif from "../assets/demo_gifs/speculative_application.gif";
+import scrapingFilterGif from "../assets/demo_gifs/scraping_filter.gif";
+import scrapedJobsPng from "../assets/screenshots/scraped-jobs.png";
 
 export default `<h4>Version 1.2.0</h4>
 
@@ -41,6 +42,7 @@ export default `<h4>Version 1.2.0</h4>
     <li>Furthermore, each job is rated by an LLM based on the user qualifications set on their user page.</li>
     <li>You can now subscribe to TOAST in your user settings under "Premium". New users can try TOAST for 14 days for free.</li>
 </ul>
+<img src="${scrapedJobsPng}" alt="TOAST demo" width="100%" style="padding: 0 5rem;" />
 
 <h5>Quality of Life Improvements</h5>
 <ul>

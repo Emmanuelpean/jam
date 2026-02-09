@@ -1283,7 +1283,7 @@ JOB_DATA = [
         "owner_id": 1,
         "source_aggregator_id": 3,
         "source_type": "aggregator",
-        "deadline": (CURRENT_DATE + dt.timedelta(days=15)).strftime(DATE_FORMAT),
+        "deadline": (CURRENT_DATE + dt.timedelta(days=4)).strftime(DATE_FORMAT),
     },
     {
         "title": "Sustainability Software Engineer",

@@ -5,6 +5,7 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Card from "react-bootstrap/Card";
+import Button from "react-bootstrap/Button";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.scss";
 import { releaseNotes as releaseNotesRegistry } from "../../releaseNotes/versions";
@@ -19,7 +20,7 @@ interface Feature {
 
 const AboutPage = (): JSX.Element => {
 	const [openVersion, setOpenVersion] = useState<string | null>(null);
-	const { showWhatsNew } = useWhatsNew();
+	const { showWhatsNew, showWelcome } = useWhatsNew();
 	const versions: string[] = Object.keys(releaseNotesRegistry).sort((a: string, b: string): number => {
 		const pa: number[] = a.split(".").map(Number);
 		const pb: number[] = b.split(".").map(Number);
@@ -143,6 +144,12 @@ const AboutPage = (): JSX.Element => {
 						<Col lg={8} className="text-center mb-2">
 							<h2 className="display-5 fw-bold">What Jam Can Do For You</h2>
 						</Col>
+						<div className="d-flex justify-content-center gap-2 mt-3">
+							<Button variant="outline-primary" onClick={showWelcome}>
+								<i className="bi bi-stars me-2" />
+								Discover JAM
+							</Button>
+						</div>
 					</Row>
 					<div className="features-grid mb-5">
 						{features.map(
@@ -166,20 +173,10 @@ const AboutPage = (): JSX.Element => {
 					<Row className="justify-content-center mb-2">
 						<Col lg={8} className="text-center mb-2">
 							<h2 className="display-5 fw-bold">Release Notes</h2>
-							<button
-								onClick={showWhatsNew}
-								className="glass-badge mt-3"
-								style={{
-									cursor: "pointer",
-									border: "none",
-									transition: "transform 0.2s ease",
-								}}
-								onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-								onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-							>
-								<i className="bi bi-stars me-2" style={{ color: "var(--primary-mid)" }} />
+							<Button variant="outline-primary" className="mt-3" onClick={showWhatsNew}>
+								<i className="bi bi-stars me-2" />
 								View What's New in {packageJson.version}
-							</button>
+							</Button>
 						</Col>
 					</Row>
 					<Row className="justify-content-center">
@@ -264,7 +261,7 @@ const AboutPage = (): JSX.Element => {
 												{ name: "OpenAI", url: "https://openai.com" },
 												{ name: "Stripe", url: "https://stripe.com" },
 												{ name: "Apify", url: "https://apify.com" },
-												{ name: "Scrapfly", url: "https://scrapfly.io" },
+												{ name: "BrightData", url: "https://brightdata.com" },
 											],
 										},
 									].map((section) => (

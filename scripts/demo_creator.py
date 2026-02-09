@@ -14,11 +14,11 @@ import sys
 import time
 from pathlib import Path
 
-import imageio.v3 as iio
-import numpy as np
 import psutil
 import requests
 from PIL import Image
+
+Image.MAX_IMAGE_PIXELS = None
 from selenium import webdriver
 from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.options import Options
@@ -269,11 +269,12 @@ class DemoBuilder:
         self,
         output_dir: str = "../frontend/src/assets/",
         output_name: str = "demo.gif",
-        fps: int = 10,
+        fps: int = 30,
         headless: bool = True,
-        width: int = 1300,
-        height: int = 1000,
-        scale_factor: int = 4,
+        width: int = 1500,
+        height: int = 850,
+        scale_factor: int = 1,
+        speed: float = 0.25,
         dark_mode: bool = False,
     ) -> None:
         """Object constructor
@@ -283,11 +284,13 @@ class DemoBuilder:
         :param width: Width of the browser window.
         :param height: Height of the browser window.
         :param scale_factor: Scale factor for the browser window.
+        :param speed: Playback speed multiplier (e.g. 0.5 = half speed, 2.0 = double speed).
         :param dark_mode: Whether to use dark mode for the browser."""
 
         self.gif_output_path = Path(output_dir + "/demo_gifs/" + output_name)
         self.screenshot_output_path = Path(output_dir + "/screenshots/")
         self.fps = fps
+        self.speed = speed
         self.headless = headless
         self.width = width
         self.height = height
@@ -310,7 +313,7 @@ class DemoBuilder:
         Called by setup_database() after users and settings are created.
         Default implementation loads all the data."""
 
-        create_database_data(db, excludes=["users"])
+        create_database_data(db, users=users)
 
     def setup_database(self) -> tuple[str, str]:
         """Set up test database with fixtures"""
@@ -579,15 +582,21 @@ class DemoBuilder:
             print("No frames captured!")
             return
 
-        frames_array = []
+        processed_frames = []
         for frame in self.frames:
             if frame.mode == "RGBA":
                 frame = frame.convert("RGB")
-            frames_array.append(np.array(frame))
+            processed_frames.append(frame)
 
-        duration = 1000 / self.fps  # milliseconds
+        duration = int((1000 / self.fps) / self.speed)  # milliseconds per frame
 
-        iio.imwrite(self.gif_output_path, frames_array, extension=".gif", duration=duration, loop=0)
+        processed_frames[0].save(
+            self.gif_output_path,
+            save_all=True,
+            append_images=processed_frames[1:],
+            duration=duration,
+            loop=0,
+        )
 
         print(f"GIF saved to: {self.gif_output_path}")
         print(f"  - Frames: {len(self.frames)}")

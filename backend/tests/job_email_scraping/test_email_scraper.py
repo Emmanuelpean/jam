@@ -851,3 +851,193 @@ class TestScrapeJobs:
         assert len(platform_stat.job_scrape_skipped_ids) == len(linkedin_scraped_jobs)
         assert len(platform_stat.job_scrape_failed_ids) == 0
         assert len(platform_stat.job_scrape_copied_ids) == 0
+
+
+# ----------------------------------------- FORWARDING EMAIL CONFIRMATION ----------------------------------------------
+
+
+class TestExtractForwardingEmailConfirmation:
+    """Test class for JobScraper.extract_forwarding_email_confirmation method"""
+
+    GMAIL_USER_INDEX = 5
+    FORWARDING_CONFIRMATION_URL = (
+        "https://mail-settings.google.com/mail/vf-%5BANGjdJ8nH5EPXs18VsktRI5FvcVb%5D-YPBzzHEVNTIn"
+    )
+    FORWARDING_CANCELLATION_URL = "https://mail-settings.google.com/mail/uf-%5BANGjdJ8crp9rBh5i9I%5D-YPBzzHEVNTIn"
+
+    def _make_forwarding_email(self, user_email: str, email_id: str = "fwd_confirm_1") -> dict:
+        """Build a mock forwarding confirmation email dict for a given gmail address."""
+        return {
+            "id": email_id,
+            "subject": "Gmail Forwarding Confirmation",
+            "from": "forwarding-noreply@google.com",
+            "to": "jam.scraper@example.com",
+            "date": dt.datetime(2025, 1, 1),
+            "platform": "gmail",
+            "body": (
+                f"{user_email} has requested to automatically forward mail to your email address "
+                f"(jam.scraper@example.com). Please click the link below to confirm the request: "
+                f"{self.FORWARDING_CONFIRMATION_URL} "
+                f"If you accidentally clicked the link, cancel here: "
+                f"{self.FORWARDING_CANCELLATION_URL} "
+                f"For more information visit http://support.google.com/mail/bin/answer.py?answer=184973."
+            ),
+        }
+
+    @staticmethod
+    def _make_forwarding_email_no_link(user_email: str, email_id: str = "fwd_no_link_1") -> dict:
+        """Build a mock forwarding email without a valid confirmation link."""
+        return {
+            "id": email_id,
+            "subject": "Gmail Forwarding Confirmation",
+            "from": "forwarding-noreply@google.com",
+            "to": "jam.scraper@example.com",
+            "date": dt.datetime(2025, 1, 1),
+            "platform": "gmail",
+            "body": f"{user_email} has requested to forward mail. No valid links here.",
+        }
+
+    def test_success_creates_confirmation_link(
+        self, test_job_scraper, test_users, test_job_scraping_service_log, session
+    ) -> None:
+        """Test successful extraction and saving of a forwarding confirmation link"""
+
+        gmail_user = test_users[self.GMAIL_USER_INDEX]
+        email_id = "fwd_confirm_1"
+        email_data = self._make_forwarding_email(gmail_user.email, email_id)
+
+        with (
+            patch.object(test_job_scraper, "get_email_ids", return_value=[[email_id]]) as mock_ids,
+            patch.object(test_job_scraper, "get_email_data", return_value=email_data),
+        ):
+            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+            mock_ids.assert_called_once_with(from_email="forwarding-noreply@google.com", timedelta_days=300)
+
+        # Verify confirmation link was created
+        link = session.query(models.ForwardingConfirmationLink).first()
+        assert link.url == self.FORWARDING_CONFIRMATION_URL
+        assert link.platform == "gmail"
+        assert link.owner_id == gmail_user.id
+        assert link.email_external_id == email_id
+        assert link.is_used is False
+
+    def test_skips_existing_entry(self, test_job_scraper, test_users, test_job_scraping_service_log, session) -> None:
+        """Test that an already-processed email is skipped without creating duplicates"""
+
+        gmail_user = test_users[self.GMAIL_USER_INDEX]
+        email_id = "fwd_confirm_existing"
+        email_data = self._make_forwarding_email(gmail_user.email, email_id)
+
+        # Pre-create an existing entry
+        # noinspection PyArgumentList
+        existing = models.ForwardingConfirmationLink(
+            email_external_id=email_id,
+            url="https://mail-settings.google.com/mail/vf-old",
+            platform="gmail",
+            owner_id=gmail_user.id,
+        )
+        session.add(existing)
+        session.commit()
+
+        with (
+            patch.object(test_job_scraper, "get_email_ids", return_value=[[email_id]]),
+            patch.object(test_job_scraper, "get_email_data", return_value=email_data) as mock_get_data,
+        ):
+            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+            # get_email_data should NOT be called since the entry already exists
+            mock_get_data.assert_not_called()
+
+        # Verify only the original entry exists
+        count = session.query(models.ForwardingConfirmationLink).count()
+        assert count == 1
+
+    def test_no_emails_found_logs_error(self, test_job_scraper, test_job_scraping_service_log, session) -> None:
+        """Test that when get_email_ids raises an exception, a service error is logged"""
+
+        with patch.object(test_job_scraper, "get_email_ids", side_effect=Exception("IMAP error")):
+            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+
+        # Verify a service error was logged
+        errors = session.query(models.JobEmailScrapingServiceError).all()
+        assert len(errors) == 1
+        assert "Failed to get email with platform gmail" in errors[0].message
+
+        # Verify no confirmation links were created
+        count = session.query(models.ForwardingConfirmationLink).count()
+        assert count == 0
+
+    def test_no_link_in_body_skips(self, test_job_scraper, test_users, test_job_scraping_service_log, session) -> None:
+        """Test that an email without a valid confirmation link is skipped"""
+
+        gmail_user = test_users[self.GMAIL_USER_INDEX]
+        email_id = "fwd_no_link"
+        email_data = self._make_forwarding_email_no_link(gmail_user.email, email_id)
+
+        with (
+            patch.object(test_job_scraper, "get_email_ids", return_value=[[email_id]]),
+            patch.object(test_job_scraper, "get_email_data", return_value=email_data),
+        ):
+            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+
+        # Verify no confirmation links were created
+        count = session.query(models.ForwardingConfirmationLink).count()
+        assert count == 0
+
+    def test_user_not_found_skips(self, test_job_scraper, test_job_scraping_service_log, session) -> None:
+        """Test that when the gmail originator is not a registered user, the link is skipped"""
+
+        email_id = "fwd_unknown_user"
+        email_data = self._make_forwarding_email("unknown_user@gmail.com", email_id)
+
+        with (
+            patch.object(test_job_scraper, "get_email_ids", return_value=[[email_id]]),
+            patch.object(test_job_scraper, "get_email_data", return_value=email_data),
+        ):
+            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+
+        # Verify no confirmation links were created
+        count = session.query(models.ForwardingConfirmationLink).count()
+        assert count == 0
+
+    def test_multiple_emails_processed(
+        self, test_job_scraper, test_users, test_job_scraping_service_log, session
+    ) -> None:
+        """Test that multiple forwarding confirmation emails are all processed"""
+
+        gmail_user = test_users[self.GMAIL_USER_INDEX]
+        email_id_1 = "fwd_multi_1"
+        email_id_2 = "fwd_multi_2"
+        email_data_1 = self._make_forwarding_email(gmail_user.email, email_id_1)
+        email_data_2 = self._make_forwarding_email(gmail_user.email, email_id_2)
+
+        def mock_get_email_data(eid: str) -> dict:
+            return {email_id_1: email_data_1, email_id_2: email_data_2}[eid]
+
+        with (
+            patch.object(test_job_scraper, "get_email_ids", return_value=[[email_id_1, email_id_2]]),
+            patch.object(test_job_scraper, "get_email_data", side_effect=mock_get_email_data),
+        ):
+            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+
+        # Verify both confirmation links were created
+        links = session.query(models.ForwardingConfirmationLink).all()
+        assert len(links) == 2
+        assert {link.email_external_id for link in links} == {email_id_1, email_id_2}
+
+    def test_idempotent_on_rerun(self, test_job_scraper, test_users, test_job_scraping_service_log, session) -> None:
+        """Test that running extraction twice does not create duplicate entries"""
+
+        gmail_user = test_users[self.GMAIL_USER_INDEX]
+        email_id = "fwd_idempotent"
+        email_data = self._make_forwarding_email(gmail_user.email, email_id)
+
+        with (
+            patch.object(test_job_scraper, "get_email_ids", return_value=[[email_id]]),
+            patch.object(test_job_scraper, "get_email_data", return_value=email_data),
+        ):
+            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+
+        # Verify only one confirmation link exists
+        count = session.query(models.ForwardingConfirmationLink).count()
+        assert count == 1

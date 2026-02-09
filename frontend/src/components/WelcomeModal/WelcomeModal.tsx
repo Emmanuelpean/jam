@@ -1,7 +1,6 @@
 import React, { forwardRef, JSX } from "react";
 import { SlideCarouselModal, SlideCarouselModalHandle } from "../SlideCarouselModal/SlideCarouselModal";
-import { ReleaseSlide, WELCOME_SLIDES } from "../../releaseNotes/versions";
-import followupGif from "../../assets/demo_gifs/followup_email_demo.gif";
+import { WELCOME_SLIDES } from "../../releaseNotes/versions";
 
 export type WelcomeModalHandle = SlideCarouselModalHandle;
 

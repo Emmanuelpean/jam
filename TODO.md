@@ -21,6 +21,7 @@
 * [ ] Move the scrollbar inside the tables so that the header is always visible
 * [ ] Add the ability to filter by columns and hide rejected jobs
 
+* [ ] Add favourite filters for scraping
 
 * [X] Add payment system for toast
 * [X] Change the service runner to work with multiple workers
@@ -63,10 +64,9 @@
 * [ ] Review what is_scraped stand for (add is_processed?)
 * [ ] On database migration, automatically add the system prompt and job prompt template to their associated tables.
 * [ ] Create free coupons for TOAST for first few users for a couple months
-* [ ] Finish the gifs
+* [X] Finish the gifs
 * [ ] Rewrite the test data for the test user
 * [ ] On Small screens, modal elements on multiple columns and rows are all on same column but spacing differs
-* [ ] Add favourite filters for scraping
-* [ ] Since last login button does not work as user last login is not recorded.
+* [X] Since last login button does not work as user last login is not recorded.
 * [ ] Create guide on how to set up TOAST
 * [ ] last_login should count when user returns to the page instead of only when they login.

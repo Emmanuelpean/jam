@@ -125,6 +125,14 @@ export interface ScrapingFilterData extends OwnedOut {
 	filtered_jobs: number[];
 }
 
+// ------------------------------------------- FORWARDING CONFIRMATION LINK -------------------------------------------
+
+export interface ForwardingConfirmationLinkData extends OwnedOut {
+	url: string;
+	platform: string;
+	is_used: boolean;
+}
+
 // ---------------------------------------------------- AI PROMPTS ----------------------------------------------------
 
 export interface AiSystemPromptData extends BaseOut {

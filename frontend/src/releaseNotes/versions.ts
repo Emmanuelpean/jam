@@ -1,9 +1,12 @@
 import V1_0_0 from "./V1_0_0";
 import V1_1_0 from "./V1_1_0";
 import V1_2_0 from "./V1_2_0";
-import followupGif from "../assets/demo_gifs/followup_email_demo.gif";
-import speculativeApplicationGif from "../assets/demo_gifs/speculative_application_demo.gif";
-import scrapingFilterGif from "../assets/demo_gifs/scraping_filter_demo.gif";
+import followupGif from "../assets/demo_gifs/followup_email.gif";
+import speculativeApplicationGif from "../assets/demo_gifs/speculative_application.gif";
+import scrapingFilterGif from "../assets/demo_gifs/scraping_filter.gif";
+import jobsGif from "../assets/demo_gifs/job_page.gif";
+import scrapedJobsPng from "../assets/screenshots/scraped-jobs.png";
+import dashboardPng from "../assets/screenshots/dashboard.png";
 import { getEntityIcon } from "../components/rendering/view/Icons";
 
 export interface ReleaseSlide {
@@ -24,37 +27,48 @@ export const WELCOME_SLIDES: ReleaseSlide[] = [
 		icon: "briefcase",
 		title: "Job Application Records",
 		description:
-			"Create and manage comprehensive job application records. Track role details, application dates, companies, contacts, and notes — all in one centralised dashboard.",
+			"Create and manage comprehensive job application records. Track role details, application dates, companies, " +
+			"contacts, and notes — all in one centralised dashboard.",
+		image: jobsGif,
 	},
 	{
 		icon: "calendar-check",
 		title: "Interview Scheduling",
 		description:
-			"Keep track of your upcoming interviews, stages, and outcomes. Never miss a meeting or deadline with clear scheduling and status tracking.",
+			"Keep track of your upcoming interviews, stages, and outcomes. Never miss a meeting or deadline with clear " +
+			"scheduling and status tracking.",
+		image: dashboardPng,
 	},
 	{
 		icon: "bar-chart",
 		title: "Progress Monitoring",
 		description:
-			"Monitor the progress of every application through customisable statuses. Get a clear overview of deadlines, follow-ups, and where each opportunity stands.",
+			"Monitor the progress of every application through customisable statuses. Get a clear overview of deadlines, " +
+			"follow-ups, and where each opportunity stands.",
+		image: dashboardPng,
 	},
 	{
 		icon: "inbox",
 		title: "Job Alert Scraping",
 		description:
-			"Automatically extract and organise job alert data from your emails. Forward job alerts to a designated address and let TOAST parse, structure, and present the results.",
+			"Automatically extract and organise job alert data from your emails. Forward job alerts to a designated " +
+			"address and let TOAST parse, structure, and present the results.",
+		image: scrapedJobsPng,
 	},
 	{
 		icon: "star-half",
 		title: "Job Rating",
 		description:
-			"Each scraped job is automatically rated by an AI based on your qualifications and preferences, helping you prioritise the best opportunities.",
+			"Each scraped job is automatically rated by an AI based on your qualifications and preferences, helping you " +
+			"prioritise the best opportunities.",
+		image: scrapedJobsPng,
 	},
 	{
 		icon: "envelope-arrow-up",
 		title: "Follow-Up Email Generator",
 		description:
-			"Generate personalised follow-up emails for any job application. Right-click a job, choose a contact, and get a ready-to-send email signed with your name.",
+			"Generate personalised follow-up emails for any job application. Right-click a job, choose a contact, " +
+			"and get a ready-to-send email signed with your name.",
 		image: followupGif,
 	},
 ];
@@ -159,6 +173,7 @@ export const releaseSlides: Record<string, ReleaseSlide[]> = {
 			description:
 				"TOAST (Turn Opportunity Alerts into Structured Tracking) is now available to everyone. " +
 				"Subscribe in your user settings under Premium. New users can try TOAST free for 14 days.",
+			image: scrapedJobsPng,
 		},
 		{
 			icon: "moon-stars",
@@ -167,6 +182,7 @@ export const releaseSlides: Record<string, ReleaseSlide[]> = {
 				"Dark mode has been added. The user settings page has been reworked, " +
 				"and you can now update your first and last name, mark contacts as recruiters, " +
 				"edit badge data via right-click, and delete your account.",
+			image: dashboardPng,
 		},
 		{
 			icon: "wrench",

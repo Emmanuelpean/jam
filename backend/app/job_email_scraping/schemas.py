@@ -227,3 +227,19 @@ class ScrapingFilterOut(OwnedOut, ScrapingFilterCreate):
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
         return serialise_relationships(value)
+
+
+# ------------------------------------------- FORWARDING CONFIRMATION LINK ---------------------------------------------
+
+
+class ForwardingConfirmationLinkOut(OwnedOut):
+    """Forwarding Confirmation Link output schema"""
+
+    url: str
+    platform: str
+
+
+class ForwardingConfirmationLinkUpdate(BaseModel):
+    """Forwarding Confirmation Link update schema"""
+
+    is_used: bool

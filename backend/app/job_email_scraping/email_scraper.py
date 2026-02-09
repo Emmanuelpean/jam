@@ -5,8 +5,8 @@ platforms (LinkedIn, Indeed, Veganjobs, etc.), stores email and job metadata in 
 database, scrapes full job details (via platform scrapers or from email
 content), and records run statistics in an JobScrapingServiceLog."""
 
-import traceback
 import datetime as dt
+import traceback
 
 from app import utils, models as models
 from app.config import settings
@@ -16,6 +16,7 @@ from app.geolocation import geocode_location
 from app.job_email_scraping.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
 from app.job_email_scraping.filtering import is_job_filtered_for_user, is_job_favoured_for_user
+from app.job_email_scraping.gmail import extract_forwarding_confirmation_link, extract_gmail_originator
 from app.job_email_scraping.job_scrapers import JobResult
 from app.job_email_scraping.job_scrapers.indeed import IndeedApifyJobScraper
 from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
@@ -139,6 +140,58 @@ class JobEmailScraper(EmailService):
         :return: True if the user has exceeded their quota"""
 
         return self.get_user_monthly_scrape_count(owner_id) >= settings.monthly_scrape_quota
+
+    def extract_forwarding_email_confirmation(self, service_log: JobEmailScrapingServiceLog):
+        """Extract and save forwarding confirmation links from emails sent by different email providers
+        :param service_log: associated JobEmailScrapingServiceLog instance"""
+
+        email_platforms = {"gmail": "forwarding-noreply@google.com"}
+        for email_platform in email_platforms:
+            try:
+                email_ids = self.get_email_ids(from_email=email_platforms[email_platform], timedelta_days=300)[0]
+            except:
+                self.log_service_error(service_log, f"Failed to get email with platform {email_platform}.")
+                continue
+
+            for email_id in email_ids:
+                existing_entry = (
+                    self.db.query(models.ForwardingConfirmationLink)
+                    .filter(models.ForwardingConfirmationLink.email_external_id == email_id)
+                    .first()
+                )
+                if existing_entry:
+                    self.logger.info(f"Forwarding confirmation link for email {email_id} already exists. Skipping.")
+                    continue
+                else:
+                    email = self.get_email_data(email_id)
+                try:
+                    link = extract_forwarding_confirmation_link(email["body"])
+                    if not link:
+                        message = (
+                            "Forwarding confirmation link not found in email body. Skipping forwarding confirmation."
+                        )
+                        self.logger.warning(message)
+                        continue
+                    user_email = extract_gmail_originator(email["body"])
+                    user = self.db.query(models.User).filter(models.User.email == user_email).first()
+                    if not user:
+                        message = (
+                            f"User with email {user_email} not found in database. Skipping forwarding confirmation."
+                        )
+                        self.logger.warning(message)
+                        continue
+                    # noinspection PyArgumentList
+                    confirmation = models.ForwardingConfirmationLink(
+                        email_external_id=email["id"],
+                        url=link,
+                        platform=email_platform,
+                        owner_id=user.id,
+                    )
+                    self.db.add(confirmation)
+                    self.db.commit()
+                except:
+                    message = f"Failed to extract forwarding confirmation link from email {email["id"]}"
+                    self.log_service_error(service_log, message)
 
     # ------------------------------------------------ EMAIL PROCESSING ------------------------------------------------
 
@@ -361,6 +414,7 @@ class JobEmailScraper(EmailService):
         start_time = dt.datetime.now()
         self.logger.info("Starting email scraping workflow")
         service_log = self.create_service_log(run_datetime=start_time)
+        self.extract_forwarding_email_confirmation(service_log)
 
         try:
             # Process emails for all users

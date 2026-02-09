@@ -1,5 +1,6 @@
 import {
 	AiSystemPromptData,
+	ForwardingConfirmationLinkData,
 	JobRatingData,
 	JobRatingServiceLogData,
 	JobScrapingServiceLogData,
@@ -128,3 +129,16 @@ export const jobRatingServiceRunnerApi: JobRatingServiceRunnerApi = {
 };
 
 export const aiSystemPromptsApi: CrudApi<AiSystemPromptData> = createCrudApi("ai-system-prompts");
+
+// Forwarding Confirmation Link API
+export interface ForwardingConfirmationLinkApi {
+	getPending: (token: string) => ApiResponsePromise<ForwardingConfirmationLinkData | null>;
+	markAsUsed: (id: number, token: string) => ApiResponsePromise<ForwardingConfirmationLinkData>;
+}
+
+export const forwardingConfirmationApi: ForwardingConfirmationLinkApi = {
+	getPending: (token: string): ApiResponsePromise<ForwardingConfirmationLinkData | null> =>
+		baseApi.get("forwarding-confirmation-links/pending", token),
+	markAsUsed: (id: number, token: string): ApiResponsePromise<ForwardingConfirmationLinkData> =>
+		baseApi.put(`forwarding-confirmation-links/${id}`, { is_used: true }, token),
+};

@@ -1,4 +1,4 @@
-"""GIF Generator Script for Speculative Applications Demo"""
+"""GIF Generator Script for Job Page Demo"""
 
 import argparse
 import time
@@ -10,43 +10,42 @@ from selenium.webdriver.support import expected_conditions as ec
 from demo_creator import DemoBuilder
 
 
-class SpeculativeApplicationBuilder(DemoBuilder):
-    """Records the speculative application workflow and generates a GIF"""
+class JobPageBuilder(DemoBuilder):
+    """Records the job page workflow and generates a GIF"""
 
     def record(self, email: str, password: str) -> None:
-        """Record the speculative application flow"""
+        """Record the job page flow: add job, fill details, save, re-open"""
 
-        print("Recording speculative application flow...")
+        print("Recording job page flow...")
 
         # Login silently (no frame capture)
         self.login_silently(email, password)
 
-        # Navigate to speculative applications page
-        print("  - Navigating to speculative applications page...")
-        self.driver.get(f"{self.frontend_url}/speculative-applications")
+        # Navigate to jobs page
+        print("  - Navigating to jobs page...")
+        self.driver.get(f"{self.frontend_url}/jobs")
         time.sleep(2)
         self.inject_highlighting()
 
-        # Capture the page
-        print("  - Capturing speculative applications page...")
+        # Capture the jobs page
+        print("  - Capturing jobs page...")
         self.capture_frames_for_duration(1.5)
 
         # Click the Add button
         print("  - Clicking add button...")
-        self.move_to_element("add-speculativeApplication-button", 500)
-        self.click_element("add-speculativeApplication-button")
+        self.move_to_element("add-job-button", 500)
+        self.click_element("add-job-button")
 
         # Wait for the add modal to appear
-        print("  - Waiting for form modal...")
-        self.wait.until(ec.presence_of_element_located((By.ID, "modal-edit-speculativeApplication")))
+        print("  - Waiting for add modal...")
+        self.wait.until(ec.presence_of_element_located((By.ID, "modal-edit-job")))
         time.sleep(0.5)
         self.capture_frames_for_duration(1.0)
 
-        print("  - Setting time...")
-        clock_icon = self.wait.until(ec.presence_of_element_located((By.ID, "date_set_current")))
-        self.move_to_element_obj(clock_icon, 400)
-        clock_icon.click()
-        time.sleep(0.3)
+        # Fill in the job title
+        print("  - Typing job title...")
+        self.move_to_element("title", 400)
+        self.type_text("title", "Python Software Engineer", delay=0.04)
         self.capture_frames_for_duration(0.5)
 
         # Select a company using react-select
@@ -62,30 +61,49 @@ class SpeculativeApplicationBuilder(DemoBuilder):
         time.sleep(0.3)
         self.capture_frames_for_duration(0.5)
 
-        # Fill in contact email
-        print("  - Typing contact email...")
-        self.move_to_element("contact_email", 400)
-        self.type_text("contact_email", "careers@example.com", delay=0.04)
+        # Fill in the job URL
+        print("  - Typing job URL...")
+        self.move_to_element("url", 400)
+        self.type_text("url", "https://linkedin.com/jobs/123456", delay=0.03)
         self.capture_frames_for_duration(0.5)
 
-        # Fill in note
-        print("  - Typing note...")
-        self.move_to_element("note", 400)
-        self.type_text("note", "Interested in software engineering roles.", delay=0.04)
+        # Set deadline
+        print("  - Setting deadline...")
+        self.move_to_element("deadline", 400)
+        deadline_field = self.wait.until(ec.presence_of_element_located((By.ID, "deadline")))
+        deadline_field.send_keys("2026-03-15")
+        time.sleep(0.3)
         self.capture_frames_for_duration(0.5)
+
+        # Select contacts using react-select
+        print("  - Selecting contacts...")
+        contacts_select = self.wait.until(ec.element_to_be_clickable((By.ID, "contacts")))
+        self.move_to_element_obj(contacts_select, 400)
+        contacts_select.click()
+        time.sleep(0.3)
+        self.capture_frames_for_duration(0.5)
+
+        contacts_input = self.driver.switch_to.active_element
+        contacts_input.send_keys(Keys.ENTER)
+        time.sleep(0.3)
+        self.capture_frames_for_duration(0.5)
+
+        # Close the contacts dropdown
+        contacts_input.send_keys(Keys.ESCAPE)
+        time.sleep(0.2)
 
         # Click confirm/save button
-        print("  - Saving speculative application...")
-        self.move_to_element("modal-edit-speculativeApplication-confirm-button", 500)
-        self.click_element("modal-edit-speculativeApplication-confirm-button")
+        print("  - Saving job...")
+        self.move_to_element("modal-edit-job-confirm-button", 500)
+        self.click_element("modal-edit-job-confirm-button")
 
         # Wait for the modal to close and the entry to appear in the table
-        print("  - Waiting for application to be saved...")
+        print("  - Waiting for job to be saved...")
         time.sleep(2)
         self.capture_frames_for_duration(1.5)
 
         # Click the newly created row to re-open it
-        print("  - Re-opening the created application...")
+        print("  - Re-opening the created job...")
         row = self.wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, ".table-row-clickable")))
         rect = self.driver.execute_script(
             """
@@ -102,8 +120,8 @@ class SpeculativeApplicationBuilder(DemoBuilder):
         row.click()
 
         # Wait for the view modal to appear
-        print("  - Viewing application details...")
-        self.wait.until(ec.presence_of_element_located((By.ID, "modal-view-speculativeApplication")))
+        print("  - Viewing job details...")
+        self.wait.until(ec.presence_of_element_located((By.ID, "modal-view-job")))
         time.sleep(1)
         self.capture_frames_for_duration(4.0)
 
@@ -129,7 +147,7 @@ def main():
     parser.add_argument("--no-headless", action="store_true", help="Show browser window (default: headless)")
     args = parser.parse_args()
 
-    recorder = SpeculativeApplicationBuilder(output_name="speculative_application.gif", headless=not args.no_headless)
+    recorder = JobPageBuilder(output_name="job_page.gif", headless=not args.no_headless)
     recorder.run()
 
 
