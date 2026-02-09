@@ -225,6 +225,28 @@ class TestCurrentUser:
         response = client.put("/current-user", json=update_data)
         assert response.status_code == 401
 
+    def test_heartbeat_updates_last_login(self, regular_user_client, test_regular_user, session) -> None:
+        """Test that heartbeat updates last_login and previous_login."""
+
+        # Set an initial last_login
+        initial_last_login = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        test_regular_user.last_login = initial_last_login
+        session.commit()
+
+        response = regular_user_client.post("/current-user/heartbeat")
+        assert response.status_code == 200
+        assert response.json()["success"] is True
+
+        updated_user = self.get_user(test_regular_user.id, session)
+        assert updated_user.previous_login == initial_last_login
+        assert updated_user.last_login > initial_last_login
+
+    def test_heartbeat_unauthenticated(self, client) -> None:
+        """Test that heartbeat requires authentication."""
+
+        response = client.post("/current-user/heartbeat")
+        assert response.status_code == 401
+
 
 class TestSendEmailChangeWithRateLimit:
 

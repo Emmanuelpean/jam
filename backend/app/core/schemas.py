@@ -162,6 +162,7 @@ class UserOut(Out):
     is_demo: bool
     is_verified: bool
     last_login: dt.datetime | None
+    previous_login: dt.datetime | None
     app_version: str | None
     first_name: str | None = None
     last_name: str | None = None

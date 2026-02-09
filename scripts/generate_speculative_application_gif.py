@@ -7,7 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as ec
 
-from demo_recorder import DemoRecorder
+from demo_creator import DemoBuilder
 from tests.utils.create_data.data_tables import (
     create_geolocations,
     create_companies,
@@ -15,7 +15,7 @@ from tests.utils.create_data.data_tables import (
 )
 
 
-class SpeculativeApplicationRecorder(DemoRecorder):
+class SpeculativeApplicationBuilder(DemoBuilder):
     """Records the speculative application workflow and generates a GIF"""
 
     def create_demo_data(self, db, users) -> None:
@@ -145,8 +145,8 @@ def main():
     parser.add_argument("--fps", type=int, default=10, help="Frames per second")
     args = parser.parse_args()
 
-    recorder = SpeculativeApplicationRecorder(
-        output_path=args.output,
+    recorder = SpeculativeApplicationBuilder(
+        output_name=args.output,
         fps=args.fps,
         headless=not args.no_headless,
     )

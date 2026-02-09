@@ -1,4 +1,4 @@
-import React, { forwardRef, JSX, useImperativeHandle, useState } from "react";
+import React, { forwardRef, JSX, useCallback, useImperativeHandle, useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { ActionButton } from "../rendering/form/ActionButton";
 import { useAuth } from "../../contexts/AuthContext";
@@ -26,6 +26,18 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 		const [currentStep, setCurrentStep] = useState<number>(0);
 		const [loading, setLoading] = useState<boolean>(false);
 		const { updateCurrentUser } = useAuth();
+		const [slideHeight, setSlideHeight] = useState<number | undefined>(undefined);
+		const measureRef = useRef<HTMLDivElement | null>(null);
+
+		const measureSlides = useCallback((): void => {
+			if (!measureRef.current) return;
+			const children = measureRef.current.children;
+			let maxHeight = 0;
+			for (let i = 0; i < children.length; i++) {
+				maxHeight = Math.max(maxHeight, (children[i] as HTMLElement).offsetHeight);
+			}
+			if (maxHeight > 0) setSlideHeight(maxHeight);
+		}, []);
 
 		const isLastStep: boolean = currentStep === slides.length - 1;
 		const isFirstStep: boolean = currentStep === 0;
@@ -66,7 +78,8 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 		if (!slide) return <></>;
 
 		return (
-			<Modal show={show} onHide={markAsSeen} centered size="lg" className="slide-carousel-modal" id={id}>
+			<Modal show={show} onHide={markAsSeen} centered size="lg" className="slide-carousel-modal" id={id}
+				onEntered={measureSlides}>
 				<Modal.Header closeButton>
 					<Modal.Title>
 						<i className={`bi bi-${titleIcon} me-2`} />
@@ -74,7 +87,23 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 					</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
-					<div className="carousel-step">
+					{/* Hidden container to measure all slides */}
+					<div ref={measureRef} className="carousel-measure-container">
+						{slides.map((s: ReleaseSlide, i: number) => (
+							<div key={i} className="carousel-step">
+								{s.image ? (
+									<img src={s.image} alt={s.title} className="carousel-step-image" />
+								) : (
+									<div className="carousel-step-icon">
+										<i className={`bi bi-${s.icon}`} />
+									</div>
+								)}
+								<h4 className="carousel-step-title">{s.title}</h4>
+								<p className="carousel-step-description">{s.description}</p>
+							</div>
+						))}
+					</div>
+					<div className="carousel-step" style={slideHeight ? { minHeight: slideHeight } : undefined}>
 						{slide.image ? (
 							<img src={slide.image} alt={slide.title} className="carousel-step-image" />
 						) : (

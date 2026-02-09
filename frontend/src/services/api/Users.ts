@@ -39,6 +39,7 @@ export interface AuthApi {
 	register: (registerData: RegisterData) => ApiResponsePromise<GenericResponse>;
 	getCurrentUser: (token: string) => ApiResponsePromise<UserData>;
 	updateCurrentUser: (data: UserDataUpdate, token: string) => ApiResponsePromise<UpdateCurrentUserResponse>;
+	heartbeat: (token: string) => ApiResponsePromise<GenericResponse>;
 	verifyEmail: (token: string) => ApiResponsePromise<GenericResponse>;
 	verifyNewEmail: (token: string) => ApiResponsePromise<GenericResponse>;
 	checkPendingEmail: (token: string) => ApiResponsePromise<boolean>;
@@ -61,6 +62,10 @@ export const authApi: AuthApi = {
 
 	getCurrentUser: async (token: string): ApiResponsePromise<UserData> => {
 		return baseApi.get("current-user/", token);
+	},
+
+	heartbeat: async (token: string): ApiResponsePromise<GenericResponse> => {
+		return baseApi.post("current-user/heartbeat", {}, token);
 	},
 
 	updateCurrentUser: async (data: UserDataUpdate, token: string): ApiResponsePromise<UpdateCurrentUserResponse> => {

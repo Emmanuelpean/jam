@@ -7,7 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as ec
 
-from demo_recorder import DemoRecorder
+from demo_creator import DemoBuilder
 from tests.utils.create_data.job_scraping import (
     create_scraped_jobs,
     create_job_alert_emails,
@@ -17,7 +17,7 @@ from tests.utils.create_data.job_scraping import (
 from tests.utils.create_data.data_tables import create_geolocations
 
 
-class ScrapingFilterRecorder(DemoRecorder):
+class ScrapingFilterBuilder(DemoBuilder):
     """Records the scraping filter workflow and generates a GIF"""
 
     def create_demo_data(self, db, users) -> None:
@@ -170,8 +170,8 @@ def main():
     parser.add_argument("--fps", type=int, default=10, help="Frames per second")
     args = parser.parse_args()
 
-    recorder = ScrapingFilterRecorder(
-        output_path=args.output,
+    recorder = ScrapingFilterBuilder(
+        output_name=args.output,
         fps=args.fps,
         headless=not args.no_headless,
     )

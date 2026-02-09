@@ -70,6 +70,126 @@ def reset_database(db_engine, ask_confirmation: bool = True) -> None:
     Base.metadata.create_all(bind=db_engine)
 
 
+def create_database_data(db, includes=None, excludes=None) -> None:
+    """Create sample data for the database
+    :param db: database session
+    :param includes: list of tables to include (if None, include all)
+    :param excludes: list of tables to exclude (if None, exclude none)"""
+
+    def should_create(table_name: str) -> bool:
+        """Check if a table should be created based on includes/excludes"""
+        if excludes and table_name in excludes:
+            return False
+        if includes and table_name not in includes:
+            return False
+        return True
+
+    # Core dependencies (always needed)
+    if should_create("users"):
+        users = create_users(db, None, 12)
+    else:
+        users = None
+
+    if should_create("settings"):
+        create_settings(db)
+
+    if should_create("ai_prompts"):
+        ai_prompts = create_ai_prompts(db)
+    else:
+        ai_prompts = None
+
+    # Table data
+    if should_create("keywords") and users:
+        keywords = create_keywords(db, users)
+    else:
+        keywords = None
+
+    if should_create("aggregators") and users:
+        aggregators = create_aggregators(db, users)
+    else:
+        aggregators = None
+
+    if should_create("geolocations"):
+        create_geolocations(db)
+
+    if should_create("locations") and users:
+        locations = create_locations(db, users)
+    else:
+        locations = None
+
+    if should_create("companies") and users:
+        companies = create_companies(db, users)
+    else:
+        companies = None
+
+    if should_create("people") and users and companies:
+        people = create_people(db, users, companies)
+    else:
+        people = None
+
+    if should_create("files") and users:
+        files = create_files(db, users)
+    else:
+        files = None
+
+    if should_create("jobs") and all([keywords, people, users, companies, locations, aggregators, files]):
+        jobs = create_jobs(db, keywords, people, users, companies, locations, aggregators, files)
+    else:
+        jobs = None
+
+    if should_create("interviews") and all([people, users, locations, jobs]):
+        create_interviews(db, people, users, locations, jobs)
+
+    if should_create("job_application_updates") and users and jobs:
+        create_job_application_updates(db, users, jobs)
+
+    if should_create("user_qualifications") and users:
+        user_qualifications = create_user_qualifications(db, users)
+    else:
+        user_qualifications = None
+
+    if should_create("speculative_applications") and users and people:
+        create_speculative_applications(db, users, people)
+
+    # Job Scraping data
+    if should_create("job_scraping_service_logs"):
+        service_logs = create_job_scraping_service_logs(db)
+    else:
+        service_logs = None
+
+    if should_create("job_scraping_platform_stats") and service_logs:
+        create_job_scraping_platform_stats(db, service_logs)
+
+    if should_create("job_scraping_service_errors") and service_logs:
+        create_job_scraping_service_errors(db, service_logs)
+
+    if should_create("job_alert_emails") and users and service_logs:
+        alert_emails = create_job_alert_emails(db, users, service_logs)
+    else:
+        alert_emails = None
+
+    if should_create("scraping_filters") and users:
+        scraping_filters = create_scraping_filters(db, users)
+    else:
+        scraping_filters = None
+
+    if should_create("scraped_jobs") and all([alert_emails, users, scraping_filters]):
+        scraped_jobs = create_scraped_jobs(db, alert_emails, users, scraping_filters)
+    else:
+        scraped_jobs = None
+
+    # Job Rating data
+    if should_create("job_rating_service_logs"):
+        job_rating_service_logs = create_job_rating_service_logs(db)
+    else:
+        job_rating_service_logs = None
+
+    if should_create("job_ratings") and all(
+        [users, scraped_jobs, user_qualifications, job_rating_service_logs, ai_prompts]
+    ):
+        create_job_ratings(db, users, scraped_jobs, user_qualifications, job_rating_service_logs, ai_prompts)
+
+
 def seed_database() -> None:
     """Main function to seed the database"""
     print("Starting database seeding...")
@@ -81,36 +201,7 @@ def seed_database() -> None:
     db = session_local()
 
     try:
-        # App data
-        users = create_users(db, None, 12)
-        create_settings(db)
-        ai_prompts = create_ai_prompts(db)
-
-        # Table data
-        keywords = create_keywords(db, users)
-        aggregators = create_aggregators(db, users)
-        create_geolocations(db)
-        locations = create_locations(db, users)
-        companies = create_companies(db, users)
-        people = create_people(db, users, companies)
-        files = create_files(db, users)
-        jobs = create_jobs(db, keywords, people, users, companies, locations, aggregators, files)
-        create_interviews(db, people, users, locations, jobs)
-        create_job_application_updates(db, users, jobs)
-        user_qualifications = create_user_qualifications(db, users)
-        create_speculative_applications(db, users, people)
-
-        # Job Scraping data
-        service_logs = create_job_scraping_service_logs(db)
-        create_job_scraping_platform_stats(db, service_logs)
-        create_job_scraping_service_errors(db, service_logs)
-        alert_emails = create_job_alert_emails(db, users, service_logs)
-        scraping_filters = create_scraping_filters(db, users)
-        scraped_jobs = create_scraped_jobs(db, alert_emails, users, scraping_filters)
-
-        # Job Rating data
-        job_rating_service_logs = create_job_rating_service_logs(db)
-        create_job_ratings(db, users, scraped_jobs, user_qualifications, job_rating_service_logs, ai_prompts)
+        create_database_data(db)
 
     except Exception as e:
         print(f"Error during seeding: {e}")

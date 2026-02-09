@@ -76,6 +76,7 @@ export interface UserData extends OwnedOut {
 	is_active: boolean;
 	is_demo: boolean;
 	last_login: Date | string | null;
+	previous_login: Date | string | null;
 	app_version: string | null;
 	first_name: string | null;
 	last_name: string | null;

@@ -67,3 +67,6 @@
 * [ ] Rewrite the test data for the test user
 * [ ] On Small screens, modal elements on multiple columns and rows are all on same column but spacing differs
 * [ ] Add favourite filters for scraping
+* [ ] Since last login button does not work as user last login is not recorded.
+* [ ] Create guide on how to set up TOAST
+* [ ] last_login should count when user returns to the page instead of only when they login.

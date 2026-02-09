@@ -1,5 +1,7 @@
 """User route"""
 
+import datetime as dt
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -144,6 +146,23 @@ def get_current_user_profile(
     return current_user
 
 
+@current_user_router.post("/heartbeat", response_model=base_schemas.GenericResponse)
+def heartbeat(
+    current_user: models.User = Depends(oauth2.get_current_user),
+    db: Session = Depends(database.get_db),
+) -> dict[str, str | bool]:
+    """Record that the user has accessed the app.
+    :param current_user: The current authenticated user.
+    :param db: The database session.
+    :returns: A success message."""
+
+    current_user.previous_login = current_user.last_login
+    current_user.last_login = dt.datetime.now(dt.timezone.utc)
+    db.commit()
+
+    return {"message": "Last login updated.", "success": True}
+
+
 @current_user_router.put("/", response_model=schemas.CurrentUserUpdateResponse)
 def update_account(
     user_update: schemas.CurrentUserUpdate,
@@ -237,7 +256,7 @@ def update_account(
 def verify_email_change(
     token: str,
     db: Session = Depends(database.get_db),
-) -> dict[str, str]:
+) -> dict[str, str | bool]:
     """Verify email change using the provided token
     :param token: The email change verification token.
     :param db: The database session.

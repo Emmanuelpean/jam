@@ -1,20 +1,6 @@
-"""
-GIF Generator Script for Follow-Up Email Demo
-
-This script generates an animated GIF demonstrating the follow-up email workflow.
-It reuses the DemoRecorder infrastructure from demo_recorder.py and follows
-the test_send_email test pattern from frontend/tests/test_followup_email.py.
-
-Usage:
-    python scripts/generate_followup_email_gif.py [--output OUTPUT_PATH] [--fps FPS] [--no-headless]
-
-Requirements:
-    pip install -r scripts/requirements.txt
-"""
+"""GIF Generator Script for Follow-Up Email Demo"""
 
 import argparse
-import copy
-import datetime as dt
 import time
 
 from selenium.webdriver import ActionChains
@@ -22,52 +8,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as ec
 
-from demo_recorder import DemoRecorder
-from tests.utils.create_data.data_tables import (
-    create_geolocations,
-    create_keywords,
-    create_aggregators,
-    create_locations,
-    create_companies,
-    create_people,
-    create_files,
-    create_jobs,
-)
-from tests.utils.test_data import data_tables
+from demo_creator import DemoBuilder
 
 
-class FollowUpEmailRecorder(DemoRecorder):
+class FollowUpEmailBuilder(DemoBuilder):
     """Records the follow-up email workflow and generates a GIF"""
-
-    def create_demo_data(self, db, users) -> None:
-        """Create full demo data with old application dates (no interviews/updates)"""
-
-        create_geolocations(db)
-        keywords = create_keywords(db, users)
-        aggregators = create_aggregators(db, users)
-        locations = create_locations(db, users)
-        companies = create_companies(db, users)
-        people = create_people(db, users, companies)
-        files = create_files(db, users)
-
-        # Deep-copy job data and set all application dates to 2+ months ago
-        job_data = copy.deepcopy(data_tables.JOB_DATA)
-        old_date = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=75)
-        for job in job_data:
-            if job.get("application_date"):
-                job["application_date"] = old_date.strftime("%Y-%m-%dT%H:%M:%S%z")
-
-        # Create jobs with old dates - NO interviews or updates
-        create_jobs(db, keywords, people, users, companies, locations, aggregators, files, job_data=job_data)
-
-        print("  Created demo data with old application dates (no interviews/updates)")
-
-    def get_chrome_prefs(self) -> dict:
-        """Add mailto handler exclusion to base prefs"""
-
-        prefs = super().get_chrome_prefs()
-        prefs["protocol_handler"] = {"excluded_schemes": {"mailto": True}}
-        return prefs
 
     def record(self, email: str, password: str) -> None:
         """Record the follow-up email flow"""
@@ -145,7 +90,7 @@ def main():
     parser.add_argument("--no-headless", action="store_true", help="Show browser window (default: headless)")
     args = parser.parse_args()
 
-    recorder = FollowUpEmailRecorder(headless=not args.no_headless)
+    recorder = FollowUpEmailBuilder(headless=not args.no_headless)
     recorder.run()
 
 

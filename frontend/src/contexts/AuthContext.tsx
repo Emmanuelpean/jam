@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi, GenericResponse, LoginResponse, UpdateCurrentUserResponse } from "../services/api/Users";
 import { ApiResponse } from "../services/api/Base";
@@ -48,6 +48,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		return localStorage.getItem("token");
 	});
 	const [userFetched, setUserFetched] = useState<boolean>(false);
+	const hadTokenOnMount = useRef<boolean>(!!localStorage.getItem("token"));
 	const navigate = useNavigate();
 
 	const fetchUserInfo = useCallback(
@@ -89,21 +90,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			return response;
 		}
 		const userResponse: ApiResponse<UserData> = await authApi.getCurrentUser(token);
-		setCurrentUser((prev: CurrentUser | null) => (prev ? { ...prev, ...userResponse.data } : prev));
+		setCurrentUser((prev: CurrentUser | null): CurrentUser | null =>
+			prev ? { ...prev, ...userResponse.data } : prev
+		);
 		return response;
 	};
 
-	useEffect(() => {
+	useEffect((): void => {
 		document.documentElement.setAttribute("data-theme", currentUser?.preferences.theme || DEFAULT_THEME);
 	}, [currentUser]);
 
 	// Check if token exists on load and fetch user info
-	useEffect(() => {
+	useEffect((): void => {
 		// Only fetch user info if we have a token and haven't fetched yet
 		if (token && !userFetched) {
 			fetchUserInfo(token).then(() => null);
 		}
 	}, [token, userFetched, fetchUserInfo]);
+
+	// Record last login only for returning users (token already in localStorage on mount)
+	useEffect((): void => {
+		if (hadTokenOnMount.current && token) {
+			authApi.heartbeat(token).catch(() => null);
+		}
+	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const login = async (email: string, password: string): Promise<GenericResponse> => {
 		const data: ApiResponse<LoginResponse> = await authApi.login(email, password);
