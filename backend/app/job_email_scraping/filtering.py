@@ -83,7 +83,7 @@ def job_matches_rule_python(
     )
 
 
-def is_job_filtered_for_user(
+def is_job_filtered_out(
     session: Session,
     job: ScrapedJob,
 ) -> ScrapingExclusionFilter | None:
@@ -106,7 +106,7 @@ def is_job_filtered_for_user(
         return None
 
 
-def is_job_favoured_for_user(
+def is_job_favoured(
     session: Session,
     job: ScrapedJob,
 ) -> ScrapingExclusionFilter | None:

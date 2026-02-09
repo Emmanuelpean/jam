@@ -89,7 +89,8 @@ class ScrapedJob(Owned, Base):
     -----------
     - `external_job_id` (str): Unique identifier for the job posting.
     - `platform` (str): Platform from which the job was scraped (LinkedIn, Indeed, etc.).
-    - `is_scraped` (bool): Indicates whether the job has been scraped.
+    - `is_processed` (bool): Indicates whether the job has been processed (scraped, skipped, copied, etc.).
+    - `is_scraped` (bool): Indicates whether the job has been successfully scraped.
     - `is_failed` (bool): Indicates whether the job scraping failed.
     - `is_skipped` (bool): Indicates whether the job scraping was skipped (e.g., quota exceeded).
     - `scrape_error` (str, optional): Error message if the job scraping failed.
@@ -129,10 +130,11 @@ class ScrapedJob(Owned, Base):
 
     external_job_id = Column(String, nullable=False)
     platform = Column(String, nullable=False)
+    is_processed = Column(Boolean, nullable=False, server_default=expression.false())
     is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
     is_failed = Column(Boolean, nullable=False, server_default=expression.false())
-    is_skipped = Column(Boolean, nullable=False, server_default=expression.false())
     scrape_error = Column(String, nullable=True)
+    is_skipped = Column(Boolean, nullable=False, server_default=expression.false())
     skip_reason = Column(String, nullable=True)
     scrape_datetime = Column(TIMESTAMP(timezone=True), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
@@ -224,9 +226,9 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
         super().__init__(**kwargs)
 
     @hybrid_property
-    def job_to_scrape_n(self) -> int:
+    def job_to_process_n(self) -> int:
         """Total jobs to scrape across all platforms."""
-        return sum(len(stat.job_to_scrape_ids) for stat in self.platform_stats)
+        return sum(len(stat.job_to_process_ids) for stat in self.platform_stats)
 
     @hybrid_property
     def job_scrape_succeeded_n(self) -> int:
@@ -282,7 +284,7 @@ class JobEmailScrapingPlatformStat(CommonBase, Base):
 
     # Jobs
     - `job_found_ids` (list of int): List of found job IDs from the emails.
-    - `job_to_scrape_ids` (list of int): List of job IDs to be scraped.
+    - `job_to_process_ids` (list of int): List of job IDs to be processed.
     - `job_scrape_failed_ids` (list of int): List of failed job scrape IDs.
     - `job_scrape_succeeded_ids` (list of int): List of successful job scrape IDs.
     - `job_scrape_copied_ids` (list of int): List of copied job scrape IDs.
@@ -310,7 +312,7 @@ class JobEmailScrapingPlatformStat(CommonBase, Base):
 
     # Jobs
     job_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
-    job_to_scrape_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    job_to_process_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_scrape_failed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_scrape_succeeded_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_scrape_copied_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
@@ -333,7 +335,7 @@ class JobEmailScrapingPlatformStat(CommonBase, Base):
         kwargs.setdefault("email_saved_ids", [])
         kwargs.setdefault("email_skipped_ids", [])
         kwargs.setdefault("job_found_ids", [])
-        kwargs.setdefault("job_to_scrape_ids", [])
+        kwargs.setdefault("job_to_process_ids", [])
         kwargs.setdefault("job_scrape_failed_ids", [])
         kwargs.setdefault("job_scrape_succeeded_ids", [])
         kwargs.setdefault("job_scrape_copied_ids", [])

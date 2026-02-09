@@ -6,7 +6,7 @@ import re
 from apify_client import ApifyClient
 
 from app.config import settings
-from app.job_email_scraping.job_scrapers import JobResult, JobInfo, Salary
+from app.job_email_scraping.schemas import Salary, JobInfo, JobResult
 
 
 class NhsJobScraper:

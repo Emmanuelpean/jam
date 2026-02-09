@@ -9,6 +9,7 @@ import pytest
 from app import models
 from app.job_email_scraping.email_parsers import indeed
 from app.job_email_scraping.email_scraper import JobEmailScraper
+from job_email_scraping.email_parsers import Platform
 from tests.job_email_scraping import resources
 from tests.job_email_scraping.mock_job_scrapers import (
     MockVeganJobsBrightdataJobScraper,
@@ -52,48 +53,17 @@ def patch_get_indeed_redirected_url(monkeypatch) -> None:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def mock_linkedin_job_scrapers() -> Generator[type[MockLinkedinBrightdataJobScraper], Any, None]:
-    """Mock LinkedinJobScraper for all tests"""
+def mock_job_scrapers() -> Generator[dict, Any, None]:
+    """Mock all job scrapers via the SCRAPERS dictionary"""
 
-    with mock.patch(
-        "app.job_email_scraping.email_scraper.LinkedinBrightdataJobScraper", MockLinkedinBrightdataJobScraper
-    ) as mocked:
-        yield mocked
+    mock_scrapers = {
+        Platform.LINKEDIN: MockLinkedinBrightdataJobScraper,
+        Platform.INDEED: MockIndeedBrightdataJobScraper,
+        Platform.VEGANJOBS: MockVeganJobsBrightdataJobScraper,
+        Platform.NHS: MockNhsBrightdataJobScraper,
+    }
 
-
-# @pytest.fixture(scope="session", autouse=True)
-# def mock_indeed_job_scrapers() -> Generator[type[MockIndeedBrightdataJobScraper], Any, None]:
-#     """Mock IndeedJobScraper for all tests"""
-#
-#     with mock.patch("app.job_email_scraping.email_scraper.IndeedBrightdataJobScraper", MockIndeedBrightdataJobScraper) as mocked:
-#         yield mocked
-
-
-@pytest.fixture(scope="session", autouse=True)
-def mock_indeed_job_apify_scrapers() -> Generator[type[MockIndeedBrightdataJobScraper], Any, None]:
-    """Mock IndeedJobScraper for all tests"""
-
-    with mock.patch(
-        "app.job_email_scraping.email_scraper.IndeedApifyJobScraper", MockIndeedBrightdataJobScraper
-    ) as mocked:
-        yield mocked
-
-
-@pytest.fixture(scope="session", autouse=True)
-def mock_veganjobs_job_scrapers() -> Generator[type[MockVeganJobsBrightdataJobScraper], Any, None]:
-    """Mock VeganJobsJobScraper for all tests"""
-
-    with mock.patch(
-        "app.job_email_scraping.email_scraper.VeganJobsJobScraper", MockVeganJobsBrightdataJobScraper
-    ) as mocked:
-        yield mocked
-
-
-@pytest.fixture(scope="session", autouse=True)
-def mock_nhs_job_scrapers() -> Generator[type[MockNhsBrightdataJobScraper], Any, None]:
-    """Mock NhsJobScraper for all tests"""
-
-    with mock.patch("app.job_email_scraping.email_scraper.NhsJobScraper", MockNhsBrightdataJobScraper) as mocked:
+    with mock.patch("app.job_email_scraping.email_scraper.SCRAPERS", mock_scrapers) as mocked:
         yield mocked
 
 

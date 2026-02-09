@@ -46,7 +46,7 @@ export const PlatformStatsTable = ({ platformStats, latestLog }: PlatformStatsTa
 						<tr key={platformStat.name}>
 							<td>{capitalise(platformStat.name)}</td>
 							<td>{getPlatformStat(latestLog, platformStat.name, "job_found_ids")}</td>
-							<td>{getPlatformStat(latestLog, platformStat.name, "job_to_scrape_ids")}</td>
+							<td>{getPlatformStat(latestLog, platformStat.name, "job_to_process_ids")}</td>
 							<td>{getPlatformStat(latestLog, platformStat.name, "job_scrape_succeeded_ids")}</td>
 							<td>{getPlatformStat(latestLog, platformStat.name, "job_scrape_failed_ids")}</td>
 							<td>{getPlatformStat(latestLog, platformStat.name, "job_scrape_skipped_ids")}</td>

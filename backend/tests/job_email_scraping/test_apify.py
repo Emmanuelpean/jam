@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from app.job_email_scraping.job_scrapers import JobResult, JobInfo
+from app.job_email_scraping.schemas import JobInfo, JobResult
 from app.job_email_scraping.job_scrapers.apify import ApifyJobScraper
 
 

@@ -15,13 +15,10 @@ from app.emails.email_service import EmailService
 from app.geolocation import geocode_location
 from app.job_email_scraping.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
-from app.job_email_scraping.filtering import is_job_filtered_for_user, is_job_favoured_for_user
+from app.job_email_scraping.filtering import is_job_filtered_out, is_job_favoured
 from app.job_email_scraping.gmail import extract_forwarding_confirmation_link, extract_gmail_originator
-from app.job_email_scraping.job_scrapers import JobResult
-from app.job_email_scraping.job_scrapers.indeed import IndeedApifyJobScraper
-from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
-from app.job_email_scraping.job_scrapers.nhs import NhsJobScraper
-from app.job_email_scraping.job_scrapers.veganjobs import VeganJobsJobScraper
+from app.job_email_scraping.schemas import JobResult
+from app.job_email_scraping.job_scrapers import SCRAPERS
 from app.job_email_scraping.location_parser import LocationParser
 from app.job_email_scraping.models import (
     JobEmail,
@@ -320,7 +317,6 @@ class JobEmailScraper(EmailService):
             )
 
             # Create new job record if it doesn't exist
-
             if not existing_entry:
                 data = self.process_job_result(job_result)
 
@@ -381,23 +377,24 @@ class JobEmailScraper(EmailService):
         :return: Updated job_record2 instance"""
 
         columns = [
+            # Only scraping info are necessary
+            "is_processed",
+            "is_scraped",
+            "scrape_datetime",
+            # Job details
+            "title",
+            "description",
+            "salary_min",
+            "salary_max",
+            "salary_currency",
+            "url",
+            "deadline",
             "company",
-            "platform",
             "location",
             "location_city",
             "location_country",
             "location_postcode",
             "attendance_type",
-            "salary_min",
-            "salary_max",
-            "salary_currency",
-            "title",
-            "description",
-            "scrape_datetime",
-            "is_scraped",
-            "is_failed",
-            "scrape_error",
-            "url",
         ]
         for key in columns:
             if getattr(job_record2, key) is not None:
@@ -526,8 +523,7 @@ class JobEmailScraper(EmailService):
         except Exception as exception:
             self.log_service_error(service_log, exception)
             self.logger.exception(
-                f"Failed to parse email ID {email_record.external_email_id} due to error: {exception}."
-                f" Skipping email."
+                f"Failed to parse email ID {email_record.external_email_id} due to error: {exception}. Skipping email."
             )
             return None  # skip the email parsing
 
@@ -546,27 +542,27 @@ class JobEmailScraper(EmailService):
             self.logger.exception(error)
 
     def scrape_jobs(self, service_log: JobEmailScrapingServiceLog) -> None:
-        """Scrape all unscraped jobs
+        """Process all unscraped jobs
         :param service_log: Service log entry"""
 
-        # List all unique job records that haven't been scraped yet
-        job_records = self.db.query(ScrapedJob).filter(ScrapedJob.is_scraped.is_(False)).all()
+        # List all unprocessed job records
+        job_records = self.db.query(ScrapedJob).filter(ScrapedJob.is_processed.is_(False)).all()
         platforms = set([job.platform for job in job_records])
         for platform in platforms:
-            ids = [job.id for job in job_records if job.platform == platform]
-            self.upsert_platform_stat(service_log, platform, job_to_scrape_ids=ids)
+            job_ids = [job.id for job in job_records if job.platform == platform]
+            self.upsert_platform_stat(service_log, platform, job_to_process_ids=job_ids)
 
-        # For each job record, scrape the data
+        # For each job record...
         for job_record in job_records:
 
-            # Check if filtered out for user
+            # Check if filtered out
             try:
-                if job_filter_rule := is_job_filtered_for_user(self.db, job_record):
+                if job_filter_rule := is_job_filtered_out(self.db, job_record):
                     self.logger.info(
                         f"Job ID {job_record.external_job_id} filtered out for user ID {job_record.owner_id} "
                         f"due to rule {job_filter_rule.name}"
                     )
-                    job_record.is_scraped = False
+                    job_record.is_processed = True
                     job_record.exclusion_filter_id = job_filter_rule.id
                     self.db.commit()
                     self.upsert_platform_stat(service_log, job_record.platform, job_scrape_filtered_ids=job_record.id)
@@ -579,8 +575,9 @@ class JobEmailScraper(EmailService):
                 self.log_service_error(service_log, error)
                 self.logger.exception(error)
 
+            # Check if favoured
             try:
-                if favoured_rule := is_job_favoured_for_user(self.db, job_record):
+                if favoured_rule := is_job_favoured(self.db, job_record):
                     self.logger.info(
                         f"Job ID {job_record.external_job_id} favoured for user ID {job_record.owner_id} "
                         f"due to rule {favoured_rule.name}"
@@ -595,11 +592,12 @@ class JobEmailScraper(EmailService):
                 self.log_service_error(service_log, error)
                 self.logger.exception(error)
 
-            # Find any existing scraped job data in the database
+            # Find any existing successfully scraped job data in the database
             existing_data = (
                 self.db.query(ScrapedJob)
                 .filter(ScrapedJob.external_job_id == job_record.external_job_id)
                 .filter(ScrapedJob.platform == job_record.platform)
+                .filter(ScrapedJob.is_processed)
                 .filter(ScrapedJob.is_scraped)
                 .first()
             )
@@ -611,52 +609,52 @@ class JobEmailScraper(EmailService):
                     f"Copying data to unscraped record."
                 )
                 self.copy_existing_entry(existing_data, job_record)
+                job_record.is_processed = True
+                self.db.commit()
                 self.upsert_platform_stat(service_log, job_record.platform, job_scrape_copied_ids=job_record.id)
+                continue  # next job record
 
-            # Otherwise, scrape the data from the web
-            else:
-                # Check if user has exceeded their monthly scrape quota
-                if self.is_user_over_monthly_quota(job_record.owner_id):
-                    self.logger.info(
-                        f"User ID {job_record.owner_id} has exceeded their monthly scrape quota of "
-                        f"{settings.monthly_scrape_quota}. Skipping job ID {job_record.external_job_id}."
-                    )
-                    job_record.is_skipped = True
-                    job_record.skip_reason = f"Monthly scrape quota of {settings.monthly_scrape_quota} exceeded"
-                    self.db.commit()
-                    self.upsert_platform_stat(service_log, job_record.platform, job_scrape_skipped_ids=job_record.id)
-                    continue  # next job record
+            # Check if user has exceeded their monthly scrape quota
+            if self.is_user_over_monthly_quota(job_record.owner_id):
+                self.logger.info(
+                    f"User ID {job_record.owner_id} has exceeded their monthly scrape quota of "
+                    f"{settings.monthly_scrape_quota}. Skipping job ID {job_record.external_job_id}."
+                )
+                job_record.is_skipped = True
+                job_record.skip_reason = f"Monthly scrape quota of {settings.monthly_scrape_quota} exceeded"
+                job_record.is_processed = True
+                self.db.commit()
+                self.upsert_platform_stat(service_log, job_record.platform, job_scrape_skipped_ids=job_record.id)
+                continue  # next job record
 
-                if job_record.platform == Platform.LINKEDIN:
-                    scraper = LinkedinBrightdataJobScraper(job_record.external_job_id)
-                elif job_record.platform == Platform.INDEED:
-                    scraper = IndeedApifyJobScraper(job_record.external_job_id)
-                elif job_record.platform == Platform.VEGANJOBS:
-                    scraper = VeganJobsJobScraper(job_record.external_job_id)
-                elif job_record.platform == Platform.NHS:
-                    scraper = NhsJobScraper(job_record.external_job_id)
-                else:
-                    self.logger.info(f"Unknown platform for job {job_record.external_job_id}. Skipping job.")
-                    continue  # next job record
-
-                # Scrape the data and save them to the database
+            # Otherwise, scrape the job data
+            if job_record.platform in SCRAPERS:
+                scraper = SCRAPERS[job_record.platform](job_record.external_job_id)
                 self.logger.info(f"Scraping job ID: {job_record.external_job_id}")
                 try:
                     job_data = scraper.scrape_job()[0]
                     self.update_scraped_job_data(job_record, job_data)
+                    job_record.is_processed = True
+                    self.db.commit()
                     self.upsert_platform_stat(service_log, job_record.platform, job_scrape_succeeded_ids=job_record.id)
-
                 except:
                     message = (
                         f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: "
                         f"{traceback.format_exc()}. Skipping job."
                     )
                     self.logger.exception(message)
-                    job_record.is_scraped = True
+                    job_record.is_processed = True
                     job_record.is_failed = True
                     job_record.scrape_error = f"{traceback.format_exc()}"
                     self.db.commit()
                     self.upsert_platform_stat(service_log, job_record.platform, job_scrape_failed_ids=job_record.id)
+            else:
+                self.logger.info(f"Unknown platform for job {job_record.external_job_id}. Skipping job.")
+                job_record.is_skipped = True
+                job_record.skip_reason = f"Unknown platform {job_record.platform}"
+                job_record.is_processed = True
+                self.db.commit()
+                continue  # next job record
 
 
 job_scraping_service_runner = ServiceRunner(

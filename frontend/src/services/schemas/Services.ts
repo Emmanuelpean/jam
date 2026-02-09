@@ -42,7 +42,7 @@ export interface PlatformStat {
 	email_saved_ids: number[];
 	email_skipped_ids: number[];
 	job_found_ids: number[];
-	job_to_scrape_ids: number[];
+	job_to_process_ids: number[];
 	job_scrape_failed_ids: number[];
 	job_scrape_succeeded_ids: number[];
 	job_scrape_copied_ids: number[];
