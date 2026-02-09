@@ -17,8 +17,8 @@ def main():
     args = parser.parse_args()
 
     taker = DemoBuilder(
-        width=1400,
-        height=1600,
+        width=1920,
+        height=1080,
         dark_mode=True,
         headless=not args.no_headless,
     )

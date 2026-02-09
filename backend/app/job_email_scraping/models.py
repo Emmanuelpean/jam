@@ -424,3 +424,19 @@ class ScrapingFavouriteFilter(Filter, Owned, Base):
     """Represents user-defined rules to filter favourite scraped jobs."""
 
     filtered_jobs = relationship("ScrapedJob", back_populates="favourite_filter")
+
+
+class ForwardingConfirmationLink(Owned, Base):
+    """Represents a confirmation email sent to a user after setting up forwarding.
+
+    Attributes:
+    -----------
+    - `email_external_id` (str): External ID of the email.
+    - `url` (str): URL to the confirmation page.
+    - `platform` (str): Platform (e.g., Gmail).
+    - `is_used` (bool): Whether the confirmation link has been used"""
+
+    email_external_id = Column(String, nullable=False)
+    url = Column(String, nullable=False)
+    platform = Column(String, nullable=False)
+    is_used = Column(Boolean, nullable=False, server_default=expression.false())

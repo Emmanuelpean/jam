@@ -7,14 +7,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as ec
 
+from app import models
 from demo_creator import DemoBuilder
-from tests.utils.create_data.job_scraping import (
-    create_scraped_jobs,
-    create_job_alert_emails,
-    create_job_scraping_service_logs,
-    create_scraping_filters,
-)
-from tests.utils.create_data.data_tables import create_geolocations
+from tests.utils.seed_database import create_database_data
 
 
 class ScrapingFilterBuilder(DemoBuilder):
@@ -23,11 +18,8 @@ class ScrapingFilterBuilder(DemoBuilder):
     def create_demo_data(self, db, users) -> None:
         """Create full demo data with old application dates (no interviews/updates)"""
 
-        create_geolocations(db)
-        filters = create_scraping_filters(db, users)
-        service_logs = create_job_scraping_service_logs(db)
-        emails = create_job_alert_emails(db, users, service_logs)
-        create_scraped_jobs(db, emails, users, [])
+        create_database_data(db, users=users)
+        filters = db.query(models.ScrapingExclusionFilter).all()
         for f in filters:
             f.is_active = False
         db.commit()
@@ -166,15 +158,9 @@ class ScrapingFilterBuilder(DemoBuilder):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--no-headless", action="store_true", help="Show browser window (default: headless)")
-    parser.add_argument("--output", default="scraping_filter_demo.gif", help="Output GIF path")
-    parser.add_argument("--fps", type=int, default=10, help="Frames per second")
     args = parser.parse_args()
 
-    recorder = ScrapingFilterBuilder(
-        output_name=args.output,
-        fps=args.fps,
-        headless=not args.no_headless,
-    )
+    recorder = ScrapingFilterBuilder(output_name="scraping_filter.gif", headless=not args.no_headless)
     recorder.run()
 
 

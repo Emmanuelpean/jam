@@ -7,6 +7,7 @@ import packageJson from "../../package.json";
 
 interface WhatsNewContextType {
 	showWhatsNew: () => void;
+	showWelcome: () => void;
 }
 
 const WhatsNewContext = createContext<WhatsNewContextType | undefined>(undefined);
@@ -33,6 +34,10 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 		const newSlides: ReleaseSlide[] = getReleaseSlidesForVersion(packageJson.version);
 		setSlides(newSlides);
 		whatsNewRef.current?.show();
+	}, []);
+
+	const showWelcome = useCallback((): void => {
+		welcomeRef.current?.show();
 	}, []);
 
 	// Show the appropriate modal automatically on login
@@ -62,7 +67,7 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 	}, [currentUser]);
 
 	return (
-		<WhatsNewContext.Provider value={{ showWhatsNew }}>
+		<WhatsNewContext.Provider value={{ showWhatsNew, showWelcome }}>
 			{children}
 			<WhatsNewModal ref={whatsNewRef} slides={slides} />
 			<WelcomeModal ref={welcomeRef} />

@@ -34,8 +34,8 @@ class FollowUpEmailBuilder(DemoBuilder):
 
         # Move cursor to first job in Needs Chase table and right-click
         print("  - Right-clicking job row 1 in Needs Chase table...")
-        self.move_to_element("table-row-job-13", 600)
-        self.right_click_element("table-row-job-13")
+        self.move_to_element("table-row-job-12", 600)
+        self.right_click_element("table-row-job-12")
 
         # Move to "Follow-up Email" context menu item and click
         print("  - Clicking Follow-up Email menu item...")
@@ -90,7 +90,7 @@ def main():
     parser.add_argument("--no-headless", action="store_true", help="Show browser window (default: headless)")
     args = parser.parse_args()
 
-    recorder = FollowUpEmailBuilder(headless=not args.no_headless)
+    recorder = FollowUpEmailBuilder(headless=not args.no_headless, output_name="followup_email.gif")
     recorder.run()
 
 
