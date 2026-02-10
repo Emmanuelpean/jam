@@ -137,7 +137,17 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const [currentPage, setCurrentPage] = useState<number>(0);
 	const [pageSize, setPageSize] = useState<number>(20);
 	const [totalCount, setTotalCount] = useState<number>(0);
+	const [showSpinner, setShowSpinner] = useState<boolean>(false);
 	const followUpModalRef = useRef<FollowUpModalHandle>(null);
+
+	useEffect(() => {
+		if (!isLoading) {
+			setShowSpinner(false);
+			return;
+		}
+		const timer = setTimeout(() => setShowSpinner(true), 200);
+		return () => clearTimeout(timer);
+	}, [isLoading]);
 
 	const isServerPagination: boolean = !!endpoint && !providedData;
 
@@ -587,7 +597,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				</div>
 
 				{/* Table */}
-				{isLoading ? (
+				{showSpinner ? (
 					<LoadingSpinner text="Loading..." />
 				) : (
 					<>
