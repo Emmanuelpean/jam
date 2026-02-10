@@ -83,9 +83,9 @@ def get_all(
         db.query(models.ScrapedJob)
         .options(joinedload(models.ScrapedJob.job_rating))  # Always load rating
         .filter(models.ScrapedJob.owner_id == current_user.id)
-        .filter(models.ScrapedJob.is_scraped)
+        .filter(models.ScrapedJob.is_processed.is_(True))
         .filter(models.ScrapedJob.is_imported.is_(False))
-        .filter(models.ScrapedJob.is_active)
+        .filter(models.ScrapedJob.is_active.is_(True))
         .filter(models.ScrapedJob.exclusion_filter_id == None)
     )
 
