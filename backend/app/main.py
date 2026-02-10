@@ -1,13 +1,19 @@
 """Main script"""
 
-from fastapi import FastAPI, APIRouter
+from contextlib import asynccontextmanager
+
+import jwt
+from fastapi import FastAPI, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
 
+from app import database
 from app.config import settings
 from app.core.routers import auth as auth_routers
 from app.core.routers import settings as settings_routers
 from app.core.routers import user as user_routers
 from app.data_tables import routers as data_table_routers
+from app.demo.router import demo_router
+from app.demo.setup import setup_demo_schema
 from app.emails import routers as email_routers
 from app.job_email_scraping import routers as job_scraping_routers
 from app.job_rating import routers as job_rating_routers
@@ -16,7 +22,16 @@ from app.payments import test_routers as payment_test_routers
 from app.routers import export as export_routers
 from app.routers import others as other_routers
 
-app = FastAPI(title="JAM", version=settings.app_version)
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Application lifespan event handler."""
+
+    setup_demo_schema()
+    yield
+
+
+app = FastAPI(title="JAM", version=settings.app_version, lifespan=lifespan)
 
 
 def get_allowed_origins() -> list[str]:
@@ -38,6 +53,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def demo_schema_middleware(request: Request, call_next):
+    """Detect demo tokens and set demo_mode context variable."""
+
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    if token:
+        try:
+            payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+            if payload.get("is_demo"):
+                database.demo_mode.set(True)
+        except Exception:
+            pass
+    response = await call_next(request)
+    database.demo_mode.set(False)
+    return response
+
 
 # Data table routers
 app.include_router(data_table_routers.company_router)
@@ -85,6 +118,9 @@ app.include_router(settings_routers.settings_router)
 # Others
 app.include_router(other_routers.other_router)
 app.include_router(other_routers.config_router)
+
+# Demo
+app.include_router(demo_router)
 
 # Stripe
 app.include_router(payment_router.payment_router)

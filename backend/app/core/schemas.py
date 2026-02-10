@@ -67,6 +67,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     id: str | None = None
     token_version: int = 0
+    is_demo: bool = False
 
 
 # ------------------------------------------------- USER PREFERENCES ---------------------------------------------------

@@ -46,6 +46,7 @@ export interface AuthApi {
 	requestPasswordReset: (email: string) => ApiResponsePromise<GenericResponse>;
 	resetPassword: (token: string, newPassword: string) => ApiResponsePromise<GenericResponse>;
 	deleteAccount: (password: string, token: string) => ApiResponsePromise<GenericResponse>;
+	demoCleanup: (token: string) => ApiResponsePromise<GenericResponse>;
 }
 
 export const authApi: AuthApi = {
@@ -97,6 +98,10 @@ export const authApi: AuthApi = {
 
 	deleteAccount: async (password: string, token: string): ApiResponsePromise<GenericResponse> => {
 		return baseApi.delete("current-user/", token, { password });
+	},
+
+	demoCleanup: async (token: string): ApiResponsePromise<GenericResponse> => {
+		return baseApi.post("demo/cleanup", {}, token);
 	},
 };
 

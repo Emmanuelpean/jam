@@ -129,6 +129,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	};
 
 	const logout = (): void => {
+		// Fire-and-forget demo cleanup if this is a demo user
+		if (currentUser?.is_demo && token) {
+			authApi.demoCleanup(token).catch(() => null);
+		}
+
 		localStorage.removeItem("token");
 		setToken(null);
 		setCurrentUser(null);

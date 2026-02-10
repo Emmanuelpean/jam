@@ -68,10 +68,10 @@ def score_scraped_jobs(
                 scraped_jobs = (
                     db.query(models.ScrapedJob)
                     .filter(models.ScrapedJob.owner_id == user.id)  # for this user
-                    .filter(models.ScrapedJob.is_scraped)  # scraped
+                    .filter(models.ScrapedJob.is_processed.is_(True))  # scraped
                     .filter(models.ScrapedJob.is_failed.is_(False))  # not failed
                     .filter(models.ScrapedJob.job_rating == None)  # not yet rated
-                    .filter(models.ScrapedJob.is_active)  # active
+                    .filter(models.ScrapedJob.is_active.is_(True))  # active
                     .filter(models.ScrapedJob.is_imported.is_(False))  # not imported
                     .filter(func.length(models.ScrapedJob.description) > min_description_length)  # description length
                     .filter(models.ScrapedJob.exclusion_filter == None)  # not filtered out
