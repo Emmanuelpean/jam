@@ -244,19 +244,23 @@ def seed_demo_data(db: Session, user: models.User) -> None:
         db, models.ScrapingExclusionFilter, _filter_owner(job_scraping.SCRAPING_FILTER_DATA, owner_id)
     )
 
-    # Job Emails (remap service_log_id)
+    # Job Emails (remap service_log_id, make external_email_id unique per demo user)
     email_data = override_properties(
         _filter_owner(job_scraping.JOB_EMAIL_DATA, owner_id), ("service_log_id", scraping_logs)
     )
+    for entry in email_data:
+        entry["external_email_id"] = f"{entry['external_email_id']}_{owner_id}"
     emails = create_db_entries(db, models.JobEmail, email_data)
 
-    # Scraped Jobs (remap service_log_id, exclusion_filter_id, geolocation_id)
+    # Scraped Jobs (remap service_log_id, exclusion_filter_id, geolocation_id, make external_job_id unique per demo user)
     scraped_job_data = override_properties(
         _filter_owner(job_scraping.SCRAPED_JOB_DATA, owner_id),
         ("service_log_id", scraping_logs),
         ("exclusion_filter_id", filters),
         ("geolocation_id", geolocations),
     )
+    for entry in scraped_job_data:
+        entry["external_job_id"] = f"{entry['external_job_id']}_{owner_id}"
     scraped_jobs = create_db_entries(db, models.ScrapedJob, scraped_job_data)
 
     # Email ↔ ScrapedJob mappings (uses index maps for interleaved data)

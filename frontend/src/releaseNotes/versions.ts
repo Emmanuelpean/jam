@@ -48,7 +48,7 @@ export const WELCOME_SLIDES: ReleaseSlide[] = [
 		image: dashboardPng,
 	},
 	{
-		icon: "inbox",
+		icon: "inboxes",
 		title: "Job Alert Scraping",
 		description:
 			"Automatically extract and organise job alert data from your emails. Forward job alerts to a designated " +
@@ -113,7 +113,7 @@ export const releaseSlides: Record<string, ReleaseSlide[]> = {
 	],
 	"1.1.0": [
 		{
-			icon: "inbox",
+			icon: "inboxes",
 			title: "Job Scraping & Rating (Alpha)",
 			description:
 				"Introducing TOAST — automatically extract and organise job alert data from your emails. " +
