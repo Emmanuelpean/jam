@@ -6,16 +6,18 @@ Create Date: 2026-02-09 22:58:25.657941
 
 """
 
+import time
 from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-from alembic.scripts.add_geolocation import add_geolocation_to_locations
-from alembic.scripts.add_geolocation_to_scraped_jobs import add_geolocation_to_scraped_jobs
-from app.database import get_db
-from app.job_rating.prompts import seed_ai_prompts
+from sqlalchemy.orm import Session
+
+from app.geolocation import geocode_location
+from app.job_email_scraping.location_parser import LocationParser
+from app.job_rating.prompts import SYSTEM_PROMPT_V1, JOB_PROMPT_TEMPLATE_V1
 
 # revision identifiers, used by Alembic.
 revision: str = "53e3869239aa"
@@ -213,6 +215,14 @@ def upgrade() -> None:
         "job_email_scraping_platform_stat",
         sa.Column("job_scrape_filtered_ids", postgresql.ARRAY(sa.Integer()), server_default="{}", nullable=False),
     )
+    # Transfer job_to_scrape_ids data to job_to_process_ids before dropping
+    op.execute(
+        """
+        UPDATE job_email_scraping_platform_stat
+        SET job_to_process_ids = job_to_scrape_ids
+        WHERE job_to_scrape_ids != '{}'
+    """
+    )
     op.drop_column("job_email_scraping_platform_stat", "job_to_scrape_ids")
     op.add_column("job_rating", sa.Column("job_prompt", sa.String(), nullable=True))
     op.add_column("job_rating", sa.Column("system_prompt_id", sa.Integer(), nullable=True))
@@ -241,40 +251,52 @@ def upgrade() -> None:
         None, "scraped_job", "scraping_favourite_filter", ["favourite_filter_id"], ["id"], ondelete="SET NULL"
     )
     # Migrate user data to subtables before dropping columns
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO user_preferences (owner_id, theme, chase_threshold, deadline_threshold, update_limit, default_currency)
         SELECT id, theme, chase_threshold, deadline_threshold, update_limit, default_currency
         FROM "user"
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         INSERT INTO stripe_details (owner_id)
         SELECT id FROM "user"
-    """)
-    op.execute("""
-        INSERT INTO premium_settings (owner_id)
-        SELECT id FROM "user"
-    """)
+    """
+    )
+    op.execute(
+        """
+        INSERT INTO premium_settings (owner_id, is_active)
+        SELECT id, toast_active FROM "user"
+    """
+    )
     # Migrate verification tokens
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO user_token (owner_id, token, token_type)
         SELECT id, verification_token, 'verification'
         FROM "user"
         WHERE verification_token IS NOT NULL
-    """)
+    """
+    )
     # Migrate password reset tokens
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO user_token (owner_id, token, token_type)
         SELECT id, password_reset_token, 'password_reset'
         FROM "user"
         WHERE password_reset_token IS NOT NULL
-    """)
+    """
+    )
     # Migrate email change tokens
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO user_token (owner_id, token, token_type, pending_email)
         SELECT id, email_change_token, 'email_change', pending_email
         FROM "user"
         WHERE email_change_token IS NOT NULL
-    """)
+    """
+    )
 
     op.add_column("user", sa.Column("previous_login", sa.TIMESTAMP(timezone=True), nullable=True))
     op.add_column("user", sa.Column("app_version", sa.String(), nullable=True))
@@ -302,17 +324,53 @@ def upgrade() -> None:
         "applied_via IN ('aggregator', 'email', 'company_website', 'phone', 'other')",
     )
 
-    # Seed AI prompts
-    db = next(get_db())
-    seed_ai_prompts(db)
+    # Seed AI prompts using raw SQL (can't use ORM session - table only exists within this transaction)
+    op.execute(sa.text("INSERT INTO ai_system_prompt (prompt) VALUES (:prompt)").bindparams(prompt=SYSTEM_PROMPT_V1))
+    op.execute(
+        sa.text("INSERT INTO ai_job_prompt_template (prompt) VALUES (:prompt)").bindparams(
+            prompt=JOB_PROMPT_TEMPLATE_V1
+        )
+    )
 
-    # Add geolocation to existing locations and scraped jobs
-    add_geolocation_to_locations()
-    add_geolocation_to_scraped_jobs()
+    # Add geolocation to existing locations and scraped jobs using the alembic connection
+    bind = op.get_bind()
+    session = Session(bind=bind)
+
+    locations = session.execute(sa.text("SELECT id, postcode, city, country, geolocation_id FROM location")).fetchall()
+    for loc in locations:
+        if loc.geolocation_id is None:
+            time.sleep(1)
+            parts = [loc.postcode, loc.city, loc.country]
+            query = ", ".join(filter(None, parts))
+            if query:
+                geolocation = geocode_location(query, session)
+                if geolocation:
+                    session.execute(
+                        sa.text("UPDATE location SET geolocation_id = :geo_id WHERE id = :loc_id"),
+                        {"geo_id": geolocation.id, "loc_id": loc.id},
+                    )
+
+    location_parser = LocationParser()
+    scraped_jobs = session.execute(sa.text("SELECT id, location, geolocation_id FROM scraped_job")).fetchall()
+    for sj in scraped_jobs:
+        if sj.geolocation_id is None and sj.location:
+            time.sleep(1)
+            location_parsed, attendance_type = location_parser.parse_location(sj.location)
+            if attendance_type:
+                session.execute(
+                    sa.text("UPDATE scraped_job SET attendance_type = :att WHERE id = :sj_id"),
+                    {"att": attendance_type, "sj_id": sj.id},
+                )
+            if location_parsed:
+                geolocation = geocode_location(location_parsed, session)
+                if geolocation:
+                    session.execute(
+                        sa.text("UPDATE scraped_job SET geolocation_id = :geo_id WHERE id = :sj_id"),
+                        {"geo_id": geolocation.id, "sj_id": sj.id},
+                    )
 
 
 def downgrade() -> None:
-    # ### commands auto generated by Alembic - please adjust! ###
     op.add_column(
         "user_qualification",
         sa.Column("is_active", sa.BOOLEAN(), server_default=sa.text("true"), autoincrement=False, nullable=False),
@@ -375,6 +433,57 @@ def downgrade() -> None:
             "email_change_token_created_at", postgresql.TIMESTAMP(timezone=True), autoincrement=False, nullable=True
         ),
     )
+
+    # Restore user data from subtables before dropping them
+    op.execute(
+        """
+        UPDATE "user" u
+        SET theme = up.theme,
+            chase_threshold = up.chase_threshold,
+            deadline_threshold = up.deadline_threshold,
+            update_limit = up.update_limit,
+            default_currency = up.default_currency
+        FROM user_preferences up
+        WHERE u.id = up.owner_id
+    """
+    )
+    # Restore toast_active from premium_settings.is_active
+    op.execute(
+        """
+        UPDATE "user" u
+        SET toast_active = ps.is_active
+        FROM premium_settings ps
+        WHERE u.id = ps.owner_id
+    """
+    )
+    # Restore verification tokens
+    op.execute(
+        """
+        UPDATE "user" u
+        SET verification_token = ut.token
+        FROM user_token ut
+        WHERE u.id = ut.owner_id AND ut.token_type = 'verification'
+    """
+    )
+    # Restore password reset tokens
+    op.execute(
+        """
+        UPDATE "user" u
+        SET password_reset_token = ut.token
+        FROM user_token ut
+        WHERE u.id = ut.owner_id AND ut.token_type = 'password_reset'
+    """
+    )
+    # Restore email change tokens
+    op.execute(
+        """
+        UPDATE "user" u
+        SET email_change_token = ut.token, pending_email = ut.pending_email
+        FROM user_token ut
+        WHERE u.id = ut.owner_id AND ut.token_type = 'email_change'
+    """
+    )
+
     op.create_unique_constraint(
         op.f("user_password_reset_token_key"), "user", ["password_reset_token"], postgresql_nulls_not_distinct=False
     )
@@ -410,9 +519,19 @@ def downgrade() -> None:
             nullable=False,
         ),
     )
+    # Transfer job_to_process_ids data back to job_to_scrape_ids before dropping
+    op.execute(
+        """
+        UPDATE job_email_scraping_platform_stat
+        SET job_to_scrape_ids = job_to_process_ids
+        WHERE job_to_process_ids != '{}'
+    """
+    )
     op.drop_column("job_email_scraping_platform_stat", "job_scrape_filtered_ids")
     op.drop_column("job_email_scraping_platform_stat", "job_to_process_ids")
     op.add_column("job", sa.Column("source_id", sa.INTEGER(), autoincrement=False, nullable=True))
+    # Transfer source_aggregator_id data back to source_id before dropping
+    op.execute("UPDATE job SET source_id = source_aggregator_id WHERE source_aggregator_id IS NOT NULL")
     op.drop_constraint(None, "job", type_="foreignkey")
     op.drop_constraint(None, "job", type_="foreignkey")
     op.drop_constraint(None, "job", type_="foreignkey")

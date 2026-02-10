@@ -6,13 +6,14 @@ import { getTableIcon } from "../rendering/view/Icons";
 import { ThemeSelector } from "./ThemeSelector";
 import "./Sidebar.scss";
 import { DEFAULT_THEME } from "../../utils/Theme";
+import { UserData } from "../../services/schemas/Core";
 
 interface NavigationItem {
 	path?: string;
 	icon?: string;
 	text: string;
 	submenu?: NavigationSubItem[];
-	adminOnly?: boolean;
+	condition?: (user: UserData) => boolean;
 	position: "top" | "bottom";
 	onClick?: () => void;
 	className?: string;
@@ -62,7 +63,12 @@ export const Sidebar = (): JSX.Element => {
 	const navigationItems: NavigationItem[] = [
 		{ path: "/dashboard", text: "Dashboard", position: "top" },
 		{ path: "/jobs", text: "Jobs", position: "top" },
-		{ path: "/scraped-jobs", text: "Job Alerts", position: "top" },
+		{
+			path: "/scraped-jobs",
+			text: "Job Alerts",
+			position: "top",
+			condition: (user: UserData): boolean => user.premium.is_active,
+		},
 		{ path: "/speculative-applications", text: "Speculative Applications", position: "top" },
 		{ path: "/persons", text: "People", position: "top" },
 		{ path: "/companies", text: "Companies", position: "top" },
@@ -81,7 +87,7 @@ export const Sidebar = (): JSX.Element => {
 		{ path: "/about", text: "About", position: "bottom" },
 		{
 			text: "Admin",
-			adminOnly: true,
+			condition: (user: UserData): boolean => user.is_admin,
 			position: "bottom",
 			submenu: [
 				{ path: "/job-scraping-dashboard", text: "Job Scraping Dashboard" },
@@ -100,14 +106,16 @@ export const Sidebar = (): JSX.Element => {
 	];
 
 	const getFilteredNavigationItems = (position: string): NavigationItem[] => {
-		let filteredItems: NavigationItem[] = navigationItems.filter(
-			(item: NavigationItem): boolean => item.position === position
-		);
-		if (currentUser?.is_admin) {
-			return filteredItems;
-		} else {
-			return filteredItems.filter((item: NavigationItem): boolean => !item.adminOnly);
-		}
+		return navigationItems
+			.filter((item: NavigationItem): boolean => item.position === position)
+			.filter((item: NavigationItem): boolean => {
+				// If no condition exists, always include the item
+				if (!item.condition) return true;
+				// If condition exists but no user, treat as false
+				if (!currentUser) return false;
+				// If both condition and user exist, evaluate the condition
+				return item.condition(currentUser);
+			});
 	};
 
 	const topNavigationItems: NavigationItem[] = getFilteredNavigationItems("top");
