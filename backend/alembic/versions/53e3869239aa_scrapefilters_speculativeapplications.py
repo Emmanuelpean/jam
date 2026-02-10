@@ -145,7 +145,7 @@ def upgrade() -> None:
     op.create_table(
         "user_preferences",
         sa.Column("theme", sa.String(), server_default="mixed-berry", nullable=False),
-        sa.Column("dark_mode", sa.Boolean(), server_default=sa.text("false"), nullable=False),
+        sa.Column("dark_mode", sa.Boolean(), server_default=sa.text("false"), nullable=False),  # TODO
         sa.Column("chase_threshold", sa.Integer(), server_default="14", nullable=False),
         sa.Column("deadline_threshold", sa.Integer(), server_default="7", nullable=False),
         sa.Column("update_limit", sa.Integer(), server_default="10", nullable=False),

@@ -49,7 +49,7 @@ const AboutPage = (): JSX.Element => {
 			description: "Monitor application status, progress, and deadlines",
 		},
 		{
-			icon: "bi-inbox",
+			icon: "bi-inboxes",
 			title: "Job Alert Scraping",
 			description: "Automatically scrape job alerts from popular job board email alerts",
 		},

@@ -547,7 +547,7 @@ function AuthForm(): JSX.Element {
 				"Keep track of application status, progress, upcoming interviews, and never miss important deadlines",
 		},
 		{
-			icon: "bi bi-inbox",
+			icon: "bi bi-inboxes",
 			text: "Scrape job alerts from emails",
 			description:
 				"Automatically scrape job alerts from popular job board email notifications like LinkedIn and Indeed",
