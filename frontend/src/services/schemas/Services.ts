@@ -64,6 +64,9 @@ export interface ScrapedJobData extends OwnedOut {
 	external_job_id: string;
 	is_scraped: boolean;
 	is_failed: boolean;
+	is_processed: boolean;
+	is_skipped: boolean;
+	skip_reason: string | null;
 	scrape_error: string;
 	scrape_datetime: Date | string;
 	is_active: boolean;

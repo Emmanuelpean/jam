@@ -38,7 +38,6 @@ def get_config() -> dict:
         "support_email": settings.support_email,
         "platform_sender_emails": {value: key for key, value in PLATFORM_SENDER_EMAILS.items()},
         "min_password_length": settings.min_password_length,
-        # "stripe_publishable_key": settings.stripe_publishable_key,
         "app_demo_username": settings.app_demo_username,
         "app_demo_password": settings.app_demo_password,
     }

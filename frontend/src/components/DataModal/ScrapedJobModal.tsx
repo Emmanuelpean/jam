@@ -187,7 +187,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			return errors;
 		};
 
-		const warningMessage = (data: ScrapedJobData) => {
+		const warningMessage = (data: ScrapedJobData): WarningMessageConfig[] | null => {
 			const result: WarningMessageConfig[] = [];
 
 			const createReportLink = (subject: string, errorMessage: string | null): JSX.Element | null => {
@@ -206,6 +206,12 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				);
 			};
 
+			if (!data?.is_processed) {
+				result.push({
+					key: "not_processed",
+					message: "This job has yet to be processed. Please come back later.",
+				});
+			}
 			if (data?.is_failed) {
 				const reportLink = createReportLink("Scraped Job Error Report", data?.scrape_error);
 				result.push({
@@ -219,9 +225,17 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 					variant: "warning",
 				});
 			}
-
+			if (data?.is_skipped) {
+				result.push({
+					key: "skipped",
+					message: "This job was not scraped due to the following reason: " + data?.skip_reason,
+				});
+			}
 			if (data?.job_rating?.is_success === false) {
-				const reportLink = createReportLink("Job Rating Error Report", data?.job_rating?.error);
+				const reportLink: JSX.Element | null = createReportLink(
+					"Job Rating Error Report",
+					data?.job_rating?.error
+				);
 				result.push({
 					key: "no_rating",
 					message: (

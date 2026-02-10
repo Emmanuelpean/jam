@@ -238,6 +238,7 @@ def upgrade() -> None:
     op.add_column(
         "scraped_job", sa.Column("is_processed", sa.Boolean(), server_default=sa.text("false"), nullable=False)
     )
+    op.execute("UPDATE scraped_job SET is_processed = true")
     op.add_column("scraped_job", sa.Column("is_skipped", sa.Boolean(), server_default=sa.text("false"), nullable=False))
     op.add_column("scraped_job", sa.Column("skip_reason", sa.String(), nullable=True))
     op.add_column("scraped_job", sa.Column("exclusion_filter_id", sa.Integer(), nullable=True))

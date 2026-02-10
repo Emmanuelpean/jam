@@ -63,10 +63,11 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 
 	return (
 		<Card className={`shadow-sm border-0 h-100 d-flex flex-column ${className}`}>
-			<Card.Header className="table-card-header border-0 p-0" onClick={handleHeaderClick}>
+			<Card.Header className="table-card-header border-0 p-0">
 				<div className="d-flex align-items-center justify-content-between p-4">
 					<div
 						className="d-flex align-items-center"
+						onClick={handleHeaderClick}
 						style={{ cursor: path || onHeaderClick ? "pointer" : "default" }}
 					>
 						<div className="header-icon-wrapper me-3">
