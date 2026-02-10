@@ -80,6 +80,14 @@ def geocode_location(query_string: str, session: Session) -> Geolocation | None:
             session.refresh(new_geo)
             return new_geo
 
+        # If no result was found, store the query string to avoid repeated calls to the API
+        except ValueError:
+            # noinspection PyArgumentList
+            new_geo = Geolocation(query=query_string)
+            session.add(new_geo)
+            session.commit()
+            session.refresh(new_geo)
+
         except Exception as e:
             print(f"Warning: Could not geocode '{query_string}': {e}")
             print(traceback.format_exc())
