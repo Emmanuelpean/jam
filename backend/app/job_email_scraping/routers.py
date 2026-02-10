@@ -185,9 +185,9 @@ def get_scraped_job_count(
     count = (
         db.query(models.ScrapedJob)
         .filter(models.ScrapedJob.owner_id == current_user.id)
-        .filter(models.ScrapedJob.is_scraped)
+        .filter(models.ScrapedJob.is_processed.is_(True))
         .filter(models.ScrapedJob.is_imported.is_(False))
-        .filter(models.ScrapedJob.is_active)
+        .filter(models.ScrapedJob.is_active.is_(True))
         .filter(models.ScrapedJob.exclusion_filter_id == None)
         .count()
     )

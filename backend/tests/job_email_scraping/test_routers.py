@@ -57,12 +57,7 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         response = client.get(self.endpoint + "/paged/?page=1&page_size=5&show_past_deadline=true")
         assert response.status_code == status.HTTP_200_OK
         scraped_jobs = response.json()
-        # expected = (
-        #     session.query(models.ScrapedJob)
-        #     .filter(models.ScrapedJob.is_imported.is_(False), models.ScrapedJob.owner_id == user.id)
-        #     .count()
-        # )
-        assert scraped_jobs["total"] == 47
+        assert scraped_jobs["total"] == 44
         assert len(scraped_jobs["items"]) == 5
 
     def test_get_all_no_past_deadlines(
@@ -78,7 +73,7 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         response = client.get(self.endpoint + "/paged/?page=1&page_size=5")
         assert response.status_code == status.HTTP_200_OK
         scraped_jobs = response.json()
-        assert scraped_jobs["total"] == 46
+        assert scraped_jobs["total"] == 43
         assert len(scraped_jobs["items"]) == 5
 
     def test_get_count(self, test_users, authorised_clients, test_scraped_jobs) -> None:
@@ -87,7 +82,7 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         client = self._get_authorised_client(authorised_clients)
         response = client.get(self.endpoint + "/count")
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["count"] == 47
+        assert response.json()["count"] == 44
 
 
 class TestScrapedJobCRUDAdminUser(CRUDTestBase):
