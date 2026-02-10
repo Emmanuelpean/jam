@@ -42,11 +42,10 @@ USER_DATA = [
     },
     # Demo user
     {
-        "email": "test@example.com",
-        "password": "password4",
+        "email": "demo@example.com",
+        "password": "demo_password",
         "is_verified": True,
         "is_demo": True,
-        "app_version": "10.0.0",
     },
     # Named users for specific tests
     {
@@ -62,15 +61,6 @@ USER_DATA = [
         "password": "test_password",
         "is_verified": True,
         "premium": {"is_active": True},
-        "app_version": "10.0.0",
-    },
-    # Demo user
-    {
-        "email": "demo@example.com",
-        "password": "password5",
-        "is_verified": True,
-        "premium": {"is_active": True},
-        "is_demo": True,
         "app_version": "10.0.0",
     },
     # User with stripe details
@@ -115,12 +105,8 @@ assert USER_DATA[TOAST_USER_1_INDEX]["premium"]
 TOAST_USER_INDEX_2 = 6
 assert USER_DATA[TOAST_USER_INDEX_2]["premium"]
 
-# Demo user
-DEMO_USER_INDEX = 7
-assert USER_DATA[DEMO_USER_INDEX]["is_demo"], "DEMO_USER_INDEX does not point to a demo user"
-
 # Stripe user
-STRIPE_USER_INDEX = 8
+STRIPE_USER_INDEX = 7
 assert USER_DATA[STRIPE_USER_INDEX]["stripe_details"], "STRIPE_USER_INDEX does not point to a stripe_details user"
 
 

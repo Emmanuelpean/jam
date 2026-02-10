@@ -11,6 +11,7 @@ import { paymentsApi, PortalSessionResponse } from "../../services/api/Payments"
 import { ScrapingGuideModal, ScrapingGuideModalHandle } from "../../components/ScrapingGuideModal/ScrapingGuideModal";
 import { forwardingConfirmationApi } from "../../services/api/Services";
 import { ForwardingConfirmationLinkData } from "../../services/schemas/Services";
+import { PremiumDetails } from "../../services/schemas/Core";
 
 interface SubscriptionStatusDisplay {
 	title: string;
@@ -31,7 +32,8 @@ interface JobBoard {
 const getSubscriptionStatusDisplay = (
 	status: string | null,
 	trialEndDate: number | null,
-	supportEmail: string
+	supportEmail: string,
+	premiumDetails: PremiumDetails | null
 ): SubscriptionStatusDisplay => {
 	// Calculate trial days remaining from absolute timestamp (seconds since epoch)
 	let trialDaysRemaining: number | null = null;
@@ -40,7 +42,17 @@ const getSubscriptionStatusDisplay = (
 		const remainingSeconds: number = trialEndDate - nowSeconds;
 		trialDaysRemaining = Math.max(0, Math.ceil(remainingSeconds / (60 * 60 * 24)));
 	}
-	console.log(trialDaysRemaining);
+
+	if (premiumDetails?.is_active && !status) {
+		return {
+			title: "Premium",
+			message: "All features unlocked",
+			variant: "success",
+			badgeVariant: "success",
+			showSubscribeButton: false,
+			icon: "bi-gem",
+		};
+	}
 
 	if (!status || status === "canceled") {
 		return {
@@ -209,7 +221,8 @@ export const PremiumTab = (): JSX.Element => {
 	const statusDisplay: SubscriptionStatusDisplay = getSubscriptionStatusDisplay(
 		currentUser?.stripe_details.subscription_status ?? null,
 		currentUser?.stripe_details.trial_end_date ?? null,
-		config?.support_email
+		config?.support_email,
+		currentUser?.premium ?? null
 	);
 	const hasActiveSubscription: boolean = ["active", "trialing", "paused"].includes(
 		currentUser?.stripe_details.subscription_status || ""

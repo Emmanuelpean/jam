@@ -1,6 +1,7 @@
 """Authentication route"""
 
 import datetime as dt
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -10,6 +11,7 @@ from app import utils, models, database, base_schemas
 from app.config import settings
 from app.core import schemas, oauth2
 from app.core.utils import send_email_verification_email, send_password_reset_email, get_token
+from app.demo.seed import seed_demo_data
 from app.emails.email_service import email_service
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
@@ -62,6 +64,40 @@ def login(
                 status_code=result.error_code,
                 detail=result.message,
             )
+
+    # Handle demo user login: create a temp user in the demo schema with seeded data
+    if user.is_demo:
+        demo_db = database.demo_session_local()
+        try:
+            demo_email = f"demo-{uuid.uuid4().hex[:12]}@demo.jam"
+            demo_user = models.User(
+                email=demo_email,
+                password=utils.hash_password(uuid.uuid4().hex),
+                is_demo=True,
+                is_active=True,
+                is_verified=True,
+                first_name="Demo",
+                last_name="User",
+                last_login=dt.datetime.now(dt.timezone.utc),
+                premium={"is_active": True, "job_scraping_active": True, "job_rating_active": True},
+            )
+            demo_db.add(demo_user)
+            demo_db.commit()
+            demo_db.refresh(demo_user)
+
+            seed_demo_data(demo_db, demo_user)
+
+            access_token = oauth2.create_access_token(
+                data={"user_id": demo_user.id},
+                token_version=demo_user.token_version,
+                is_demo=True,
+            )
+            return {"access_token": access_token, "token_type": "bearer"}
+        except Exception:
+            demo_db.rollback()
+            raise
+        finally:
+            demo_db.close()
 
     # Save the last login date and update the last login date
     user.previous_login = user.last_login

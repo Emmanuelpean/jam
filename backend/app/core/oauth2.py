@@ -19,15 +19,18 @@ ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
-def create_access_token(data: dict, token_version: int = 0) -> str:
+def create_access_token(data: dict, token_version: int = 0, is_demo: bool = False) -> str:
     """Create a JWT access token with token version.
     :param data: The data to be encoded into the JWT access token.
     :param token_version: The user's current token version for invalidation tracking.
+    :param is_demo: Whether this token is for a demo user.
     :returns: The JWT access token."""
 
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire, "token_version": token_version})
+    if is_demo:
+        to_encode["is_demo"] = True
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -49,8 +52,9 @@ def verify_access_token(
             raise credentials_exception
 
         token_version: int = payload.get("token_version", 0)
+        is_demo: bool = payload.get("is_demo", False)
 
-        token_data = schemas.TokenData(id=str(user_id), token_version=token_version)
+        token_data = schemas.TokenData(id=str(user_id), token_version=token_version, is_demo=is_demo)
 
     except jwt.PyJWTError:
         raise credentials_exception
@@ -74,6 +78,11 @@ def get_current_user(
     )
 
     token_data = verify_access_token(token, credentials_exception)
+
+    # Set demo mode context var if token is for a demo user
+    if token_data.is_demo:
+        database.demo_mode.set(True)
+
     user = db.query(models.User).filter(token_data.id == models.User.id).first()
 
     if user is None:
