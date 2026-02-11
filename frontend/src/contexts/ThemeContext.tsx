@@ -1,100 +1,85 @@
-import React, { createContext, JSX, ReactNode, useContext, useEffect, useState } from "react";
+import React, { createContext, JSX, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { useGlobalToast } from "../hooks/useNotificationToast";
+import { ThemeMode } from "../services/schemas/Core";
 
 interface ThemeContextType {
+	themeMode: ThemeMode;
 	isDarkMode: boolean;
-	handleDarkModeToggle: () => void;
+	setThemeMode: (mode: ThemeMode) => void;
 }
 
-type Mode = "light" | "dark";
+type AppliedMode = "light" | "dark";
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const getInitialTheme = (): boolean => {
-	// Check for system preference
-	const systemPreference = window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+const getSystemPreference = (): boolean => window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
 
-	// Set the theme IMMEDIATELY to prevent flash
-	const mode: Mode = systemPreference ? "dark" : "light";
+const applyMode = (mode: AppliedMode): void => {
 	document.body.setAttribute("data-mode", mode);
 	document.documentElement.setAttribute("data-mode", mode);
 	document.documentElement.setAttribute("data-bs-theme", mode);
+};
 
-	return systemPreference;
+const getInitialThemeMode = (): ThemeMode => {
+	// On initial load, default to system so there's no flash
+	applyMode(getSystemPreference() ? "dark" : "light");
+	return "system";
 };
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }): JSX.Element => {
 	const { currentUser, updateCurrentUser } = useAuth();
 	const { showToastError } = useGlobalToast();
 
-	const [isDarkMode, setIsDarkMode] = useState<boolean>(() => getInitialTheme());
+	const [themeMode, setThemeModeState] = useState<ThemeMode>(() => getInitialThemeMode());
+	const [systemIsDark, setSystemIsDark] = useState<boolean>(() => getSystemPreference());
+
+	// Listen for OS theme changes
+	useEffect(() => {
+		const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+		const handler = (e: MediaQueryListEvent) => setSystemIsDark(e.matches);
+		mediaQuery.addEventListener("change", handler);
+		return () => mediaQuery.removeEventListener("change", handler);
+	}, []);
 
 	// Sync with user preference when they log in or currentUser loads
 	useEffect(() => {
-		if (currentUser?.preferences?.dark_mode !== undefined) {
-			setIsDarkMode(currentUser.preferences.dark_mode);
+		if (currentUser?.preferences?.dark_mode) {
+			setThemeModeState(currentUser.preferences.dark_mode);
 		} else if (!currentUser) {
-			const saved: string | null = localStorage.getItem("darkMode");
-
-			// Check if localStorage has a MANUAL override (stored as string "manual:true" or "manual:false")
-			if (saved !== null && saved.startsWith('"manual:')) {
-				const manualValue: boolean = saved.includes("true");
-				setIsDarkMode(manualValue);
+			const saved: string | null = localStorage.getItem("themeMode");
+			if (saved === "dark" || saved === "light" || saved === "system") {
+				setThemeModeState(saved);
 			} else {
-				// Otherwise use system preference
-				if (window.matchMedia) {
-					const systemPreference: boolean = window.matchMedia("(prefers-color-scheme: dark)").matches;
-					setIsDarkMode(systemPreference);
-				}
+				setThemeModeState("system");
 			}
 		}
 	}, [currentUser]);
 
-	// Listen for system theme changes when user is not logged in
-	useEffect(() => {
-		if (currentUser) {
-			return;
-		}
+	// Derive the actual dark mode boolean
+	const isDarkMode: boolean = useMemo((): boolean => {
+		if (themeMode === "system") return systemIsDark;
+		return themeMode === "dark";
+	}, [themeMode, systemIsDark]);
 
-		const mediaQuery: MediaQueryList = window.matchMedia("(prefers-color-scheme: dark)");
+	// Apply CSS attributes whenever isDarkMode changes
+	useEffect((): void => {
+		applyMode(isDarkMode ? "dark" : "light");
+	}, [isDarkMode]);
 
-		const handleChange = (e: MediaQueryListEvent) => {
-			const saved: string | null = localStorage.getItem("darkMode");
-
-			// Only ignore if it's a MANUAL override
-			if (saved === null || !saved.startsWith('"manual:')) {
-				setIsDarkMode(e.matches);
-			}
-		};
-
-		mediaQuery.addEventListener("change", handleChange);
-		return () => {
-			mediaQuery.removeEventListener("change", handleChange);
-		};
-	}, [currentUser]);
-
-	useEffect(() => {
-		const mode: Mode = isDarkMode ? "dark" : "light";
-		document.body.setAttribute("data-mode", mode);
-		document.documentElement.setAttribute("data-mode", mode);
-		document.documentElement.setAttribute("data-bs-theme", mode);
-	}, [isDarkMode, currentUser]);
-
-	const handleDarkModeToggle = (): void => {
-		const newValue = !isDarkMode;
-		setIsDarkMode(newValue);
+	const setThemeMode = (mode: ThemeMode): void => {
+		setThemeModeState(mode);
 
 		if (currentUser) {
-			updateCurrentUser({ preferences: { dark_mode: newValue } }).catch((err) =>
+			updateCurrentUser({ preferences: { dark_mode: mode } }).catch((err) =>
 				showToastError("Failed to update user preferences:", err)
 			);
 		} else {
-			localStorage.setItem("darkMode", JSON.stringify(`manual:${newValue}`));
+			localStorage.setItem("themeMode", mode);
 		}
 	};
 
-	return <ThemeContext.Provider value={{ isDarkMode, handleDarkModeToggle }}>{children}</ThemeContext.Provider>;
+	return <ThemeContext.Provider value={{ themeMode, isDarkMode, setThemeMode }}>{children}</ThemeContext.Provider>;
 };
 
 export const useTheme = () => {

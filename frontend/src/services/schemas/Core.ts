@@ -18,9 +18,11 @@ export interface SettingData extends BaseOut {
 
 // -------------------------------------------------- USER PREFERENCES -------------------------------------------------
 
+export type ThemeMode = "dark" | "light" | "system";
+
 export interface UserPreferences {
 	theme: string;
-	dark_mode: boolean;
+	dark_mode: ThemeMode;
 	chase_threshold: number;
 	deadline_threshold: number;
 	update_limit: number;

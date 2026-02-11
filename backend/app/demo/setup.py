@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app import models
 from app.database import Base, demo_engine, demo_session_local, engine
 from app.job_rating.prompts import seed_ai_prompts
+from tests.utils.seed_database import reset_database
 
 
 def setup_demo_schema() -> None:
@@ -15,19 +16,19 @@ def setup_demo_schema() -> None:
     Called at application startup."""
 
     # Create the demo schema if it doesn't exist
-    with engine.connect() as conn:
-        conn.execute(text("CREATE SCHEMA IF NOT EXISTS demo"))
-        conn.commit()
-
-    # Create all tables in the demo schema
-    Base.metadata.create_all(bind=demo_engine)
+    # with engine.connect() as conn:
+    #     conn.execute(text("CREATE SCHEMA IF NOT EXISTS demo"))
+    #     conn.commit()
+    # reset_database(demo_engine, False)
+    #
+    # # Create all tables in the demo schema
+    # Base.metadata.create_all(bind=demo_engine)
 
     # Seed required data in the demo schema
     db = demo_session_local()
     try:
         seed_demo_ai_prompts(db)
         cleanup_stale_demo_users(db)
-
     finally:
         db.close()
 
