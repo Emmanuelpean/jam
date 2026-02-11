@@ -351,7 +351,9 @@ class TestStaleDemoUserCleanup:
 
         assert demo_session.query(models.User).filter(models.User.id == user.id).first() is not None
 
-    def test_stale_cleanup_runs_during_setup_demo_schema(self, demo_session_raw, demo_session_factory_raw) -> None:
+    def test_stale_cleanup_runs_during_setup_demo_schema(
+        self, engine, demo_engine, demo_session_raw, demo_session_factory_raw
+    ) -> None:
         """setup_demo_schema must remove stale demo users as part of its startup routine."""
 
         # Insert a stale user directly
@@ -363,7 +365,11 @@ class TestStaleDemoUserCleanup:
         )
         demo_session_raw.commit()
 
-        with patch("app.demo.setup.demo_session_local", side_effect=demo_session_factory_raw):
+        with (
+            patch("app.demo.setup.engine", engine),
+            patch("app.demo.setup.demo_engine", demo_engine),
+            patch("app.demo.setup.demo_session_local", side_effect=demo_session_factory_raw),
+        ):
             setup_demo_schema()
 
         demo_session_raw.expire_all()
