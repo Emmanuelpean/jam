@@ -35,6 +35,17 @@ demo_engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"options": "-
 demo_session_local = sessionmaker(autocommit=False, autoflush=False, bind=demo_engine)
 
 
+def get_demo_db() -> Generator[Session, Any, None]:
+    """Get a demo schema database session.
+    :return: the demo database session."""
+
+    db = demo_session_local()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 def get_db() -> Generator[Session, Any, None]:
     """Get the database session. Uses demo schema if demo_mode context var is set.
     :return: the database session."""

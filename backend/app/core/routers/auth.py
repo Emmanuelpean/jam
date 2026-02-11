@@ -24,10 +24,12 @@ login_router = APIRouter(prefix="/login", tags=["Login"])
 def login(
     user_credentials: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(database.get_db),
+    demo_db: Session = Depends(database.get_demo_db),
 ) -> dict[str, str]:
     """Log in a user.
     :param user_credentials: The user credentials (note: username is the email field)
     :param db: The database session
+    :param demo_db: The demo database session
     :returns: The access token dictionary
     :raises HTTPException with a 403 status code if the credentials are invalid
     :raises HTTPException with a 401 status code if the user is not active or not verified
@@ -67,7 +69,6 @@ def login(
 
     # Handle demo user login: create a temp user in the demo schema with seeded data
     if user.is_demo:
-        demo_db = database.demo_session_local()
         try:
             demo_email = f"demo-{uuid.uuid4().hex[:12]}@demo.jam"
             demo_user = models.User(
@@ -96,8 +97,6 @@ def login(
         except Exception:
             demo_db.rollback()
             raise
-        finally:
-            demo_db.close()
 
     # Save the last login date and update the last login date
     user.previous_login = user.last_login
