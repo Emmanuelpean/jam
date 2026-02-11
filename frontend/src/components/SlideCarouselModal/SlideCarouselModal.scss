@@ -15,6 +15,16 @@
         top: 0;
     }
 
+    @keyframes slide-in-from-right {
+        from { transform: translateX(60px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes slide-in-from-left {
+        from { transform: translateX(-60px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
     .carousel-step {
         display: flex;
         flex-direction: column;
@@ -23,6 +33,14 @@
         text-align: center;
         padding: 1rem 2rem;
         min-height: 300px;
+
+        &.slide-next {
+            animation: slide-in-from-right 0.3s ease;
+        }
+
+        &.slide-prev {
+            animation: slide-in-from-left 0.3s ease;
+        }
     }
 
     .carousel-step-icon {

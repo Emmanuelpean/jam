@@ -24,6 +24,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 	({ id, title, titleIcon, slides, finishText, finishIcon }: SlideCarouselModalProps, ref): JSX.Element => {
 		const [show, setShow] = useState<boolean>(false);
 		const [currentStep, setCurrentStep] = useState<number>(0);
+		const [direction, setDirection] = useState<"next" | "prev">("next");
 		const [loading, setLoading] = useState<boolean>(false);
 		const { updateCurrentUser } = useAuth();
 		const [slideHeight, setSlideHeight] = useState<number | undefined>(undefined);
@@ -67,11 +68,13 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 			if (isLastStep) {
 				void markAsSeen();
 			} else {
+				setDirection("next");
 				setCurrentStep((prev: number): number => prev + 1);
 			}
 		};
 
 		const handleBack = (): void => {
+			setDirection("prev");
 			setCurrentStep((prev: number): number => prev - 1);
 		};
 
@@ -103,7 +106,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 							</div>
 						))}
 					</div>
-					<div className="carousel-step" style={slideHeight ? { minHeight: slideHeight } : undefined}>
+					<div key={currentStep} className={`carousel-step slide-${direction}`} style={slideHeight ? { minHeight: slideHeight } : undefined}>
 						{slide.image ? (
 							<img src={slide.image} alt={slide.title} className="carousel-step-image" />
 						) : (
@@ -120,7 +123,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 								<button
 									key={index}
 									className={`carousel-dot ${index === currentStep ? "active" : ""}`}
-									onClick={() => setCurrentStep(index)}
+									onClick={() => { setDirection(index > currentStep ? "next" : "prev"); setCurrentStep(index); }}
 									aria-label={`Go to slide ${index + 1}`}
 								/>
 							)

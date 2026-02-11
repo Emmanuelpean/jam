@@ -104,8 +104,6 @@ def seed_demo_data(db: Session, user: models.User) -> None:
 
     # Geolocations
     geolocations = db.query(models.Geolocation).all()
-    if not geolocations:
-        geolocations = create_db_entries(db, models.Geolocation, data_tables.GEOLOCATION_DATA)
 
     # User Qualifications
     qualification_data = [
@@ -309,9 +307,8 @@ def seed_demo_data(db: Session, user: models.User) -> None:
     db.commit()
 
 
-def cleanup_demo_user(db: Session, user_id: int) -> None:
-    """Delete a demo user and all their data from the demo schema.
-    Cascade deletes handle all owned data.
+def delete_user(db: Session, user_id: int) -> None:
+    """Delete a user and all cascade delete all their owned data.
     :param db: Database session (bound to demo schema)
     :param user_id: The ID of the demo user to delete"""
 

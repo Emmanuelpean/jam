@@ -30,6 +30,10 @@ class CommonBase(object):
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
     modified_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
+    def __init__(self, **kwargs):
+
+        super().__init__(**kwargs)
+
 
 class Owned(CommonBase):
     """A base class that contains common attributes shared by tables which entries have an owner.

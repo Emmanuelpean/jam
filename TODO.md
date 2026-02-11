@@ -73,3 +73,5 @@
 * [X] Review what scraped jobs are displayed (is_scraped should be is_processed)
 * [X] Add fallback to geolocation
 * [ ] Add frontend tests for scraped jobs failed/skipped/rated/rating skipped/failed
+* [ ] Add test for past deadline scraped jobs
+* [ ] Add a global welcome slide to the jam welcome modal

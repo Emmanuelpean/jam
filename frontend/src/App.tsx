@@ -35,6 +35,7 @@ import { ScrapedJobsPage } from "./pages/DataTablePages/ScrapedJobsPage";
 import { StyleGuidePage } from "./pages/StylePage";
 import { ConfigProvider } from "./contexts/ConfigContext";
 import { MaintenanceBanner } from "./components/MaintenanceBanner/MaintenanceBanner";
+import { DemoBanner } from "./components/DemoBanner/DemoBanner";
 import { MaintenancePage } from "./pages/MaintenancePage/MaintenancePage";
 import { WhatsNewProvider } from "./contexts/WhatsNewContext";
 
@@ -90,6 +91,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	return (
 		<>
 			<MaintenanceBanner />
+			<DemoBanner />
 			<div style={{ display: "flex", minHeight: "100vh" }}>
 				{currentUser && <Sidebar />}
 				<div style={{ flex: 1, minWidth: 0 }}>
