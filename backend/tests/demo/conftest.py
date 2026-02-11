@@ -40,15 +40,6 @@ def demo_session(demo_session_raw):
 
 
 @pytest.fixture
-def demo_session_factory(demo_engine, demo_session):
-    """Session factory for the demo test DB.
-    Requesting demo_session as a dependency ensures the DB has been reset and
-    seeded before any session factory sessions are opened."""
-
-    return orm.sessionmaker(autocommit=False, autoflush=False, bind=demo_engine)
-
-
-@pytest.fixture
 def demo_session_factory_raw(demo_engine, demo_session_raw):
     """Session factory for the demo test DB without pre-seeded data.
     Use with demo_session_raw for tests that call setup_demo_schema."""
@@ -66,6 +57,24 @@ def demo_client(demo_session):
     app.dependency_overrides[database.get_db] = override_get_db
     yield TestClient(app)
     app.dependency_overrides.pop(database.get_db, None)
+
+
+@pytest.fixture
+def demo_login_client(session, demo_session):
+    """FastAPI test client that overrides both get_db (public schema) and
+    get_demo_db (demo schema) for login tests."""
+
+    def override_get_db():
+        yield session
+
+    def override_get_demo_db():
+        yield demo_session
+
+    app.dependency_overrides[database.get_db] = override_get_db
+    app.dependency_overrides[database.get_demo_db] = override_get_demo_db
+    yield TestClient(app)
+    app.dependency_overrides.pop(database.get_db, None)
+    app.dependency_overrides.pop(database.get_demo_db, None)
 
 
 def create_demo_user(session: orm.Session) -> models.User:

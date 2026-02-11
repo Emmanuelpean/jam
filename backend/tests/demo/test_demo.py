@@ -15,18 +15,14 @@ from tests.utils import test_data as td
 
 class TestDemoLogin:
 
-    def test_login_creates_ephemeral_user_in_demo_schema(self, test_demo_user, client, demo_session_factory) -> None:
+    def test_login_creates_ephemeral_user_in_demo_schema(self, test_demo_user, demo_login_client, demo_session) -> None:
         """Logging in with the demo account must create exactly one ephemeral user
         in the demo schema and return a JWT stamped with is_demo=True."""
 
-        with patch("app.database.demo_session_local", side_effect=demo_session_factory):
-            response = client.post(
-                "/login",
-                data={
-                    "username": test_demo_user.email,
-                    "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
-                },
-            )
+        response = demo_login_client.post(
+            "/login",
+            data={"username": test_demo_user.email, "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"]},
+        )
 
         assert response.status_code == 200
 
@@ -39,32 +35,28 @@ class TestDemoLogin:
         assert payload.get("is_demo") is True
 
         # Exactly one ephemeral user must exist in the demo DB
-        verify = demo_session_factory()
-        try:
-            demo_users = verify.query(models.User).filter(models.User.is_demo.is_(True)).all()
-            assert len(demo_users) == 1
-            user = demo_users[0]
-            assert "@demo.jam" in user.email
-            assert user.first_name == "Demo"
-            assert user.last_name == "User"
-            assert user.is_active is True
-            assert user.is_verified is True
-            assert user.premium is not None
-            assert user.premium.is_active is True
-        finally:
-            verify.close()
+        demo_session.expire_all()
+        demo_users = demo_session.query(models.User).filter(models.User.is_demo.is_(True)).all()
+        assert len(demo_users) == 1
+        user = demo_users[0]
+        assert "@demo.jam" in user.email
+        assert user.first_name == "Demo"
+        assert user.last_name == "User"
+        assert user.is_active is True
+        assert user.is_verified is True
+        assert user.premium is not None
+        assert user.premium.is_active is True
 
-    def test_login_seeds_data_for_ephemeral_user(self, test_demo_user, client, demo_session_factory) -> None:
+    def test_login_seeds_data_for_ephemeral_user(self, test_demo_user, demo_login_client, demo_session) -> None:
         """After demo login the ephemeral user must have seeded jobs and companies."""
 
-        with patch("app.database.demo_session_local", side_effect=demo_session_factory):
-            response = client.post(
-                "/login",
-                data={
-                    "username": test_demo_user.email,
-                    "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
-                },
-            )
+        response = demo_login_client.post(
+            "/login",
+            data={
+                "username": test_demo_user.email,
+                "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
+            },
+        )
 
         assert response.status_code == 200
 
@@ -75,28 +67,24 @@ class TestDemoLogin:
         )
         ephemeral_user_id = payload["user_id"]
 
-        verify = demo_session_factory()
-        try:
-            jobs = verify.query(models.Job).filter(models.Job.owner_id == ephemeral_user_id).count()
-            companies = verify.query(models.Company).filter(models.Company.owner_id == ephemeral_user_id).count()
-            assert jobs > 0, "Expected seeded jobs for the demo user"
-            assert companies > 0, "Expected seeded companies for the demo user"
-        finally:
-            verify.close()
+        demo_session.expire_all()
+        jobs = demo_session.query(models.Job).filter(models.Job.owner_id == ephemeral_user_id).count()
+        companies = demo_session.query(models.Company).filter(models.Company.owner_id == ephemeral_user_id).count()
+        assert jobs > 0, "Expected seeded jobs for the demo user"
+        assert companies > 0, "Expected seeded companies for the demo user"
 
     def test_regular_user_login_does_not_touch_demo_schema(
-        self, test_regular_user, client, demo_session_factory
+        self, test_regular_user, demo_login_client, demo_session
     ) -> None:
         """A normal (non-demo) login must not create any record in the demo schema."""
 
-        with patch("app.database.demo_session_local", side_effect=demo_session_factory):
-            response = client.post(
-                "/login",
-                data={
-                    "username": test_regular_user.email,
-                    "password": td.USER_DATA[td.REGULAR_USER_INDEX]["password"],
-                },
-            )
+        response = demo_login_client.post(
+            "/login",
+            data={
+                "username": test_regular_user.email,
+                "password": td.USER_DATA[td.REGULAR_USER_INDEX]["password"],
+            },
+        )
 
         assert response.status_code == 200
 
@@ -107,15 +95,12 @@ class TestDemoLogin:
         )
         assert payload.get("is_demo") is False
 
-        verify = demo_session_factory()
-        try:
-            assert verify.query(models.User).count() == 0
-        finally:
-            verify.close()
+        demo_session.expire_all()
+        assert demo_session.query(models.User).count() == 0
 
 
 class TestDemoSchemaSetup:
-    def test_setup_seeds_ai_prompts_in_fresh_schema(self, demo_session, demo_session_factory) -> None:
+    def test_setup_seeds_ai_prompts_in_fresh_schema(self, demo_session) -> None:
         """setup_demo_schema must seed AI system prompts when the schema is empty."""
 
         # demo_session fixture already seeded AI prompts — verify they exist
@@ -137,30 +122,24 @@ class TestDemoSchemaSetup:
         assert count_before == count_after
 
 
-# -------------------------------------------------------
-# 3. Multiple demo users can exist simultaneously
-# -------------------------------------------------------
-
-
 class TestMultipleDemoUsers:
-    def test_two_logins_create_two_independent_users(self, test_demo_user, client, demo_session_factory) -> None:
+    def test_two_logins_create_two_independent_users(self, test_demo_user, demo_login_client, demo_session) -> None:
         """Two concurrent demo logins must create two distinct ephemeral users."""
 
-        with patch("app.database.demo_session_local", side_effect=demo_session_factory):
-            res1 = client.post(
-                "/login",
-                data={
-                    "username": test_demo_user.email,
-                    "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
-                },
-            )
-            res2 = client.post(
-                "/login",
-                data={
-                    "username": test_demo_user.email,
-                    "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
-                },
-            )
+        res1 = demo_login_client.post(
+            "/login",
+            data={
+                "username": test_demo_user.email,
+                "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
+            },
+        )
+        res2 = demo_login_client.post(
+            "/login",
+            data={
+                "username": test_demo_user.email,
+                "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
+            },
+        )
 
         assert res1.status_code == 200
         assert res2.status_code == 200
@@ -170,54 +149,42 @@ class TestMultipleDemoUsers:
 
         assert payload1["user_id"] != payload2["user_id"], "Each login must produce a distinct user ID"
 
-        verify = demo_session_factory()
-        try:
-            users = verify.query(models.User).filter(models.User.is_demo.is_(True)).all()
-            assert len(users) == 2
-            emails = {u.email for u in users}
-            assert len(emails) == 2, "Each ephemeral user must have a unique email"
-        finally:
-            verify.close()
+        demo_session.expire_all()
+        users = demo_session.query(models.User).filter(models.User.is_demo.is_(True)).all()
+        assert len(users) == 2
+        emails = {u.email for u in users}
+        assert len(emails) == 2, "Each ephemeral user must have a unique email"
 
-    def test_each_session_data_belongs_only_to_its_user(self, test_demo_user, client, demo_session_factory) -> None:
+    def test_each_session_data_belongs_only_to_its_user(self, test_demo_user, demo_login_client, demo_session) -> None:
         """Data seeded for session A must not appear under session B's user ID."""
 
-        with patch("app.database.demo_session_local", side_effect=demo_session_factory):
-            res1 = client.post(
-                "/login",
-                data={
-                    "username": test_demo_user.email,
-                    "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
-                },
-            )
-            res2 = client.post(
-                "/login",
-                data={
-                    "username": test_demo_user.email,
-                    "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
-                },
-            )
+        res1 = demo_login_client.post(
+            "/login",
+            data={
+                "username": test_demo_user.email,
+                "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
+            },
+        )
+        res2 = demo_login_client.post(
+            "/login",
+            data={
+                "username": test_demo_user.email,
+                "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
+            },
+        )
 
         payload1 = jwt.decode(res1.json()["access_token"], settings.secret_key, algorithms=[settings.algorithm])
         payload2 = jwt.decode(res2.json()["access_token"], settings.secret_key, algorithms=[settings.algorithm])
         user1_id, user2_id = payload1["user_id"], payload2["user_id"]
 
-        verify = demo_session_factory()
-        try:
-            jobs_u1 = verify.query(models.Job).filter(models.Job.owner_id == user1_id).count()
-            jobs_u2 = verify.query(models.Job).filter(models.Job.owner_id == user2_id).count()
-            total_jobs = verify.query(models.Job).count()
+        demo_session.expire_all()
+        jobs_u1 = demo_session.query(models.Job).filter(models.Job.owner_id == user1_id).count()
+        jobs_u2 = demo_session.query(models.Job).filter(models.Job.owner_id == user2_id).count()
+        total_jobs = demo_session.query(models.Job).count()
 
-            assert jobs_u1 > 0, "Session 1 user must have seeded jobs"
-            assert jobs_u2 > 0, "Session 2 user must have seeded jobs"
-            assert total_jobs == jobs_u1 + jobs_u2, "No jobs must be shared between sessions"
-        finally:
-            verify.close()
-
-
-# -------------------------------------------------------
-# 4. Logout (cleanup endpoint) deletes the demo user and their data
-# -------------------------------------------------------
+        assert jobs_u1 > 0, "Session 1 user must have seeded jobs"
+        assert jobs_u2 > 0, "Session 2 user must have seeded jobs"
+        assert total_jobs == jobs_u1 + jobs_u2, "No jobs must be shared between sessions"
 
 
 class TestDemoCleanup:
