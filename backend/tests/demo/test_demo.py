@@ -11,6 +11,7 @@ from app.core.oauth2 import create_access_token
 from app.demo.setup import cleanup_stale_demo_users, setup_demo_schema
 from tests.demo.conftest import create_demo_user
 from tests.utils import test_data as td
+from tests.utils.create_data.core import create_users
 
 
 class TestDemoLogin:
@@ -185,6 +186,67 @@ class TestMultipleDemoUsers:
         assert jobs_u1 > 0, "Session 1 user must have seeded jobs"
         assert jobs_u2 > 0, "Session 2 user must have seeded jobs"
         assert total_jobs == jobs_u1 + jobs_u2, "No jobs must be shared between sessions"
+
+
+class TestDemoSchemaIsolation:
+
+    def test_deleting_demo_user_does_not_affect_public_schema(self, session, demo_session) -> None:
+        """Deleting a demo user (and their cascaded data) in the demo schema
+        must not affect a regular user or their data in the public schema."""
+
+        # Create a regular user with a job in the public schema
+        regular_user = create_users(session)[0]
+        public_job = models.Job(title="Public Job", owner_id=regular_user.id)
+        session.add(public_job)
+        session.commit()
+        session.refresh(public_job)
+        public_job_id = public_job.id
+
+        # Create a demo user with a job in the demo schema
+        demo_user = create_demo_user(demo_session)
+        demo_job = models.Job(title="Demo Job", owner_id=demo_user.id)
+        demo_session.add(demo_job)
+        demo_session.commit()
+
+        # Delete the demo user — cascade should remove the demo job
+        demo_session.delete(demo_user)
+        demo_session.commit()
+        demo_session.expire_all()
+
+        assert demo_session.query(models.Job).count() == 0, "Demo job must be cascade-deleted with the demo user"
+
+        # The public schema must be completely untouched
+        session.expire_all()
+        assert (
+            session.query(models.User).filter(models.User.id == regular_user.id).first() is not None
+        ), "Regular user in the public schema must still exist"
+        assert (
+            session.query(models.Job).filter(models.Job.id == public_job_id).first() is not None
+        ), "Job in the public schema must still exist"
+
+    def test_deleting_demo_entry_does_not_affect_other_demo_users(self, demo_session) -> None:
+        """Deleting one demo user's data must not affect another demo user's data
+        within the same demo schema."""
+
+        user_a = create_demo_user(demo_session)
+        user_b = create_demo_user(demo_session)
+
+        job_a = models.Job(title="Job A", owner_id=user_a.id)
+        job_b = models.Job(title="Job B", owner_id=user_b.id)
+        demo_session.add_all([job_a, job_b])
+        demo_session.commit()
+
+        # Delete user A — cascade should only remove job A
+        demo_session.delete(user_a)
+        demo_session.commit()
+        demo_session.expire_all()
+
+        assert (
+            demo_session.query(models.Job).filter(models.Job.owner_id == user_a.id).count() == 0
+        ), "Deleted demo user's jobs must be gone"
+        remaining = demo_session.query(models.Job).filter(models.Job.owner_id == user_b.id).all()
+        assert len(remaining) == 1, "Other demo user's jobs must be untouched"
+        assert remaining[0].title == "Job B"
 
 
 class TestDemoCleanup:
