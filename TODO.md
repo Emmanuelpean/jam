@@ -70,5 +70,6 @@
 * [X] Since last login button does not work as user last login is not recorded.
 * [X] Create guide on how to set up TOAST
 * [X] last_login should count when user returns to the page instead of only when they login.
-* [ ] Review what scraped jobs are displayed (is_scraped should be is_processed)
-* [ ] Add fallback to geolocation
+* [X] Review what scraped jobs are displayed (is_scraped should be is_processed)
+* [X] Add fallback to geolocation
+* [ ] Add frontend tests for scraped jobs failed/skipped/rated/rating skipped/failed

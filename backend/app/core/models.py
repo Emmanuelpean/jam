@@ -160,7 +160,7 @@ class UserPreferences(Owned, Base):
     - `default_currency` (str): The default currency for salary fields."""
 
     theme = Column(String, nullable=False, server_default="mixed-berry")
-    dark_mode = Column(Boolean, nullable=False, server_default=expression.false())
+    dark_mode = Column(String, nullable=False, server_default="system")
     chase_threshold = Column(Integer, nullable=False, server_default="14")
     deadline_threshold = Column(Integer, nullable=False, server_default="7")
     update_limit = Column(Integer, nullable=False, server_default="10")

@@ -13,7 +13,7 @@ USER_DATA = [
         "first_name": "Regular",
         "last_name": "User",
         "app_version": "10.0.0",
-        "preferences": {"dark_mode": True},
+        "preferences": {"dark_mode": "dark"},
     },
     # Admin user
     {

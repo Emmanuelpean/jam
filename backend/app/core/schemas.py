@@ -6,8 +6,11 @@ contain reference to other tables.
 Update schemas should be used to update existing entries in the database."""
 
 import datetime as dt
+from typing import Literal
 
 from pydantic import BaseModel
+
+ThemeMode = Literal["dark", "light", "system"]
 
 from app.base_schemas import Out, OwnedOut, EmailField
 
@@ -78,7 +81,7 @@ class UserPreferencesCreate(BaseModel):
     Defaults are handled in the database layer."""
 
     theme: str | None = None
-    dark_mode: bool = False
+    dark_mode: ThemeMode = "system"
     chase_threshold: int | None = None
     deadline_threshold: int | None = None
     update_limit: int | None = None
