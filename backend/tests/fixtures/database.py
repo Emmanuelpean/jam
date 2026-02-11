@@ -29,16 +29,13 @@ def worker_database_name(worker_id) -> str:
         return f"{DATABASE_NAME}_{worker_id}"
 
 
-@pytest.fixture(scope="session")
-def database_url(worker_database_name) -> str:
-    """Generate database URL for the worker."""
+def create_db_engine(database_name: str, worker_id: str) -> Generator[Engine, Any, None]:
+    """Create engine for a given database name.
+    :param database_name: Name of the database to create.
+    :param worker_id: ID of the worker process.
+    :return: Engine instance."""
 
-    return create_db_url(worker_database_name)
-
-
-@pytest.fixture(scope="session")
-def engine(database_url, worker_id) -> Generator[Engine, Any, None]:
-    """Create engine once per worker session, creating database first."""
+    database_url = create_db_url(database_name)
     is_parallel = worker_id != "master"
 
     if is_parallel:
@@ -59,13 +56,29 @@ def engine(database_url, worker_id) -> Generator[Engine, Any, None]:
         drop_database(database_url)
 
 
-@pytest.fixture(scope="function")
-def session(engine) -> Generator[orm.Session, Any, None]:
-    """Fixture that sets up and tears down a new database session for each test function."""
-    reset_database(engine, False)
-    TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    db = TestingSessionLocal()
+@pytest.fixture(scope="session")
+def engine(worker_database_name, worker_id) -> Generator[Engine, Any, None]:
+    """Create engine once per worker session, creating database first."""
+
+    yield from create_db_engine(worker_database_name, worker_id)
+
+
+def create_db_session(db_engine: Engine) -> Generator[orm.Session, Any, None]:
+    """Reset the database and yield a fresh session.
+    :param db_engine: Engine to create the session from.
+    :return: Database session."""
+
+    reset_database(db_engine, False)
+    SessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
+    db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+
+@pytest.fixture(scope="function")
+def session(engine) -> Generator[orm.Session, Any, None]:
+    """Fixture that sets up and tears down a new database session for each test function."""
+
+    yield from create_db_session(engine)
