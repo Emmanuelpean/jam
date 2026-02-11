@@ -3,30 +3,46 @@
 import uuid
 
 import pytest
-from sqlalchemy import orm
+from sqlalchemy import create_engine, text, orm
 from starlette.testclient import TestClient
 
 from app import database, models
+from app.database import Base
 from app.job_rating.prompts import seed_ai_prompts
 from app.main import app
-from tests.fixtures.database import create_db_engine, create_db_session
 from tests.utils.create_data.data_tables import create_geolocations
 
 
 @pytest.fixture(scope="session")
-def demo_engine(worker_database_name, worker_id):
-    """Dedicated PostgreSQL database for demo tests.
-    Created fresh for every pytest-xdist worker so parallel runs stay isolated."""
+def demo_engine(engine):
+    """Engine targeting a 'demo' schema inside the test database."""
 
-    yield from create_db_engine(f"{worker_database_name}_demo", worker_id)
+    with engine.connect() as conn:
+        conn.execute(text("DROP SCHEMA IF EXISTS demo CASCADE"))
+        conn.execute(text("CREATE SCHEMA demo"))
+        conn.commit()
+
+    demo_eng = create_engine(engine.url, connect_args={"options": "-c search_path=demo"})
+    yield demo_eng
+    demo_eng.dispose()
 
 
 @pytest.fixture
-def demo_session_raw(demo_engine):
-    """Clean session on the demo test DB with tables reset but NO seed data.
-    Use this for tests that call setup_demo_schema (which seeds its own data)."""
+def demo_session_raw(engine, demo_engine):
+    """Clean demo schema session — drops and recreates the demo schema each test."""
 
-    yield from create_db_session(demo_engine)
+    with engine.connect() as conn:
+        conn.execute(text("DROP SCHEMA IF EXISTS demo CASCADE"))
+        conn.execute(text("CREATE SCHEMA demo"))
+        conn.commit()
+    Base.metadata.create_all(bind=demo_engine)
+
+    session_factory = orm.sessionmaker(autocommit=False, autoflush=False, bind=demo_engine)
+    db = session_factory()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @pytest.fixture
