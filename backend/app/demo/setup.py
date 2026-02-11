@@ -5,32 +5,41 @@ import datetime as dt
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from tests.utils.test_data import data_tables
+from tests.utils.create_data.utils import create_db_entries
 from app import models
 from app.database import Base, demo_engine, demo_session_local, engine
 from app.job_rating.prompts import seed_ai_prompts
-from tests.utils.seed_database import reset_database
+
+
+_DEMO_SETUP_LOCK_ID = 987_654_321
 
 
 def setup_demo_schema() -> None:
     """Create the demo schema and all tables, then seed required data.
     Called at application startup."""
 
-    # Create the demo schema if it doesn't exist
-    # with engine.connect() as conn:
-    #     conn.execute(text("CREATE SCHEMA IF NOT EXISTS demo"))
-    #     conn.commit()
-    # reset_database(demo_engine, False)
-    #
-    # # Create all tables in the demo schema
-    # Base.metadata.create_all(bind=demo_engine)
+    with engine.connect() as conn:
+        # Serialize setup across processes (e.g. multi-port dev servers)
+        conn.execute(text("SELECT pg_advisory_lock(:lock_id)"), {"lock_id": _DEMO_SETUP_LOCK_ID})
+        try:
+            conn.execute(text("DROP SCHEMA IF EXISTS demo CASCADE"))
+            conn.execute(text("CREATE SCHEMA demo"))
+            conn.commit()
 
-    # Seed required data in the demo schema
-    db = demo_session_local()
-    try:
-        seed_demo_ai_prompts(db)
-        cleanup_stale_demo_users(db)
-    finally:
-        db.close()
+            # Create all tables in the demo schema
+            Base.metadata.create_all(bind=demo_engine)
+
+            # Seed required data in the demo schema
+            db = demo_session_local()
+            try:
+                seed_ai_prompts(db)
+                create_db_entries(db, models.Geolocation, data_tables.GEOLOCATION_DATA)
+                cleanup_stale_demo_users(db)
+            finally:
+                db.close()
+        finally:
+            conn.execute(text("SELECT pg_advisory_unlock(:lock_id)"), {"lock_id": _DEMO_SETUP_LOCK_ID})
 
 
 def seed_demo_ai_prompts(db: Session) -> None:

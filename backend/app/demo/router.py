@@ -1,11 +1,12 @@
 """Demo cleanup endpoint."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from impit.impit import delete
 from sqlalchemy.orm import Session
 
 from app import models, database, base_schemas
 from app.core.oauth2 import get_current_user
-from app.demo.seed import cleanup_demo_user
+from app.demo.seed import delete_user
 
 demo_router = APIRouter(prefix="/demo", tags=["Demo"])
 
@@ -14,7 +15,7 @@ demo_router = APIRouter(prefix="/demo", tags=["Demo"])
 def demo_cleanup(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(database.get_db),
-) -> base_schemas.GenericResponse:
+) -> dict:
     """Clean up a demo user and all their data.
     Only accessible by demo users.
     :param current_user: The current authenticated demo user
@@ -27,5 +28,5 @@ def demo_cleanup(
             detail="This endpoint is only available for demo users.",
         )
 
-    cleanup_demo_user(db, current_user.id)
-    return base_schemas.GenericResponse(success=True, message="Demo data cleaned up successfully.")
+    delete_user(db, current_user.id)
+    return dict(success=True, message="Demo data cleaned up successfully.")

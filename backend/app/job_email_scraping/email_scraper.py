@@ -230,7 +230,6 @@ class JobEmailScraper(EmailService):
             alert_name = ALERT_NAME_EXTRACTORS[platform](message["subject"], message["body"])
             sender = message["from"] if forwarded else message["to"]
             # Create a new email record
-            # noinspection PyArgumentList
             email_record = JobEmail(
                 owner_id=user.id,
                 service_log_id=service_log_id,

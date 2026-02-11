@@ -7,6 +7,7 @@ import { ThemeSelector } from "./ThemeSelector";
 import "./Sidebar.scss";
 import { DEFAULT_THEME } from "../../utils/Theme";
 import { UserData } from "../../services/schemas/Core";
+import { useAlert } from "../../contexts/AlertContext";
 
 interface NavigationItem {
 	path?: string;
@@ -28,9 +29,26 @@ interface NavigationSubItem {
 export const Sidebar = (): JSX.Element => {
 	const location = useLocation();
 	const { logout, currentUser } = useAuth();
+	const { showConfirm, showLogout, showDelete } = useAlert();
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
 	const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
+
+	const handleLogoutClick = async (): Promise<void> => {
+		if (currentUser?.is_demo) {
+			const confirmed: boolean = await showDelete({
+				title: "Log out of demo account?",
+				message:
+					"All demo data — including your jobs, companies, and settings — will be permanently deleted when you log out.",
+				cancelText: "Stay",
+				confirmText: "Log out",
+			});
+			if (confirmed) logout();
+		} else {
+			logout();
+		}
+	};
+
 	const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const dropdownRef = useRef<HTMLDivElement | null>(null);
 	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 990);
@@ -100,7 +118,7 @@ export const Sidebar = (): JSX.Element => {
 			icon: "box-arrow-right",
 			text: "Logout",
 			position: "bottom",
-			onClick: logout,
+			onClick: handleLogoutClick,
 			className: "logout-item",
 		},
 	];
