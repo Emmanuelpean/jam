@@ -1,6 +1,6 @@
 import React, { JSX, useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import "./MaintenanceBanner.scss";
+import { AppBanner } from "./AppBanner";
 import { formatDuration, formatScheduledTime, ONE_HOUR_IN_SECONDS } from "../../utils/TimeUtils";
 
 declare global {
@@ -87,49 +87,39 @@ export function MaintenanceBanner(): JSX.Element | null {
 	return (
 		<>
 			{showCountdownBanner && (
-				<div className="maintenance-countdown-banner bg-warning" role="alert" id="maintenance-countdown-banner">
-					<div className="maintenance-countdown-content">
-						<i className="bi bi-clock-history"></i>
-						<span>
-							{secondsLeft > ONE_HOUR_IN_SECONDS ? (
-								<>
-									Scheduled maintenance on{" "}
-									<strong>{formatScheduledTime(new Date(maintenanceScheduledAt))}</strong>. The app
-									will be temporarily unavailable.
-								</>
-							) : (
-								<>
-									Maintenance in <strong>{formatDuration(secondsLeft)}</strong>. The app will go
-									offline for updates.
-								</>
-							)}
-						</span>
-					</div>
-					<button
-						type="button"
-						className="maintenance-dismiss-btn"
-						onClick={() => setBannerDismissed(true)}
-						aria-label="Dismiss maintenance notice"
-					>
-						<i className="bi bi-x-lg"></i>
-					</button>
-				</div>
+				<AppBanner
+					icon="bi-clock-history"
+					colorClass="bg-warning"
+					id="maintenance-countdown-banner"
+					role="alert"
+					onDismiss={() => setBannerDismissed(true)}
+					dismissLabel="Dismiss maintenance notice"
+				>
+					{secondsLeft > ONE_HOUR_IN_SECONDS ? (
+						<>
+							Scheduled maintenance on{" "}
+							<strong>{formatScheduledTime(new Date(maintenanceScheduledAt))}</strong>. The app will be
+							temporarily unavailable.
+						</>
+					) : (
+						<>
+							Maintenance in <strong>{formatDuration(secondsLeft)}</strong>. The app will go offline for
+							updates.
+						</>
+					)}
+				</AppBanner>
 			)}
 
 			{showErrorBanner && (
-				<div
-					className="maintenance-countdown-banner maintenance-error-banner bg-danger"
-					role="alert"
+				<AppBanner
+					icon="bi-exclamation-triangle-fill"
+					colorClass="bg-danger"
 					id="maintenance-error-banner"
+					role="alert"
 				>
-					<div className="maintenance-countdown-content">
-						<i className="bi bi-exclamation-triangle-fill"></i>
-						<span>
-							<strong>App is being updated.</strong> JAM is currently undergoing maintenance. The
-							application will be back shortly. Any unsaved changes will not be saved.
-						</span>
-					</div>
-				</div>
+					<strong>App is being updated.</strong> JAM is currently undergoing maintenance. The application will
+					be back shortly. Any unsaved changes will not be saved.
+				</AppBanner>
 			)}
 		</>
 	);

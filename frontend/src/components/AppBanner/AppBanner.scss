@@ -1,12 +1,16 @@
-.maintenance-countdown-banner {
+.app-banner {
 	position: relative;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	width: 100%;
-	padding: 10px 40px 10px 20px;
+	padding: 8px 20px;
 
-	.maintenance-countdown-content {
+	&.has-dismiss {
+		padding-right: 40px;
+	}
+
+	.app-banner-content {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -22,7 +26,7 @@
 	}
 }
 
-.maintenance-dismiss-btn {
+.app-banner-dismiss-btn {
 	position: absolute;
 	top: 50%;
 	right: 16px;
