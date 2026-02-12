@@ -60,7 +60,7 @@ class TestToast(BaseTest):
 
         self.scrapedJob_table_utils.table_row(2).click()
         self.scrapedJob_modal_utils.delete_button("import").click()
-        self.delete_confirm_button.click()
+        self.delete_modal.confirm_button.click()
         self.scrapedJob_modal_utils.wait_for_import_modal_modal_close()
         self.assert_toast_message("Scraped Job deleted successfully.")
         self.db.expire_all()
@@ -71,7 +71,7 @@ class TestToast(BaseTest):
         """Test deleting a scraped job via right-click and displaying a toast notification."""
 
         self.scrapedJob_table_utils.table_context_menu(2, "delete")
-        self.delete_confirm_button.click()
+        self.delete_modal.confirm_button.click()
         self.scrapedJob_modal_utils.wait_for_import_modal_modal_close()
         self.assert_toast_message("Scraped Job deleted successfully.")
         self.db.expire_all()

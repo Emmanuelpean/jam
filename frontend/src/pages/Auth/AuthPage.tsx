@@ -874,6 +874,7 @@ function AuthForm(): JSX.Element {
 							loadingText="Loading demo..."
 							defaultIcon="bi bi-play-circle"
 							variant="outline-primary"
+							id={"try-app-btn"}
 						/>
 					</div>
 				</div>
