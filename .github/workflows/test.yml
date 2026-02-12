@@ -33,8 +33,6 @@ jobs:
       LOG_DIRECTORY: ${{ vars.LOG_DIRECTORY }}
       TEST_MODE: ${{ vars.TEST_MODE }}
       MIN_PASSWORD_LENGTH: ${{ vars.MIN_PASSWORD_LENGTH }}
-      APP_DEMO_USERNAME: ${{ vars.APP_DEMO_USERNAME }}
-      APP_DEMO_PASSWORD: ${{ vars.APP_DEMO_PASSWORD }}
       MONTHLY_SCRAPE_QUOTA: ${{ vars.MONTHLY_SCRAPE_QUOTA }}
 
       # Email Configuration

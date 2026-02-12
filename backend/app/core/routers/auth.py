@@ -43,32 +43,8 @@ def login(
     # Find the user in the list based on the email provided
     user = db.query(models.User).filter(models.User.email == user_email).first()
 
-    # Check that the user exists and verify the password
-    if user is None or not utils.verify_password(user_credentials.password, user.password):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials.")
-
-    # Check that the user is active
-    if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account is not active.")
-
-    # Check that the user is verified
-    if not user.is_verified:
-        result = send_email_verification_email(user, db)
-
-        # Raise appropriate exception based on email sending result
-        if result.success:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"User account is not verified. A new verification email has been sent to {user.email}.",
-            )
-        else:
-            raise HTTPException(
-                status_code=result.error_code,
-                detail=result.message,
-            )
-
     # Handle demo user login: create a temp user in the demo schema with seeded data
-    if user.is_demo:
+    if user is not None and user.is_demo:
         try:
             demo_email = f"demo-{uuid.uuid4().hex[:12]}@demo.jam"
             demo_user = models.User(
@@ -97,6 +73,30 @@ def login(
         except Exception:
             demo_db.rollback()
             raise
+
+    # Check that the user exists and verify the password
+    if user is None or not utils.verify_password(user_credentials.password, user.password):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials.")
+
+    # Check that the user is active
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account is not active.")
+
+    # Check that the user is verified
+    if not user.is_verified:
+        result = send_email_verification_email(user, db)
+
+        # Raise appropriate exception based on email sending result
+        if result.success:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"User account is not verified. A new verification email has been sent to {user.email}.",
+            )
+        else:
+            raise HTTPException(
+                status_code=result.error_code,
+                detail=result.message,
+            )
 
     # Save the last login date and update the last login date
     user.previous_login = user.last_login
