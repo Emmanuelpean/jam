@@ -1694,10 +1694,22 @@ class UserSettingsUtils(BaseUtilsClass):
         return self.get_element(theme_key + "-theme")
 
     @property
-    def dark_mode_toggle(self) -> WebElement:
+    def dark_mode_btn(self) -> WebElement:
         """Get the dark mode toggle button"""
 
-        return self.get_element("theme-switch-label")
+        return self.get_element("theme-dark-btn")
+
+    @property
+    def light_mode_btn(self) -> WebElement:
+        """Get the light mode toggle button"""
+
+        return self.get_element("theme-light-btn")
+
+    @property
+    def system_theme_btn(self) -> WebElement:
+        """Get the system theme toggle button"""
+
+        return self.get_element("theme-system-btn")
 
     def confirm(self) -> None:
         """Confirm the form submission"""

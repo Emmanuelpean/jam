@@ -56,6 +56,6 @@ class TestPreferenceSettingsPage(BaseTest):
     def test_toggle_dark_model(self) -> None:
         """Toggle Dark Model"""
 
-        self.user_settings_utils.dark_mode_toggle.click()
+        self.user_settings_utils.dark_mode_btn.click()
         time.sleep(0.1)
         assert self.db_user.preferences.dark_mode

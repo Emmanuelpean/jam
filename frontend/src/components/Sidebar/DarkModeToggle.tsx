@@ -24,6 +24,7 @@ export const DarkModeToggle: React.FC = () => {
 				{options.map(({ mode, icon, label }) => (
 					<button
 						key={mode}
+						id={`theme-${mode}-btn`}
 						className={`theme-segment${themeMode === mode ? " active" : ""}`}
 						onClick={() => setThemeMode(mode)}
 						role="radio"

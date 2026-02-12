@@ -3,11 +3,11 @@
     align-items: center;
     margin-top: auto;
     padding: 0.75rem 0;
-    border-top: 1px solid #e8eaed;
+    border-top: 1px solid rgb(0 0 0 / 6%);
 }
 
 [data-mode="dark"] .dark-mode-toggle-container {
-    border-top-color: rgb(255 255 255 / 10%);
+    border-top-color: rgb(255 255 255 / 8%);
 }
 
 .theme-segmented-control {
@@ -15,13 +15,16 @@
     display: flex;
     width: 100%;
     overflow: hidden;
-    border-radius: 8px;
-    background: #f0f2f5;
+    border-radius: 12px;
+    background: rgb(0 0 0 / 5%);
     padding: 3px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgb(0 0 0 / 6%);
 }
 
 [data-mode="dark"] .theme-segmented-control {
-    background: rgb(255 255 255 / 8%);
+    background: rgb(255 255 255 / 6%);
+    border-color: rgb(255 255 255 / 8%);
 }
 
 /* Sliding indicator */
@@ -31,16 +34,20 @@
     left: 3px;
     width: calc(33.333% - 2px);
     height: calc(100% - 6px);
-    border-radius: 6px;
+    border-radius: 10px;
     background: white;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+        0 1px 3px rgb(0 0 0 / 8%),
+        0 0 0 1px rgb(0 0 0 / 4%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
 }
 
 [data-mode="dark"] .theme-segment-indicator {
     background: rgb(255 255 255 / 12%);
-    box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+    box-shadow:
+        0 1px 4px rgb(0 0 0 / 30%),
+        0 0 0 1px rgb(255 255 255 / 6%);
 }
 
 /* Segments */
@@ -52,34 +59,39 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    padding: 6px 4px 5px;
+    gap: 2px;
+    padding: 7px 4px 6px;
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
     background: transparent;
-    color: #6b7280;
+    color: #9ca3af;
     cursor: pointer;
-    transition: color 0.3s ease;
+    transition: color 0.25s ease;
 
     i {
-        font-size: 15px;
-        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                    color 0.3s ease;
+        font-size: 14px;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                    color 0.25s ease;
     }
 
     .segment-label {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         font-weight: 600;
-        letter-spacing: 0.03em;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
+        opacity: 0.85;
     }
 
     &:hover:not(.active) {
-        color: #374151;
+        color: #6b7280;
     }
 
     &.active {
         color: #667eea;
+
+        .segment-label {
+            opacity: 1;
+        }
     }
 }
 
@@ -142,7 +154,7 @@
 
 /* Dark mode colors */
 [data-mode="dark"] .theme-segment {
-    color: #9ca3af;
+    color: #6b7280;
 
     &:hover:not(.active) {
         color: #d1d5db;
