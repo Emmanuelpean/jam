@@ -845,7 +845,12 @@ class DataModalUtils(BaseUtilsClass):
 
         return self.get_element(f"modal-edit-{self.entry_type}")
 
-    def wait_for_import_modal_modal_close(self) -> None:
+    def wait_for_import_modal(self) -> WebElement:
+        """Wait for the import modal to close"""
+
+        return self.get_element(f"modal-import-{self.entry_type}")
+
+    def wait_for_import_modal_close(self) -> None:
         """Wait for the import modal to close"""
 
         self._wait_for_modal_close(f"modal-import-{self.entry_type}")
@@ -1431,6 +1436,11 @@ class DataTableUtils(BaseUtilsClass):
             re.search(rf"table-row-{self.entry_type}-(\d+)", self.table_rows[index].get_attribute("id")).group(1)
         )
 
+    def check_id_in_table(self, entry_id: int) -> bool:
+        """Check if an ID is in the table"""
+
+        return any(row.get_attribute("id") == f"table-row-{self.entry_type}-{entry_id}" for row in self.table_rows)
+
     def set_search(self, search_text: str) -> None:
         """Set the search input to the given text"""
 
@@ -1444,6 +1454,12 @@ class DataTableUtils(BaseUtilsClass):
         """Get the Add Entity button"""
 
         return self.get_element(f"add-{self.entry_type}-button")
+
+    @property
+    def deadline_toggle(self) -> WebElement:
+        """Get the Deadline Toggle button"""
+
+        return self.get_element("show-past-deadline-toggle")
 
     def set_page_item_select(self, value: str) -> None:
         """Set the number of items to display per page
@@ -2154,7 +2170,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
