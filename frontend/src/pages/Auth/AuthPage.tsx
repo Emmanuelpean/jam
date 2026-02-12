@@ -419,7 +419,7 @@ function AuthForm(): JSX.Element {
 		const errorTitle: string = "Demo Login Failed";
 
 		try {
-			const result: GenericResponse = await login(config.app_demo_username, config.app_demo_password);
+			const result: GenericResponse = await login(config.app_demo_username, "");
 			if (result.success) {
 				navigate("/dashboard");
 			} else {

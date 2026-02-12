@@ -32,8 +32,6 @@ class Settings(BaseSettings):
     app_version: str = get_app_version()
     max_file_size_mb: int
     min_password_length: int
-    app_demo_username: str
-    app_demo_password: str
     monthly_scrape_quota: int
 
     # Other settings
