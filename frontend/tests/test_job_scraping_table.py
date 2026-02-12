@@ -17,9 +17,10 @@ class TestToast(BaseTest):
     def test_import_scraped_job(self) -> None:
         """Test importing a scraped job and displaying a toast notification."""
 
-        # Import the scraped job with ID 2
+        entry_id = 27
+        # Import the scraped job
         job_count = self.db.query(models.Job).count()
-        self.scrapedJob_table_utils.table_row(2).click()
+        self.scrapedJob_table_utils.table_row(entry_id).click()
         self.scrapedJob_modal_utils.import_button().click()
         self.scrapedJob_modal_utils.wait_for_import_modal_modal_close()
         self.scrapedJob_table_utils.assert_toast_message("Job imported successfully.")
@@ -32,14 +33,15 @@ class TestToast(BaseTest):
         self.db.expire_all()
 
         # Verify that the scraped job is marked as imported
-        scraped_job = self.db.query(models.ScrapedJob).filter_by(id=2).first()
+        scraped_job = self.db.query(models.ScrapedJob).filter_by(id=entry_id).first()
         assert scraped_job.is_imported
 
     def test_right_click_import_scraped_job(self) -> None:
         """Test importing a scraped job via right-click and displaying a toast notification."""
 
+        entry_id = 27
         job_count = self.db.query(models.Job).count()
-        self.scrapedJob_table_utils.table_context_menu(2, "import")
+        self.scrapedJob_table_utils.table_context_menu(entry_id, "import")
         self.scrapedJob_modal_utils.import_button().click()
         self.scrapedJob_modal_utils.wait_for_import_modal_modal_close()
         self.scrapedJob_table_utils.assert_toast_message("Job imported successfully.")
@@ -52,30 +54,32 @@ class TestToast(BaseTest):
         self.db.expire_all()
 
         # Verify that the scraped job is marked as imported
-        scraped_job = self.db.query(models.ScrapedJob).filter_by(id=2).first()
+        scraped_job = self.db.query(models.ScrapedJob).filter_by(id=entry_id).first()
         assert scraped_job.is_imported
 
     def test_delete_scraped_job(self) -> None:
         """Test deleting a scraped job and displaying a toast notification."""
 
-        self.scrapedJob_table_utils.table_row(2).click()
+        entry_id = 27
+        self.scrapedJob_table_utils.table_row(entry_id).click()
         self.scrapedJob_modal_utils.delete_button("import").click()
         self.delete_modal.confirm_button.click()
         self.scrapedJob_modal_utils.wait_for_import_modal_modal_close()
         self.assert_toast_message("Scraped Job deleted successfully.")
         self.db.expire_all()
-        scraped_job = self.db.query(models.ScrapedJob).filter_by(id=2).first()
+        scraped_job = self.db.query(models.ScrapedJob).filter_by(id=entry_id).first()
         assert not scraped_job.is_active
 
     def test_context_menu_delete_scraped_job(self) -> None:
         """Test deleting a scraped job via right-click and displaying a toast notification."""
 
-        self.scrapedJob_table_utils.table_context_menu(2, "delete")
+        entry_id = 27
+        self.scrapedJob_table_utils.table_context_menu(entry_id, "delete")
         self.delete_modal.confirm_button.click()
         self.scrapedJob_modal_utils.wait_for_import_modal_modal_close()
         self.assert_toast_message("Scraped Job deleted successfully.")
         self.db.expire_all()
-        scraped_job = self.db.query(models.ScrapedJob).filter_by(id=2).first()
+        scraped_job = self.db.query(models.ScrapedJob).filter_by(id=entry_id).first()
         assert not scraped_job.is_active
 
 
