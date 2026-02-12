@@ -23,8 +23,7 @@ def load_file_as_base64(filename: str) -> str | None:
         with open(file_path, "rb") as file:
             file_content = file.read()
             return base64.b64encode(file_content).decode("utf-8")
-    except Exception as e:
-        print(f"❌ Error reading file {filename}: {e}")
+    except Exception:
         return None
 
 
@@ -55,8 +54,7 @@ def get_file_info(filename) -> tuple[int | None, str | None]:
             mime_type = mime_defaults.get(ext, "application/octet-stream")
 
         return file_size, mime_type
-    except Exception as e:
-        print(f"❌ Error getting file info for {filename}: {e}")
+    except Exception:
         return None, None
 
 
@@ -66,8 +64,6 @@ def load_all_resource_files() -> dict[str, dict[str, str | int]]:
     resources_path = get_resources_path()
     loaded_files = {}
 
-    print(f"📁 Loading files from: {resources_path}")
-
     for file_path in resources_path.iterdir():
         if file_path.is_file():
             file_content = load_file_as_base64(file_path.name)
@@ -75,10 +71,5 @@ def load_all_resource_files() -> dict[str, dict[str, str | int]]:
 
             if file_content:
                 loaded_files[file_path.name] = {"content": file_content, "size": file_size, "type": mime_type}
-
-    if not loaded_files:
-        print("📂 No files found in resources folder")
-    else:
-        print(f"📊 Total files loaded: {len(loaded_files)}")
 
     return loaded_files

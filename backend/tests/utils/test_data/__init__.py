@@ -74,18 +74,12 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
         "SCRAPING_FILTER_DATA": [],  # Has owner_id but no FKs to other owned tables
     }
 
-    print("=== OWNERSHIP INTEGRITY VALIDATION ===\n")
-
-    # Phase 1: Validate direct foreign key relationships
-    print("Phase 1: Validating direct foreign key relationships...")
-
     for table_name, relationships in fk_relationships.items():
         table_data = data_collections.get(table_name, [])
         if not table_data:
             continue
 
         results["statistics"]["tables_checked"] += 1
-        print(f"  Checking {table_name}: {len(table_data)} entries")
 
         for entry_idx, entry in enumerate(table_data):
             results["statistics"]["entries_validated"] += 1
@@ -143,9 +137,6 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
                             }
                         )
 
-    # Phase 2: Validate mapping relationships
-    print(f"\nPhase 2: Validating mapping relationships...")
-
     mapping_relationships = {
         "JOB_KEYWORD_MAPPINGS": {
             "primary_table": "JOB_DATA",
@@ -188,8 +179,6 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
         mapping_data = data_collections.get(mapping_name, [])
         if not mapping_data:
             continue
-
-        print(f"  Checking {mapping_name}: {len(mapping_data)} mappings - {config['description']}")
 
         for mapping_idx, mapping in enumerate(mapping_data):
             primary_id = mapping.get(config["primary_id_field"])
@@ -242,9 +231,6 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
                             "message": f"Mapping connects {config['primary_table']} (user {primary_owner}) with {config['secondary_table']} (user {secondary_owner})",
                         }
                     )
-
-    # Phase 3: Generate comprehensive summary
-    print(f"\nPhase 3: Generating summary report...")
 
     total_violations = len(results["direct_foreign_key_violations"]) + len(results["mapping_violations"])
 
