@@ -151,6 +151,7 @@
     flex: 1.25;
     flex-direction: column;
     justify-content: center;
+    min-height: 100vh;
     background: var(--bg-primary, #f8f9fa);
 }
 
@@ -158,10 +159,15 @@
     display: flex;
     align-items: center;
     flex-direction: column;
-    justify-content: center;
+    flex: 1;
     width: 100%;
     max-width: 550px;
     padding: 20px;
+
+    &::before {
+        content: "";
+        flex: 1;
+    }
 }
 
 @media (width < $tablet-breakpoint) {
@@ -247,14 +253,14 @@
 
 /* Try the app section under login card */
 .try-app-container {
+    flex: 1;
     width: 100%;
     max-width: 480px;
-    margin-top: 1.5rem;
 }
 
 .try-app-divider {
     position: relative;
-    margin: 1.5rem 0 1rem;
+    margin: 1.5rem 0;
     text-align: center;
 
     &::before {

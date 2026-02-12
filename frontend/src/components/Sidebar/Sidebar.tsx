@@ -18,6 +18,7 @@ interface NavigationItem {
 	position: "top" | "bottom";
 	onClick?: () => void;
 	className?: string;
+	id?: string;
 }
 
 interface NavigationSubItem {
@@ -29,7 +30,7 @@ interface NavigationSubItem {
 export const Sidebar = (): JSX.Element => {
 	const location = useLocation();
 	const { logout, currentUser } = useAuth();
-	const { showConfirm, showLogout, showDelete } = useAlert();
+	const { showDelete } = useAlert();
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
 	const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
@@ -120,6 +121,7 @@ export const Sidebar = (): JSX.Element => {
 			position: "bottom",
 			onClick: handleLogoutClick,
 			className: "logout-item",
+			id: "logout-btn",
 		},
 	];
 
@@ -247,6 +249,7 @@ export const Sidebar = (): JSX.Element => {
 					to={item.path!}
 					className={`nav-item ${isMenuActive(item.path!) ? "active" : ""} ${item.className || ""}`}
 					onClick={item.onClick}
+					id={item.id}
 				>
 					<span className="nav-icon">
 						<i className={`bi bi-${item?.icon || getTableIcon(item.text)}`}></i>

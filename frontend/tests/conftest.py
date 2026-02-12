@@ -772,17 +772,6 @@ class BaseUtils(object):
         assert error_message in element.text, f"Message not found: {error_message}"
         element.click()  # Dismiss toast
 
-    @property
-    def delete_confirm_button(self) -> WebElement:
-        """Get the delete confirm button on the modal"""
-
-        return self.get_element("delete-alert-modal-confirm-button")
-
-    def wait_for_delete_modal_close(self) -> None:
-        """Wait for the delete modal to close"""
-
-        self._wait_for_modal_close("delete-alert-modal")
-
     def wait_for_windows(self, n: int) -> None:
         """Wait for the given number of browser windows to be present"""
 
@@ -1497,6 +1486,12 @@ class AuthentificationUtils(BaseUtilsClass):
         self.go_to_page(f"forgot-password")
         time.sleep(0.5)  # animation
 
+    @property
+    def try_button(self) -> WebElement:
+        """Get the Try button"""
+
+        return self.get_element("try-app-btn")
+
     def set_email(self, email: str) -> None:
         """Set the email field to the given value"""
 
@@ -1901,30 +1896,44 @@ class FollowUpEmailModalUtils(BaseUtilsClass):
         return self.get_element("default-email-btn")
 
 
-class ConfirmModalUtils(BaseUtilsClass):
+class AlertModalUtils(BaseUtilsClass):
     """Utilities for the Confirm Modal."""
+
+    key = ""
 
     def wait_for_modal(self) -> WebElement:
         """Get the confirm modal element."""
 
-        return self.get_element("confirm-alert-modal")
+        return self.get_element(f"{self.key}-alert-modal")
 
     def wait_for_modal_close(self) -> None:
         """Wait for the confirm modal to close."""
 
-        self._wait_for_modal_close("confirm-alert-modal")
+        self._wait_for_modal_close(f"{self.key}-alert-modal")
 
     @property
     def confirm_button(self) -> WebElement:
         """Get the confirm button in the modal."""
 
-        return self.get_element("confirm-alert-modal-confirm-button")
+        return self.get_element(f"{self.key}-alert-modal-confirm-button")
 
     @property
     def cancel_button(self) -> WebElement:
         """Get the cancel button in the modal."""
 
-        return self.get_element("confirm-alert-modal-cancel-button")
+        return self.get_element(f"{self.key}-alert-modal-cancel-button")
+
+
+class ConfirmModalUtils(AlertModalUtils):
+    """Utilities for the Confirm Modal."""
+
+    key = "confirm"
+
+
+class DeleteModalUtils(AlertModalUtils):
+    """Utilities for the Delete Modal."""
+
+    key = "delete"
 
 
 class PremiumSettingsUtils(BaseUtilsClass):
@@ -2104,6 +2113,7 @@ class BaseTest(BaseUtils):
     user_settings_utils: UserSettingsUtils = None
     followup_modal: FollowUpEmailModalUtils = None
     confirm_modal: ConfirmModalUtils = None
+    delete_modal: DeleteModalUtils = None
     premium_settings_utils: PremiumSettingsUtils = None
 
     @pytest.fixture(autouse=True)
@@ -2132,8 +2142,8 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
-            chrome_options.add_argument("--window-size=1960,1080")
+            # chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--wwindow-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--ignore-certificate-errors")
@@ -2193,6 +2203,7 @@ class BaseTest(BaseUtils):
             self.user_settings_utils = UserSettingsUtils(**shared_kwargs)
             self.followup_modal = FollowUpEmailModalUtils(**shared_kwargs)
             self.confirm_modal = ConfirmModalUtils(**shared_kwargs)
+            self.delete_modal = DeleteModalUtils(**shared_kwargs)
             self.premium_settings_utils = PremiumSettingsUtils(**shared_kwargs)
 
             self.driver.get(self.frontend_base_url)

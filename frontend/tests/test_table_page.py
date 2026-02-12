@@ -128,8 +128,8 @@ class BaseTablePage(BaseTest):
 
         self.table_utils.table_context_menu(self.test_entry.id, "delete")
         self.modal_utils.wait_for_delete_modal()
-        self.table_utils.delete_confirm_button.click()
-        self.table_utils.wait_for_delete_modal_close()
+        self.delete_modal.confirm_button.click()
+        self.delete_modal.wait_for_modal_close()
         time.sleep(0.1)
         self.table_utils.wait_for_disappear(f"table-row-{self.test_entry.id}")
 
@@ -146,8 +146,8 @@ class BaseTablePage(BaseTest):
         self.modal_utils.wait_for_edit_modal()
         self.modal_utils.delete_button("edit").click()
         self.modal_utils.wait_for_delete_modal()
-        self.table_utils.delete_confirm_button.click()
-        self.table_utils.wait_for_delete_modal_close()
+        self.delete_modal.confirm_button.click()
+        self.delete_modal.wait_for_modal_close()
         time.sleep(0.1)
         self.table_utils.wait_for_disappear(f"table-row-{self.test_entry.id}")
 

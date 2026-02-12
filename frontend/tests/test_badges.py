@@ -53,7 +53,7 @@ class TestBadge(BaseTest):
 
         badge = self.job_modal_utils.get_element("modal-view-job-CompanyBadge")
         self.context_menu(badge, "delete")
-        self.delete_confirm_button.click()
+        self.delete_modal.confirm_button.click()
         self.assert_toast_message("Company deleted successfully.")
         modal = self.job_modal_utils.wait_for_view_modal()
         assert "Company\nNot Provided" in modal.text
