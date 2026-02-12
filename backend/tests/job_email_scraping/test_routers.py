@@ -73,7 +73,7 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         response = client.get(self.endpoint + "/paged/?page=1&page_size=5")
         assert response.status_code == status.HTTP_200_OK
         scraped_jobs = response.json()
-        assert scraped_jobs["total"] == 43
+        assert scraped_jobs["total"] == 42
         assert len(scraped_jobs["items"]) == 5
 
     def test_get_count(self, test_users, authorised_clients, test_scraped_jobs) -> None:

@@ -3,8 +3,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
-import database
-from app import models
+from app import models, database
 from app.config import settings
 from app.job_email_scraping.email_parsers import PLATFORM_SENDER_EMAILS
 from app.utils import open_json

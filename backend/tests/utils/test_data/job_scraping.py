@@ -826,6 +826,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://indeed.com/viewjob?jk=987654321",
         "scrape_datetime": "2025-08-22T09:45:32.789012+00:00",
         "service_log_id": 1,
+        "deadline": "2024-01-01 00:00:00",
     },
     {
         "external_job_id": "1122334455",

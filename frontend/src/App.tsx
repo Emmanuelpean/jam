@@ -34,8 +34,8 @@ import { ProgressOverlayProvider } from "./contexts/useProgressOverlayContext";
 import { ScrapedJobsPage } from "./pages/DataTablePages/ScrapedJobsPage";
 import { StyleGuidePage } from "./pages/StylePage";
 import { ConfigProvider } from "./contexts/ConfigContext";
-import { MaintenanceBanner } from "./components/MaintenanceBanner/MaintenanceBanner";
-import { DemoBanner } from "./components/DemoBanner/DemoBanner";
+import { MaintenanceBanner } from "./components/AppBanner/MaintenanceBanner";
+import { DemoBanner } from "./components/AppBanner/DemoBanner";
 import { MaintenancePage } from "./pages/MaintenancePage/MaintenancePage";
 import { WhatsNewProvider } from "./contexts/WhatsNewContext";
 
