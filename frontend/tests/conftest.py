@@ -2155,7 +2155,7 @@ class BaseTest(BaseUtils):
             }
             chrome_options.add_experimental_option("prefs", prefs)
             chrome_options.add_argument("--headless=new")
-            chrome_options.add_argument("--wwindow-size=1960,1080")
+            chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--ignore-certificate-errors")
