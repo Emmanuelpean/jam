@@ -187,6 +187,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
 			setFetchedData(response.data.items);
 			setTotalCount(response.data.total);
+			console.log(response.data.items);
 		} catch (error: any) {
 			setLoadError(error.message || "Failed to load data");
 		} finally {

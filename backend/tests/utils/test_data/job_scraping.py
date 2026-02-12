@@ -1924,6 +1924,7 @@ SCRAPED_JOB_DATA = [
         "platform": "linkedin",
         "owner_id": 1,
         "is_skipped": True,
+        "skip_reason": "You reached your month quota for job scraping.",
         "is_processed": True,
         "title": "Data Engineer",
         "description": "Collaborate with cross-functional teams to deliver high-quality software...",

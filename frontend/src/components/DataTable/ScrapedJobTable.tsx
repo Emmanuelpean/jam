@@ -15,9 +15,9 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 }: DataTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 	const { currentUser } = useAuth();
-	const [showFilters, setShowFilters] = useState(false);
-	const [showPastDeadline, setShowPastDeadline] = useState(false);
-	const [sincePreviousLogin, setSincePreviousLogin] = useState(false);
+	const [showFilters, setShowFilters] = useState<boolean>(false);
+	const [showPastDeadline, setShowPastDeadline] = useState<boolean>(false);
+	const [sincePreviousLogin, setSincePreviousLogin] = useState<boolean>(false);
 
 	const queryParams = useMemo(
 		() => ({

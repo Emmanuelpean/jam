@@ -47,13 +47,13 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		};
 
 		const jobFormFields: Fields = [
+			modalViewFields.jobRating(),
 			{
 				type: "section",
 				key: "basic-info",
 				title: "Basic Information",
 				icon: "bi-briefcase",
 				fields: [
-					modalViewFields.jobRating(),
 					formFields.jobTitle({ placeholder: "Python Software Engineer" }),
 					[
 						formFields.scrapedCompany(companies, companyModalRef, (scrapedJob: ScrapedJobData) => ({
@@ -168,6 +168,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		];
 
 		const viewFields: Fields = [
+			modalViewFields.jobRating(),
 			modalViewFields.title({ isTitle: true }),
 			modalViewFields.description(),
 			[modalViewFields.company(), modalViewFields.location()],
@@ -240,7 +241,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 					key: "no_rating",
 					message: (
 						<>
-							This job could not be rated automatically due to an error.
+							This job could not be rated due to an error.
 							{reportLink && <> You can {reportLink}.</>}
 						</>
 					),

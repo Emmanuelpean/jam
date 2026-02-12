@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
 import { renderFunctions, RenderParams, RenderViewFieldWithContext, ViewField } from "./ViewRenders";
+import { ScrapedJobData } from "../../../services/schemas/Services";
 
 export interface ModalViewField extends ViewField {
 	label?: string;
@@ -370,7 +371,7 @@ export const modalViewFields = {
 		label: "Job Rating",
 		icon: "bi-stars",
 		render: (params: RenderParams) => renderFunctions.jobRating({ ...params, view: true }),
-		displayCondition: (item): boolean => !!item.job_rating,
+		displayCondition: (item: ScrapedJobData): boolean => item.job_rating?.is_success === true,
 		...overrides,
 	}),
 
