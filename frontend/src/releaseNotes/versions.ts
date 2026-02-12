@@ -24,6 +24,14 @@ export const releaseNotes: Record<string, string> = {
 
 export const WELCOME_SLIDES: ReleaseSlide[] = [
 	{
+		title: "Welcome to JAM",
+		description:
+			"You have taken the first step towards landing your next job. Organise your applications, " +
+			"track your progress, stay on top of deadlines, and turn your job search into a structured, focused process. " +
+			"Explore the features of JAM and take control of your next move.",
+		image: dashboardPng,
+	},
+	{
 		icon: "briefcase",
 		title: "Job Application Records",
 		description:

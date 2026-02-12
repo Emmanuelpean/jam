@@ -84,6 +84,64 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["count"] == 44
 
+    @staticmethod
+    def _create_job(
+        session, owner_id: int, service_log_id: int, created_at: dt.datetime, **kwargs
+    ) -> models.ScrapedJob:
+        return create_db_entries(
+            session,
+            models.ScrapedJob,
+            {
+                "external_job_id": f"since_login_job_{created_at.timestamp()}",
+                "platform": "linkedin",
+                "owner_id": owner_id,
+                "is_processed": True,
+                "title": "Test Job",
+                "url": "https://example.com",
+                "service_log_id": service_log_id,
+                "created_at": created_at,
+                **kwargs,
+            },
+        )[0]
+
+    def test_since_last_login_filters_jobs_before_previous_login(
+        self, session, test_regular_user, regular_user_client, test_job_scraping_service_logs
+    ) -> None:
+        """Jobs created before previous_login are excluded when since_last_login=True."""
+
+        previous_login = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=3)
+        test_regular_user.previous_login = previous_login
+        session.commit()
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        self._create_job(session, test_regular_user.id, service_log_id, previous_login - dt.timedelta(days=1))
+        self._create_job(session, test_regular_user.id, service_log_id, previous_login + dt.timedelta(hours=1))
+        self._create_job(session, test_regular_user.id, service_log_id, previous_login + dt.timedelta(days=1))
+
+        response = regular_user_client.get(self.endpoint + "/paged", params={"since_last_login": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["total"] == 2
+
+    def test_since_last_login_no_previous_login_returns_all_jobs(
+        self, session, test_regular_user, regular_user_client, test_job_scraping_service_logs
+    ) -> None:
+        """All jobs are returned when since_last_login=True but the user has no previous_login."""
+
+        test_regular_user.previous_login = None
+        session.commit()
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        now = dt.datetime.now(dt.timezone.utc)
+        self._create_job(session, test_regular_user.id, service_log_id, now - dt.timedelta(days=10))
+        self._create_job(session, test_regular_user.id, service_log_id, now - dt.timedelta(days=5))
+        self._create_job(session, test_regular_user.id, service_log_id, now)
+
+        response = regular_user_client.get(self.endpoint + "/paged", params={"since_last_login": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["total"] == 3
+
 
 class TestScrapedJobCRUDAdminUser(CRUDTestBase):
     endpoint = "/scraped-jobs"
