@@ -28,6 +28,7 @@ export interface UserPreferences {
 	update_limit: number;
 	default_currency: string;
 	extension_banner_dismissed: boolean;
+	dashboard_layout: string | null;
 }
 
 export type UserPreferencesUpdate = Partial<UserPreferences>;

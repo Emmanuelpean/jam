@@ -87,6 +87,7 @@ class UserPreferencesCreate(BaseModel):
     update_limit: int | None = None
     default_currency: str | None = None
     extension_banner_dismissed: bool | None = None
+    dashboard_layout: str | None = None
 
 
 class UserPreferencesUpdate(UserPreferencesCreate):

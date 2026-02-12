@@ -165,6 +165,7 @@ class UserPreferences(Owned, Base):
     deadline_threshold = Column(Integer, nullable=False, server_default="7")
     update_limit = Column(Integer, nullable=False, server_default="10")
     default_currency = Column(String, nullable=False, server_default="GBP")
+    dashboard_layout = Column(String, nullable=True)
     extension_banner_dismissed = Column(Boolean, nullable=False, server_default="false")
 
 
