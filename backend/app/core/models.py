@@ -167,6 +167,7 @@ class UserPreferences(Owned, Base):
     default_currency = Column(String, nullable=False, server_default="GBP")
     table_columns = Column(JSON, nullable=True)
     table_sort = Column(JSON, nullable=True)
+    dashboard_layout = Column(String, nullable=True)
     extension_banner_dismissed = Column(Boolean, nullable=False, server_default="false")
 
 

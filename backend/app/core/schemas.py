@@ -87,6 +87,7 @@ class UserPreferencesCreate(BaseModel):
     update_limit: int | None = None
     default_currency: str | None = None
     extension_banner_dismissed: bool | None = None
+    dashboard_layout: str | None = None
     table_columns: dict[str, list[str]] | None = None
     table_sort: dict[str, dict[str, str]] | None = None
 

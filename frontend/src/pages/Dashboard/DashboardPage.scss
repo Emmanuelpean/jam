@@ -1,3 +1,6 @@
+@import "~react-grid-layout/css/styles.css";
+@import "~react-resizable/css/styles.css";
+
 .table-card-header {
     position: relative;
     background: var(--bs-body-bg) !important;
@@ -80,24 +83,71 @@
     background-color: #e5e7eb;
 }
 
-.table-column,
-.activity-column {
-    height: 450px;
-    min-height: 0;
+/* Grid layout */
+.dashboard-grid {
+    margin: -8px;
 }
 
-.toast-table {
-    height: 630px;
-    min-height: 0;
+.dashboard-grid-item {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
 }
 
-@media (width <= 991px) {
-    .table-column,
-    .activity-column,
-    .toast-table {
-        height: auto;
-        min-height: 360px;
+.grid-item-content {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+}
+
+.grid-item-content > * {
+    height: 100%;
+}
+
+/* Drag handle */
+.drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    cursor: grab;
+    color: var(--bs-secondary);
+    font-size: 1.25rem;
+    opacity: 0.6;
+    transition: opacity 0.15s;
+
+    &:hover {
+        opacity: 1;
     }
+
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+/* Edit mode styles */
+.dashboard-edit-mode {
+    .dashboard-grid-item {
+        border: 2px dashed var(--bs-border-color);
+        border-radius: 0.5rem;
+        background: var(--bs-body-bg);
+    }
+
+    .react-grid-placeholder {
+        background: var(--bs-primary);
+        opacity: 0.15;
+        border-radius: 0.5rem;
+    }
+}
+
+/* Resize handle */
+.react-resizable-handle {
+    z-index: 10;
+}
+
+.dashboard-edit-mode .react-resizable-handle::after {
+    border-color: var(--bs-secondary) !important;
 }
 
 @media (width <= 1200px) {
