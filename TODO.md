@@ -65,7 +65,7 @@
 * [X] On database migration, automatically add the system prompt and job prompt template to their associated tables.
 * [ ] Create free coupons for TOAST for first few users for a couple months
 * [X] Finish the gifs
-* [ ] Rewrite the test data for the test user
+* [X] Rewrite the test data for the test user
 * [ ] On Small screens, modal elements on multiple columns and rows are all on same column but spacing differs
 * [X] Since last login button does not work as user last login is not recorded.
 * [X] Create guide on how to set up TOAST
@@ -73,5 +73,5 @@
 * [X] Review what scraped jobs are displayed (is_scraped should be is_processed)
 * [X] Add fallback to geolocation
 * [ ] Add frontend tests for scraped jobs failed/skipped/rated/rating skipped/failed
-* [ ] Add test for past deadline scraped jobs
-* [ ] Add a global welcome slide to the jam welcome modal
+* [ ] Add frontend test for past deadline scraped jobs
+* [X] Add a global welcome slide to the jam welcome modal
