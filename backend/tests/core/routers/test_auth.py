@@ -359,7 +359,7 @@ class TestSendPasswordResetWithRateLimit:
         result = send_password_reset_email(test_regular_user, session)
         assert result.model_dump() == {
             "error_code": 429,
-            "message": "Please wait 120 seconds before requesting another password_reset email.",
+            "message": "Please wait 120 seconds before requesting another Password reset email.",
             "success": False,
         }
         assert mock_email.call_count == 1

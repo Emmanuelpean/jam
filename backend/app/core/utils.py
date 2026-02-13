@@ -101,7 +101,7 @@ def send_verification_with_rate_limit(
         if float(str(seconds_remaining)) > 0:
             return base_schemas.GenericResponse(
                 success=False,
-                message=f"Please wait {seconds_remaining} seconds before requesting another {token_type} email.",
+                message=f"Please wait {seconds_remaining} seconds before requesting another {name} email.",
                 error_code=status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
