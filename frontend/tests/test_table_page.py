@@ -456,7 +456,7 @@ class TestInterviewPage(BaseTablePage):
         "job_id": "Senior Python Developer (Tech Corp)",
         "note": "Received automated confirmation email",
         "attendance_type": "On-site",
-        "type": "HR Interview",
+        "type": "HR",
     }
     model = models.Interview
 
@@ -525,7 +525,7 @@ class TestJobPage(BaseTablePage):
 
         interview_data = dict(
             date=dt.datetime(year=2025, month=4, day=10, hour=10, minute=0, tzinfo=dt.timezone.utc),
-            type="HR Interview",
+            type="HR",
             attendance_type="On-site",
             note="Initial HR screening interview",
         )
@@ -548,7 +548,7 @@ class TestJobPage(BaseTablePage):
         """Test modifying an interview through the job view modal"""
 
         interview_data = dict(
-            type="Technical Interview",
+            type="Technical",
             attendance_type="Remote",
             note="Technical deep-dive interview",
         )

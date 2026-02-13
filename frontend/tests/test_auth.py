@@ -511,7 +511,7 @@ class TestWhatsNewModal(BaseTest):
         assert "Welcome to Jam" in modal.text
 
         # Navigate through all steps and close
-        for _ in range(7):
+        for _ in range(6):
             self.get_element("welcome-modal-next-button").click()
         self.wait_for_disappear("welcome-modal")
 
