@@ -116,7 +116,6 @@ export const PremiumTab = (): JSX.Element => {
 		// Set up polling interval
 		const intervalId = setInterval((): void => {
 			void fetchUserInfo(token);
-			console.log(currentUser);
 		}, 5000);
 
 		return (): void => {

@@ -8,6 +8,7 @@ import { useDataContext } from "../../contexts/DataContext";
 import { ApiResponse } from "../../services/api/Base";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
+import LoadingSpinner from "../../components/Spinner/Spinner";
 import { UserQualification } from "../../services/schemas/Core";
 import { userQualificationApi } from "../../services/api/Users";
 import { AiSystemPromptData } from "../../services/schemas/Services";
@@ -34,6 +35,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		interests: "",
 	});
 	const [errors, _setErrors] = useState<ValidationErrors>({});
+	const [loading, setLoading] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
 
 	useEffect(() => {
@@ -54,6 +56,8 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 				}
 			} catch (error) {
 				console.error("Error fetching qualification:", error);
+			} finally {
+				setLoading(false);
 			}
 		};
 		fetchQualifications().then();
@@ -99,6 +103,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		label: "Experience",
 		placeholder: "Describe your work experience...",
 		rows: 3,
+		autoHeight: true,
 	};
 
 	const skillsField: ModalFormField = {
@@ -107,6 +112,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		label: "Skills",
 		placeholder: "List your skills...",
 		rows: 3,
+		autoHeight: true,
 	};
 
 	const qualitiesField: ModalFormField = {
@@ -115,6 +121,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		label: "Qualities",
 		placeholder: "Describe your qualities...",
 		rows: 3,
+		autoHeight: true,
 	};
 
 	const educationField: ModalFormField = {
@@ -123,6 +130,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		label: "Education",
 		placeholder: "Describe your education...",
 		rows: 3,
+		autoHeight: true,
 	};
 
 	const interestsField: ModalFormField = {
@@ -131,6 +139,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		label: "Interests",
 		placeholder: "Describe your interests...",
 		rows: 3,
+		autoHeight: true,
 	};
 
 	const latestSystemPrompt: AiSystemPromptData | null | undefined = aiSystemPrompts?.length
@@ -144,6 +153,10 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		!!formData.qualities?.trim() ||
 		!!formData.education?.trim() ||
 		!!formData.interests?.trim();
+
+	if (loading) {
+		return <LoadingSpinner text="Loading qualifications..." />;
+	}
 
 	return (
 		<>

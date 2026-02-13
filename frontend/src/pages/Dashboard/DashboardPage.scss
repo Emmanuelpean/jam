@@ -34,14 +34,13 @@
     align-items: center;
     justify-content: center;
     width: auto;
-    min-width: 42px;
+    min-width: 52px;
     height: auto;
     padding: 0.5rem 0.875rem;
     text-align: center;
     color: white;
     border-radius: 142px;
     background: var(--primary-gradient);
-    aspect-ratio: 1 / 1;
 }
 
 .activity-count-badge {

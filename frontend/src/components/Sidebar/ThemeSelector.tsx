@@ -38,6 +38,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 			{THEMES.map(
 				(theme: Theme): JSX.Element => (
 					<ThemeItem
+						key={theme.key}
 						themeKey={theme.key}
 						themeName={theme.name}
 						isActive={currentTheme === theme.key}
