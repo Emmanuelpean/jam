@@ -1081,7 +1081,7 @@ class DataModalUtils(BaseUtilsClass):
 
         modal = self.wait_for_view_modal()
         display_time = entry.date.astimezone()
-        entry_type = {"HR": "HR Interview", "Technical": "Technical Interview"}[entry.type]
+        entry_type = {"HR": "HR", "Technical": "Technical"}[entry.type]
         if standalone:
             expected = "Interview Details\n" "Job\n" f"{entry.job.title.upper()} ({entry.job.company.name.upper()})\n"
         else:
