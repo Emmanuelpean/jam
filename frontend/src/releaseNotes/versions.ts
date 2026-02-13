@@ -7,6 +7,8 @@ import scrapingFilterGif from "../assets/demo_gifs/scraping_filter.gif";
 import jobsGif from "../assets/demo_gifs/job_page.gif";
 import scrapedJobsPng from "../assets/screenshots/scraped-jobs.png";
 import dashboardPng from "../assets/screenshots/dashboard.png";
+import interviewsPng from "../assets/screenshots/interviews.png";
+import deadlinesPng from "../assets/screenshots/deadlines.png";
 import { getEntityIcon } from "../components/rendering/view/Icons";
 
 export interface ReleaseSlide {
@@ -27,7 +29,7 @@ export const WELCOME_SLIDES: ReleaseSlide[] = [
 		title: "Welcome to JAM!",
 		description:
 			"You have taken the first step toward landing your dream job. JAM is your all-in-one job application " +
-			"manager—designed to keep your search organized so you can focus on interviews, not admin work. Let us show " +
+			"manager - designed to keep your search organized so you can focus on interviews, not admin work. Let us show " +
 			"you what is inside.",
 		image: dashboardPng,
 	},
@@ -44,36 +46,29 @@ export const WELCOME_SLIDES: ReleaseSlide[] = [
 		title: "Interview Scheduling",
 		description:
 			"Stay on top of your interviews with clear scheduling and status tracking. Log dates, stages, " +
-			"and outcomes so you always know what's coming up next.",
-		image: dashboardPng,
+			"interviewers, and outcomes so you always know what's coming up next.",
+		image: interviewsPng,
 	},
 	{
 		icon: "clock",
 		title: "Deadline & Follow-Up Reminder",
 		description: "Get reminded of upcoming application deadlines and job requiring a follow-up",
-		image: dashboardPng,
+		image: deadlinesPng,
 	},
 	{
 		icon: "inboxes",
 		title: "Premium - Job Alert Scraping and Rating",
 		description:
-			"Typical job seekers receive hundreds of job alerts every month from job aggregators such as LinkedIn and Indeed. " +
-			"For only £5/month, JAM can automatically scrape the details of these jobs and import them",
-		image: scrapedJobsPng,
-	},
-	{
-		icon: "star-half",
-		title: "AI Job Rating",
-		description:
-			"Every scraped job is rated by AI based on your qualifications and preferences, so the best " +
-			"opportunities rise to the top and you can focus on what matters.",
+			"Typical job seekers receive hundreds of job alerts every month from job aggregators like LinkedIn and Indeed. " +
+			"For only £5/month, JAM automatically scrapes these job details, rates them against your qualifications, " +
+			"and highlights the best matches for you.",
 		image: scrapedJobsPng,
 	},
 	{
 		icon: "envelope-arrow-up",
 		title: "Follow-Up Email Generator",
 		description:
-			"Craft personalised follow-up emails in seconds. Right-click any job, pick a contact, " +
+			"Automatically generate personalised follow-up emails in seconds. Right-click any job, pick a contact, " +
 			"and get a ready-to-send message signed with your name.",
 		image: followupGif,
 	},
