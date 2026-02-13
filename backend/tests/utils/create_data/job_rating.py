@@ -26,7 +26,7 @@ def create_job_ratings(db, users, use_qualifications, scraped_jobs, service_logs
     print(f"Creating {len(data)} Job Ratings...")
     job_ratings = create_db_entries(db, models.JobRating, data)
 
-    # Assign AI prompts if provided  # TODO
+    # Assign AI prompts if provided
     if job_ratings:
         system_prompt, job_template = ai_prompts
         for rating in job_ratings:

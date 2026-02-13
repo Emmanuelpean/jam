@@ -89,7 +89,7 @@ async def stripe_webhook(
     return {"status": "success"}
 
 
-@payment_router.post("/create-portal-session")  # TODO
+@payment_router.post("/create-portal-session")
 async def create_portal_session(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),

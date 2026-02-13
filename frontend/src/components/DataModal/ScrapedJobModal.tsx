@@ -154,10 +154,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				title: "Details",
 				icon: "bi-card-text",
 				fields: [
-					formFields.description({
-						placeholder: "",
-						autoHeight: true,
-					}),
+					modalViewFields.description(),
 					formFields.note({
 						placeholder:
 							"This role offers a chance to apply Python expertise to build scalable solutions " +
