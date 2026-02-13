@@ -24,7 +24,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 	({ id, title, titleIcon, slides, finishText, finishIcon }: SlideCarouselModalProps, ref): JSX.Element => {
 		const [show, setShow] = useState<boolean>(false);
 		const [currentStep, setCurrentStep] = useState<number>(0);
-		const [direction, setDirection] = useState<"next" | "prev">("next");
+		const [direction, setDirection] = useState<"next" | "prev" | null>(null);
 		const [loading, setLoading] = useState<boolean>(false);
 		const { updateCurrentUser } = useAuth();
 		const [slideHeight, setSlideHeight] = useState<number | undefined>(undefined);
@@ -47,6 +47,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 		useImperativeHandle(ref, () => ({
 			show: (): void => {
 				setCurrentStep(0);
+				setDirection(null);
 				setShow(true);
 			},
 			hide: (): void => setShow(false),
@@ -106,7 +107,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 							</div>
 						))}
 					</div>
-					<div key={currentStep} className={`carousel-step slide-${direction}`} style={slideHeight ? { minHeight: slideHeight } : undefined}>
+					<div key={currentStep} className={`carousel-step${direction ? ` slide-${direction}` : ""}`} style={slideHeight ? { minHeight: slideHeight } : undefined}>
 						{slide.image ? (
 							<img src={slide.image} alt={slide.title} className="carousel-step-image" />
 						) : (

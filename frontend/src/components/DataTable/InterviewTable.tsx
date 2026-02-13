@@ -18,7 +18,7 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 			? columns
 			: [
 					tableColumns.dateColumn(),
-					tableColumns.typeColumn(),
+					tableColumns.interviewTypeColumn(),
 					tableColumns.locationBadgeColumn(),
 					tableColumns.noteColumn(),
 				];

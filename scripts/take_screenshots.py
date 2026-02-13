@@ -20,6 +20,7 @@ def main():
         width=1920,
         height=1080,
         dark_mode=True,
+        scale_factor=1,
         headless=not args.no_headless,
     )
     taker.screenshot(DEFAULT_PAGES)
