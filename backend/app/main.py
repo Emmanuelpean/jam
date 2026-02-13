@@ -43,7 +43,7 @@ def get_allowed_origins() -> list[str]:
 
     # In production, allow only the frontend URL
     else:
-        return [settings.frontend_url]
+        return [settings.frontend_url, "http://localhost:3000"]
 
 
 app.add_middleware(

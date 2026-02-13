@@ -298,6 +298,8 @@ def upgrade() -> None:
         WHERE email_change_token IS NOT NULL
     """
     )
+    # Add version number
+    op.execute("UPDATE 'user' SET app_version = '1.10.0'")
 
     op.add_column("user", sa.Column("previous_login", sa.TIMESTAMP(timezone=True), nullable=True))
     op.add_column("user", sa.Column("app_version", sa.String(), nullable=True))
@@ -340,35 +342,39 @@ def upgrade() -> None:
     locations = session.execute(sa.text("SELECT id, postcode, city, country, geolocation_id FROM location")).fetchall()
     for loc in locations:
         if loc.geolocation_id is None:
-            time.sleep(1)
-            parts = [loc.postcode, loc.city, loc.country]
-            query = ", ".join(filter(None, parts))
-            if query:
-                geolocation = geocode_location(query, session)
+            time.sleep(1.1)
+            params = {
+                "postcode": loc.postcode,
+                "city": loc.city,
+                "country": loc.country,
+            }
+            params = {k: v for k, v in params.items() if v}
+            if params:
+                geolocation = geocode_location(params, session)
                 if geolocation:
                     session.execute(
                         sa.text("UPDATE location SET geolocation_id = :geo_id WHERE id = :loc_id"),
                         {"geo_id": geolocation.id, "loc_id": loc.id},
                     )
 
-    location_parser = LocationParser()
-    scraped_jobs = session.execute(sa.text("SELECT id, location, geolocation_id FROM scraped_job")).fetchall()
-    for sj in scraped_jobs:
-        if sj.geolocation_id is None and sj.location:
-            time.sleep(1)
-            location_parsed, attendance_type = location_parser.parse_location(sj.location)
-            if attendance_type:
-                session.execute(
-                    sa.text("UPDATE scraped_job SET attendance_type = :att WHERE id = :sj_id"),
-                    {"att": attendance_type, "sj_id": sj.id},
-                )
-            if location_parsed:
-                geolocation = geocode_location(location_parsed, session)
-                if geolocation:
-                    session.execute(
-                        sa.text("UPDATE scraped_job SET geolocation_id = :geo_id WHERE id = :sj_id"),
-                        {"geo_id": geolocation.id, "sj_id": sj.id},
-                    )
+    # location_parser = LocationParser()
+    # scraped_jobs = session.execute(sa.text("SELECT id, location, geolocation_id FROM scraped_job")).fetchall()
+    # for sj in scraped_jobs:
+    #     if sj.geolocation_id is None and sj.location:
+    #         time.sleep(1.1)
+    #         location_parsed, attendance_type = location_parser.parse_location(sj.location)
+    #         if attendance_type:
+    #             session.execute(
+    #                 sa.text("UPDATE scraped_job SET attendance_type = :att WHERE id = :sj_id"),
+    #                 {"att": attendance_type, "sj_id": sj.id},
+    #             )
+    #         if location_parsed:
+    #             geolocation = geocode_location(location_parsed, session)
+    #             if geolocation:
+    #                 session.execute(
+    #                     sa.text("UPDATE scraped_job SET geolocation_id = :geo_id WHERE id = :sj_id"),
+    #                     {"geo_id": geolocation.id, "sj_id": sj.id},
+    #                 )
 
 
 def downgrade() -> None:

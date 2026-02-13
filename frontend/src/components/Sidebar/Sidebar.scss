@@ -8,7 +8,7 @@
     overflow: hidden;
     flex-direction: column;
     width: 64px;
-    height: 100vh;
+    height: 100%;
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.4s ease;
     border-right: 1px solid var(--bs-card-border-color);
@@ -97,9 +97,13 @@
     top: 0;
     right: 8px;
     left: 8px;
-    height: 2px;
+    height: 1px;
     content: "";
     background-color: var(--bs-card-border-color);
+}
+
+.sidebar-nav-top::before {
+    height: 1.5px;
 }
 
 /* Navigation items */

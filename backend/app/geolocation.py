@@ -10,15 +10,20 @@ from app.config import settings
 from app.models import Geolocation
 
 
-def call_geocoding_api(query: str) -> tuple[float, float, dict]:
+def call_geocoding_api(query: str | dict) -> tuple[float, float, dict]:
     """Geocode using OpenStreetMap Nominatim API directly.
-    :param query: The location query string.
+    :param query: A location query string or a dict with structured params (postcode, city, country).
     :return: A tuple of (latitude, longitude, formatted_address).
     :raises RuntimeError: If the API call fails or returns no results."""
 
     print("Calling Nominatim API for query:", query)
     base_url = "https://nominatim.openstreetmap.org/search"
-    params = {"q": query, "format": "json", "limit": 1, "addressdetails": 1}
+    params = {"format": "json", "limit": 1, "addressdetails": 1}
+
+    if isinstance(query, dict):
+        params.update(query)
+    else:
+        params["q"] = query
 
     headers = {"User-Agent": f"JAM/{settings.app_version} ({settings.main_email_username})"}
 
@@ -37,21 +42,27 @@ def call_geocoding_api(query: str) -> tuple[float, float, dict]:
         raise RuntimeError(f"Nominatim API error: {str(e)}")
 
 
-def geocode_location(query_string: str, session: Session) -> Geolocation | None:
+def geocode_location(query: str | dict, session: Session) -> Geolocation | None:
     """Geocode a location or scraped job using cached results when available.
     Links the location/scraped job to a Geolocation record via foreign key.
-    :param query_string: The location query string.
+    :param query: A location query string or a dict with structured params (postcode, city, country).
     :param session: SQLAlchemy session for database operations.
     :return: The geolocation ID if successful, else None."""
 
+    # Normalize dict to a stable cache key string
+    if isinstance(query, dict):
+        cache_key = ", ".join(f"{k}={v}" for k, v in sorted(query.items()))
+    else:
+        cache_key = query
+
     # Check cache first
-    cached = session.query(Geolocation).filter_by(query=query_string).first()
+    cached = session.query(Geolocation).filter_by(query=cache_key).first()
 
     if cached:
         return cached
     else:
         try:
-            lat, lon, address_dict = call_geocoding_api(query_string)
+            lat, lon, address_dict = call_geocoding_api(query)
 
             # Create new geolocation entry
             countries = utils.open_json("app/data/countries.json")
@@ -65,7 +76,7 @@ def geocode_location(query_string: str, session: Session) -> Geolocation | None:
 
             # noinspection PyArgumentList
             new_geo = Geolocation(
-                query=query_string,
+                query=cache_key,
                 latitude=lat,
                 longitude=lon,
                 postcode=address_dict.get("postcode"),
@@ -83,12 +94,12 @@ def geocode_location(query_string: str, session: Session) -> Geolocation | None:
         # If no result was found, store the query string to avoid repeated calls to the API
         except ValueError:
             # noinspection PyArgumentList
-            new_geo = Geolocation(query=query_string)
+            new_geo = Geolocation(query=cache_key)
             session.add(new_geo)
             session.commit()
             session.refresh(new_geo)
 
         except Exception as e:
-            print(f"Warning: Could not geocode '{query_string}': {e}")
+            print(f"Warning: Could not geocode '{cache_key}': {e}")
             print(traceback.format_exc())
             return None

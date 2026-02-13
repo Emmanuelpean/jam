@@ -89,12 +89,12 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	].includes(normalisedPathname);
 
 	return (
-		<>
+		<div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
 			<MaintenanceBanner />
 			<DemoBanner />
-			<div style={{ display: "flex", minHeight: "100vh" }}>
+			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
 				{currentUser && <Sidebar />}
-				<div style={{ flex: 1, minWidth: 0 }}>
+				<div style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
 					<div className={!isAuthPage ? `main-content` : ""}>
 						{isLoading && (
 							<div className="global-loading-overlay">
@@ -123,7 +123,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 					</div>
 				</div>
 			</div>
-		</>
+		</div>
 	);
 }
 

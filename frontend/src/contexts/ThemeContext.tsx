@@ -33,7 +33,6 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }): 
 
 	const [themeMode, setThemeModeState] = useState<ThemeMode>(() => getInitialThemeMode());
 	const [systemIsDark, setSystemIsDark] = useState<boolean>(() => getSystemPreference());
-
 	// Listen for OS theme changes
 	useEffect(() => {
 		const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");

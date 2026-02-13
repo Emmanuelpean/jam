@@ -51,9 +51,13 @@ def transform_location(location_data: dict, db: Session) -> dict:
     :param db: The database session.
     :return: The transformed location data dictionary with geolocation_id set."""
 
-    parts = [location_data.get("postcode"), location_data.get("city"), location_data.get("country")]
-    query_string = ", ".join([part for part in parts if part])
-    geolocation = geocode_location(query_string, db)
+    params = {
+        "postcode": location_data.get("postcode"),
+        "city": location_data.get("city"),
+        "country": location_data.get("country"),
+    }
+    params = {k: v for k, v in params.items() if v}
+    geolocation = geocode_location(params, db) if params else None
     return {"geolocation_id": geolocation.id if geolocation else None}
 
 

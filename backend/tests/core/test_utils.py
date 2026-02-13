@@ -58,7 +58,7 @@ class TestSendVerificationWithRateLimit:
 
         assert result.model_dump() == {
             "error_code": 429,
-            "message": "Please wait 120 seconds before requesting another verification email.",
+            "message": "Please wait 120 seconds before requesting another Verification email.",
             "success": False,
         }
         assert mock_send_function.call_count == 0
