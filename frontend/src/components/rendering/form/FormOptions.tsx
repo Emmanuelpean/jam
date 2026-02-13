@@ -229,14 +229,14 @@ export const updateTypeOptions: SelectOption[] = [
 ];
 
 export const interviewTypeOptions: SelectOption[] = [
-	{ value: "HR", label: "HR Interview" },
-	{ value: "Technical", label: "Technical Interview" },
-	{ value: "Management", label: "Management Interview" },
-	{ value: "Panel", label: "Panel Interview" },
-	{ value: "Phone", label: "Phone Interview" },
-	{ value: "Video", label: "Video Interview" },
+	{ value: "HR", label: "HR" },
+	{ value: "Technical", label: "Technical" },
+	{ value: "Management", label: "Management" },
+	{ value: "Panel", label: "Panel" },
+	{ value: "Phone", label: "Phone" },
+	{ value: "Video", label: "Video" },
 	{ value: "Assessment", label: "Assessment/Test" },
-	{ value: "Final", label: "Final Interview" },
+	{ value: "Final", label: "Final" },
 	{ value: "Other", label: "Other" },
 ];
 

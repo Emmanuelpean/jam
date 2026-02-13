@@ -128,6 +128,16 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	interviewTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "type",
+		label: "Type",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.interviewType,
+		...overrides,
+	}),
+
 	updateTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "type",
 		label: "Type",

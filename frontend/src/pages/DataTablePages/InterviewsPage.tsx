@@ -8,7 +8,7 @@ const InterviewsPage = () => {
 		tableColumns.jobBadgeColumn(),
 		tableColumns.interviewerBadgesColumn(),
 		tableColumns.dateColumn(),
-		tableColumns.typeColumn(),
+		tableColumns.interviewTypeColumn(),
 		tableColumns.locationBadgeColumn(),
 		tableColumns.createdAtColumn(),
 	];

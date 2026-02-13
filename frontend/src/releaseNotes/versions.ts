@@ -24,59 +24,57 @@ export const releaseNotes: Record<string, string> = {
 
 export const WELCOME_SLIDES: ReleaseSlide[] = [
 	{
-		title: "Welcome to JAM",
+		title: "Welcome to JAM!",
 		description:
-			"You have taken the first step towards landing your next job. Organise your applications, " +
-			"track your progress, stay on top of deadlines, and turn your job search into a structured, focused process. " +
-			"Explore the features of JAM and take control of your next move.",
+			"You have taken the first step toward landing your dream job. JAM is your all-in-one job application " +
+			"manager—designed to keep your search organized so you can focus on interviews, not admin work. Let us show " +
+			"you what is inside.",
 		image: dashboardPng,
 	},
 	{
 		icon: "briefcase",
 		title: "Job Application Records",
 		description:
-			"Create and manage comprehensive job application records. Track role details, application dates, companies, " +
-			"contacts, and notes — all in one centralised dashboard.",
+			"Store every detail of your job applications in one place. Track roles, companies, contacts, dates, " +
+			"and notes so nothing slips through the cracks.",
 		image: jobsGif,
 	},
 	{
 		icon: "calendar-check",
 		title: "Interview Scheduling",
 		description:
-			"Keep track of your upcoming interviews, stages, and outcomes. Never miss a meeting or deadline with clear " +
-			"scheduling and status tracking.",
+			"Stay on top of your interviews with clear scheduling and status tracking. Log dates, stages, " +
+			"and outcomes so you always know what's coming up next.",
 		image: dashboardPng,
 	},
 	{
-		icon: "bar-chart",
-		title: "Progress Monitoring",
-		description:
-			"Monitor the progress of every application through customisable statuses. Get a clear overview of deadlines, " +
-			"follow-ups, and where each opportunity stands.",
+		icon: "clock",
+		title: "Deadline & Follow-Up Reminder",
+		description: "Get reminded of upcoming application deadlines and job requiring a follow-up",
 		image: dashboardPng,
 	},
 	{
 		icon: "inboxes",
-		title: "Job Alert Scraping",
+		title: "Premium - Job Alert Scraping and Rating",
 		description:
-			"Automatically extract and organise job alert data from your emails. Forward job alerts to a designated " +
-			"address and let TOAST parse, structure, and present the results.",
+			"Typical job seekers receive hundreds of job alerts every month from job aggregators such as LinkedIn and Indeed. " +
+			"For only £5/month, JAM can automatically scrape the details of these jobs and import them",
 		image: scrapedJobsPng,
 	},
 	{
 		icon: "star-half",
-		title: "Job Rating",
+		title: "AI Job Rating",
 		description:
-			"Each scraped job is automatically rated by an AI based on your qualifications and preferences, helping you " +
-			"prioritise the best opportunities.",
+			"Every scraped job is rated by AI based on your qualifications and preferences, so the best " +
+			"opportunities rise to the top and you can focus on what matters.",
 		image: scrapedJobsPng,
 	},
 	{
 		icon: "envelope-arrow-up",
 		title: "Follow-Up Email Generator",
 		description:
-			"Generate personalised follow-up emails for any job application. Right-click a job, choose a contact, " +
-			"and get a ready-to-send email signed with your name.",
+			"Craft personalised follow-up emails in seconds. Right-click any job, pick a contact, " +
+			"and get a ready-to-send message signed with your name.",
 		image: followupGif,
 	},
 ];
