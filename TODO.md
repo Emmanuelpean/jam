@@ -75,4 +75,4 @@
 * [X] Add frontend tests for scraped jobs failed/skipped/rated/rating skipped/failed
 * [X] Add frontend test for past deadline scraped jobs
 * [X] Add a global welcome slide to the jam welcome modal
-* [ ] Fix the 
+* [X] Generate new src images
