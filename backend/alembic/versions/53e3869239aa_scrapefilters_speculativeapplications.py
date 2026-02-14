@@ -299,7 +299,7 @@ def upgrade() -> None:
     """
     )
     # Add version number
-    op.execute("UPDATE 'user' SET app_version = '1.10.0'")
+    op.execute("UPDATE \"user\" SET app_version = '1.10.0'")
 
     op.add_column("user", sa.Column("previous_login", sa.TIMESTAMP(timezone=True), nullable=True))
     op.add_column("user", sa.Column("app_version", sa.String(), nullable=True))
