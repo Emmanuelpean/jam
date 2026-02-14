@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 
 from app import models, database
 from app.config import settings
+from app.core.models import get_setting_value
 from app.job_email_scraping.email_parsers import PLATFORM_SENDER_EMAILS
 from app.utils import open_json
 
@@ -51,4 +52,14 @@ def get_config(
         "platform_sender_emails": {value: key for key, value in PLATFORM_SENDER_EMAILS.items()},
         "min_password_length": settings.min_password_length,
         "app_demo_username": get_demo_credentials(db),
+    }
+
+
+@config_router.get("/status")
+def get_status(db=Depends(database.get_db)) -> dict:
+    """Get dynamic application status (polled by frontend)."""
+
+    return {
+        "maintenance_mode": get_setting_value(db, "maintenance_mode", "false") == "true",
+        "maintenance_scheduled_at": get_setting_value(db, "maintenance_scheduled_at", None),
     }
