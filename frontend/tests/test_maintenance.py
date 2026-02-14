@@ -3,10 +3,10 @@
 These tests cover:
 1. Maintenance countdown banner displayed to authenticated users
 2. Maintenance error_banner displayed when scheduled time is reached
-3. Maintenance page displayed when maintenance_mode setting is enabled
+3. Maintenance page displayed when maintenance_scheduled_at is in the past
 
-The tests create/update Setting records via the backend API so the
-StatusContext polling picks up the changes.
+The tests create/update the `maintenance_scheduled_at` Setting via the backend API
+so the StatusContext polling picks up the changes.
 """
 
 import time
@@ -54,6 +54,13 @@ class TestMaintenanceCountdownBanner(BaseTest):
         future_time = datetime.now(timezone.utc) + timedelta(minutes=minutes)
         return future_time.isoformat()
 
+    @staticmethod
+    def _get_past_timestamp(minutes: int | float = 5) -> str:
+        """Get an ISO 8601 timestamp for a time in the past."""
+
+        past_time = datetime.now(timezone.utc) - timedelta(minutes=minutes)
+        return past_time.isoformat()
+
     def test_countdown_banner_shows_countdown_when_under_one_hour(self) -> None:
         """Test that the countdown banner is displayed when maintenance is scheduled."""
 
@@ -99,42 +106,49 @@ class TestMaintenanceCountdownBanner(BaseTest):
 
 
 class TestMaintenancePage(BaseTest):
-    """Tests for the maintenance page when maintenance_mode setting is enabled.
-    These tests create a `maintenance_mode` setting via the API."""
+    """Tests for the maintenance page when maintenance_scheduled_at is in the past.
+    A past timestamp means maintenance mode is active."""
 
     _setting_id = None
 
-    def _set_maintenance_mode(self, enabled: bool) -> None:
-        """Create or update the maintenance_mode setting via the API."""
+    def _set_maintenance_scheduled_at(self, iso_timestamp: str) -> None:
+        """Create or update the maintenance_scheduled_at setting via the API."""
 
-        value = "true" if enabled else "false"
         if self._setting_id is None:
             response = self.client.post(
                 "/settings/",
-                json={"name": "maintenance_mode", "value": value},
+                json={"name": "maintenance_scheduled_at", "value": iso_timestamp},
             )
             assert response.status_code == 201
             self._setting_id = response.json()["id"]
         else:
             response = self.client.put(
                 f"/settings/{self._setting_id}",
-                json={"value": value},
+                json={"value": iso_timestamp},
             )
             assert response.status_code == 200
 
-    def _clear_maintenance_mode(self) -> None:
-        """Delete the maintenance_mode setting if it exists."""
+    def _clear_maintenance_scheduled_at(self) -> None:
+        """Delete the maintenance_scheduled_at setting if it exists."""
 
         if self._setting_id is not None:
             self.client.delete(f"/settings/{self._setting_id}")
             self._setting_id = None
 
-    def test_maintenance_page_displayed_when_mode_enabled(self) -> None:
-        """Test that the maintenance page is displayed when maintenance mode is enabled."""
+    @staticmethod
+    def _get_past_timestamp(minutes: int | float = 5) -> str:
+        """Get an ISO 8601 timestamp for a time in the past."""
 
-        self._set_maintenance_mode(True)
+        past_time = datetime.now(timezone.utc) - timedelta(minutes=minutes)
+        return past_time.isoformat()
+
+    def test_maintenance_page_displayed_when_mode_enabled(self) -> None:
+        """Test that the maintenance page is displayed when scheduled time is in the past."""
+
+        past_time = self._get_past_timestamp(minutes=5)
+        self._set_maintenance_scheduled_at(past_time)
         for page in ["login", "register"]:
             self.go_to_page(f"{self.frontend_base_url}/{page}")
             maintenance_page_exists = self.check_element_exists("maintenance-page", timeout=35)
             assert maintenance_page_exists, "Maintenance page should be displayed when maintenance mode is enabled"
-        self._clear_maintenance_mode()
+        self._clear_maintenance_scheduled_at()

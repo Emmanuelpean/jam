@@ -60,6 +60,5 @@ def get_status(db=Depends(database.get_db)) -> dict:
     """Get dynamic application status (polled by frontend)."""
 
     return {
-        "maintenance_mode": get_setting_value(db, "maintenance_mode", "false") == "true",
         "maintenance_scheduled_at": get_setting_value(db, "maintenance_scheduled_at", None),
     }

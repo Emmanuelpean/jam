@@ -19,6 +19,7 @@ const SettingsPage = () => {
 			title="Settings"
 			columns={columns}
 			Modal={SettingModal}
+			initialData={{ is_active: true }}
 		/>
 	);
 };
