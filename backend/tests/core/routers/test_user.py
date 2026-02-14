@@ -838,3 +838,52 @@ class TestUserQualificationsCRUD(CRUDTestBase):
         response = authorised_clients[1].post(f"{self.endpoint}", json=new_qualification_data)
         assert response.status_code == 200
         assert response.json()["id"] == len(test_user_qualifications) + 1
+
+    def test_experience_within_char_limit(self, authorised_clients, session) -> None:
+        """Test that experience within the 10000 character limit is accepted."""
+
+        data = {"experience": "a" * 10000}
+        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
+        assert response.status_code == 200
+
+    def test_experience_exceeds_char_limit(self, authorised_clients) -> None:
+        """Test that experience exceeding 10000 characters is rejected."""
+
+        data = {"experience": "a" * 10001}
+        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
+        assert response.status_code == 422
+
+    def test_skills_within_char_limit(self, authorised_clients, session) -> None:
+        """Test that skills within the 3500 character limit is accepted."""
+
+        data = {"skills": "a" * 3500}
+        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
+        assert response.status_code == 200
+
+    def test_skills_exceeds_char_limit(self, authorised_clients) -> None:
+        """Test that skills exceeding 3500 characters is rejected."""
+
+        data = {"skills": "a" * 3501}
+        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
+        assert response.status_code == 422
+
+    def test_qualities_exceeds_char_limit(self, authorised_clients) -> None:
+        """Test that qualities exceeding 3500 characters is rejected."""
+
+        data = {"qualities": "a" * 3501}
+        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
+        assert response.status_code == 422
+
+    def test_education_exceeds_char_limit(self, authorised_clients) -> None:
+        """Test that education exceeding 3500 characters is rejected."""
+
+        data = {"education": "a" * 3501}
+        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
+        assert response.status_code == 422
+
+    def test_interests_exceeds_char_limit(self, authorised_clients) -> None:
+        """Test that interests exceeding 3500 characters is rejected."""
+
+        data = {"interests": "a" * 3501}
+        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
+        assert response.status_code == 422

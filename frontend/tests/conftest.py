@@ -2327,20 +2327,14 @@ class BaseTest(BaseUtils):
     def login(self) -> None:
         """Log in by generating a JWT token directly and injecting it into localStorage."""
 
-        login_start = time.perf_counter()
-
         # Generate JWT directly — no HTTP call, no bcrypt verification
         token = create_access_token(
             data={"user_id": self.user.id},
             token_version=self.user.token_version,
         )
-        t1 = time.perf_counter()
-        print(f"  ⏱ generate JWT: {t1 - login_start:.3f}s")
 
         # Inject token into localStorage — browser is already on the same origin from setup_method
         self.driver.execute_script(f'window.localStorage.setItem("token", "{token}");')
-        t2 = time.perf_counter()
-        print(f"  ⏱ inject token: {t2 - t1:.3f}s")
 
         self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
         self.wait_for_page(self.page_url)

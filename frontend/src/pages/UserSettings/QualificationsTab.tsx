@@ -97,6 +97,9 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		}
 	};
 
+	const EXPERIENCE_CHAR_LIMIT = 10000;
+	const OTHER_CHAR_LIMIT = 3500;
+
 	const experienceField: ModalFormField = {
 		name: "experience",
 		type: "textarea",
@@ -104,6 +107,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		placeholder: "Describe your work experience...",
 		rows: 3,
 		autoHeight: true,
+		maxChars: EXPERIENCE_CHAR_LIMIT,
 	};
 
 	const skillsField: ModalFormField = {
@@ -113,6 +117,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		placeholder: "List your skills...",
 		rows: 3,
 		autoHeight: true,
+		maxChars: OTHER_CHAR_LIMIT,
 	};
 
 	const qualitiesField: ModalFormField = {
@@ -122,6 +127,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		placeholder: "Describe your qualities...",
 		rows: 3,
 		autoHeight: true,
+		maxChars: OTHER_CHAR_LIMIT,
 	};
 
 	const educationField: ModalFormField = {
@@ -131,6 +137,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		placeholder: "Describe your education...",
 		rows: 3,
 		autoHeight: true,
+		maxChars: OTHER_CHAR_LIMIT,
 	};
 
 	const interestsField: ModalFormField = {
@@ -140,6 +147,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		placeholder: "Describe your interests...",
 		rows: 3,
 		autoHeight: true,
+		maxChars: OTHER_CHAR_LIMIT,
 	};
 
 	const latestSystemPrompt: AiSystemPromptData | null | undefined = aiSystemPrompts?.length
@@ -153,6 +161,13 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		!!formData.qualities?.trim() ||
 		!!formData.education?.trim() ||
 		!!formData.interests?.trim();
+
+	const isWithinCharLimits: boolean =
+		(formData.experience?.length || 0) <= EXPERIENCE_CHAR_LIMIT &&
+		(formData.skills?.length || 0) <= OTHER_CHAR_LIMIT &&
+		(formData.qualities?.length || 0) <= OTHER_CHAR_LIMIT &&
+		(formData.education?.length || 0) <= OTHER_CHAR_LIMIT &&
+		(formData.interests?.length || 0) <= OTHER_CHAR_LIMIT;
 
 	if (loading) {
 		return <LoadingSpinner text="Loading qualifications..." />;
@@ -174,7 +189,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 					<ActionButton
 						type="submit"
 						variant="primary"
-						disabled={submitting || !hasAtLeastOneQualification}
+						disabled={submitting || !hasAtLeastOneQualification || !isWithinCharLimits}
 						defaultIcon="save"
 						id={"confirm-button"}
 						defaultText={submitting ? "Saving..." : "Save Qualifications"}

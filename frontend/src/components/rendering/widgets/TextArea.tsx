@@ -6,6 +6,8 @@ import { toKey } from "../../../utils/StringUtils";
 
 export const Textarea = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
 	const ref = useRef<HTMLTextAreaElement | null>(null);
+	const charCount = field.maxChars ? (value || "").length : 0;
+	const isOverLimit = field.maxChars ? charCount > field.maxChars : false;
 
 	useEffect((): void => {
 		if (field.autoHeight) {
@@ -17,18 +19,25 @@ export const Textarea = ({ field, value, handleChange, error }: WidgetProps): JS
 	}, [value]);
 
 	return (
-		<Form.Control
-			as="textarea"
-			ref={ref}
-			id={toKey(field.name)}
-			rows={field.rows || 3}
-			name={toKey(field.name)}
-			value={value || ""}
-			onChange={handleChange}
-			placeholder={field.placeholder}
-			isInvalid={!!error}
-			className="optimized-textarea"
-			disabled={field.isDisabled}
-		/>
+		<>
+			<Form.Control
+				as="textarea"
+				ref={ref}
+				id={toKey(field.name)}
+				rows={field.rows || 3}
+				name={toKey(field.name)}
+				value={value || ""}
+				onChange={handleChange}
+				placeholder={field.placeholder}
+				isInvalid={!!error || isOverLimit}
+				className="optimized-textarea"
+				disabled={field.isDisabled}
+			/>
+			{field.maxChars && (
+				<Form.Text className={isOverLimit ? "text-danger" : "text-muted"}>
+					{charCount} / {field.maxChars} characters
+				</Form.Text>
+			)}
+		</>
 	);
 };

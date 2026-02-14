@@ -253,7 +253,6 @@ class UserQualification(Owned, Base):
 
     Attributes:
     -----------
-    - `owner_id` (int): Foreign key to user table (inherited from Owned).
     - `experience` (str): User's experience details.
     - `skills` (str): User's skills details.
     - `qualities` (str): User's personal qualities.

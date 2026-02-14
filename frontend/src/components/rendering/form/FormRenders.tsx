@@ -42,6 +42,7 @@ export interface ModalFormField {
 	previewConfig?: SelectWidgetPreviewConfig | null;
 	isDisabled?: boolean;
 	autoHeight?: boolean;
+	maxChars?: number;
 }
 
 interface FormFieldOverride extends Partial<ModalFormField> {}
