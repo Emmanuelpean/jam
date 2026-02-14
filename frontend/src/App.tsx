@@ -207,9 +207,19 @@ function AppRoutes(): JSX.Element {
 	);
 }
 
+function MaintenanceGate({ children }: { children: ReactNode }): JSX.Element {
+	const { maintenanceMode } = useStatus();
+	const { currentUser } = useAuth();
+
+	if (maintenanceMode && !currentUser?.is_admin) {
+		return <MaintenancePage />;
+	}
+
+	return <>{children}</>;
+}
+
 function AppContent(): JSX.Element {
 	const toastMethods: UseToastReturn = useToast();
-	const { maintenanceMode } = useStatus();
 
 	return (
 		<BrowserRouter basename="/jam">
@@ -221,15 +231,13 @@ function AppContent(): JSX.Element {
 								<ProgressOverlayProvider>
 									<ThemeProvider>
 										<WhatsNewProvider>
-											{maintenanceMode ? (
-												<MaintenancePage />
-											) : (
+											<MaintenanceGate>
 												<ContextMenuProvider>
 													<AppLayout>
 														<AppRoutes />
 													</AppLayout>
 												</ContextMenuProvider>
-											)}
+											</MaintenanceGate>
 										</WhatsNewProvider>
 									</ThemeProvider>
 									<ToastStack

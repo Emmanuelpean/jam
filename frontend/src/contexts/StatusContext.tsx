@@ -12,6 +12,12 @@ interface StatusContextValue extends StatusData {
 
 const STATUS_POLL_INTERVAL_MS = 30_000;
 
+function isMaintenanceActive(scheduledAt: string | null): boolean {
+	if (!scheduledAt) return false;
+	const time = new Date(scheduledAt).getTime();
+	return !isNaN(time) && time <= Date.now();
+}
+
 const StatusContext = createContext<StatusContextValue | undefined>(undefined);
 
 export const StatusProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -24,9 +30,10 @@ export const StatusProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 	const fetchStatus = useCallback(async () => {
 		try {
 			const response = await baseApi.get("config/status", null);
+			const scheduledAt: string | null = response.data.maintenance_scheduled_at || null;
 			setStatus({
-				maintenanceMode: response.data.maintenance_mode,
-				maintenanceScheduledAt: response.data.maintenance_scheduled_at || null,
+				maintenanceMode: isMaintenanceActive(scheduledAt),
+				maintenanceScheduledAt: scheduledAt,
 			});
 		} catch {
 			// Silently ignore — keep last known status

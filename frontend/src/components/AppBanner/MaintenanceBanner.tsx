@@ -5,17 +5,15 @@ import { AppBanner } from "./AppBanner";
 import { formatDuration, formatScheduledTime, ONE_HOUR_IN_SECONDS } from "../../utils/TimeUtils";
 
 export function MaintenanceBanner(): JSX.Element | null {
-	const { isAuthenticated } = useAuth();
-	const { maintenanceScheduledAt } = useStatus();
-	const [showError, setShowError] = useState(false);
+	const { isAuthenticated, currentUser } = useAuth();
+	const { maintenanceMode, maintenanceScheduledAt } = useStatus();
 	const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 	const [bannerDismissed, setBannerDismissed] = useState(false);
 
 	// Live countdown for a scheduled pre-maintenance window.
-	// Only runs when a valid future timestamp is set and the user is authenticated.
-	// When the countdown hits zero the error banner takes over.
+	// Only runs when the scheduled time is in the future and the user is authenticated.
 	useEffect(() => {
-		if (!maintenanceScheduledAt || !isAuthenticated) {
+		if (!maintenanceScheduledAt || !isAuthenticated || maintenanceMode) {
 			setSecondsLeft(null);
 			return;
 		}
@@ -30,7 +28,6 @@ export function MaintenanceBanner(): JSX.Element | null {
 		const initialDiff: number = Math.ceil((scheduledTime - Date.now()) / 1000);
 
 		if (initialDiff <= 0) {
-			setShowError(true);
 			setSecondsLeft(null);
 			return;
 		}
@@ -42,7 +39,6 @@ export function MaintenanceBanner(): JSX.Element | null {
 
 			if (remaining <= 0) {
 				setSecondsLeft(null);
-				setShowError(true);
 				clearInterval(interval);
 				return;
 			}
@@ -51,15 +47,28 @@ export function MaintenanceBanner(): JSX.Element | null {
 		}, 1000);
 
 		return () => clearInterval(interval);
-	}, [isAuthenticated, maintenanceScheduledAt]);
+	}, [isAuthenticated, maintenanceScheduledAt, maintenanceMode]);
 
 	const showCountdownBanner = secondsLeft !== null && secondsLeft > 0 && !bannerDismissed;
-	const showErrorBanner = showError && isAuthenticated;
+	const showAdminMaintenanceBanner = maintenanceMode && currentUser?.is_admin;
+	const showMaintenanceActiveBanner = maintenanceMode && isAuthenticated && !currentUser?.is_admin;
 
-	if (!showCountdownBanner && !showErrorBanner) return null;
+	if (!showCountdownBanner && !showAdminMaintenanceBanner && !showMaintenanceActiveBanner) return null;
 
 	return (
 		<>
+			{showAdminMaintenanceBanner && (
+				<AppBanner
+					icon="bi-exclamation-triangle-fill"
+					colorClass="bg-danger"
+					id="maintenance-active-banner"
+					role="alert"
+				>
+					<strong>Maintenance mode is active.</strong> Regular users see the maintenance page. Toggle it off
+					via <strong>App Settings</strong>.
+				</AppBanner>
+			)}
+
 			{showCountdownBanner && (
 				<AppBanner
 					icon="bi-clock-history"
@@ -84,7 +93,7 @@ export function MaintenanceBanner(): JSX.Element | null {
 				</AppBanner>
 			)}
 
-			{showErrorBanner && (
+			{showMaintenanceActiveBanner && (
 				<AppBanner
 					icon="bi-exclamation-triangle-fill"
 					colorClass="bg-danger"
