@@ -61,4 +61,5 @@ def get_status(db=Depends(database.get_db)) -> dict:
 
     return {
         "maintenance_scheduled_at": get_setting_value(db, "maintenance_scheduled_at", None),
+        "test_mode": settings.test_mode,
     }
