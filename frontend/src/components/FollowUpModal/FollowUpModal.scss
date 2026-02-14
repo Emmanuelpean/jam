@@ -1,0 +1,88 @@
+/* Apply gradient to the button group container */
+.email-service-dropdown {
+    padding: 0;
+    border-radius: 12px !important;
+    background: var(--primary-gradient);
+    box-shadow: 0 6px 20px var(--jam-glow),
+    0 2px 4px rgb(0 0 0 / 10%);
+}
+
+/* Make both buttons transparent so the gradient shows through */
+.email-service-dropdown .btn-primary {
+    color: white;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+}
+
+/* Remove Bootstrap's default borders between buttons */
+.email-service-dropdown .btn-primary:not(:last-child) {
+    border-right: 1px solid rgb(255 255 255 / 30%) !important;
+}
+
+/* Hover effect - darken slightly */
+.email-service-dropdown:hover {
+    transition: var(--transition);
+    transform: translateY(-2px);
+    background: var(--primary-hover-gradient);
+    box-shadow: 0 8px 25px var(--jam-glow),
+    0 4px 8px rgb(0 0 0 / 15%);
+}
+
+/* Active state */
+.email-service-dropdown .btn-primary:active,
+.email-service-dropdown .btn-primary.active {
+    background: rgb(0 0 0 / 10%) !important;
+}
+
+/* Focus state */
+.email-service-dropdown .btn-primary:focus {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.email-service-dropdown .dropdown-toggle-split {
+    flex: 0 0 60px !important; /* Override the flex property */
+    width: 60px !important; /* Override the existing !important */
+    min-width: 60px !important;
+    max-width: 60px !important;
+    padding-right: 0.5rem !important;
+    padding-left: 0.5rem !important;
+}
+
+/* Dropdown menu */
+.email-dropdown-menu {
+    min-width: 220px;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    border: 2px solid #e8eaed;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgb(0 0 0 / 15%),
+    0 2px 4px rgb(0 0 0 / 10%);
+}
+
+.email-dropdown-item {
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: #2c3e50;
+    border-radius: 8px;
+}
+
+.email-dropdown-item:hover {
+    color: white !important;
+    background: var(--primary-gradient);
+}
+
+.email-dropdown-item i {
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+.dropdown-divider {
+    margin: 0.5rem 0;
+    border-top: 1px solid #e8eaed;
+}

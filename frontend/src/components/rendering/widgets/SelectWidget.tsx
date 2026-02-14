@@ -1,12 +1,12 @@
-import React, { JSX, useCallback, useState, useRef } from "react";
-import Select, { ActionMeta, GroupBase, MultiValue, SingleValue } from "react-select";
+import React, { JSX, useCallback, useRef, useState } from "react";
+import Select, { ActionMeta, MultiValue, SingleValue } from "react-select";
 import makeAnimated from "react-select/animated";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
-import "./SelectWidget.css";
 import { FloatingPreview } from "../../FloatingPreview/FloatingPreview";
 import { CustomSelectOption } from "../form/CustomSelectOption";
 import { ModalViewFields } from "../view/ModalFields";
-import { SelectOption } from "../form/FormOptions";
+import { GroupedSelectOption, SelectOption } from "../form/FormOptions";
+import { toKey } from "../../../utils/StringUtils";
 
 export interface SelectWidgetPreviewConfig {
 	enabled: boolean;
@@ -15,6 +15,33 @@ export interface SelectWidgetPreviewConfig {
 }
 
 const animatedComponents = makeAnimated();
+
+// Type guard to check if options are grouped
+const isGroupedOptions = (
+	options: readonly (SelectOption | GroupedSelectOption)[]
+): options is readonly GroupedSelectOption[] => {
+	return options.length > 0 && "options" in options[0]!;
+};
+
+// Helper function to find option in both flat and grouped arrays
+const findOption = (
+	options: readonly (SelectOption | GroupedSelectOption)[] | undefined,
+	targetValue: string
+): SelectOption | undefined => {
+	if (!options || options.length === 0) return undefined;
+
+	if (isGroupedOptions(options)) {
+		// Search within grouped options
+		for (const group of options) {
+			const found = group.options.find((opt) => opt.value === targetValue);
+			if (found) return found;
+		}
+		return undefined;
+	} else {
+		// Search flat options - type is now narrowed to SelectOption[]
+		return (options as readonly SelectOption[]).find((opt) => opt.value === targetValue);
+	}
+};
 
 const CustomDropdownIndicator = (props: any): JSX.Element => {
 	const [hover, setHover] = useState(false);
@@ -37,11 +64,8 @@ const CustomDropdownIndicator = (props: any): JSX.Element => {
 							}
 						});
 					} else {
-						console.log("A");
 						customProps.addButtonModalRef.current?.showAdd({}, (newData: any) => {
-							console.log(newData);
 							if (customProps.onAddSuccess) {
-								console.log("here");
 								customProps.onAddSuccess(newData);
 							}
 						});
@@ -91,7 +115,7 @@ export const SelectInput = ({
 				const currentIds = Array.isArray(value) ? value : [];
 				const syntheticEvent: SyntheticEvent = {
 					target: {
-						name: field.name,
+						name: toKey(field.name),
 						value: [...currentIds, newId],
 					},
 				};
@@ -100,14 +124,14 @@ export const SelectInput = ({
 				// For single select, replace value
 				const syntheticEvent: SyntheticEvent = {
 					target: {
-						name: field.name,
+						name: toKey(field.name),
 						value: newId,
 					},
 				};
 				handleChange(syntheticEvent);
 			}
 		},
-		[field.name, handleChange, isMulti, value],
+		[field.name, handleChange, isMulti, value]
 	);
 
 	const handleHover = useCallback(
@@ -123,7 +147,7 @@ export const SelectInput = ({
 				setShowPreview(true);
 			}
 		},
-		[previewConfig],
+		[previewConfig]
 	);
 
 	const handleHoverEnd = useCallback(() => {
@@ -143,7 +167,7 @@ export const SelectInput = ({
 			selectedValue = value
 				.map((item: any) => {
 					const id = typeof item === "object" && item !== null ? item.id : item;
-					return field.options!.find((opt) => opt.value === id);
+					return findOption(field.options, id);
 				})
 				.filter(Boolean) as SelectOption[];
 		} else {
@@ -151,7 +175,7 @@ export const SelectInput = ({
 		}
 	} else {
 		if (value !== null && value !== undefined && value !== "" && field.options) {
-			selectedValue = field.options.find((option) => option.value === value) || null;
+			selectedValue = findOption(field.options, value) || null;
 		}
 	}
 
@@ -160,8 +184,8 @@ export const SelectInput = ({
 	if (field.addButton?.modalRef) {
 		selectComponents.DropdownIndicator = CustomDropdownIndicator;
 	} else {
-		selectComponents.DropdownIndicator = undefined;
-		selectComponents.IndicatorSeparator = undefined;
+		// selectComponents.DropdownIndicator = undefined;
+		// selectComponents.IndicatorSeparator = undefined;
 	}
 
 	if (previewConfig?.enabled) {
@@ -172,12 +196,12 @@ export const SelectInput = ({
 
 	const selectElement = (
 		<>
-			<Select<SelectOption, boolean, GroupBase<SelectOption>>
-				name={field.name}
+			<Select<SelectOption, boolean>
+				name={toKey(field.name)}
 				value={selectedValue}
 				onChange={(
 					selectedOptions: MultiValue<SelectOption> | SingleValue<SelectOption>,
-					_actionMeta: ActionMeta<SelectOption>,
+					_actionMeta: ActionMeta<SelectOption>
 				) => {
 					if (isMulti) {
 						const ids: string[] = Array.isArray(selectedOptions)
@@ -186,7 +210,7 @@ export const SelectInput = ({
 
 						const syntheticEvent: SyntheticEvent = {
 							target: {
-								name: field.name,
+								name: toKey(field.name),
 								value: ids,
 							},
 						};
@@ -194,7 +218,7 @@ export const SelectInput = ({
 					} else {
 						const syntheticEvent: SyntheticEvent = {
 							target: {
-								name: field.name,
+								name: toKey(field.name),
 								value: selectedOptions ? (selectedOptions as SelectOption).value : null,
 							},
 						};
@@ -202,7 +226,7 @@ export const SelectInput = ({
 					}
 				}}
 				onMenuClose={handleMenuClose}
-				id={field.name}
+				id={toKey(field.name)}
 				options={field.options || []}
 				closeMenuOnSelect={!isMulti}
 				placeholder={field.placeholder || `Select ${field.label}`}
@@ -219,16 +243,6 @@ export const SelectInput = ({
 				parentData={data}
 				transformParentData={field.addButton?.transformParentData}
 				onAddSuccess={handleAddSuccess}
-				styles={{
-					control: (base, state) => ({
-						...base,
-						borderColor: error ? "red" : state.isFocused ? "#2684FF" : base.borderColor,
-						boxShadow: error ? "0 0 0 1px red" : state.isFocused ? "0 0 0 1px #2684FF" : base.boxShadow,
-						"&:hover": {
-							borderColor: error ? "red" : state.isFocused ? "#2684FF" : base.borderColor,
-						},
-					}),
-				}}
 			/>
 			{previewConfig?.enabled && (
 				<FloatingPreview

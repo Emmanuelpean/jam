@@ -1,21 +1,23 @@
 import { useEffect, useState } from "react";
-import { JobRatingServiceLog } from "../services/Schemas";
+import { JobRatingServiceLogData } from "../services/schemas/Services";
 import { jobRatingServiceLogApi } from "../services/api/Services";
 import { DateRange } from "../utils/TimeUtils";
 import { useAuth } from "../contexts/AuthContext";
+import { ApiResponse } from "../services/api/Base";
 
 export const useJobRatingServiceLogs = (isServiceRunning: boolean, dateRange: DateRange) => {
 	const { token } = useAuth();
-	const [previousServiceLogs, setPreviousServiceLogs] = useState<JobRatingServiceLog[] | null>(null);
-	const [latestServiceLog, setLatestServiceLog] = useState<JobRatingServiceLog | null>(null);
+	const [previousServiceLogs, setPreviousServiceLogs] = useState<JobRatingServiceLogData[] | null>(null);
+	const [latestServiceLog, setLatestServiceLog] = useState<JobRatingServiceLogData | null>(null);
 	const [serviceLogError, setServiceLogError] = useState<string | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
 
 	const fetchLatestServiceLog = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const log: JobRatingServiceLog = await jobRatingServiceLogApi.getLatest(token);
-			if (log) {
-				setLatestServiceLog(log);
+			const log: ApiResponse<JobRatingServiceLogData> = await jobRatingServiceLogApi.getLatest(token);
+			if (log.data) {
+				setLatestServiceLog(log.data);
 			}
 		} catch (err: any) {
 			setServiceLogError(err.message || "An error occurred while fetching the latest log.");
@@ -25,15 +27,18 @@ export const useJobRatingServiceLogs = (isServiceRunning: boolean, dateRange: Da
 
 	const fetchLatestLogs = async (): Promise<void> => {
 		if (!token) return;
+		setLoading(true);
 		try {
-			const logs: JobRatingServiceLog[] = await jobRatingServiceLogApi.getAll(token, {
+			const logs: ApiResponse<JobRatingServiceLogData[]> = await jobRatingServiceLogApi.getAll(token, {
 				start_date: new Date(dateRange.start).toISOString(),
 				end_date: new Date(dateRange.end).toISOString(),
 			});
-			setPreviousServiceLogs(logs);
+			setPreviousServiceLogs(logs.data);
 		} catch (err: any) {
 			setServiceLogError(err.message || "An error occurred while fetching the logs.");
 			console.error("Failed to fetch latest logs:", err);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -54,5 +59,5 @@ export const useJobRatingServiceLogs = (isServiceRunning: boolean, dateRange: Da
 		fetchLatestServiceLog().then();
 	}, [token]);
 
-	return { previousServiceLogs, latestServiceLog, fetchLatestServiceLog, serviceLogError };
+	return { previousServiceLogs, latestServiceLog, fetchLatestServiceLog, serviceLogError, loading };
 };

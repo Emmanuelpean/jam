@@ -1,519 +1,36 @@
 """
-This module is designed to facilitate testing and database interaction in the application. It includes utility functions,
-fixtures, and configurations for setting up and managing the SQLAlchemy database, test users, test tokens, and mock
-clients for API testing. The provided components streamline testing by enabling convenient access to preconfigured
-resources.
+Test configuration and pytest hooks.
 
-This module is instrumental for efficiently executing unit and integration tests by establishing a robust test environment
-and providing the necessary utilities for seamless interactions with the application's data and APIs.
+Fixtures are organised in the tests/fixtures/ directory:
+- database.py: Database session and engine fixtures
+- clients.py: API test client fixtures
+- users.py: User-related fixtures
+- test_data.py: Test data fixtures for various models
+
+The CRUDTestBase class is in tests/utils/crud_test_base.py
 """
 
 import datetime as dt
 import os
-from typing import Any, Generator
+from typing import Any
 
 import pytest
-from fastapi import status
 from requests import Response
-from sqlalchemy import create_engine, orm
+from starlette import status
 from starlette.testclient import TestClient
 
-from app import models, database, schemas
-from app.job_email_scraping import models as eis_models
-from app.job_rating import models as rating_models
-from app.config import settings
-from app.main import app
-from app.oauth2 import create_access_token
-from app.utils import hash_token
-from tests.utils.create_data import (
-    create_users,
-    create_companies,
-    create_locations,
-    create_aggregators,
-    create_keywords,
-    create_people,
-    create_jobs,
-    create_files,
-    create_interviews,
-    create_job_application_updates,
-    create_settings,
-    create_scraped_jobs,
-    create_job_scraping_service_logs,
-    create_job_scraping_platform_stats,
-    create_job_scraping_service_errors,
-    create_job_alert_emails,
-    create_user_qualifications,
-    create_job_ratings,
-    create_job_rating_service_logs,
-)
-from tests.utils.seed_database import reset_database
-from tests.utils.test_data import (
-    DEMO_USER_INDEX,
-    ADMIN_USER_INDEX,
-    INACTIVE_USER_INDEX,
-    REGULAR_USER_INDEX,
-    UNVERIFIED_USER_INDEX,
-)
-
-# ---------------------------------------------------- TEST DATABASE ---------------------------------------------------
-
-
-DATABASE_NAME = "jam_test"
-SQLALCHEMY_DATABASE_URL = (
-    f"postgresql://{settings.database_username}:{settings.database_password}@"
-    f"{settings.database_hostname}:{settings.database_port}/{DATABASE_NAME}"
-)
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def find_non_owned(entries: list, owner_id: int) -> int:
-    """Find an entry not owned by the specified owner_id.
-    :param entries: List of entries to search.
-    :param owner_id: The owner ID to exclude."""
-
-    for entry in entries:
-        if entry.owner_id != owner_id:
-            return entry.id
-    raise AssertionError("No non-owned entry found")
-
-
-@pytest.fixture(scope="function")
-def session() -> Generator[orm.Session, Any, None]:
-    """Fixture that sets up and tears down a new database session for each test function.
-    This fixture creates a fresh database session by creating and dropping all tables in the
-    test database. It yields a session that can be used by test functions. After the test
-    function completes, the session is closed.
-    :yield: A new SQLAlchemy session bound to the test database."""
-
-    reset_database(engine, False)
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-# ------------------------------------------------------- CLIENTS ------------------------------------------------------
-
-
-@pytest.fixture
-def tokens(test_users) -> list[str]:
-    """Fixture that generates access tokens for the given test users."""
-
-    return [create_access_token({"user_id": user.id}) for user in test_users]
-
-
-@pytest.fixture
-def client(session) -> Generator[TestClient, Any, None]:
-    """Fixture that provides a test client with an overridden database dependency.
-    This fixture creates a test client by overriding the default database dependency
-    to use the test database session. It yields the TestClient, allowing the test
-    functions to make requests to the FastAPI application.
-    :param session: The database session fixture to override the database dependency.
-    :yield: The FastAPI TestClient with the overridden database dependency."""
-
-    def override_get_db() -> Generator[orm.Session, Any, None]:
-        """Override the default database dependency to use the test database session."""
-        try:
-            yield session
-        finally:
-            session.close()
-
-    app.dependency_overrides[database.get_db] = override_get_db  # noqa
-    yield TestClient(app)
-    app.dependency_overrides.pop(database.get_db, None)  # Clean up dependency override  # noqa
-
-
-@pytest.fixture
-def authorised_clients(client: TestClient, tokens: list[str]) -> list[TestClient]:
-    """Fixture that provides a list of authenticated test clients."""
-
-    clients = []
-    for token in tokens:
-        authorised_client = TestClient(client.app)
-        authorised_client.headers = {**client.headers, "Authorization": f"Bearer {token}"}
-        clients.append(authorised_client)
-    return clients
-
-
-@pytest.fixture
-def admin_client(authorised_clients) -> TestClient:
-    """Fixture for an admin client."""
-
-    return authorised_clients[ADMIN_USER_INDEX]
-
-
-@pytest.fixture
-def regular_user_client(authorised_clients) -> TestClient:
-    """Fixture for a non-admin client."""
-
-    return authorised_clients[REGULAR_USER_INDEX]
-
-
-@pytest.fixture
-def demo_user_client(authorised_clients) -> TestClient:
-    """Fixture for a demo user client"""
-
-    return authorised_clients[DEMO_USER_INDEX]
-
-
-# -------------------------------------------------------- USERS -------------------------------------------------------
-
-
-@pytest.fixture
-def test_users(session) -> list[models.User]:
-    """Create test user data"""
-
-    return create_users(session)
-
-
-@pytest.fixture
-def test_admin_user(test_users) -> models.User:
-    """Fixture for an admin user."""
-
-    return test_users[ADMIN_USER_INDEX]
-
-
-@pytest.fixture
-def test_demo_user(test_users) -> models.User:
-    """Fixture for a non-admin user."""
-
-    return test_users[DEMO_USER_INDEX]
-
-
-@pytest.fixture
-def test_regular_user(test_users) -> models.User:
-    """Fixture for a non-admin user."""
-
-    return test_users[REGULAR_USER_INDEX]
-
-
-@pytest.fixture
-def test_inactive_user(test_users) -> models.User:
-    """Fixture for an inactive user."""
-
-    return test_users[INACTIVE_USER_INDEX]
-
-
-@pytest.fixture
-def test_unverified_user(test_users) -> models.User:
-    """Fixture to create an unverified user (i.e. is_verified=False)."""
-
-    return test_users[UNVERIFIED_USER_INDEX]
-
-
-@pytest.fixture
-def test_unverified_token_user(session) -> models.User:
-    """Fixture to create an unverified user with a verification token."""
-
-    plain_token = "testtoken"
-    hashed_token = hash_token(plain_token)
-    user_data = dict(
-        email="unverified@test.com",
-        password="password",
-        is_verified=False,
-        is_active=True,
-        verification_token=hashed_token,
-        verification_token_created_at=dt.datetime.now(),
-    )
-
-    user = create_users(session, [user_data])[0]
-    user.plain_verification_token = plain_token
-    return user
-
-
-@pytest.fixture
-def test_user_change_email_token_user(session) -> models.User:
-    """Fixture to create a user with a change email token."""
-
-    plain_token = "changeemailtoken"
-    hashed_token = hash_token(plain_token)
-    user_data = dict(
-        email="test_user@test.com",
-        password="password",
-        is_verified=True,
-        is_active=True,
-        pending_email="newemail@test.com",
-        email_change_token=hashed_token,
-        email_change_token_created_at=dt.datetime.now(),
-    )
-    user = create_users(session, [user_data])[0]
-    user.plain_verification_token = plain_token
-    return user
-
-
-@pytest.fixture
-def test_user_qualifications(session, test_users) -> list[models.UserQualification]:
-    """Create test user qualifications"""
-
-    return create_user_qualifications(session, test_users)
-
-
-# -------------------------------------------------------- OTHER -------------------------------------------------------
-
-
-@pytest.fixture
-def test_settings(session) -> list[models.Setting]:
-    """Create test settings data"""
-
-    return create_settings(session)
-
-
-# ------------------------------------------------------ TEST DATA -----------------------------------------------------
-
-
-@pytest.fixture
-def test_keywords(session, test_users) -> list[models.Keyword]:
-    """Create test keyword data"""
-
-    return create_keywords(session, test_users)
-
-
-@pytest.fixture
-def test_aggregators(session, test_users) -> list[models.Aggregator]:
-    """Create test aggregator data"""
-
-    return create_aggregators(session, test_users)
-
-
-@pytest.fixture
-def test_locations(session, test_users) -> list[models.Location]:
-    """Create test location data"""
-
-    return create_locations(session, test_users)
-
-
-@pytest.fixture
-def test_companies(session, test_users) -> list[models.Company]:
-    """Create test company data"""
-
-    return create_companies(session, test_users)
-
-
-@pytest.fixture
-def test_persons(session, test_users, test_companies) -> list[models.Person]:
-    """Create test person data"""
-
-    return create_people(session, test_users, test_companies)
-
-
-@pytest.fixture
-def persons_unauthorised_data(test_companies) -> tuple[list[dict], int]:
-    """Create test person data with incorrect company_id for access control testing"""
-
-    owner_id = 1
-    company_id = find_non_owned(test_companies, owner_id)
-    return [{"first_name": "A", "last_name": "B", "company_id": company_id, "owner_id": owner_id}], owner_id
-
-
-@pytest.fixture
-def test_persons_unauthorised(
-    session, test_users, test_companies, persons_unauthorised_data
-) -> tuple[list[models.Person], int]:
-    """Create test person data with incorrect company_id for access control testing"""
-
-    data, owner_id = persons_unauthorised_data
-    return create_people(session, test_users, test_companies, data), owner_id
-
-
-@pytest.fixture
-def test_files(session, test_users) -> list[models.File]:
-    """Create test files for job applications"""
-
-    return create_files(session, test_users)
-
-
-@pytest.fixture
-def test_jobs(
-    session, test_users, test_companies, test_locations, test_keywords, test_persons, test_aggregators, test_files
-) -> list[models.Job]:
-    """Create test job data"""
-
-    return create_jobs(
-        session, test_keywords, test_persons, test_users, test_companies, test_locations, test_aggregators, test_files
-    )
-
-
-@pytest.fixture
-def jobs_unauthorised_data(
-    session, test_users, test_companies, test_locations, test_keywords, test_persons, test_aggregators, test_files
-) -> tuple[list[dict], int, list[dict], list[dict]]:
-    """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
-
-    owner_id = 1
-    company_id = find_non_owned(test_companies, owner_id)
-    location_id = find_non_owned(test_locations, owner_id)
-    job_keyword_mapping = [{"job_id": 1, "keyword_ids": [find_non_owned(test_keywords, owner_id)]}]
-    job_contact_mapping = [{"job_id": 1, "person_ids": [find_non_owned(test_persons, owner_id)]}]
-    data = [
-        {
-            "title": "A",
-            "company_id": company_id,
-            "location_id": location_id,
-            "owner_id": owner_id,
-        }
-    ]
-    return data, owner_id, job_keyword_mapping, job_contact_mapping
-
-
-@pytest.fixture
-def test_jobs_unauthorised(
-    session,
-    test_users,
-    test_companies,
-    test_locations,
-    test_keywords,
-    test_persons,
-    test_aggregators,
-    test_files,
-    jobs_unauthorised_data,
-) -> tuple[list[models.Job], int]:
-    """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
-
-    data, owner_id, job_keyword_mapping, job_contact_mapping = jobs_unauthorised_data
-    jobs = create_jobs(
-        session,
-        test_keywords,
-        test_persons,
-        test_users,
-        test_companies,
-        test_locations,
-        test_aggregators,
-        test_files,
-        data,
-        job_keyword_mapping,
-        job_contact_mapping,
-    )
-    return jobs, owner_id
-
-
-@pytest.fixture
-def test_interviews(session, test_users, test_jobs, test_locations, test_persons) -> list[models.Interview]:
-    """Create test interview data"""
-
-    return create_interviews(session, test_persons, test_users, test_locations, test_jobs)
-
-
-@pytest.fixture
-def interviews_unauthorised_data(
-    session, test_users, test_jobs, test_locations, test_persons
-) -> tuple[list[dict], int, list[dict]]:
-    """Create test interview data with incorrect job_id for access control testing"""
-
-    owner_id = 1
-    job_id = find_non_owned(test_jobs, owner_id)
-    data = [{"job_id": job_id, "date": str(dt.datetime.now()), "owner_id": owner_id, "type": "phone"}]
-    interview_interviewer_mappings = [{"interview_id": 1, "person_ids": [find_non_owned(test_persons, owner_id)]}]
-    return data, owner_id, interview_interviewer_mappings
-
-
-@pytest.fixture
-def test_interviews_unauthorised(
-    session, test_users, test_jobs, test_locations, test_persons, interviews_unauthorised_data
-) -> tuple[list[models.Interview], int]:
-    """Create test interview data with incorrect job_id for access control testing"""
-
-    data, owner_id, interview_interviewer_mappings = interviews_unauthorised_data
-    interviews = create_interviews(
-        session,
-        test_persons,
-        test_users,
-        test_locations,
-        test_jobs,
-        data,
-        interview_interviewer_mappings,
-    )
-    return interviews, owner_id
-
-
-@pytest.fixture
-def test_job_application_updates(session, test_users, test_jobs) -> list[models.JobApplicationUpdate]:
-    """Create test job application update data"""
-
-    return create_job_application_updates(session, test_users, test_jobs)
-
-
-@pytest.fixture
-def job_application_updates_unauthorised_data(session, test_users, test_jobs) -> tuple[list[dict], int]:
-    """Create test job application update data with incorrect job_id for access control testing"""
-
-    owner_id = 1
-    job_id = find_non_owned(test_jobs, owner_id)
-    data = [
-        {
-            "job_id": job_id,
-            "date": str(dt.datetime.now()),
-            "type": "received",
-            "owner_id": owner_id,
-            "note": "Test note",
-        }
-    ]
-    return data, owner_id
-
-
-@pytest.fixture
-def test_job_application_updates_unauthorised(
-    session, test_users, test_jobs, job_application_updates_unauthorised_data
-) -> tuple[list[models.JobApplicationUpdate], int]:
-    """Create test job application update data with incorrect job_id for access control testing"""
-
-    data, owner_id = job_application_updates_unauthorised_data
-    updates = create_job_application_updates(session, test_users, test_jobs, data)
-    return updates, owner_id
-
-
-@pytest.fixture
-def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[eis_models.ScrapedJob]:
-    """Create test job alert email jobs"""
-
-    return create_scraped_jobs(session, test_job_alert_emails, test_users)
-
-
-@pytest.fixture
-def test_eis_service_logs(session) -> list[eis_models.JobEmailScrapingServiceLog]:
-    """Create test service logs"""
-
-    return create_job_scraping_service_logs(session)
-
-
-@pytest.fixture
-def test_platform_stats(session, test_eis_service_logs) -> list[eis_models.JobEmailScrapingPlatformStat]:
-    """Create test platform stats"""
-
-    return create_job_scraping_platform_stats(session, test_eis_service_logs)
-
-
-@pytest.fixture
-def test_eis_service_errors(session, test_eis_service_logs) -> list[eis_models.JobEmailScrapingServiceError]:
-    """Create test job_email_scraping service errors"""
-
-    return create_job_scraping_service_errors(session, test_eis_service_logs)
-
-
-@pytest.fixture
-def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[eis_models.JobEmail]:
-    """Create test job alert emails"""
-
-    return create_job_alert_emails(session, test_users, test_eis_service_logs)
-
-
-@pytest.fixture
-def test_job_rating_service_logs(session) -> list[rating_models.JobRatingServiceLog]:
-    """Create test job rating service logs"""
-
-    return create_job_rating_service_logs(session)
-
-
-@pytest.fixture
-def test_job_ratings(
-    session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
-) -> list[rating_models.JobRating]:
-    """Create test job ratings"""
-
-    return create_job_ratings(
-        session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
-    )
+from app import models
+from tests.utils import test_data as td
+
+# Load fixtures from separate modules
+pytest_plugins = [
+    "tests.fixtures.database",
+    "tests.fixtures.clients",
+    "tests.fixtures.users",
+    "tests.fixtures.test_data",
+    "tests.fixtures.job_scraping",
+    "tests.fixtures.job_rating",
+]
 
 
 # -------------------------------------------------------- UTILS -------------------------------------------------------
@@ -523,25 +40,10 @@ def open_file(filepath: str) -> str:
     """Helper function to open a text file from the resources directory.
     :param filepath: The name of the file located in the resources directory"""
 
-    base_dir = os.path.dirname(__file__)  # directory of this test file
+    base_dir = os.path.dirname(__file__)
     filepath = os.path.join(base_dir, "resources", filepath)
     with open(filepath, "r", encoding="utf8") as ofile:
         return ofile.read()
-
-
-def assert_ownership(item: list | dict, owner_id: int) -> None:
-    """Assert that all items in a list belong to the specified owner.
-    :param item: The item or list of items to check.
-    :param owner_id: The expected owner ID."""
-
-    if isinstance(item, dict):
-        if "owner_id" in item:
-            assert item["owner_id"] == owner_id
-        for key in item:
-            assert_ownership(item[key], owner_id)
-    if isinstance(item, list):
-        for subitem in item:
-            assert_ownership(subitem, owner_id)
 
 
 def pytest_configure(config) -> None:
@@ -568,6 +70,18 @@ def pytest_collection_modifyitems(config, items) -> None:
             item.add_marker(pytest.mark.skip(reason="Skipping tests as per actions_to_test setting"))
 
 
+def assert_ownership(item: list | dict, owner_id: int) -> None:
+    """Assert that all items in a list belong to the specified owner."""
+    if isinstance(item, dict):
+        if "owner_id" in item:
+            assert item["owner_id"] == owner_id
+        for key in item:
+            assert_ownership(item[key], owner_id)
+    if isinstance(item, list):
+        for subitem in item:
+            assert_ownership(subitem, owner_id)
+
+
 class CRUDTestBase:
     """Base class for CRUD tests on FastAPI routes.
 
@@ -582,8 +96,7 @@ class CRUDTestBase:
     - get_unauthorised_fixture: str - name of pytest fixture providing data for access tests with incorrect ownership
     - unauthorised_data_fixture: str - name of pytest fixture providing data for creation tests with incorrect ownership
     - admin_only: bool - if True, only admin users can access the endpoint
-    - actions_to_test: list[str] - which CRUD actions to test (any subset of ["get", "post", "put", "delete"])
-    """
+    - actions_to_test: list[str] - which CRUD actions to test (any subset of ["get", "post", "put", "delete"])"""
 
     endpoint: str = ""
     create_schema = None
@@ -599,23 +112,18 @@ class CRUDTestBase:
 
     def check_output(
         self,
-        test_data: list[schemas.BaseModel] | list[dict] | dict | schemas.BaseModel,
+        test_data: Any,
         response_data: list[dict] | dict,
     ):
-        """Check that the output of a test matches the test data.
-        :param test_data: The test data to compare against.
-        :param response_data: The output data to compare against."""
-
+        """Check that the output of a test matches the test data."""
         if isinstance(test_data, list) and isinstance(response_data, list):
             assert len(test_data) == len(response_data)
             for d1, d2 in zip(test_data, response_data):
                 return self.check_output(d1, d2)
 
-        # Process the response
         if isinstance(response_data, dict):
             response_data = self.out_schema(**response_data)
 
-        # Use the test data keys for comparison
         if isinstance(test_data, dict):
             items = test_data.items()
         else:
@@ -627,11 +135,8 @@ class CRUDTestBase:
                 if isinstance(value, models.Base) or isinstance(value, list):
                     self.check_output(value, response_value)
                 elif key == "date" and isinstance(value, str):
-                    # Handle datetime string comparison using fromisoformat
                     if isinstance(response_value, dt.datetime):
-                        # Parse the string datetime and compare
                         parsed_value = dt.datetime.fromisoformat(value)
-                        # Handle timezone differences - normalize both to the same timezone state
                         if response_value.tzinfo is not None and parsed_value.tzinfo is None:
                             parsed_value = parsed_value.replace(tzinfo=dt.timezone.utc)
                         elif response_value.tzinfo is None and parsed_value.tzinfo is not None:
@@ -653,74 +158,62 @@ class CRUDTestBase:
 
     def get_all(self, client) -> Response:
         """Helper method to get all items from the endpoint."""
-
         return client.get(self.endpoint)
 
     def get_bulk(self, client, item_ids) -> Response:
         """Helper method to get bulk items from the endpoint."""
-
         strings = ["ids=" + str(i) for i in item_ids]
         return client.get(f"{self.endpoint}/?{'&'.join(strings)}")
 
     def get_one(self, client, item_id) -> Response:
         """Helper method to get one item from the endpoint."""
-
         return client.get(f"{self.endpoint}/{item_id}")
 
     def post(self, client, data) -> Response:
         """Helper method to post a new item to the endpoint."""
-
         return client.post(self.endpoint, json=data)
 
     def put(self, client: TestClient, item_id: int, data) -> Response:
         """Helper method to update an existing item in the endpoint."""
-
         return client.put(f"{self.endpoint}/{item_id}", json=data)
 
     def delete(self, client, item_id) -> Response:
         """Helper method to delete an existing item from the endpoint."""
-
         return client.delete(f"{self.endpoint}/{item_id}")
 
     # ----------------------------------------------------- CLIENTS ----------------------------------------------------
 
     def _get_authorised_client(self, authorised_clients) -> TestClient:
         """Get the appropriate authorised client based on admin_only setting."""
-
         if self.admin_only:
-            return authorised_clients[ADMIN_USER_INDEX]
+            return authorised_clients[td.ADMIN_USER_INDEX]
         else:
-            return authorised_clients[REGULAR_USER_INDEX]
+            return authorised_clients[td.REGULAR_USER_INDEX]
 
     def _get_admin_unauthorised_client(self, authorised_clients) -> TestClient:
         """Get a client that should be denied access."""
-
         if self.admin_only:
-            return authorised_clients[REGULAR_USER_INDEX]
+            return authorised_clients[td.REGULAR_USER_INDEX]
         else:
-            return authorised_clients[ADMIN_USER_INDEX]
+            return authorised_clients[td.ADMIN_USER_INDEX]
 
     def _get_admin_authorised_user(self, test_users) -> models.User:
         """Get the appropriate authorised user based on admin_only setting."""
-
         if self.admin_only:
-            return test_users[ADMIN_USER_INDEX]
+            return test_users[td.ADMIN_USER_INDEX]
         else:
-            return test_users[REGULAR_USER_INDEX]
+            return test_users[td.REGULAR_USER_INDEX]
 
     def get_user_data(self, test_users, data: list) -> list:
         """Get create_data filtered by owner_id based on admin_only setting."""
-
         user = self._get_admin_authorised_user(test_users)
         filtered_data = []
         for d in data:
-            # Determine if the user owns the data
             if isinstance(d, dict):
                 owner_condition = "owner_id" in d and d["owner_id"] == user.id
             else:
                 owner_condition = hasattr(d, "owner_id") and d.owner_id == user.id
 
-            # Filter based on admin_only setting
             if not self.admin_only:
                 if owner_condition:
                     filtered_data.append(d)
@@ -732,7 +225,6 @@ class CRUDTestBase:
     @pytest.fixture(autouse=True)
     def setup_method(self, request) -> None:
         """Fixture that runs before each test method."""
-
         if isinstance(self.required_fixture, list):
             for fixture in self.required_fixture:
                 request.getfixturevalue(fixture)
@@ -740,7 +232,6 @@ class CRUDTestBase:
     @pytest.fixture
     def test_data(self, request, test_users) -> list:
         """Fixture to get the test data from the specified fixture name."""
-
         return self.get_user_data(test_users, request.getfixturevalue(self.test_data_ref))
 
     # ----------------------------------------------------- GET ALL ----------------------------------------------------
@@ -751,11 +242,8 @@ class CRUDTestBase:
         authorised_clients,
         test_data,
     ) -> None:
-        """Test that an authorised users can successfully retrieve all items from the endpoint.
-        For admin only endpoints, uses admin user; otherwise regular user.
-        Verifies 200 OK response and validates the returned data matches expected test data."""
-
-        client = self._get_authorised_client(authorised_clients)  # admin user for admin_only endpoints
+        """Test that authorised users can successfully retrieve all items from the endpoint."""
+        client = self._get_authorised_client(authorised_clients)
         response = self.get_all(client)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data, response.json())
@@ -766,9 +254,7 @@ class CRUDTestBase:
         client: TestClient,
         test_data,
     ) -> None:
-        """Test that unauthenticated requests to get all items are rejected.
-        Verifies 401 response when no authentication is provided."""
-
+        """Test that unauthenticated requests to get all items are rejected."""
         response = self.get_all(client)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -778,9 +264,7 @@ class CRUDTestBase:
         authorised_clients,
         test_data,
     ) -> None:
-        """Test that non admin user requests to get all items are rejected for admin_only endpoints.
-        Verifies 403 response when the user is not an admin."""
-
+        """Test that non-admin users requests to get all items are rejected for admin_only endpoints."""
         if self.admin_only:
             client = self._get_admin_unauthorised_client(authorised_clients)
             response = self.get_all(client)
@@ -792,9 +276,7 @@ class CRUDTestBase:
         authorised_clients,
         request,
     ) -> None:
-        """Test that users only see data they own when retrieving all items (non-admin endpoints only).
-        Verifies proper data filtering based on ownership using the get_unauthorised_fixture."""
-
+        """Test that users only see data they own when retrieving all items (non-admin endpoints only)."""
         if not self.admin_only and self.get_unauthorised_fixture:
             owner_id = request.getfixturevalue(self.get_unauthorised_fixture)[1]
             response = self.get_all(authorised_clients[owner_id - 1])
@@ -812,10 +294,7 @@ class CRUDTestBase:
         authorised_clients,
         test_data,
     ) -> None:
-        """Test that an authorised users can successfully retrieve a specific item by ID.
-        For admin only endpoints, uses admin user; otherwise regular user.
-        Verifies 200 OK response and validates the returned data matches the requested item."""
-
+        """Test that authorised users can successfully retrieve a specific item by ID."""
         client = self._get_authorised_client(authorised_clients)
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_200_OK
@@ -827,9 +306,7 @@ class CRUDTestBase:
         client,
         test_data,
     ) -> None:
-        """Test that unauthenticated requests to get a specific item are rejected.
-        Verifies 401 Unauthorised response when no authentication is provided."""
-
+        """Test that unauthenticated requests to get a specific item are rejected."""
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -839,9 +316,7 @@ class CRUDTestBase:
         authorised_clients,
         test_data,
     ) -> None:
-        """Test that users are denied access to items they don't have permission to view.
-        For admin_only=True: non-admin users get 403; for admin_only=False: different users get 403."""
-
+        """Test that users are denied access to items they don't have permission to view."""
         client = self._get_admin_unauthorised_client(authorised_clients)
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -851,9 +326,7 @@ class CRUDTestBase:
         self,
         authorised_clients,
     ) -> None:
-        """Test that requests for non-existent items return a 404 error.
-        Verifies proper handling when the requested item ID doesn't exist in the database."""
-
+        """Test that requests for non-existent items return a 404 error."""
         client = self._get_authorised_client(authorised_clients)
         response = self.get_one(client, 0)
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -866,10 +339,7 @@ class CRUDTestBase:
         authorised_clients,
         test_users,
     ) -> None:
-        """Test that authorised users can successfully create new items.
-        For admin only endpoints, uses admin user; otherwise regular user.
-        Iterates through create_data examples, verifies 201 Created responses and validates returned data."""
-
+        """Test that authorised users can successfully create new items."""
         client = self._get_authorised_client(authorised_clients)
         for create_data in self.get_user_data(test_users, self.create_data):
             create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
@@ -882,9 +352,7 @@ class CRUDTestBase:
         self,
         client,
     ) -> None:
-        """Test that unauthenticated requests to create items are rejected.
-        Verifies 401 Unauthorised response when no authentication is provided."""
-
+        """Test that unauthenticated requests to create items are rejected."""
         response = self.post(client, {})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -894,9 +362,7 @@ class CRUDTestBase:
         authorised_clients,
         test_users,
     ) -> None:
-        """Test that non-admin users are denied access to create items on admin-only endpoints.
-        Only runs for admin_only=True endpoints, verifying 403 Forbidden responses."""
-
+        """Test that non-admin users are denied access to create items on admin-only endpoints."""
         if self.admin_only:
             client = self._get_admin_unauthorised_client(authorised_clients)
             for create_data in self.get_user_data(test_users, self.create_data):
@@ -910,9 +376,7 @@ class CRUDTestBase:
         authorised_clients,
         request,
     ) -> None:
-        """Test that users can successfully create data they own on non-admin endpoints.
-        Uses unauthorised_data_fixture to verify proper ownership validation during creation."""
-
+        """Test that users can successfully create data they own on non-admin endpoints."""
         if not self.admin_only and self.unauthorised_data_fixture:
             data, owner_id = request.getfixturevalue(self.unauthorised_data_fixture)[:2]
             for datum in data:
@@ -929,10 +393,7 @@ class CRUDTestBase:
         authorised_clients,
         test_data,
     ) -> None:
-        """Test that authorised users can successfully update existing items.
-        For admin only endpoints, uses admin user; otherwise regular user.
-        Verifies 200 OK response and validates the returned data matches the update_data."""
-
+        """Test that authorised users can successfully update existing items."""
         client = self._get_authorised_client(authorised_clients)
         response = self.put(client, self.update_data.get("id"), self.update_data)
         assert response.status_code == status.HTTP_200_OK
@@ -944,18 +405,14 @@ class CRUDTestBase:
         authorised_clients,
         test_data,
     ) -> None:
-        """Test that PUT requests with empty request bodies are rejected.
-        Verifies 400 Bad Request response when no update data is provided."""
-
+        """Test that PUT requests with empty request bodies are rejected."""
         client = self._get_authorised_client(authorised_clients)
         response = self.put(client, test_data[0].id, {})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     @pytest.mark.requires_actions("put")
     def test_put_non_exist(self, authorised_clients) -> None:
-        """Test that PUT requests for non-existent items return a 404 error.
-        Verifies proper handling when attempting to update an item that doesn't exist."""
-
+        """Test that PUT requests for non-existent items return a 404 error."""
         client = self._get_authorised_client(authorised_clients)
         response = self.put(client, 0, {})
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -966,17 +423,13 @@ class CRUDTestBase:
         client,
         test_data,
     ) -> None:
-        """Test that unauthenticated requests to update items are rejected.
-        Verifies 401 Unauthorised response when no authentication is provided."""
-
+        """Test that unauthenticated requests to update items are rejected."""
         response = self.put(client, test_data[0].id, {"name": "Test"})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.requires_actions("put")
     def test_put_forbidden(self, authorised_clients, test_data) -> None:
-        """Test that users are denied access to update items they don't have permission to modify.
-        For admin_only=True: non-admin users get 403; for admin_only=False: different users get 403."""
-
+        """Test that users are denied access to update items they don't have permission to modify."""
         client = self._get_admin_unauthorised_client(authorised_clients)
         response = self.put(client, test_data[0].id, {"name": "Test"})
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -989,9 +442,7 @@ class CRUDTestBase:
         authorised_clients,
         test_data,
     ) -> None:
-        """Test that authorised users can successfully delete existing items.
-        Verifies 204 No Content response indicating successful deletion."""
-
+        """Test that authorised users can successfully delete existing items."""
         client = self._get_authorised_client(authorised_clients)
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -1001,9 +452,7 @@ class CRUDTestBase:
         self,
         authorised_clients,
     ) -> None:
-        """Test that DELETE requests for non-existent items return a 404 error.
-        Verifies proper handling when attempting to delete an item that doesn't exist."""
-
+        """Test that DELETE requests for non-existent items return a 404 error."""
         client = self._get_authorised_client(authorised_clients)
         response = self.delete(client, 0)
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -1014,9 +463,7 @@ class CRUDTestBase:
         client,
         test_data,
     ) -> None:
-        """Test that unauthenticated requests to delete items are rejected.
-        Verifies 401 Unauthorised response when no authentication is provided."""
-
+        """Test that unauthenticated requests to delete items are rejected."""
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -1026,9 +473,7 @@ class CRUDTestBase:
         authorised_clients,
         test_data,
     ) -> None:
-        """Test that users are denied access to delete items they don't have permission to remove.
-        For admin_only=True: non-admin users get 403; for admin_only=False: different users get 403."""
-
+        """Test that users are denied access to delete items they don't have permission to remove."""
         client = self._get_admin_unauthorised_client(authorised_clients)
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN

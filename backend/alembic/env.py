@@ -8,7 +8,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from app.database import SQLALCHEMY_DATABASE_URL
-from app.model_registry import Base
+from app.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -51,6 +51,8 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        compare_type=True,
+        compare_server_default=True,
     )
 
     with context.begin_transaction():

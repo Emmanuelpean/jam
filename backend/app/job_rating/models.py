@@ -10,8 +10,43 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 from sqlalchemy.orm import relationship
 
+from app.base_models import Owned, CommonBase
 from app.database import Base
-from app.models import Owned, CommonBase, ServiceLog
+from app.service_runner.models import ServiceLog
+
+
+class AiSystemPrompt(CommonBase, Base):
+    """Represents AI system prompts for job ratings.
+
+    Attributes:
+    -----------
+    - `prompt` (str): The AI system prompt.
+
+    Relationships
+    -------------
+    - `job_ratings`: JobRating that used the system prompt to rate the job"""
+
+    prompt = Column(String, nullable=False)
+
+    # Relationships
+    job_ratings = relationship("JobRating", back_populates="system_prompt")
+
+
+class AiJobPromptTemplate(CommonBase, Base):
+    """Represents AI job prompt templates for job rating
+
+    Attributes:
+    -----------
+    - `prompt` (str): The AI job prompt template.
+
+    Relationships
+    -------------
+    - `job_ratings`: JobRating that used the system prompt to rate the job"""
+
+    prompt = Column(String, nullable=False)
+
+    # Relationships
+    job_ratings = relationship("JobRating", back_populates="job_prompt_template")
 
 
 class JobRating(Owned, Base):
@@ -25,7 +60,6 @@ class JobRating(Owned, Base):
     - `educational_score` (int, optional): Educational score for the job.
     - `interest_score` (int, optional): Interest score for the job.
     - `feedback` (str, optional): Additional feedback or comments about the job rating.
-    - `script_version` (int, optional): Version of the rating script used.
     - `is_success` (bool, optional): Indicates whether the rating process was successful.
     - `error` (str, optional): Error message if the rating process failed.
 
@@ -45,17 +79,23 @@ class JobRating(Owned, Base):
     educational_score = Column(Integer, nullable=True)
     interest_score = Column(Integer, nullable=True)
     feedback = Column(String, nullable=True)
-    script_version = Column(Integer, nullable=True)
     is_success = Column(Boolean, nullable=True)
     error = Column(String, nullable=True)
+    job_prompt = Column(String, nullable=True)
 
     # Foreign keys
     scraped_job_id = Column(Integer, ForeignKey("scraped_job.id", ondelete="CASCADE"), nullable=False)
     user_qualification_id = Column(Integer, ForeignKey("user_qualification.id", ondelete="CASCADE"), nullable=False)
+    system_prompt_id = Column(Integer, ForeignKey("ai_system_prompt.id", ondelete="SET NULL"), nullable=True)
+    job_prompt_template_id = Column(
+        Integer, ForeignKey("ai_job_prompt_template.id", ondelete="SET NULL"), nullable=True
+    )
 
     # Relationships
     scraped_job = relationship("ScrapedJob", back_populates="job_rating")
     user_qualification = relationship("UserQualification", back_populates="job_ratings")
+    system_prompt = relationship("AiSystemPrompt", back_populates="job_ratings")
+    job_prompt_template = relationship("AiJobPromptTemplate", back_populates="job_ratings")
 
 
 class JobRatingServiceLog(ServiceLog, CommonBase, Base):

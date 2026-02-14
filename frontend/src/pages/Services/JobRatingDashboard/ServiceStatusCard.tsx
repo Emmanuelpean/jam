@@ -1,6 +1,6 @@
 import React, { JSX } from "react";
 import { ActionButton } from "../../../components/rendering/form/ActionButton";
-import Spinner from "../../../components/spinner/Spinner";
+import Spinner from "../../../components/Spinner/Spinner";
 import { FormData } from "./JobRatingDashboardPage";
 import {
 	getServiceStatus,
@@ -35,21 +35,21 @@ export const ServiceStatusCard = ({
 				<div className="status-content">
 					<div className="status-indicators">
 						<div className="indicator-item">
+							<span className="indicator-label">Service Runner</span>
+							<span
+								className={`status-badge ${["started", "starting"].includes(status.service_runner_status) ? "badge-success" : "badge-danger"}`}
+							>
+								<i className={`bi ${serviceRunnerStatusIcons[status.service_runner_status]} me-2`}></i>
+								{serviceRunnerStatusLabels[status.service_runner_status]}
+							</span>
+						</div>
+						<div className="indicator-item">
 							<span className="indicator-label">Scraper Service</span>
 							<span
 								className={`status-badge ${status.service_running ? "badge-success" : "badge-danger"}`}
 							>
 								<i className={`bi ${getServiceStatus(status.service_running)} me-2`}></i>
 								{getServiceStatusMessage(status, remainingTime)}
-							</span>
-						</div>
-						<div className="indicator-item">
-							<span className="indicator-label">Service</span>
-							<span
-								className={`status-badge ${["started", "starting"].includes(status.service_runner_status) ? "badge-success" : "badge-danger"}`}
-							>
-								<i className={`bi ${serviceRunnerStatusIcons[status.service_runner_status]} me-2`}></i>
-								{serviceRunnerStatusLabels[status.service_runner_status]}
 							</span>
 						</div>
 					</div>
@@ -63,7 +63,7 @@ export const ServiceStatusCard = ({
 								formData.period_hours,
 								"Hour(s)",
 								status.service_runner_status === "stopped",
-								onFormChange,
+								onFormChange
 							)}
 						</div>
 					</div>

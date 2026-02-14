@@ -1,10 +1,10 @@
 import React, { JSX } from "react";
-import { JobRatingServiceLog } from "../../../services/Schemas";
+import { JobRatingServiceLogData } from "../../../services/schemas/Services";
 import { formatDuration } from "../../../utils/TimeUtils";
 import ProgressBar from "../ProgressBar/ProgressBar";
 
 interface LatestRunProgressProps {
-	latestLog: JobRatingServiceLog | null;
+	latestLog: JobRatingServiceLogData | null;
 	isRunning: boolean;
 }
 

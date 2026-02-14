@@ -1,4 +1,5 @@
 import React, { ReactNode } from "react";
+import { EntityType } from "../../../contexts/DataContext";
 
 export function getApplicationStatusBadgeClass(status: string | undefined): string {
 	switch (status?.toLowerCase()) {
@@ -27,25 +28,47 @@ export function getUpdateTypeIcon(type: string): string {
 
 export function getTableIcon(title: string): string {
 	const iconMap: Record<string, string> = {
-		Jobs: "bi-briefcase",
-		Companies: "bi-building",
-		Persons: "bi-people",
-		People: "bi-people",
-		Locations: "bi-geo-alt",
-		Tags: "bi-tags",
-		Interviews: "bi-calendar-event",
-		"Job Applications": "bi-person-workspace",
-		"Job Application Updates": "bi-bell",
-		"Job Aggregators": "bi-linkedin",
-		Users: "bi-person-lines-fill",
-		Settings: "bi-database-gear",
-		"User Settings": "bi-gear",
-		"TOAST Dashboard": "bi-envelope-arrow-down",
-		About: "bi-info-circle",
-		Admin: "bi-person-gear",
-		"Job Rating Dashboard": "bi-star-half",
+		Jobs: getEntityIcon("job"),
+		Companies: getEntityIcon("company"),
+		People: getEntityIcon("person"),
+		Locations: getEntityIcon("location"),
+		Tags: getEntityIcon("keyword"),
+		"Job Application Updates": getEntityIcon("jobApplicationUpdate"),
+		Interviews: getEntityIcon("interview"),
+		"Job Aggregators": getEntityIcon("aggregator"),
+		"Speculative Applications": getEntityIcon("speculativeApplication"),
+		Dashboard: "house-door",
+		"Job Applications": "person-workspace",
+		Users: getEntityIcon("user"),
+		Settings: getEntityIcon("setting"),
+		"Job Alerts": getEntityIcon("scrapedJob"),
+		"User Settings": "gear",
+		"Job Scraping Dashboard": "envelope-arrow-down",
+		About: "info-circle",
+		Admin: "person-gear",
+		"Job Rating Dashboard": "star-half",
+		Other: "three-dots",
 	};
 	return iconMap[title] || "bi-table";
+}
+
+export function getEntityIcon(entityType: EntityType): string {
+	const iconMap: Record<string, string> = {
+		job: "briefcase",
+		company: "building",
+		person: "people",
+		location: "geo-alt",
+		keyword: "tags",
+		interview: "calendar-event",
+		jobApplicationUpdate: "bell",
+		aggregator: "linkedin",
+		user: "person-lines-fill",
+		setting: "database-gear",
+		speculativeApplication: "envelope-paper",
+		scrapedJob: "inboxes",
+		scrapingFilter: "funnel",
+	};
+	return iconMap[entityType] || "";
 }
 
 export const getAdminIcon = (isAdmin: boolean): string => {
@@ -56,18 +79,10 @@ export const getAdminIcon = (isAdmin: boolean): string => {
 	}
 };
 
-export const getToastIcon = (toastActive: boolean): string => {
-	if (toastActive) {
-		return "bi bi-cup-hot text-success";
+export const getTrueFalseBadge = (value: boolean): ReactNode => {
+	if (value) {
+		return <i className="bi bi-check-circle text-success"></i>;
 	} else {
-		return "bi bi-cup text-danger";
-	}
-};
-
-export const getActiveBadge = (isActive: boolean): ReactNode => {
-	if (isActive) {
-		return <span className="badge bg-success">Active</span>;
-	} else {
-		return <span className="badge bg-secondary">Inactive</span>;
+		return <i className="bi bi-x-circle text-danger"></i>;
 	}
 };

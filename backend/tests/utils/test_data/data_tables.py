@@ -5,6 +5,8 @@ from itertools import groupby
 
 from tests.utils.test_data.utils import CURRENT_DATE, RESOURCE_FILES, DATE_FORMAT, DATETIME_FORMAT
 
+# ------------------------------------------------------ COMPANIES -----------------------------------------------------
+
 COMPANY_DATA = [
     {
         "name": "Tech Corp",
@@ -100,6 +102,7 @@ COMPANY_DATA = [
     },
 ]
 
+# ------------------------------------------------------ LOCATIONS -----------------------------------------------------
 
 LOCATION_DATA = [
     {
@@ -107,104 +110,280 @@ LOCATION_DATA = [
         "city": "New York",
         "country": "United States",
         "owner_id": 1,
+        "geolocation_id": 1,
     },
     {
         "postcode": "90210",
         "city": "Beverly Hills",
         "country": "United States",
         "owner_id": 1,
+        "geolocation_id": 2,
     },
     {
         "postcode": "SW1A 1AA",
         "city": "London",
         "country": "United Kingdom",
         "owner_id": 1,
+        "geolocation_id": 3,
     },
     {
         "city": "San Francisco",
         "country": "United States",
         "owner_id": 1,
+        "geolocation_id": 4,
     },
     {
         "country": "Germany",
         "owner_id": 1,
+        "geolocation_id": 5,
     },
     {
         "postcode": "OX1 2JD",
         "city": "Oxford",
         "country": "United Kingdom",
         "owner_id": 1,
+        "geolocation_id": 6,
     },
     {
         "country": "Canada",
         "owner_id": 1,
+        "geolocation_id": 7,
     },
     {
         "postcode": "75001",
         "city": "Paris",
         "country": "France",
         "owner_id": 1,
+        "geolocation_id": 8,
     },
     {
         "postcode": "10115",
         "country": "Germany",
         "owner_id": 1,
+        "geolocation_id": 9,
     },
     {
         "city": "Tokyo",
         "country": "Japan",
         "owner_id": 1,
+        "geolocation_id": 10,
     },
     {
         "postcode": "M5V 3A8",
         "city": "Toronto",
         "country": "Canada",
         "owner_id": 1,
+        "geolocation_id": 11,
     },
     {
         "city": "Amsterdam",
         "country": "Netherlands",
         "owner_id": 1,
+        "geolocation_id": 12,
     },
     {
         "country": "Brazil",
         "owner_id": 1,
+        "geolocation_id": 13,
     },
     {
         "postcode": "SW1A 1AA",
         "city": "London",
         "country": "United Kingdom",
         "owner_id": 2,
+        "geolocation_id": 3,  # Reuses same geolocation as index 2
     },
     {
         "postcode": "OX1 2JD",
         "city": "Oxford",
         "country": "United Kingdom",
         "owner_id": 2,
+        "geolocation_id": 6,  # Reuses same geolocation as index 5
     },
     {
         "postcode": "M1 1AA",
         "city": "Manchester",
         "country": "United Kingdom",
         "owner_id": 2,
+        "geolocation_id": 14,
     },
     {
         "city": "Edinburgh",
         "country": "United Kingdom",
         "owner_id": 2,
+        "geolocation_id": 15,
     },
     {
         "country": "United Kingdom",
         "owner_id": 2,
+        "geolocation_id": 16,
     },
     {
         "postcode": "BS1 1AA",
         "city": "Bristol",
         "country": "United Kingdom",
         "owner_id": 2,
+        "geolocation_id": 17,
     },
 ]
 
+# ---------------------------------------------------- GEOLOCATIONS ----------------------------------------------------
+
+GEOLOCATION_DATA = [
+    {
+        "query": "10001, New York, United States",
+        "latitude": 40.7485025,
+        "longitude": -73.9940331,
+        "postcode": "10001",
+        "city": "New York",
+        "county": "New York County",
+        "suburb": "Manhattan",
+        "state": "New York",
+        "country": "United States",
+    },
+    {
+        "query": "90210, Beverly Hills, United States",
+        "latitude": 34.0696501,
+        "longitude": -118.3963062,
+        "postcode": "90210",
+        "city": "Beverly Hills",
+        "county": "Los Angeles County",
+        "state": "California",
+        "country": "United States",
+    },
+    {
+        "query": "SW1A 1AA, London, United Kingdom",
+        "latitude": 51.5008349,
+        "longitude": -0.1430045,
+        "postcode": "SW1A 1AA",
+        "city": "London",
+        "county": "Greater London",
+        "suburb": "Westminster",
+        "state": "England",
+        "country": "United Kingdom",
+    },
+    {
+        "query": "San Francisco, United States",
+        "latitude": 37.7879363,
+        "longitude": -122.4075201,
+        "city": "San Francisco",
+        "county": "San Francisco County",
+        "state": "California",
+        "country": "United States",
+    },
+    {
+        "query": "Germany",
+        "latitude": 51.1638175,
+        "longitude": 10.4478313,
+        "country": "Deutschland",
+    },
+    {
+        "query": "OX1 2JD, Oxford, United Kingdom",
+        "latitude": 51.7583709,
+        "longitude": -1.2618709,
+        "postcode": "OX1 2JD",
+        "city": "Oxford",
+        "county": "Oxfordshire",
+        "suburb": "City Centre",
+        "state": "England",
+        "country": "United Kingdom",
+    },
+    {
+        "query": "Canada",
+        "latitude": 61.0666922,
+        "longitude": -107.991707,
+        "country": "Canada",
+    },
+    {
+        "query": "75001, Paris, France",
+        "latitude": 48.8618779,
+        "longitude": 2.3374139,
+        "postcode": "75001",
+        "city": "Paris",
+        "state": "Île-de-France",
+        "country": "France",
+    },
+    {
+        "query": "10115, Germany",
+        "latitude": 52.5319487,
+        "longitude": 13.3837943,
+        "postcode": "10115",
+        "city": "Berlin",
+        "suburb": "Mitte",
+        "state": "Berlin",
+        "country": "Deutschland",
+    },
+    {
+        "query": "Tokyo, Japan",
+        "latitude": 35.6768601,
+        "longitude": 139.7638947,
+        "city": "Tokyo",
+        "state": "Tokyo",
+        "country": "日本",
+    },
+    {
+        "query": "M5V 3A8, Toronto, Canada",
+        "latitude": 43.6477776,
+        "longitude": -79.3951973,
+        "postcode": "M5V 3A8",
+        "city": "Toronto",
+        "suburb": "Spadina—Fort York",
+        "state": "Ontario",
+        "country": "Canada",
+    },
+    {
+        "query": "Amsterdam, Netherlands",
+        "latitude": 52.3730796,
+        "longitude": 4.8924534,
+        "city": "Amsterdam",
+        "state": "Noord-Holland",
+        "country": "Nederland",
+    },
+    {
+        "query": "Brazil",
+        "latitude": -10.3333333,
+        "longitude": -53.2,
+        "country": "Brasil",
+    },
+    {
+        "query": "M1 1AA, Manchester, United Kingdom",
+        "latitude": 53.4626401,
+        "longitude": -2.2372955,
+        "postcode": "M15 6SZ",
+        "city": "Manchester",
+        "county": "Greater Manchester",
+        "suburb": "Moss Side",
+        "state": "England",
+        "country": "United Kingdom",
+    },
+    {
+        "query": "Edinburgh, United Kingdom",
+        "latitude": 55.9533456,
+        "longitude": -3.1883749,
+        "city": "Edinburgh",
+        "county": "City of Edinburgh",
+        "state": "Scotland",
+        "country": "United Kingdom",
+    },
+    {
+        "query": "United Kingdom",
+        "latitude": 54.7023545,
+        "longitude": -3.2765753,
+        "country": "United Kingdom",
+    },
+    {
+        "query": "BS1 1AA, Bristol, United Kingdom",
+        "latitude": 51.449515,
+        "longitude": -2.578372,
+        "postcode": "BS1 1AA",
+        "city": "Bristol",
+        "suburb": "Lawrence Hill",
+        "state": "England",
+        "country": "United Kingdom",
+    },
+]
+
+# ----------------------------------------------------- AGGREGATORS ----------------------------------------------------
 
 AGGREGATOR_DATA = [
     {
@@ -289,6 +468,7 @@ AGGREGATOR_DATA = [
     },
 ]
 
+# ------------------------------------------------------ KEYWORDS ------------------------------------------------------
 
 KEYWORD_DATA = [
     {
@@ -417,6 +597,7 @@ KEYWORD_DATA = [
     },
 ]
 
+# ------------------------------------------------------- PERSONS ------------------------------------------------------
 
 PERSON_DATA = [
     {
@@ -428,6 +609,7 @@ PERSON_DATA = [
         "role": "Senior Engineering Manager",
         "company_id": 1,
         "owner_id": 1,
+        "is_recruiter": True,
     },
     {
         "first_name": "Jane",
@@ -442,6 +624,7 @@ PERSON_DATA = [
         "first_name": "Mike",
         "last_name": "Taylor",
         "phone": "9876543210",
+        "email": "mike.taylor@company.com",
         "role": "Lead Developer",
         "company_id": 1,
         "owner_id": 1,
@@ -492,6 +675,7 @@ PERSON_DATA = [
         "role": "CTO",
         "company_id": 6,
         "owner_id": 1,
+        "is_recruiter": True,
     },
     {
         "first_name": "Maria",
@@ -575,6 +759,7 @@ PERSON_DATA = [
         "role": "Technical Recruiter",
         "company_id": 14,
         "owner_id": 2,
+        "is_recruiter": True,
     },
     {
         "first_name": "Catherine",
@@ -584,6 +769,7 @@ PERSON_DATA = [
         "role": "Senior Java Developer",
         "company_id": 15,
         "owner_id": 2,
+        "is_recruiter": True,
     },
     {
         "first_name": "Daniel",
@@ -604,6 +790,7 @@ PERSON_DATA = [
     },
 ]
 
+# -------------------------------------------------------- JOBS --------------------------------------------------------
 
 JOB_DATA = [
     {
@@ -619,7 +806,8 @@ JOB_DATA = [
         "note": "Excellent opportunity for senior developer",
         "attendance_type": "hybrid",
         "owner_id": 1,
-        "source_id": 1,
+        "source_aggregator_id": 1,
+        "source_type": "aggregator",
         "application_date": "2024-01-15T10:00:00",
         "application_url": "https://techcorp.com/apply/senior-python",
         "application_status": "applied",
@@ -642,7 +830,8 @@ JOB_DATA = [
         "note": "Great team culture mentioned in reviews",
         "attendance_type": "on-site",
         "owner_id": 1,
-        "source_id": 2,
+        "source_aggregator_id": 2,
+        "source_type": "aggregator_email",
         "application_date": "2024-01-16T14:30:00",
         "application_url": "https://startupxyz.com/apply/fullstack-js",
         "application_status": "interview",
@@ -663,7 +852,8 @@ JOB_DATA = [
         "company_id": 1,
         "location_id": 4,
         "owner_id": 1,
-        "source_id": 2,
+        "source_aggregator_id": 2,
+        "source_type": "aggregator",
         "application_date": "2024-01-17T09:15:00",
         "application_url": None,
         "application_status": "applied",
@@ -685,7 +875,8 @@ JOB_DATA = [
         "location_id": 3,
         "attendance_type": "hybrid",
         "owner_id": 1,
-        "source_id": 2,
+        "source_aggregator_id": 2,
+        "source_type": "aggregator",
         "application_date": "2024-01-18T16:45:00",
         "application_url": "https://startupxyz.com/careers/cloud-engineer",
         "application_status": "rejected",
@@ -707,7 +898,8 @@ JOB_DATA = [
         "location_id": 5,
         "attendance_type": "on-site",
         "owner_id": 1,
-        "source_id": 4,
+        "source_aggregator_id": 4,
+        "source_type": "aggregator",
         "application_date": None,
         "application_url": None,
         "application_status": None,
@@ -724,7 +916,8 @@ JOB_DATA = [
         "attendance_type": "hybrid",
         "salary_currency": "GBP",
         "owner_id": 1,
-        "source_id": 1,
+        "source_aggregator_id": 1,
+        "source_type": "aggregator",
         "application_date": "2024-01-20T13:30:00",
         "application_url": None,
         "application_status": "applied",
@@ -741,7 +934,8 @@ JOB_DATA = [
         "company_id": 3,
         "salary_currency": "GBP",
         "owner_id": 1,
-        "source_id": 7,
+        "source_aggregator_id": 7,
+        "source_type": "aggregator_email",
         "application_date": None,
         "application_url": None,
         "application_status": None,
@@ -757,7 +951,8 @@ JOB_DATA = [
         "location_id": 5,
         "attendance_type": "hybrid",
         "owner_id": 1,
-        "source_id": 9,
+        "source_aggregator_id": 9,
+        "source_type": "aggregator",
         "application_date": None,
         "salary_currency": "GBP",
         "application_url": None,
@@ -782,7 +977,8 @@ JOB_DATA = [
         "note": "Strong DevOps culture, great tools",
         "attendance_type": "hybrid",
         "owner_id": 1,
-        "source_id": 9,
+        "source_aggregator_id": 9,
+        "source_type": "aggregator",
         "application_date": "2024-01-21T09:00:00",
         "application_url": "https://cloudfirst.io/apply/devops",
         "application_status": "interview",
@@ -803,7 +999,8 @@ JOB_DATA = [
         "location_id": 9,
         "attendance_type": "remote",
         "owner_id": 1,
-        "source_id": 1,
+        "source_aggregator_id": 1,
+        "source_type": "aggregator",
         "application_date": "2024-01-22T11:15:00",
         "application_url": None,
         "application_status": "applied",
@@ -824,7 +1021,8 @@ JOB_DATA = [
         "location_id": 10,
         "attendance_type": "on-site",
         "owner_id": 1,
-        "source_id": 5,
+        "source_aggregator_id": 5,
+        "source_type": "aggregator_email",
         "application_date": "2024-01-23T15:45:00",
         "application_url": "https://enterprise-solutions.com/apply/vue-dev",
         "application_status": "rejected",
@@ -847,7 +1045,8 @@ JOB_DATA = [
         "note": "Small team, lots of autonomy",
         "attendance_type": "remote",
         "owner_id": 1,
-        "source_id": 7,
+        "source_aggregator_id": 7,
+        "source_type": "aggregator",
         "application_date": "2024-01-24T08:30:00",
         "application_url": None,
         "application_status": "applied",
@@ -868,7 +1067,8 @@ JOB_DATA = [
         "location_id": 12,
         "attendance_type": "on-site",
         "owner_id": 1,
-        "source_id": 8,
+        "source_aggregator_id": 8,
+        "source_type": "aggregator",
         "application_date": "2024-01-25T10:00:00",
         "application_url": None,
         "application_status": "interview",
@@ -887,6 +1087,8 @@ JOB_DATA = [
         "note": "Flexible hours, project-based",
         "attendance_type": "remote",
         "owner_id": 1,
+        "source_type": "recruiter",
+        "recruiter_id": 1,
         "application_date": None,
         "application_url": None,
         "application_status": None,
@@ -922,6 +1124,8 @@ JOB_DATA = [
         "attendance_type": "on-site",
         "owner_id": 1,
         "salary_currency": "GBP",
+        "source_type": "recruitment_company",
+        "recruitment_company_id": 3,
         "application_date": "2024-01-27T12:00:00",
         "application_url": None,
         "application_status": "applied",
@@ -942,6 +1146,7 @@ JOB_DATA = [
         "location_id": 1,
         "attendance_type": "hybrid",
         "owner_id": 1,
+        "source_type": "other",
         "application_date": "2024-01-28T14:20:00",
         "application_url": "https://enterprise-solutions.com/apply/high-salary",
         "application_status": "interview",
@@ -964,7 +1169,8 @@ JOB_DATA = [
         "note": "Great fintech experience opportunity",
         "attendance_type": "hybrid",
         "owner_id": 2,
-        "source_id": 14,
+        "source_aggregator_id": 14,
+        "source_type": "aggregator",
         "application_date": "2024-02-01T10:00:00",
         "application_status": "applied",
         "applied_via": "email",
@@ -982,7 +1188,8 @@ JOB_DATA = [
         "location_id": 17,
         "attendance_type": "remote",
         "owner_id": 2,
-        "source_id": 15,
+        "source_aggregator_id": 15,
+        "source_type": "aggregator_email",
         "application_date": "2024-02-03T14:30:00",
         "application_status": "interview",
         "applied_via": "aggregator",
@@ -1000,7 +1207,8 @@ JOB_DATA = [
         "location_id": 18,
         "attendance_type": "hybrid",
         "owner_id": 2,
-        "source_id": 15,
+        "source_aggregator_id": 15,
+        "source_type": "aggregator",
         "application_date": "2024-02-05T09:15:00",
         "application_status": "applied",
         "applied_via": "aggregator",
@@ -1018,7 +1226,8 @@ JOB_DATA = [
         "location_id": 19,
         "attendance_type": "on-site",
         "owner_id": 2,
-        "source_id": 14,
+        "source_aggregator_id": 14,
+        "source_type": "aggregator",
         "application_date": None,
         "application_status": None,
     },
@@ -1033,7 +1242,9 @@ JOB_DATA = [
         "location_id": 16,
         "attendance_type": "hybrid",
         "owner_id": 2,
-        "source_id": 15,
+        "source_aggregator_id": 15,
+        "source_type": "recruiter",
+        "recruiter_id": 9,
         "application_date": "2024-02-07T11:00:00",
         "application_status": "rejected",
         "applied_via": "email",
@@ -1051,7 +1262,8 @@ JOB_DATA = [
         "location_id": 16,
         "attendance_type": "on-site",
         "owner_id": 2,
-        "source_id": 13,
+        "source_aggregator_id": 13,
+        "source_type": "aggregator",
         "application_date": "2024-02-09T15:45:00",
         "application_status": "applied",
         "applied_via": "aggregator",
@@ -1069,8 +1281,9 @@ JOB_DATA = [
         "location_id": 6,
         "attendance_type": "on-site",
         "owner_id": 1,
-        "source_id": 3,
-        "deadline": (CURRENT_DATE + dt.timedelta(days=15)).strftime(DATE_FORMAT),
+        "source_aggregator_id": 3,
+        "source_type": "aggregator",
+        "deadline": (CURRENT_DATE + dt.timedelta(days=4)).strftime(DATE_FORMAT),
     },
     {
         "title": "Sustainability Software Engineer",
@@ -1081,18 +1294,60 @@ JOB_DATA = [
         "personal_rating": 3,
         "company_id": 2,
         "location_id": 4,
+        "source_type": "recruitment_company",
+        "recruitment_company_id": 5,
         "attendance_type": "on-site",
         "owner_id": 1,
-        "source_id": 2,
+        "source_aggregator_id": 2,
         "deadline": (CURRENT_DATE + dt.timedelta(days=20)).strftime(DATE_FORMAT),
     },
 ]
 
+# Set the job application datetime in the past few weeks
 JOB_APPLICATION_DATETIME = [CURRENT_DATE - dt.timedelta(weeks=i) for i in range(len(JOB_DATA))]
 for job_application, date in zip(JOB_DATA, JOB_APPLICATION_DATETIME):
     if job_application.get("application_date"):
         job_application["application_date"] = date.strftime(DATETIME_FORMAT)
 
+JOB_KEYWORD_MAPPINGS = [
+    {"job_id": 1, "keyword_ids": [1, 2, 6, 7]},
+    {"job_id": 2, "keyword_ids": [2, 3, 4, 13]},
+    {"job_id": 3, "keyword_ids": [3, 2, 14]},
+    {"job_id": 4, "keyword_ids": [12, 10, 11, 9]},
+    {"job_id": 5, "keyword_ids": [2, 3, 14, 15]},
+    {"job_id": 9, "keyword_ids": [9, 10, 11, 22, 23]},
+    {"job_id": 10, "keyword_ids": [8, 1, 18]},
+    {"job_id": 11, "keyword_ids": [16, 5, 2]},
+    {"job_id": 12, "keyword_ids": [2, 3, 4, 1]},
+    {"job_id": 13, "keyword_ids": [2, 14, 15]},
+    {"job_id": 15, "keyword_ids": [2, 3, 17]},
+    {"job_id": 18, "keyword_ids": [29, 26]},
+    {"job_id": 19, "keyword_ids": [28, 26]},
+    {"job_id": 20, "keyword_ids": [27, 26]},
+    {"job_id": 21, "keyword_ids": [27]},
+    {"job_id": 22, "keyword_ids": [26, 27]},
+]
+
+JOB_CONTACT_MAPPINGS = [
+    {"job_id": 1, "person_ids": [1, 3]},
+    {"job_id": 2, "person_ids": [2, 4]},
+    {"job_id": 3, "person_ids": [1]},
+    {"job_id": 4, "person_ids": [4]},
+    {"job_id": 5, "person_ids": [5]},
+    {"job_id": 9, "person_ids": [9]},
+    {"job_id": 10, "person_ids": [15]},
+    {"job_id": 11, "person_ids": [10]},
+    {"job_id": 12, "person_ids": [12]},
+    {"job_id": 13, "person_ids": [13]},
+    {"job_id": 15, "person_ids": [11, 16]},
+    {"job_id": 18, "person_ids": [20]},
+    {"job_id": 19, "person_ids": [18]},
+    {"job_id": 20, "person_ids": [17]},
+    {"job_id": 21, "person_ids": [20]},
+    {"job_id": 22, "person_ids": [21]},
+]
+
+# -------------------------------------------------------- FILES -------------------------------------------------------
 
 FILE_DATA = [
     {
@@ -1187,6 +1442,7 @@ FILE_DATA = [
     },
 ]
 
+# ----------------------------------------------------- INTERVIEWS -----------------------------------------------------
 
 INTERVIEW_DATA = [
     {
@@ -1352,12 +1608,35 @@ INTERVIEW_DATA = [
     },
 ]
 
+# Set the interviews date a few weeks after the job application date
 interviews_sorted = sorted(INTERVIEW_DATA, key=lambda x: x["job_id"])
 grouped = {k: list(v) for k, v in groupby(interviews_sorted, key=lambda x: x["job_id"])}
-for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
-    for i, update in enumerate(grouped[update_key]):
-        update["date"] = (date + dt.timedelta(weeks=4) * (i + 1)).strftime(DATETIME_FORMAT)
+for interview_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
+    for i, interview in enumerate(grouped[interview_key]):
+        interview["date"] = (date + dt.timedelta(weeks=4) * (i + 1)).strftime(DATETIME_FORMAT)
 
+
+INTERVIEW_INTERVIEWER_MAPPINGS = [
+    {"interview_id": 1, "person_ids": [1]},
+    {"interview_id": 2, "person_ids": [2]},
+    {"interview_id": 3, "person_ids": [3, 5]},
+    {"interview_id": 4, "person_ids": [1]},
+    {"interview_id": 5, "person_ids": [4]},
+    {"interview_id": 7, "person_ids": [9]},
+    {"interview_id": 8, "person_ids": [12, 11]},
+    {"interview_id": 9, "person_ids": [13]},
+    {"interview_id": 10, "person_ids": [16]},
+    {"interview_id": 11, "person_ids": [10, 15]},
+    {"interview_id": 12, "person_ids": [15]},
+    {"interview_id": 13, "person_ids": [19]},
+    {"interview_id": 14, "person_ids": [20]},
+    {"interview_id": 15, "person_ids": [18, 17]},
+    {"interview_id": 16, "person_ids": [20]},
+    {"interview_id": 17, "person_ids": [21]},
+    {"interview_id": 18, "person_ids": [17, 19]},
+]
+
+# ----------------------------------------------- JOB APPLICATION UPDATES ----------------------------------------------
 
 JOB_APPLICATION_UPDATE_DATA = [
     {
@@ -1509,69 +1788,51 @@ JOB_APPLICATION_UPDATE_DATA = [
     },
 ]
 
+# Set the job application update date a few weeks after the job application date
 job_application_updates_sorted = sorted(JOB_APPLICATION_UPDATE_DATA, key=lambda x: x["job_id"])
 grouped = {k: list(v) for k, v in groupby(job_application_updates_sorted, key=lambda x: x["job_id"])}
 for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
     for i, update in enumerate(grouped[update_key]):
         update["date"] = (date + dt.timedelta(weeks=4) * (i + 1)).strftime(DATETIME_FORMAT)
 
+# ---------------------------------------------- SPECULATIVE APPLICATIONS ----------------------------------------------
 
-JOB_KEYWORD_MAPPINGS = [
-    {"job_id": 1, "keyword_ids": [1, 2, 6, 7]},
-    {"job_id": 2, "keyword_ids": [2, 3, 4, 13]},
-    {"job_id": 3, "keyword_ids": [3, 2, 14]},
-    {"job_id": 4, "keyword_ids": [12, 10, 11, 9]},
-    {"job_id": 5, "keyword_ids": [2, 3, 14, 15]},
-    {"job_id": 9, "keyword_ids": [9, 10, 11, 22, 23]},
-    {"job_id": 10, "keyword_ids": [8, 1, 18]},
-    {"job_id": 11, "keyword_ids": [16, 5, 2]},
-    {"job_id": 12, "keyword_ids": [2, 3, 4, 1]},
-    {"job_id": 13, "keyword_ids": [2, 14, 15]},
-    {"job_id": 15, "keyword_ids": [2, 3, 17]},
-    {"job_id": 18, "keyword_ids": [29, 26]},
-    {"job_id": 19, "keyword_ids": [28, 26]},
-    {"job_id": 20, "keyword_ids": [27, 26]},
-    {"job_id": 21, "keyword_ids": [27]},
-    {"job_id": 22, "keyword_ids": [26, 27]},
+SPECULATIVE_APPLICATION_DATA = [
+    {
+        "date": "2025-01-08T09:30:00+0000",
+        "note": "Initial speculative application for a research scientist position.",
+        "contact_email": "careers@photonicsltd.com",
+        "company_id": 1,
+        "owner_id": 1,
+    },
+    {
+        "date": "2025-01-15T14:45:00+0000",
+        "contact_email": "hr@photonicsltd.com",
+        "company_id": 1,
+        "owner_id": 1,
+    },
+    {
+        "date": "2025-02-02T10:00:00+0000",
+        "note": "Speculative application submitted via company website.",
+        "company_id": 2,
+        "owner_id": 1,
+    },
+    {
+        "date": "2025-02-12T16:20:00+0000",
+        "note": "Reached out regarding potential R&D collaboration opportunities.",
+        "contact_email": "contact@nanomaterials.io",
+        "company_id": 13,  # InnovateTech Solutions (owned by user 2)
+        "owner_id": 2,
+    },
+    {
+        "date": "2025-03-01T11:10:00+0000",
+        "company_id": 7,
+        "owner_id": 1,
+    },
 ]
 
-
-JOB_CONTACT_MAPPINGS = [
-    {"job_id": 1, "person_ids": [1, 3]},
-    {"job_id": 2, "person_ids": [2, 4]},
-    {"job_id": 3, "person_ids": [1]},
-    {"job_id": 4, "person_ids": [4]},
-    {"job_id": 5, "person_ids": [5]},
-    {"job_id": 9, "person_ids": [9]},
-    {"job_id": 10, "person_ids": [15]},
-    {"job_id": 11, "person_ids": [10]},
-    {"job_id": 12, "person_ids": [12]},
-    {"job_id": 13, "person_ids": [13]},
-    {"job_id": 15, "person_ids": [11, 16]},
-    {"job_id": 18, "person_ids": [20]},
-    {"job_id": 19, "person_ids": [18]},
-    {"job_id": 20, "person_ids": [17]},
-    {"job_id": 21, "person_ids": [20]},
-    {"job_id": 22, "person_ids": [21]},
-]
-
-
-INTERVIEW_INTERVIEWER_MAPPINGS = [
-    {"interview_id": 1, "person_ids": [1]},
-    {"interview_id": 2, "person_ids": [2]},
-    {"interview_id": 3, "person_ids": [3, 5]},
-    {"interview_id": 4, "person_ids": [1]},
-    {"interview_id": 5, "person_ids": [4]},
-    {"interview_id": 7, "person_ids": [9]},
-    {"interview_id": 8, "person_ids": [12, 11]},
-    {"interview_id": 9, "person_ids": [13]},
-    {"interview_id": 10, "person_ids": [16]},
-    {"interview_id": 11, "person_ids": [10, 15]},
-    {"interview_id": 12, "person_ids": [15]},
-    {"interview_id": 13, "person_ids": [19]},
-    {"interview_id": 14, "person_ids": [20]},
-    {"interview_id": 15, "person_ids": [18, 17]},
-    {"interview_id": 16, "person_ids": [20]},
-    {"interview_id": 17, "person_ids": [21]},
-    {"interview_id": 18, "person_ids": [17, 19]},
+SPECULATIVE_APPLICATION_CONTACTS_MAPPING = [
+    {"speculative_application_id": 1, "contact_ids": [1]},
+    {"speculative_application_id": 2, "contact_ids": [4, 5, 3, 6]},
+    {"speculative_application_id": 3, "contact_ids": [4, 6, 8]},
 ]

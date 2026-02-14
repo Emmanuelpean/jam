@@ -3,11 +3,13 @@
 import csv
 import io
 import zipfile
+from typing import Iterable, Any
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
-from app import database, oauth2, models
+from app import database, models
+from app.core import oauth2
 
 router = APIRouter(prefix="/export", tags=["export"])
 
@@ -57,75 +59,180 @@ AGGREGATOR_FIELDS = {
     "modified_at": "Last Modified At",
 }
 
+SPECULATIVE_APPLICATION_FIELDS = {
+    "date": "Application Date",
+    "note": "Notes",
+    "contact_email": "Contact Email",
+    "created_at": "Created At",
+    "modified_at": "Last Modified At",
+}
+
+SCRAPED_JOB_FIELDS = {
+    "external_job_id": "External Job ID",
+    "platform": "Source",
+    "title": "Job Title",
+    "description": "Job Description",
+    "salary_min": "Min. Salary",
+    "salary_max": "Max. Salary",
+    "url": "Job URL",
+    "deadline": "Application Deadline",
+    "location": "Location",
+    "attendance_type": "Attendance Type",
+    "company": "Company",
+    "created_at": "Created At",
+    "modified_at": "Last Modified At",
+}
+
+
+def query_for_owner(
+    db,
+    model,
+    current_owner: models.User,
+) -> list[Any]:
+    """Return all records for the current owner.
+    :param db: Database session
+    :param model: SQLAlchemy model to query
+    :param current_owner: Current user
+    :return: List of model instances belonging to the current owner"""
+
+    return db.query(model).filter(model.owner_id == current_owner.id).all()
+
+
+def write_csv(
+    headers: list[str],
+    rows: Iterable[list[Any]],
+) -> str:
+    """Write CSV content to a string.
+    :param headers: List of CSV headers
+    :param rows: Iterable of rows, each row is a list of values
+    :return: CSV content as a string"""
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(headers)
+    for row in rows:
+        writer.writerow(row)
+    return output.getvalue()
+
+
+def get_model_rows(
+    instance,
+    fields: dict,
+) -> list[Any]:
+    """Extract ordered field values from a SQLAlchemy model.
+    :param instance: SQLAlchemy model instance
+    :param fields: Dictionary of field names to extract
+    :return: List of field values in the order of the fields dictionary"""
+
+    return [getattr(instance, field) for field in fields]
+
 
 @router.get("/")
-def export_jobs_with_all_columns(
+def export_all(
     db=Depends(database.get_db),
     current_user=Depends(oauth2.get_current_user),
 ) -> StreamingResponse:
-    """Export jobs with all columns (except IDs) and related data as a single CSV file."""
+    """Export all user data as a ZIP of CSV files.
+    :param db: Database session
+    :param current_user: Current authenticated user"""
 
     mem_zip = io.BytesIO()
 
-    with zipfile.ZipFile(mem_zip, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+    with zipfile.ZipFile(mem_zip, "w", zipfile.ZIP_DEFLATED) as zf:
+
         # Jobs
-        jobs = db.query(models.Job).filter(models.Job.owner_id == current_user.id).all()
-        job_output = io.StringIO()
-        job_writer = csv.writer(job_output)
-        additional_fields = [
-            "Company",
-            "Location",
-            "Source Aggregator",
-            "Application Aggregator",
-            "Keywords",
-            "Contacts",
-            "Interviews",
-            "Updates",
-        ]
-        job_writer.writerow(list(JOB_FIELDS.values()) + additional_fields)
+        jobs = query_for_owner(db, models.Job, current_user)
+        job_rows = []
         for job in jobs:
-            row = [getattr(job, field) for field in JOB_FIELDS]
-            company = job.company.name if job.company else ""
-            location = job.location.name if job.location else ""
-            source_agg = job.source.name if job.source else ""
-            app_agg = job.application_aggregator.name if job.application_aggregator else ""
-            keywords = "; ".join([k.name for k in job.keywords])
-            contacts = "; ".join([f"{p.first_name} {p.last_name}" for p in job.contacts])
-            interviews = "; ".join(
-                [f"{i.date.strftime('%Y-%m-%d')} ({i.type}) (notes: {i.note})" for i in job.interviews]
+            job_rows.append(
+                get_model_rows(job, JOB_FIELDS)
+                + [
+                    job.company.name if job.company else "",
+                    job.location.name if job.location else "",
+                    job.source_aggregator.name if job.source_aggregator else "",
+                    job.application_aggregator.name if job.application_aggregator else "",
+                    "; ".join(k.name for k in job.keywords),
+                    "; ".join(f"{p.first_name} {p.last_name}" for p in job.contacts),
+                    "; ".join(f"{i.date:%Y-%m-%d} ({i.type}) (notes: {i.note})" for i in job.interviews),
+                    "; ".join(f"{u.date:%Y-%m-%d} ({u.type}) (notes: {u.note})" for u in job.updates),
+                ]
             )
-            updates = "; ".join([f"{u.date.strftime('%Y-%m-%d')} ({u.type}) (notes: {u.note})" for u in job.updates])
-            job_writer.writerow(row + [company, location, source_agg, app_agg, keywords, contacts, interviews, updates])
-        zf.writestr("jobs.csv", job_output.getvalue())
+        zf.writestr(
+            "jobs.csv",
+            write_csv(
+                list(JOB_FIELDS.values())
+                + [
+                    "Company",
+                    "Location",
+                    "Source Aggregator",
+                    "Application Aggregator",
+                    "Keywords",
+                    "Contacts",
+                    "Interviews",
+                    "Updates",
+                ],
+                job_rows,
+            ),
+        )
 
         # People
-        people = db.query(models.Person).filter(models.Person.owner_id == current_user.id).all()
-        people_output = io.StringIO()
-        people_writer = csv.writer(people_output)
-        people_writer.writerow(list(PERSON_FIELDS.values()) + ["Company"])
-        for p in people:
-            company_name = p.company.name if p.company else ""
-            people_writer.writerow([getattr(p, field) for field in PERSON_FIELDS] + [company_name])
-        zf.writestr("people.csv", people_output.getvalue())
+        people = query_for_owner(db, models.Person, current_user)
+        zf.writestr(
+            "people.csv",
+            write_csv(
+                list(PERSON_FIELDS.values()) + ["Company"],
+                [get_model_rows(p, PERSON_FIELDS) + [p.company.name if p.company else ""] for p in people],
+            ),
+        )
 
         # Companies
-        companies = db.query(models.Company).filter(models.Company.owner_id == current_user.id).all()
-        companies_output = io.StringIO()
-        companies_writer = csv.writer(companies_output)
-        companies_writer.writerow(list(COMPANY_FIELDS.values()) + ["People"])
-        for c in companies:
-            people_list = "; ".join([f"{p.first_name} {p.last_name}" for p in c.persons])
-            companies_writer.writerow([getattr(c, field) for field in COMPANY_FIELDS] + [people_list])
-        zf.writestr("companies.csv", companies_output.getvalue())
+        companies = query_for_owner(db, models.Company, current_user)
+        zf.writestr(
+            "companies.csv",
+            write_csv(
+                list(COMPANY_FIELDS.values()) + ["People"],
+                [
+                    get_model_rows(c, COMPANY_FIELDS) + ["; ".join(f"{p.first_name} {p.last_name}" for p in c.persons)]
+                    for c in companies
+                ],
+            ),
+        )
 
         # Aggregators
-        aggregators = db.query(models.Aggregator).filter(models.Aggregator.owner_id == current_user.id).all()
-        aggregators_output = io.StringIO()
-        aggregators_writer = csv.writer(aggregators_output)
-        aggregators_writer.writerow(list(AGGREGATOR_FIELDS.values()))
-        for a in aggregators:
-            aggregators_writer.writerow([getattr(a, field) for field in AGGREGATOR_FIELDS])
-        zf.writestr("aggregators.csv", aggregators_output.getvalue())
+        aggregators = query_for_owner(db, models.Aggregator, current_user)
+        zf.writestr(
+            "aggregators.csv",
+            write_csv(
+                list(AGGREGATOR_FIELDS.values()),
+                [get_model_rows(a, AGGREGATOR_FIELDS) for a in aggregators],
+            ),
+        )
+
+        # Speculative Applications
+        spec_apps = query_for_owner(db, models.SpeculativeApplication, current_user)
+        zf.writestr(
+            "speculative_applications.csv",
+            write_csv(
+                list(SPECULATIVE_APPLICATION_FIELDS.values()) + ["Company"],
+                [
+                    get_model_rows(sa, SPECULATIVE_APPLICATION_FIELDS) + [sa.company.name if sa.company else ""]
+                    for sa in spec_apps
+                ],
+            ),
+        )
+
+        # Scraped Jobs
+        scraped_jobs = query_for_owner(db, models.ScrapedJob, current_user)
+        zf.writestr(
+            "scraped_jobs.csv",
+            write_csv(
+                list(SCRAPED_JOB_FIELDS.values()) + ["Rating"],
+                [
+                    get_model_rows(sj, SCRAPED_JOB_FIELDS) + [sj.job_rating.overall_score if sj.job_rating else None]
+                    for sj in scraped_jobs
+                ],
+            ),
+        )
 
     mem_zip.seek(0)
     return StreamingResponse(

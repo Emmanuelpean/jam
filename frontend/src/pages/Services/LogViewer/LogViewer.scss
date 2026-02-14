@@ -1,0 +1,108 @@
+.log-section {
+    margin-top: 20px;
+}
+
+.log-toggle {
+    font-size: 15px;
+    font-weight: 600;
+    width: 100%;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    text-align: left;
+    border: 1px solid var(--bs-card-border) !important;
+    border-radius: 6px;
+    background-color: var(--bs-card-bg);
+}
+
+.log-toggle:hover {
+    background-color: var(--bs-tertiary-bg);
+}
+
+.log-count {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--bs-muted-color);
+}
+
+.log-viewer {
+    overflow: hidden;
+    margin-top: 12px;
+    border-radius: 6px;
+    background-color: #1e1e1e;
+    overscroll-behavior: contain;
+}
+
+.log-header {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    color: #e0e0e0;
+    border-bottom: 1px solid #404040;
+    background-color: #2d2d2d;
+}
+
+.log-load-more {
+    font-size: 12px;
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+}
+
+.log-load-more:hover {
+    background-color: #0056b3;
+}
+
+.log-content {
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-y: auto;
+    max-height: 500px;
+    margin: 0;
+    padding: 16px;
+    color: #e0e0e0;
+}
+
+.log-line {
+    display: flex;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.log-line:hover {
+    background-color: #2d2d2d;
+}
+
+.log-line-number {
+    display: inline-block;
+    min-width: 3.5em;
+    margin-right: 1em;
+    padding-right: 1em;
+    user-select: none; /* Prevent selection when copying */
+    text-align: right;
+    color: #888;
+    border-right: 1px solid #444;
+}
+
+.log-line-content {
+    flex: 1;
+}
+
+.log-preview {
+    font-size: 0.9em;
+    font-style: italic;
+    display: inline-block;
+    overflow: hidden;
+    width: auto;
+    margin-left: 8px;
+    vertical-align: bottom;
+    white-space: nowrap;
+    color: #888;
+}

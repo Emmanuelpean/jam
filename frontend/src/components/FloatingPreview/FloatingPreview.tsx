@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
 import { Card } from "react-bootstrap";
 import { ModalViewField, ModalViewFields, renderModalViewField } from "../rendering/view/ModalFields";
-import "./FloatingPreview.css";
+import "./FloatingPreview.scss";
 import { getColumnClass, normaliseArray } from "../../utils/Utils";
 
 export interface FloatingPreviewProps {

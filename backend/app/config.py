@@ -1,8 +1,18 @@
 """JAM configuration"""
 
+from importlib.metadata import version, PackageNotFoundError
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def get_app_version() -> str:
+    """Get the current version of the app"""
+
+    try:
+        return version("jam")
+    except PackageNotFoundError:
+        return "0.0.0"
 
 
 class Settings(BaseSettings):
@@ -13,24 +23,30 @@ class Settings(BaseSettings):
     database_name: str
     database_username: str
 
-    # Authentication settings
+    # JWT settings
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
 
     # Application settings
-    min_password_length: int
+    app_version: str = get_app_version()
     max_file_size_mb: int
+    min_password_length: int
+    monthly_scrape_quota: int
+
+    # Other settings
     log_directory: str
+    test_mode: bool
 
     # Email configuration
-    email_username: str
-    email_password: str
+    main_email_username: str
+    main_email_password: str
+    scraper_email_username: str
+    scraper_email_password: str
     email_smtp_port: int
     email_smtp_host: str
     email_imap_port: int
     email_imap_host: str
-    scraper_email: str
     info_email: str
     support_email: str
 
@@ -40,24 +56,27 @@ class Settings(BaseSettings):
 
     # Verification settings
     verification_token_expiration_minutes: int
+    password_reset_token_expiration_minutes: int
+    email_change_token_expiration_minutes: int
     verification_email_min_interval_seconds: int
 
-    # Testing
-    test_mode: bool
-
-    # BrightAPI
+    # BrightData
     brightdata_api_key: str
     brightdata_linkedin_dataset_id: str
     brightdata_indeed_dataset_id: str
 
-    # AI Keys
+    # OpenAI
     openai_api_key: str
 
     # Apify
     apify_api_key: str
 
+    # Stripe
+    stripe_api_key: str
+    stripe_webhook_secret: str
+    stripe_toast_price_id: str
+
     model_config = SettingsConfigDict(
-        extra="ignore",
         env_file=Path(__file__).parent.parent / ".env",
     )
 

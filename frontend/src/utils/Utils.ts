@@ -1,8 +1,3 @@
-export interface Progress {
-	current: number;
-	total: number;
-}
-
 export const accessAttribute = (item: any, key: string | null | undefined) => {
 	if (!key) return item;
 	const parts = key.split(".");

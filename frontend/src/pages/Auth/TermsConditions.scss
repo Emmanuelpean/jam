@@ -1,0 +1,123 @@
+.terms-body {
+    background: var(--bg-primary);
+}
+
+.terms-modal .modal-dialog {
+    max-width: 1000px;
+}
+
+.terms-header {
+    color: white;
+    border-bottom: none;
+    padding: 1.5rem 2rem;
+}
+
+.terms-header .modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.terms-content {
+    padding: 2rem;
+    line-height: 1.6;
+}
+
+.terms-updated-date {
+    background: var(--primary-light);
+    border: 1px solid var(--primary-start);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+/* Bootstrap Card styling for each section */
+.terms-section {
+    margin-top: 2rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+/* Card Header styling */
+.terms-card-header {
+    color: var(--primary-mid);
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-number {
+    background: var(--primary-gradient);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.section-number span {
+    position: relative;
+    z-index: 1;
+}
+
+.terms-subsection {
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+}
+
+.terms-subsection-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.terms-text {
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.terms-list {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.terms-list li {
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    position: relative;
+}
+
+.terms-list li::marker {
+    color: var(--primary-mid);
+}
+
+.terms-footer {
+    padding: 1.5rem 2rem;
+    justify-content: center;
+    display: flex !important;
+}
+
+.terms-footer .btn {
+    min-width: 180px;
+    font-weight: 600;
+    text-transform: uppercase;
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+/* JAM theme enhancement for the updated date */
+.terms-updated-date i {
+    color: var(--primary-mid);
+}

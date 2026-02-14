@@ -5,20 +5,37 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app import service_runner, models as app_models
+from app import models
+from app.core.oauth2 import get_current_user
 from app.database import get_db
-from app.job_rating import models, schemas
+from app.job_rating import schemas
 from app.job_rating.scraped_job_rating import job_rating_service_runner, SERVICE_NAME
-from app.oauth2 import get_current_user
 from app.routers import generate_data_table_crud_router
+from app.service_runner import routers
 
-# ---------------------------------------------------- SCRAPED JOBS ----------------------------------------------------
+# --------------------------------------------------- AI SYSTEM PROMPT ---------------------------------------------------
+
+
+ai_system_prompt_router = APIRouter(prefix="/ai-system-prompts", tags=["ai-system-prompts"])
+
+
+@ai_system_prompt_router.get("/", response_model=list[schemas.AiSystemPromptOut])
+def get_all_ai_system_prompts(
+    _current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get all AI system prompts."""
+
+    return db.query(models.AiSystemPrompt).all()
+
+
+# ----------------------------------------------------- JOB RATING -----------------------------------------------------
 
 
 job_rating_router = generate_data_table_crud_router(
     table_model=models.JobRating,
     out_schema=schemas.JobRatingOut,
-    endpoint="job_ratings",
+    endpoint="job-ratings",
     not_found_msg="Job Rating not found",
     allowed_actions=["get_all"],
     admin_only=True,
@@ -29,7 +46,7 @@ job_rating_router = generate_data_table_crud_router(
 
 
 # Service Log router
-job_rating_service_log_router = APIRouter(prefix="/job_rating_service_logs", tags=["job_rating_service_logs"])
+job_rating_service_log_router = APIRouter(prefix="/job-rating-service-logs", tags=["job-rating-service-logs"])
 
 
 # GET endpoint for admins to get the service logs
@@ -39,7 +56,7 @@ def get_service_logs_by_date_range(
     end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),
     delta_days: int | None = Query(None, description="Number of days to go back in time"),
     limit: int | None = Query(None, description="Maximum number of logs to return"),
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Get service logs within a specified date range. Admin access required.
@@ -51,7 +68,7 @@ def get_service_logs_by_date_range(
     :param db: Database session
     :return: list of service logs within the date range ordered by run_datetime descending"""
 
-    return service_runner.get_service_logs_by_date_range(
+    return routers.get_service_logs_by_date_range(
         start_date,
         end_date,
         delta_days,
@@ -65,7 +82,7 @@ def get_service_logs_by_date_range(
 # GET endpoint for admin user to get the latest service log
 @job_rating_service_log_router.get("/latest", response_model=schemas.JobRatingServiceLogOut)
 def get_latest(
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Get the latest service log entry. Admin access required.
@@ -73,54 +90,54 @@ def get_latest(
     :param db: Database session
     :return: Latest service log entry"""
 
-    return service_runner.get_latest(current_user, db, models.JobRatingServiceLog)
+    return routers.get_latest(current_user, db, models.JobRatingServiceLog)
 
 
 # --------------------------------------------------- SERVICE RUNNER ---------------------------------------------------
 
 
-job_rating_service_router = APIRouter(prefix="/job_rating_service_runner", tags=["job_rating_service_runner"])
+job_rating_service_router = APIRouter(prefix="/job-rating-service-runner", tags=["job-rating-service-runner"])
 
 
 @job_rating_service_router.post("/start")
 def start_scraper(
     request: schemas.JobRatingServiceLogStartRequest,
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ) -> dict:
     """Start the email scraping service with the specified period.
     :param request: StartRequest object containing period_hours
     :param current_user: Current authenticated user"""
 
-    return service_runner.start_scraper(job_rating_service_runner, current_user, request.period_hours)
+    return routers.start_scraper(job_rating_service_runner, current_user, request.period_hours)
 
 
 @job_rating_service_router.post("/stop")
 def stop_scraper(
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ) -> dict:
     """Stop the email scraping service.
     :param current_user: Current authenticated user"""
 
-    return service_runner.stop_scraper(job_rating_service_runner, current_user)
+    return routers.stop_scraper(job_rating_service_runner, current_user)
 
 
 @job_rating_service_router.get("/status")
 def scraper_status(
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ) -> dict:
     """Get the current status of the email scraping service.
     :param current_user: Current authenticated user"""
 
-    return service_runner.scraper_status(job_rating_service_runner, current_user)
+    return routers.scraper_status(job_rating_service_runner, current_user)
 
 
 @job_rating_service_router.get("/logs")
 def get_scraper_logs(
     lines: int = Query(100, ge=1, le=10000),
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ):
     """Get the last N lines from the scraper log file
     :param lines: Number of lines to retrieve (default 100, max 10000)
     :param current_user: Current authenticated user"""
 
-    return service_runner.get_service_logs(SERVICE_NAME, lines, current_user)
+    return routers.get_service_logs(SERVICE_NAME, lines, current_user)

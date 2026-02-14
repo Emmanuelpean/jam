@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react";
 import { renderFunctions, RenderParams, RenderViewFieldWithContext, ViewField } from "./ViewRenders";
+import { ScrapedJobData } from "../../../services/schemas/Services";
 
 export interface ModalViewField extends ViewField {
 	label?: string;
@@ -56,6 +57,25 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	company: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "company",
+		label: "Company",
+		...overrides,
+	}),
+
+	location: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "location",
+		label: "Location",
+		...overrides,
+	}),
+
+	platform: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "platform",
+		label: "Aggregator",
+		render: (params: RenderParams) => renderFunctions.capitalise(params, "platform"),
+		...overrides,
+	}),
+
 	value: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "value",
 		label: "Value",
@@ -79,7 +99,6 @@ export const modalViewFields = {
 
 	applicationNote: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_note",
-		label: "Notes",
 		render: (params: RenderParams) => renderFunctions.applicationNote({ ...params, view: true }),
 		...overrides,
 	}),
@@ -91,13 +110,6 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	appTheme: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "theme",
-		label: "Theme",
-		render: renderFunctions.appTheme,
-		...overrides,
-	}),
-
 	isAdmin: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "is_admin",
 		label: "Admin",
@@ -105,10 +117,24 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	toastActive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "toast_active",
-		label: "TOAST",
-		render: renderFunctions.toastActive,
+	premiumActive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "premium_active",
+		label: "Premium Active",
+		render: renderFunctions.premiumActive,
+		...overrides,
+	}),
+
+	jobRatingActive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "job_rating_active",
+		label: "Job Rating Active",
+		render: renderFunctions.jobRatingActive,
+		...overrides,
+	}),
+
+	jobScrapingActive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "job_scraping_active",
+		label: "Job Rating Active",
+		render: renderFunctions.jobScrapingActive,
 		...overrides,
 	}),
 
@@ -143,6 +169,20 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	scrapingFilterName: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "name",
+		label: "Filter Name",
+		render: renderFunctions.scrapingFilterName,
+		...overrides,
+	}),
+
+	sourceType: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "source_type",
+		label: "Source",
+		render: renderFunctions.sourceType,
+		...overrides,
+	}),
+
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
 	url: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
@@ -163,6 +203,13 @@ export const modalViewFields = {
 		key: "email",
 		label: "Email",
 		render: (params: RenderParams) => renderFunctions.email({ ...params, view: true }),
+		...overrides,
+	}),
+
+	contactEmail: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "contact_email",
+		label: "Contact Email",
+		render: (params: RenderParams) => renderFunctions.contactEmail({ ...params, view: true }),
 		...overrides,
 	}),
 
@@ -202,10 +249,10 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	personBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	personBadges: (overrides: ModalViewFieldOverride = {}, menuItemKeys?: string[]): ModalViewField => ({
 		key: "person",
 		label: "Contacts",
-		render: (params: RenderParams) => renderFunctions.ContactBadges({ ...params, view: true }),
+		render: (params: RenderParams): ReactNode => renderFunctions.ContactBadges(params, menuItemKeys),
 		...overrides,
 	}),
 
@@ -230,10 +277,24 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	sourceBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	sourceAggregatorBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "source",
 		label: "Source Aggregator",
 		render: renderFunctions.SourceBadge,
+		...overrides,
+	}),
+
+	recruiterBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "recruiter_id",
+		label: "Source Recruiter",
+		render: renderFunctions.recruiterBadge,
+		...overrides,
+	}),
+
+	recruitmentCompanyBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "recruiter_company_id",
+		label: "Source Recruitment Company",
+		render: renderFunctions.recruitmentCompanyBadge,
 		...overrides,
 	}),
 
@@ -291,11 +352,26 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	isRecruiter: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "is_recruiter",
+		label: "Recruiter",
+		render: renderFunctions.isRecruiter,
+		...overrides,
+	}),
+
+	caseSensitive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "case_sensitive",
+		label: "Case Sensitive",
+		render: (params: RenderParams) => renderFunctions.caseSensitive({ ...params, view: true }),
+		...overrides,
+	}),
+
 	jobRating: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job_rating",
 		label: "Job Rating",
 		icon: "bi-stars",
 		render: (params: RenderParams) => renderFunctions.jobRating({ ...params, view: true }),
+		displayCondition: (item: ScrapedJobData): boolean => item.job_rating?.is_success === true,
 		...overrides,
 	}),
 
@@ -327,13 +403,26 @@ export const modalViewFields = {
 
 	accordionJobTableAggregator: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "jobs",
-		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "source_id"),
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "source_aggregator_id"),
 		...overrides,
 	}),
 
 	accordionJobTablePerson: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "jobs",
 		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "contacts"),
+		...overrides,
+	}),
+
+	accordionRecruitedJobTablePerson: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "recruited_jobs",
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "recruiter_id", "Recruited Jobs"),
+		...overrides,
+	}),
+
+	accordionRecruitedJobTableCompany: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "recruited_jobs",
+		render: (param: RenderParams) =>
+			renderFunctions._accordionJobTable(param, "recruitment_company_id", "Recruited Jobs"),
 		...overrides,
 	}),
 
@@ -364,6 +453,12 @@ export const modalViewFields = {
 	accordionPersonTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "persons",
 		render: renderFunctions.AccordionPersonTable,
+		...overrides,
+	}),
+
+	accordionScrapedJobTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "filtered_jobs",
+		render: renderFunctions.accordionScrapedJobTable,
 		...overrides,
 	}),
 

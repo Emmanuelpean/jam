@@ -1,9 +1,25 @@
-const API_BASE_URL: string = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
+import { ApiError } from "./ApiError";
 
-export interface ApiError extends Error {
-	status?: number;
-	data?: any;
-}
+export const API_BASE_URL: string = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
+export const API_SERVICE_URL: string = process.env.REACT_APP_API_SERVICE_URL || "http://localhost:8001";
+
+const parseResponseBody = async (response: Response): Promise<any> => {
+	if (response.status === 204) {
+		return null;
+	}
+
+	const contentType: string = response.headers.get("content-type") || "";
+
+	if (contentType.includes("application/json")) {
+		return response.json();
+	}
+
+	if (contentType.includes("text/")) {
+		return response.text();
+	}
+
+	return response.blob();
+};
 
 export interface QueryParams {
 	[key: string]: any;
@@ -13,64 +29,50 @@ export interface RequestOptions {
 	responseType?: "blob" | "json";
 }
 
-export interface CrudApi {
-	getAll: (token: string, queryParams?: QueryParams | null) => Promise<any>;
-	get: (id: number, token: string) => Promise<any>;
-	create: (data: any, token: string) => Promise<any>;
-	update: (id: number, data: any, token: string) => Promise<any>;
-	delete: (id: number, token: string) => Promise<any>;
-}
-
 const getAuthHeaders = (token: string): HeadersInit => ({
 	"Content-Type": "application/json",
 	...(token && { Authorization: `Bearer ${token}` }),
 });
 
-const handleResponse = async (response: Response, isBlob: boolean = false): Promise<any> => {
-	// Enhanced error handling
+export interface ApiResponse<T = any> {
+	data: T;
+	status: number;
+}
+
+export type ApiResponsePromise<T = any> = Promise<ApiResponse<T>>;
+
+const handleResponse = async <T>(response: Response, responseType?: boolean): Promise<ApiResponse<T>> => {
+	const data = responseType ? await response.blob() : await parseResponseBody(response);
+
 	if (!response.ok) {
-		const errorData = await response.json().catch(() => ({}));
-		const error: ApiError = new Error(errorData.detail);
-		error.status = response.status;
-		error.data = errorData;
-		throw error;
+		const message = (data && (data.message || data.detail)) || `Request failed with status ${response.status}`;
+
+		throw new ApiError(message, response.status, data);
 	}
 
-	if (isBlob) {
-		return response.blob();
-	}
-
-	// Handle empty responses (like DELETE 204 No Content)
-	const contentType = response.headers.get("content-type");
-	if (response.status === 204 || !contentType || !contentType.includes("application/json")) {
-		return null;
-	}
-
-	// Check if response has content before parsing JSON
-	const text = await response.text();
-	if (!text) {
-		return null;
-	}
-
-	try {
-		return JSON.parse(text);
-	} catch (error) {
-		console.warn("Failed to parse JSON response:", text);
-		return null;
-	}
+	return {
+		data,
+		status: response.status,
+	};
 };
 
-class ApiService {
-	async get(endpoint: string, token: string | null = null, options: RequestOptions = {}): Promise<any> {
-		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+export class ApiService {
+	private readonly baseUrl: string;
+
+	constructor(baseUrl: string) {
+		this.baseUrl = baseUrl;
+	}
+
+	async get(endpoint: string, token: string | null = null, options: RequestOptions = {}): ApiResponsePromise {
+		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "GET",
 			headers: getAuthHeaders(token || ""),
 		});
 		return handleResponse(response, options.responseType === "blob");
 	}
 
-	async post(endpoint: string, data: any, token: string | null = null): Promise<any> {
-		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+	async post(endpoint: string, data: any, token: string | null = null): ApiResponsePromise {
+		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "POST",
 			headers: getAuthHeaders(token || ""),
 			body: JSON.stringify(data),
@@ -78,8 +80,8 @@ class ApiService {
 		return handleResponse(response);
 	}
 
-	async put(endpoint: string, data: any, token: string | null = null): Promise<any> {
-		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+	async put(endpoint: string, data: any, token: string | null = null): ApiResponsePromise {
+		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "PUT",
 			headers: getAuthHeaders(token || ""),
 			body: JSON.stringify(data),
@@ -87,17 +89,18 @@ class ApiService {
 		return handleResponse(response);
 	}
 
-	async delete(endpoint: string, token: string | null = null): Promise<any> {
-		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+	async delete(endpoint: string, token: string | null = null, data: any = null): ApiResponsePromise {
+		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "DELETE",
 			headers: getAuthHeaders(token || ""),
+			...(data && { body: JSON.stringify(data) }),
 		});
 		return handleResponse(response);
 	}
 
-	async postFormData(endpoint: string, formData: FormData, token: string | null = null): Promise<any> {
+	async postFormData(endpoint: string, formData: FormData, token: string | null = null): ApiResponsePromise {
 		const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "POST",
 			headers,
 			body: formData,
@@ -106,11 +109,8 @@ class ApiService {
 	}
 
 	async downloadFile(endpoint: string, filename: string, token: string | null = null): Promise<void> {
-		// Use the existing get method with blob response type
 		const blob = await this.get(endpoint, token, { responseType: "blob" });
-
-		// Create download link and trigger download
-		const url: string = window.URL.createObjectURL(blob);
+		const url: string = window.URL.createObjectURL(blob.data);
 		const link: HTMLAnchorElement = document.createElement("a");
 		link.href = url;
 		link.download = filename;
@@ -121,35 +121,5 @@ class ApiService {
 	}
 }
 
-const api = new ApiService();
-
-export const createCrudApi = (endpoint: string): CrudApi => ({
-	getAll: (token: string, queryParams: QueryParams | null = null): Promise<any> => {
-		let url: string = `${endpoint}/`;
-		if (queryParams) {
-			const searchParams = new URLSearchParams();
-			Object.keys(queryParams).forEach((key: string): void => {
-				const value: any = queryParams[key];
-				if (value !== undefined) {
-					if (Array.isArray(value)) {
-						value.forEach((item): void => {
-							searchParams.append(key, String(item));
-						});
-					} else {
-						searchParams.append(key, String(value));
-					}
-				}
-			});
-			if (searchParams.toString()) {
-				url += `?${searchParams.toString()}`;
-			}
-		}
-		return api.get(url, token);
-	},
-	get: (id: string | number, token: string): Promise<any> => api.get(`${endpoint}/${id}`, token),
-	create: (data: any, token: string): Promise<any> => api.post(`${endpoint}/`, data, token),
-	update: (id: string | number, data: any, token: string): Promise<any> => api.put(`${endpoint}/${id}`, data, token),
-	delete: (id: string | number, token: string): Promise<any> => api.delete(`${endpoint}/${id}`, token),
-});
-
-export { api };
+export const baseApi = new ApiService(API_BASE_URL);
+export const serviceApi = new ApiService(API_SERVICE_URL);

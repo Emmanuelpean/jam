@@ -1,0 +1,299 @@
+@use "../../variables" as *;
+
+.auth-page-wrapper {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    min-height: 100%;
+}
+
+/* Left branding panel */
+.auth-branding-panel {
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    align-items: center;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-end), var(--primary-start));
+}
+
+.branding-content {
+    position: relative;
+    z-index: 1;
+    max-width: 550px;
+    text-align: center;
+}
+
+.branding-logo {
+    margin-bottom: 2rem;
+    user-select: none;
+
+    svg {
+        width: auto;
+        height: 150px;
+    }
+}
+
+.branding-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: rgb(255 255 255);
+    text-shadow: 0 2px 10px rgb(0 0 0 / 10%);
+}
+
+.branding-tagline {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 3rem;
+    color: rgb(255 255 255 / 85%);
+}
+
+.feature-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    text-align: left;
+}
+
+.feature-item {
+    font-size: 1rem;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    cursor: default;
+    transition: all 0.25s ease;
+    color: rgb(255 255 255 / 90%);
+    border-radius: 12px;
+    gap: 1rem;
+
+    &:hover {
+        z-index: 100;
+        background: rgb(255 255 255 / 10%);
+
+        .feature-tooltip {
+            visibility: visible;
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .feature-icon {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        transition: all 0.25s ease;
+        border-radius: 10px;
+        background: rgb(255 255 255 / 15%);
+
+        i {
+            font-size: 1.2rem;
+            color: #fff;
+        }
+    }
+
+    &:hover .feature-icon {
+        transform: scale(1.05);
+        background: rgb(255 255 255 / 25%);
+    }
+
+    .feature-text {
+        font-weight: 500;
+    }
+
+    .feature-tooltip {
+        font-size: 0.85rem;
+        font-weight: 400;
+        line-height: 1.4;
+        position: absolute;
+        z-index: 1000;
+        top: 100%;
+        right: 0;
+        left: 0;
+        visibility: hidden;
+        margin-top: 4px;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
+        transform: translateY(-8px);
+        pointer-events: none;
+        opacity: 0;
+        border-radius: 8px;
+        background: black;
+        box-shadow: 0 4px 20px rgb(0 0 0 / 30%);
+        backdrop-filter: blur(10px);
+
+        &::before {
+            position: absolute;
+            top: -6px;
+            left: 24px;
+            width: 12px;
+            height: 12px;
+            content: "";
+            transform: rotate(45deg);
+            border-radius: 2px;
+            background: rgb(0 0 0 / 85%);
+        }
+    }
+}
+
+/* Right form panel */
+.auth-form-panel {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1.25;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--bg-primary, #f8f9fa);
+}
+
+.auth-container {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    flex: 1;
+    width: 100%;
+    max-width: 550px;
+    padding: 20px;
+
+    &::before {
+        content: "";
+        flex: 1;
+    }
+}
+
+@media (width < $tablet-breakpoint) {
+    .auth-container {
+        max-width: 500px;
+    }
+}
+
+.auth-card {
+    width: 100%;
+    transition: height 0.3s ease-in-out;
+    border: 1px solid rgb(0 0 0 / 5%) !important;
+    border-radius: 16px !important;
+    background: var(--bg-secondary, #fff);
+    box-shadow: 0 10px 40px rgb(0 0 0 / 8%);
+}
+
+.auth-card .card-body {
+    padding: 0;
+}
+
+.auth-card .card-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+    text-align: center;
+    color: inherit !important;
+}
+
+.btn-link {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none !important;
+    color: var(--primary-mid) !important;
+    border: none !important;
+    background: none !important;
+}
+
+.btn-link:hover {
+    transform: translateY(-1px);
+}
+
+.card-footer {
+    margin-top: 1rem;
+    text-align: center;
+    border-top: 1px solid var(--border-color, #dee2e6);
+    background-color: transparent;
+}
+
+.card-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Mobile logo - always displayed when rendered */
+.auth-logo {
+    display: block;
+    margin-bottom: 2rem;
+}
+
+.logo-text-below {
+    font-size: 2.5rem !important;
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.logo-container-vertical {
+    flex-direction: column;
+    margin-top: 1rem;
+
+    svg {
+        height: 150px !important;
+    }
+}
+
+/* Welcome text above form */
+.auth-welcome-text {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--text-muted, #6c757d);
+}
+
+/* Try the app section under login card */
+.try-app-container {
+    flex: 1;
+    width: 100%;
+    max-width: 480px;
+}
+
+.try-app-divider {
+    position: relative;
+    margin: 1.5rem 0;
+    text-align: center;
+
+    &::before {
+        position: absolute;
+        top: 50%;
+        right: 0;
+        left: 0;
+        height: 1px;
+        content: "";
+        background: var(--border-color, #dee2e6);
+    }
+
+    span {
+        font-size: 0.85rem;
+        font-weight: 500;
+        position: relative;
+        display: inline-block;
+        padding: 0 1rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--text-muted, #6c757d);
+        background: var(--bg-primary, #f8f9fa);
+    }
+}
+
+.try-app-btn {
+    font-weight: 600;
+    width: 100%;
+    padding: 0.75rem 1.25rem;
+    transition: all 0.3s ease;
+    border-radius: 12px;
+
+    i {
+        font-size: 1.1rem;
+    }
+}

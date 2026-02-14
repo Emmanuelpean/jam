@@ -1,37 +1,21 @@
-import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authApi } from "../services/api/Users";
-import { ApiError } from "../services/api/Base";
-import { UserData } from "../services/Schemas";
+import { authApi, GenericResponse, LoginResponse, UpdateCurrentUserResponse } from "../services/api/Users";
+import { ApiResponse } from "../services/api/Base";
 import { DEFAULT_THEME } from "../utils/Theme";
+import { UserData, UserDataUpdate } from "../services/schemas/Core";
+import { handleApiError } from "../services/api/ApiError";
 
 export interface CurrentUser extends UserData {
 	token: string | null;
 }
 
-export interface AuthResponse {
-	success: boolean;
-	status?: number;
-	error?: string;
-}
-
-export interface LoginResponse {
-	access_token: string;
-}
-
-interface UpdateCurrentUserResponse {
-	user: UserData;
-	success: boolean;
-	message: string;
-	logged_out: boolean;
-}
-
 export interface AuthContextType {
 	currentUser: CurrentUser | null;
 	token: string | null;
-	login: (email: string, password: string) => Promise<AuthResponse>;
-	register: (email: string, password: string) => Promise<AuthResponse>;
-	updateCurrentUser: (userData: Partial<UserData>) => Promise<any>;
+	login: (email: string, password: string) => Promise<GenericResponse>;
+	updateCurrentUser: (userData: UserDataUpdate) => Promise<ApiResponse<UpdateCurrentUserResponse> | null>;
+	fetchUserInfo: (authToken: string) => Promise<void>;
 	logout: () => void;
 	isAuthenticated: boolean;
 }
@@ -44,6 +28,8 @@ export interface FormData {
 	email: string;
 	password: string;
 	confirmPassword: string;
+	firstName: string;
+	lastName: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,105 +48,92 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		return localStorage.getItem("token");
 	});
 	const [userFetched, setUserFetched] = useState<boolean>(false);
+	const hadTokenOnMount = useRef<boolean>(!!localStorage.getItem("token"));
 	const navigate = useNavigate();
 
 	const fetchUserInfo = useCallback(
 		async (authToken: string): Promise<void> => {
-			// Don't fetch if we already have user data and the token hasn't changed
-			if (userFetched && currentUser && token === authToken) {
-				return;
-			}
-
 			try {
-				const userData: UserData = await authApi.getCurrentUser(authToken);
-				setCurrentUser({
-					token: token,
-					...userData,
-				});
-				setUserFetched(true);
-			} catch (error) {
-				const apiError = error as ApiError;
-				console.error("Failed to fetch user info:", apiError);
+				const userData: ApiResponse<UserData> = await authApi.getCurrentUser(authToken);
 
-				// If token is invalid, clear it
-				if (apiError.status === 401 || apiError.status === 403) {
+				setCurrentUser({
+					token: authToken,
+					...userData.data,
+				});
+			} catch (error) {
+				console.error("Failed to fetch user info:", error);
+
+				const { status } = handleApiError(error);
+
+				// Invalid token — log out user
+				if (status === 401 || status === 403) {
 					localStorage.removeItem("token");
 					setToken(null);
 					setCurrentUser(null);
 				} else {
-					// If it's a network error, set basic auth state without admin
-					// We can't create a valid CurrentUser without email, so set to null
-					// The user will remain logged in via the token, but without user data
 					setCurrentUser(null);
-					setUserFetched(true);
 				}
+			} finally {
+				setUserFetched(true);
 			}
 		},
-		[userFetched, currentUser, token],
+		[token, setToken, setCurrentUser, setUserFetched]
 	);
 
-	const updateCurrentUser = async (userData: Partial<UserData>) => {
+	const updateCurrentUser = async (
+		userData: UserDataUpdate
+	): Promise<ApiResponse<UpdateCurrentUserResponse> | null> => {
 		if (!token) return null;
-		const response: UpdateCurrentUserResponse = await authApi.updateCurrentUser(userData, token);
-		if (response.logged_out) {
+		const response: ApiResponse<UpdateCurrentUserResponse> = await authApi.updateCurrentUser(userData, token);
+		if (response.data.logged_out) {
 			logout();
 			return response;
 		}
-		const userResponse: UserData = await authApi.getCurrentUser(token);
-		setCurrentUser((prev: CurrentUser | null) => (prev ? { ...prev, ...userResponse } : prev));
+		const userResponse: ApiResponse<UserData> = await authApi.getCurrentUser(token);
+		setCurrentUser((prev: CurrentUser | null): CurrentUser | null =>
+			prev ? { ...prev, ...userResponse.data } : prev
+		);
 		return response;
 	};
 
-	useEffect(() => {
-		document.documentElement.setAttribute("data-theme", currentUser?.theme || DEFAULT_THEME);
+	useEffect((): void => {
+		document.documentElement.setAttribute("data-theme", currentUser?.preferences.theme || DEFAULT_THEME);
 	}, [currentUser]);
 
 	// Check if token exists on load and fetch user info
-	useEffect(() => {
+	useEffect((): void => {
 		// Only fetch user info if we have a token and haven't fetched yet
 		if (token && !userFetched) {
 			fetchUserInfo(token).then(() => null);
 		}
 	}, [token, userFetched, fetchUserInfo]);
 
-	const login = async (email: string, password: string): Promise<AuthResponse> => {
-		try {
-			const data: LoginResponse = await authApi.login(email, password);
-			if (data.access_token) {
-				localStorage.setItem("token", data.access_token);
-				setToken(data.access_token);
-				setUserFetched(false);
-
-				// Fetch user info after successful login
-				await fetchUserInfo(data.access_token);
-			}
-
-			return { success: true };
-		} catch (error) {
-			const apiError = error as ApiError;
-			return {
-				success: false,
-				error: apiError.message,
-				status: apiError.status,
-			};
+	// Record last login only for returning users (token already in localStorage on mount)
+	useEffect((): void => {
+		if (hadTokenOnMount.current && token) {
+			authApi.heartbeat(token).catch(() => null);
 		}
-	};
+	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-	const register = async (email: string, password: string): Promise<AuthResponse> => {
-		try {
-			await authApi.register(email, password);
-			return { success: true };
-		} catch (error) {
-			const apiError = error as ApiError;
-			return {
-				success: false,
-				error: apiError.message,
-				status: apiError.status,
-			};
+	const login = async (email: string, password: string): Promise<GenericResponse> => {
+		const data: ApiResponse<LoginResponse> = await authApi.login(email, password);
+		if (data.data.access_token) {
+			localStorage.setItem("token", data.data.access_token);
+			setToken(data.data.access_token);
+			setUserFetched(false);
+
+			// Fetch user info after successful login
+			await fetchUserInfo(data.data.access_token);
 		}
+		return { success: true, message: "Login successful", error_code: null };
 	};
 
 	const logout = (): void => {
+		// Fire-and-forget demo cleanup if this is a demo user
+		if (currentUser?.is_demo && token) {
+			authApi.demoCleanup(token).catch(() => null);
+		}
+
 		localStorage.removeItem("token");
 		setToken(null);
 		setCurrentUser(null);
@@ -170,9 +143,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 	const value: AuthContextType = {
 		currentUser,
+		fetchUserInfo,
 		token,
 		login,
-		register,
 		logout,
 		updateCurrentUser,
 		isAuthenticated: !!token,

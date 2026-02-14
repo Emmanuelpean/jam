@@ -1,22 +1,27 @@
 import React, { useState } from "react";
-import { Card, Col, Row } from "react-bootstrap";
+import { Col, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import "./DashboardPage.css";
-import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, EnrichedJobData } from "../../services/Schemas";
-import JobsToChase from "../../components/tables/JobsToChase";
-import UpcomingDeadlinesTable from "../../components/tables/UpcomingDeadlines";
+import "./DashboardPage.scss";
+import {
+	EnrichedInterviewData,
+	EnrichedJobApplicationUpdateData,
+	EnrichedJobData,
+} from "../../services/schemas/DataTables";
+import JobsToChase from "../../components/DataTable/JobsToChase";
+import UpcomingDeadlinesTable from "../../components/DataTable/UpcomingDeadlines";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { StatCard } from "./StatCard";
-import { CardHeader } from "./CardHeader";
+import { DashboardCard } from "./DashboardCard";
 import {
 	ActivityFeedCard,
 	RecentActivity,
 	renderRecentActivityItem,
 	renderUpcomingInterviewItem,
 } from "./ActivityFeed";
-import ScrapedJobsTable from "../../components/tables/ScrapedJobTable";
+import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
 import { scrapedJobApi } from "../../services/api/Services";
 import { sortByKey } from "../../utils/Utils";
+import { getEntityIcon } from "../../components/rendering/view/Icons";
 
 const Dashboard: React.FC = () => {
 	const dataContext: DataContextValue = useDataContext();
@@ -29,22 +34,24 @@ const Dashboard: React.FC = () => {
 	const now = new Date();
 
 	const jobApplications: EnrichedJobData[] = dataContext.jobs.filter(
-		(job: EnrichedJobData): Date | string | null | undefined => job.application_date || job.application_status,
+		(job: EnrichedJobData): Date | string | null | undefined => job.application_date || job.application_status
 	);
 
 	const jobApplicationPending: EnrichedJobData[] = jobApplications.filter(
 		(job: EnrichedJobData): boolean | string | null | undefined =>
-			job.application_status && !["rejected", "withdrawn"].includes(job.application_status),
+			job.application_status && !["rejected", "withdrawn"].includes(job.application_status)
 	);
 
 	const needsChase: EnrichedJobData[] = jobApplicationPending.filter(
-		(job: EnrichedJobData): boolean | 0 | null | undefined =>
+		(job: EnrichedJobData) =>
 			job.days_since_last_update &&
-			job.days_since_last_update > currentUser.chase_threshold &&
-			(!job.followup_snooze_datetime || job.followup_snooze_datetime <= now),
+			job.days_since_last_update > currentUser.preferences.chase_threshold &&
+			(!job.followup_snooze_datetime || job.followup_snooze_datetime <= now) &&
+			job.application_status &&
+			!["rejected", "offer", "withdrawn"].includes(job.application_status)
 	);
 
-	const thresholdDate = new Date(now.getTime() + currentUser.deadline_threshold * 24 * 60 * 60 * 1000);
+	const thresholdDate = new Date(now.getTime() + currentUser.preferences.deadline_threshold * 24 * 60 * 60 * 1000);
 
 	const upcomingDeadlines: EnrichedJobData[] = dataContext.jobs.filter(
 		(job: EnrichedJobData) =>
@@ -52,14 +59,14 @@ const Dashboard: React.FC = () => {
 			!job.application_status &&
 			job.deadline &&
 			new Date(job.deadline) > now &&
-			new Date(job.deadline) <= thresholdDate,
+			new Date(job.deadline) <= thresholdDate
 	);
 
 	const upcomingInterviews: EnrichedInterviewData[] = sortByKey(
 		dataContext.interviews.filter(
-			(interview: EnrichedInterviewData): boolean | null | undefined => new Date(interview.date!) >= now,
+			(interview: EnrichedInterviewData): boolean | null | undefined => new Date(interview.date!) >= now
 		),
-		"date",
+		"date"
 	);
 
 	const allUpdates: RecentActivity[] = [];
@@ -101,10 +108,10 @@ const Dashboard: React.FC = () => {
 	});
 
 	allUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-	const recentActivity = allUpdates.slice(0, currentUser.update_limit);
+	const recentActivity = allUpdates.slice(0, currentUser.preferences.update_limit);
 
 	scrapedJobApi.getCount(token || "").then((count) => {
-		setScrapedJobCount(count.count);
+		setScrapedJobCount(count.data.count);
 	});
 
 	return (
@@ -154,7 +161,6 @@ const Dashboard: React.FC = () => {
 					<ActivityFeedCard
 						icon="clock-history"
 						title="Recent Activity"
-						subtitle="Latest job applications, interviews and updates"
 						badgeValue={recentActivity.length}
 						emptyIcon="inbox"
 						emptyTitle="No recent activity"
@@ -164,44 +170,43 @@ const Dashboard: React.FC = () => {
 					/>
 				</Col>
 				<Col xs={12} lg={8} className="table-column order-lg-2">
-					<Card className="shadow-sm border-0 h-100 d-flex flex-column">
-						<CardHeader
-							icon="telephone"
-							title="Applications Requiring Follow-up"
-							subtitle="Jobs that need your attention"
-							badgeValue={needsChase.length}
-						/>
-						<Card.Body className="p-0 flex-grow-1 overflow-auto">
-							<div className="px-3">
-								<JobsToChase data={needsChase} menuItems={["view", "edit", "snooze", "delete"]} />
-							</div>
-						</Card.Body>
-					</Card>
+					<DashboardCard
+						icon="telephone"
+						title="Applications Requiring Follow-up"
+						badgeValue={needsChase.length}
+						isEmpty={needsChase.length === 0}
+						emptyState={{
+							icon: "telephone-x",
+							title: "No follow-ups needed",
+							description: "All your applications are up to date",
+						}}
+					>
+						<JobsToChase data={needsChase} />
+					</DashboardCard>
 				</Col>
 			</Row>
 
 			{/* Second section: Upcoming Deadlines (left on desktop) and Upcoming Interviews */}
 			<Row className="g-4 mb-4">
 				<Col xs={12} lg={8} className="table-column order-lg-1">
-					<Card className="shadow-sm border-0 h-100 d-flex flex-column">
-						<CardHeader
-							icon="clock"
-							title="Upcoming Deadlines"
-							subtitle="Jobs that need your attention"
-							badgeValue={upcomingDeadlines.length}
-						/>
-						<Card.Body className="p-0 flex-grow-1 overflow-auto">
-							<div className="px-3">
-								<UpcomingDeadlinesTable data={upcomingDeadlines} />
-							</div>
-						</Card.Body>
-					</Card>
+					<DashboardCard
+						icon="clock"
+						title="Upcoming Deadlines"
+						badgeValue={upcomingDeadlines.length}
+						isEmpty={upcomingDeadlines.length === 0}
+						emptyState={{
+							icon: "calendar-check",
+							title: "No upcoming deadlines",
+							description: "You have no application deadlines approaching",
+						}}
+					>
+						<UpcomingDeadlinesTable data={upcomingDeadlines} />
+					</DashboardCard>
 				</Col>
 				<Col xs={12} lg={4} className="activity-column order-lg-2">
 					<ActivityFeedCard
 						icon="calendar-event"
 						title="Upcoming Interviews"
-						subtitle="Scheduled interviews"
 						badgeValue={upcomingInterviews.length}
 						emptyIcon="calendar-x"
 						emptyTitle="No upcoming interviews"
@@ -211,38 +216,26 @@ const Dashboard: React.FC = () => {
 					/>
 				</Col>
 			</Row>
-			{currentUser?.toast_active && (
+			{currentUser?.premium.is_active && (
 				<Row className="g-4 mb-4">
-					<Col lg={12} className="table-column order-lg-1">
-						<Card
-							className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
-							style={{ height: "100%", minHeight: 0 }}
+					<Col lg={12} className="toast-table order-lg-1">
+						<DashboardCard
+							icon={getEntityIcon("scrapedJob")}
+							title="Job Alerts"
+							subtitle="Jobs that you received from job boards"
+							badgeValue={scrapedJobCount}
+							path="/scraped-jobs"
+							isEmpty={scrapedJobCount === 0}
+							emptyState={{
+								icon: "bell-slash",
+								title: "No job alerts",
+								description: "Job alerts from your scrapers will appear here",
+							}}
 						>
-							<CardHeader
-								icon="inbox"
-								title="Job Alerts"
-								subtitle="Jobs that you received from job boards"
-								badgeValue={scrapedJobCount}
-							/>
-							<Card.Body
-								className="p-0 flex-grow-1 d-flex flex-column"
-								style={{ height: "100%", minHeight: 0 }}
-							>
-								<div
-									style={{
-										flexGrow: 1,
-										overflowY: "auto",
-										minHeight: 0,
-										paddingTop: "10px",
-										paddingBottom: "20px",
-									}}
-								>
-									<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
-										<ScrapedJobsTable />
-									</div>
-								</div>
-							</Card.Body>
-						</Card>
+							<div style={{ paddingTop: "10px", paddingBottom: "20px" }}>
+								<ScrapedJobsTable />
+							</div>
+						</DashboardCard>
 					</Col>
 				</Row>
 			)}

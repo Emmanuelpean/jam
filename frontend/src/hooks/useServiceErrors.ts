@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
-import { JobScraperServiceLog, ServiceError } from "../services/Schemas";
+import { JobScrapingServiceLogData, ServiceError } from "../services/schemas/Services";
 import { normaliseArray } from "../utils/Utils";
 
-export const useServiceErrors = (latestLog: JobScraperServiceLog | JobScraperServiceLog[] | null) => {
+export const useServiceErrors = (latestLog: JobScrapingServiceLogData | JobScrapingServiceLogData[] | null) => {
 	const [serviceErrors, setServiceErrors] = useState<Record<string, number>>({});
+	const [loading, setLoading] = useState<boolean>(false);
 
 	useEffect(() => {
 		if (!latestLog) return;
 
 		const fetchErrors = async (): Promise<void> => {
+			setLoading(true);
 			try {
-				const logs: JobScraperServiceLog[] = normaliseArray(latestLog);
+				const logs: JobScrapingServiceLogData[] = normaliseArray(latestLog);
 				const allErrors: ServiceError[] = logs.flatMap(
-					(log: JobScraperServiceLog): ServiceError[] => log.service_errors,
+					(log: JobScrapingServiceLogData): ServiceError[] => log.service_errors
 				);
 
 				// Count errors by message
@@ -25,11 +27,13 @@ export const useServiceErrors = (latestLog: JobScraperServiceLog | JobScraperSer
 				setServiceErrors(errorCounts);
 			} catch (err: any) {
 				console.error("Failed to fetch service errors:", err);
+			} finally {
+				setLoading(false);
 			}
 		};
 
 		fetchErrors().then();
 	}, [latestLog]);
 
-	return { serviceErrors: serviceErrors };
+	return { serviceErrors, loading };
 };

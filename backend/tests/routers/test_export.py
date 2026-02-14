@@ -1,8 +1,8 @@
 """Tests for export endpoint"""
 
-import zipfile
 import csv
 import io
+import zipfile
 
 
 class TestExport:
@@ -32,7 +32,14 @@ class TestExport:
         zip_buffer = io.BytesIO(response.content)
         with zipfile.ZipFile(zip_buffer, "r") as zf:
             # Verify all expected files are in the ZIP
-            assert set(zf.namelist()) == {"jobs.csv", "people.csv", "companies.csv", "aggregators.csv"}
+            assert set(zf.namelist()) == {
+                "jobs.csv",
+                "people.csv",
+                "companies.csv",
+                "aggregators.csv",
+                "speculative_applications.csv",
+                "scraped_jobs.csv",
+            }
 
             # Verify jobs.csv content
             with zf.open("jobs.csv") as f:
@@ -90,7 +97,14 @@ class TestExport:
         zip_buffer = io.BytesIO(response.content)
         with zipfile.ZipFile(zip_buffer, "r") as zf:
             # Verify all files exist
-            assert set(zf.namelist()) == {"jobs.csv", "people.csv", "companies.csv", "aggregators.csv"}
+            assert set(zf.namelist()) == {
+                "jobs.csv",
+                "people.csv",
+                "companies.csv",
+                "aggregators.csv",
+                "speculative_applications.csv",
+                "scraped_jobs.csv",
+            }
 
             # Verify each CSV only contains headers
             with zf.open("jobs.csv") as f:

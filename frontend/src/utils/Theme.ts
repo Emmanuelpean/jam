@@ -12,4 +12,4 @@ export const THEMES: Theme[] = [
 	{ key: "blackberry", name: "Blackberry" },
 ];
 
-export const DEFAULT_THEME: string = "mixed-berry";
+export const DEFAULT_THEME: string = "blueberry";

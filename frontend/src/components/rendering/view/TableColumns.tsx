@@ -1,8 +1,8 @@
 import { renderFunctions, RenderParams, ViewField } from "./ViewRenders";
 import { toDdMmYyyy } from "../../../utils/TimeUtils";
-import { PersonData } from "../../../services/Schemas";
 import { DataContextValue, JamData } from "../../../contexts/DataContext";
 import { findItemById } from "../../../utils/Utils";
+import { PersonData } from "../../../services/schemas/DataTables";
 
 export interface TableColumn extends ViewField {
 	label: string;
@@ -51,6 +51,10 @@ const _getPersonsText = (item: JamData, context: DataContextValue, key: string):
 
 const getInterviewersText = (item: JamData, context: DataContextValue): string | null => {
 	return _getPersonsText(item, context, "interviewers");
+};
+
+const getContactsText = (item: JamData, context: DataContextValue): string | null => {
+	return _getPersonsText(item, context, "contacts");
 };
 
 interface TableColumnOverrides extends Partial<TableColumn> {}
@@ -124,6 +128,16 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	interviewTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "type",
+		label: "Type",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.interviewType,
+		...overrides,
+	}),
+
 	updateTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "type",
 		label: "Type",
@@ -189,16 +203,6 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	appThemeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "theme",
-		label: "Theme",
-		sortable: true,
-		searchable: true,
-		type: "text",
-		render: renderFunctions.appTheme,
-		...overrides,
-	}),
-
 	roleColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "role",
 		label: "Role",
@@ -254,6 +258,26 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	filterTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "type",
+		label: "Filter Type",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.filterType,
+		...overrides,
+	}),
+
+	filterOperatorColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "operator",
+		label: "Operator",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.filterOperator,
+		...overrides,
+	}),
+
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
 	urlColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
@@ -283,6 +307,16 @@ export const tableColumns = {
 		searchable: true,
 		type: "text",
 		render: renderFunctions.email,
+		...overrides,
+	}),
+
+	contactEmailColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "contact_email",
+		label: "Contact Email",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.contactEmail,
 		...overrides,
 	}),
 
@@ -326,7 +360,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "date",
-		searchFields: (item: JamData) => ("last_login" in item && item.last_login ? toDdMmYyyy(item.last_login) : ""),
+		searchFields: (item: JamData) => ("last_login" in item && item.last_login ? toDdMmYyyy(item.last_login) : null),
 		render: (params: RenderParams) => renderFunctions._date(params, "last_login"),
 		...overrides,
 	}),
@@ -334,7 +368,7 @@ export const tableColumns = {
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
 	locationBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "location",
+		key: "locationBadge",
 		label: "Location",
 		sortable: true,
 		searchable: true,
@@ -346,7 +380,7 @@ export const tableColumns = {
 	}),
 
 	companyBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "CompanyBadge",
+		key: "companyBadge",
 		label: "Company",
 		sortable: true,
 		searchable: true,
@@ -358,7 +392,7 @@ export const tableColumns = {
 	}),
 
 	interviewerBadgesColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "interviewers",
+		key: "interviewerBadges",
 		label: "Interviewers",
 		sortable: false,
 		searchable: true,
@@ -368,8 +402,19 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	contactBadgesColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "contactBadges",
+		label: "Contacts",
+		sortable: false,
+		searchable: true,
+		type: "text",
+		searchFields: getContactsText,
+		render: renderFunctions.ContactBadges,
+		...overrides,
+	}),
+
 	jobBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "job",
+		key: "jobBadge",
 		label: "Job",
 		sortable: true,
 		searchable: true,
@@ -392,22 +437,32 @@ export const tableColumns = {
 	}),
 
 	toastActiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "toast_active",
-		label: "TOAST",
+		key: "premium_active",
+		label: "Premium",
 		sortable: true,
 		searchable: false,
 		type: "text",
-		render: renderFunctions.toastActive,
+		render: renderFunctions.premiumActive,
 		...overrides,
 	}),
 
 	isActiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "is_active",
+		key: "is_enabled",
 		label: "Active",
 		sortable: true,
 		searchable: true,
 		type: "text",
 		render: renderFunctions.isActive,
+		...overrides,
+	}),
+
+	caseSensitiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "case_sensitive",
+		label: "Case Sensitive",
+		sortable: true,
+		searchable: false,
+		type: "text",
+		render: renderFunctions.caseSensitive,
 		...overrides,
 	}),
 
@@ -475,7 +530,7 @@ export const tableColumns = {
 		label: "Jobs",
 		sortable: true,
 		searchable: false,
-		render: (param: RenderParams) => renderFunctions._jobCount(param, "source_id"),
+		render: (param: RenderParams) => renderFunctions._jobCount(param, "source_aggregator_id"),
 		...overrides,
 	}),
 
@@ -512,6 +567,15 @@ export const tableColumns = {
 		sortable: true,
 		searchable: false,
 		render: (param: RenderParams) => renderFunctions._personCount(param, "company_id"),
+		...overrides,
+	}),
+
+	filteredJobCountColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "filtered_jobs",
+		label: "Filtered Jobs",
+		sortable: true,
+		searchable: false,
+		render: renderFunctions.filteredJobCount,
 		...overrides,
 	}),
 };

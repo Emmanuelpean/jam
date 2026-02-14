@@ -1,9 +1,9 @@
 """Centralised test data for both conftest.py and seed_database.py"""
 
-from tests.utils.test_data.basics import *
+from tests.utils.test_data.core import *
 from tests.utils.test_data.data_tables import *
-from tests.utils.test_data.job_rating_service import *
-from tests.utils.test_data.job_scraping_service import *
+from tests.utils.test_data.job_rating import *
+from tests.utils.test_data.job_scraping import *
 
 
 def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
@@ -56,7 +56,7 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
         "JOB_DATA": [
             ("company_id", "COMPANY_DATA", "optional"),
             ("location_id", "LOCATION_DATA", "optional"),
-            ("source_id", "AGGREGATOR_DATA", "optional"),
+            ("source_aggregator_id", "AGGREGATOR_DATA", "optional"),
             ("cv_id", "FILE_DATA", "optional"),
             ("cover_letter_id", "FILE_DATA", "optional"),
             ("application_aggregator_id", "AGGREGATOR_DATA", "optional"),
@@ -66,12 +66,13 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
             ("job_id", "JOB_DATA", "required"),  # Should always have a job
         ],
         "JOB_APPLICATION_UPDATE_DATA": [("job_id", "JOB_DATA", "required")],  # Should always reference a job
+        "SPECULATIVE_APPLICATION_DATA": [("company_id", "COMPANY_DATA", "optional")],  # Can have a company
+        "JOB_RATING_DATA": [
+            ("scraped_job_id", "JOB_SCRAPED_DATA", "required"),  # Must reference a scraped job
+            ("user_qualification_id", "USER_QUALIFICATION_DATA", "required"),  # Must reference user qualification
+        ],
+        "SCRAPING_FILTER_DATA": [],  # Has owner_id but no FKs to other owned tables
     }
-
-    print("=== OWNERSHIP INTEGRITY VALIDATION ===\n")
-
-    # Phase 1: Validate direct foreign key relationships
-    print("Phase 1: Validating direct foreign key relationships...")
 
     for table_name, relationships in fk_relationships.items():
         table_data = data_collections.get(table_name, [])
@@ -79,7 +80,6 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
             continue
 
         results["statistics"]["tables_checked"] += 1
-        print(f"  Checking {table_name}: {len(table_data)} entries")
 
         for entry_idx, entry in enumerate(table_data):
             results["statistics"]["entries_validated"] += 1
@@ -137,9 +137,6 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
                             }
                         )
 
-    # Phase 2: Validate mapping relationships
-    print(f"\nPhase 2: Validating mapping relationships...")
-
     mapping_relationships = {
         "JOB_KEYWORD_MAPPINGS": {
             "primary_table": "JOB_DATA",
@@ -169,14 +166,19 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
             "secondary_ids_field": "scraped_job_ids",
             "description": "Email-Scraped job associations",
         },
+        "SPECULATIVE_APPLICATION_CONTACTS_MAPPING": {
+            "primary_table": "SPECULATIVE_APPLICATION_DATA",
+            "primary_id_field": "speculative_application_id",
+            "secondary_table": "PERSON_DATA",
+            "secondary_ids_field": "contact_ids",
+            "description": "Speculative application-Contact person associations",
+        },
     }
 
     for mapping_name, config in mapping_relationships.items():
         mapping_data = data_collections.get(mapping_name, [])
         if not mapping_data:
             continue
-
-        print(f"  Checking {mapping_name}: {len(mapping_data)} mappings - {config['description']}")
 
         for mapping_idx, mapping in enumerate(mapping_data):
             primary_id = mapping.get(config["primary_id_field"])
@@ -230,9 +232,6 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
                         }
                     )
 
-    # Phase 3: Generate comprehensive summary
-    print(f"\nPhase 3: Generating summary report...")
-
     total_violations = len(results["direct_foreign_key_violations"]) + len(results["mapping_violations"])
 
     results["summary"] = {
@@ -262,12 +261,17 @@ analysis_results = validate_ownership_integrity_detailed(
         "KEYWORD_DATA": KEYWORD_DATA,
         "AGGREGATOR_DATA": AGGREGATOR_DATA,
         "JOB_APPLICATION_UPDATE_DATA": JOB_APPLICATION_UPDATE_DATA,
-        "JOB_ALERT_EMAIL_DATA": JOB_ALERT_EMAIL_DATA,
-        "JOB_SCRAPED_DATA": JOB_SCRAPED_DATA,
+        "JOB_ALERT_EMAIL_DATA": JOB_EMAIL_DATA,
+        "JOB_SCRAPED_DATA": SCRAPED_JOB_DATA,
         "JOB_KEYWORD_MAPPINGS": JOB_KEYWORD_MAPPINGS,
         "JOB_CONTACT_MAPPINGS": JOB_CONTACT_MAPPINGS,
         "INTERVIEW_INTERVIEWER_MAPPINGS": INTERVIEW_INTERVIEWER_MAPPINGS,
         "EMAIL_SCRAPEDJOB_MAPPINGS": EMAIL_SCRAPEDJOB_MAPPINGS,
+        "SPECULATIVE_APPLICATION_DATA": SPECULATIVE_APPLICATION_DATA,
+        "SPECULATIVE_APPLICATION_CONTACTS_MAPPING": SPECULATIVE_APPLICATION_CONTACTS_MAPPING,
+        "JOB_RATING_DATA": JOB_RATING_DATA,
+        "SCRAPING_FILTER_DATA": SCRAPING_FILTER_DATA,
+        "USER_QUALIFICATION_DATA": USER_QUALIFICATION_DATA,
     }
 )
 
