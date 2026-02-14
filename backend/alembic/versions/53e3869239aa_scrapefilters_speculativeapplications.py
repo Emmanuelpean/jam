@@ -298,11 +298,10 @@ def upgrade() -> None:
         WHERE email_change_token IS NOT NULL
     """
     )
-    # Add version number
-    op.execute("UPDATE \"user\" SET app_version = '1.10.0'")
 
     op.add_column("user", sa.Column("previous_login", sa.TIMESTAMP(timezone=True), nullable=True))
     op.add_column("user", sa.Column("app_version", sa.String(), nullable=True))
+    op.execute("UPDATE \"user\" SET app_version = '1.10.0'")  # Add version number
     op.add_column("user", sa.Column("first_name", sa.String(), nullable=True))
     op.add_column("user", sa.Column("last_name", sa.String(), nullable=True))
     op.drop_constraint(op.f("user_password_reset_token_key"), "user", type_="unique")
