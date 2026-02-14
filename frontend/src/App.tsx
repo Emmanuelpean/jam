@@ -1,4 +1,4 @@
-import React, { createContext, JSX, ReactNode, useEffect, useState } from "react";
+import React, { createContext, JSX, ReactNode, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
@@ -34,24 +34,11 @@ import { ProgressOverlayProvider } from "./contexts/useProgressOverlayContext";
 import { ScrapedJobsPage } from "./pages/DataTablePages/ScrapedJobsPage";
 import { StyleGuidePage } from "./pages/StylePage";
 import { ConfigProvider } from "./contexts/ConfigContext";
+import { StatusProvider, useStatus } from "./contexts/StatusContext";
 import { MaintenanceBanner } from "./components/AppBanner/MaintenanceBanner";
 import { DemoBanner } from "./components/AppBanner/DemoBanner";
 import { MaintenancePage } from "./pages/MaintenancePage/MaintenancePage";
 import { WhatsNewProvider } from "./contexts/WhatsNewContext";
-
-declare global {
-	interface Window {
-		__TEST_MAINTENANCE_MODE__?: boolean;
-	}
-}
-
-function isMaintenanceModeEnabled(): boolean {
-	// Allow test override via window global (for Selenium tests)
-	if (typeof window !== "undefined" && window.__TEST_MAINTENANCE_MODE__ !== undefined) {
-		return window.__TEST_MAINTENANCE_MODE__;
-	}
-	return process.env.REACT_APP_MAINTENANCE_MODE === "true";
-}
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -222,19 +209,7 @@ function AppRoutes(): JSX.Element {
 
 function AppContent(): JSX.Element {
 	const toastMethods: UseToastReturn = useToast();
-	const [maintenanceMode, setMaintenanceMode] = useState<boolean>(isMaintenanceModeEnabled);
-
-	// Check for maintenance mode changes (allows test injection)
-	useEffect(() => {
-		const interval = setInterval(() => {
-			const currentMode = isMaintenanceModeEnabled();
-			if (currentMode !== maintenanceMode) {
-				setMaintenanceMode(currentMode);
-			}
-		}, 1000);
-
-		return () => clearInterval(interval);
-	}, [maintenanceMode]);
+	const { maintenanceMode } = useStatus();
 
 	return (
 		<BrowserRouter basename="/jam">
@@ -275,7 +250,9 @@ function AppContent(): JSX.Element {
 function App(): JSX.Element {
 	return (
 		<ConfigProvider>
-			<AppContent />
+			<StatusProvider>
+				<AppContent />
+			</StatusProvider>
 		</ConfigProvider>
 	);
 }

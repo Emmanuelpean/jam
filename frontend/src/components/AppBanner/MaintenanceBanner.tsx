@@ -1,41 +1,15 @@
 import React, { JSX, useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useStatus } from "../../contexts/StatusContext";
 import { AppBanner } from "./AppBanner";
 import { formatDuration, formatScheduledTime, ONE_HOUR_IN_SECONDS } from "../../utils/TimeUtils";
 
-declare global {
-	// noinspection JSUnusedGlobalSymbols
-	interface Window {
-		__TEST_MAINTENANCE_SCHEDULED_AT__?: string;
-	}
-}
-
-function getMaintenanceScheduledAt(): string {
-	// Allow test override via window global (for Selenium tests)
-	if (typeof window !== "undefined" && window.__TEST_MAINTENANCE_SCHEDULED_AT__) {
-		return window.__TEST_MAINTENANCE_SCHEDULED_AT__;
-	}
-	return process.env.REACT_APP_MAINTENANCE_SCHEDULED_AT || "";
-}
-
 export function MaintenanceBanner(): JSX.Element | null {
 	const { isAuthenticated } = useAuth();
+	const { maintenanceScheduledAt } = useStatus();
 	const [showError, setShowError] = useState(false);
 	const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 	const [bannerDismissed, setBannerDismissed] = useState(false);
-	const [maintenanceScheduledAt, setMaintenanceScheduledAt] = useState<string>(getMaintenanceScheduledAt);
-
-	// Poll for test injection of maintenance scheduled time (runs always)
-	useEffect(() => {
-		const pollInterval = setInterval(() => {
-			const currentValue = getMaintenanceScheduledAt();
-			if (currentValue !== maintenanceScheduledAt) {
-				setMaintenanceScheduledAt(currentValue);
-			}
-		}, 500);
-
-		return () => clearInterval(pollInterval);
-	}, [maintenanceScheduledAt]);
 
 	// Live countdown for a scheduled pre-maintenance window.
 	// Only runs when a valid future timestamp is set and the user is authenticated.
@@ -98,7 +72,7 @@ export function MaintenanceBanner(): JSX.Element | null {
 					{secondsLeft > ONE_HOUR_IN_SECONDS ? (
 						<>
 							Scheduled maintenance on{" "}
-							<strong>{formatScheduledTime(new Date(maintenanceScheduledAt))}</strong>. The app will be
+							<strong>{formatScheduledTime(new Date(maintenanceScheduledAt!))}</strong>. The app will be
 							temporarily unavailable.
 						</>
 					) : (
