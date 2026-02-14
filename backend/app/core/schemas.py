@@ -8,7 +8,7 @@ Update schemas should be used to update existing entries in the database."""
 import datetime as dt
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 ThemeMode = Literal["dark", "light", "system"]
 
@@ -223,6 +223,22 @@ class UserQualificationUpsert(BaseModel):
     education: str | None = None
     qualities: str | None = None
     interests: str | None = None
+
+    @field_validator("experience")
+    @classmethod
+    def validate_experience(cls, v: str | None) -> str | None:
+        EXPERIENCE_CHAR_LIMIT: int = 10000
+        if v and len(v) > EXPERIENCE_CHAR_LIMIT:
+            raise ValueError(f"Experience must not exceed {EXPERIENCE_CHAR_LIMIT} characters")
+        return v
+
+    @field_validator("skills", "education", "qualities", "interests")
+    @classmethod
+    def validate_other_fields(cls, v: str | None) -> str | None:
+        OTHER_CHAR_LIMIT: int = 3500
+        if v and len(v) > OTHER_CHAR_LIMIT:
+            raise ValueError(f"This field must not exceed {OTHER_CHAR_LIMIT} characters")
+        return v
 
 
 class UserQualificationOut(UserQualificationUpsert, OwnedOut):

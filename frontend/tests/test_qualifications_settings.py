@@ -10,6 +10,9 @@ class TestQualificationSettingsPage(BaseTest):
     page_url = "settings/qualifications"
     user_index = TOAST_USER_1_INDEX
 
+    EXPERIENCE_CHAR_LIMIT = 10000
+    OTHER_CHAR_LIMIT = 3500
+
     def setup_function(self, request) -> None:
         """Setup function"""
 
@@ -43,3 +46,19 @@ class TestQualificationSettingsPage(BaseTest):
         qualification = self.db.query(models.UserQualification).filter_by(owner_id=self.user.id).first()
         assert qualification.qualities == "New Quality"
         assert qualification.experience == "Different Experience1"
+
+    def test_experience_char_limit_disables_save(self) -> None:
+        """Test that exceeding the experience character limit disables the save button."""
+
+        over_limit_text = "a" * (self.EXPERIENCE_CHAR_LIMIT + 1)
+        self.set_text(self.user_settings_utils.experience_input, over_limit_text)
+        confirm_button = self.get_element("confirm-button", enabled=False)
+        assert not confirm_button.is_enabled()
+
+    def test_skills_char_limit_disables_save(self) -> None:
+        """Test that exceeding the skills character limit disables the save button."""
+
+        over_limit_text = "a" * (self.OTHER_CHAR_LIMIT + 1)
+        self.set_text(self.user_settings_utils.skills_input, over_limit_text)
+        confirm_button = self.get_element("confirm-button", enabled=False)
+        assert not confirm_button.is_enabled()
