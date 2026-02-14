@@ -2,11 +2,13 @@
 Contains data models for job alert emails, scraped job postings, and service logs
 used in the external job scraping and notification system."""
 
+import datetime as dt
 from datetime import datetime
 
-from pydantic import field_validator
+from pydantic import field_validator, Field
 
-from app.schemas import BaseModel, OwnedOut, Out, serialize_relationships
+from app.base_schemas import BaseModel, OwnedOut, Out, serialise_relationships
+from app.data_tables.schemas import GeolocationOut
 from app.job_rating.schemas import JobRatingOut
 
 
@@ -43,7 +45,7 @@ class JobEmailOut(JobEmail, OwnedOut):
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
 
-        return serialize_relationships(value)
+        return serialise_relationships(value)
 
 
 # ----------------------------------------------------- SCRAPED JOB ----------------------------------------------------
@@ -55,12 +57,15 @@ class ScrapedJob(BaseModel):
     external_job_id: str
     platform: str
     service_log_id: int
+    is_processed: bool = False
     is_scraped: bool = False
     is_failed: bool = False
     scrape_datetime: datetime | None = None
     scrape_error: str | None = None
     is_active: bool = True
     is_imported: bool = False
+    is_skipped: bool = False
+    skip_reason: str | None = None
 
     # Job data
     title: str | None = None
@@ -90,13 +95,14 @@ class ScrapedJobOut(ScrapedJob, OwnedOut):
 
     emails: list[int]
     job_rating: JobRatingOut | None
+    geolocation: GeolocationOut | None
 
     @field_validator("emails", mode="before")
     @classmethod
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
 
-        return serialize_relationships(value)
+        return serialise_relationships(value)
 
 
 class PaginatedScrapedJobResponse(BaseModel):
@@ -131,7 +137,7 @@ class JobEmailScrapingServiceLogOut(Out):
 
     # Jobs
     job_found_n: int = 0
-    job_to_scrape_n: int = 0
+    job_to_process_n: int = 0
     job_scrape_succeeded_n: int = 0
     job_scrape_failed_n: int = 0
     job_scrape_copied_n: int = 0
@@ -147,7 +153,7 @@ class JobEmailScrapingServiceLogOut(Out):
     @classmethod
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
-        return serialize_relationships(value)
+        return serialise_relationships(value)
 
 
 # --------------------------------------------------- PLATFORM STATS ---------------------------------------------------
@@ -160,7 +166,7 @@ class JobEmailScrapingPlatformStatOut(Out):
 
     # Jobs
     job_found_ids: list[int] = []
-    job_to_scrape_ids: list[int] = []
+    job_to_process_ids: list[int] = []
     job_scrape_succeeded_ids: list[int] = []
     job_scrape_failed_ids: list[int] = []
     job_scrape_copied_ids: list[int] = []
@@ -173,7 +179,7 @@ class JobEmailScrapingPlatformStatOut(Out):
     service_log_id: int | None = None
 
 
-# -------------------------------------------------- EIS SERVICE ERROR -------------------------------------------------
+# --------------------------------------------- JOB SCRAPING SERVICE ERROR ---------------------------------------------
 
 
 class JobEmailScrapingServiceErrorOut(Out):
@@ -192,3 +198,77 @@ class JobEmailScrapingStartRequest(BaseModel):
 
     period_hours: float | None = 3.0
     timedelta_days: int | None = 1
+
+
+# ------------------------------------------------- SCRAPED JOB FILTER -------------------------------------------------
+
+
+class ScrapingFilterCreate(BaseModel):
+    """Scraped Job Filter creation schema"""
+
+    type: str
+    value: str
+    operator: str
+    is_active: bool = True
+    case_sensitive: bool = False
+
+
+class ScrapingFilterUpdate(ScrapingFilterCreate):
+    """Scraped Job Filter update schema"""
+
+    type: str | None = None
+    value: str | None = None
+    operator: str | None = None
+
+
+class ScrapingFilterOut(OwnedOut, ScrapingFilterCreate):
+    """Scraped Job Filter output schema"""
+
+    filtered_jobs: list[int]
+
+    @field_validator("filtered_jobs", mode="before")
+    @classmethod
+    def serialize_relationships(cls, value) -> list[int]:
+        """Serialize relationships to list of IDs"""
+        return serialise_relationships(value)
+
+
+# ------------------------------------------- FORWARDING CONFIRMATION LINK ---------------------------------------------
+
+
+class ForwardingConfirmationLinkOut(OwnedOut):
+    """Forwarding Confirmation Link output schema"""
+
+    url: str
+    platform: str
+
+
+class ForwardingConfirmationLinkUpdate(BaseModel):
+    """Forwarding Confirmation Link update schema"""
+
+    is_used: bool
+
+
+class Salary(BaseModel):
+    min_amount: float | None = None
+    max_amount: float | None = None
+    currency: str | None = None
+
+
+class JobInfo(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    url: str | None = None
+    raw_url: str | None = None
+    deadline: dt.datetime | None = None
+    salary: Salary = Field(default_factory=Salary)
+
+
+class JobResult(BaseModel):
+    platform: str | None = None
+    job_id: str | None = None
+    company: str | None = None
+    company_id: str | None = None
+    location: str | None = None
+    raw: str | None = None
+    job: JobInfo

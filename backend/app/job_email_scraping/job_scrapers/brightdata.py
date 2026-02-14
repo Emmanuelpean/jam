@@ -8,7 +8,7 @@ import requests
 from tqdm import tqdm
 
 from app.config import settings
-from app.job_email_scraping.job_scrapers import JobResult
+from app.job_email_scraping.schemas import JobResult
 
 
 class BrightdataJobScraper(object):

@@ -21,16 +21,18 @@ templates = Jinja2Templates(directory="templates")
 class EmailService(object):
     """Email service class for sending and reading emails."""
 
-    sender = settings.email_username
-    password = settings.email_password
     smtp_server = settings.email_smtp_host
     smtp_port = settings.email_smtp_port
     imap_server = settings.email_imap_host
     imap_port = settings.email_imap_port
 
-    def __init__(self) -> None:
-        """Initialize the EmailService class."""
+    def __init__(self, email_username: str, email_password: str) -> None:
+        """Initialise the EmailService class
+        :param email_username: The email username for SMTP/IMAP authentication.
+        :param email_password: The email password for SMTP/IMAP authentication."""
 
+        self.email_username = email_username
+        self.email_password = email_password
         self.logger = AppLogger.create_service_logger("email_service", "INFO")
         self.test_emails = []
 
@@ -57,7 +59,7 @@ class EmailService(object):
         :param subject: The subject of the email.
         :param body: The body of the email in HTML format.
         :param message_type: The type of email being sent (for logging purposes).
-        :param sender: The sender's email address (optional, defaults to configured sender)."""
+        :param sender: The sender's email address alias (optional, defaults to configured sender)."""
 
         if settings.test_mode:
             self.test_emails.append(
@@ -65,7 +67,7 @@ class EmailService(object):
                     "recipient": recipient,
                     "subject": subject,
                     "body": body,
-                    "sender": sender or self.sender,
+                    "sender": sender or self.email_username,
                     "timestamp": datetime.now().isoformat(),
                 }
             )
@@ -73,15 +75,15 @@ class EmailService(object):
 
         try:
             msg = MIMEMultipart()
-            msg["From"] = settings.email_username if sender is None else sender
+            msg["From"] = self.email_username if sender is None else sender
             msg["To"] = recipient
             msg["Subject"] = subject
             msg.attach(MIMEText(body, "html"))
 
-            with smtplib.SMTP(settings.email_smtp_host, settings.email_smtp_port) as server:
+            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.starttls()
-                server.login(settings.email_username, settings.email_password)
-                server.sendmail(settings.email_username, recipient, msg.as_string())
+                server.login(self.email_username, self.email_password)
+                server.sendmail(self.email_username, recipient, msg.as_string())
                 self.logger.info(f"{message_type} email sent to %s with subject: %s", recipient, subject)
         except Exception as e:
             self.logger.error(f"Failed to send {message_type} email to %s: %s", recipient, str(e))
@@ -91,14 +93,16 @@ class EmailService(object):
         self,
         recipient: str,
         verification_url: str,
+        recipient_name: str | None = None,
     ) -> None:
         """Send a verification email to the specified recipient.
         :param recipient: The recipient's email address.
-        :param verification_url: The email verification URL."""
+        :param verification_url: The email verification URL.
+        :param recipient_name: The recipient name."""
 
         template = self.templates.env.get_template("email_confirmation.html")
         html_content = template.render(
-            name="there",
+            name=recipient_name if recipient_name else "there",
             confirmation_url=verification_url,
             token_expiry_min=settings.verification_token_expiration_minutes,
         )
@@ -115,16 +119,18 @@ class EmailService(object):
         self,
         recipient: str,
         verification_url: str,
+        recipient_name: str | None = None,
     ) -> None:
         """Send an email change verification email to the specified recipient.
         :param recipient: The recipient's email address.
-        :param verification_url: The email change verification URL."""
+        :param verification_url: The email change verification URL.
+        :param recipient_name: The recipient name."""
 
         template = self.templates.env.get_template("email_change.html")
         html_content = template.render(
-            name="there",
+            name=recipient_name if recipient_name else "there",
             confirmation_url=verification_url,
-            token_expiry_min=settings.verification_token_expiration_minutes,
+            token_expiry_min=settings.email_change_token_expiration_minutes,
         )
 
         self.send_email(
@@ -139,14 +145,18 @@ class EmailService(object):
         self,
         recipient: str,
         reset_url: str,
+        recipient_name: str | None = None,
     ) -> None:
         """Send a password reset email to the specified recipient.
         :param recipient: The recipient's email address.
-        :param reset_url: The password reset URL."""
+        :param reset_url: The password reset URL.
+        :param recipient_name: The recipient name."""
 
         template = self.templates.env.get_template("password_reset.html")
         html_content = template.render(
-            reset_url=reset_url, token_expiry_min=settings.verification_token_expiration_minutes
+            name=recipient_name if recipient_name else "there",
+            reset_url=reset_url,
+            token_expiry_min=settings.password_reset_token_expiration_minutes,
         )
 
         self.send_email(
@@ -202,13 +212,37 @@ class EmailService(object):
             "Email change notification",
         )
 
-    @staticmethod
-    def _connect_imap() -> imaplib.IMAP4_SSL:
+    def send_trial_end_notification(
+        self,
+        recipient: str,
+        end_date: datetime,
+    ) -> None:
+        """Send an email to the specified recipient mentioning that the email was changed.
+        :param recipient: The recipient's email address.
+        :param end_date: The trial end date."""
+
+        template = self.templates.env.get_template("trial_end_reminder.html")
+        html_content = template.render(
+            upgrade_url=settings.frontend_url + "/settings/premium",
+            end_date=end_date.strftime("%B %d, %Y"),
+            support_email=settings.support_email,
+        )
+
+        subject = "Your TOAST Free Trial is Ending Soon"
+        self.send_email(
+            recipient,
+            subject,
+            html_content,
+            settings.support_email,
+            "Trial end notification",
+        )
+
+    def _connect_imap(self) -> imaplib.IMAP4_SSL:
         """Connect to IMAP server and login.
         :return: IMAP connection object"""
 
-        mail = imaplib.IMAP4_SSL(settings.email_imap_host, settings.email_imap_port)
-        mail.login(settings.email_username, settings.email_password)
+        mail = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
+        mail.login(self.email_username, self.email_password)
         return mail
 
     def get_test_emails(self, recipient: str = None) -> list[dict]:
@@ -283,13 +317,14 @@ class EmailService(object):
             # Default to all if no criteria
             search_query = " ".join(search_criteria) if search_criteria else "ALL"
 
-            # Execute search
-            status, message_ids = mail.search(None, search_query)
+            # Execute search using UID instead of sequence numbers
+            # noinspection PyTypeChecker
+            status, message_ids = mail.uid("search", None, search_query)
 
             if status != "OK":
                 return []
 
-            # Parse message IDs
+            # Parse message UIDs (more stable than sequence numbers)
             email_ids = message_ids[0].split()
             return [msg_id.decode() for msg_id in email_ids]
 
@@ -302,7 +337,7 @@ class EmailService(object):
         email_id: str,
     ) -> dict[str, str | datetime] | None:
         """Get the content of a specific email by ID.
-        :param email_id: The email message ID
+        :param email_id: The email message UID (unique identifier)
         :return: Dictionary with email details (subject, from, date, body)"""
 
         mail = self._connect_imap()
@@ -310,8 +345,8 @@ class EmailService(object):
         try:
             mail.select("INBOX")
 
-            # Fetch the email
-            status, msg_data = mail.fetch(email_id, "(RFC822)")
+            # Fetch the email using UID
+            status, msg_data = mail.uid("fetch", email_id, "(RFC822)")
 
             if status != "OK":
                 return None
@@ -325,6 +360,7 @@ class EmailService(object):
             subject = self._decode_header(msg["Subject"])
             from_email = clean_email_address(self._decode_header(msg["From"]))
             to_email = clean_email_address(self._decode_header(msg["To"]))
+            message_id = msg.get("Message-ID", "").strip()
 
             # Extract date
             date = msg["Date"]
@@ -382,6 +418,7 @@ class EmailService(object):
 
             return {
                 "id": email_id,
+                "message_id": message_id,
                 "subject": subject,
                 "from": from_email,
                 "to": to_email,
@@ -409,7 +446,7 @@ class EmailService(object):
         return emails
 
     @staticmethod
-    def _decode_header(header: str) -> str:
+    def _decode_header(header: str | None) -> str:
         """Decode email header.
         :param header: Raw header string
         :return: Decoded header string"""
@@ -433,7 +470,7 @@ class EmailService(object):
         email_id: str,
     ) -> bool:
         """Delete an email by ID from the inbox.
-        :param email_id: The email message ID to delete
+        :param email_id: The email message UID to delete
         :return: True if deletion successful, False otherwise"""
 
         if settings.test_mode:
@@ -444,8 +481,8 @@ class EmailService(object):
         try:
             mail.select("INBOX")
 
-            # Mark the email as deleted
-            status, _ = mail.store(email_id, "+FLAGS", "\\Deleted")
+            # Mark the email as deleted using UID
+            status, _ = mail.uid("store", email_id, "+FLAGS", "\\Deleted")
 
             if status != "OK":
                 return False
@@ -460,4 +497,4 @@ class EmailService(object):
             mail.logout()
 
 
-email_service = EmailService()
+email_service = EmailService(settings.main_email_username, settings.main_email_password)

@@ -7,25 +7,36 @@ import sys
 from sqlalchemy import text, inspect
 
 from app.database import engine, session_local, Base
-from tests.utils.create_data import (
+from tests.utils.create_data.core import (
     create_users,
     create_settings,
-    create_companies,
-    create_locations,
-    create_aggregators,
+    create_ai_prompts,
+    create_user_qualifications,
+)
+from tests.utils.create_data.data_tables import (
     create_keywords,
+    create_aggregators,
+    create_geolocations,
+    create_locations,
+    create_companies,
     create_people,
     create_jobs,
     create_files,
     create_interviews,
-    create_job_alert_emails,
-    create_scraped_jobs,
-    create_job_scraping_service_logs,
     create_job_application_updates,
+    create_speculative_applications,
+)
+from tests.utils.create_data.job_rating import (
+    create_job_rating_service_logs,
+    create_job_ratings,
+)
+from tests.utils.create_data.job_scraping import (
+    create_job_scraping_service_logs,
     create_job_scraping_platform_stats,
     create_job_scraping_service_errors,
-    create_user_qualifications,
-    create_job_ratings,
+    create_job_alert_emails,
+    create_scraping_filters,
+    create_scraped_jobs,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -59,6 +70,159 @@ def reset_database(db_engine, ask_confirmation: bool = True) -> None:
     Base.metadata.create_all(bind=db_engine)
 
 
+def create_database_data(db, includes=None, excludes=None, **kwargs) -> None:
+    """Create sample data for the database
+    :param db: database session
+    :param includes: list of tables to include (if None, include all)
+    :param excludes: list of tables to exclude (if None, exclude none)
+    :param kwargs: pre-created entities to use instead of generating (e.g. users=my_users)"""
+
+    def should_create(table_name: str) -> bool:
+        """Check if a table should be created based on includes/excludes"""
+        if excludes and table_name in excludes:
+            return False
+        if includes and table_name not in includes:
+            return False
+        return True
+
+    # Core dependencies (always needed)
+    if "users" in kwargs:
+        users = kwargs["users"]
+    elif should_create("users"):
+        users = create_users(db, None, 12)
+    else:
+        users = None
+
+    if should_create("settings") and "settings" not in kwargs:
+        create_settings(db)
+
+    if "ai_prompts" in kwargs:
+        ai_prompts = kwargs["ai_prompts"]
+    elif should_create("ai_prompts"):
+        ai_prompts = create_ai_prompts(db)
+    else:
+        ai_prompts = None
+
+    # Table data
+    if "keywords" in kwargs:
+        keywords = kwargs["keywords"]
+    elif should_create("keywords") and users:
+        keywords = create_keywords(db, users)
+    else:
+        keywords = None
+
+    if "aggregators" in kwargs:
+        aggregators = kwargs["aggregators"]
+    elif should_create("aggregators") and users:
+        aggregators = create_aggregators(db, users)
+    else:
+        aggregators = None
+
+    if should_create("geolocations") and "geolocations" not in kwargs:
+        create_geolocations(db)
+
+    if "locations" in kwargs:
+        locations = kwargs["locations"]
+    elif should_create("locations") and users:
+        locations = create_locations(db, users)
+    else:
+        locations = None
+
+    if "companies" in kwargs:
+        companies = kwargs["companies"]
+    elif should_create("companies") and users:
+        companies = create_companies(db, users)
+    else:
+        companies = None
+
+    if "people" in kwargs:
+        people = kwargs["people"]
+    elif should_create("people") and users and companies:
+        people = create_people(db, users, companies)
+    else:
+        people = None
+
+    if "files" in kwargs:
+        files = kwargs["files"]
+    elif should_create("files") and users:
+        files = create_files(db, users)
+    else:
+        files = None
+
+    if "jobs" in kwargs:
+        jobs = kwargs["jobs"]
+    elif should_create("jobs") and all([keywords, people, users, companies, locations, aggregators, files]):
+        jobs = create_jobs(db, keywords, people, users, companies, locations, aggregators, files)
+    else:
+        jobs = None
+
+    if should_create("interviews") and "interviews" not in kwargs and all([people, users, locations, jobs]):
+        create_interviews(db, people, users, locations, jobs)
+
+    if should_create("job_application_updates") and "job_application_updates" not in kwargs and users and jobs:
+        create_job_application_updates(db, users, jobs)
+
+    if "user_qualifications" in kwargs:
+        user_qualifications = kwargs["user_qualifications"]
+    elif should_create("user_qualifications") and users:
+        user_qualifications = create_user_qualifications(db, users)
+    else:
+        user_qualifications = None
+
+    if should_create("speculative_applications") and "speculative_applications" not in kwargs and users and people:
+        create_speculative_applications(db, users, people)
+
+    # Job Scraping data
+    if "job_scraping_service_logs" in kwargs:
+        service_logs = kwargs["job_scraping_service_logs"]
+    elif should_create("job_scraping_service_logs"):
+        service_logs = create_job_scraping_service_logs(db)
+    else:
+        service_logs = None
+
+    if should_create("job_scraping_platform_stats") and "job_scraping_platform_stats" not in kwargs and service_logs:
+        create_job_scraping_platform_stats(db, service_logs)
+
+    if should_create("job_scraping_service_errors") and "job_scraping_service_errors" not in kwargs and service_logs:
+        create_job_scraping_service_errors(db, service_logs)
+
+    if "job_alert_emails" in kwargs:
+        alert_emails = kwargs["job_alert_emails"]
+    elif should_create("job_alert_emails") and users and service_logs:
+        alert_emails = create_job_alert_emails(db, users, service_logs)
+    else:
+        alert_emails = None
+
+    if "scraping_filters" in kwargs:
+        scraping_filters = kwargs["scraping_filters"]
+    elif should_create("scraping_filters") and users:
+        scraping_filters = create_scraping_filters(db, users)
+    else:
+        scraping_filters = None
+
+    if "scraped_jobs" in kwargs:
+        scraped_jobs = kwargs["scraped_jobs"]
+    elif should_create("scraped_jobs") and all([alert_emails, users, scraping_filters]):
+        scraped_jobs = create_scraped_jobs(db, alert_emails, users, scraping_filters)
+    else:
+        scraped_jobs = None
+
+    # Job Rating data
+    if "job_rating_service_logs" in kwargs:
+        job_rating_service_logs = kwargs["job_rating_service_logs"]
+    elif should_create("job_rating_service_logs"):
+        job_rating_service_logs = create_job_rating_service_logs(db)
+    else:
+        job_rating_service_logs = None
+
+    if (
+        should_create("job_ratings")
+        and "job_ratings" not in kwargs
+        and all([users, scraped_jobs, user_qualifications, job_rating_service_logs, ai_prompts])
+    ):
+        create_job_ratings(db, users, scraped_jobs, user_qualifications, job_rating_service_logs, ai_prompts)
+
+
 def seed_database() -> None:
     """Main function to seed the database"""
     print("Starting database seeding...")
@@ -70,56 +234,7 @@ def seed_database() -> None:
     db = session_local()
 
     try:
-        # App data
-        users = create_users(db)
-        settings = create_settings(db)
-
-        # Table data
-        keywords = create_keywords(db, users)
-        aggregators = create_aggregators(db, users)
-        locations = create_locations(db, users)
-        companies = create_companies(db, users)
-        people = create_people(db, users, companies)
-        files = create_files(db, users)
-        jobs = create_jobs(db, keywords, people, users, companies, locations, aggregators, files)
-        interviews = create_interviews(db, people, users, locations, jobs)
-        job_application_updates = create_job_application_updates(db, users, jobs)
-        user_qualifications = create_user_qualifications(db, users)
-
-        # EIS data
-        service_logs = create_job_scraping_service_logs(db)
-        platform_stats = create_job_scraping_platform_stats(db, service_logs)
-        eis_service_errors = create_job_scraping_service_errors(db, service_logs)
-        alert_emails = create_job_alert_emails(db, users, service_logs)
-        scraped_jobs = create_scraped_jobs(db, alert_emails, users)
-
-        # Job Ratings data
-        job_rating_service_logs = create_job_scraping_service_logs(db)
-        job_ratings = create_job_ratings(db, users, scraped_jobs, user_qualifications, job_rating_service_logs)
-
-        print("\n" + "=" * 50)
-        print("DATABASE SEEDING COMPLETED SUCCESSFULLY!")
-        print("=" * 50)
-        print(f"Users: {len(users)}")
-        print(f"Settings: {len(settings)}")
-        print(f"Companies: {len(companies)}")
-        print(f"Locations: {len(locations)}")
-        print(f"Aggregators: {len(aggregators)}")
-        print(f"Keywords: {len(keywords)}")
-        print(f"People: {len(people)}")
-        print(f"Jobs: {len(jobs)}")
-        print(f"Files: {len(files)}")
-        print(f"Interviews: {len(interviews)}")
-        print(f"Service Logs: {len(service_logs)}")
-        print(f"Job Alert Emails: {len(alert_emails)}")
-        print(f"Scraped Jobs: {len(scraped_jobs)}")
-        print(f"Job Application Updates: {len(job_application_updates)}")
-        print(f"Platform Stats: {len(platform_stats)}")
-        print(f"EIS Service Errors: {len(eis_service_errors)}")
-        print(f"User Qualifications: {len(user_qualifications)}")
-        print(f"Job Rating Service Logs: {len(job_rating_service_logs)}")
-        print(f"Job Ratings: {len(job_ratings)}")
-        print("=" * 50)
+        create_database_data(db)
 
     except Exception as e:
         print(f"Error during seeding: {e}")

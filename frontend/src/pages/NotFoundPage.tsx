@@ -38,7 +38,7 @@ export const NotFoundPage = () => {
 	return NotAllowed(
 		"404",
 		"Oops! Something Is Jamming Our Radars",
-		"The page you're looking for might have been removed, had its name changed, or is temporarily unavailable.",
+		"The page you're looking for might have been removed, had its name changed, or is temporarily unavailable."
 	);
 };
 
@@ -46,6 +46,6 @@ export const NotAuthorisedPage = () => {
 	return NotAllowed(
 		"403",
 		"Access Denied: You Shall Not Pass!",
-		"Sorry, you don't have the necessary permissions to access this resource.",
+		"Sorry, you don't have the necessary permissions to access this resource."
 	);
 };

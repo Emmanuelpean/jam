@@ -1,17 +1,16 @@
-import { createContext, useContext, ReactNode, useState, JSX } from "react";
-import AlertModal, { AlertState } from "../components/modals/AlertModal";
+import { createContext, JSX, ReactNode, useContext, useState } from "react";
+import AlertModal, { AlertState } from "../components/AlertModal/AlertModal";
 
 interface AlertConfig {
 	title?: string;
 	message: string;
-	type?: "info" | "success" | "danger" | "warning";
+	type?: "info" | "success" | "danger" | "warning" | "primary";
 	confirmText?: string;
 	cancelText?: string | null;
 	icon?: string | null;
 	size?: "sm" | "md" | "lg" | "xl";
 	id?: string | null;
-	onSuccess?: (() => void) | null;
-	onCancel?: (() => void) | null;
+	onSuccess?: (() => void | Promise<void>) | null;
 }
 
 interface AlertContextType {
@@ -44,6 +43,10 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		onCancel: null,
 	});
 
+	const hideAlert = (): void => {
+		setAlertState((prev: AlertState): AlertState => ({ ...prev, show: false }));
+	};
+
 	const showAlert = ({
 		title = "Alert",
 		message,
@@ -54,7 +57,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		size = "md",
 		id = null,
 		onSuccess = null,
-		onCancel = null,
 	}: AlertConfig): Promise<boolean> => {
 		return new Promise((resolve): void => {
 			setAlertState({
@@ -67,22 +69,23 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 				icon,
 				size,
 				id,
-				onSuccess: (): void => {
-					if (onSuccess) onSuccess();
-					resolve(true);
-					hideAlert();
-				},
+				onSuccess: onSuccess
+					? async (): Promise<void> => {
+							try {
+								await onSuccess();
+								resolve(true);
+							} catch (error) {
+								throw error;
+							}
+						}
+					: (): void => {
+							resolve(true);
+						},
 				onCancel: (): void => {
-					if (onCancel) onCancel();
 					resolve(false);
-					hideAlert();
 				},
 			});
 		});
-	};
-
-	const hideAlert = (): void => {
-		setAlertState((prev: AlertState) => ({ ...prev, show: false }));
 	};
 
 	const showSuccess = ({
@@ -173,19 +176,17 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		size = "md",
 		id = null,
 		onSuccess = null,
-		onCancel = null,
 	}: Partial<AlertConfig> = {}): Promise<boolean> => {
 		return showAlert({
 			title,
 			message: message!,
-			type: "danger",
+			type: "primary",
 			confirmText,
 			cancelText,
 			icon: "bi bi-question-circle-fill",
 			size,
 			id: id || "confirm-alert-modal",
 			onSuccess,
-			onCancel,
 		});
 	};
 
@@ -197,7 +198,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		size = "md",
 		id = null,
 		onSuccess = null,
-		onCancel = null,
 	}: Partial<AlertConfig> = {}): Promise<boolean> => {
 		return showAlert({
 			title,
@@ -209,7 +209,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 			size,
 			id: id || "delete-alert-modal",
 			onSuccess,
-			onCancel,
 		});
 	};
 
@@ -221,7 +220,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		size = "md",
 		id = null,
 		onSuccess = null,
-		onCancel = null,
 	}: Partial<AlertConfig> = {}): Promise<boolean> => {
 		return showAlert({
 			title,
@@ -233,7 +231,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 			size,
 			id: id || "logout-alert-modal",
 			onSuccess,
-			onCancel,
 		});
 	};
 

@@ -3,7 +3,7 @@
 import re
 
 from app.job_email_scraping.email_parsers.utils import Platform
-from app.job_email_scraping.job_scrapers import JobInfo, JobResult
+from app.job_email_scraping.schemas import JobInfo, JobResult
 
 BASE_URL = "https://veganjobs.com/job/"
 

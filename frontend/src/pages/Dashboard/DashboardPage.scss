@@ -1,0 +1,113 @@
+.table-card-header {
+    position: relative;
+    background: var(--bs-body-bg) !important;
+}
+
+.table-card-header::before {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    content: "";
+    opacity: 0.8;
+    background: var(--primary-gradient);
+}
+
+.header-icon-wrapper {
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    color: white;
+    border-radius: 12px;
+    background: var(--primary-gradient);
+    aspect-ratio: 1 / 1;
+}
+
+.table-count-badge {
+    font-size: 1rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 52px;
+    height: auto;
+    padding: 0.5rem 0.875rem;
+    text-align: center;
+    color: white;
+    border-radius: 142px;
+    background: var(--primary-gradient);
+}
+
+.activity-count-badge {
+    font-size: 0.875rem;
+    font-weight: 600;
+    min-width: 32px;
+    padding: 0.5rem 0.875rem;
+    text-align: center;
+    color: white;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--primary-mid) 0%, var(--primary-end) 100%);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
+}
+
+/* Enhanced timeline styling */
+.activity-timeline {
+    padding-top: 0.5rem;
+    padding-bottom: 1rem;
+}
+
+.activity-item:first-child {
+    padding-top: 0.5rem;
+}
+
+.center-container {
+    display: grid;
+    min-height: 100%;
+    place-items: center;
+}
+
+.activity-line {
+    z-index: 0;
+    top: 20px;
+    left: 17px;
+    width: 2px;
+    height: 110%;
+    background-color: #e5e7eb;
+}
+
+.table-column,
+.activity-column {
+    height: 500px;
+    min-height: 0;
+}
+
+.toast-table {
+    min-height: 0;
+    max-height: 700px;
+}
+
+@media (width <= 991px) {
+    .table-column,
+    .activity-column {
+        height: auto;
+        min-height: 400px;
+    }
+}
+
+@media (width <= 1200px) {
+    .activity-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .activity-date {
+        margin-top: 2px;
+        margin-bottom: 2px;
+        margin-left: 0 !important;
+    }
+}

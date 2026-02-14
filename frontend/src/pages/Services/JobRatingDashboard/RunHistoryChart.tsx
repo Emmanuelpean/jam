@@ -1,20 +1,18 @@
 import React, { JSX, useEffect, useState } from "react";
-import { JobRatingServiceLog } from "../../../services/Schemas";
-import { LineChart, SeriesData } from "../../../components/charts/LineChart";
-import TimeSelection from "../../../components/TimeSelection/TimeSelection";
-import { DateRange } from "../../../utils/TimeUtils";
+import { JobRatingServiceLogData } from "../../../services/schemas/Services";
+import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
 import { createSeries, failureColor, infoColor, successColor } from "../ServiceUtils";
 
 interface RunHistoryChartProps {
-	serviceLogData: JobRatingServiceLog[] | null;
-	onDateRangeChange: (dateRange: DateRange) => void;
+	serviceLogData: JobRatingServiceLogData[] | null;
 	isRunning: boolean;
+	loading?: boolean;
 }
 
 export const RunHistoryChart = ({
 	serviceLogData,
-	onDateRangeChange,
 	isRunning,
+	loading = false,
 }: RunHistoryChartProps): JSX.Element => {
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
 
@@ -22,8 +20,8 @@ export const RunHistoryChart = ({
 		if (!serviceLogData) return;
 
 		const durationSeries: SeriesData[] = [
-			createSeries(serviceLogData, "Run Duration (h)", infoColor, (log: JobRatingServiceLog): number =>
-				log.run_duration ? log.run_duration / 3600 : 0,
+			createSeries(serviceLogData, "Run Duration (h)", infoColor, (log: JobRatingServiceLogData): number =>
+				log.run_duration ? log.run_duration / 3600 : 0
 			),
 		];
 
@@ -32,13 +30,13 @@ export const RunHistoryChart = ({
 				serviceLogData,
 				"Successful Jobs",
 				successColor,
-				(log: JobRatingServiceLog): number => log.rated_job_succeeded_ids.length,
+				(log: JobRatingServiceLogData): number => log.rated_job_succeeded_ids.length
 			),
 			createSeries(
 				serviceLogData,
 				"Failed Jobs",
 				failureColor,
-				(log: JobRatingServiceLog): number => log.rated_job_failed_ids.length,
+				(log: JobRatingServiceLogData): number => log.rated_job_failed_ids.length
 			),
 		];
 		setLogData([jobSeries, durationSeries]);
@@ -51,17 +49,22 @@ export const RunHistoryChart = ({
 				Run History
 				{isRunning && <span className="live-indicator ms-2"></span>}
 			</h2>
-			<div style={{ display: "flex", justifyContent: "space-between" }}>
-				<TimeSelection onDateRangeChange={onDateRangeChange} defaultMode="period" />
-			</div>
-			<div style={{ display: "flex" }}>
-				{logData && logData[0] && (
-					<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of jobs rated" />
-				)}
-				{logData && logData[1] && (
-					<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
-				)}
-			</div>
+			{loading ? (
+				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "300px" }}>
+					<div className="spinner-border text-primary" role="status">
+						<span className="visually-hidden">Loading...</span>
+					</div>
+				</div>
+			) : (
+				<div style={{ display: "flex" }}>
+					{logData && logData[0] && (
+						<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of jobs rated" />
+					)}
+					{logData && logData[1] && (
+						<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
+					)}
+				</div>
+			)}
 		</div>
 	);
 };

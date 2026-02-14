@@ -1,0 +1,172 @@
+.dark-mode-toggle-container {
+    display: flex;
+    align-items: center;
+    margin-top: auto;
+    padding: 0.75rem 0;
+    border-top: 1px solid rgb(0 0 0 / 6%);
+}
+
+[data-mode="dark"] .dark-mode-toggle-container {
+    border-top-color: rgb(255 255 255 / 8%);
+}
+
+.theme-segmented-control {
+    position: relative;
+    display: flex;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 12px;
+    background: rgb(0 0 0 / 5%);
+    padding: 3px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgb(0 0 0 / 6%);
+}
+
+[data-mode="dark"] .theme-segmented-control {
+    background: rgb(255 255 255 / 6%);
+    border-color: rgb(255 255 255 / 8%);
+}
+
+/* Sliding indicator */
+.theme-segment-indicator {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: calc(33.333% - 2px);
+    height: calc(100% - 6px);
+    border-radius: 10px;
+    background: white;
+    box-shadow:
+        0 1px 3px rgb(0 0 0 / 8%),
+        0 0 0 1px rgb(0 0 0 / 4%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+[data-mode="dark"] .theme-segment-indicator {
+    background: rgb(255 255 255 / 12%);
+    box-shadow:
+        0 1px 4px rgb(0 0 0 / 30%),
+        0 0 0 1px rgb(255 255 255 / 6%);
+}
+
+/* Segments */
+.theme-segment {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 7px 4px 6px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: color 0.25s ease;
+
+    i {
+        font-size: 14px;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                    color 0.25s ease;
+    }
+
+    .segment-label {
+        font-size: 0.55rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        opacity: 0.85;
+    }
+
+    &:hover:not(.active) {
+        color: #6b7280;
+    }
+
+    &.active {
+        color: #667eea;
+
+        .segment-label {
+            opacity: 1;
+        }
+    }
+}
+
+/* Icon animations per mode */
+.theme-segment.active .bi-sun-fill {
+    animation: sun-spin 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-segment.active .bi-moon-stars-fill {
+    animation: moon-rock 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-segment.active .bi-display {
+    animation: monitor-pop 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes sun-spin {
+    0% {
+        transform: scale(0.5) rotate(-180deg);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes moon-rock {
+    0% {
+        transform: scale(0.5) rotate(180deg);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.15) rotate(-10deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes monitor-pop {
+    0% {
+        transform: scale(0.6);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Dark mode colors */
+[data-mode="dark"] .theme-segment {
+    color: #6b7280;
+
+    &:hover:not(.active) {
+        color: #d1d5db;
+    }
+
+    &.active {
+        color: #a5b4fc;
+    }
+}
+
+/* Accessibility - Focus State */
+.theme-segment:focus-visible {
+    outline: 2px solid #667eea;
+    outline-offset: -2px;
+}

@@ -4,7 +4,6 @@ import hashlib
 import json
 import logging
 import os
-from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Optional
@@ -15,12 +14,13 @@ from pydantic import EmailStr
 from app.config import settings
 
 
-def hash_password(password: str) -> str:
+def hash_password(password: str, rounds: int = 12) -> str:
     """Hash a password for storing.
     :param password: password to hash
+    :param rounds: number of bcrypt rounds (default: 12)
     :return: hashed password"""
 
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=rounds)).decode("utf-8")
 
 
 def verify_password(password: str, hashed: str) -> bool:
@@ -186,39 +186,49 @@ class AppLogger:
             console_output=True,
         )
 
-    @classmethod
-    def log_execution_time(cls, logger: logging.Logger, start_time: datetime, operation: str):
-        """
-        Log execution time for an operation
 
-        :param logger: Logger instance
-        :param start_time: Start time of the operation
-        :param operation: Description of the operation
-        """
-        end_time = datetime.now()
-        duration = end_time - start_time
-        logger.info(f"{operation} completed in {duration.total_seconds():.2f} seconds")
+def get_last_log_line(logger_name: str) -> str | None:
+    """Get the last line from the service log file efficiently.
+    Reads from the end of the file to avoid loading the entire file.
+    :param logger_name: Name of the logger / log file"""
 
-    @classmethod
-    def log_stats(cls, logger: logging.Logger, stats: dict, title: str = "Operation Statistics"):
-        """
-        Log statistics in a formatted way
+    log_file_path = os.path.join(settings.log_directory, logger_name + ".log")
 
-        :param logger: Logger instance
-        :param stats: Dictionary of statistics
-        :param title: Title for the statistics block
-        """
-        logger.info("=" * 50)
-        logger.info(title)
-        logger.info("=" * 50)
+    if not os.path.exists(log_file_path):
+        return None
 
-        for key, value in stats.items():
-            if isinstance(value, list):
-                logger.info(f"{key}: {len(value)} items")
-                if value:  # Log first few items if list is not empty
-                    sample = value[:3]
-                    logger.debug(f"  Sample {key}: {sample}")
-            else:
-                logger.info(f"{key}: {value}")
+    try:
+        with open(log_file_path, "rb") as f:
+            # Seek to end
+            f.seek(0, 2)
+            position = f.tell()
 
-        logger.info("=" * 50)
+            if position == 0:
+                return None
+
+            # Read backwards to find the last non-empty line
+            chunk_size = 1024
+            buffer = b""
+
+            while position > 0:
+                read_size = min(chunk_size, position)
+                position -= read_size
+                f.seek(position)
+                buffer = f.read(read_size) + buffer
+
+                # Split and look for a complete line
+                lines = buffer.split(b"\n")
+
+                # Find the last non-empty line
+                for line in reversed(lines):
+                    stripped = line.strip()
+                    if stripped:
+                        try:
+                            return stripped.decode("utf-8")
+                        except UnicodeDecodeError:
+                            return stripped.decode("utf-8", errors="replace")
+
+            return None
+
+    except Exception as e:
+        return f"Error reading log file: {str(e)}"

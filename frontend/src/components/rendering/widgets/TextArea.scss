@@ -1,0 +1,6 @@
+.optimized-textarea {
+    resize: vertical;
+    transition: none !important;
+    transform: translateZ(0); /* Force hardware acceleration */
+    will-change: height;
+}

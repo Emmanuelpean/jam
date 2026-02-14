@@ -11,4 +11,5 @@ osascript -e "tell application \"Terminal\" to do script \"cd '$FRONTEND_DIR' &&
 sleep 1
 
 # Open backend in a new Terminal tab with environment activation
-osascript -e "tell application \"Terminal\" to do script \"cd '$BACKEND_DIR' && source /Users/emmanuel/PycharmProjects/jam/.venv/bin/activate && python3 -m uvicorn app.main:app --workers 4 --reload\""
+osascript -e "tell application \"Terminal\" to do script \"cd '$BACKEND_DIR' && source /Users/emmanuel/PycharmProjects/jam/.venv/bin/activate && python3 -m uvicorn app.main:app --workers 4 --port 8000 --reload\""
+osascript -e "tell application \"Terminal\" to do script \"cd '$BACKEND_DIR' && source /Users/emmanuel/PycharmProjects/jam/.venv/bin/activate && python3 -m uvicorn app.main:app --workers 1 --port 8001 --reload\""

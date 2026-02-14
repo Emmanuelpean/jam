@@ -1,26 +1,29 @@
-import { JSX } from "react";
-import { Theme, THEMES } from "../../../utils/Theme";
+import React, { JSX } from "react";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 import {
 	applicationStatusOptions,
 	appliedViaOptions,
 	attendanceTypeOptions,
+	GroupedSelectOption,
 	interviewAttendanceOptions,
 	interviewTypeOptions,
+	scrapingFilterOperatorOptions,
+	scrapingFilterTypeOptions,
 	SelectOption,
+	sourceTypeOptions,
 	updateTypeOptions,
 } from "./FormOptions";
-import { DataModalHandle } from "../../modals/DataModal/DataModal";
+import { DataModalHandle } from "../../DataModal/DataModal";
 
 export interface ModalFormField {
-	name: string;
+	name: string | string[];
 	secondaryName?: string;
-	label?: string | JSX.Element;
+	label?: string | JSX.Element | null;
 	icon?: string;
 	type: string;
 	required?: boolean;
 	placeholder?: string;
-	options?: SelectOption[];
+	options?: SelectOption[] | GroupedSelectOption[];
 	validation?: (value: string) => { isValid: boolean; message: string } | undefined;
 	rows?: number;
 	isSearchable?: boolean;
@@ -38,6 +41,8 @@ export interface ModalFormField {
 	displayCondition?: (item: any) => boolean;
 	previewConfig?: SelectWidgetPreviewConfig | null;
 	isDisabled?: boolean;
+	autoHeight?: boolean;
+	maxChars?: number;
 }
 
 interface FormFieldOverride extends Partial<ModalFormField> {}
@@ -94,6 +99,11 @@ export const formFields = {
 		label: "URL",
 		type: "url",
 		placeholder: "https://...",
+		validation: (value: string) => {
+			if (value && !value.includes(".")) {
+				return { isValid: false, message: "Please enter a valid URL" };
+			}
+		},
 		...overrides,
 	}),
 
@@ -128,15 +138,21 @@ export const formFields = {
 		...overrides,
 	}),
 
-	// ------------------------------------------------- USERS ------------------------------------------------
-
-	appTheme: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "theme",
-		label: "App Theme",
-		type: "select",
-		options: THEMES.map((theme: Theme): SelectOption => ({ value: theme.key, label: theme.name })),
+	caseSensitive: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "case_sensitive",
+		label: "Case Sensitive",
+		type: "checkbox",
 		...overrides,
 	}),
+
+	isRecruiter: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "is_recruiter",
+		label: "Is Recruiter",
+		type: "checkbox",
+		...overrides,
+	}),
+
+	// ------------------------------------------------- USERS ------------------------------------------------
 
 	isAdmin: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "is_admin",
@@ -145,10 +161,24 @@ export const formFields = {
 		...overrides,
 	}),
 
-	toastActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "toast_active",
-		label: "Toast Active",
-		type: "checkbox",
+	premiumActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: ["premium", "is_active"],
+		label: "Premium Active",
+		type: "toggle",
+		...overrides,
+	}),
+
+	jobScrapingActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: ["premium", "job_scraping_active"],
+		label: "Job Scraping Active",
+		type: "toggle",
+		...overrides,
+	}),
+
+	jobRatingActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: ["premium", "job_rating_active"],
+		label: "Job Rating Active",
+		type: "toggle",
 		...overrides,
 	}),
 
@@ -356,7 +386,7 @@ export const formFields = {
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "company_id",
 		label: "Company",
@@ -374,7 +404,7 @@ export const formFields = {
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "company_id",
 		secondaryName: "company",
@@ -393,7 +423,7 @@ export const formFields = {
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "location_id",
 		label: "Location",
@@ -411,7 +441,7 @@ export const formFields = {
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "location_id",
 		secondaryName: "location",
@@ -430,7 +460,7 @@ export const formFields = {
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "keywords",
 		label: "Tags",
@@ -448,7 +478,7 @@ export const formFields = {
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "contacts",
 		label: "Contacts",
@@ -466,11 +496,28 @@ export const formFields = {
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "interviewers",
 		label: "Interviewers",
 		type: "multiselect",
+		isSearchable: true,
+		previewConfig: previewConfig,
+		options: options,
+		addButton: { modalRef, transformParentData },
+		...overrides,
+	}),
+
+	recruiter: (
+		options: SelectOption[] = [],
+		modalRef: React.RefObject<DataModalHandle | null>,
+		transformParentData?: ((parentData: any) => any) | null,
+		previewConfig: SelectWidgetPreviewConfig | null = null,
+		overrides: FormFieldOverride = {}
+	): ModalFormField => ({
+		name: "recruiter_id",
+		label: "Recruiter",
+		type: "select",
 		isSearchable: true,
 		previewConfig: previewConfig,
 		options: options,
@@ -495,7 +542,7 @@ export const formFields = {
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "aggregator_id",
 		label: "Aggregator",
@@ -506,6 +553,41 @@ export const formFields = {
 		previewConfig: previewConfig,
 		options: options,
 		addButton: { modalRef, transformParentData },
+		...overrides,
+	}),
+
+	sourceType: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		options: sourceTypeOptions,
+		name: "source_type",
+		label: "Source",
+		type: "select",
+		placeholder: "Select source",
+		isSearchable: true,
+		isClearable: true,
+		...overrides,
+	}),
+
+	scrapingFilterType: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "type",
+		label: "Filter Type",
+		type: "select",
+		required: true,
+		placeholder: "Select filter type",
+		isSearchable: true,
+		isClearable: true,
+		options: scrapingFilterTypeOptions,
+		...overrides,
+	}),
+
+	scrapingFilterOperator: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "operator",
+		label: "Operator",
+		type: "select",
+		required: true,
+		placeholder: "Select filter type",
+		isSearchable: true,
+		isClearable: true,
+		options: scrapingFilterOperatorOptions,
 		...overrides,
 	}),
 };

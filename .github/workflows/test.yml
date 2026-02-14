@@ -12,21 +12,34 @@ env:
 
 jobs:
   build:
-    environment:
-      name: production
+    name: Run Tests and Generate Reports
+    environment: test
+    runs-on: ubuntu-latest
     env:
-      DATABASE_HOSTNAME:  ${{secrets.DATABASE_HOSTNAME}}
-      DATABASE_PORT: ${{secrets.DATABASE_PORT}}
-      DATABASE_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
-      DATABASE_NAME: jam_test
-      DATABASE_USERNAME: ${{secrets.DATABASE_USERNAME}}
-      SECRET_KEY: ${{secrets.SECRET_KEY}}
-      ALGORITHM: ${{secrets.ALGORITHM}}
-      ACCESS_TOKEN_EXPIRE_MINUTES: ${{secrets.ACCESS_TOKEN_EXPIRE_MINUTES}}
-      MIN_PASSWORD_LENGTH: ${{secrets.MIN_PASSWORD_LENGTH}}
-      MAX_FILE_SIZE_MB: ${{secrets.MAX_FILE_SIZE_MB}}
-      EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
-      EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+      # Database Configuration
+      DATABASE_HOSTNAME: ${{ vars.DATABASE_HOSTNAME }}
+      DATABASE_PORT: ${{ vars.DATABASE_PORT }}
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      DATABASE_NAME: ${{ vars.DATABASE_NAME }}
+      DATABASE_USERNAME: ${{ vars.DATABASE_USERNAME }}
+
+      # Authentication
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      ALGORITHM: ${{ secrets.ALGORITHM }}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${{ vars.ACCESS_TOKEN_EXPIRE_MINUTES }}
+
+      # Application Settings
+      MAX_FILE_SIZE_MB: ${{ vars.MAX_FILE_SIZE_MB }}
+      LOG_DIRECTORY: ${{ vars.LOG_DIRECTORY }}
+      TEST_MODE: ${{ vars.TEST_MODE }}
+      MIN_PASSWORD_LENGTH: ${{ vars.MIN_PASSWORD_LENGTH }}
+      MONTHLY_SCRAPE_QUOTA: ${{ vars.MONTHLY_SCRAPE_QUOTA }}
+
+      # Email Configuration
+      MAIN_EMAIL_USERNAME: ${{ secrets.MAIN_EMAIL_USERNAME }}
+      MAIN_EMAIL_PASSWORD: ${{ secrets.MAIN_EMAIL_PASSWORD }}
+      SCRAPER_EMAIL_USERNAME: ${{ secrets.SCRAPER_EMAIL_USERNAME }}
+      SCRAPER_EMAIL_PASSWORD: ${{ secrets.SCRAPER_EMAIL_PASSWORD }}
       EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
       EMAIL_SMTP_HOST: ${{ secrets.EMAIL_SMTP_HOST }}
       EMAIL_IMAP_PORT: ${{ secrets.EMAIL_IMAP_PORT }}
@@ -34,23 +47,39 @@ jobs:
       SCRAPER_EMAIL: ${{ secrets.SCRAPER_EMAIL }}
       INFO_EMAIL: ${{ secrets.INFO_EMAIL }}
       SUPPORT_EMAIL: ${{ secrets.SUPPORT_EMAIL }}
-      FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-      BACKEND_URL: ${{ secrets.BACKEND_URL }}
-      VERIFICATION_TOKEN_EXPIRATION_MINUTES: ${{ secrets.VERIFICATION_TOKEN_EXPIRATION_MINUTES }}
-      VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS: ${{ secrets.VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS }}
-      TEST_MODE: true
-      log_directory: ${{ secrets.LOG_DIRECTORY }}
-      brightdata_api_key: ${{ secrets.BRIGHTDATA_API_KEY }}
-      brightdata_linkedin_dataset_id: ${{ secrets.BRIGHTDATA_LINKEDIN_DATASET_ID }}
-      brightdata_indeed_dataset_id: ${{ secrets.BRIGHTDATA_INDEED_DATASET_ID }}
-      openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-      apify_api_key: ${{ secrets.APIFY_API_KEY }}
+
+      # URLs
+      FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+      BACKEND_URL: ${{ vars.BACKEND_URL }}
+
+      # Verification Settings
+      VERIFICATION_TOKEN_EXPIRATION_MINUTES: ${{ vars.VERIFICATION_TOKEN_EXPIRATION_MINUTES }}
+      VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS: ${{ vars.VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS }}
+      EMAIL_CHANGE_TOKEN_EXPIRATION_MINUTES: ${{ vars.EMAIL_CHANGE_TOKEN_EXPIRATION_MINUTES }}
+      PASSWORD_RESET_TOKEN_EXPIRATION_MINUTES: ${{ vars.PASSWORD_RESET_TOKEN_EXPIRATION_MINUTES }}
+
+      # External API Keys
+      BRIGHTDATA_API_KEY: ${{ secrets.BRIGHTDATA_API_KEY }}
+      BRIGHTDATA_LINKEDIN_DATASET_ID: ${{ secrets.BRIGHTDATA_LINKEDIN_DATASET_ID }}
+      BRIGHTDATA_INDEED_DATASET_ID: ${{ secrets.BRIGHTDATA_INDEED_DATASET_ID }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      APIFY_API_KEY: ${{ secrets.APIFY_API_KEY }}
+
+      # Payment Configuration
+      STRIPE_API_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+      STRIPE_TOAST_PRICE_ID: ${{ secrets.STRIPE_TOAST_PRICE_ID }}
+
+      # Frontend Config
+      REACT_APP_API_BASE_URL: ${{ vars.REACT_APP_API_BASE_URL }}
+      REACT_APP_API_SERVICE_URL: ${{ vars.REACT_APP_SERVICE_BASE_URL }}
+      REACT_APP_ENABLE_ANALYTICS: ${{ vars.REACT_APP_ENABLE_ANALYTICS }}
 
     services:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
+          POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           POSTGRES_DB: jam_test
         ports:
           - 5432:5432
@@ -60,7 +89,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -75,7 +103,7 @@ jobs:
 
       - name: Update pip and install dependencies
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
-        run: | 
+        run: |
           python -m pip install --upgrade pip
           python -m pip install ./backend[dev]
 
@@ -83,36 +111,66 @@ jobs:
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
           cd frontend
-          npm install --legacy-peer-deps
+          npm install
           cd ..
 
-      - name: Run Tests with Pytest and Coverage
+      - name: Install Stripe CLI
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
-          coverage run -m pytest ./ -v --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
+          curl -s https://packages.stripe.dev/api/security/keypair/stripe-cli-gpg/public | sudo gpg --dearmor -o /usr/share/keyrings/stripe.gpg
+          echo "deb [signed-by=/usr/share/keyrings/stripe.gpg] https://packages.stripe.dev/stripe-cli-debian-local stable main" | sudo tee /etc/apt/sources.list.d/stripe.list
+          sudo apt-get update
+          sudo apt-get install -y stripe
 
-#      - name: Upload test logs and screenshots
-#        uses: actions/upload-artifact@v4
-#        if: always() && !contains(github.event.head_commit.message, '[skip tests]')
-#        with:
-#          name: test-logs-${{ github.run_number }}
-#          path: test_logs/
-#          if-no-files-found: ignore
-#          retention-days: 14
+      - name: Run backend tests
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
+        run: |
+          pytest -n auto ./backend \
+            --cov=backend \
+            --cov-config=backend/pyproject.toml \
+            --cov-report=term-missing \
+            --cov-report=html \
+            --cov-report=xml \
+            --junitxml=reports/tests/backend.xml
+
+      - name: Run frontend (Selenium) tests
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
+        run: |
+          pytest -n auto --dist loadgroup ./frontend/tests \
+            --junitxml=reports/tests/frontend.xml -v
+
+      - name: Install junitparser
+        run: pip install junitparser
+
+      - name: Merge test reports
+        run: |
+          junitparser merge \
+            reports/tests/backend.xml \
+            reports/tests/frontend.xml \
+            reports/tests/tests.xml
+
+      - name: Upload test logs and screenshots
+        uses: actions/upload-artifact@v4
+        if: always() && !contains(github.event.head_commit.message, '[skip tests]')
+        with:
+          name: test-logs-${{ github.run_number }}
+          path: ${{ env.LOG_DIRECTORY }}/
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Print log summary
         if: always() && !contains(github.event.head_commit.message, '[skip tests]')
         run: |
           echo "=== Test Log Summary ==="
-          if [ -d "test_logs" ]; then
+          if [ -d "$LOG_DIRECTORY" ]; then
             echo "Log directory contents:"
-            ls -lh test_logs/
+            ls -lh "$LOG_DIRECTORY"
             echo ""
             echo "Failed test browser logs:"
-            find test_logs/ -name "*FAILED*browser.log" -exec echo "  - {}" \; 2>/dev/null || echo "  None found"
+            find "$LOG_DIRECTORY" -name "*FAILED*browser.log" -exec echo "  - {}" \; 2>/dev/null || echo "  None found"
             echo ""
             echo "Failed test screenshots:"
-            find test_logs/ -name "*FAILED*.png" -exec echo "  - {}" \; 2>/dev/null || echo "  None found"
+            find "$LOG_DIRECTORY" -name "*FAILED*.png" -exec echo "  - {}" \; 2>/dev/null || echo "  None found"
           else
             echo "No logs directory found (all tests may have passed)"
           fi
@@ -120,10 +178,12 @@ jobs:
       - name: Generate badges and coverage
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
-          coverage xml -o reports/coverage/coverage.xml
-          genbadge tests --input-file=reports/tests/tests.xml --output-file=reports/tests/tests-badge.svg
-          coverage html -d reports/coverage/htmlcov
-          genbadge coverage --output-file=reports/coverage/coverage-badge.svg
+          genbadge tests \
+            --input-file=reports/tests/tests.xml \
+            --output-file=reports/tests/tests-badge.svg
+
+          genbadge coverage \
+            --output-file=reports/coverage/coverage-badge.svg
 
       - name: Commit and push badge
         if: "!contains(github.event.head_commit.message, '[skip tests]')"

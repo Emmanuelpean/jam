@@ -12,7 +12,8 @@ from sqlalchemy.orm import Session
 from starlette import status
 from starlette.requests import Request
 
-from app import database, models, oauth2
+from app import database, models
+from app.core import oauth2
 
 NOT_ALLOWED_EXCEPTION = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
@@ -289,7 +290,10 @@ def generate_data_table_crud_router(
             query = filter_query(query, table_model, filter_params)
 
             results = query.limit(limit).all()
-            return [filter_out_non_owned(result, current_user.id) for result in results]
+            if current_user.is_admin:
+                return results
+            else:
+                return [filter_out_non_owned(result, current_user.id) for result in results]
 
     if "get" in allowed_actions or "get_one" in allowed_actions:
 
@@ -318,7 +322,10 @@ def generate_data_table_crud_router(
             # Ensure that the user is authorised to view this entry
             check_ownership(entry, current_user)
 
-            return filter_out_non_owned(entry, current_user.id)
+            if current_user.is_admin:
+                return entry
+            else:
+                return filter_out_non_owned(entry, current_user.id)
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
@@ -352,7 +359,7 @@ def generate_data_table_crud_router(
             # Extract the item data and exclude many-to-many fields from main creation
             item_dict = item.model_dump()
             if transform:
-                item_dict = transform(item_dict)
+                item_dict.update(transform(item_dict, db))
 
             # Remove many-to-many fields from main creation data
             main_data = item_dict.copy()
@@ -387,13 +394,16 @@ def generate_data_table_crud_router(
                 db.commit()
                 db.refresh(new_entry)
 
-            return filter_out_non_owned(new_entry, current_user.id)
+            if current_user.is_admin:
+                return new_entry
+            else:
+                return filter_out_non_owned(new_entry, current_user.id)
 
     # ------------------------------------------------------- PUT ------------------------------------------------------
 
     if "put" in allowed_actions:
 
-        @router.put("/{entry_id}", response_model=out_schema)
+        @router.put("/{entry_id}", status_code=status.HTTP_200_OK, response_model=out_schema)
         def update(
             entry_id: int,
             item: update_schema,  # noqa
@@ -440,9 +450,20 @@ def generate_data_table_crud_router(
                     if field_name in main_data:
                         m2m_data[field_name] = main_data.pop(field_name)
 
+            # Apply transform to the merged data (existing entry + updates)
+            if transform:
+                merged_data = {c.name: getattr(entry, c.name) for c in entry.__table__.columns}
+                merged_data.update(main_data)
+                transformed_data = transform(merged_data, db)
+                main_data.update(transformed_data)
+
             # Update the record
             for field, value in main_data.items():
-                setattr(entry, field, value)
+                if isinstance(value, dict):
+                    for k, v in value.items():
+                        setattr(getattr(entry, field), k, v)
+                else:
+                    setattr(entry, field, value)
 
             # Handle many-to-many relationships
             if m2m_data:
@@ -460,7 +481,10 @@ def generate_data_table_crud_router(
                     )
 
             # Return the updated entry
-            return filter_out_non_owned(entry, current_user.id)
+            if current_user.is_admin:
+                return entry
+            else:
+                return filter_out_non_owned(entry, current_user.id)
 
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 

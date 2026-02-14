@@ -1,4 +1,4 @@
-"""Pytest fixtures for EIS tests"""
+"""Pytest fixtures for Job Scraping tests"""
 
 import datetime as dt
 from typing import Any, Generator
@@ -6,10 +6,10 @@ from unittest import mock
 
 import pytest
 
-from app.job_email_scraping import models
+from app import models
 from app.job_email_scraping.email_parsers import indeed
 from app.job_email_scraping.email_scraper import JobEmailScraper
-from app.models import Setting
+from app.job_email_scraping.email_parsers import Platform
 from tests.job_email_scraping import resources
 from tests.job_email_scraping.mock_job_scrapers import (
     MockVeganJobsBrightdataJobScraper,
@@ -53,54 +53,23 @@ def patch_get_indeed_redirected_url(monkeypatch) -> None:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def mock_linkedin_job_scrapers() -> Generator[type[MockLinkedinBrightdataJobScraper], Any, None]:
-    """Mock LinkedinJobScraper for all tests"""
+def mock_job_scrapers() -> Generator[dict, Any, None]:
+    """Mock all job scrapers via the SCRAPERS dictionary"""
 
-    with mock.patch(
-        "app.job_email_scraping.email_scraper.LinkedinBrightdataJobScraper", MockLinkedinBrightdataJobScraper
-    ) as mocked:
-        yield mocked
+    mock_scrapers = {
+        Platform.LINKEDIN: MockLinkedinBrightdataJobScraper,
+        Platform.INDEED: MockIndeedBrightdataJobScraper,
+        Platform.VEGANJOBS: MockVeganJobsBrightdataJobScraper,
+        Platform.NHS: MockNhsBrightdataJobScraper,
+    }
 
-
-# @pytest.fixture(scope="session", autouse=True)
-# def mock_indeed_job_scrapers() -> Generator[type[MockIndeedBrightdataJobScraper], Any, None]:
-#     """Mock IndeedJobScraper for all tests"""
-#
-#     with mock.patch("app.job_email_scraping.email_scraper.IndeedBrightdataJobScraper", MockIndeedBrightdataJobScraper) as mocked:
-#         yield mocked
-
-
-@pytest.fixture(scope="session", autouse=True)
-def mock_indeed_job_apify_scrapers() -> Generator[type[MockIndeedBrightdataJobScraper], Any, None]:
-    """Mock IndeedJobScraper for all tests"""
-
-    with mock.patch(
-        "app.job_email_scraping.email_scraper.IndeedApifyJobScraper", MockIndeedBrightdataJobScraper
-    ) as mocked:
-        yield mocked
-
-
-@pytest.fixture(scope="session", autouse=True)
-def mock_veganjobs_job_scrapers() -> Generator[type[MockVeganJobsBrightdataJobScraper], Any, None]:
-    """Mock VeganJobsJobScraper for all tests"""
-
-    with mock.patch(
-        "app.job_email_scraping.email_scraper.VeganJobsJobScraper", MockVeganJobsBrightdataJobScraper
-    ) as mocked:
-        yield mocked
-
-
-@pytest.fixture(scope="session", autouse=True)
-def mock_nhs_job_scrapers() -> Generator[type[MockNhsBrightdataJobScraper], Any, None]:
-    """Mock NhsJobScraper for all tests"""
-
-    with mock.patch("app.job_email_scraping.email_scraper.NhsJobScraper", MockNhsBrightdataJobScraper) as mocked:
+    with mock.patch("app.job_email_scraping.email_scraper.SCRAPERS", mock_scrapers) as mocked:
         yield mocked
 
 
 @pytest.fixture
-def test_eis_service_log(session) -> models.JobEmailScrapingServiceLog:
-    """Create a test EisServiceLog record"""
+def test_job_scraping_service_log(session) -> models.JobEmailScrapingServiceLog:
+    """Create a test JobEmailScrapingServiceLog record"""
 
     # noinspection PyArgumentList
     service_log = models.JobEmailScrapingServiceLog(run_datetime=dt.datetime.now())
@@ -114,7 +83,7 @@ def test_job_scraper(session) -> JobEmailScraper:
     """Create a JobScraper instance for testing with mocked file dependencies."""
 
     # noinspection PyArgumentList
-    entry = Setting(name="indeed_scraper", value="brightapi")
+    entry = models.Setting(name="indeed_scraper", value="brightapi")
     session.add(entry)
     session.commit()
     return JobEmailScraper(session)
@@ -125,14 +94,14 @@ def job_scraper_with_brightapi_skip(session) -> JobEmailScraper:
     """Create a JobScraper instance with BrightAPI skip enabled for indeed jobs."""
 
     # noinspection PyArgumentList
-    entry = Setting(name="indeed_scraper", value="email")
+    entry = models.Setting(name="indeed_scraper", value="email")
     session.add(entry)
     session.commit()
     return JobEmailScraper(session)
 
 
 @pytest.fixture
-def email_record_factory(session, test_users, test_eis_service_log) -> Any:
+def email_record_factory(session, test_users, test_job_scraping_service_log) -> Any:
     """Factory fixture for creating email records in the database."""
 
     def _create(email_id: str, user_index: int = 0) -> tuple[models.JobEmail, list[str]]:
@@ -145,7 +114,7 @@ def email_record_factory(session, test_users, test_eis_service_log) -> Any:
             date_received=email_resource["date"],
             platform=email_resource["platform"],
             body=email_resource["body"],
-            service_log_id=test_eis_service_log.id,
+            service_log_id=test_job_scraping_service_log.id,
         )
 
         # noinspection PyArgumentList

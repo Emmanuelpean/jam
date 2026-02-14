@@ -1,0 +1,38 @@
+.progress-overlay {
+    position: fixed;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 200ms ease-out;
+    pointer-events: none;
+    opacity: 0;
+    background-color: rgb(0 0 0 / 50%);
+    inset: 0;
+}
+
+.progress-overlay.show {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.progress-overlay-card {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    min-width: 300px;
+    max-width: 500px;
+    padding: 2rem;
+    transition: opacity 200ms ease-out,
+    transform 200ms ease-out;
+    transform: scale(0.95);
+    opacity: 0;
+    border-radius: 8px;
+    background-color: var(--bs-secondary-bg);
+    box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
+}
+
+.progress-overlay.show .progress-overlay-card {
+    transform: scale(1);
+    opacity: 1;
+}

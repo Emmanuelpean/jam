@@ -4,16 +4,26 @@ Defines SQLAlchemy ORM models for email-based job scraping functionality.
 Includes models for job alert emails, extracted job IDs, and scraped job data
 with associated companies and locations from external sources."""
 
-from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, Float, TIMESTAMP, Table, UniqueConstraint
+from sqlalchemy import (
+    Column,
+    String,
+    Boolean,
+    ForeignKey,
+    Integer,
+    Float,
+    TIMESTAMP,
+    Table,
+    UniqueConstraint,
+    CheckConstraint,
+)
 from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
-from app.models import Base, CommonBase, Owned, ServiceLog
-
-# ------------------------------------------------------ MAPPINGS ------------------------------------------------------
-
+from app.base_models import CommonBase, Owned
+from app.database import Base
+from app.service_runner.models import ServiceLog
 
 jobemail_scrapedjob_mapping = Table(
     "jobemail_scrapedjob_mapping",
@@ -21,9 +31,6 @@ jobemail_scrapedjob_mapping = Table(
     Column("email_id", Integer, ForeignKey("job_email.id", ondelete="CASCADE"), primary_key=True),
     Column("job_id", Integer, ForeignKey("scraped_job.id", ondelete="CASCADE"), primary_key=True),
 )
-
-
-# -------------------------------------------------------- DATA --------------------------------------------------------
 
 
 class JobEmail(Owned, Base):
@@ -81,9 +88,12 @@ class ScrapedJob(Owned, Base):
     -----------
     - `external_job_id` (str): Unique identifier for the job posting.
     - `platform` (str): Platform from which the job was scraped (LinkedIn, Indeed, etc.).
-    - `is_scraped` (bool): Indicates whether the job has been scraped.
+    - `is_processed` (bool): Indicates whether the job has been processed (scraped, skipped, copied, etc.).
+    - `is_scraped` (bool): Indicates whether the job has been successfully scraped.
     - `is_failed` (bool): Indicates whether the job scraping failed.
+    - `is_skipped` (bool): Indicates whether the job scraping was skipped (e.g., quota exceeded).
     - `scrape_error` (str, optional): Error message if the job scraping failed.
+    - `skip_reason` (str, optional): Reason why the job scraping was skipped.
     - `scrape_datetime` (datetime, optional): Date and time when the job was scraped.
     - `is_active` (bool): Indicates whether the job is active
     - `is_imported` (bool): Indicates whether the job was imported into a job.
@@ -119,9 +129,12 @@ class ScrapedJob(Owned, Base):
 
     external_job_id = Column(String, nullable=False)
     platform = Column(String, nullable=False)
+    is_processed = Column(Boolean, nullable=False, server_default=expression.false())
     is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
     is_failed = Column(Boolean, nullable=False, server_default=expression.false())
     scrape_error = Column(String, nullable=True)
+    is_skipped = Column(Boolean, nullable=False, server_default=expression.false())
+    skip_reason = Column(String, nullable=True)
     scrape_datetime = Column(TIMESTAMP(timezone=True), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
     is_imported = Column(Boolean, nullable=False, server_default=expression.false())
@@ -146,11 +159,21 @@ class ScrapedJob(Owned, Base):
     service_log_id = Column(
         Integer, ForeignKey("job_email_scraping_service_log.id", ondelete="SET NULL"), nullable=False
     )
+    exclusion_filter_id = Column(
+        Integer, ForeignKey("scraping_exclusion_filter.id", ondelete="SET NULL"), nullable=True
+    )
+    favourite_filter_id = Column(
+        Integer, ForeignKey("scraping_favourite_filter.id", ondelete="SET NULL"), nullable=True
+    )
+    geolocation_id = Column(Integer, ForeignKey("geolocation.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     emails = relationship("JobEmail", secondary=jobemail_scrapedjob_mapping, back_populates="jobs")
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="scraped_jobs")
     job_rating = relationship("JobRating", back_populates="scraped_job", uselist=False)
+    exclusion_filter = relationship("ScrapingExclusionFilter", back_populates="filtered_jobs")
+    favourite_filter = relationship("ScrapingFavouriteFilter", back_populates="filtered_jobs")
+    geolocation = relationship("Geolocation")
 
     # Constraints
     __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)
@@ -202,9 +225,9 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
         super().__init__(**kwargs)
 
     @hybrid_property
-    def job_to_scrape_n(self) -> int:
+    def job_to_process_n(self) -> int:
         """Total jobs to scrape across all platforms."""
-        return sum(len(stat.job_to_scrape_ids) for stat in self.platform_stats)
+        return sum(len(stat.job_to_process_ids) for stat in self.platform_stats)
 
     @hybrid_property
     def job_scrape_succeeded_n(self) -> int:
@@ -241,6 +264,11 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
         """Total emails saved across all platforms."""
         return sum(len(stat.email_skipped_ids) for stat in self.platform_stats)
 
+    @hybrid_property
+    def job_scrape_filtered_n(self) -> int:
+        """Total filtered scraped jobs across all platforms."""
+        return sum(len(stat.job_scrape_filtered_ids) for stat in self.platform_stats)
+
 
 class JobEmailScrapingPlatformStat(CommonBase, Base):
     """Per-platform stats for a service run linked to an JobEmailScrapingServiceLog.
@@ -255,11 +283,12 @@ class JobEmailScrapingPlatformStat(CommonBase, Base):
 
     # Jobs
     - `job_found_ids` (list of int): List of found job IDs from the emails.
-    - `job_to_scrape_ids` (list of int): List of job IDs to be scraped.
+    - `job_to_process_ids` (list of int): List of job IDs to be processed.
     - `job_scrape_failed_ids` (list of int): List of failed job scrape IDs.
     - `job_scrape_succeeded_ids` (list of int): List of successful job scrape IDs.
     - `job_scrape_copied_ids` (list of int): List of copied job scrape IDs.
     - `job_scrape_skipped_ids` (list of int): List of skipped job scrape IDs.
+    - `job_scrape_filtered_ids` (list of int): List of filtered job scrape IDs.
 
     Foreign keys:
     -------------
@@ -282,11 +311,12 @@ class JobEmailScrapingPlatformStat(CommonBase, Base):
 
     # Jobs
     job_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
-    job_to_scrape_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    job_to_process_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_scrape_failed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_scrape_succeeded_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_scrape_copied_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_scrape_skipped_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    job_scrape_filtered_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
 
     # Foreign keys
     service_log_id = Column(
@@ -304,11 +334,12 @@ class JobEmailScrapingPlatformStat(CommonBase, Base):
         kwargs.setdefault("email_saved_ids", [])
         kwargs.setdefault("email_skipped_ids", [])
         kwargs.setdefault("job_found_ids", [])
-        kwargs.setdefault("job_to_scrape_ids", [])
+        kwargs.setdefault("job_to_process_ids", [])
         kwargs.setdefault("job_scrape_failed_ids", [])
         kwargs.setdefault("job_scrape_succeeded_ids", [])
         kwargs.setdefault("job_scrape_copied_ids", [])
         kwargs.setdefault("job_scrape_skipped_ids", [])
+        kwargs.setdefault("job_scrape_filtered_ids", [])
         super().__init__(**kwargs)
 
 
@@ -340,3 +371,73 @@ class JobEmailScrapingServiceError(CommonBase, Base):
 
     # Relationships
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="service_errors")
+
+
+class Filter(object):
+    """Represents user-defined rules to filter scraped jobs
+
+    Attributes:
+    -----------
+    - `type` (str): Type of filter (title, company, location, salary, attendance_type).
+    - `operator` (str): Operator for the filter (contains, equals, starts_with, ends_with, less_than, greater_than).
+    - `value` (str): Value to match against.
+    - `case_sensitive` (bool): Whether string matching should be case-sensitive.
+    - `is_active` (bool): Whether the filter is active.
+
+    Constraints:
+    ------------
+    - Check constraint to ensure valid filter_type values.
+    - Check constraint to ensure valid filter_operator values."""
+
+    type = Column(String, nullable=False)
+    operator = Column(String, nullable=False)
+    value = Column(String, nullable=False)
+    case_sensitive = Column(Boolean, nullable=False, server_default=expression.false())
+    is_active = Column(Boolean, nullable=False, server_default=expression.true())
+
+    # Constraints
+    __table_args__ = (
+        CheckConstraint(
+            "type IN ('title', 'company', 'location', 'location_city', 'location_country', 'salary_min', 'salary_max', 'attendance_type')",
+            name="valid_filter_type",
+        ),
+        CheckConstraint(
+            "operator IN ('contains', 'equals', 'starts_with', 'ends_with', 'less_than', 'greater_than', 'not_contains', 'not_equals')",
+            name="valid_filter_operator",
+        ),
+    )
+
+    @hybrid_property
+    def name(self) -> str:
+        """Generate a human-readable name for the filter rule."""
+
+        case_str = " (case-sensitive)" if self.case_sensitive else ""
+        return f"{self.type} {self.operator} '{self.value}'{case_str}"
+
+
+class ScrapingExclusionFilter(Filter, Owned, Base):
+    """Represents user-defined rules to filter out scraped jobs."""
+
+    filtered_jobs = relationship("ScrapedJob", back_populates="exclusion_filter")
+
+
+class ScrapingFavouriteFilter(Filter, Owned, Base):
+    """Represents user-defined rules to filter favourite scraped jobs."""
+
+    filtered_jobs = relationship("ScrapedJob", back_populates="favourite_filter")
+
+
+class ForwardingConfirmationLink(Owned, Base):
+    """Represents a confirmation email sent to a user after setting up forwarding.
+
+    Attributes:
+    -----------
+    - `email_external_id` (str): External ID of the email.
+    - `url` (str): URL to the confirmation page.
+    - `platform` (str): Platform (e.g., Gmail).
+    - `is_used` (bool): Whether the confirmation link has been used"""
+
+    email_external_id = Column(String, nullable=False)
+    url = Column(String, nullable=False)
+    platform = Column(String, nullable=False)
+    is_used = Column(Boolean, nullable=False, server_default=expression.false())

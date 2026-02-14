@@ -3,7 +3,7 @@
 import datetime
 import os
 
-from app.job_email_scraping.job_scrapers import JobResult, JobInfo, Salary
+from app.job_email_scraping.schemas import Salary, JobInfo, JobResult
 from tests.utils.test_data import USER_DATA
 
 
@@ -13,7 +13,7 @@ def open_file(file: str, **kwargs) -> str:
     :return: The contents of the file"""
 
     BASE_DIR = os.path.dirname(__file__)
-    filepath = os.path.join(BASE_DIR, "../resources/job_alert_emails", file)
+    filepath = os.path.join(BASE_DIR, "../utils/resources/job_alert_emails", file)
     with open(filepath, "r", **kwargs) as ofile:
         return ofile.read()
 

@@ -1,0 +1,108 @@
+.slide-carousel-modal {
+    .modal-body {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .carousel-measure-container {
+        position: absolute;
+        visibility: hidden;
+        pointer-events: none;
+        overflow: hidden;
+        width: 100%;
+        left: 0;
+        z-index: -1;
+        top: 0;
+    }
+
+    @keyframes slide-in-from-right {
+        from { transform: translateX(60px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes slide-in-from-left {
+        from { transform: translateX(-60px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    .carousel-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 1rem 2rem;
+        min-height: 300px;
+
+        &.slide-next {
+            animation: slide-in-from-right 0.3s ease;
+        }
+
+        &.slide-prev {
+            animation: slide-in-from-left 0.3s ease;
+        }
+    }
+
+    .carousel-step-icon {
+        width: 96px;
+        height: 96px;
+        background: var(--primary-gradient);
+        border-radius: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .carousel-step-image {
+        max-width: 100%;
+        height: 350px;
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+        object-fit: contain;
+    }
+
+    .carousel-step-title {
+        font-weight: 700;
+        color: var(--primary-mid);
+        margin-bottom: 0.75rem;
+        font-size: 1.4rem;
+    }
+
+    .carousel-step-description {
+        color: var(--bs-body-color);
+        line-height: 1.7;
+        max-width: 700px;
+        font-size: 0.95rem;
+    }
+
+    .carousel-dots {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 0;
+    }
+
+    .carousel-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: none;
+        padding: 0;
+        background: var(--bs-border-color);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &.active {
+            background: var(--primary-mid);
+            transform: scale(1.3);
+        }
+
+        &:hover:not(.active) {
+            background: var(--bs-secondary-color);
+        }
+    }
+}

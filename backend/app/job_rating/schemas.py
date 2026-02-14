@@ -4,7 +4,16 @@ import datetime as dt
 
 from pydantic import BaseModel
 
-from app.schemas import Out
+from app.base_schemas import Out
+
+
+# --------------------------------------------------- AI SYSTEM PROMPT ---------------------------------------------------
+
+
+class AiSystemPromptOut(Out):
+    """AI System Prompt output schema"""
+
+    prompt: str
 
 
 # ----------------------------------------------------- JOB RATING -----------------------------------------------------
@@ -19,11 +28,13 @@ class JobRatingOut(BaseModel):
     educational_score: int | None
     interest_score: int | None
     feedback: str | None
-    script_version: int | None
     is_success: bool | None
     error: str | None
     scraped_job_id: int | None
     user_qualification_id: int | None
+    system_prompt_id: int | None
+    job_prompt_template_id: int | None
+    job_prompt: str | None
 
 
 # ----------------------------------------------- JOB RATING SERVICE LOG -----------------------------------------------

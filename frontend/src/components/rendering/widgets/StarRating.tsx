@@ -1,6 +1,7 @@
 import React, { JSX, useState } from "react";
-import "./StarRating.css";
+import "./StarRating.scss";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
+import { toKey } from "../../../utils/StringUtils";
 
 export const StarRating = ({ field, value, handleChange }: WidgetProps): JSX.Element => {
 	const [hoverRating, setHoverRating] = useState<number>(0);
@@ -10,7 +11,7 @@ export const StarRating = ({ field, value, handleChange }: WidgetProps): JSX.Ele
 	const handleStarClick = (rating: number): void => {
 		const syntheticEvent: SyntheticEvent = {
 			target: {
-				name: field.name,
+				name: toKey(field.name),
 				value: rating === currentRating ? 0 : rating,
 			},
 		};

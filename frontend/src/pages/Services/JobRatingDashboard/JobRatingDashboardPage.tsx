@@ -1,4 +1,4 @@
-import React, { JSX, useState, useEffect } from "react";
+import React, { JSX, useEffect, useState } from "react";
 import { jobRatingServiceRunnerApi } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import { SyntheticEvent } from "../../../components/rendering/widgets/WidgetRenders";
@@ -13,7 +13,9 @@ import { getTableIcon } from "../../../components/rendering/view/Icons";
 import { DateRange } from "../../../utils/TimeUtils";
 import { useJobRatingServiceLogs } from "../../../hooks/useJobRatingServiceLog";
 import { useJobRatingErrors } from "../../../hooks/useJobRatingErrors";
-import "../Service.css";
+import TimeSelection from "../../../components/TimeSelection/TimeSelection";
+import "../Service.scss";
+import PageHeader from "../../PageHeader/PageHeader";
 
 export interface FormData {
 	period_hours: number;
@@ -25,20 +27,30 @@ const JobRatingDashboard = (): JSX.Element => {
 		start: new Date(),
 		end: new Date(),
 	});
-	const { serviceStatus, remainingTime, fetchStatus, statusError } =
+	const { serviceStatus, remainingTime, fetchStatus, statusError, loading: statusLoading } =
 		useServiceRunnerStatus(jobRatingServiceRunnerApi);
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: serviceStatus?.period_hours || 0,
 	});
 	const [loading, setLoading] = useState<boolean>(false);
 	const { showToastSuccess } = useGlobalToast();
-	const { previousServiceLogs, latestServiceLog, fetchLatestServiceLog, serviceLogError } = useJobRatingServiceLogs(
-		serviceStatus?.service_running || false,
-		dateRange,
-	);
-	const { scraperErrors: previousRatingErrors, error: previousRatingRequestError } =
-		useJobRatingErrors(previousServiceLogs);
-	const { scraperErrors: lastRatingErrors, error: latestRatingRequestError } = useJobRatingErrors(latestServiceLog);
+	const {
+		previousServiceLogs,
+		latestServiceLog,
+		fetchLatestServiceLog,
+		serviceLogError,
+		loading: logsLoading,
+	} = useJobRatingServiceLogs(serviceStatus?.service_running || false, dateRange);
+	const {
+		scraperErrors: previousRatingErrors,
+		error: previousRatingRequestError,
+		loading: previousRatingErrorsLoading,
+	} = useJobRatingErrors(previousServiceLogs);
+	const {
+		scraperErrors: lastRatingErrors,
+		error: latestRatingRequestError,
+		loading: lastRatingErrorsLoading,
+	} = useJobRatingErrors(latestServiceLog);
 
 	useEffect((): void => {
 		if (serviceStatus && serviceStatus?.service_runner_status === "stopped") {
@@ -103,22 +115,16 @@ const JobRatingDashboard = (): JSX.Element => {
 		{ key: "status", label: "Service status", value: statusError },
 		{ key: "serviceLogs", label: "Service logs", value: serviceLogError },
 		{ key: "lastRatingError", label: "Last rating error", value: latestRatingRequestError },
-		{ key: "latestRatingError", label: "Latest rating error", value: previousRatingRequestError },
+		{
+			key: "latestRatingError",
+			label: "Latest rating error",
+			value: previousRatingRequestError,
+		},
 	].filter((e) => e.value);
 
 	return (
 		<div>
-			<div className="table-header-section mb-4">
-				<div className="d-flex align-items-center justify-content-between p-4 border-0 bg-white shadow-sm rounded-3">
-					<div className="d-flex align-items-center">
-						<div className="header-icon-wrapper me-3">
-							<i className={getTableIcon("Job Rating Dashboard")}></i>
-						</div>
-						<h4 className="mb-0 fw-bold text-dark">Job Rating Dashboard</h4>
-					</div>
-				</div>
-			</div>
-
+			<PageHeader title={"Job Rating Dashboard"} icon={getTableIcon("Job Rating Dashboard")} />
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
 					<div className="d-flex align-items-start">
@@ -149,12 +155,24 @@ const JobRatingDashboard = (): JSX.Element => {
 
 			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.service_running || false} />
 
-			<LogViewer api={jobRatingServiceRunnerApi} isServiceRunning={serviceStatus?.service_running || false} />
+			<LogViewer
+				api={jobRatingServiceRunnerApi}
+				isServiceRunning={serviceStatus?.service_running || false}
+				serviceStatus={serviceStatus}
+			/>
+
+			<div className="status-card mt-4">
+				<h2 className="card-title">
+					<i className="bi bi-funnel me-2"></i>
+					History Filters
+				</h2>
+				<TimeSelection onDateRangeChange={setDateRange} defaultMode="period" />
+			</div>
 
 			<RunHistoryChart
 				serviceLogData={previousServiceLogs}
-				onDateRangeChange={setDateRange}
 				isRunning={serviceStatus?.service_running || false}
+				loading={logsLoading}
 			/>
 
 			<ErrorSummaryCard
@@ -162,6 +180,7 @@ const JobRatingDashboard = (): JSX.Element => {
 				lastRatingErrors={lastRatingErrors}
 				latestRatingErrors={previousRatingErrors}
 				isRunning={serviceStatus?.service_running || false}
+				loading={logsLoading || previousRatingErrorsLoading || lastRatingErrorsLoading}
 			/>
 		</div>
 	);

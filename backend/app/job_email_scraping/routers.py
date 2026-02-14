@@ -1,31 +1,28 @@
-"""FastAPI routers for the email ingestion service (EIS) endpoints.
+"""FastAPI routers for the job email scraping service endpoints.
 
 Provides REST API endpoints for managing job alert emails, scraped job postings,
 and service execution logs with CRUD operations and admin access controls."""
 
-from datetime import datetime
+import datetime as dt
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session, joinedload
+from starlette import status
 from starlette.requests import Request
 
-from app import model_registry as models
-from app import service_runner
+from app import models as models
+from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.job_email_scraping import schemas
-from app.job_email_scraping.email_scraper import scraper_service, SERVICE_NAME
+from app.job_email_scraping.email_scraper import job_scraping_service_runner, SERVICE_NAME
 from app.job_email_scraping.job_scrapers.indeed import IndeedBrightdataJobScraper
 from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
 from app.job_email_scraping.job_scrapers.nhs import NhsJobScraper
 from app.job_email_scraping.job_scrapers.veganjobs import VeganJobsJobScraper
-from app.oauth2 import get_current_user
-from app.routers import (
-    generate_data_table_crud_router,
-    filter_query,
-    NOT_ALLOWED_EXCEPTION,
-)
+from app.routers import generate_data_table_crud_router, filter_query, NOT_ALLOWED_EXCEPTION
+from app.service_runner import routers
 
 # --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
 
@@ -34,7 +31,7 @@ from app.routers import (
 job_alert_email_router = generate_data_table_crud_router(
     table_model=models.JobEmail,
     out_schema=schemas.JobEmailOut,
-    endpoint="job_alert_emails",
+    endpoint="job-alert-emails",
     not_found_msg="Job alert email not found",
     allowed_actions=["get_all"],
     admin_only=True,
@@ -48,14 +45,13 @@ job_alert_email_router = generate_data_table_crud_router(
 scraped_job_router = generate_data_table_crud_router(
     table_model=models.ScrapedJob,
     out_schema=schemas.ScrapedJobOut,
-    endpoint="scraped_jobs",
+    endpoint="scraped-jobs",
     not_found_msg="Scraped Job not found",
     allowed_actions=["get_all"],
     admin_only=True,
 )
 
 
-# GET endpoint for regular user to get paged scraped jobs
 @scraped_job_router.get("/paged", response_model=schemas.PaginatedScrapedJobResponse)
 def get_all(
     request: Request,
@@ -65,19 +61,43 @@ def get_all(
     page_size: int = 10,
     sort_by: str = "scrape_datetime",
     sort_direction: Literal["asc", "desc"] = "desc",
+    show_past_deadline: bool = False,
+    since_last_login: bool = False,
     search: str | None = None,
-):
-    """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped."""
+) -> dict:
+    """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped.
+    :param request: Request
+    :param db: Database session
+    :param current_user: Current user
+    :param page: Page number
+    :param page_size: Page size
+    :param sort_by: sort key
+    :param sort_direction: sort direction
+    :param show_past_deadline: Show scraped jobs with past deadlines
+    :param since_last_login: Only show jobs created since last login
+    :param search: Search term"""
 
     # Base query with eager loading of job_rating
+    # noinspection PyComparisonWithNone
     query = (
         db.query(models.ScrapedJob)
         .options(joinedload(models.ScrapedJob.job_rating))  # Always load rating
         .filter(models.ScrapedJob.owner_id == current_user.id)
-        .filter(models.ScrapedJob.is_scraped)
         .filter(models.ScrapedJob.is_imported.is_(False))
-        .filter(models.ScrapedJob.is_active)
+        .filter(models.ScrapedJob.is_active.is_(True))
+        .filter(models.ScrapedJob.exclusion_filter_id == None)
     )
+
+    if not show_past_deadline:
+        query = query.filter(
+            or_(
+                models.ScrapedJob.deadline.is_(None),
+                models.ScrapedJob.deadline >= dt.datetime.now(dt.timezone.utc),
+            )
+        )
+
+    if since_last_login and current_user.previous_login:
+        query = query.filter(models.ScrapedJob.created_at >= current_user.previous_login)
 
     # Apply search filter
     if search:
@@ -99,6 +119,8 @@ def get_all(
     filter_params.pop("sort_by", None)
     filter_params.pop("sort_direction", None)
     filter_params.pop("search", None)
+    filter_params.pop("show_past_deadline", None)
+    filter_params.pop("since_last_login", None)
     query = filter_query(query, models.ScrapedJob, filter_params)
 
     # Apply sorting
@@ -158,15 +180,37 @@ def get_scraped_job_count(
     :param db: Database session
     :return: Count of scraped jobs"""
 
+    # noinspection PyComparisonWithNone
     count = (
         db.query(models.ScrapedJob)
         .filter(models.ScrapedJob.owner_id == current_user.id)
-        .filter(models.ScrapedJob.is_scraped)
         .filter(models.ScrapedJob.is_imported.is_(False))
-        .filter(models.ScrapedJob.is_active)
+        .filter(models.ScrapedJob.is_active.is_(True))
+        .filter(models.ScrapedJob.exclusion_filter_id == None)
         .count()
     )
     return {"count": count}
+
+
+@scraped_job_router.get("/filtered-by-filter/{filter_id}", response_model=list[schemas.ScrapedJobOut])
+def get_scraped_jobs_filtered_by_filter(
+    filter_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get scraped jobs associated with a specific filter for the current user.
+    :param filter_id: ID of the filter
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: List of scraped jobs associated with the filter"""
+
+    scraped_jobs = (
+        db.query(models.ScrapedJob)
+        .filter(models.ScrapedJob.owner_id == current_user.id)
+        .filter(models.ScrapedJob.exclusion_filter_id == filter_id)
+        .all()
+    )
+    return scraped_jobs
 
 
 # PUT endpoint for regular users to update the entries
@@ -174,25 +218,25 @@ generate_data_table_crud_router(
     table_model=models.ScrapedJob,
     update_schema=schemas.ScrapedJobUpdate,
     out_schema=schemas.ScrapedJobOut,
-    endpoint="scraped_jobs",
+    endpoint="scraped-jobs",
     not_found_msg="Scraped Job not found",
     allowed_actions=["put"],
     router=scraped_job_router,
 )
 
 
-# -------------------------------------------------- EIS SERVICE LOGS --------------------------------------------------
+# ---------------------------------------------- JOB SCRAPING SERVICE LOGS ---------------------------------------------
 
 
 # Email Ingestion Service Log router
-eis_service_log_router = APIRouter(prefix="/eis_service_logs", tags=["eis_service_logs"])
+job_scraping_service_log_router = APIRouter(prefix="/job-scraping-service-logs", tags=["job-scraping-service-logs"])
 
 
 # GET endpoint for admins to get the service logs
-@eis_service_log_router.get("/", response_model=list[schemas.JobEmailScrapingServiceLogOut])
+@job_scraping_service_log_router.get("/", response_model=list[schemas.JobEmailScrapingServiceLogOut])
 def get_service_logs_by_date_range(
-    start_date: datetime | None = Query(None, description="Start date for filtering (ISO format)"),
-    end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),
+    start_date: dt.datetime | None = Query(None, description="Start date for filtering (ISO format)"),
+    end_date: dt.datetime | None = Query(None, description="End date for filtering (ISO format)"),
     delta_days: int | None = Query(None, description="Number of days to go back in time"),
     limit: int | None = Query(None, description="Maximum number of logs to return"),
     current_user: models.User = Depends(get_current_user),
@@ -207,7 +251,7 @@ def get_service_logs_by_date_range(
     :param db: Database session
     :return: list of service logs within the date range ordered by run_datetime descending"""
 
-    return service_runner.get_service_logs_by_date_range(
+    return routers.get_service_logs_by_date_range(
         start_date,
         end_date,
         delta_days,
@@ -219,7 +263,7 @@ def get_service_logs_by_date_range(
 
 
 # GET endpoint for admin user to get the latest service log
-@eis_service_log_router.get("/latest", response_model=schemas.JobEmailScrapingServiceLogOut)
+@job_scraping_service_log_router.get("/latest", response_model=schemas.JobEmailScrapingServiceLogOut)
 def get_latest(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -229,7 +273,7 @@ def get_latest(
     :param db: Database session
     :return: Latest service log entry"""
 
-    return service_runner.get_latest(current_user, db, models.JobEmailScrapingServiceLog)
+    return routers.get_latest(current_user, db, models.JobEmailScrapingServiceLog)
 
 
 # ------------------------------------------------------ SCRAPING ------------------------------------------------------
@@ -307,7 +351,7 @@ def scrape_job(
 # ------------------------------------------------ EMAIL SCRAPER SERVICE -----------------------------------------------
 
 
-email_scraper_service_router = APIRouter(prefix="/email_scraper_service", tags=["email_scraper_service"])
+email_scraper_service_router = APIRouter(prefix="/job-scraper-service", tags=["job-scraper-service"])
 
 
 @email_scraper_service_router.post("/start")
@@ -319,25 +363,26 @@ def start_scraper(
     :param request: StartRequest object containing period_hours
     :param current_user: Current authenticated user"""
 
-    return service_runner.start_scraper(scraper_service, current_user, request.period_hours)
+    return routers.start_scraper(job_scraping_service_runner, current_user, request.period_hours)
 
 
 @email_scraper_service_router.post("/stop")
-def stop_scraper(current_user: models.User = Depends(get_current_user)) -> dict:
+def stop_scraper(
+    current_user: models.User = Depends(get_current_user),
+) -> dict:
     """Stop the service runner.
     :param current_user: Current authenticated user"""
 
-    return service_runner.stop_scraper(scraper_service, current_user)
+    return routers.stop_scraper(job_scraping_service_runner, current_user)
 
 
 @email_scraper_service_router.get("/status")
 def scraper_status(
     current_user: models.User = Depends(get_current_user),
 ) -> dict:
-    """Get the current status of the service.
-    :param current_user: Current authenticated user"""
+    """Get the current status of the service"""
 
-    return service_runner.scraper_status(scraper_service, current_user)
+    return routers.scraper_status(job_scraping_service_runner, current_user)
 
 
 @email_scraper_service_router.get("/logs")
@@ -349,4 +394,159 @@ def get_scraper_logs(
     :param lines: Number of lines to retrieve (default 100, max 10000)
     :param current_user: Current authenticated user"""
 
-    return service_runner.get_service_logs(SERVICE_NAME, lines, current_user)
+    return routers.get_service_logs(SERVICE_NAME, lines, current_user)
+
+
+# ------------------------------------------------- SCRAPED JOB FILTERS ------------------------------------------------
+
+
+scraping_filter_router = generate_data_table_crud_router(
+    table_model=models.ScrapingExclusionFilter,
+    create_schema=schemas.ScrapingFilterCreate,
+    update_schema=schemas.ScrapingFilterUpdate,
+    out_schema=schemas.ScrapingFilterOut,
+    endpoint="scraping-filters",
+    not_found_msg="Scraped Job Filter not found",
+    allowed_actions=["get_all", "get_one", "post"],
+)
+
+
+@scraping_filter_router.put("/{filter_id}", status_code=status.HTTP_200_OK, response_model=schemas.ScrapingFilterOut)
+def update_scraping_filter(
+    filter_id: int,
+    update_data: schemas.ScrapingFilterUpdate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Update a scraped job filter by ID.
+    :param filter_id: ID of the filter to update
+    :param update_data: Update data for the filter
+    :param current_user: Current authenticated user
+    :param db: Database session"""
+
+    # Fetch the filter to ensure it exists and belongs to the current user.
+    filter_obj = (
+        db.query(models.ScrapingExclusionFilter)
+        .filter(models.ScrapingExclusionFilter.id == filter_id)
+        .filter(models.ScrapingExclusionFilter.owner_id == current_user.id)
+        .first()
+    )
+
+    if not filter_obj:
+        raise NOT_ALLOWED_EXCEPTION
+
+    # Get the update fields
+    update_dict = update_data.model_dump(exclude_unset=True)
+    print(filter_obj.filtered_jobs)
+    print(filter_obj.id)
+
+    # If the filter previously filtered jobs, only allow is_active updates
+    if filter_obj.filtered_jobs:
+        # Check if any fields other than is_active are being updated
+        non_active_fields = {k: v for k, v in update_dict.items() if k != "is_active"}
+        if non_active_fields:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cannot update filter fields other than is_active when filter has been used",
+            )
+
+    # If the filter was never used, update it
+    for key, value in update_data.model_dump(exclude_unset=True).items():
+        setattr(filter_obj, key, value)
+
+    db.commit()
+    db.refresh(filter_obj)
+    return filter_obj
+
+
+@scraping_filter_router.delete("/{filter_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_scraping_filter(
+    filter_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Delete a scraped job filter by ID.
+    :param filter_id: ID of the filter to delete
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: The deleted or deactivated filter object"""
+
+    # Fetch the filter to ensure it exists and belongs to the current user
+    filter_obj = (
+        db.query(models.ScrapingExclusionFilter)
+        .filter(models.ScrapingExclusionFilter.id == filter_id)
+        .filter(models.ScrapingExclusionFilter.owner_id == current_user.id)
+        .first()
+    )
+
+    if not filter_obj:
+        raise NOT_ALLOWED_EXCEPTION
+
+    # If the filter has filtered jobs, do not delete it, just deactivate it
+    if filter_obj.filtered_jobs:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT)
+    else:
+        db.delete(filter_obj)
+        db.commit()
+
+
+# ------------------------------------------- FORWARDING CONFIRMATION LINKS --------------------------------------------
+
+
+forwarding_confirmation_router = APIRouter(
+    prefix="/forwarding-confirmation-links", tags=["forwarding-confirmation-links"]
+)
+
+
+@forwarding_confirmation_router.get("/pending", response_model=schemas.ForwardingConfirmationLinkOut | None)
+def get_pending_confirmation_links(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> models.ForwardingConfirmationLink | None:
+    """Get all unused forwarding confirmation links for the current user.
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: List of pending forwarding confirmation links"""
+
+    entry = (
+        db.query(models.ForwardingConfirmationLink)
+        .filter(models.ForwardingConfirmationLink.owner_id == current_user.id)
+        .order_by(models.ForwardingConfirmationLink.created_at.desc())
+        .first()
+    )
+    if entry and entry.is_used:
+        return None
+    else:
+        return entry
+
+
+@forwarding_confirmation_router.put("/{link_id}", response_model=schemas.ForwardingConfirmationLinkOut)
+def update_confirmation_link(
+    link_id: int,
+    update_data: schemas.ForwardingConfirmationLinkUpdate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> models.ForwardingConfirmationLink:
+    """Update a forwarding confirmation link (mark as used).
+    :param link_id: ID of the link to update
+    :param update_data: Update data
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: Updated forwarding confirmation link"""
+
+    link = (
+        db.query(models.ForwardingConfirmationLink)
+        .filter(models.ForwardingConfirmationLink.id == link_id)
+        .filter(models.ForwardingConfirmationLink.owner_id == current_user.id)
+        .first()
+    )
+
+    if not link:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Confirmation link not found")
+
+    for key, value in update_data.model_dump(exclude_unset=True).items():
+        setattr(link, key, value)
+
+    db.commit()
+    db.refresh(link)
+    return link

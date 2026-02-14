@@ -1,60 +1,19 @@
 ## TODO
 
 ### Bugs
-* [ ] Modals darken when a help bubble is displayed.
-* [X] The theme shown in the user setting page is not updated when changed in the sidebar.
-* [X] The content of job application update and interview modals are not updated after an edit when opened through the job modal.
-* [ ] the sidebar is not expanding properly on small screens on the job page.
-* [X] Source aggregator is sometimes not shown when editing a job
-* [X] Move the logs to an absolute location
-* [X] Improve rhe raspberry theme contrast
-* [X] Incomplete job application updates are shown in the dashboard
-* [ ] Log out the user when their token expires
+* [X] Modals darken when a help bubble is displayed.
+* [X] the sidebar is not expanding properly on small screens on the job page.
 
 ### TOAST
-* [X] Ensure that the parsed country matches the list of available countries
-* [X] Add currency parsing
-* [X] Add admin control and monitoring page
-* [X] Add graphs showing the results of previous service logs
-* [X] Add frontend tests
-* [X] Deleting/deactivating is not working
 * [ ] If no currency is found, use the default currency
-* [X] Load the currencies and countries from the backend instead of the frontend
-* [X] Add search box
-* [X] If the company/location match is not good enough, do not suggest it
-* [X] Add the total number of scraped jobs
-* [X] Display the most common failures
-* [X] Display critical failures
-* [X] Add AI rating for the jobs
-* [ ] Add the ability to filter out jobs (extract the job title when extracting the job ids). Mark the job as filtered
-* [X] Add NHS job alert support
-* [X] Add the ability to display the results for the selected platform only
-* [X] Add new endpoint for admin only that allows to query specific job ids (as a list)
-* [X] Add job alert name extraction
-* [ ] Store the scraped jobs needing scraping in the service log
-* [ ] Display the current step of the logs
 
-### Select Widgets Improvements
-* [X] Sort options alphabetically
-* [X] After adding an option, select it automatically
+### Select Widgets
 * [ ] Display the entry associated with the hovered option
-* [X] Show the company name in job and person selects
 
-### Job Modal Improvements
-* [ ] Add option to select the source (recruiter, aggregator, other)
-* [X] Add option for application on company website
+### Job Modal
+* [X] Add option to select the source (recruiter, aggregator, other)
 
-### Spontaneous Applications
-* [ ] Add spontaneous application table with the following columns:
-  * [ ] Company
-  * [ ] Date Sent
-  * [ ] Notes
-  * [ ] Email sent to
-
-### Email Generation
-* [ ] Add the ability to generate a follow-up email and select the contact to send it to
-
-### Active Jobs Widget
+### Advanced Dashboard
 * [ ] Add a "active jobs" log showing jobs with the most activity
 * [ ] Add a "favourite" column to the job table
 
@@ -62,20 +21,58 @@
 * [ ] Move the scrollbar inside the tables so that the header is always visible
 * [ ] Add the ability to filter by columns and hide rejected jobs
 
-### Users
-* [X] Add test user setting and prevent update of email and password
-* [X] Make sure the user is reloaded properly when the settings are changed
+* [ ] Add favourite filters for scraping
 
-### New Modals
-* [X] Interview modals should show the edited value after being edited from the job modal
-* [X] Multiple modals of the same type should be able to be opened at the same time 
+* [X] Add payment system for toast
+* [X] Change the service runner to work with multiple workers
+* [X] Limit the number of scraped jobs per user per month, and set limits for AI rating
+* [X] finish adding configs endpoint
+* [X] Add loading to delete for scraped jobs
+* [X] Rename TOAST dashboard
+* [X] Add loading to graphs on TOAST dashboard
+* [X] Add acknowledgements for open source libraries used
+* [X] Add acknowledgements for services
+* [X] Fix frontend packages incompatibility issues
+* [X] Add trial period for TOAST
+* [X] Run the service API on a different worker
+* [X] Add loading spinner when using the context menu
+* [X] Delete interviews and updates when associated job is deleted
+* [X] Get the new inbox for support/info
+* [X] Fix the action button height changing during loading
+* [X] Non data modal should not be affected by the small screen full size
+* [X] Allow badges to collapse on small screens (...)
+* [X] Dropdowns styles are broken in dark mode (in light mode multiselect is not working as expected)
+* [X] Finish the dark mode - Missing dark mode in select widget in time selector
+* [X] Fix the settings table column and modal active states
+* [X] Redo the users table
+* [X] Display the AI prompt in the user settings
+* [X] Display reason why scraped job was not rated
+* [X] Display the AI prompt in the user settings
+* [X] Display reason why scraped job was not rated
+* [X] Update terms and conditions
+* [X] Fix demo mode drop down
+* [X] Add account deletion option (delete subscription in this case) (tests required)
+* [X] Withdrawn, rejected or offered jobs are not shown in the needs chase dashboard anymore.
+* [X] Fix the password reset bug
+* [X] Add a button to kick everyone out
+* [X] Add popup to show the new stuff
+* [X] Set the scraped job source_type to aggregator_email
+* [X] Fix the selenium tests
 
-
-### AI Rating
-* [ ] User Qualification table
-  * [ ] If no entry, then create a new entry. If a user modifies an entry either
-    * [ ] Create a new entry if the current entry has been used to rate a job
-    * [ ] Update the current entry if it has not been used to rate a job
-  * [ ] Show the list of qualifications in the user settings page
-* [ ] Create the service that will rate the jobs based on the user qualifications
-* 
+* [X] Add toggle to hide scraped jobs with past deadline
+* [X] Merge the custom accordions
+* [X] Review what is_scraped stand for (add is_processed?)
+* [X] On database migration, automatically add the system prompt and job prompt template to their associated tables.
+* [ ] Create free coupons for TOAST for first few users for a couple months
+* [X] Finish the gifs
+* [X] Rewrite the test data for the test user
+* [ ] On Small screens, modal elements on multiple columns and rows are all on same column but spacing differs
+* [X] Since last login button does not work as user last login is not recorded.
+* [X] Create guide on how to set up TOAST
+* [X] last_login should count when user returns to the page instead of only when they login.
+* [X] Review what scraped jobs are displayed (is_scraped should be is_processed)
+* [X] Add fallback to geolocation
+* [X] Add frontend tests for scraped jobs failed/skipped/rated/rating skipped/failed
+* [X] Add frontend test for past deadline scraped jobs
+* [X] Add a global welcome slide to the jam welcome modal
+* [X] Generate new src images
