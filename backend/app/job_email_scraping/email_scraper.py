@@ -269,7 +269,7 @@ class JobEmailScraper(EmailService):
         result["attendance_type"] = attendance_type
 
         if parsed_location:
-            geolocation = geocode_location(parsed_location, self.db)
+            geolocation = geocode_location(parsed_location, self.db, self.logger)
             if geolocation:
                 result["geolocation_id"] = geolocation.id
                 result["location_postcode"] = geolocation.postcode
@@ -667,3 +667,5 @@ job_scraping_service_runner = ServiceRunner(
     service_function=JobEmailScraper().run_scraping,
     service_kwargs=dict(timedelta_days=3),
 )
+
+# JobEmailScraper().run_scraping(timedelta_days=5)
