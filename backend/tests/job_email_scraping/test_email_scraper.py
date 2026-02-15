@@ -908,11 +908,11 @@ class TestExtractForwardingEmailConfirmation:
         email_data = self._make_forwarding_email(gmail_user.email, email_id)
 
         with (
-            patch.object(test_job_scraper, "get_email_ids", return_value=[[email_id]]) as mock_ids,
+            patch.object(test_job_scraper, "get_email_ids", return_value=[email_id]) as mock_ids,
             patch.object(test_job_scraper, "get_email_data", return_value=email_data),
         ):
             test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
-            mock_ids.assert_called_once_with(from_email="forwarding-noreply@google.com", timedelta_days=300)
+            mock_ids.assert_called_once_with(from_email="forwarding-noreply@google.com", timedelta_days=365)
 
         # Verify confirmation link was created
         link = session.query(models.ForwardingConfirmationLink).first()
@@ -941,7 +941,7 @@ class TestExtractForwardingEmailConfirmation:
         session.commit()
 
         with (
-            patch.object(test_job_scraper, "get_email_ids", return_value=[[email_id]]),
+            patch.object(test_job_scraper, "get_email_ids", return_value=[email_id]),
             patch.object(test_job_scraper, "get_email_data", return_value=email_data) as mock_get_data,
         ):
             test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
@@ -975,7 +975,7 @@ class TestExtractForwardingEmailConfirmation:
         email_data = self._make_forwarding_email_no_link(gmail_user.email, email_id)
 
         with (
-            patch.object(test_job_scraper, "get_email_ids", return_value=[[email_id]]),
+            patch.object(test_job_scraper, "get_email_ids", return_value=[email_id]),
             patch.object(test_job_scraper, "get_email_data", return_value=email_data),
         ):
             test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
@@ -991,7 +991,7 @@ class TestExtractForwardingEmailConfirmation:
         email_data = self._make_forwarding_email("unknown_user@gmail.com", email_id)
 
         with (
-            patch.object(test_job_scraper, "get_email_ids", return_value=[[email_id]]),
+            patch.object(test_job_scraper, "get_email_ids", return_value=[email_id]),
             patch.object(test_job_scraper, "get_email_data", return_value=email_data),
         ):
             test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
@@ -1015,7 +1015,7 @@ class TestExtractForwardingEmailConfirmation:
             return {email_id_1: email_data_1, email_id_2: email_data_2}[eid]
 
         with (
-            patch.object(test_job_scraper, "get_email_ids", return_value=[[email_id_1, email_id_2]]),
+            patch.object(test_job_scraper, "get_email_ids", return_value=[email_id_1, email_id_2]),
             patch.object(test_job_scraper, "get_email_data", side_effect=mock_get_email_data),
         ):
             test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
@@ -1033,7 +1033,7 @@ class TestExtractForwardingEmailConfirmation:
         email_data = self._make_forwarding_email(gmail_user.email, email_id)
 
         with (
-            patch.object(test_job_scraper, "get_email_ids", return_value=[[email_id]]),
+            patch.object(test_job_scraper, "get_email_ids", return_value=[email_id]),
             patch.object(test_job_scraper, "get_email_data", return_value=email_data),
         ):
             test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
