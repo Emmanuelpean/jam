@@ -145,22 +145,28 @@ class JobEmailScraper(EmailService):
         email_platforms = {"gmail": "forwarding-noreply@google.com"}
         for email_platform in email_platforms:
             try:
-                email_ids = self.get_email_ids(from_email=email_platforms[email_platform], timedelta_days=300)[0]
+                email_ids = self.get_email_ids(from_email=email_platforms[email_platform], timedelta_days=365)
             except:
                 self.log_service_error(service_log, f"Failed to get email with platform {email_platform}.")
                 continue
 
             for email_id in email_ids:
-                existing_entry = (
-                    self.db.query(models.ForwardingConfirmationLink)
-                    .filter(models.ForwardingConfirmationLink.email_external_id == email_id)
-                    .first()
-                )
-                if existing_entry:
-                    self.logger.info(f"Forwarding confirmation link for email {email_id} already exists. Skipping.")
+                try:
+                    existing_entry = (
+                        self.db.query(models.ForwardingConfirmationLink)
+                        .filter(models.ForwardingConfirmationLink.email_external_id == email_id)
+                        .first()
+                    )
+                    if existing_entry:
+                        self.logger.info(f"Forwarding confirmation link for email {email_id} already exists. Skipping.")
+                        continue
+                    else:
+                        email = self.get_email_data(email_id)
+                except:
+                    self.log_service_error(
+                        service_log, f"Failed to read email {email_id} with platform {email_platform}."
+                    )
                     continue
-                else:
-                    email = self.get_email_data(email_id)
                 try:
                     link = extract_forwarding_confirmation_link(email["body"])
                     if not link:
