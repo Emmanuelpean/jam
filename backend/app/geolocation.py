@@ -1,5 +1,7 @@
 """Geolocation handling using OpenStreetMap Nominatim API with caching."""
 
+import html
+import logging
 import traceback
 
 import requests
@@ -31,28 +33,30 @@ def call_geocoding_api(query: str | dict) -> tuple[float, float, dict]:
         response = requests.get(base_url, params=params, headers=headers, timeout=5)
         response.raise_for_status()
         data = response.json()
-
-        if data and len(data) > 0:
-            result = data[0]
-            return float(result["lat"]), float(result["lon"]), result.get("address", {})
-        else:
-            raise ValueError(f"No results found for: {query}")
-
     except Exception as e:
         raise RuntimeError(f"Nominatim API error: {str(e)}")
 
+    if data and len(data) > 0:
+        result = data[0]
+        return float(result["lat"]), float(result["lon"]), result.get("address", {})
+    else:
+        raise ValueError(f"No results found for: {query}")
 
-def geocode_location(query: str | dict, session: Session) -> Geolocation | None:
+
+def geocode_location(query: str | dict, session: Session, logger: logging.Logger | None = None) -> Geolocation | None:
     """Geocode a location or scraped job using cached results when available.
     Links the location/scraped job to a Geolocation record via foreign key.
     :param query: A location query string or a dict with structured params (postcode, city, country).
     :param session: SQLAlchemy session for database operations.
+    :param logger: AppLogger instance
     :return: The geolocation ID if successful, else None."""
 
-    # Normalize dict to a stable cache key string
+    # Decode HTML entities and normalise whitespace
     if isinstance(query, dict):
+        query = {k: html.unescape(v).strip() if isinstance(v, str) else v for k, v in query.items()}
         cache_key = ", ".join(f"{k}={v}" for k, v in sorted(query.items()))
     else:
+        query = html.unescape(query).strip()
         cache_key = query
 
     # Check cache first
@@ -74,7 +78,6 @@ def geocode_location(query: str | dict, session: Session) -> Geolocation | None:
                         matched_country = country["name"]
                         break
 
-            # noinspection PyArgumentList
             new_geo = Geolocation(
                 query=cache_key,
                 latitude=lat,
@@ -89,17 +92,23 @@ def geocode_location(query: str | dict, session: Session) -> Geolocation | None:
             session.add(new_geo)
             session.commit()
             session.refresh(new_geo)
+            if logger is not None:
+                logger.info(f"Successfully geocode '{cache_key}' to '{new_geo.id}'")
             return new_geo
 
         # If no result was found, store the query string to avoid repeated calls to the API
         except ValueError:
-            # noinspection PyArgumentList
             new_geo = Geolocation(query=cache_key)
             session.add(new_geo)
             session.commit()
             session.refresh(new_geo)
+            if logger is not None:
+                logger.warning(f"Failed to geocode '{cache_key}'. Stored in '{new_geo.id}'")
+            return new_geo
 
         except Exception as e:
             print(f"Warning: Could not geocode '{cache_key}': {e}")
             print(traceback.format_exc())
+            if logger is not None:
+                logger.warning(f"Failed to geocode '{cache_key}' due to error {e}")
             return None

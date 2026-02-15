@@ -60,18 +60,18 @@ class TestCallGeocodingApi:
         assert address == {}
 
     @patch("app.geolocation.requests.get")
-    def test_raises_runtime_error_when_no_results(self, mock_get) -> None:
-        """Raises RuntimeError when API returns empty results."""
+    def test_raises_value_error_when_no_results(self, mock_get) -> None:
+        """Raises ValueError when API returns empty results."""
 
         mock_response = MagicMock()
         mock_response.json.return_value = []
         mock_response.raise_for_status = MagicMock()
         mock_get.return_value = mock_response
 
-        with pytest.raises(RuntimeError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             call_geocoding_api("NonexistentPlace12345")
 
-        assert "Nominatim API error" in str(exc_info.value)
+        assert "No results found" in str(exc_info.value)
 
     @patch("app.geolocation.requests.get")
     def test_raises_runtime_error_on_http_error(self, mock_get) -> None:
@@ -213,6 +213,46 @@ class TestGeocodeLocation:
         # Check the geolocation was created with matched country name
         add_call = mock_session.add.call_args[0][0]
         assert add_call.country == "United Kingdom"
+
+    @patch("app.geolocation.call_geocoding_api")
+    def test_decodes_html_entities_in_string_query(self, mock_api) -> None:
+        """Decodes HTML entities in string queries before geocoding."""
+
+        mock_session = MagicMock()
+        mock_session.query.return_value.filter_by.return_value.first.return_value = None
+        mock_api.side_effect = ValueError("No results found")
+
+        geocode_location("London UK &amp;", mock_session)
+
+        mock_api.assert_called_once_with("London UK &")
+
+    @patch("app.geolocation.call_geocoding_api")
+    def test_decodes_html_entities_in_dict_query(self, mock_api) -> None:
+        """Decodes HTML entities in dict query values before geocoding."""
+
+        mock_session = MagicMock()
+        mock_session.query.return_value.filter_by.return_value.first.return_value = None
+        mock_api.side_effect = ValueError("No results found")
+
+        geocode_location({"city": "Caf&eacute; City", "country": "UK"}, mock_session)
+
+        mock_api.assert_called_once_with({"city": "Café City", "country": "UK"})
+
+    @patch("app.geolocation.call_geocoding_api")
+    def test_caches_empty_result_when_no_geocoding_results(self, mock_api) -> None:
+        """Caches an empty Geolocation record when API finds no results, to avoid repeat calls."""
+
+        mock_session = MagicMock()
+        mock_session.query.return_value.filter_by.return_value.first.return_value = None
+        mock_api.side_effect = ValueError("No results found for: NonexistentPlace")
+
+        geocode_location("NonexistentPlace", mock_session)
+
+        mock_session.add.assert_called_once()
+        mock_session.commit.assert_called_once()
+        add_call = mock_session.add.call_args[0][0]
+        assert add_call.query == "NonexistentPlace"
+        assert add_call.latitude is None
 
     @patch("app.geolocation.call_geocoding_api")
     def test_returns_none_on_api_failure(self, mock_api) -> None:
