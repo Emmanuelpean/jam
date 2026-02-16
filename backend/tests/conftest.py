@@ -46,6 +46,7 @@ def mock_nominatim_get():
     which causes call_geocoding_api to raise ValueError."""
 
     def side_effect(url, **kwargs):
+        print("Geocoding mock called")
         _ = url
         params = kwargs.get("params", {})
         query = params.get("q")

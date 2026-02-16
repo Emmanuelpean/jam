@@ -44,7 +44,7 @@ const formatLocationName = (location: MapLocation): string => {
 type MappableLocation = MapLocation & { geolocation: GeoLocation & { latitude: number; longitude: number } };
 
 const isMappable = (location: MapLocation): location is MappableLocation =>
-	location.geolocation !== null && location.geolocation.latitude !== null && location.geolocation.longitude !== null;
+	location.geolocation != null && location.geolocation.latitude != null && location.geolocation.longitude != null;
 
 const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpdaterProps) => {
 	const map = useMap();
