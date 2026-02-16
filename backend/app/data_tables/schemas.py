@@ -88,8 +88,8 @@ class GeolocationOut(BaseModel):
     """Geolocation output schema"""
 
     query: str
-    latitude: float
-    longitude: float
+    latitude: float | None = None
+    longitude: float | None = None
     formatted_address: str | None = None
 
 
