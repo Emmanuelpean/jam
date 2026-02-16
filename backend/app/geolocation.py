@@ -7,7 +7,7 @@ import traceback
 import requests
 from sqlalchemy.orm import Session
 
-from app import utils
+from app.resources import COUNTRIES
 from app.config import settings
 from app.models import Geolocation
 
@@ -69,11 +69,10 @@ def geocode_location(query: str | dict, session: Session, logger: logging.Logger
             lat, lon, address_dict = call_geocoding_api(query)
 
             # Create new geolocation entry
-            countries = utils.open_json("app/data/countries.json")
             oms_country = address_dict.get("country")
             matched_country = None
             if oms_country:
-                for country in countries:
+                for country in COUNTRIES:
                     if oms_country.lower() == country["name"].lower():
                         matched_country = country["name"]
                         break
