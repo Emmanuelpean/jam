@@ -36,12 +36,15 @@ const isScrapedJobData = (location: MapLocation): location is ScrapedJobData => 
 const formatLocationName = (location: MapLocation): string => {
 	if (isScrapedJobData(location)) {
 		const parts = [location.location_postcode, location.location_city, location.location_country].filter(Boolean);
-		return parts.join(", ") || "Unknown Location";
+		return parts.join(", ");
 	}
 	return location.name;
 };
 
-type GeolocatedMapLocation = MapLocation & { geolocation: GeoLocation };
+type MappableLocation = MapLocation & { geolocation: GeoLocation & { latitude: number; longitude: number } };
+
+const isMappable = (location: MapLocation): location is MappableLocation =>
+	location.geolocation !== null && location.geolocation.latitude !== null && location.geolocation.longitude !== null;
 
 const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpdaterProps) => {
 	const map = useMap();
@@ -51,9 +54,7 @@ const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpd
 			// Check if map container and pane are properly initialized
 			if (!map || !map.getContainer() || !map.getPane("mapPane")) return;
 
-			const geolocatedLocations: GeolocatedMapLocation[] = locations.filter(
-				(location: MapLocation): location is GeolocatedMapLocation => location.geolocation !== null
-			);
+			const geolocatedLocations: MappableLocation[] = locations.filter(isMappable);
 
 			try {
 				// Stop any ongoing animations first
@@ -122,10 +123,27 @@ const LocationMap: React.FC<LocationMapProps> = ({
 		return () => observer.disconnect();
 	}, []);
 
-	const geolocatedLocations: MapLocation[] = locations.filter((location: MapLocation) => !!location.geolocation);
+	const mappableLocations: MappableLocation[] = locations.filter(isMappable);
 	const currentTileConfig = isDarkMode ? MAP_TILES.dark : MAP_TILES.light;
 
-	if (geolocatedLocations.length === 0) {
+	if (mappableLocations.length === 0) {
+		let icon = "bi-compass";
+		let title = "No mappable locations found";
+		let message = "Could not find coordinates for any of the provided locations.";
+
+		if (locations.length === 1) {
+			const [single] = locations;
+			if (single!.geolocation === null) {
+				icon = "bi-exclamation-triangle";
+				title = "An error occurred when trying to locate this entry";
+				message = "No geolocation data is available for this entry.";
+			} else {
+				icon = "bi-geo-alt";
+				title = "This location could not be found";
+				message = "The coordinates for this location could not be determined.";
+			}
+		}
+
 		return (
 			<div
 				style={{ height }}
@@ -133,14 +151,10 @@ const LocationMap: React.FC<LocationMapProps> = ({
 			>
 				<div className="text-center p-4">
 					<div className="mb-3" style={{ fontSize: "2rem" }}>
-						<i className="bi-compass"></i>
+						<i className={icon}></i>
 					</div>
-					<h6 className="text-muted">No mappable locations found</h6>
-					<p className="text-muted mb-0 small">
-						{locations.length === 0
-							? "Add some locations to see them on the map."
-							: "Could not find coordinates for any locations."}
-					</p>
+					<h6 className="text-muted">{title}</h6>
+					<p className="text-muted mb-0 small">{message}</p>
 				</div>
 			</div>
 		);
@@ -167,12 +181,12 @@ const LocationMap: React.FC<LocationMapProps> = ({
 					scrollWheelZoom={scrollWheelZoom}
 				>
 					<TileLayer attribution={attribution} url={currentTileConfig.url} />
-					<MapViewUpdater locations={geolocatedLocations} />
-					{geolocatedLocations.map(
-						(location: MapLocation): JSX.Element => (
+					<MapViewUpdater locations={mappableLocations} />
+					{mappableLocations.map(
+						(location: MappableLocation): JSX.Element => (
 							<Marker
-								key={`${location.id}-${location.geolocation!.latitude}-${location.geolocation!.longitude}`}
-								position={[location.geolocation!.latitude, location.geolocation!.longitude]}
+								key={`${location.id}-${location.geolocation.latitude}-${location.geolocation.longitude}`}
+								position={[location.geolocation.latitude, location.geolocation.longitude]}
 							>
 								<Popup>
 									<div>

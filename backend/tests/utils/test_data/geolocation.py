@@ -268,12 +268,3 @@ MOCK_GEOCODING_RESPONSES = {
         },
     ),
 }
-
-
-def mock_geocoding_side_effect(query: str):
-    """Side effect function for mocking geocoding API calls
-    :param query: Location query string
-    :return: Tuple of (latitude, longitude, address_dict)
-    :raises ValueError: If query is empty or not found"""
-
-    return MOCK_GEOCODING_RESPONSES[query]

@@ -20,6 +20,8 @@ from requests import Response
 from starlette import status
 from starlette.testclient import TestClient
 
+from tests.utils.test_data.geolocation import MOCK_GEOCODING_RESPONSES
+
 from app import models
 from tests.utils import test_data as td
 
@@ -39,12 +41,24 @@ pytest_plugins = [
 
 @pytest.fixture(autouse=True)
 def mock_nominatim_get():
-    """Auto-mock Nominatim HTTP calls to prevent real API requests in tests."""
+    """Auto-mock Nominatim HTTP calls using MOCK_GEOCODING_RESPONSES.
+    Known queries return a real-shaped Nominatim response; unknown queries return []
+    which causes call_geocoding_api to raise ValueError."""
 
-    mock_response = MagicMock()
-    mock_response.json.return_value = []
-    mock_response.raise_for_status = MagicMock()
-    with patch("app.geolocation.requests.get", return_value=mock_response) as mock:
+    def side_effect(url, **kwargs):
+        _ = url
+        params = kwargs.get("params", {})
+        query = params.get("q")
+        mock_response = MagicMock()
+        mock_response.raise_for_status = MagicMock()
+        if query in MOCK_GEOCODING_RESPONSES:
+            lat, lon, address = MOCK_GEOCODING_RESPONSES[query]
+            mock_response.json.return_value = [{"lat": str(lat), "lon": str(lon), "address": address}]
+        else:
+            mock_response.json.return_value = []
+        return mock_response
+
+    with patch("app.geolocation.requests.get", side_effect=side_effect) as mock:
         yield mock
 
 

@@ -1010,7 +1010,11 @@ class DataModalUtils(BaseUtilsClass):
 
         modal = self.wait_for_view_modal()
         WebDriverWait(self.driver, 30).until(lambda d: "Finding location on map..." not in modal.text)
-        if "No mappable locations found" in modal.text:
+        if (
+            "No mappable locations found" in modal.text
+            or "This location could not be found" in modal.text
+            or "An error occurred when trying to locate this entry" in modal.text
+        ):
             return
 
         # Verify modal contains the entry information
