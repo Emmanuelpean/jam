@@ -1,6 +1,5 @@
 """Mock fixtures for geocoding API calls"""
 
-# Mock geocoding responses based on your test data
 MOCK_GEOCODING_RESPONSES = {
     "Cambridge": (
         52.2055314,

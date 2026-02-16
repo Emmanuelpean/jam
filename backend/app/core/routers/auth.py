@@ -10,11 +10,29 @@ from sqlalchemy.orm import Session
 from app import utils, models, database, base_schemas
 from app.config import settings
 from app.core import schemas, oauth2
+from app.core.models import get_setting_value
 from app.core.utils import send_email_verification_email, send_password_reset_email, get_token
 from app.demo.seed import seed_demo_data
 from app.emails.email_service import email_service
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
+
+
+def _assert_not_maintenance(db: Session) -> None:
+    """Raise 401 if maintenance mode is currently active."""
+    maintenance_scheduled_at = get_setting_value(db, "maintenance_scheduled_at", None)
+    if maintenance_scheduled_at:
+        try:
+            scheduled_time = dt.datetime.fromisoformat(maintenance_scheduled_at)
+            if scheduled_time.tzinfo is None:
+                scheduled_time = scheduled_time.replace(tzinfo=dt.timezone.utc)
+            if scheduled_time <= dt.datetime.now(dt.timezone.utc):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Service is currently under maintenance.",
+                )
+        except ValueError:
+            pass
 
 
 login_router = APIRouter(prefix="/login", tags=["Login"])
@@ -98,6 +116,10 @@ def login(
                 detail=result.message,
             )
 
+    # Block non-admin users from logging in during maintenance
+    if not user.is_admin:
+        _assert_not_maintenance(db)
+
     # Save the last login date and update the last login date
     user.previous_login = user.last_login
     user.last_login = dt.datetime.now(dt.timezone.utc)
@@ -128,6 +150,8 @@ def create_user(
     :returns: Dictionary with success status and message
     :raises HTTPException with a 400 status code if the email is already registered
     :raises HTTPException with a 401 status code if the user is not allowed to sign up"""
+
+    _assert_not_maintenance(db)
 
     # Check the user can be created
     allowlist = models.get_setting_value(db, "allowlist", None)
@@ -190,6 +214,8 @@ def verify_email(
     :raises HTTPException with a 403 status code if the token has expired
     :return: Success message upon successful verification"""
 
+    _assert_not_maintenance(db)
+
     verification_code = utils.hash_token(token)
     token_entry = get_token(verification_code, "verification", db)
 
@@ -239,6 +265,8 @@ def request_password_reset(
     :raises HTTPException with a 403 status code if user is a test user
     :raises HTTPException with send_password_reset_with_rate_limit error details"""
 
+    _assert_not_maintenance(db)
+
     # Find user by email
     user = db.query(models.User).filter(models.User.email == email_data.email).first()
 
@@ -272,6 +300,8 @@ def reset_password(
     :raises HTTPException with code 403 if token is invalid or expired
     :raises HTTPException with code 403 if user is a test user
     :raises HTTPException with code 500 if there is an error resetting the password"""
+
+    _assert_not_maintenance(db)
 
     # Hash the token to compare with stored hash
     password_reset_code = utils.hash_token(reset_data.token)
