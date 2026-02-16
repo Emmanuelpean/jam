@@ -8,7 +8,7 @@ content), and records run statistics in an JobScrapingServiceLog."""
 import datetime as dt
 import traceback
 
-from app import utils, models as models
+from app import models
 from app.config import settings
 from app.database import get_db
 from app.emails.email_service import EmailService
@@ -27,6 +27,7 @@ from app.job_email_scraping.models import (
     JobEmailScrapingServiceError,
 )
 from app.job_email_scraping.schemas import JobResult
+from app.resources import CURRENCIES
 from app.service_runner.service_runner import ServiceRunner
 from app.utils import AppLogger
 
@@ -44,7 +45,6 @@ class JobEmailScraper(EmailService):
         self.location_parser = LocationParser()
         self.logger = AppLogger.create_service_logger(SERVICE_NAME, "INFO")
         self.db = next(get_db()) if db is None else db
-        self.currencies = utils.open_json("app/data/currencies.json")
 
     def create_service_log(self, **kwargs) -> JobEmailScrapingServiceLog:
         """Create a new service log entry
@@ -281,7 +281,7 @@ class JobEmailScraper(EmailService):
         result["salary_max"] = job_result.job.salary.max_amount
         result["salary_currency"] = None
         currency_code = (job_result.job.salary.currency or "").lower()
-        for currency in self.currencies:
+        for currency in CURRENCIES:
             if currency_code in (currency["code"].lower(), currency["symbol_native"].lower()):
                 result["salary_currency"] = currency["code"]
                 break
@@ -667,5 +667,3 @@ job_scraping_service_runner = ServiceRunner(
     service_function=JobEmailScraper().run_scraping,
     service_kwargs=dict(timedelta_days=3),
 )
-
-# JobEmailScraper().run_scraping(timedelta_days=5)

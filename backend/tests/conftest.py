@@ -13,6 +13,7 @@ The CRUDTestBase class is in tests/utils/crud_test_base.py
 import datetime as dt
 import os
 from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 from requests import Response
@@ -31,6 +32,20 @@ pytest_plugins = [
     "tests.fixtures.job_scraping",
     "tests.fixtures.job_rating",
 ]
+
+
+# ------------------------------------------------------ FIXTURES ------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def mock_nominatim_get():
+    """Auto-mock Nominatim HTTP calls to prevent real API requests in tests."""
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = []
+    mock_response.raise_for_status = MagicMock()
+    with patch("app.geolocation.requests.get", return_value=mock_response) as mock:
+        yield mock
 
 
 # -------------------------------------------------------- UTILS -------------------------------------------------------

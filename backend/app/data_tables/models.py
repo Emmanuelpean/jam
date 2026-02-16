@@ -223,8 +223,8 @@ class Geolocation(Base, CommonBase):
     - `country` (str, optional): Country of the location"""
 
     query = Column(String, nullable=False, unique=True, index=True)
-    latitude = Column(Float, nullable=False)
-    longitude = Column(Float, nullable=False)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
     postcode = Column(String, nullable=True)
     suburb = Column(String, nullable=True)
     city = Column(String, nullable=True)
