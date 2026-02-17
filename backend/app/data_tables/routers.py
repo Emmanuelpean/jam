@@ -56,7 +56,6 @@ def transform_location(location_data: dict, db: Session) -> dict:
         "city": location_data.get("city"),
         "country": location_data.get("country"),
     }
-    params = {k: v for k, v in params.items() if v}
     geolocation = geocode_location(params, db) if params else None
     return {"geolocation_id": geolocation.id if geolocation else None}
 

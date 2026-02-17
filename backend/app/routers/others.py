@@ -7,7 +7,7 @@ from app import models, database
 from app.config import settings
 from app.core.models import get_setting_value
 from app.job_email_scraping.email_parsers import PLATFORM_SENDER_EMAILS
-from app.utils import open_json
+from app.resources import COUNTRIES, CURRENCIES
 
 other_router = APIRouter(prefix="/others", tags=["others"])
 
@@ -16,16 +16,14 @@ other_router = APIRouter(prefix="/others", tags=["others"])
 def get_currencies() -> list[dict]:
     """Get the list of currencies."""
 
-    currencies = open_json("app/data/currencies.json")
-    return currencies
+    return CURRENCIES
 
 
 @other_router.get("/countries/", response_class=JSONResponse)
 def get_countries() -> list[dict]:
     """Get the list of countries."""
 
-    countries = open_json("app/data/countries.json")
-    return countries
+    return COUNTRIES
 
 
 config_router = APIRouter(prefix="/config", tags=["config"])

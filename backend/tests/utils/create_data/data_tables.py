@@ -30,10 +30,16 @@ def create_companies(db, users: list[models.User]) -> list[models.Company]:
     return create_db_entries(db, models.Company, data)
 
 
-def create_locations(db, users: list[models.User]) -> list[models.Location]:
+def create_locations(db, users: list[models.User], geolocations: list[models.Geolocation]) -> list[models.Location]:
     """Create sample locations"""
 
     data = override_properties(data_tables.LOCATION_DATA, ("owner_id", users))
+    for d in data:
+        query = [d.get("postcode"), d.get("city"), d.get("country")]
+        query = ", ".join(filter(None, query))
+        geolocation = [g for g in geolocations if query == g.query]
+        if geolocation:
+            d["geolocation_id"] = geolocation[0].id
     print(f"Creating {len(data)} Locations...")
     return create_db_entries(db, models.Location, data)
 

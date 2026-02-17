@@ -1,7 +1,6 @@
 """Database fixtures for test setup and session management."""
 
 from typing import Any, Generator
-from unittest.mock import patch
 
 import pytest
 from sqlalchemy import create_engine, orm, Engine
@@ -9,14 +8,6 @@ from sqlalchemy_utils import database_exists, create_database, drop_database
 
 from app.database import create_db_url
 from tests.utils.seed_database import reset_database
-from tests.utils.test_data.geolocation import mock_geocoding_side_effect
-
-
-@pytest.fixture(autouse=True)
-def mock_geocoding_for_all_tests() -> Generator[None, Any, None]:
-    """Mock geocoding API calls for all tests automatically"""
-    with patch("app.geolocation.call_geocoding_api", side_effect=mock_geocoding_side_effect):
-        yield
 
 
 @pytest.fixture(scope="session")

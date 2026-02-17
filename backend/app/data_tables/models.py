@@ -15,6 +15,7 @@ from sqlalchemy import (
     CheckConstraint,
     Table,
     UniqueConstraint,
+    JSON,
 )
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
@@ -216,20 +217,15 @@ class Geolocation(Base, CommonBase):
     - `latitude` (float): Latitude coordinate
     - `longitude` (float): Longitude coordinate
     - `postcode` (str, optional): Postcode of the location
-    - `suburb` (str, optional): Suburb of the location
     - `city` (str, optional): City of the location
-    - `county` (str, optional): County of the location
-    - `state` (str, optional): State of the location
     - `country` (str, optional): Country of the location"""
 
     query = Column(String, nullable=False, unique=True, index=True)
-    latitude = Column(Float, nullable=False)
-    longitude = Column(Float, nullable=False)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    data = Column(JSON, nullable=True)
     postcode = Column(String, nullable=True)
-    suburb = Column(String, nullable=True)
     city = Column(String, nullable=True)
-    county = Column(String, nullable=True)
-    state = Column(String, nullable=True)
     country = Column(String, nullable=True)
 
 

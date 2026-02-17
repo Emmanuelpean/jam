@@ -34,10 +34,9 @@ import { ProgressOverlayProvider } from "./contexts/useProgressOverlayContext";
 import { ScrapedJobsPage } from "./pages/DataTablePages/ScrapedJobsPage";
 import { StyleGuidePage } from "./pages/StylePage";
 import { ConfigProvider } from "./contexts/ConfigContext";
-import { StatusProvider, useStatus } from "./contexts/StatusContext";
+import { StatusProvider } from "./contexts/StatusContext";
 import { MaintenanceBanner } from "./components/AppBanner/MaintenanceBanner";
 import { DemoBanner } from "./components/AppBanner/DemoBanner";
-import { MaintenancePage } from "./pages/MaintenancePage/MaintenancePage";
 import { WhatsNewProvider } from "./contexts/WhatsNewContext";
 
 export function useSwetrixPageViews() {
@@ -82,7 +81,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
 				{currentUser && <Sidebar />}
 				<div style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
-					<div className={!isAuthPage ? `main-content` : ""}>
+					<div className={!isAuthPage ? `main-content` : ""} style={isAuthPage ? { height: "100%" } : undefined}>
 						{isLoading && (
 							<div className="global-loading-overlay">
 								<div className="d-flex flex-column justify-content-center align-items-center h-100">
@@ -106,7 +105,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 								</div>
 							</div>
 						)}
-						{!isLoading && <div>{children}</div>}
+						{!isLoading && <div style={isAuthPage ? { height: "100%" } : undefined}>{children}</div>}
 					</div>
 				</div>
 			</div>
@@ -207,17 +206,6 @@ function AppRoutes(): JSX.Element {
 	);
 }
 
-function MaintenanceGate({ children }: { children: ReactNode }): JSX.Element {
-	const { maintenanceMode } = useStatus();
-	const { currentUser } = useAuth();
-
-	if (maintenanceMode && !currentUser?.is_admin) {
-		return <MaintenancePage />;
-	}
-
-	return <>{children}</>;
-}
-
 function AppContent(): JSX.Element {
 	const toastMethods: UseToastReturn = useToast();
 
@@ -231,13 +219,11 @@ function AppContent(): JSX.Element {
 								<ProgressOverlayProvider>
 									<ThemeProvider>
 										<WhatsNewProvider>
-											<MaintenanceGate>
-												<ContextMenuProvider>
-													<AppLayout>
-														<AppRoutes />
-													</AppLayout>
-												</ContextMenuProvider>
-											</MaintenanceGate>
+											<ContextMenuProvider>
+												<AppLayout>
+													<AppRoutes />
+												</AppLayout>
+											</ContextMenuProvider>
 										</WhatsNewProvider>
 									</ThemeProvider>
 									<ToastStack

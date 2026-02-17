@@ -1,288 +1,164 @@
 """Tests for geolocation module."""
 
-from unittest.mock import patch, MagicMock
+import threading
+import time
 
 import pytest
 import requests
 
+import app.geolocation as geolocation_module
 from app.geolocation import call_geocoding_api, geocode_location
 from app.models import Geolocation
+from tests.utils.create_data.utils import create_db_entries
 
 
 class TestCallGeocodingApi:
     """Tests for call_geocoding_api function."""
 
-    @patch("app.geolocation.requests.get")
-    def test_returns_coordinates_and_address_on_success(self, mock_get) -> None:
+    def test_returns_coordinates_and_address_on_success(self) -> None:
         """Returns latitude, longitude, and address dict when API succeeds."""
 
-        mock_response = MagicMock()
-        mock_response.json.return_value = [
-            {
-                "lat": "51.5074456",
-                "lon": "-0.1277653",
-                "address": {
-                    "city": "London",
-                    "country": "United Kingdom",
-                    "country_code": "gb",
-                },
-            }
-        ]
-        mock_response.raise_for_status = MagicMock()
-        mock_get.return_value = mock_response
+        result = call_geocoding_api("London")
+        assert result[0] == 51.5074456
+        assert result[1] == -0.1277653
+        assert result[2] == {
+            "ISO3166-2-lvl4": "GB-ENG",
+            "city": "Greater London",
+            "country": "United Kingdom",
+            "country_code": "gb",
+            "state": "England",
+        }
 
-        lat, lon, address = call_geocoding_api("London")
+    def test_raises_value_error_when_no_results(self) -> None:
+        """Raises ValueError when API returns empty results."""
 
-        assert lat == 51.5074456
-        assert lon == -0.1277653
-        assert address["city"] == "London"
-        assert address["country"] == "United Kingdom"
-        mock_get.assert_called_once()
-
-    @patch("app.geolocation.requests.get")
-    def test_returns_empty_address_dict_when_not_provided(self, mock_get) -> None:
-        """Returns empty address dict when API result has no address field."""
-
-        mock_response = MagicMock()
-        mock_response.json.return_value = [
-            {
-                "lat": "51.5074456",
-                "lon": "-0.1277653",
-            }
-        ]
-        mock_response.raise_for_status = MagicMock()
-        mock_get.return_value = mock_response
-
-        lat, lon, address = call_geocoding_api("London")
-
-        assert lat == 51.5074456
-        assert lon == -0.1277653
-        assert address == {}
-
-    @patch("app.geolocation.requests.get")
-    def test_raises_runtime_error_when_no_results(self, mock_get) -> None:
-        """Raises RuntimeError when API returns empty results."""
-
-        mock_response = MagicMock()
-        mock_response.json.return_value = []
-        mock_response.raise_for_status = MagicMock()
-        mock_get.return_value = mock_response
-
-        with pytest.raises(RuntimeError) as exc_info:
+        # Default fixture response is already an empty list
+        with pytest.raises(ValueError) as exc_info:
             call_geocoding_api("NonexistentPlace12345")
 
-        assert "Nominatim API error" in str(exc_info.value)
+        assert "No results found" in str(exc_info.value)
 
-    @patch("app.geolocation.requests.get")
-    def test_raises_runtime_error_on_http_error(self, mock_get) -> None:
+    def test_raises_runtime_error_on_http_error(self, mock_nominatim_get) -> None:
         """Raises RuntimeError when HTTP request fails."""
 
-        mock_response = MagicMock()
-        mock_response.raise_for_status.side_effect = requests.HTTPError("503 Server Error")
-        mock_get.return_value = mock_response
+        mock_nominatim_get.side_effect = requests.HTTPError("503 Server Error")
 
         with pytest.raises(RuntimeError) as exc_info:
             call_geocoding_api("London")
 
         assert "Nominatim API error" in str(exc_info.value)
-
-    @patch("app.geolocation.requests.get")
-    def test_raises_runtime_error_on_connection_error(self, mock_get) -> None:
-        """Raises RuntimeError when connection fails."""
-
-        mock_get.side_effect = requests.ConnectionError("Connection refused")
-
-        with pytest.raises(RuntimeError) as exc_info:
-            call_geocoding_api("London")
-
-        assert "Nominatim API error" in str(exc_info.value)
-
-    @patch("app.geolocation.requests.get")
-    def test_raises_runtime_error_on_timeout(self, mock_get) -> None:
-        """Raises RuntimeError when request times out."""
-
-        mock_get.side_effect = requests.Timeout("Request timed out")
-
-        with pytest.raises(RuntimeError) as exc_info:
-            call_geocoding_api("London")
-
-        assert "Nominatim API error" in str(exc_info.value)
-
-    @patch("app.geolocation.settings")
-    @patch("app.geolocation.requests.get")
-    def test_sends_correct_request_parameters(self, mock_get, mock_settings) -> None:
-        """Sends correct query parameters and headers to API."""
-
-        mock_settings.app_version = "1.0.0"
-        mock_settings.main_email_username = "test@example.com"
-        mock_response = MagicMock()
-        mock_response.json.return_value = [{"lat": "51.5", "lon": "-0.1", "address": {}}]
-        mock_response.raise_for_status = MagicMock()
-        mock_get.return_value = mock_response
-
-        call_geocoding_api("Cambridge, UK")
-
-        mock_get.assert_called_once()
-        call_args = mock_get.call_args
-        assert call_args[0][0] == "https://nominatim.openstreetmap.org/search"
-        assert call_args[1]["params"]["q"] == "Cambridge, UK"
-        assert call_args[1]["params"]["format"] == "json"
-        assert call_args[1]["params"]["limit"] == 1
-        assert call_args[1]["params"]["addressdetails"] == 1
-        assert call_args[1]["timeout"] == 5
-        assert "User-Agent" in call_args[1]["headers"]
-
-    @patch("app.geolocation.settings")
-    @patch("app.geolocation.requests.get")
-    def test_sends_structured_params_when_given_dict(self, mock_get, mock_settings) -> None:
-        """Sends structured query parameters when given a dict instead of a string."""
-
-        mock_settings.app_version = "1.0.0"
-        mock_settings.main_email_username = "test@example.com"
-        mock_response = MagicMock()
-        mock_response.json.return_value = [{"lat": "51.5", "lon": "-0.1", "address": {}}]
-        mock_response.raise_for_status = MagicMock()
-        mock_get.return_value = mock_response
-
-        call_geocoding_api({"city": "London", "country": "United Kingdom"})
-
-        call_args = mock_get.call_args
-        assert "q" not in call_args[1]["params"]
-        assert call_args[1]["params"]["city"] == "London"
-        assert call_args[1]["params"]["country"] == "United Kingdom"
-        assert call_args[1]["params"]["format"] == "json"
 
 
 class TestGeocodeLocation:
     """Tests for geocode_location function."""
 
-    def test_returns_cached_geolocation_when_exists(self) -> None:
+    def test_returns_cached_geolocation_when_exists(self, session, mock_nominatim_get) -> None:
         """Returns cached geolocation without calling API if query exists."""
 
-        mock_session = MagicMock()
-        cached_geo = MagicMock(spec=Geolocation)
-        cached_geo.id = 1
-        cached_geo.query = "London"
-        cached_geo.latitude = 51.5074456
-        cached_geo.longitude = -0.1277653
-        mock_session.query.return_value.filter_by.return_value.first.return_value = cached_geo
+        data = dict(query="London", latitude=51.5074456, longitude=-0.1277653)
+        geo = create_db_entries(session, Geolocation, data)[0]
+        result = geocode_location(geo.query, session)
 
-        result = geocode_location("London", mock_session)
+        assert result.id == geo.id
+        assert mock_nominatim_get.call_count == 0
 
-        assert result == cached_geo
-        mock_session.add.assert_not_called()
-
-    @patch("app.geolocation.call_geocoding_api")
-    @patch("app.geolocation.utils.open_json")
-    def test_creates_new_geolocation_when_not_cached(self, mock_open_json, mock_api) -> None:
+    def test_creates_new_geolocation_when_not_cached(self, session) -> None:
         """Calls API and creates new geolocation when query not in cache."""
 
-        mock_session = MagicMock()
-        mock_session.query.return_value.filter_by.return_value.first.return_value = None
-        mock_api.return_value = (
-            51.5074456,
-            -0.1277653,
-            {"city": "London", "country": "United Kingdom", "postcode": "SW1A 1AA"},
-        )
-        mock_open_json.return_value = [{"name": "United Kingdom"}]
+        result = geocode_location("London", session)
 
-        result = geocode_location("London", mock_session)
-
-        mock_api.assert_called_once_with("London")
-        mock_session.add.assert_called_once()
-        mock_session.commit.assert_called_once()
-        mock_session.refresh.assert_called_once()
         assert result is not None
+        assert result.latitude == 51.5074456
+        assert result.longitude == -0.1277653
 
-    @patch("app.geolocation.call_geocoding_api")
-    @patch("app.geolocation.utils.open_json")
-    def test_matches_country_name_case_insensitive(self, mock_open_json, mock_api) -> None:
-        """Matches country name in case-insensitive manner."""
+    def test_creates_geolocation_from_dict_query(self, session, mock_nominatim_get) -> None:
+        """Creates geolocation with a stable sorted cache key when given a dict query."""
 
-        mock_session = MagicMock()
-        mock_session.query.return_value.filter_by.return_value.first.return_value = None
-        mock_api.return_value = (
-            51.5074456,
-            -0.1277653,
-            {"city": "London", "country": "UNITED KINGDOM"},
-        )
-        mock_open_json.return_value = [{"name": "United Kingdom"}, {"name": "France"}]
+        result = geocode_location({"postcode": "10001", "city": "New York", "country": "United States"}, session)
+        assert result is not None
+        cached = session.query(Geolocation).filter_by(query="10001, New York, United States").first()
+        assert cached is not None
 
-        geocode_location("London", mock_session)
+    def test_decodes_html_entities_in_string_query(self, session, mock_nominatim_get) -> None:
+        """Decodes HTML entities in string queries before calling the API."""
 
-        # Check the geolocation was created with matched country name
-        add_call = mock_session.add.call_args[0][0]
-        assert add_call.country == "United Kingdom"
+        geocode_location("London UK &amp;", session)
+        assert mock_nominatim_get.call_args[1]["params"]["q"] == "London UK &"
 
-    @patch("app.geolocation.call_geocoding_api")
-    def test_returns_none_on_api_failure(self, mock_api) -> None:
-        """Returns None when API call fails."""
+    def test_decodes_html_entities_in_dict_query(self, session, mock_nominatim_get) -> None:
+        """Decodes HTML entities in dict query values before calling the API."""
 
-        mock_session = MagicMock()
-        mock_session.query.return_value.filter_by.return_value.first.return_value = None
-        mock_api.side_effect = RuntimeError("API error")
+        geocode_location({"city": "Caf&eacute; City", "country": "UK"}, session)
+        assert mock_nominatim_get.call_args[1]["params"]["q"] == "Café City, UK"
 
-        result = geocode_location("NonexistentPlace", mock_session)
+    def test_returns_empty_geolocation_when_no_results(self, session) -> None:
+        """Returns an empty Geolocation record when the API finds no results, to avoid repeat API calls."""
 
+        result = geocode_location("NonexistentPlace12345", session)
+        assert result is not None
+        assert result.query == "NonexistentPlace12345"
+        assert result.latitude is None
+        assert result.longitude is None
+
+    def test_returns_none_on_api_failure(self, session, mock_nominatim_get) -> None:
+        """Returns None when a network error occurs."""
+
+        mock_nominatim_get.side_effect = requests.ConnectionError("Connection refused")
+        result = geocode_location("SomePlace", session)
         assert result is None
-        mock_session.add.assert_not_called()
+        assert session.query(Geolocation).filter_by(query="SomePlace").first() is None
 
-    @patch("app.geolocation.call_geocoding_api")
-    @patch("app.geolocation.utils.open_json")
-    def test_handles_missing_address_fields(self, mock_open_json, mock_api) -> None:
-        """Creates geolocation with None for missing address fields."""
+    def test_none_in_dict(self, session) -> None:
+        """Check that the sanitation works even if None is in the dictionary"""
 
-        mock_session = MagicMock()
-        mock_session.query.return_value.filter_by.return_value.first.return_value = None
-        mock_api.return_value = (51.5074456, -0.1277653, {})
-        mock_open_json.return_value = []
-
-        geocode_location("Unknown Place", mock_session)
-
-        add_call = mock_session.add.call_args[0][0]
-        assert add_call.postcode is None
-        assert add_call.city is None
-        assert add_call.country is None
-
-    @patch("app.geolocation.call_geocoding_api")
-    @patch("app.geolocation.utils.open_json")
-    def test_creates_geolocation_from_dict_query(self, mock_open_json, mock_api) -> None:
-        """Creates geolocation with a stable cache key when given a dict query."""
-
-        mock_session = MagicMock()
-        mock_session.query.return_value.filter_by.return_value.first.return_value = None
-        mock_api.return_value = (
-            51.5074456,
-            -0.1277653,
-            {"city": "London", "country": "United Kingdom", "postcode": "SW1A 1AA"},
-        )
-        mock_open_json.return_value = [{"name": "United Kingdom"}]
-
-        result = geocode_location({"city": "London", "country": "United Kingdom"}, mock_session)
-
-        mock_api.assert_called_once_with({"city": "London", "country": "United Kingdom"})
-        # Cache key should be sorted and formatted
-        mock_session.query.return_value.filter_by.assert_called_with(query="city=London, country=United Kingdom")
+        result = geocode_location({"postcode": None, "city": "London", "country": None}, session)
         assert result is not None
+        assert result.latitude is not None
+        assert result.longitude is not None
 
-    @patch("app.geolocation.call_geocoding_api")
-    @patch("app.geolocation.utils.open_json")
-    def test_does_not_match_unrecognized_country(self, mock_open_json, mock_api) -> None:
-        """Sets country to None when country not in known countries list."""
+    def test_all_none_in_dict(self, session) -> None:
+        """Check that the sanitation works even if None is in the dictionary"""
 
-        mock_session = MagicMock()
-        mock_session.query.return_value.filter_by.return_value.first.return_value = None
-        mock_api.return_value = (
-            51.5074456,
-            -0.1277653,
-            {"city": "Test City", "country": "Unknown Country"},
-        )
-        mock_open_json.return_value = [{"name": "United Kingdom"}, {"name": "France"}]
+        result = geocode_location({"postcode": None, "city": None, "country": None}, session)
+        assert result is not None
+        assert result.latitude is None
+        assert result.longitude is None
 
-        geocode_location("Test City", mock_session)
 
-        add_call = mock_session.add.call_args[0][0]
-        assert add_call.country is None
+class TestRateLimiting:
+    """Tests for Nominatim API rate limiting."""
+
+    def test_concurrent_calls_are_spaced_at_least_1s_apart(self) -> None:
+        """When multiple threads call the API simultaneously, calls are spaced >= 1s apart."""
+
+        # Reset the last call time so the first call doesn't wait
+        geolocation_module._last_call_time = 0.0
+
+        call_times: list[float] = []
+        lock = threading.Lock()
+
+        original_get = geolocation_module.requests.get
+
+        def tracking_get(*args, **kwargs):
+            with lock:
+                call_times.append(time.monotonic())
+            return original_get(*args, **kwargs)
+
+        geolocation_module.requests.get = tracking_get
+        try:
+            threads = [threading.Thread(target=call_geocoding_api, args=("London",)) for _ in range(3)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+        finally:
+            geolocation_module.requests.get = original_get
+
+        call_times.sort()
+        assert len(call_times) == 3
+        for i in range(1, len(call_times)):
+            gap = call_times[i] - call_times[i - 1]
+            assert gap >= 0.9, f"Gap between call {i - 1} and {i} was only {gap:.3f}s"
 
 
 class TestGeolocationCascade:

@@ -10,6 +10,7 @@
       <sourceFolder url="file://$MODULE_DIR$/backend" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/backend/app" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/backend/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/frontend/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/frontend/node_modules" />
       <excludeFolder url="file://$MODULE_DIR$/logs" />
