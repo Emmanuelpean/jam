@@ -616,6 +616,10 @@ textarea.form-control {
     padding: 1.2rem 1rem 0.1rem 1rem;
 }
 
+.accordion-collapse {
+    background-color: var(--bg-secondary);
+}
+
 .accordion-button:focus {
     outline: 2px solid var(--primary-mid);
     box-shadow: 0 0 0 0.25rem var(--jam-glow);

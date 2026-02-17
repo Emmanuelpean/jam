@@ -9,8 +9,23 @@ import pytest
 from app import models
 from app.config import settings
 from app.core import schemas
+from app.core.models import Setting
 from app.core.utils import send_password_reset_email
 from app.utils import hash_token
+
+
+def _create_maintenance_setting(session, minutes_offset: int) -> Setting:
+    """Insert a maintenance_scheduled_at setting with a timestamp offset from now.
+
+    A negative offset puts the time in the past (maintenance active).
+    A positive offset puts the time in the future (scheduled but not yet active).
+    """
+    scheduled_at = datetime.now(timezone.utc) + timedelta(minutes=minutes_offset)
+    setting = Setting(name="maintenance_scheduled_at", value=scheduled_at.isoformat())
+    session.add(setting)
+    session.commit()
+    session.refresh(setting)
+    return setting
 
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
@@ -108,6 +123,40 @@ class TestLogin:
 
         response = client.post("/login/", data={"username": email, "password": password})
         assert response.status_code == status_code
+
+    def test_regular_user_login_blocked_during_maintenance(self, session, test_regular_user, client) -> None:
+        """Non-admin users receive 401 when trying to log in during maintenance."""
+
+        _create_maintenance_setting(session, minutes_offset=-5)
+        data = {"username": test_regular_user.email, "password": test_regular_user.plain_password}
+        response = client.post("/login", data=data)
+        assert response.status_code == 401
+        assert "maintenance" in response.json()["detail"].lower()
+
+    def test_admin_user_login_allowed_during_maintenance(self, session, test_admin_user, client) -> None:
+        """Admin users can log in when maintenance is active."""
+
+        _create_maintenance_setting(session, minutes_offset=-5)
+        data = {"username": test_admin_user.email, "password": test_admin_user.plain_password}
+        response = client.post("/login", data=data)
+        assert response.status_code == 200
+
+    def test_regular_user_login_allowed_outside_maintenance(self, test_regular_user, client) -> None:
+        """Regular users can log in when no maintenance setting is present."""
+
+        data = {"username": test_regular_user.email, "password": test_regular_user.plain_password}
+        response = client.post("/login", data=data)
+        assert response.status_code == 200
+
+    def test_regular_user_login_allowed_when_maintenance_scheduled_in_future(
+        self, session, test_regular_user, client
+    ) -> None:
+        """Regular users can log in when maintenance is scheduled but not yet active."""
+
+        _create_maintenance_setting(session, minutes_offset=30)
+        data = {"username": test_regular_user.email, "password": test_regular_user.plain_password}
+        response = client.post("/login", data=data)
+        assert response.status_code == 200
 
 
 # ------------------------------------------------------ REGISTER ------------------------------------------------------
@@ -244,6 +293,18 @@ class TestRegister:
         assert "error" in response.json()["detail"].lower()
         assert mock_email.call_count == 1
 
+    def test_register_blocked_during_maintenance(self, session, client) -> None:
+        _create_maintenance_setting(session, minutes_offset=-5)
+        data = {
+            "email": "newuser@test.com",
+            "password": "testpassword",
+            "first_name": "New",
+            "last_name": "User",
+        }
+        response = client.post("/register", json=data)
+        assert response.status_code == 401
+        assert "maintenance" in response.json()["detail"].lower()
+
 
 class TestEmailVerification:
 
@@ -318,6 +379,12 @@ class TestEmailVerification:
         # Re-query user to check verification status
         user = session.query(models.User).filter(models.User.id == user_id).first()
         assert user.is_verified is False
+
+    def test_verify_email_blocked_during_maintenance(self, session, test_unverified_token_user, client) -> None:
+        _create_maintenance_setting(session, minutes_offset=-5)
+        response = client.get(f"/register/verify-email/{test_unverified_token_user.plain_verification_token}")
+        assert response.status_code == 401
+        assert "maintenance" in response.json()["detail"].lower()
 
 
 # --------------------------------------------------- PASSWORD RESET ---------------------------------------------------
@@ -449,6 +516,12 @@ class TestRequestPasswordReset:
 
         assert response.status_code == 422
 
+    def test_password_reset_request_blocked_during_maintenance(self, session, test_regular_user, client) -> None:
+        _create_maintenance_setting(session, minutes_offset=-5)
+        response = client.post("/password/forgot", json={"email": test_regular_user.email})
+        assert response.status_code == 401
+        assert "maintenance" in response.json()["detail"].lower()
+
 
 class TestResetPassword:
 
@@ -527,3 +600,16 @@ class TestResetPassword:
         response = client.post("/password/reset", json=new_password_data)
         assert response.status_code == 403
         assert "invalid" in response.json()["detail"].lower()
+
+    @patch("app.core.routers.auth.email_service.send_password_changed_notification")
+    def test_password_reset_confirm_blocked_during_maintenance(
+        self, _mock_email, session, test_unverified_token_user, client
+    ) -> None:
+        _create_maintenance_setting(session, minutes_offset=-5)
+        data = {
+            "token": test_unverified_token_user.plain_verification_token,
+            "new_password": "newpassword123",
+        }
+        response = client.post("/password/reset", json=data)
+        assert response.status_code == 401
+        assert "maintenance" in response.json()["detail"].lower()

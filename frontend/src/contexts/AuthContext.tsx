@@ -113,7 +113,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		if (hadTokenOnMount.current && token) {
 			authApi.heartbeat(token).catch(() => null);
 		}
-	}, []); // eslint-disable-line react-hooks/exhaustive-deps
+	}, []);
 
 	const login = async (email: string, password: string): Promise<GenericResponse> => {
 		const data: ApiResponse<LoginResponse> = await authApi.login(email, password);

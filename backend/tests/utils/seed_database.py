@@ -118,13 +118,17 @@ def create_database_data(db, includes=None, excludes=None, **kwargs) -> None:
     else:
         aggregators = None
 
-    if should_create("geolocations") and "geolocations" not in kwargs:
-        create_geolocations(db)
+    if "geolocations" in kwargs:
+        geolocations = kwargs["geolocations"]
+    elif should_create("geolocations"):
+        geolocations = create_geolocations(db)
+    else:
+        geolocations = None
 
     if "locations" in kwargs:
         locations = kwargs["locations"]
-    elif should_create("locations") and users:
-        locations = create_locations(db, users)
+    elif should_create("locations") and users and geolocations:
+        locations = create_locations(db, users, geolocations)
     else:
         locations = None
 
@@ -202,8 +206,8 @@ def create_database_data(db, includes=None, excludes=None, **kwargs) -> None:
 
     if "scraped_jobs" in kwargs:
         scraped_jobs = kwargs["scraped_jobs"]
-    elif should_create("scraped_jobs") and all([alert_emails, users, scraping_filters]):
-        scraped_jobs = create_scraped_jobs(db, alert_emails, users, scraping_filters)
+    elif should_create("scraped_jobs") and all([alert_emails, users, scraping_filters, geolocations]):
+        scraped_jobs = create_scraped_jobs(db, alert_emails, users, scraping_filters, geolocations)
     else:
         scraped_jobs = None
 
