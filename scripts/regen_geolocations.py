@@ -3,7 +3,7 @@
 from app.database import session_local
 from app.geolocation import geocode_location
 from app.models import ScrapedJob, Geolocation, Location
-from job_email_scraping.location_parser import LocationParser
+from app.job_email_scraping.location_parser import LocationParser
 
 
 def run():
