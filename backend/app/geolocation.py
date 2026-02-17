@@ -7,12 +7,12 @@ import traceback
 import requests
 from sqlalchemy.orm import Session
 
-from app.resources import COUNTRIES
 from app.config import settings
 from app.models import Geolocation
+from app.resources import COUNTRIES
 
 
-def call_geocoding_api(query: str | dict) -> tuple[float, float, dict]:
+def call_geocoding_api(query: str) -> tuple[float, float, dict]:
     """Geocode using OpenStreetMap Nominatim API directly.
     :param query: A location query string or a dict with structured params (postcode, city, country).
     :return: A tuple of (latitude, longitude, formatted_address).
@@ -20,13 +20,7 @@ def call_geocoding_api(query: str | dict) -> tuple[float, float, dict]:
 
     print("Calling Nominatim API for query:", query)
     base_url = "https://nominatim.openstreetmap.org/search"
-    params = {"format": "json", "limit": 1, "addressdetails": 1}
-
-    if isinstance(query, dict):
-        params.update(query)
-    else:
-        params["q"] = query
-
+    params = {"format": "json", "limit": 1, "addressdetails": 1, "q": query}
     headers = {"User-Agent": f"JAM/{settings.app_version} ({settings.main_email_username})"}
 
     try:
@@ -43,30 +37,29 @@ def call_geocoding_api(query: str | dict) -> tuple[float, float, dict]:
         raise ValueError(f"No results found for: {query}")
 
 
-def geocode_location(query: str | dict, session: Session, logger: logging.Logger | None = None) -> Geolocation | None:
+def geocode_location(query: str | dict, db: Session, logger: logging.Logger | None = None) -> Geolocation | None:
     """Geocode a location or scraped job using cached results when available.
     Links the location/scraped job to a Geolocation record via foreign key.
     :param query: A location query string or a dict with structured params (postcode, city, country).
-    :param session: SQLAlchemy session for database operations.
+    :param db: SQLAlchemy session for database operations.
     :param logger: AppLogger instance
     :return: The geolocation ID if successful, else None."""
 
     # Decode HTML entities and normalise whitespace
     if isinstance(query, dict):
-        query = {k: html.unescape(v).strip() if isinstance(v, str) else v for k, v in query.items()}
-        cache_key = ", ".join(f"{k}={v}" for k, v in sorted(query.items()))
+        sanitised_query = {k: html.unescape(v).strip() if isinstance(v, str) else v for k, v in query.items()}
+        sanitised_query = ", ".join(sanitised_query.values())
     else:
-        query = html.unescape(query).strip()
-        cache_key = query
+        sanitised_query = html.unescape(query).strip()
 
     # Check cache first
-    cached = session.query(Geolocation).filter_by(query=cache_key).first()
+    cached = db.query(Geolocation).filter_by(query=sanitised_query).first()
 
     if cached:
         return cached
     else:
         try:
-            lat, lon, address_dict = call_geocoding_api(query)
+            lat, lon, address_dict = call_geocoding_api(sanitised_query)
 
             # Create new geolocation entry
             oms_country = address_dict.get("country")
@@ -78,36 +71,34 @@ def geocode_location(query: str | dict, session: Session, logger: logging.Logger
                         break
 
             new_geo = Geolocation(
-                query=cache_key,
+                query=sanitised_query,
                 latitude=lat,
                 longitude=lon,
+                data=address_dict,
                 postcode=address_dict.get("postcode"),
                 city=address_dict.get("city"),
                 country=matched_country,
-                county=address_dict.get("county"),
-                state=address_dict.get("state"),
-                suburb=address_dict.get("suburb"),
             )
-            session.add(new_geo)
-            session.commit()
-            session.refresh(new_geo)
+            db.add(new_geo)
+            db.commit()
+            db.refresh(new_geo)
             if logger is not None:
-                logger.info(f"Successfully geocode '{cache_key}' to '{new_geo.id}'")
+                logger.info(f"Successfully geocode '{sanitised_query}' to '{new_geo.id}'")
             return new_geo
 
         # If no result was found, store the query string to avoid repeated calls to the API
         except ValueError:
-            new_geo = Geolocation(query=cache_key)
-            session.add(new_geo)
-            session.commit()
-            session.refresh(new_geo)
+            new_geo = Geolocation(query=sanitised_query)
+            db.add(new_geo)
+            db.commit()
+            db.refresh(new_geo)
             if logger is not None:
-                logger.warning(f"Failed to geocode '{cache_key}'. Stored in '{new_geo.id}'")
+                logger.warning(f"Failed to geocode '{sanitised_query}'. Stored in '{new_geo.id}'")
             return new_geo
 
         except Exception as e:
-            print(f"Warning: Could not geocode '{cache_key}': {e}")
+            print(f"Warning: Could not geocode '{sanitised_query}': {e}")
             print(traceback.format_exc())
             if logger is not None:
-                logger.warning(f"Failed to geocode '{cache_key}' due to error {e}")
+                logger.warning(f"Failed to geocode '{sanitised_query}' due to error {e}")
             return None

@@ -36,6 +36,7 @@ def create_scraped_jobs(
     emails,
     users: list[models.User],
     filters: list[models.ScrapingExclusionFilter],
+    geolocations: list[models.Geolocation],
 ) -> list[models.ScrapedJob]:
     """Create sample scraped jobs - some with scraped data, some without"""
 
@@ -45,6 +46,10 @@ def create_scraped_jobs(
         ("service_log_id", emails),
         ("filter_id", filters),
     )
+    for d in data:
+        geolocation = [g for g in geolocations if d.get("location") == g.query]
+        if geolocation:
+            d["geolocation_id"] = geolocation[0].id
     print(f"Creating {len(data)} Scraped Jobs...")
     scraped_jobs = create_db_entries(db, models.ScrapedJob, data)
 

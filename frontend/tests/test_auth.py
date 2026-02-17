@@ -5,6 +5,7 @@ including login, registration, form validation, and mode switching functionality
 """
 
 import datetime as dt
+import time
 
 from selenium.webdriver.common.by import By
 
@@ -131,6 +132,7 @@ class TestLogIn(BaseTest):
         # Refresh the page
         self.driver.get("https://google.com")
         self.driver.get(self.frontend_base_url + "/jobs")
+        time.sleep(0.5)
         self.db.expire_all()
         assert self.user.last_login > login_dt
         assert self.user.previous_login == login_dt
