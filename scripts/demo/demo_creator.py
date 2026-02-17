@@ -29,8 +29,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 from tests.utils.test_data import USER_DATA
 
 # Backend/frontend paths
-backend_path = Path(__file__).parent.parent / "backend"
-frontend_path = Path(__file__).parent.parent / "frontend"
+backend_path = Path(__file__).parent.parent.parent / "backend"
+frontend_path = Path(__file__).parent.parent.parent / "frontend"
 
 sys.path.insert(0, str(backend_path))
 

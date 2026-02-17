@@ -6,17 +6,12 @@ Create Date: 2026-02-09 22:58:25.657941
 
 """
 
-import time
 from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-from sqlalchemy.orm import Session
-
-from app.geolocation import geocode_location
-from app.job_email_scraping.location_parser import LocationParser
 from app.job_rating.prompts import SYSTEM_PROMPT_V1, JOB_PROMPT_TEMPLATE_V1
 
 # revision identifiers, used by Alembic.
@@ -326,54 +321,13 @@ def upgrade() -> None:
         "applied_via IN ('aggregator', 'email', 'company_website', 'phone', 'other')",
     )
 
-    # Seed AI prompts using raw SQL (can't use ORM session - table only exists within this transaction)
+    # Seed AI prompts
     op.execute(sa.text("INSERT INTO ai_system_prompt (prompt) VALUES (:prompt)").bindparams(prompt=SYSTEM_PROMPT_V1))
     op.execute(
         sa.text("INSERT INTO ai_job_prompt_template (prompt) VALUES (:prompt)").bindparams(
             prompt=JOB_PROMPT_TEMPLATE_V1
         )
     )
-
-    # Add geolocation to existing locations and scraped jobs using the alembic connection
-    bind = op.get_bind()
-    session = Session(bind=bind)
-
-    locations = session.execute(sa.text("SELECT id, postcode, city, country, geolocation_id FROM location")).fetchall()
-    for loc in locations:
-        if loc.geolocation_id is None:
-            time.sleep(1.1)
-            params = {
-                "postcode": loc.postcode,
-                "city": loc.city,
-                "country": loc.country,
-            }
-            params = {k: v for k, v in params.items() if v}
-            if params:
-                geolocation = geocode_location(params, session)
-                if geolocation:
-                    session.execute(
-                        sa.text("UPDATE location SET geolocation_id = :geo_id WHERE id = :loc_id"),
-                        {"geo_id": geolocation.id, "loc_id": loc.id},
-                    )
-
-    location_parser = LocationParser()
-    scraped_jobs = session.execute(sa.text("SELECT id, location, geolocation_id FROM scraped_job")).fetchall()
-    for sj in scraped_jobs:
-        if sj.geolocation_id is None and sj.location:
-            time.sleep(1.1)
-            location_parsed, attendance_type = location_parser.parse_location(sj.location)
-            if attendance_type:
-                session.execute(
-                    sa.text("UPDATE scraped_job SET attendance_type = :att WHERE id = :sj_id"),
-                    {"att": attendance_type, "sj_id": sj.id},
-                )
-            if location_parsed:
-                geolocation = geocode_location(location_parsed, session)
-                if geolocation:
-                    session.execute(
-                        sa.text("UPDATE scraped_job SET geolocation_id = :geo_id WHERE id = :sj_id"),
-                        {"geo_id": geolocation.id, "sj_id": sj.id},
-                    )
 
 
 def downgrade() -> None:
