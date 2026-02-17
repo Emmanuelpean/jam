@@ -75,6 +75,7 @@ class ScrapedJob(BaseModel):
     salary_currency: str | None = None
     url: str | None = None
     deadline: datetime | None = None
+    parsed_location: str | None = None
     attendance_type: str | None = None
     location: str | None = None
     location_city: str | None = None

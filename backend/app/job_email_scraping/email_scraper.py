@@ -263,13 +263,11 @@ class JobEmailScraper(EmailService):
         result = {}
 
         # Location & attendance type
-        raw_location = job_result.location
-        parsed_location, attendance_type = self.location_parser.parse_location(raw_location)
-        result["location"] = raw_location
-        result["attendance_type"] = attendance_type
+        result["location"] = job_result.location
+        result["parsed_location"], result["attendance_type"] = self.location_parser.parse_location(result["location"])
 
-        if parsed_location:
-            geolocation = geocode_location(parsed_location, self.db, self.logger)
+        if result["parsed_location"]:
+            geolocation = geocode_location(result["parsed_location"], self.db, self.logger)
             if geolocation:
                 result["geolocation_id"] = geolocation.id
                 result["location_postcode"] = geolocation.postcode

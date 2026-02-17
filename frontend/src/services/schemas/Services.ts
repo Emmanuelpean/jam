@@ -83,6 +83,7 @@ export interface ScrapedJobData extends OwnedOut {
 	location_postcode: string | null;
 	location_city: string | null;
 	location_country: string | null;
+	parsed_location: string | null;
 	attendance_type: string | null;
 	location: string | null;
 	emails: number[];

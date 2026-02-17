@@ -40,7 +40,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			return {
 				...data,
 				company_id: data.company ? findClosestOption(companies, data.company) : null,
-				location_id: data.location ? findClosestOption(locations, data.location) : null,
+				location_id: data.parsed_location ? findClosestOption(locations, data.parsed_location) : null,
 				source_aggregator_id: data.platform ? findExactOption(aggregators, data.platform) : null,
 				source_type: "aggregator_email",
 			};
