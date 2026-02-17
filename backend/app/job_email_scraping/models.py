@@ -111,6 +111,7 @@ class ScrapedJob(Owned, Base):
     - `location_postcode` (str, optional): Postcode of the job location.
     - `location_city` (str, optional): City of the job location.
     - `location_country` (str, optional): Country of the job location.
+    - `parsed_location` (str, optional): Parsed location of the job posting.
     - `attendance_type` (str, optional): Attendance type of the job (e.g., remote, on-site).
 
     Foreign keys:
@@ -153,6 +154,7 @@ class ScrapedJob(Owned, Base):
     location_postcode = Column(String, nullable=True)
     location_city = Column(String, nullable=True)
     location_country = Column(String, nullable=True)
+    parsed_location = Column(String, nullable=True)
     attendance_type = Column(String, nullable=True)
 
     # Foreign keys
