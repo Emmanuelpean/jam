@@ -8,7 +8,7 @@ import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.scss";
-import { releaseNotes as releaseNotesRegistry } from "../../releaseNotes/versions";
+import { LAST_VERSION, releaseNotes as releaseNotesRegistry, version, VERSIONS } from "../../releaseNotes/versions";
 import { useWhatsNew } from "../../contexts/WhatsNewContext";
 import { Accordion } from "../../components/Accordion/Accordion";
 
@@ -21,16 +21,6 @@ interface Feature {
 const AboutPage = (): JSX.Element => {
 	const [openVersion, setOpenVersion] = useState<string | null>(null);
 	const { showWhatsNew, showWelcome } = useWhatsNew();
-	const versions: string[] = Object.keys(releaseNotesRegistry).sort((a: string, b: string): number => {
-		const pa: number[] = a.split(".").map(Number);
-		const pb: number[] = b.split(".").map(Number);
-		for (let i: number = 0; i < Math.max(pa.length, pb.length); i++) {
-			const na: number = pa[i] ?? 0;
-			const nb: number = pb[i] ?? 0;
-			if (na !== nb) return nb - na;
-		}
-		return 0;
-	});
 
 	const features: Feature[] = [
 		{
@@ -97,7 +87,7 @@ const AboutPage = (): JSX.Element => {
 											rel="noopener noreferrer"
 											className="link-gradient ms-2 align-items-center"
 										>
-											{packageJson.version}
+											{LAST_VERSION}
 											<i className="bi bi-github ms-2"></i>
 										</a>
 									</div>
@@ -175,15 +165,15 @@ const AboutPage = (): JSX.Element => {
 							<h2 className="display-5 fw-bold">Release Notes</h2>
 							<Button variant="outline-primary" className="mt-3" onClick={showWhatsNew}>
 								<i className="bi bi-stars me-2" />
-								View What's New in {packageJson.version}
+								View What's New in {LAST_VERSION}
 							</Button>
 						</Col>
 					</Row>
 					<Row className="justify-content-center">
 						<Col lg={10}>
 							<div style={{ width: "100%", marginTop: "10px" }}>
-								{versions.map(
-									(version: string): JSX.Element => (
+								{VERSIONS.reverse().map(
+									(version: version): JSX.Element => (
 										<Accordion
 											key={version}
 											className="mb-2"

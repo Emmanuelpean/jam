@@ -1,0 +1,50 @@
+{% extends "base_email.html" %}
+
+{% block email_title %}JAM V{{ version }} is Here!{% endblock %}
+
+{% block header_bg %}background: linear-gradient(135deg, #0ea5e9 0%, #2dd4bf 100%);{% endblock %}
+
+{% block header_title %}JAM V{{ version }} is Here!{% endblock %}
+
+{% block content %}
+<p style="margin: 0 0 25px 0; font-size: 16px; line-height: 24px; color: #333333;">
+    Hi there,
+</p>
+
+<p style="margin: 0 0 30px 0; font-size: 16px; line-height: 24px; color: #333333;">
+    We're excited to share what's new in <strong>JAM v{{ version }}</strong>. Here's a summary of the latest features and improvements:
+</p>
+
+<table role="presentation" style="width: 100%; border-collapse: collapse; margin: 0 0 30px 0;">
+{% for feature in features %}
+    <tr>
+        <td style="padding: 8px 0 8px 0; vertical-align: top; width: 24px; color: #0ea5e9; font-size: 16px;">
+            &#8226;
+        </td>
+        <td style="padding: 8px 0 8px 8px; vertical-align: top;">
+            <span style="font-size: 15px; font-weight: 600; color: #1e293b;">{{ feature.title }}</span>
+            <span style="font-size: 14px; color: #475569;"> &mdash; {{ feature.description }}</span>
+        </td>
+    </tr>
+{% endfor %}
+</table>
+
+<!-- CTA Button -->
+<table role="presentation" style="width: 100%; border-collapse: collapse; margin: 30px 0;">
+    <tr>
+        <td align="center">
+            <a href="{{ app_url }}"
+               style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #0ea5e9 0%, #2dd4bf 100%); color: #ffffff;
+               text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; text-align: center;">
+                Open JAM
+            </a>
+        </td>
+    </tr>
+</table>
+
+<p style="margin: 20px 0 0 0; font-size: 14px; line-height: 20px; color: #999999;">
+    Thank you for using JAM. We hope these updates make your job search even more productive!
+</p>
+{% endblock %}
+
+{% block footer_message %}You're receiving this because you have an active JAM account. Please do not reply to this email.{% endblock %}

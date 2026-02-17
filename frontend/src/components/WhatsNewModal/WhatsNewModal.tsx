@@ -1,6 +1,6 @@
 import React, { forwardRef, JSX } from "react";
 import { SlideCarouselModal, SlideCarouselModalHandle } from "../SlideCarouselModal/SlideCarouselModal";
-import { ReleaseSlide } from "../../releaseNotes/versions";
+import { LAST_VERSION, ReleaseSlide } from "../../releaseNotes/versions";
 import packageJson from "../../../package.json";
 
 export type WhatsNewModalHandle = SlideCarouselModalHandle;
@@ -15,7 +15,7 @@ export const WhatsNewModal = forwardRef<WhatsNewModalHandle, WhatsNewModalProps>
 			<SlideCarouselModal
 				ref={ref}
 				id="whats-new-modal"
-				title={`What's New in Version ${packageJson.version}`}
+				title={`What's New in Version ${LAST_VERSION}`}
 				titleIcon="bi-stars"
 				slides={slides}
 				finishText="Got it!"

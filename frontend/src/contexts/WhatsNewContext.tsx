@@ -1,9 +1,13 @@
-import React, { createContext, useContext, useRef, useEffect, useState, useCallback, ReactNode, JSX } from "react";
+import React, { createContext, JSX, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
-import { WhatsNewModalHandle, WhatsNewModal } from "../components/WhatsNewModal/WhatsNewModal";
-import { WelcomeModalHandle, WelcomeModal } from "../components/WelcomeModal/WelcomeModal";
-import { getNewerReleaseSlides, getReleaseSlidesForVersion, ReleaseSlide } from "../releaseNotes/versions";
-import packageJson from "../../package.json";
+import { WhatsNewModal, WhatsNewModalHandle } from "../components/WhatsNewModal/WhatsNewModal";
+import { WelcomeModal, WelcomeModalHandle } from "../components/WelcomeModal/WelcomeModal";
+import {
+	getNewerReleaseSlides,
+	getReleaseSlidesForLastVersion,
+	LAST_VERSION,
+	ReleaseSlide,
+} from "../releaseNotes/versions";
 
 interface WhatsNewContextType {
 	showWhatsNew: () => void;
@@ -31,7 +35,7 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 	const [slides, setSlides] = useState<ReleaseSlide[]>([]);
 
 	const showWhatsNew = useCallback((): void => {
-		const newSlides: ReleaseSlide[] = getReleaseSlidesForVersion(packageJson.version);
+		const newSlides: ReleaseSlide[] = getReleaseSlidesForLastVersion();
 		setSlides(newSlides);
 		whatsNewRef.current?.show();
 	}, []);
@@ -52,7 +56,7 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 			return (): void => clearTimeout(timer);
 		}
 
-		if (currentUser.app_version !== packageJson.version) {
+		if (currentUser.app_version !== LAST_VERSION) {
 			// Returning user with outdated version — show what's new slides
 			const newSlides: ReleaseSlide[] = getNewerReleaseSlides(currentUser.app_version);
 			if (newSlides.length > 0) {
