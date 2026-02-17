@@ -1,12 +1,15 @@
 """Tests for geolocation module."""
 
+import threading
+import time
+
 import pytest
 import requests
 
+import app.geolocation as geolocation_module
 from app.geolocation import call_geocoding_api, geocode_location
 from app.models import Geolocation
 from tests.utils.create_data.utils import create_db_entries
-from tests.utils.test_data.geolocation import MOCK_GEOCODING_RESPONSES
 
 
 class TestCallGeocodingApi:
@@ -104,6 +107,58 @@ class TestGeocodeLocation:
         result = geocode_location("SomePlace", session)
         assert result is None
         assert session.query(Geolocation).filter_by(query="SomePlace").first() is None
+
+    def test_none_in_dict(self, session) -> None:
+        """Check that the sanitation works even if None is in the dictionary"""
+
+        result = geocode_location({"postcode": None, "city": "London", "country": None}, session)
+        assert result is not None
+        assert result.latitude is not None
+        assert result.longitude is not None
+
+    def test_all_none_in_dict(self, session) -> None:
+        """Check that the sanitation works even if None is in the dictionary"""
+
+        result = geocode_location({"postcode": None, "city": None, "country": None}, session)
+        assert result is not None
+        assert result.latitude is None
+        assert result.longitude is None
+
+
+class TestRateLimiting:
+    """Tests for Nominatim API rate limiting."""
+
+    def test_concurrent_calls_are_spaced_at_least_1s_apart(self) -> None:
+        """When multiple threads call the API simultaneously, calls are spaced >= 1s apart."""
+
+        # Reset the last call time so the first call doesn't wait
+        geolocation_module._last_call_time = 0.0
+
+        call_times: list[float] = []
+        lock = threading.Lock()
+
+        original_get = geolocation_module.requests.get
+
+        def tracking_get(*args, **kwargs):
+            with lock:
+                call_times.append(time.monotonic())
+            return original_get(*args, **kwargs)
+
+        geolocation_module.requests.get = tracking_get
+        try:
+            threads = [threading.Thread(target=call_geocoding_api, args=("London",)) for _ in range(3)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+        finally:
+            geolocation_module.requests.get = original_get
+
+        call_times.sort()
+        assert len(call_times) == 3
+        for i in range(1, len(call_times)):
+            gap = call_times[i] - call_times[i - 1]
+            assert gap >= 0.9, f"Gap between call {i - 1} and {i} was only {gap:.3f}s"
 
 
 class TestGeolocationCascade:

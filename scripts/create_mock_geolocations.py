@@ -1,12 +1,11 @@
-"""Geolocation handling using OpenStreetMap Nominatim API with caching."""
+"""Create real mock geolocations for testing using the Nominatim API."""
 
 import time
 
 import requests
 
 from app.config import settings
-from tests.utils.test_data.data_tables import LOCATION_DATA
-from tests.utils.test_data import SCRAPED_JOB_DATA
+from tests.utils.test_data import SCRAPED_JOB_DATA, LOCATION_DATA
 from tests.utils.test_data.geolocation import MOCK_GEOCODING_RESPONSES
 
 
@@ -23,41 +22,43 @@ def call_geocoding_api(query: str):
     return requests.get(base_url, params=params, headers=headers, timeout=5)
 
 
-data = {}
-for location in LOCATION_DATA:
-    query = [location.get("postcode"), location.get("city"), location.get("country")]
-    query = ", ".join(filter(None, query))
-    try:
+def geocode_test_locations() -> None:
+    """Run this to generate the mock geocoding responses for test locations"""
+
+    data = {}
+    for location in LOCATION_DATA:
+        query = [location.get("postcode"), location.get("city"), location.get("country")]
+        query = ", ".join(filter(None, query))
         data[query] = call_geocoding_api(query).json()
-        time.sleep(1)
-    except Exception as e:
-        data[query] = e
 
-print(data)
+    print(data)
 
-data = {}
-for scraped_job in SCRAPED_JOB_DATA:
-    query = scraped_job.get("location")
-    try:
+
+def geocode_test_scraped_jobs() -> None:
+    """Run this to generate the mock geocoding responses for test scraped jobs"""
+
+    data = {}
+    for scraped_job in SCRAPED_JOB_DATA:
+        query = scraped_job.get("location")
         if query:
             data[query] = call_geocoding_api(query).json()
-            time.sleep(1)
-    except Exception as e:
-        data[query] = e
-
-print(data)
+    print(data)
 
 
-data = []
-for query, response in MOCK_GEOCODING_RESPONSES.items():
-    if response:
-        data.append(
-            {
-                "query": query,
-                "latitude": response[0]["lat"],
-                "longitude": response[0]["lon"],
-                "data": response[0]["address"],
-            }
-        )
-    else:
-        data.append({"query": query})
+def create_geolocation_entries_from_mock_api_results() -> None:
+    """Once the mock geolocation data are saved in MOCK_GEOCODING_RESPONSES, run this to generate the test geolocation entries."""
+
+    data = []
+    for query, response in MOCK_GEOCODING_RESPONSES.items():
+        if response:
+            data.append(
+                {
+                    "query": query,
+                    "latitude": response[0]["lat"],
+                    "longitude": response[0]["lon"],
+                    "data": response[0]["address"],
+                }
+            )
+        else:
+            data.append({"query": query})
+    print(data)
