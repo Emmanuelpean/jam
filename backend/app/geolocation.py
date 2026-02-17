@@ -88,7 +88,7 @@ def geocode_location(query: str | dict, db: Session, logger: logging.Logger | No
                 longitude=lon,
                 data=address_dict,
                 postcode=address_dict.get("postcode"),
-                city=address_dict.get("city"),
+                city=address_dict.get("town") or address_dict.get("city"),
                 country=matched_country,
             )
             db.add(new_geo)
