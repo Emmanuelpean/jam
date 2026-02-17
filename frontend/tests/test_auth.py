@@ -539,6 +539,7 @@ class TestWhatsNewModal(BaseTest):
 
         # Verify app_version is updated in the database
         assert self.db_user.app_version != "1.1.0"
+        assert self.db_user.app_version != "1.0.0"
 
     def test_no_modal_shown_when_up_to_date(self, session) -> None:
         """Test that no modal appears when user's app_version matches the current version."""

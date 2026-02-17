@@ -28,10 +28,13 @@ export interface RegisterData {
 
 export const userApi: CrudApi<UserData> & {
 	invalidateAllSessions: (token: string) => ApiResponsePromise<GenericResponse>;
+	sendReleaseEmail: (version: string, token: string) => ApiResponsePromise<GenericResponse>;
 } = {
 	...createCrudApi("users"),
 	invalidateAllSessions: (token: string): ApiResponsePromise<GenericResponse> =>
 		baseApi.post("users/invalidate-all-sessions", {}, token),
+	sendReleaseEmail: (version: string, token: string): ApiResponsePromise<GenericResponse> =>
+		baseApi.post(`users/send-release-email/${version}`, {}, token),
 };
 
 export interface AuthApi {
