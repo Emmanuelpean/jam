@@ -16,7 +16,7 @@ export interface JobScrapingServiceLogData extends ServiceLog {
 	scraped_jobs: ScrapedJobData[];
 	platform_stats: PlatformStat[];
 	errors: ServiceError[];
-	job_to_scrape_n: number;
+	job_to_process_n: number;
 	job_scrape_succeeded_n: number;
 	job_scrape_failed_n: number;
 	job_scrape_copied_n: number;
