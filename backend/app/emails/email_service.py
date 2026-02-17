@@ -237,6 +237,32 @@ class EmailService(object):
             "Trial end notification",
         )
 
+    def send_new_version_email(
+        self,
+        recipient: str,
+        version: str,
+        features: list[dict],
+    ) -> None:
+        """Send a new version announcement email to the specified recipient.
+        :param recipient: The recipient's email address.
+        :param version: The version string (e.g. "1.2.0").
+        :param features: List of feature dicts with title, description, and optional image_url."""
+
+        template = self.templates.env.get_template("new_version.html")
+        html_content = template.render(
+            version=version,
+            features=features,
+            app_url=settings.frontend_url,
+        )
+
+        self.send_email(
+            recipient,
+            f"JAM v{version} is Here! \u2014 See What's New",
+            html_content,
+            settings.info_email,
+            "New version announcement",
+        )
+
     def _connect_imap(self) -> imaplib.IMAP4_SSL:
         """Connect to IMAP server and login.
         :return: IMAP connection object"""

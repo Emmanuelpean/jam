@@ -753,6 +753,69 @@ class TestDeleteAccount:
         assert user_token is None
 
 
+class TestSendReleaseEmail:
+    """Test suite for the /send-release-email/{version} endpoint."""
+
+    @patch("app.core.routers.user.email_service.send_new_version_email")
+    def test_send_release_email_success(self, mock_send, admin_client, test_users) -> None:
+        """Test successfully sending release emails as admin."""
+
+        response = admin_client.post("/users/send-release-email/1.2.0")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert "1.2.0" in data["message"]
+
+        # Should only send to active, verified, non-demo users
+        expected_recipients = [
+            u for u in test_users
+            if u.is_active and u.is_verified and not u.is_demo
+        ]
+        assert mock_send.call_count == len(expected_recipients)
+
+    @patch("app.core.routers.user.email_service.send_new_version_email")
+    def test_send_release_email_invalid_version(self, mock_send, admin_client) -> None:
+        """Test sending release email for a non-existent version returns 404."""
+
+        response = admin_client.post("/users/send-release-email/99.99.99")
+
+        assert response.status_code == 404
+        assert "no release data" in response.json()["detail"].lower()
+        assert mock_send.call_count == 0
+
+    def test_send_release_email_non_admin(self, regular_user_client) -> None:
+        """Test that non-admin users cannot send release emails."""
+
+        response = regular_user_client.post("/users/send-release-email/1.2.0")
+        assert response.status_code == 403
+
+    def test_send_release_email_unauthenticated(self, client) -> None:
+        """Test that unauthenticated users cannot send release emails."""
+
+        response = client.post("/users/send-release-email/1.2.0")
+        assert response.status_code == 401
+
+    @patch("app.core.routers.user.email_service.send_new_version_email")
+    def test_send_release_email_partial_failure(self, mock_send, admin_client, test_users) -> None:
+        """Test that partial email failures are handled gracefully."""
+
+        # Fail on the first call, succeed on the rest
+        mock_send.side_effect = [Exception("SMTP error")] + [None] * (len(test_users) - 1)
+        response = admin_client.post("/users/send-release-email/1.2.0")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+
+        expected_recipients = [
+            u for u in test_users
+            if u.is_active and u.is_verified and not u.is_demo
+        ]
+        # One failed, so sent_count should be total - 1
+        assert f"{len(expected_recipients) - 1}/{len(expected_recipients)}" in data["message"]
+
+
 class TestUserQualificationsCRUD(CRUDTestBase):
 
     endpoint = "user-qualifications"
