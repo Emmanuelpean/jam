@@ -18,7 +18,7 @@ def test_scraped_jobs(
     session, test_users, test_job_alert_emails, test_scraping_filters, test_geolocations
 ) -> list[models.ScrapedJob]:
     """Create test job alert email jobs"""
-    return create_scraped_jobs(session, test_job_alert_emails, test_users, test_scraping_filters)
+    return create_scraped_jobs(session, test_job_alert_emails, test_users, test_scraping_filters, test_geolocations)
 
 
 @pytest.fixture

@@ -68,7 +68,7 @@ def test_geolocations(session) -> list[models.Geolocation]:
 @pytest.fixture
 def test_locations(session, test_users, test_geolocations) -> list[models.Location]:
     """Create test location data"""
-    return create_locations(session, test_users)
+    return create_locations(session, test_users, test_geolocations)
 
 
 @pytest.fixture

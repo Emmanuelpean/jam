@@ -46,17 +46,12 @@ def mock_nominatim_get():
     which causes call_geocoding_api to raise ValueError."""
 
     def side_effect(url, **kwargs):
-        print("Geocoding mock called")
         _ = url
         params = kwargs.get("params", {})
         query = params.get("q")
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
-        if query in MOCK_GEOCODING_RESPONSES:
-            lat, lon, address = MOCK_GEOCODING_RESPONSES[query]
-            mock_response.json.return_value = [{"lat": str(lat), "lon": str(lon), "address": address}]
-        else:
-            mock_response.json.return_value = []
+        mock_response.json.return_value = MOCK_GEOCODING_RESPONSES.get(query, [])
         return mock_response
 
     with patch("app.geolocation.requests.get", side_effect=side_effect) as mock:
