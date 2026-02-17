@@ -10,8 +10,10 @@ from app import utils, models, database
 from app.core import oauth2, schemas
 from app.core.utils import send_email_change_email
 from app.emails.email_service import email_service
+from app.emails.release_data import get_release_slides
 from app.payments import stripe
 from app.routers import generate_data_table_crud_router, assert_admin
+from app.utils import AppLogger
 
 
 # -------------------------------------------------------- USERS -------------------------------------------------------
@@ -60,6 +62,49 @@ def invalidate_all_sessions(
     db.commit()
 
     return {"message": "All user sessions have been invalidated.", "success": True}
+
+
+@user_router.post("/send-release-email/{version}", response_model=base_schemas.GenericResponse)
+def send_release_email(
+    version: str,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+) -> dict[str, str | bool]:
+    """Send a new version announcement email to all active, verified, non-demo users.
+    :param version: The version string to announce (e.g. "1.2.0").
+    :param db: The database session.
+    :param current_user: The current authenticated admin user.
+    :returns: A message with the count of emails sent."""
+
+    assert_admin(current_user)
+
+    features = get_release_slides(version)
+    if features is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No release data found for version {version}",
+        )
+
+    logger = AppLogger.create_service_logger("release_email", "INFO")
+
+    users = (
+        db.query(models.User)
+        .filter(models.User.is_active, models.User.is_verified, models.User.is_demo.is_(False))
+        .all()
+    )
+
+    sent_count = 0
+    for user in users:
+        try:
+            email_service.send_new_version_email(user.email, version, features)
+            sent_count += 1
+        except Exception as e:
+            logger.error("Failed to send release email to user %s: %s", user.id, str(e))
+
+    return {
+        "message": f"Release email for v{version} sent to {sent_count}/{len(users)} users.",
+        "success": True,
+    }
 
 
 # ------------------------------------------------- USER QUALIFICATIONS ------------------------------------------------

@@ -367,7 +367,8 @@ textarea.form-control {
     border-color: var(--danger-color);
 }
 
-.btn-outline-primary:hover {
+.btn-outline-primary:hover,
+.dropdown-toggle.btn-outline-primary.show{
     color: white;
     border-color: transparent;
     background: var(--primary-gradient) border-box;
@@ -398,6 +399,12 @@ textarea.form-control {
 .btn-danger:hover {
     transform: translateY(-2px);
     background: linear-gradient(135deg, #f56565 0%, #e53e3e 25%, #c53030 50%, #9b2c2c 75%, #742a2a 100%);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--primary-mid);
+    color: white;
 }
 
 /* ----------------------------------------------------- BADGES ----------------------------------------------------- */

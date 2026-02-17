@@ -11,6 +11,10 @@ import interviewsPng from "../assets/screenshots/interviews.png";
 import deadlinesPng from "../assets/screenshots/deadlines.png";
 import { getEntityIcon } from "../components/rendering/view/Icons";
 
+export type version = "1.0.0" | "1.1.0" | "1.2.0";
+export const VERSIONS: version[] = ["1.0.0", "1.1.0", "1.2.0"];
+export const LAST_VERSION: version = VERSIONS[VERSIONS.length - 1]!;
+
 export interface ReleaseSlide {
 	icon?: string;
 	title: string;
@@ -18,7 +22,7 @@ export interface ReleaseSlide {
 	image?: string;
 }
 
-export const releaseNotes: Record<string, string> = {
+export const releaseNotes: Record<version, string> = {
 	"1.0.0": V1_0_0,
 	"1.1.0": V1_1_0,
 	"1.2.0": V1_2_0,
@@ -74,7 +78,7 @@ export const WELCOME_SLIDES: ReleaseSlide[] = [
 	},
 ];
 
-export const releaseSlides: Record<string, ReleaseSlide[]> = {
+export const RELEASE_SLIDES: Record<version, ReleaseSlide[]> = {
 	"1.0.0": [
 		{
 			icon: getEntityIcon("job"),
@@ -208,18 +212,12 @@ function compareVersions(a: string, b: string): number {
 	return 0;
 }
 
-export function getReleaseSlidesForVersion(version: string): ReleaseSlide[] {
-	return releaseSlides[version] ?? [];
+export function getReleaseSlidesForLastVersion(): ReleaseSlide[] {
+	return RELEASE_SLIDES[LAST_VERSION] ?? [];
 }
 
-export function getNewerReleaseSlides(lastVersion: string | null): ReleaseSlide[] {
-	const versions: string[] = Object.keys(releaseSlides);
-
-	const newer: string[] = lastVersion
-		? versions.filter((version: string): boolean => compareVersions(version, lastVersion) > 0)
-		: versions;
-
+export function getNewerReleaseSlides(userVersion: string): ReleaseSlide[] {
+	const newer: version[] = VERSIONS.filter((v: version): boolean => compareVersions(v, userVersion) > 0);
 	newer.sort(compareVersions);
-
-	return newer.flatMap((version: string): ReleaseSlide[] => releaseSlides[version] ?? []);
+	return newer.flatMap((v: version): ReleaseSlide[] => RELEASE_SLIDES[v] ?? []);
 }
