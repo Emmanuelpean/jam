@@ -20,6 +20,7 @@ from app.emails.email_service import email_service
 
 def _assert_not_maintenance(db: Session) -> None:
     """Raise 401 if maintenance mode is currently active."""
+
     maintenance_scheduled_at = get_setting_value(db, "maintenance_scheduled_at", None)
     if maintenance_scheduled_at:
         try:
@@ -63,6 +64,7 @@ def login(
 
     # Handle demo user login: create a temp user in the demo schema with seeded data
     if user is not None and user.is_demo:
+        _assert_not_maintenance(db)
         try:
             demo_email = f"demo-{uuid.uuid4().hex[:12]}@demo.jam"
             demo_user = models.User(

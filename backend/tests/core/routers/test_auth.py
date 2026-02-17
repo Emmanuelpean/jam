@@ -158,6 +158,14 @@ class TestLogin:
         response = client.post("/login", data=data)
         assert response.status_code == 200
 
+    def test_demo_user_login_not_allowed_when_maintenance(self, session, test_demo_user, client) -> None:
+        """Demo users cannot log in when maintenance is active."""
+
+        _create_maintenance_setting(session, minutes_offset=-30)
+        data = {"username": test_demo_user.email, "password": ""}
+        response = client.post("/login", data=data)
+        assert response.status_code == 401
+
 
 # ------------------------------------------------------ REGISTER ------------------------------------------------------
 

@@ -450,11 +450,9 @@ def generate_data_table_crud_router(
                     if field_name in main_data:
                         m2m_data[field_name] = main_data.pop(field_name)
 
-            # Apply transform to the merged data (existing entry + updates)
+            # Apply transform to the update data only (not merged with existing DB values)
             if transform:
-                merged_data = {c.name: getattr(entry, c.name) for c in entry.__table__.columns}
-                merged_data.update(main_data)
-                transformed_data = transform(merged_data, db)
+                transformed_data = transform(main_data, db)
                 main_data.update(transformed_data)
 
             # Update the record
