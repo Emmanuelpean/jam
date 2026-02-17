@@ -1,10 +1,9 @@
 """Script to delete and generate geolocations for all the scraped jobs and locations"""
 
-import time
-
 from app.database import session_local
 from app.geolocation import geocode_location
 from app.models import ScrapedJob, Geolocation, Location
+from job_email_scraping.location_parser import LocationParser
 
 
 def run():
@@ -31,13 +30,16 @@ def run():
         scraped_jobs = session.query(ScrapedJob).all()
         for scraped_job in scraped_jobs:
             if scraped_job.location:
-                geolocation = geocode_location(scraped_job.location, session)
-                if geolocation:
-                    scraped_job.geolocation_id = geolocation.id
-                    scraped_job.location_postcode = geolocation.postcode
-                    scraped_job.location_city = geolocation.city
-                    scraped_job.location_country = geolocation.country
-                    session.commit()
+                parsed_location, parsed_attendance = LocationParser().parse_location(scraped_job.location)
+                scraped_job.parsed_location = parsed_location
+                if parsed_location:
+                    geolocation = geocode_location(parsed_location, session)
+                    if geolocation:
+                        scraped_job.geolocation_id = geolocation.id
+                        scraped_job.location_postcode = geolocation.postcode
+                        scraped_job.location_city = geolocation.city
+                        scraped_job.location_country = geolocation.country
+                        session.commit()
     finally:
         session.close()
 
