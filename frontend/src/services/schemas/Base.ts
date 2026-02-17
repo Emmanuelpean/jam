@@ -11,4 +11,7 @@ export interface OwnedOut extends BaseOut {
 export interface GeoLocation {
 	latitude: number | null;
 	longitude: number | null;
+	city: string | null;
+	postcode: string | null;
+	country: string | null;
 }
