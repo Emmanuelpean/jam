@@ -117,10 +117,7 @@ jobs:
       - name: Install Stripe CLI
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
-          curl -s https://packages.stripe.dev/api/security/keypair/stripe-cli-gpg/public | sudo gpg --dearmor -o /usr/share/keyrings/stripe.gpg
-          echo "deb [signed-by=/usr/share/keyrings/stripe.gpg] https://packages.stripe.dev/stripe-cli-debian-local stable main" | sudo tee /etc/apt/sources.list.d/stripe.list
-          sudo apt-get update
-          sudo apt-get install -y stripe
+          curl -fsSL https://stripe.com/install.sh | sudo bash
 
       - name: Run backend tests
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
