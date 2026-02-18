@@ -63,7 +63,8 @@ export const ServiceStatusCard = ({
 								formData.period_hours,
 								"Hour(s)",
 								status.service_runner_status === "stopped",
-								onFormChange
+								onFormChange,
+								status.service_runner_status !== "stopped"
 							)}
 						</div>
 					</div>

@@ -49,8 +49,9 @@
 
 /* Gradient logo text */
 .logo-text {
+    font-family: var(--logo-font-family);
     font-size: 50px !important;
-    font-weight: 600;
+    font-weight: 700;
     padding-left: 13.5px;
     user-select: none;
     background: var(--primary-gradient);

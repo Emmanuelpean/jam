@@ -61,7 +61,8 @@ export const RenderLabeledInput = (
 	value: number,
 	unitText: string = "",
 	isRequired: boolean = false,
-	onChange?: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void
+	onChange?: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,
+	disabled: boolean = false
 ): JSX.Element => {
 	return (
 		<Form.Group id={id}>
@@ -72,7 +73,7 @@ export const RenderLabeledInput = (
 					{help && <HelpBubble helpText={help} />}
 				</InputGroup.Text>
 
-				<Form.Control name={id} type="text" value={value} onChange={onChange} />
+				<Form.Control name={id} type="text" value={value} onChange={onChange} disabled={disabled} />
 
 				{unitText && <InputGroup.Text>{unitText}</InputGroup.Text>}
 			</InputGroup>

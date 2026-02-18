@@ -1,6 +1,7 @@
 @use "./variables" as *;
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap");
 
 * {
     margin: 0;
@@ -10,6 +11,7 @@
 body {
     --danger-color: #e74c3c;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    --logo-font-family: "Quicksand", sans-serif;
 }
 
 body[data-mode="light"] {

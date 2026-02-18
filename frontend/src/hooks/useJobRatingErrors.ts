@@ -1,21 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { JobRatingData, JobRatingServiceLogData } from "../services/schemas/Services";
 import { jobRatingApi } from "../services/api/Services";
 import { normaliseArray } from "../utils/Utils";
 import { useAuth } from "../contexts/AuthContext";
 import { ApiResponse } from "../services/api/Base";
 
-export const useJobRatingErrors = (latestLog: JobRatingServiceLogData | JobRatingServiceLogData[] | null) => {
+export const useJobRatingErrors = (
+	latestLog: JobRatingServiceLogData | JobRatingServiceLogData[] | null,
+	showLoadingOnUpdate: boolean = false
+) => {
 	const { token } = useAuth();
 	const [scraperErrors, setScraperErrors] = useState<Record<string, number>>({});
 	const [error, setError] = useState<Error | null>(null);
-	const [loading, setLoading] = useState<boolean>(false);
+	const [loading, setLoading] = useState<boolean>(true);
+	const hasLoaded = useRef<boolean>(false);
 
 	useEffect((): void => {
 		if (!latestLog || !token) return;
 
 		const fetchErrors = async (): Promise<void> => {
-			setLoading(true);
+			if (!hasLoaded.current || showLoadingOnUpdate) {
+				setLoading(true);
+			}
 			try {
 				// Get the job rating failed IDs from the logs
 				const logs: JobRatingServiceLogData[] = normaliseArray(latestLog);
@@ -34,6 +40,7 @@ export const useJobRatingErrors = (latestLog: JobRatingServiceLogData | JobRatin
 					}
 				});
 				setScraperErrors(errorCounts);
+				hasLoaded.current = true;
 			} catch (err: any) {
 				setError(err || new Error("Failed to fetch errors"));
 				console.error("Failed to fetch errors:", err);

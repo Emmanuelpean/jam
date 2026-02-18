@@ -30,7 +30,7 @@ const JobScraperDashboard = (): JSX.Element => {
 		end: new Date(),
 	});
 	const [selectedPlatform, setSelectedPlatform] = useState("all");
-	const { serviceStatus, remainingTime, fetchStatus, statusError, loading: statusLoading } =
+	const { serviceStatus, remainingTime, fetchStatus, statusError } =
 		useServiceRunnerStatus(jobScraperServiceApi);
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: 0,
@@ -67,11 +67,11 @@ const JobScraperDashboard = (): JSX.Element => {
 		scraperErrors: previousScraperErrors,
 		error: previousScraperRequestError,
 		loading: previousScraperErrorsLoading,
-	} = useJobScraperErrors(previousServiceLogs, selectedPlatform);
+	} = useJobScraperErrors(previousServiceLogs, selectedPlatform, true);
 	const { serviceErrors: lastServiceErrors, loading: lastServiceErrorsLoading } =
 		useServiceErrors(latestServiceLog);
 	const { serviceErrors: previousServiceErrors, loading: previousServiceErrorsLoading } =
-		useServiceErrors(previousServiceLogs);
+		useServiceErrors(previousServiceLogs, true);
 
 	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
 		const target = event.target as HTMLInputElement;
