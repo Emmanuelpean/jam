@@ -172,7 +172,7 @@ const AboutPage = (): JSX.Element => {
 					<Row className="justify-content-center">
 						<Col lg={10}>
 							<div style={{ width: "100%", marginTop: "10px" }}>
-								{VERSIONS.reverse().map(
+								{[...VERSIONS].reverse().map(
 									(version: version): JSX.Element => (
 										<Accordion
 											key={version}
