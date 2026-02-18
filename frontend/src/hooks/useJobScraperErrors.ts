@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { JobScrapingServiceLogData, PlatformStat, ScrapedJobData } from "../services/schemas/Services";
 import { scrapedJobApi } from "../services/api/Services";
 import { normaliseArray } from "../utils/Utils";
@@ -12,18 +12,22 @@ export interface ErrorCount {
 
 export const useJobScraperErrors = (
 	latestLog: JobScrapingServiceLogData | JobScrapingServiceLogData[] | null,
-	platform: string
+	platform: string,
+	showLoadingOnUpdate: boolean = false
 ) => {
 	const { token } = useAuth();
 	const [scraperErrors, setScraperErrors] = useState<Record<string, ErrorCount>>({});
 	const [error, setError] = useState<Error | null>(null);
-	const [loading, setLoading] = useState<boolean>(false);
+	const [loading, setLoading] = useState<boolean>(true);
+	const hasLoaded = useRef<boolean>(false);
 
 	useEffect(() => {
 		if (!latestLog || !token) return;
 
 		const fetchErrors = async (): Promise<void> => {
-			setLoading(true);
+			if (!hasLoaded.current || showLoadingOnUpdate) {
+				setLoading(true);
+			}
 			try {
 				// Normalize input to array
 				const logs: JobScrapingServiceLogData[] = normaliseArray(latestLog);
@@ -77,6 +81,7 @@ export const useJobScraperErrors = (
 					}
 				});
 				setScraperErrors(errorCounts);
+				hasLoaded.current = true;
 			} catch (err: any) {
 				setError(err || new Error("Failed to fetch scraper errors"));
 				console.error("Failed to fetch scraper errors:", err);

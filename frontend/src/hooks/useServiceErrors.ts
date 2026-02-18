@@ -1,16 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { JobScrapingServiceLogData, ServiceError } from "../services/schemas/Services";
 import { normaliseArray } from "../utils/Utils";
 
-export const useServiceErrors = (latestLog: JobScrapingServiceLogData | JobScrapingServiceLogData[] | null) => {
+export const useServiceErrors = (
+	latestLog: JobScrapingServiceLogData | JobScrapingServiceLogData[] | null,
+	showLoadingOnUpdate: boolean = false
+) => {
 	const [serviceErrors, setServiceErrors] = useState<Record<string, number>>({});
-	const [loading, setLoading] = useState<boolean>(false);
+	const [loading, setLoading] = useState<boolean>(true);
+	const hasLoaded = useRef<boolean>(false);
 
 	useEffect(() => {
 		if (!latestLog) return;
 
 		const fetchErrors = async (): Promise<void> => {
-			setLoading(true);
+			if (!hasLoaded.current || showLoadingOnUpdate) {
+				setLoading(true);
+			}
 			try {
 				const logs: JobScrapingServiceLogData[] = normaliseArray(latestLog);
 				const allErrors: ServiceError[] = logs.flatMap(
@@ -25,6 +31,7 @@ export const useServiceErrors = (latestLog: JobScrapingServiceLogData | JobScrap
 				});
 
 				setServiceErrors(errorCounts);
+				hasLoaded.current = true;
 			} catch (err: any) {
 				console.error("Failed to fetch service errors:", err);
 			} finally {

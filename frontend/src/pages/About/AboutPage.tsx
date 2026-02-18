@@ -1,6 +1,5 @@
 import React, { JSX, useState } from "react";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
-import packageJson from "../../../package.json";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -120,7 +119,7 @@ const AboutPage = (): JSX.Element => {
 										Job searching is overwhelming. Between tracking applications, following up with
 										contacts, and preparing for interviews, it's easy to lose sight of opportunities
 										that could change your career.{" "}
-										<strong style={{ color: "var(--primary-mid)" }}>Jam</strong> brings everything
+										<strong style={{ color: "var(--primary-mid)" }}>JAM</strong> brings everything
 										together in one place—applications - interviews, contacts, and notes - so you
 										can stay organised and focused on landing your dream job.
 									</p>

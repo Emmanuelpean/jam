@@ -27,7 +27,7 @@ const JobRatingDashboard = (): JSX.Element => {
 		start: new Date(),
 		end: new Date(),
 	});
-	const { serviceStatus, remainingTime, fetchStatus, statusError, loading: statusLoading } =
+	const { serviceStatus, remainingTime, fetchStatus, statusError } =
 		useServiceRunnerStatus(jobRatingServiceRunnerApi);
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: serviceStatus?.period_hours || 0,
@@ -45,7 +45,7 @@ const JobRatingDashboard = (): JSX.Element => {
 		scraperErrors: previousRatingErrors,
 		error: previousRatingRequestError,
 		loading: previousRatingErrorsLoading,
-	} = useJobRatingErrors(previousServiceLogs);
+	} = useJobRatingErrors(previousServiceLogs, true);
 	const {
 		scraperErrors: lastRatingErrors,
 		error: latestRatingRequestError,
@@ -53,12 +53,10 @@ const JobRatingDashboard = (): JSX.Element => {
 	} = useJobRatingErrors(latestServiceLog);
 
 	useEffect((): void => {
-		if (serviceStatus && serviceStatus?.service_runner_status === "stopped") {
-			setFormData({
-				period_hours: serviceStatus.period_hours || 3,
-			});
-		}
-	}, [serviceStatus]);
+		setFormData({
+			period_hours: serviceStatus?.period_hours || 0,
+		});
+	}, [serviceStatus?.period_hours]);
 
 	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
 		const target = event.target as HTMLInputElement;
