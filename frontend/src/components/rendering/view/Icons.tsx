@@ -47,6 +47,7 @@ export function getTableIcon(title: string): string {
 		About: "info-circle",
 		Admin: "person-gear",
 		"Job Rating Dashboard": "star-half",
+		"Email Templates": "envelope-open",
 		Other: "three-dots",
 	};
 	return iconMap[title] || "bi-table";
