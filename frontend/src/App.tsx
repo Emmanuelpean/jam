@@ -33,6 +33,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProgressOverlayProvider } from "./contexts/useProgressOverlayContext";
 import { ScrapedJobsPage } from "./pages/DataTablePages/ScrapedJobsPage";
 import { StyleGuidePage } from "./pages/StylePage";
+import { EmailTemplatesPage } from "./pages/Admin/EmailTemplatesPage";
 import { ConfigProvider } from "./contexts/ConfigContext";
 import { StatusProvider } from "./contexts/StatusContext";
 import { MaintenanceBanner } from "./components/AppBanner/MaintenanceBanner";
@@ -181,6 +182,7 @@ const routeConfigs: RouteConfig[] = [
 		adminOnly: true,
 	},
 	{ path: "/app-settings", element: <SettingsPage />, protected: true, adminOnly: true },
+	{ path: "/email-templates", element: <EmailTemplatesPage />, protected: true, adminOnly: true },
 	{ path: "*", element: <NotFoundPage /> },
 ];
 
