@@ -14,7 +14,8 @@ from app.core.routers import user as user_routers
 from app.data_tables import routers as data_table_routers
 from app.demo.router import demo_router
 from app.demo.setup import setup_demo_schema
-from app.emails import routers as email_routers
+from app.emails.routers import templates as email_template_router
+from app.emails.routers import tests as email_test_router
 from app.job_email_scraping import routers as job_scraping_routers
 from app.job_rating import routers as job_rating_routers
 from app.payments import routers as payment_router
@@ -115,6 +116,9 @@ app.include_router(export_routers.router)
 # Settings router
 app.include_router(settings_routers.settings_router)
 
+# Email admin
+app.include_router(email_template_router.router)
+
 # Others
 app.include_router(other_routers.other_router)
 app.include_router(other_routers.config_router)
@@ -127,7 +131,7 @@ app.include_router(payment_router.payment_router)
 
 # Testing
 if settings.test_mode:
-    app.include_router(email_routers.router)
+    app.include_router(email_test_router.router)
     app.include_router(payment_test_routers.test_router)
 
 
