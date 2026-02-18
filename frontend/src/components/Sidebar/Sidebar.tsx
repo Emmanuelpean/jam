@@ -113,6 +113,7 @@ export const Sidebar = (): JSX.Element => {
 				{ path: "/job-rating-dashboard", text: "Job Rating Dashboard" },
 				{ path: "/users", text: "Users" },
 				{ path: "/app-settings", text: "Settings" },
+				{ path: "/email-templates", text: "Email Templates" },
 			],
 		},
 		{
