@@ -19,13 +19,14 @@ from app.utils import AppLogger
 # -------------------------------------------------------- USERS -------------------------------------------------------
 
 
-def transform_user_data(data: dict, db: Session) -> dict:
+def transform_user_data(data: dict, db: Session, entry_data: dict | None = None) -> dict:
     """Transform user data before creating or updating a user.
     :param data: The user data to transform.
     :param db: The database session
+    :param entry_data: optional original data of the entry
     :returns: The transformed user data."""
 
-    _ = db
+    _ = db, entry_data
     if "password" in data:
         return {"password": utils.hash_password(data["password"])}
     else:

@@ -45,12 +45,16 @@ company_router = generate_data_table_crud_router(
 
 
 # Location router
-def transform_location(location_data: dict, db: Session) -> dict:
+def transform_location(location_data: dict, db: Session, entry_data: dict | None = None) -> dict:
     """Geolocate the location data before creating/updating the record.
     :param location_data: The location data dictionary.
     :param db: The database session.
+    :param entry_data: optional original data of the entry
     :return: The transformed location data dictionary with geolocation_id set."""
 
+    if entry_data:
+        location_data = location_data.copy()
+        location_data.update(entry_data)
     params = {
         "postcode": location_data.get("postcode"),
         "city": location_data.get("city"),

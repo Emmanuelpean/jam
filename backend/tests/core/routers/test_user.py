@@ -37,6 +37,16 @@ class TestUsersCRUD(CRUDTestBase):
         response = admin_client.put(f"/users/{test_regular_user.id}", json=update_data)
         assert response.status_code == 400
 
+    def test_update_account(self, session, admin_client, test_regular_user) -> None:
+        """Test updating account does not affect the password."""
+
+        password = test_regular_user.password
+        update_data = {"first_name": "New first name"}
+        response = admin_client.put(f"/users/{test_regular_user.id}", json=update_data)
+        assert response.status_code == 200
+        session.refresh(test_regular_user)
+        assert test_regular_user.password == password
+
 
 class TestCurrentUser:
 
@@ -158,6 +168,16 @@ class TestCurrentUser:
         update_data = {"email": test_admin_user.email, "current_password": test_regular_user.plain_password}
         response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 400
+
+    def test_update_account(self, session, regular_user_client, test_regular_user) -> None:
+        """Test updating account does not affect the password."""
+
+        password = test_regular_user.password
+        update_data = {"first_name": "New first name"}
+        response = regular_user_client.put("/current-user", json=update_data)
+        assert response.status_code == 200
+        session.refresh(test_regular_user)
+        assert test_regular_user.password == password
 
     def test_update_preferences(self, session, regular_user_client, test_regular_user) -> None:
         """Test updating user preferences that don't require password."""
@@ -768,10 +788,7 @@ class TestSendReleaseEmail:
         assert "1.2.0" in data["message"]
 
         # Should only send to active, verified, non-demo users
-        expected_recipients = [
-            u for u in test_users
-            if u.is_active and u.is_verified and not u.is_demo
-        ]
+        expected_recipients = [u for u in test_users if u.is_active and u.is_verified and not u.is_demo]
         assert mock_send.call_count == len(expected_recipients)
 
     @patch("app.core.routers.user.email_service.send_new_version_email")
@@ -808,10 +825,7 @@ class TestSendReleaseEmail:
         data = response.json()
         assert data["success"] is True
 
-        expected_recipients = [
-            u for u in test_users
-            if u.is_active and u.is_verified and not u.is_demo
-        ]
+        expected_recipients = [u for u in test_users if u.is_active and u.is_verified and not u.is_demo]
         # One failed, so sent_count should be total - 1
         assert f"{len(expected_recipients) - 1}/{len(expected_recipients)}" in data["message"]
 
