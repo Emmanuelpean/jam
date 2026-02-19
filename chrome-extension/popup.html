@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>JAM</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      width: 300px;
+      background: #fff;
+      color: #1a1a2e;
+      user-select: none;
+    }
+
+    /* ── Spinner ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+      flex-shrink: 0;
+    }
+    .hidden { display: none !important; }
+
+    /* ── Shared button base ── */
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* ── Login view ── */
+    #loginView {
+      padding: 28px 22px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+
+    .logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .logo-name {
+      font-size: 21px;
+      font-weight: 800;
+      color: #0055cc;
+      letter-spacing: 1.5px;
+    }
+    .logo-sub {
+      font-size: 11px;
+      color: #999;
+      letter-spacing: 0.4px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    label { font-size: 12px; color: #555; font-weight: 500; }
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 9px 11px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 7px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+      background: #fafafa;
+    }
+    input:focus { border-color: #0055cc; background: #fff; }
+
+    #loginBtn { background: #0055cc; color: #fff; margin-top: 2px; }
+    #loginBtn:hover:not(:disabled) { background: #0044aa; }
+
+    #loginStatus {
+      font-size: 12px;
+      min-height: 15px;
+      text-align: center;
+      word-break: break-word;
+    }
+    #loginStatus.error { color: #cc2200; }
+
+    /* ── Main (logged-in) view ── */
+    #mainView {
+      padding: 18px 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .main-header {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .main-logo-name {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0055cc;
+      letter-spacing: 0.8px;
+    }
+
+    #addBtn { background: #0055cc; color: #fff; padding: 11px 14px; }
+    #addBtn:hover:not(:disabled) { background: #0044aa; }
+
+    #status {
+      font-size: 13px;
+      min-height: 18px;
+      text-align: center;
+      word-break: break-word;
+    }
+    #status.success { color: #1a7a3e; }
+    #status.error   { color: #cc2200; }
+
+    #sessionBar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 10px;
+      border-top: 1px solid #f0f0f0;
+      font-size: 12px;
+      color: #999;
+    }
+    #sessionEmail {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 190px;
+    }
+    #logoutBtn {
+      width: auto;
+      padding: 4px 10px;
+      background: #f2f2f2;
+      color: #555;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 6px;
+    }
+    #logoutBtn:hover { background: #e4e4e4; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Login view ── -->
+  <div id="loginView">
+    <div class="logo">
+      <img src="icons/icon128.png" width="56" height="56" alt="JAM" />
+      <div class="logo-name">JAM</div>
+      <div class="logo-sub">Job Application Manager</div>
+    </div>
+
+    <div class="field">
+      <label for="emailInput">Email</label>
+      <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email" />
+    </div>
+    <div class="field">
+      <label for="passwordInput">Password</label>
+      <input type="password" id="passwordInput" autocomplete="current-password" />
+    </div>
+
+    <button id="loginBtn">
+      <span id="loginBtnLabel">Log in</span>
+      <span id="loginSpinner" class="spinner hidden"></span>
+    </button>
+    <div id="loginStatus"></div>
+  </div>
+
+  <!-- ── Main (logged-in) view ── -->
+  <div id="mainView" style="display:none">
+    <div class="main-header">
+      <img src="icons/icon128.png" width="28" height="28" alt="JAM" />
+      <span class="main-logo-name">JAM</span>
+    </div>
+
+    <button id="addBtn">
+      <span id="addBtnLabel">Add to JAM</span>
+      <span id="addSpinner" class="spinner hidden"></span>
+    </button>
+    <div id="status"></div>
+
+    <div id="sessionBar">
+      <span id="sessionEmail"></span>
+      <button id="logoutBtn">Log out</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
