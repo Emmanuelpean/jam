@@ -47,12 +47,9 @@ def get_allowed_origins() -> list[str]:
         return [settings.frontend_url, "http://localhost:3000"]
 
 
-_CHROME_EXTENSION_ORIGIN_REGEX = r"chrome-extension://[a-z]{32}"
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_allowed_origins(),
-    allow_origin_regex=_CHROME_EXTENSION_ORIGIN_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
