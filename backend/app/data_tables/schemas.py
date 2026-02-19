@@ -90,6 +90,9 @@ class GeolocationOut(BaseModel):
     query: str
     latitude: float | None = None
     longitude: float | None = None
+    postcode: str | None = None
+    city: str | None = None
+    country: str | None = None
     formatted_address: str | None = None
 
 
