@@ -1,7 +1,7 @@
 import React, { useEffect, useState, JSX } from "react";
 import { Col, Row, Spinner } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { emailApi } from "../../services/api/Emails";
+import { emailApi } from "../../services/api/Others";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import PageHeader from "../PageHeader/PageHeader";
 import "../UserSettings/UserSettingsPage.scss";

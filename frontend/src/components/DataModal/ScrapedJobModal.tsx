@@ -4,7 +4,6 @@ import DataModal, {
 	Fields,
 	JamDataModalProps,
 	SectionConfig,
-	ValidationErrors,
 	WarningMessageConfig,
 } from "./DataModal";
 import { formFields } from "../rendering/form/FormRenders";
@@ -16,8 +15,8 @@ import { LocationModal } from "./LocationModal";
 import { KeywordModal } from "./KeywordModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
-import { DataContextValue, JamData, useDataContext } from "../../contexts/DataContext";
-import { EnrichedJobData, JobData, JobDataTransform, LocationDataTransform } from "../../services/schemas/DataTables";
+import { JamData, useDataContext } from "../../contexts/DataContext";
+import { JobData, JobDataTransform, LocationDataTransform } from "../../services/schemas/DataTables";
 import { ScrapedJobData, ScrapedJobUpdate } from "../../services/schemas/Services";
 import { useConfig } from "../../contexts/ConfigContext";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
@@ -25,7 +24,6 @@ import { ApiResponse } from "../../services/api/Base";
 
 export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 	({ size = "xl", onDelete, onSuccess: parentOnSuccess, canEdit = true }: JamDataModalProps, ref): JSX.Element => {
-		const dataContext: DataContextValue = useDataContext();
 		const { addEntity } = useDataContext();
 		const { config } = useConfig();
 		const companyModalRef = useRef<DataModalHandle>(null);
@@ -168,7 +166,6 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			[modalViewFields.platform(), modalViewFields.url()],
 			modalViewFields.scrapedLocationMap(),
 		];
-
 
 		const warningMessage = (data: ScrapedJobData): WarningMessageConfig[] | null => {
 			const result: WarningMessageConfig[] = [];
