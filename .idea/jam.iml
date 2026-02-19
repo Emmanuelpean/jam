@@ -2,7 +2,7 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Python" name="Python facet">
-      <configuration sdkName="Python 3.12 virtualenv at C:\Users\Emmanuel\PycharmProjects\jam\.venv" />
+      <configuration sdkName="Python 3.12 virtualenv at ~/PycharmProjects/jam/.venv" />
     </facet>
   </component>
   <component name="NewModuleRootManager">
@@ -11,7 +11,6 @@
       <sourceFolder url="file://$MODULE_DIR$/backend/app" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/backend/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/frontend/tests" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/chrome-extension/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/frontend/node_modules" />
       <excludeFolder url="file://$MODULE_DIR$/logs" />
@@ -21,7 +20,6 @@
     </content>
     <orderEntry type="jdk" jdkName="Python 3.12 (jam)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Python 3.12 virtualenv at C:\Users\Emmanuel\PycharmProjects\jam\.venv interpreter library" level="application" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />
