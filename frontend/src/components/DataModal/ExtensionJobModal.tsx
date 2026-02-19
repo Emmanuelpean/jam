@@ -59,8 +59,10 @@ export const ExtensionJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				fields: [
 					formFields.jobTitle({ placeholder: "Python Software Engineer" }),
 					[
-						formFields.scrapedCompany(companies, companyModalRef, (d: any) => ({ name: d.company_name || d.company })),
-						formFields.url({ label: "Job URL", placeholder: "https://linkedin.com/jobs/123456" }),
+						formFields.scrapedCompany(companies, companyModalRef, (d: any) => ({
+							name: d.company_name || d.company,
+						})),
+						formFields.jobURl(),
 					],
 				],
 			} as SectionConfig,
@@ -205,13 +207,6 @@ export const ExtensionJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				errors.salary_min = "Minimum salary must be a valid number";
 			if (formData.salary_max && isNaN(Number(formData.salary_max)))
 				errors.salary_max = "Maximum salary must be a valid number";
-			if (formData.url) {
-				const dup = dataContext.jobs.find(
-					(j: EnrichedJobData) =>
-						j.url?.trim().toLowerCase() === formData.url?.trim().toLowerCase() && j.id !== formData.id
-				);
-				if (dup) errors.url = "A job with this URL already exists";
-			}
 			return errors;
 		};
 
