@@ -49,7 +49,11 @@ def call_geocoding_api(query: str) -> tuple[float, float, dict]:
         raise ValueError(f"No results found for: {query}")
 
 
-def geocode_location(query: str | dict, db: Session, logger: logging.Logger | None = None) -> Geolocation | None:
+def geocode_location(
+    query: str | dict,
+    db: Session,
+    logger: logging.Logger | None = None,
+) -> Geolocation | None:
     """Geocode a location or scraped job using cached results when available.
     Links the location/scraped job to a Geolocation record via foreign key.
     :param query: A location query string or a dict with structured params (postcode, city, country).

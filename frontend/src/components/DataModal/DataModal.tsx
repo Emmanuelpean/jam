@@ -1,5 +1,6 @@
 import React, { forwardRef, JSX, ReactNode, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
+import LoadingSpinner from "../Spinner/Spinner";
 import { useAuth } from "../../contexts/AuthContext";
 import {
 	DataContextValue,
@@ -123,34 +124,58 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		const [mode, setMode] = useState<modalModes>("view");
 		const [effectiveData, setEffectiveData] = useState<any>(null);
 		useImperativeHandle(ref, () => ({
-			showView: (data: JamData): void => {
-				const processedData = transformInputData ? transformInputData(data) : data;
-				setEffectiveData(processedData);
+			showView: async (data: JamData): Promise<void> => {
 				setMode("view");
 				resetExpandedStates();
 				setInternalShow(true);
+				if (transformInputData) {
+					setInputDataLoading(true);
+					const processedData = await transformInputData(data);
+					setEffectiveData(processedData);
+					setInputDataLoading(false);
+				} else {
+					setEffectiveData(data);
+				}
 			},
-			showEdit: (data: JamData): void => {
-				const processedData = transformInputData ? transformInputData(data) : data;
-				setEffectiveData(processedData);
+			showEdit: async (data: JamData): Promise<void> => {
 				setMode("edit");
 				resetExpandedStates();
 				setInternalShow(true);
+				if (transformInputData) {
+					setInputDataLoading(true);
+					const processedData = await transformInputData(data);
+					setEffectiveData(processedData);
+					setInputDataLoading(false);
+				} else {
+					setEffectiveData(data);
+				}
 			},
-			showAdd: (data: JamData, successCallback?: (newData: JamData) => void) => {
-				const processedData = transformInputData ? transformInputData(data) : data;
-				setEffectiveData(processedData);
+			showAdd: async (data: JamData, successCallback?: (newData: JamData) => void): Promise<void> => {
 				setMode("add");
 				setOnSuccessCallback(() => successCallback || null);
 				resetExpandedStates();
 				setInternalShow(true);
+				if (transformInputData) {
+					setInputDataLoading(true);
+					const processedData = await transformInputData(data);
+					setEffectiveData(processedData);
+					setInputDataLoading(false);
+				} else {
+					setEffectiveData(data);
+				}
 			},
-			showImport: (data: JamData) => {
-				const processedData = transformInputData ? transformInputData(data) : data;
-				setEffectiveData(processedData);
+			showImport: async (data: JamData): Promise<void> => {
 				setMode("import");
 				resetExpandedStates();
 				setInternalShow(true);
+				if (transformInputData) {
+					setInputDataLoading(true);
+					const processedData = await transformInputData(data);
+					setEffectiveData(processedData);
+					setInputDataLoading(false);
+				} else {
+					setEffectiveData(data);
+				}
 			},
 		}));
 
@@ -159,6 +184,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		const [originalFormData, setOriginalFormData] = useState<Record<string, any>>({});
 		const [submitting, setSubmitting] = useState<boolean>(false);
 		const [activeLoading, setActiveLoading] = useState<boolean>(false);
+		const [inputDataLoading, setInputDataLoading] = useState<boolean>(false);
 		const [errors, setErrors] = useState<Errors>({});
 		const [isEditing, setIsEditing] = useState<boolean>(false);
 		const { currentUser } = useAuth();
@@ -809,6 +835,10 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		};
 
 		const renderBodyContent = (): JSX.Element => {
+			if (inputDataLoading) {
+				return <LoadingSpinner text="Loading..." />;
+			}
+
 			const currentFields = getCurrentFields();
 			const currentAdditionalFields: ModalViewField[] = getCurrentAdditionalFields();
 			const warnings: WarningMessageConfig[] | null = warningMessage ? warningMessage(effectiveData) : null;

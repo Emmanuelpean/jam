@@ -215,13 +215,13 @@ textarea.form-control {
 .react-select__option:hover,
 .react-select__option--is-focused {
     color: white !important;
-    background-color: var(--primary-start) !important;
+    background-color: var(--primary-mid) !important;
 }
 
 /* Dropdown value hovering and focus */
 .react-select__option--is-selected {
     color: white !important;
-    background-color: var(--primary-mid) !important;
+    background-color: var(--primary-end) !important;
 }
 
 /* Text colour */
