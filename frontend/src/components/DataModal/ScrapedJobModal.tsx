@@ -167,6 +167,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			modalViewFields.scrapedLocationMap(),
 		];
 
+
 		const warningMessage = (data: ScrapedJobData): WarningMessageConfig[] | null => {
 			const result: WarningMessageConfig[] = [];
 
