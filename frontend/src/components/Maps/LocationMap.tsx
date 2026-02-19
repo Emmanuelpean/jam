@@ -7,7 +7,7 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { LocationData } from "../../services/schemas/DataTables";
 import { ScrapedJobData } from "../../services/schemas/Services";
-import { GeoLocation } from "../../services/schemas/Base";
+import { GeoLocationData } from "../../services/schemas/Base";
 import "./LocationMap.scss";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -41,7 +41,7 @@ const formatLocationName = (location: MapLocation): string => {
 	return location.name;
 };
 
-type MappableLocation = MapLocation & { geolocation: GeoLocation & { latitude: number; longitude: number } };
+type MappableLocation = MapLocation & { geolocation: GeoLocationData & { latitude: number; longitude: number } };
 
 const isMappable = (location: MapLocation): location is MappableLocation =>
 	location.geolocation != null && location.geolocation.latitude != null && location.geolocation.longitude != null;

@@ -12,7 +12,7 @@ from app import models
 from app.config import settings
 from app.database import get_db
 from app.emails.email_service import EmailService
-from app.geolocation import geocode_location
+from app.geolocation.geolocation import geocode_location
 from app.job_email_scraping.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
 from app.job_email_scraping.filtering import is_job_filtered_out, is_job_favoured

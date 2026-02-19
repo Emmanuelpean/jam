@@ -138,6 +138,12 @@ jobs:
           pytest -n auto --dist loadgroup ./frontend/tests \
             --junitxml=reports/tests/frontend.xml -v
 
+      - name: Run extension (Selenium) tests
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
+        run: |
+          pytest ./chrome-extension/tests \
+            --junitxml=reports/tests/extension.xml -v
+
       - name: Install junitparser
         run: pip install junitparser
 
@@ -146,6 +152,7 @@ jobs:
           junitparser merge \
             reports/tests/backend.xml \
             reports/tests/frontend.xml \
+            reports/tests/extension.xml \
             reports/tests/tests.xml
 
       - name: Upload test logs and screenshots
