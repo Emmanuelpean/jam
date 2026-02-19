@@ -22,6 +22,7 @@ from app.payments import routers as payment_router
 from app.payments import test_routers as payment_test_routers
 from app.routers import export as export_routers
 from app.routers import others as other_routers
+from app.geolocation import routers as geolocation_routers
 
 
 @asynccontextmanager
@@ -122,6 +123,7 @@ app.include_router(email_template_router.router)
 # Others
 app.include_router(other_routers.other_router)
 app.include_router(other_routers.config_router)
+app.include_router(geolocation_routers.router)
 
 # Demo
 app.include_router(demo_router)
