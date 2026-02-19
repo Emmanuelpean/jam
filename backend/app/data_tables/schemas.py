@@ -329,23 +329,3 @@ class SpeculativeApplicationUpdate(SpeculativeApplicationCreate):
     """Speculative application update schema"""
 
     company_id: int | None = None
-
-
-# -------------------------------------------------- JOB FROM EXTENSION -----------------------------------------------
-
-
-class JobFromExtensionCreate(BaseModel):
-    """Schema for creating a job from the Chrome extension.
-    Accepts raw text fields; company/location/aggregator are resolved server-side."""
-
-    title: str
-    company_name: str | None = None
-    location_city: str | None = None
-    location_country: str | None = None
-    description: str | None = None
-    url: str | None = None
-    salary_min: float | None = None
-    salary_max: float | None = None
-    salary_currency: str | None = None
-    attendance_type: str | None = None
-    note: str | None = None

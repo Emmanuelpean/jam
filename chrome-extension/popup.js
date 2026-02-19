@@ -26,6 +26,12 @@ const loginBtnLabel = document.getElementById('loginBtnLabel');
 const loginSpinner  = document.getElementById('loginSpinner');
 const loginStatus   = document.getElementById('loginStatus');
 
+const detectingRow  = document.getElementById('detectingRow');
+const noJobMsg      = document.getElementById('noJobMsg');
+const jobCard       = document.getElementById('jobCard');
+const jobTitle      = document.getElementById('jobTitle');
+const jobCompany    = document.getElementById('jobCompany');
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -56,12 +62,39 @@ function spinOff(spinner, btn, label, labelText) {
 }
 
 // ---------------------------------------------------------------------------
+// Job detection state
+// ---------------------------------------------------------------------------
+function showDetecting() {
+  detectingRow.classList.remove('hidden');
+  noJobMsg.classList.add('hidden');
+  jobCard.classList.add('hidden');
+  addBtn.classList.add('hidden');
+}
+
+function showNoJob() {
+  detectingRow.classList.add('hidden');
+  noJobMsg.classList.remove('hidden');
+  jobCard.classList.add('hidden');
+  addBtn.classList.add('hidden');
+}
+
+function showJob(title, company) {
+  detectingRow.classList.add('hidden');
+  noJobMsg.classList.add('hidden');
+  jobCard.classList.remove('hidden');
+  jobTitle.textContent  = title   || '—';
+  jobCompany.textContent = company || '';
+  addBtn.classList.remove('hidden');
+}
+
+// ---------------------------------------------------------------------------
 // UI state
 // ---------------------------------------------------------------------------
 function showLoggedIn(email) {
   loginView.style.display = 'none';
   mainView.style.display  = 'flex';
   sessionEmail.textContent = email || '';
+  detectJob();
 }
 
 function showLoggedOut() {
@@ -70,6 +103,58 @@ function showLoggedOut() {
   if (!emailInput.value)    emailInput.value    = DEFAULT_EMAIL;
   if (!passwordInput.value) passwordInput.value = DEFAULT_PASSWORD;
   setLoginStatus('');
+}
+
+// ---------------------------------------------------------------------------
+// Auto-detect job on popup open
+// ---------------------------------------------------------------------------
+function isLinkedInJobPage(url) {
+  if (!url) return false;
+  if (url.includes('linkedin.com/jobs/view')) return true;
+  if (url.includes('linkedin.com/jobs/collections')) {
+    try { return new URL(url).searchParams.has('currentJobId'); } catch (_) {}
+  }
+  return false;
+}
+
+function detectJob() {
+  showDetecting();
+  setStatus('');
+
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tab = tabs[0];
+    if (!isLinkedInJobPage(tab?.url)) {
+      showNoJob();
+      return;
+    }
+
+    chrome.scripting.executeScript(
+      { target: { tabId: tab.id }, files: ['content.js'] },
+      () => {
+        const injectErr = chrome.runtime.lastError;
+        if (injectErr) {
+          showNoJob();
+          setStatus(`Inject: ${injectErr.message}`, 'error');
+          return;
+        }
+
+        chrome.tabs.sendMessage(tab.id, { action: 'scrapeJob' }, (response) => {
+          const msgErr = chrome.runtime.lastError;
+          if (msgErr) {
+            showNoJob();
+            setStatus(`Msg: ${msgErr.message}`, 'error');
+            return;
+          }
+          if (!response?.success || !response.data?.title) {
+            showNoJob();
+            setStatus(response?.error || 'No title found', 'error');
+            return;
+          }
+          showJob(response.data.title, response.data.company_name);
+        });
+      }
+    );
+  });
 }
 
 // Initialise on popup open
@@ -130,7 +215,7 @@ logoutBtn.addEventListener('click', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Add to JAM — open the frontend with prefilled URL params
+// Save to JAM — scrape full job data and open the frontend with URL params
 // ---------------------------------------------------------------------------
 addBtn.addEventListener('click', () => {
   setStatus('');
@@ -139,40 +224,31 @@ addBtn.addEventListener('click', () => {
   chrome.storage.local.get(['jamApiToken'], (result) => {
     if (!result.jamApiToken) {
       setStatus('Please log in first.', 'error');
-      spinOff(addSpinner, addBtn, addBtnLabel, 'Add to JAM');
+      spinOff(addSpinner, addBtn, addBtnLabel, 'Save to JAM');
       return;
     }
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs[0];
-      const isJobView        = tab?.url?.includes('linkedin.com/jobs/view');
-      const isCollectionView = tab?.url?.includes('linkedin.com/jobs/collections') &&
-                               new URL(tab.url).searchParams.has('currentJobId');
-
-      if (!isJobView && !isCollectionView) {
-        setStatus('Navigate to a LinkedIn job listing page first.', 'error');
-        spinOff(addSpinner, addBtn, addBtnLabel, 'Add to JAM');
-        return;
-      }
 
       chrome.scripting.executeScript(
         { target: { tabId: tab.id }, files: ['content.js'] },
         () => {
           if (chrome.runtime.lastError) {
             setStatus(`Injection failed: ${chrome.runtime.lastError.message}`, 'error');
-            spinOff(addSpinner, addBtn, addBtnLabel, 'Add to JAM');
+            spinOff(addSpinner, addBtn, addBtnLabel, 'Save to JAM');
             return;
           }
 
           chrome.tabs.sendMessage(tab.id, { action: 'scrapeJob' }, (response) => {
             if (chrome.runtime.lastError) {
               setStatus(`Script error: ${chrome.runtime.lastError.message}`, 'error');
-              spinOff(addSpinner, addBtn, addBtnLabel, 'Add to JAM');
+              spinOff(addSpinner, addBtn, addBtnLabel, 'Save to JAM');
               return;
             }
             if (!response?.success) {
               setStatus(response?.error || 'Unknown scraping error.', 'error');
-              spinOff(addSpinner, addBtn, addBtnLabel, 'Add to JAM');
+              spinOff(addSpinner, addBtn, addBtnLabel, 'Save to JAM');
               return;
             }
 
@@ -198,8 +274,8 @@ addBtn.addEventListener('click', () => {
               } else {
                 chrome.tabs.create({ url: targetUrl });
               }
-              setStatus(`Opened: ${job.title}`, 'success');
-              spinOff(addSpinner, addBtn, addBtnLabel, 'Add to JAM');
+              setStatus(`Saved: ${job.title}`, 'success');
+              spinOff(addSpinner, addBtn, addBtnLabel, 'Save to JAM');
             });
           }); // sendMessage
         }
