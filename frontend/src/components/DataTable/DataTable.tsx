@@ -1,4 +1,4 @@
-import React, { JSX, MouseEvent, ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import React, { forwardRef, JSX, MouseEvent, ReactNode, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -83,9 +83,14 @@ export interface GenericTableProps {
 	toolbarAddon?: React.ReactNode;
 	reloadTrigger?: number;
 	queryParams?: Record<string, string>;
+	autoOpenWith?: any;
 }
 
-export const DataTable: React.FC<GenericTableProps> = ({
+export interface DataTableHandle {
+	openAddModal: (data?: any) => void;
+}
+
+export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(({
 	entityType,
 	mode = "default",
 	data: providedData,
@@ -108,13 +113,17 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	reloadTrigger,
 	queryParams,
 	defaultModalMode = "view",
-}: GenericTableProps): JSX.Element => {
+	autoOpenWith,
+}: GenericTableProps, ref): JSX.Element => {
 	const { token } = useAuth();
 	const modalRef = useRef<DataModalHandle>(null);
 	const openViewModal = (item: any): void | undefined => modalRef.current?.showView(item);
 	const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
-	const openAddModal = () => modalRef.current?.showAdd(initialData);
+	const openAddModal = (data?: any) => modalRef.current?.showAdd(data ?? initialData);
 	const openImportModal = (item: any): void | undefined => modalRef.current?.showImport(item);
+
+	useImperativeHandle(ref, () => ({ openAddModal }));
+
 
 	// Add context menu hook
 	const { openContextMenu } = useContextMenu();
@@ -801,6 +810,8 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			<FollowUpModal ref={followUpModalRef} />
 		</>
 	);
-};
+});
+
+DataTable.displayName = "DataTable";
 
 export default DataTable;
