@@ -31,6 +31,7 @@ const noJobMsg      = document.getElementById('noJobMsg');
 const jobCard       = document.getElementById('jobCard');
 const jobTitle      = document.getElementById('jobTitle');
 const jobCompany    = document.getElementById('jobCompany');
+const platformBadge = document.getElementById('platformBadge');
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -78,12 +79,15 @@ function showNoJob() {
   addBtn.classList.add('hidden');
 }
 
-function showJob(title, company) {
+function showJob(title, company, platform) {
   detectingRow.classList.add('hidden');
   noJobMsg.classList.add('hidden');
   jobCard.classList.remove('hidden');
   jobTitle.textContent  = title   || '—';
   jobCompany.textContent = company || '';
+  const badge = getBadgeContent(platform);
+  platformBadge.innerHTML = badge.html;
+  platformBadge.style.background = badge.bg;
   addBtn.classList.remove('hidden');
 }
 
@@ -108,13 +112,29 @@ function showLoggedOut() {
 // ---------------------------------------------------------------------------
 // Auto-detect job on popup open
 // ---------------------------------------------------------------------------
-function isLinkedInJobPage(url) {
-  if (!url) return false;
-  if (url.includes('linkedin.com/jobs/view')) return true;
-  if (url.includes('linkedin.com/jobs/collections')) {
-    try { return new URL(url).searchParams.has('currentJobId'); } catch (_) {}
-  }
-  return false;
+function detectPlatform(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    const h = u.hostname;
+    if (h.includes('linkedin.com')) {
+      if (u.pathname.includes('/jobs/view')) return 'linkedin';
+      if (u.pathname.includes('/jobs/collections') && u.searchParams.has('currentJobId')) return 'linkedin';
+    }
+    if (h.endsWith('indeed.com')) {
+      if (u.pathname.includes('/viewjob')) return 'indeed';
+      if (u.searchParams.has('jk') || u.searchParams.has('vjk')) return 'indeed';
+    }
+  } catch (_) {}
+  return null;
+}
+
+const LINKEDIN_ICON = '<svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>';
+
+function getBadgeContent(platform) {
+  if (platform === 'linkedin') return { html: LINKEDIN_ICON + 'LinkedIn', bg: '#0a66c2' };
+  if (platform === 'indeed')   return { html: 'Indeed',                   bg: '#2557a7' };
+  return { html: platform || '', bg: '#555' };
 }
 
 function detectJob() {
@@ -123,13 +143,13 @@ function detectJob() {
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs[0];
-    if (!isLinkedInJobPage(tab?.url)) {
+    if (!detectPlatform(tab?.url)) {
       showNoJob();
       return;
     }
 
     chrome.scripting.executeScript(
-      { target: { tabId: tab.id }, files: ['content.js'] },
+      { target: { tabId: tab.id }, files: ['content.js', 'linkedin.js', 'indeed.js'] },
       () => {
         const injectErr = chrome.runtime.lastError;
         if (injectErr) {
@@ -150,7 +170,7 @@ function detectJob() {
             setStatus(response?.error || 'No title found', 'error');
             return;
           }
-          showJob(response.data.title, response.data.company_name);
+          showJob(response.data.title, response.data.company, response.data.platform);
         });
       }
     );
@@ -232,7 +252,7 @@ addBtn.addEventListener('click', () => {
       const tab = tabs[0];
 
       chrome.scripting.executeScript(
-        { target: { tabId: tab.id }, files: ['content.js'] },
+        { target: { tabId: tab.id }, files: ['content.js', 'linkedin.js', 'indeed.js'] },
         () => {
           if (chrome.runtime.lastError) {
             setStatus(`Injection failed: ${chrome.runtime.lastError.message}`, 'error');
@@ -260,9 +280,9 @@ addBtn.addEventListener('click', () => {
             if (job.salary_min)       params.set('ext_salary_min',       String(job.salary_min));
             if (job.salary_max)       params.set('ext_salary_max',       String(job.salary_max));
             if (job.attendance_type)  params.set('ext_attendance_type',  job.attendance_type);
-            if (job.company_name)     params.set('ext_company_name',     job.company_name);
-            if (job.location_city)    params.set('ext_location_city',    job.location_city);
-            if (job.location_country) params.set('ext_location_country', job.location_country);
+            if (job.company)          params.set('ext_company',          job.company);
+            if (job.location)         params.set('ext_location',         job.location);
+            if (job.platform)         params.set('ext_platform',         job.platform);
 
             const base      = trimSlash(FRONTEND_URL);
             const targetUrl = `${base}/jobs?${params.toString()}`;
