@@ -6,7 +6,7 @@ import time
 import pytest
 import requests
 
-import app.geolocation as geolocation_module
+import app.geolocation.geolocation as geolocation_module
 from app.geolocation.geolocation import call_geocoding_api, geocode_location
 from app.models import Geolocation
 from tests.utils.create_data.utils import create_db_entries
