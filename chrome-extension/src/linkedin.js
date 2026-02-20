@@ -100,9 +100,18 @@ function cleanLinkedInUrl() {
 	return window.location.href;
 }
 
+function detectApplicationStatus() {
+	const text = document.body.innerText;
+	if (text.includes("Application status") && text.includes("Application submitted")) {
+		return "Applied";
+	}
+	return null;
+}
+
 function scrapeLinkedInJob() {
+	console.log("here");
 	const title = queryFirst([
-		".job-details-jobs-unified-top-card__job-title h1",
+		".job-details-jobs-unified-top-card__job-title",
 		".jobs-unified-top-card__job-title h1",
 		".t-24.t-bold.inline h1",
 		"h1.t-24",
@@ -137,6 +146,7 @@ function scrapeLinkedInJob() {
 		platform: "linkedin",
 		location,
 		attendance_type,
+		application_status: detectApplicationStatus(),
 		...salary,
 	};
 }
