@@ -128,8 +128,19 @@ if (!window.__jamInjected) {
 	function waitForJobTitle(callback, maxWaitMs = 8000, intervalMs = 200) {
 		const start = Date.now();
 		const timer = setInterval(() => {
-			const h1 = document.querySelector("h1");
-			if (h1 && h1.textContent.trim()) {
+			const title = queryFirst([
+				// LinkedIn
+				"job-details-jobs-unified-top-card__job-title",
+				".jobs-unified-top-card__job-title h1",
+				".t-24.t-bold.inline h1",
+				"h1.t-24",
+				// Indeed
+				"[data-testid='jobsearch-JobInfoHeader-title']",
+				"h1[class*='jobTitle']",
+				// General fallback
+				"h1",
+			]);
+			if (title) {
 				clearInterval(timer);
 				callback();
 			} else if (Date.now() - start >= maxWaitMs) {
