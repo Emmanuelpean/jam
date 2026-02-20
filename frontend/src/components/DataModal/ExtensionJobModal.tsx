@@ -33,9 +33,8 @@ export interface ExtensionJobData {
 	company: string | null;
 	location: string | null;
 	platform: string | null;
-	location_postcode?: string | null;
-	location_city?: string | null;
-	location_country?: string | null;
+	application_status: string | null;
+	geolocation?: GeoLocationData | null;
 }
 
 export const ExtensionJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
@@ -57,15 +56,14 @@ export const ExtensionJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			} else {
 				geolocation = { postcode: null, city: null, country: null, latitude: null, longitude: null };
 			}
+			console.log(geolocation);
 			return {
 				...data,
-				location_postcode: geolocation.postcode,
-				location_city: geolocation.city,
-				location_country: geolocation.country,
 				company_id: data.company ? findClosestOption(companies, data.company) : null,
 				location_id: data.location ? findClosestOption(locations, data.location) : null,
 				source_aggregator_id: data.platform ? findExactOption(aggregators, data.platform) : null,
 				source_type: "aggregator",
+				geolocation: geolocation,
 			};
 		};
 
@@ -95,13 +93,14 @@ export const ExtensionJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 						locations,
 						locationModalRef,
 						(data: ExtensionJobData): LocationDataTransform => ({
-							postcode: data.location_postcode,
-							city: data.location_city,
-							country: data.location_country,
+							postcode: data.geolocation?.postcode,
+							city: data.geolocation?.city,
+							country: data.geolocation?.country,
 						}),
 						{ secondaryName: "location" }
 					),
 					formFields.attendanceType(),
+					modalViewFields.scrapedLocationMap(),
 				],
 			} as SectionConfig,
 			{
