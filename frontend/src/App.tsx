@@ -1,5 +1,5 @@
 import React, { createContext, JSX, ReactNode, useEffect } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
 import Login from "./pages/Auth/AuthPage";
@@ -58,8 +58,19 @@ interface AppLayoutProps {
 function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	const { isLoading, loadingMessage, progress } = useLoading();
 	const location = useLocation();
-	const { currentUser } = useAuth();
+	const { currentUser, isAuthenticated } = useAuth();
+	const navigate = useNavigate();
 	useSwetrixPageViews();
+
+	useEffect(() => {
+		if (!isAuthenticated) return;
+		const handler = (event: MessageEvent): void => {
+			if (event.data?.type !== "JAM_EXT_JOB") return;
+			navigate("/jobs", { state: { extJob: event.data.data } });
+		};
+		window.addEventListener("message", handler);
+		return () => window.removeEventListener("message", handler);
+	}, [isAuthenticated, navigate]);
 
 	const normalisedPathname: string =
 		location.pathname !== "/" && location.pathname.endsWith("/")
