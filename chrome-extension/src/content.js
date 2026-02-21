@@ -85,6 +85,10 @@ function descriptionToText(el) {
 			out += "\n";
 			return;
 		}
+
+		// Skip LinkedIn's "About the job" section header
+		if (/^h[1-6]$/.test(tag) && node.textContent.trim() === "About the job") return;
+
 		if (tag === "li") out += "- ";
 		if (LIST_TAGS.has(tag)) out += "\n";
 
@@ -98,6 +102,7 @@ function descriptionToText(el) {
 
 	return out
 		.replace(/[ \t]+/g, " ") // collapse inline whitespace
+		.replace(/ *\n */g, "\n") // strip spaces around newlines (indentation artifacts)
 		.replace(/\n{3,}/g, "\n\n") // max one blank line between blocks
 		.replace(/^(- .+)\n\n+(?=- )/gm, "$1\n") // no blank lines between bullets
 		.trim();

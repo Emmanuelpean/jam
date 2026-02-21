@@ -17,11 +17,7 @@ function cleanIndeedUrl() {
 }
 
 function scrapeIndeedJob() {
-	const title = queryFirst([
-		"[data-testid='jobsearch-JobInfoHeader-title']",
-		"h1[class*='jobTitle']",
-		"h1",
-	]);
+	const title = queryFirst(['[data-testid="jobsearch-JobInfoHeader-title"]', "h1[class*='jobTitle']", "h1"]);
 
 	const company = queryFirst([
 		"[data-testid='inlineHeader-companyName'] a",
@@ -31,9 +27,7 @@ function scrapeIndeedJob() {
 		".jobsearch-CompanyInfoWithoutHeaderImage a[data-tn-element='reviewsLink']",
 	]);
 
-	const descEl = document.querySelector(
-		"[data-testid='jobsearch-jobDescriptionText'], #jobDescriptionText"
-	);
+	const descEl = document.querySelector("[data-testid='jobsearch-jobDescriptionText'], #jobDescriptionText");
 	const description = descEl ? descriptionToText(descEl) : null;
 
 	const url = cleanIndeedUrl();
