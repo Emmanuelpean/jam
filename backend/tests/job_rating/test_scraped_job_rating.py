@@ -24,9 +24,9 @@ class TestScoreScrapedJobs(object):
         service_log = session.query(models.JobRatingServiceLog).first()
         assert service_log is not None
         assert service_log.run_datetime is not None
-        assert len(service_log.rated_job_found_ids) == 34
-        assert len(service_log.rated_job_succeeded_ids) == 34
-        assert len(service_log.rated_job_failed_ids) == 0
+        assert len(service_log.job_found_ids) == 34
+        assert len(service_log.job_found_ids) == 34
+        assert len(service_log.job_failed_ids) == 0
         assert len(service_log.user_found_ids) == len(self.get_premium_users(session))
         assert len(service_log.user_processed_ids) == len(self.get_premium_users(session))
         job_prompt = f"""### Candidate Profile
@@ -72,8 +72,8 @@ class TestScoreScrapedJobs(object):
         service_log = session.query(models.JobRatingServiceLog).first()
         assert service_log is not None
         assert service_log.run_datetime is not None
-        assert len(service_log.rated_job_found_ids) == 34
-        assert len(service_log.rated_job_succeeded_ids) == 34
-        assert len(service_log.rated_job_failed_ids) == 0
+        assert len(service_log.job_found_ids) == 34
+        assert len(service_log.job_succeeded_ids) == 34
+        assert len(service_log.job_failed_ids) == 0
         assert len(service_log.user_found_ids) == len(self.get_premium_users(session))
         assert len(service_log.user_processed_ids) == len(self.get_premium_users(session))

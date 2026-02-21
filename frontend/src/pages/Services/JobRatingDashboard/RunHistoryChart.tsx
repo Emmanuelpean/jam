@@ -9,11 +9,7 @@ interface RunHistoryChartProps {
 	loading?: boolean;
 }
 
-export const RunHistoryChart = ({
-	serviceLogData,
-	isRunning,
-	loading = false,
-}: RunHistoryChartProps): JSX.Element => {
+export const RunHistoryChart = ({ serviceLogData, isRunning, loading = false }: RunHistoryChartProps): JSX.Element => {
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
 
 	useEffect(() => {
@@ -30,13 +26,19 @@ export const RunHistoryChart = ({
 				serviceLogData,
 				"Successful Jobs",
 				successColor,
-				(log: JobRatingServiceLogData): number => log.rated_job_succeeded_ids.length
+				(log: JobRatingServiceLogData): number => log.job_succeeded_ids.length
 			),
 			createSeries(
 				serviceLogData,
 				"Failed Jobs",
 				failureColor,
-				(log: JobRatingServiceLogData): number => log.rated_job_failed_ids.length
+				(log: JobRatingServiceLogData): number => log.job_failed_ids.length
+			),
+			createSeries(
+				serviceLogData,
+				"Skipped Jobs",
+				infoColor,
+				(log: JobRatingServiceLogData): number => log.job_skipped_ids.length
 			),
 		];
 		setLogData([jobSeries, durationSeries]);
