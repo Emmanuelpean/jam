@@ -29,9 +29,10 @@ export interface JobScrapingServiceLogData extends ServiceLog {
 }
 
 export interface JobRatingServiceLogData extends ServiceLog {
-	rated_job_found_ids: number[];
-	rated_job_succeeded_ids: number[];
-	rated_job_failed_ids: number[];
+	job_found_ids: number[];
+	job_succeeded_ids: number[];
+	job_failed_ids: number[];
+	job_skipped_ids: number[];
 	user_found_ids: number[];
 	user_processed_ids: number[];
 }

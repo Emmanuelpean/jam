@@ -73,11 +73,11 @@ def score_scraped_jobs(
                     .filter(models.ScrapedJob.job_rating == None)  # not yet rated
                     .filter(models.ScrapedJob.is_active.is_(True))  # active
                     .filter(models.ScrapedJob.is_imported.is_(False))  # not imported
-                    .filter(func.length(models.ScrapedJob.description) > min_description_length)  # description length
+                    # .filter(func.length(models.ScrapedJob.description) > min_description_length)  # description length
                     .filter(models.ScrapedJob.exclusion_filter == None)  # not filtered out
                     .all()
                 )
-                service_log.rated_job_found_ids = service_log.rated_job_found_ids + [job.id for job in scraped_jobs]
+                service_log.job_found_ids = service_log.job_found_ids + [job.id for job in scraped_jobs]
                 logger.info(f"Found {len(scraped_jobs)} scraped jobs to rate")
 
                 # Rate each job
@@ -90,6 +90,17 @@ def score_scraped_jobs(
                         system_prompt_id=system_prompt.id,
                         job_prompt_template_id=job_prompt_template.id,
                     )
+
+                    if len(scraped_job.description) < min_description_length:
+                        logger.info(f"Skipping job ID {scraped_job.id} as its description is too short")
+                        job_rating = models.JobRating(
+                            is_skipped=True,
+                            skip_reason="Job description too short",
+                            **job_rating_kwargs,
+                        )
+                        db.add(job_rating)
+                        service_log.job_skipped_ids = service_log.job_skipped_ids + [scraped_job.id]
+                        continue
 
                     score = None
                     try:
@@ -106,7 +117,6 @@ def score_scraped_jobs(
                             scraped_job.description,
                         )
                         score = openai_query(system_prompt.prompt, job_prompt)
-                        # noinspection PyArgumentList
                         job_rating = models.JobRating(
                             overall_score=score["overall_score"],
                             technical_score=score["technical_fit"],
@@ -120,11 +130,10 @@ def score_scraped_jobs(
                         )
                         db.add(job_rating)
                         db.commit()
-                        service_log.rated_job_succeeded_ids = service_log.rated_job_succeeded_ids + [scraped_job.id]
+                        service_log.rated_job_succeeded_ids = service_log.job_succeeded_ids + [scraped_job.id]
                     except Exception as exception:
                         tb = traceback.format_exc()
                         logger.exception(f"Error in rating workflow: {exception}")
-                        # noinspection PyArgumentList
                         job_rating = models.JobRating(
                             is_success=False,
                             error=f"Error scoring job: {exception}\n{tb}\nRaw response is {score}",
@@ -135,7 +144,6 @@ def score_scraped_jobs(
                         # noinspection PyAugmentAssignment
                         service_log.rated_job_failed_ids = service_log.rated_job_failed_ids + [scraped_job.id]
 
-                # noinspection PyAugmentAssignment
                 service_log.user_processed_ids = service_log.user_processed_ids + [user.id]
 
             else:
