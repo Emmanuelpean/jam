@@ -8,7 +8,7 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
 def _read_script(filename: str) -> str:
-    return (EXTENSION_DIR / filename).read_text(encoding="utf-8")
+    return (EXTENSION_DIR / "src" / filename).read_text(encoding="utf-8")
 
 
 @pytest.fixture(scope="session")
@@ -23,7 +23,7 @@ def driver():
     drv.quit()
 
 
-@pytest.fixture
+@pytest.fixture(scope="class")
 def scrape(driver):
     """Navigate to a fixture HTML file and inject all content scripts.
 
@@ -37,9 +37,7 @@ def scrape(driver):
         fixture_path = FIXTURES_DIR / fixture_filename
         driver.get(fixture_path.as_uri())
         # Mock chrome.runtime so the message-listener guard doesn't error
-        driver.execute_script(
-            "window.chrome = { runtime: { onMessage: { addListener: function() {} } } };"
-        )
+        driver.execute_script("window.chrome = { runtime: { onMessage: { addListener: function() {} } } };")
         for filename in ["content.js", "linkedin.js", "indeed.js"]:
             driver.execute_script(_read_script(filename))
         return driver
