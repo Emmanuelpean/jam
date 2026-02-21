@@ -17,10 +17,11 @@ function getFitLevelTexts() {
 function findSalaryText() {
 	// Salary may appear in the tertiary description or insight items
 	const salarySelectors = [
-		".compensation__salary",
-		"[class*='salary']",
-		".job-details-jobs-unified-top-card__job-insight--highlight span",
-		".job-details-jobs-unified-top-card__salary-main-rail",
+		// ".compensation__salary",
+		// "[class*='salary']",
+		// ".job-details-jobs-unified-top-card__job-insight--highlight span",
+		// ".job-details-jobs-unified-top-card__salary-main-rail",
+		"button.artdeco-button--secondary.artdeco-button--muted span.tvm__text--low-emphasis strong",
 	];
 	for (const sel of salarySelectors) {
 		const el = document.querySelector(sel);

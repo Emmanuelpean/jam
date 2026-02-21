@@ -56,7 +56,6 @@ export const ExtensionJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			} else {
 				geolocation = { postcode: null, city: null, country: null, latitude: null, longitude: null };
 			}
-			console.log(geolocation);
 			return {
 				...data,
 				company_id: data.company ? findClosestOption(companies, data.company) : null,
