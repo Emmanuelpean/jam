@@ -85,6 +85,7 @@ class JobRating(Owned, Base):
     is_success = Column(Boolean, nullable=True)
     error = Column(String, nullable=True)
     job_prompt = Column(String, nullable=True)
+    notes = Column(PG_ARRAY(String), server_default="{}", nullable=False)
 
     # Foreign keys
     scraped_job_id = Column(Integer, ForeignKey("scraped_job.id", ondelete="CASCADE"), nullable=False)
@@ -99,6 +100,12 @@ class JobRating(Owned, Base):
     user_qualification = relationship("UserQualification", back_populates="job_ratings")
     system_prompt = relationship("AiSystemPrompt", back_populates="job_ratings")
     job_prompt_template = relationship("AiJobPromptTemplate", back_populates="job_ratings")
+
+    def __init__(self, **kwargs) -> None:
+        """Initialise array fields with empty lists if not provided"""
+
+        kwargs.setdefault("notes", [])
+        super().__init__(**kwargs)
 
 
 class JobRatingServiceLog(ServiceLog, CommonBase, Base):
