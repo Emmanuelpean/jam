@@ -777,7 +777,6 @@ SCRAPING_FILTER_DATA = [
 # ---------------------------------------------------- SCRAPED JOBS ----------------------------------------------------
 
 SCRAPED_JOB_DATA = [
-    # Processed and Scraped
     {
         "external_job_id": "3789012345",
         "platform": "linkedin",
@@ -797,6 +796,7 @@ SCRAPED_JOB_DATA = [
         "service_log_id": 1,
         "geolocation_id": 4,
         "deadline": "2024-01-01 00:00:00",
+        "parsed_location": "San Francisco",
     },
     {
         "external_job_id": "987654321",
@@ -809,19 +809,7 @@ SCRAPED_JOB_DATA = [
         "attendance_type": "remote",
         "salary_min": 90000.0,
         "salary_max": 130000.0,
-        "description": """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut vitae nunc sed metus elementum 
-        dignissim. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. 
-        Donec vulputate felis nulla. Cras ac urna in diam maximus euismod. Quisque laoreet ex vel felis tristique, 
-        id viverra mi fermentum. Nullam hendrerit justo odio, tempor varius lectus venenatis placerat. Nunc blandit, 
-        purus non ornare condimentum, tortor nisi euismod ipsum, ut dictum quam ex a neque. Sed rhoncus purus eu felis 
-        placerat blandit. Curabitur rutrum consequat enim nec rutrum. Praesent gravida sem a justo ullamcorper blandit. 
-        Vestibulum rutrum sem augue, eu malesuada elit dignissim nec. Aenean cursus feugiat elit, eget mattis risus 
-        dignissim id. In sit amet hendrerit nisi. Ut venenatis leo ut odio eleifend, eget mollis sem vulputate. 
-        Phasellus finibus eget quam eget iaculis. Maecenas ullamcorper varius nisi, eu porta nulla iaculis vel. 
-        Donec bibendum nisl viverra odio vehicula molestie. Sed laoreet lorem vel enim porta, id facilisis risus 
-        scelerisque. Donec vehicula, arcu ut vestibulum tincidunt, urna nulla tristique neque, id faucibus dui magna 
-        eget nisi. Mauris fringilla sagittis aliquet. Quisque facilisis vulputate diam, sit amet lacinia lectus commodo 
-        in. Phasellus quis aliquam ex. Fusce in ornare est.""",
+        "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut vitae nunc sed metus elementum \n        dignissim. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. \n        Donec vulputate felis nulla. Cras ac urna in diam maximus euismod. Quisque laoreet ex vel felis tristique, \n        id viverra mi fermentum. Nullam hendrerit justo odio, tempor varius lectus venenatis placerat. Nunc blandit, \n        purus non ornare condimentum, tortor nisi euismod ipsum, ut dictum quam ex a neque. Sed rhoncus purus eu felis \n        placerat blandit. Curabitur rutrum consequat enim nec rutrum. Praesent gravida sem a justo ullamcorper blandit. \n        Vestibulum rutrum sem augue, eu malesuada elit dignissim nec. Aenean cursus feugiat elit, eget mattis risus \n        dignissim id. In sit amet hendrerit nisi. Ut venenatis leo ut odio eleifend, eget mollis sem vulputate. \n        Phasellus finibus eget quam eget iaculis. Maecenas ullamcorper varius nisi, eu porta nulla iaculis vel. \n        Donec bibendum nisl viverra odio vehicula molestie. Sed laoreet lorem vel enim porta, id facilisis risus \n        scelerisque. Donec vehicula, arcu ut vestibulum tincidunt, urna nulla tristique neque, id faucibus dui magna \n        eget nisi. Mauris fringilla sagittis aliquet. Quisque facilisis vulputate diam, sit amet lacinia lectus commodo \n        in. Phasellus quis aliquam ex. Fusce in ornare est.",
         "salary_currency": "GBP",
         "url": "https://indeed.com/viewjob?jk=987654321",
         "scrape_datetime": "2025-08-22T09:45:32.789012+00:00",
@@ -845,7 +833,8 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/1122334455",
         "scrape_datetime": "2025-08-28T16:20:45.456789+00:00",
         "service_log_id": 1,
-        "geolocation_id": 1,  # New York, United States
+        "geolocation_id": 1,
+        "parsed_location": "New York",
     },
     {
         "external_job_id": "5566778899",
@@ -887,7 +876,8 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/4123456789",
         "scrape_datetime": "2025-09-01T10:15:30.123456+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,  # London, United Kingdom
+        "geolocation_id": 3,
+        "parsed_location": "London, UK",
     },
     {
         "external_job_id": "totaljobs_567890",
@@ -899,7 +889,7 @@ SCRAPED_JOB_DATA = [
         "description": "Join our healthcare tech team to build mobile applications...",
         "company": "HealthTech Solutions",
         "attendance_type": "remote",
-        "location": "UK",
+        "location": "UK (remote)",
         "location_country": "United Kingdom",
         "salary_min": 50000.0,
         "salary_max": 70000.0,
@@ -907,7 +897,8 @@ SCRAPED_JOB_DATA = [
         "url": "https://totaljobs.com/job/flutter-healthcare-567890",
         "scrape_datetime": "2025-09-03T14:22:45.789012+00:00",
         "service_log_id": 1,
-        "geolocation_id": 16,  # United Kingdom
+        "geolocation_id": 16,
+        "parsed_location": "UK",
     },
     {
         "external_job_id": "reed_345678",
@@ -927,7 +918,8 @@ SCRAPED_JOB_DATA = [
         "url": "https://reed.co.uk/jobs/ml-engineer-edinburgh/345678",
         "scrape_datetime": "2025-09-05T09:33:12.345678+00:00",
         "service_log_id": 1,
-        "geolocation_id": 15,  # Edinburgh, United Kingdom
+        "geolocation_id": 15,
+        "parsed_location": "Edinburgh, UK",
     },
     {
         "external_job_id": "jobsite_901234",
@@ -947,7 +939,8 @@ SCRAPED_JOB_DATA = [
         "url": "https://jobsite.co.uk/job/fullstack-js-manchester-901234",
         "scrape_datetime": "2025-09-09T13:20:15.567890+00:00",
         "service_log_id": 1,
-        "geolocation_id": 14,  # Manchester, United Kingdom
+        "geolocation_id": 14,
+        "parsed_location": "Manchester, UK",
     },
     {
         "external_job_id": "soft1sdf23456789",
@@ -962,7 +955,8 @@ SCRAPED_JOB_DATA = [
         "location": "London",
         "location_city": "London",
         "exclusion_filter_id": 2,
-        "geolocation_id": 3,  # London, United Kingdom
+        "geolocation_id": 3,
+        "parsed_location": "London",
     },
     {
         "external_job_id": "soft1sdf23456789r3",
@@ -985,7 +979,7 @@ SCRAPED_JOB_DATA = [
         "title": "Senior Python Developer",
         "description": "We are looking for an experienced developer to join our growing team...",
         "company": "TechCorp Inc",
-        "location": "London, UK",
+        "location": "London, UK (hybrid)",
         "location_city": "London",
         "location_country": "United Kingdom",
         "salary_min": 75000.0,
@@ -996,6 +990,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2025-01-15T10:00:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "London, UK",
     },
     {
         "external_job_id": "job_1111",
@@ -1006,7 +1001,7 @@ SCRAPED_JOB_DATA = [
         "title": "Full Stack Engineer",
         "description": "Join our innovative startup and help build cutting-edge solutions...",
         "company": "StartupXYZ",
-        "location": "Manchester, UK",
+        "location": "Manchester, UK (remote)",
         "location_city": "Manchester",
         "location_country": "United Kingdom",
         "salary_min": 60000.0,
@@ -1017,6 +1012,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2025-01-14T11:30:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 14,
+        "parsed_location": "Manchester, UK",
     },
     {
         "external_job_id": "job_1116",
@@ -1027,7 +1023,7 @@ SCRAPED_JOB_DATA = [
         "title": "ML Engineer",
         "description": "Help shape the future of our platform with your technical expertise...",
         "company": "InnovateTech Solutions",
-        "location": "Leeds, UK",
+        "location": "Leeds, UK (on-site)",
         "location_city": "Leeds",
         "location_country": "United Kingdom",
         "salary_min": 70000.0,
@@ -1038,6 +1034,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2025-01-09T12:00:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Leeds, UK",
     },
     {
         "external_job_id": "job_1117",
@@ -1048,7 +1045,7 @@ SCRAPED_JOB_DATA = [
         "title": "Frontend Developer",
         "description": "Work remotely with a global team on mission-critical applications...",
         "company": "Digital Dynamics",
-        "location": "Liverpool, UK",
+        "location": "Liverpool, UK (remote)",
         "location_city": "Liverpool",
         "location_country": "United Kingdom",
         "salary_min": 50000.0,
@@ -1059,6 +1056,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2025-01-08T15:45:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Liverpool, UK",
     },
     {
         "external_job_id": "job_1118",
@@ -1069,7 +1067,7 @@ SCRAPED_JOB_DATA = [
         "title": "React Developer",
         "description": "We are looking for an experienced developer to join our growing team...",
         "company": "Future Systems",
-        "location": "Cardiff, UK",
+        "location": "Cardiff, UK (hybrid)",
         "location_city": "Cardiff",
         "location_country": "United Kingdom",
         "salary_min": 52000.0,
@@ -1080,6 +1078,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2025-01-07T10:30:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Cardiff, UK",
     },
     {
         "external_job_id": "job_1119",
@@ -1090,7 +1089,7 @@ SCRAPED_JOB_DATA = [
         "title": "Vue.js Developer",
         "description": "Join our innovative startup and help build cutting-edge solutions...",
         "company": "Quantum Labs",
-        "location": "Newcastle, UK",
+        "location": "Newcastle, UK (on-site)",
         "location_city": "Newcastle",
         "location_country": "United Kingdom",
         "salary_min": 48000.0,
@@ -1101,6 +1100,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2025-01-06T09:00:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Newcastle, UK",
     },
     {
         "external_job_id": "job_1125",
@@ -1112,7 +1112,7 @@ SCRAPED_JOB_DATA = [
         "title": "Site Reliability Engineer",
         "description": "Exciting opportunity to work with modern technologies in an agile environment...",
         "company": "Neural Networks Inc",
-        "location": "London, UK",
+        "location": "London, UK (hybrid)",
         "location_city": "London",
         "location_country": "United Kingdom",
         "salary_min": 80000.0,
@@ -1123,6 +1123,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-31T10:00:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "London, UK",
     },
     {
         "external_job_id": "job_1126",
@@ -1134,7 +1135,7 @@ SCRAPED_JOB_DATA = [
         "title": "Cloud Architect",
         "description": "Work on challenging projects with a talented team of engineers...",
         "company": "CyberSecure Ltd",
-        "location": "Manchester, UK",
+        "location": "Manchester, UK (remote)",
         "location_city": "Manchester",
         "location_country": "United Kingdom",
         "salary_min": 90000.0,
@@ -1145,6 +1146,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-30T11:30:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 14,
+        "parsed_location": "Manchester, UK",
     },
     {
         "external_job_id": "job_1127",
@@ -1156,7 +1158,7 @@ SCRAPED_JOB_DATA = [
         "title": "Security Engineer",
         "description": "Build scalable systems that impact millions of users...",
         "company": "GreenTech Energy",
-        "location": "Birmingham, UK",
+        "location": "Birmingham, UK (on-site)",
         "location_city": "Birmingham",
         "location_country": "United Kingdom",
         "salary_min": 72000.0,
@@ -1167,6 +1169,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-29T14:15:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Birmingham, UK",
     },
     {
         "external_job_id": "job_1128",
@@ -1178,7 +1181,7 @@ SCRAPED_JOB_DATA = [
         "title": "Blockchain Developer",
         "description": "Collaborate with cross-functional teams to deliver high-quality software...",
         "company": "SmartCity Solutions",
-        "location": "Edinburgh, UK",
+        "location": "Edinburgh, UK (hybrid)",
         "location_city": "Edinburgh",
         "location_country": "United Kingdom",
         "salary_min": 68000.0,
@@ -1189,6 +1192,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-28T16:00:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 15,
+        "parsed_location": "Edinburgh, UK",
     },
     {
         "external_job_id": "job_1129",
@@ -1200,7 +1204,7 @@ SCRAPED_JOB_DATA = [
         "title": "QA Engineer",
         "description": "Help shape the future of our platform with your technical expertise...",
         "company": "BioTech Innovations",
-        "location": "Bristol, UK",
+        "location": "Bristol, UK (remote)",
         "location_city": "Bristol",
         "location_country": "United Kingdom",
         "salary_min": 45000.0,
@@ -1211,6 +1215,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-27T09:30:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Bristol, UK",
     },
     {
         "external_job_id": "job_1130",
@@ -1222,7 +1227,7 @@ SCRAPED_JOB_DATA = [
         "title": "Technical Lead",
         "description": "Work remotely with a global team on mission-critical applications...",
         "company": "AI Research Corp",
-        "location": "Glasgow, UK",
+        "location": "Glasgow, UK (hybrid)",
         "location_city": "Glasgow",
         "location_country": "United Kingdom",
         "salary_min": 85000.0,
@@ -1233,6 +1238,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-26T12:45:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Glasgow, UK",
     },
     {
         "external_job_id": "job_1131",
@@ -1244,7 +1250,7 @@ SCRAPED_JOB_DATA = [
         "title": "Engineering Manager",
         "description": "We are looking for an experienced developer to join our growing team...",
         "company": "BlockChain Ventures",
-        "location": "Leeds, UK",
+        "location": "Leeds, UK (on-site)",
         "location_city": "Leeds",
         "location_country": "United Kingdom",
         "salary_min": 95000.0,
@@ -1255,6 +1261,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-25T15:00:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Leeds, UK",
     },
     {
         "external_job_id": "job_1132",
@@ -1266,7 +1273,7 @@ SCRAPED_JOB_DATA = [
         "title": "Principal Engineer",
         "description": "Join our innovative startup and help build cutting-edge solutions...",
         "company": "CloudScale Systems",
-        "location": "Liverpool, UK",
+        "location": "Liverpool, UK (remote)",
         "location_city": "Liverpool",
         "location_country": "United Kingdom",
         "salary_min": 100000.0,
@@ -1277,6 +1284,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-24T08:15:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Liverpool, UK",
     },
     {
         "external_job_id": "job_1133",
@@ -1369,7 +1377,7 @@ SCRAPED_JOB_DATA = [
         "title": "Business Intelligence Developer",
         "description": "Work remotely with a global team on mission-critical applications...",
         "company": "DataSoft Ltd",
-        "location": "Cambridge, UK",
+        "location": "Cambridge, UK (hybrid)",
         "location_city": "Cambridge",
         "location_country": "United Kingdom",
         "attendance_type": "hybrid",
@@ -1377,6 +1385,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-18T14:00:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Cambridge, UK",
     },
     {
         "external_job_id": "job_1139",
@@ -1387,7 +1396,7 @@ SCRAPED_JOB_DATA = [
         "title": "ETL Developer",
         "description": "We are looking for an experienced developer to join our growing team...",
         "company": "FinTech Innovations",
-        "location": "Oxford, UK",
+        "location": "Oxford, UK (on-site)",
         "location_city": "Oxford",
         "location_country": "United Kingdom",
         "attendance_type": "on-site",
@@ -1395,6 +1404,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-17T16:30:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Oxford, UK",
     },
     {
         "external_job_id": "job_1140",
@@ -1405,7 +1415,7 @@ SCRAPED_JOB_DATA = [
         "title": "Big Data Engineer",
         "description": "Join our innovative startup and help build cutting-edge solutions...",
         "company": "HealthTech Solutions",
-        "location": "Reading, UK",
+        "location": "Reading, UK (remote)",
         "location_city": "Reading",
         "location_country": "United Kingdom",
         "attendance_type": "remote",
@@ -1413,6 +1423,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-16T08:45:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Reading, UK",
     },
     {
         "external_job_id": "job_1141",
@@ -1430,6 +1441,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-15T12:15:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Brighton, UK",
     },
     {
         "external_job_id": "job_1142",
@@ -1447,6 +1459,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-14T14:45:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Southampton, UK",
     },
     {
         "external_job_id": "job_1143",
@@ -1457,7 +1470,7 @@ SCRAPED_JOB_DATA = [
         "title": "DevOps Engineer",
         "description": "Build scalable systems that impact millions of users...",
         "company": "Future Systems",
-        "location": "Nottingham, UK",
+        "location": "Nottingham, UK (hybrid)",
         "location_city": "Nottingham",
         "location_country": "United Kingdom",
         "salary_min": 60000.0,
@@ -1468,6 +1481,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-13T10:00:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Nottingham, UK",
     },
     {
         "external_job_id": "job_1146",
@@ -1478,7 +1492,7 @@ SCRAPED_JOB_DATA = [
         "title": "Data Engineer",
         "description": "Work remotely with a global team on mission-critical applications...",
         "company": "CyberSecure Ltd",
-        "location": "Manchester, UK",
+        "location": "Manchester, UK (hybrid)",
         "location_city": "Manchester",
         "location_country": "United Kingdom",
         "salary_min": 62000.0,
@@ -1489,6 +1503,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-10T15:45:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 14,
+        "parsed_location": "Manchester, UK",
     },
     {
         "external_job_id": "job_1147",
@@ -1499,7 +1514,7 @@ SCRAPED_JOB_DATA = [
         "title": "ML Engineer",
         "description": "We are looking for an experienced developer to join our growing team...",
         "company": "GreenTech Energy",
-        "location": "Birmingham, UK",
+        "location": "Birmingham, UK (on-site)",
         "location_city": "Birmingham",
         "location_country": "United Kingdom",
         "salary_min": 72000.0,
@@ -1510,6 +1525,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-09T09:00:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Birmingham, UK",
     },
     {
         "external_job_id": "job_1148",
@@ -1520,7 +1536,7 @@ SCRAPED_JOB_DATA = [
         "title": "Frontend Developer",
         "description": "Join our innovative startup and help build cutting-edge solutions...",
         "company": "SmartCity Solutions",
-        "location": "Edinburgh, UK",
+        "location": "Edinburgh, UK (remote)",
         "location_city": "Edinburgh",
         "location_country": "United Kingdom",
         "salary_min": 48000.0,
@@ -1531,6 +1547,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-08T10:30:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 15,
+        "parsed_location": "Edinburgh, UK",
     },
     {
         "external_job_id": "job_1149",
@@ -1541,7 +1558,7 @@ SCRAPED_JOB_DATA = [
         "title": "React Developer",
         "description": "Exciting opportunity to work with modern technologies in an agile environment...",
         "company": "BioTech Innovations",
-        "location": "Bristol, UK",
+        "location": "Bristol, UK (hybrid)",
         "location_city": "Bristol",
         "location_country": "United Kingdom",
         "salary_min": 55000.0,
@@ -1552,6 +1569,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-07T12:00:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Bristol, UK",
     },
     {
         "external_job_id": "job_1153",
@@ -1562,7 +1580,7 @@ SCRAPED_JOB_DATA = [
         "title": "AI Software Developer",
         "description": "Work on challenging projects with a talented team of engineers...",
         "company": "AI Research Corp",
-        "location": "Glasgow, UK",
+        "location": "Glasgow, UK (hybrid)",
         "location_city": "Glasgow",
         "location_country": "United Kingdom",
         "salary_min": 75000.0,
@@ -1573,6 +1591,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-03T10:15:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Glasgow, UK",
     },
     {
         "external_job_id": "job_1154",
@@ -1583,7 +1602,7 @@ SCRAPED_JOB_DATA = [
         "title": "iOS Developer",
         "description": "Build scalable systems that impact millions of users...",
         "company": "BlockChain Ventures",
-        "location": "Leeds, UK",
+        "location": "Leeds, UK (on-site)",
         "location_city": "Leeds",
         "location_country": "United Kingdom",
         "salary_min": 58000.0,
@@ -1594,6 +1613,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-02T11:45:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Leeds, UK",
     },
     {
         "external_job_id": "job_1155",
@@ -1604,7 +1624,7 @@ SCRAPED_JOB_DATA = [
         "title": "Android Developer",
         "description": "Collaborate with cross-functional teams to deliver high-quality software...",
         "company": "CloudScale Systems",
-        "location": "Liverpool, UK",
+        "location": "Liverpool, UK (remote)",
         "location_city": "Liverpool",
         "location_country": "United Kingdom",
         "salary_min": 55000.0,
@@ -1615,6 +1635,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-01T13:30:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Liverpool, UK",
     },
     {
         "external_job_id": "job_1156",
@@ -1625,7 +1646,7 @@ SCRAPED_JOB_DATA = [
         "title": "Site Reliability Engineer",
         "description": "Help shape the future of our platform with your technical expertise...",
         "company": "DevOps Masters",
-        "location": "Cardiff, UK",
+        "location": "Cardiff, UK (hybrid)",
         "location_city": "Cardiff",
         "location_country": "United Kingdom",
         "salary_min": 68000.0,
@@ -1636,6 +1657,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-11-30T15:00:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Cardiff, UK",
     },
     {
         "external_job_id": "job_1157",
@@ -1646,7 +1668,7 @@ SCRAPED_JOB_DATA = [
         "title": "Cloud Architect",
         "description": "Work remotely with a global team on mission-critical applications...",
         "company": "Enterprise Solutions Ltd",
-        "location": "Newcastle, UK",
+        "location": "Newcastle, UK (remote)",
         "location_city": "Newcastle",
         "location_country": "United Kingdom",
         "salary_min": 85000.0,
@@ -1657,6 +1679,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-11-29T09:45:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Newcastle, UK",
     },
     {
         "external_job_id": "job_1158",
@@ -1667,7 +1690,7 @@ SCRAPED_JOB_DATA = [
         "title": "Security Engineer",
         "description": "We are looking for an experienced developer to join our growing team...",
         "company": "TechCorp Inc",
-        "location": "London, UK",
+        "location": "London, UK (on-site)",
         "location_city": "London",
         "location_country": "United Kingdom",
         "salary_min": 78000.0,
@@ -1678,6 +1701,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-11-28T11:15:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "London, UK",
     },
     {
         "external_job_id": "job_1159",
@@ -1688,7 +1712,7 @@ SCRAPED_JOB_DATA = [
         "title": "Blockchain Developer",
         "description": "Join our innovative startup and help build cutting-edge solutions...",
         "company": "StartupXYZ",
-        "location": "Manchester, UK",
+        "location": "Manchester, UK (hybrid)",
         "location_city": "Manchester",
         "location_country": "United Kingdom",
         "salary_min": 70000.0,
@@ -1699,6 +1723,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-11-27T13:45:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 14,
+        "parsed_location": "Manchester, UK",
     },
     # Scraping Failed
     {
@@ -1844,7 +1869,7 @@ SCRAPED_JOB_DATA = [
         "title": "DevOps Engineer",
         "description": "Exciting opportunity to work with modern technologies in an agile environment...",
         "company": "CloudTech Solutions",
-        "location": "Birmingham, UK",
+        "location": "Birmingham, UK (on-site)",
         "location_city": "Birmingham",
         "location_country": "United Kingdom",
         "salary_min": 65000.0,
@@ -1855,6 +1880,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2025-01-13T09:15:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Birmingham, UK",
     },
     {
         "external_job_id": "9988776655",
@@ -1886,7 +1912,7 @@ SCRAPED_JOB_DATA = [
         "title": "Software Engineer",
         "description": "Work on challenging projects with a talented team of engineers...",
         "company": "DataSoft Ltd",
-        "location": "Edinburgh, UK",
+        "location": "Edinburgh, UK (hybrid)",
         "location_city": "Edinburgh",
         "location_country": "United Kingdom",
         "salary_min": 55000.0,
@@ -1897,6 +1923,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2025-01-12T14:45:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 15,
+        "parsed_location": "Edinburgh, UK",
     },
     {
         "external_job_id": "job_1114",
@@ -1906,7 +1933,7 @@ SCRAPED_JOB_DATA = [
         "title": "Backend Developer",
         "description": "Build scalable systems that impact millions of users...",
         "company": "FinTech Innovations",
-        "location": "Bristol, UK",
+        "location": "Bristol, UK (remote)",
         "location_city": "Bristol",
         "location_country": "United Kingdom",
         "salary_min": 58000.0,
@@ -1917,6 +1944,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2025-01-11T16:20:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Bristol, UK",
     },
     # Skipped
     {
@@ -1929,7 +1957,7 @@ SCRAPED_JOB_DATA = [
         "title": "Data Engineer",
         "description": "Collaborate with cross-functional teams to deliver high-quality software...",
         "company": "HealthTech Solutions",
-        "location": "Glasgow, UK",
+        "location": "Glasgow, UK (hybrid)",
         "location_city": "Glasgow",
         "location_country": "United Kingdom",
         "salary_min": 62000.0,
@@ -1940,6 +1968,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2025-01-10T08:30:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Glasgow, UK",
     },
     {
         "external_job_id": "job_1144",
@@ -1949,7 +1978,7 @@ SCRAPED_JOB_DATA = [
         "title": "Software Engineer",
         "description": "Collaborate with cross-functional teams to deliver high-quality software...",
         "company": "Quantum Labs",
-        "location": "Sheffield, UK",
+        "location": "Sheffield, UK (on-site)",
         "location_city": "Sheffield",
         "location_country": "United Kingdom",
         "is_skipped": True,
@@ -1962,6 +1991,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-12T11:30:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "Sheffield, UK",
     },
     {
         "external_job_id": "job_1145",
@@ -1971,7 +2001,7 @@ SCRAPED_JOB_DATA = [
         "title": "Backend Developer",
         "description": "Help shape the future of our platform with your technical expertise...",
         "company": "Neural Networks Inc",
-        "location": "London, UK",
+        "location": "London, UK (remote)",
         "location_city": "London",
         "is_skipped": True,
         "skip_reason": "Quota",
@@ -1984,6 +2014,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2024-12-11T13:15:00.000+00:00",
         "service_log_id": 1,
         "geolocation_id": 3,
+        "parsed_location": "London, UK",
     },
 ]
 
