@@ -2,7 +2,46 @@
 
 from app import models
 from app.job_email_scraping.email_parsers import Platform
-from app.job_rating.scraped_job_rating import score_scraped_jobs
+from app.job_rating.scraped_job_rating import ensure_length_limit, score_scraped_jobs
+
+
+class TestEnsureLengthLimit:
+
+    def test_within_limit(self) -> None:
+        """Test that text within the limit is returned unchanged."""
+
+        text = "Short text"
+        result_text, note = ensure_length_limit("description", text, 100)
+        assert result_text == text
+        assert note is None
+
+    def test_at_limit(self) -> None:
+        """Test that text at the exact limit is returned unchanged."""
+
+        text = "x" * 100
+        result_text, note = ensure_length_limit("description", text, 100)
+        assert result_text == text
+        assert note is None
+
+    def test_exceeds_limit(self) -> None:
+        """Test that text exceeding the limit is truncated and a note is returned."""
+
+        text = "x" * 200
+        max_length = 100
+        result_text, note = ensure_length_limit("description", text, max_length)
+        assert result_text == "x" * max_length + "..."
+        truncated_len = max_length + len("...")
+        assert (
+            note
+            == f"Description was truncated as it was too long ({truncated_len} characters. Limit is {max_length} characters)"
+        )
+
+    def test_text_describer_is_capitalised_in_note(self) -> None:
+        """Test that the text describer is capitalised in the truncation note."""
+
+        _, note = ensure_length_limit("title", "x" * 50, 20)
+        assert note is not None
+        assert note.startswith("Title")
 
 
 class TestScoreScrapedJobs(object):
