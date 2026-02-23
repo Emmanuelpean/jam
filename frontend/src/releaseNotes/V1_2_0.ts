@@ -63,5 +63,7 @@ export default `<h4>Version 1.2.0</h4>
 
 <ul>
     <li>Added limits to scraped job description, title and company length for AI rating.</li>
+    <li>Fixed a bug hidding the scraped job location in the demo user.</li>
+    <li>Improved the feedback regarding job scraping and rating in the Scraped Job Modals</li>
 </ul>
 `;

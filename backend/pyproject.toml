@@ -55,7 +55,7 @@ repository = "https://github.com/emmanuelpean/jam"
 source = ["backend/app"]
 data_file = "reports/coverage/.coverage"
 omit = [
-    "backend/tests/utils/*",
+    "backend/tests/*",
     "frontend",
 ]
 
