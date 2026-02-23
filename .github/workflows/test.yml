@@ -228,11 +228,11 @@ jobs:
 
       - name: Set production URLs
         run: |
-          sed -i 's|http://localhost:8000|${{ secrets.CHROME_EXT_API_URL }}|g' chrome-extension/src/popup.js
-          sed -i 's|http://localhost:3000/jam|${{ secrets.CHROME_EXT_FRONTEND_URL }}|g' chrome-extension/src/popup.js
+          sed -i 's|http://localhost:8000|${{ secrets.CHROME_EXT_API_URL }}|g' chrome_extension/src/popup.js
+          sed -i 's|http://localhost:3000/jam|${{ secrets.CHROME_EXT_FRONTEND_URL }}|g' chrome_extension/src/popup.js
 
       - name: Zip extension
-        run: zip -r extension.zip chrome-extension/src/
+        run: zip -r extension.zip chrome_extension/src/
 
       - name: Upload and publish to Chrome Web Store
         uses: mnao305/chrome-extension-upload@v5.0.0
