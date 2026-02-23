@@ -58,7 +58,7 @@ export const UserManagementPage: React.FC = () => {
 
 	const handleSendReleaseEmail = async (): Promise<void> => {
 		const recipientCount: number = users.filter(
-			(user: UserData): boolean => user.is_active && !user.is_demo
+			(user: UserData): boolean => user.is_active && !user.is_demo && user.is_verified
 		).length;
 		const errorTitle = "Failed to send release email";
 

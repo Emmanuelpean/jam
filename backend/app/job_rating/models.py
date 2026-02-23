@@ -9,6 +9,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import expression
 
 from app.base_models import Owned, CommonBase
 from app.database import Base
@@ -79,9 +80,12 @@ class JobRating(Owned, Base):
     educational_score = Column(Integer, nullable=True)
     interest_score = Column(Integer, nullable=True)
     feedback = Column(String, nullable=True)
+    is_skipped = Column(Boolean, nullable=False, server_default=expression.false())
+    skip_reason = Column(String, nullable=True)
     is_success = Column(Boolean, nullable=True)
     error = Column(String, nullable=True)
     job_prompt = Column(String, nullable=True)
+    notes = Column(PG_ARRAY(String), server_default="{}", nullable=False)
 
     # Foreign keys
     scraped_job_id = Column(Integer, ForeignKey("scraped_job.id", ondelete="CASCADE"), nullable=False)
@@ -97,6 +101,12 @@ class JobRating(Owned, Base):
     system_prompt = relationship("AiSystemPrompt", back_populates="job_ratings")
     job_prompt_template = relationship("AiJobPromptTemplate", back_populates="job_ratings")
 
+    def __init__(self, **kwargs) -> None:
+        """Initialise array fields with empty lists if not provided"""
+
+        kwargs.setdefault("notes", [])
+        super().__init__(**kwargs)
+
 
 class JobRatingServiceLog(ServiceLog, CommonBase, Base):
     """Represents service logs for job ratings.
@@ -105,22 +115,25 @@ class JobRatingServiceLog(ServiceLog, CommonBase, Base):
     -----------
     - `user_found_ids` (List[int]): List of user IDs that were found during the processing.
     - `user_processed_ids` (List[int]): List of user IDs that were processed.
-    - `rated_job_found_ids` (List[int]): List of job IDs that were found during the rating process.
-    - `rated_job_succeeded_ids` (List[int]): List of job IDs that were successfully rated.
-    - `rated_job_failed_ids` (List[int]): List of job IDs that failed to be rated."""
+    - `job_found_ids` (List[int]): List of job IDs that were found during the rating process.
+    - `job_succeeded_ids` (List[int]): List of job IDs that were successfully rated.
+    - `job_skipped_ids` (List[int]): List of job IDs that were skipped during the rating process.
+    - `job_failed_ids` (List[int]): List of job IDs that failed to be rated."""
 
     user_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     user_processed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
-    rated_job_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
-    rated_job_succeeded_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
-    rated_job_failed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    job_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    job_succeeded_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    job_skipped_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    job_failed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
 
     def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""
 
         kwargs.setdefault("user_found_ids", [])
         kwargs.setdefault("user_processed_ids", [])
-        kwargs.setdefault("rated_job_found_ids", [])
-        kwargs.setdefault("rated_job_succeeded_ids", [])
-        kwargs.setdefault("rated_job_failed_ids", [])
+        kwargs.setdefault("job_found_ids", [])
+        kwargs.setdefault("job_succeeded_ids", [])
+        kwargs.setdefault("job_skipped_ids", [])
+        kwargs.setdefault("job_failed_ids", [])
         super().__init__(**kwargs)
