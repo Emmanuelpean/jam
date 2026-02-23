@@ -3,6 +3,8 @@ import pytest
 
 class TestPage(object):
 
+    __test__ = False
+
     title = None
     company = None
     platform = None
