@@ -1,6 +1,6 @@
 [project]
 name = "jam"
-version = "1.2.0"
+version = "1.2.1"
 description = "Job Application Manager"
 authors = [
     { name = "Emmanuel V. Péan", email = "emmanuel.pean@gmail.com" }
@@ -55,7 +55,7 @@ repository = "https://github.com/emmanuelpean/jam"
 source = ["backend/app"]
 data_file = "reports/coverage/.coverage"
 omit = [
-    "backend/tests/utils/*",
+    "backend/tests/*",
     "frontend",
 ]
 
