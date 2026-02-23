@@ -186,19 +186,20 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				);
 			};
 
+			// Scraped Job Status
 			if (!data?.is_processed) {
 				result.push({
-					key: "not_processed",
-					message: "This job has yet to be processed. Please come back later.",
+					key: "scraping_not_processed",
+					message: "This job has yet to be processed. Please come back soon.",
 				});
 			}
 			if (data?.is_failed) {
 				const reportLink = createReportLink("Scraped Job Error Report", data?.scrape_error);
 				result.push({
-					key: "inactive",
+					key: "scraping_failed",
 					message: (
 						<>
-							This job could not be scraped properly due to an error.
+							This job could not be scraped properly due to an unexpected error.
 							{reportLink && <> You can {reportLink}.</>}
 						</>
 					),
@@ -207,11 +208,21 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			}
 			if (data?.is_skipped) {
 				result.push({
-					key: "skipped",
+					key: "scraping_skipped",
 					message: "This job was not scraped due to the following reason: " + data?.skip_reason,
 				});
 			}
-			if (data?.job_rating?.is_success === false) {
+
+			// Job rating
+			if (!data?.job_rating && data?.is_scraped && !data?.is_failed) {
+				result.push({
+					key: "no_rating",
+					message: "This job has yet to be rated. Please come back later.",
+					variant: "info",
+				});
+			}
+
+			if (!data?.job_rating?.is_success && data?.job_rating?.error) {
 				const reportLink: JSX.Element | null = createReportLink(
 					"Job Rating Error Report",
 					data?.job_rating?.error
@@ -220,7 +231,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 					key: "no_rating",
 					message: (
 						<>
-							This job could not be rated due to an error.
+							This job could not be rated due to an unexpected error.
 							{reportLink && <> You can {reportLink}.</>}
 						</>
 					),
@@ -230,8 +241,25 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 			if (data?.job_rating?.is_skipped) {
 				result.push({
-					key: "skipped",
-					message: "This job was not scraped as you have exhausted your monthly quota.",
+					key: "rating_skipped",
+					message: "This job was not rated due to the following reason: " + data?.job_rating?.skip_reason,
+					variant: "warning",
+				});
+			}
+
+			if (data?.job_rating?.notes.length) {
+				result.push({
+					key: "rating_notes",
+					message: (
+						<>
+							Please note the following, during AI rating:
+							<ul className="mb-0 mt-1">
+								{data.job_rating.notes.map((note: string, idx: number) => (
+									<li key={idx}>{note}</li>
+								))}
+							</ul>
+						</>
+					),
 					variant: "info",
 				});
 			}

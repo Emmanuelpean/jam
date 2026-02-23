@@ -72,7 +72,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 						</Button>
 						<ActionToggle
 							id="show-past-deadline-toggle"
-							label="Show past deadline"
+							label="Show past deadline jobs"
 							checked={showPastDeadline}
 							onChange={(): void => setShowPastDeadline((prev: boolean): boolean => !prev)}
 						/>

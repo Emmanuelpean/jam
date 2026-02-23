@@ -25,7 +25,7 @@ export const useJobRatingErrors = (
 			try {
 				// Get the job rating failed IDs from the logs
 				const logs: JobRatingServiceLogData[] = normaliseArray(latestLog);
-				let ids: number[] = logs.flatMap((log: JobRatingServiceLogData): number[] => log.rated_job_failed_ids);
+				let ids: number[] = logs.flatMap((log: JobRatingServiceLogData): number[] => log.job_failed_ids);
 				ids = [...new Set(ids)];
 
 				// Get the job rating data for the failed IDs
