@@ -206,7 +206,7 @@ class ScrapedJobRater:
             self.logger.info(f"Skipping job ID {scraped_job.id} as its description is too short")
             job_rating = models.JobRating(
                 is_skipped=True,
-                skip_reason="Job description too short",
+                skip_reason=f"Job description too short (minimum length is {settings.min_scraping_description_length} characters)",
                 **job_rating_kwargs,
             )
             db.add(job_rating)

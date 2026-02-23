@@ -2,10 +2,12 @@
 
 import datetime as dt
 
+from sqlalchemy import func
+
 from conftest import BaseTest, models
 
 
-class TestToast(BaseTest):
+class TestJobScrapingTable(BaseTest):
 
     user_index = 0
     page_url = "dashboard"
@@ -101,6 +103,72 @@ class TestToast(BaseTest):
         scraped_job = self.db.query(models.ScrapedJob).filter_by(id=scraped_job.id).first()
         assert not scraped_job.is_active
 
+    def test_deadline_toggle(self) -> None:
+        """Test the deadline toggle"""
+
+        # noinspection PyComparisonWithNone
+        scraped_job = (
+            self.db.query(models.ScrapedJob)
+            .filter(models.ScrapedJob.owner_id == self.user.id)
+            .filter(models.ScrapedJob.is_imported.is_(False))
+            .filter(models.ScrapedJob.is_active.is_(True))
+            .filter(models.ScrapedJob.exclusion_filter_id == None)
+            .filter(models.ScrapedJob.deadline.isnot(None))
+            .first()
+        )
+        assert scraped_job.deadline < dt.datetime.now(dt.timezone.utc)
+        self.scrapedJob_table_utils.set_search(scraped_job.title)
+        assert not self.scrapedJob_table_utils.check_id_in_table(scraped_job.id)
+
+        self.scrapingFilter_table_utils.deadline_toggle.click()
+        assert self.scrapedJob_table_utils.check_id_in_table(scraped_job.id)
+
+    # -------------------------------------------------- JOB SCRAPING --------------------------------------------------
+
+    def test_scraped_job_skipped(self) -> None:
+        """Test that a scraped job that was skipped is displayed correctly."""
+
+        scraped_job = self.db.query(models.ScrapedJob).filter_by(owner_id=self.db_user.id, is_skipped=True).first()
+        self.show_job(scraped_job)
+        self.scrapedJob_table_utils.table_row(scraped_job.id).click()
+        modal = self.scrapedJob_modal_utils.wait_for_import_modal()
+        assert scraped_job.skip_reason in modal.text
+
+    def test_scraped_job_not_processed(self) -> None:
+        """Test that a scraped job that was not processed is displayed correctly."""
+
+        scraped_job = self.db.query(models.ScrapedJob).filter_by(owner_id=self.db_user.id, is_processed=False).first()
+        self.show_job(scraped_job)
+        self.scrapedJob_table_utils.table_row(scraped_job.id).click()
+        modal = self.scrapedJob_modal_utils.wait_for_import_modal()
+        assert "This job has yet to be processed. Please come back soon." in modal.text
+
+    def test_scraped_job_failed(self) -> None:
+        """Test a scraped job that failed to be processed."""
+
+        scraped_job = (
+            self.db.query(models.ScrapedJob)
+            .filter_by(owner_id=self.db_user.id, is_failed=True, is_imported=False)
+            .first()
+        )
+        self.show_job(scraped_job)
+        self.scrapedJob_table_utils.table_row(scraped_job.id).click()
+        modal = self.scrapedJob_modal_utils.wait_for_import_modal()
+        expected = "This job could not be scraped properly due to an unexpected error. You can report it here."
+        assert expected in modal.text
+
+    # --------------------------------------------------- JOB RATING ---------------------------------------------------
+
+    def test_scraped_job_without_rating(self, session, test_job_ratings) -> None:
+        """Test that a scraped job without a rating is displayed correctly."""
+
+        # noinspection PyComparisonWithNone
+        scraped_job = session.query(models.ScrapedJob).filter(models.ScrapedJob.job_rating == None).first()
+        self.show_job(scraped_job)
+        self.scrapedJob_table_utils.table_row(scraped_job.id).click()
+        modal = self.scrapedJob_modal_utils.wait_for_import_modal()
+        assert "This job has yet to be rated. Please come back later." in modal.text
+
     def test_scraped_job_with_rating(self, session, test_job_ratings) -> None:
         """Test that a scraped job with a rating is displayed correctly."""
 
@@ -129,55 +197,47 @@ class TestToast(BaseTest):
         self.show_job(scraped_job)
         self.scrapedJob_table_utils.table_row(scraped_job.id).click()
         modal = self.scrapedJob_modal_utils.wait_for_import_modal()
-        assert "This job could not be rated due to an error. You can report it here." in modal.text
+        assert "This job could not be rated due to an unexpected error. You can report it here." in modal.text
         assert "Job Rating" not in modal.text
 
-    def test_scraped_job_skipped(self) -> None:
-        """Test that a scraped job that was skipped is displayed correctly."""
-
-        scraped_job = self.db.query(models.ScrapedJob).filter_by(owner_id=self.db_user.id, is_skipped=True).first()
-        self.show_job(scraped_job)
-        self.scrapedJob_table_utils.table_row(scraped_job.id).click()
-        modal = self.scrapedJob_modal_utils.wait_for_import_modal()
-        assert scraped_job.skip_reason in modal.text
-
-    def test_scraped_job_not_processed(self) -> None:
-        """Test that a scraped job that was not processed is displayed correctly."""
-
-        scraped_job = self.db.query(models.ScrapedJob).filter_by(owner_id=self.db_user.id, is_processed=False).first()
-        self.show_job(scraped_job)
-        self.scrapedJob_table_utils.table_row(scraped_job.id).click()
-        modal = self.scrapedJob_modal_utils.wait_for_import_modal()
-        assert "This job has yet to be processed. Please come back later." in modal.text
-
-    def test_scraped_job_failed(self) -> None:
-        """Test a scraped job that failed to be processed."""
-
-        scraped_job = self.db.query(models.ScrapedJob).filter_by(owner_id=self.db_user.id, is_failed=True).first()
-        self.show_job(scraped_job)
-        self.scrapedJob_table_utils.table_row(scraped_job.id).click()
-        modal = self.scrapedJob_modal_utils.wait_for_import_modal()
-        assert "This job could not be scraped properly due to an error. You can report it here." in modal.text
-
-    def test_deadline_toggle(self) -> None:
-        """Test the deadline toggle"""
+    def test_scraped_job_with_skipped_rating(self, session, test_job_ratings) -> None:
+        """Test that a scraped job with skipped rating is displayed correctly."""
 
         # noinspection PyComparisonWithNone
-        scraped_job = (
-            self.db.query(models.ScrapedJob)
-            .filter(models.ScrapedJob.owner_id == self.user.id)
-            .filter(models.ScrapedJob.is_imported.is_(False))
-            .filter(models.ScrapedJob.is_active.is_(True))
-            .filter(models.ScrapedJob.exclusion_filter_id == None)
-            .filter(models.ScrapedJob.deadline.isnot(None))
+        job_rating = (
+            session.query(models.JobRating)
+            .join(models.ScrapedJob)
+            .filter(
+                models.JobRating.owner_id == self.db_user.id,
+                models.JobRating.is_skipped.is_(True),
+                models.ScrapedJob.exclusion_filter_id == None,
+            )
             .first()
         )
-        assert scraped_job.deadline < dt.datetime.now(dt.timezone.utc)
-        self.scrapedJob_table_utils.set_search(scraped_job.title)
-        assert not self.scrapedJob_table_utils.check_id_in_table(scraped_job.id)
+        scraped_job = job_rating.scraped_job
+        self.show_job(scraped_job)
+        self.scrapedJob_table_utils.table_row(scraped_job.id).click()
+        modal = self.scrapedJob_modal_utils.wait_for_import_modal()
+        assert "Job description too short (minimum length is 100 characters)" in modal.text
+        assert "Job Rating" not in modal.text
 
-        self.scrapingFilter_table_utils.deadline_toggle.click()
-        assert self.scrapedJob_table_utils.check_id_in_table(scraped_job.id)
+    def test_scraped_job_with_job_rating_with_notes(self, session, test_job_ratings) -> None:
+        """Test that a scraped job with a rating with notes is displayed correctly."""
+
+        job_rating = (
+            session.query(models.JobRating)
+            .filter(models.JobRating.owner_id == self.db_user.id, func.array_length(models.JobRating.notes, 1) > 0)
+            .first()
+        )
+        self.show_job(job_rating.scraped_job)
+        self.scrapedJob_table_utils.table_row(job_rating.scraped_job.id).click()
+        modal = self.scrapedJob_modal_utils.wait_for_import_modal()
+        expected = (
+            "Please note the following, during AI rating:\nDescription was truncated as it was too long "
+            "(5234 characters. Limit is 5000 characters)\nTitle was truncated as it was too long "
+            "(5234 characters. Limit is 5000 characters)"
+        )
+        assert expected in modal.text
 
 
 class TestScrapingFilters(BaseTest):

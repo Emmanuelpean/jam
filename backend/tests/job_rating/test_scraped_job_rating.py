@@ -252,7 +252,7 @@ class TestScrapedJobRaterRateJob:
         rating = session.query(models.JobRating).filter(models.JobRating.scraped_job_id == scraped_job.id).first()
         assert rating is not None
         assert rating.is_skipped is True
-        assert rating.skip_reason == "Job description too short"
+        assert "Job description too short" in rating.skip_reason
         assert scraped_job.id in service_log.job_skipped_ids
 
     def test_successful_rating(
