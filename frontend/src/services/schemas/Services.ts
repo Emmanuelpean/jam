@@ -112,6 +112,7 @@ export interface JobRatingData extends BaseOut {
 	job_prompt_template_id: number | null;
 	system_prompt_id: number | null;
 	job_prompt: string | null;
+	notes: string[];
 }
 
 export interface ScrapingFilterTransform {

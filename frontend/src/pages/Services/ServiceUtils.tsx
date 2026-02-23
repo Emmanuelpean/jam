@@ -51,7 +51,7 @@ export const getServiceStatusMessage = (status: ServiceStatus, remainingTime: nu
 	if (status.service_running) {
 		return "Running";
 	}
-	return `Stopped (${formatDuration(remainingTime)} s before next run)`;
+	return `Stopped (${formatDuration(remainingTime)} before next run)`;
 };
 
 export const RenderLabeledInput = (
