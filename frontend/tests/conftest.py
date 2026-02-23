@@ -1440,10 +1440,20 @@ class DataTableUtils(BaseUtilsClass):
             re.search(rf"table-row-{self.entry_type}-(\d+)", self.table_rows[index].get_attribute("id")).group(1)
         )
 
-    def check_id_in_table(self, entry_id: int) -> bool:
+    def check_id_in_table(self, entry_id: int, **kwargs) -> bool:
         """Check if an ID is in the table"""
 
-        return any(row.get_attribute("id") == f"table-row-{self.entry_type}-{entry_id}" for row in self.table_rows)
+        try:
+            self.get_element("table-row-clickable", By.CLASS_NAME, **kwargs)
+        except AssertionError:
+            return False
+        rows = self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-{self.entry_type}-']")
+        return any(row.get_attribute("id") == f"table-row-{self.entry_type}-{entry_id}" for row in rows)
+
+    def check_id_not_in_table(self, entry_id: int) -> bool:
+        """Check if an ID is not in the table"""
+
+        return not self.check_id_in_table(entry_id, timeout=2)
 
     def set_search(self, search_text: str) -> None:
         """Set the search input to the given text"""
