@@ -29,12 +29,15 @@ class JobRatingOut(BaseModel):
     interest_score: int | None
     feedback: str | None
     is_success: bool | None
+    is_skipped: bool | None
+    skip_reason: str | None
     error: str | None
     scraped_job_id: int | None
     user_qualification_id: int | None
     system_prompt_id: int | None
     job_prompt_template_id: int | None
     job_prompt: str | None
+    notes: list[str] = []
 
 
 # ----------------------------------------------- JOB RATING SERVICE LOG -----------------------------------------------
@@ -47,9 +50,10 @@ class JobRatingServiceLogOut(Out):
     run_duration: float | None = None
     is_success: bool | None = None
     error_message: str | None = None
-    rated_job_found_ids: list[int] = []
-    rated_job_succeeded_ids: list[int] = []
-    rated_job_failed_ids: list[int] = []
+    job_found_ids: list[int] = []
+    job_succeeded_ids: list[int] = []
+    job_failed_ids: list[int] = []
+    job_skipped_ids: list[int] = []
     user_found_ids: list[int] = []
     user_processed_ids: list[int] = []
 

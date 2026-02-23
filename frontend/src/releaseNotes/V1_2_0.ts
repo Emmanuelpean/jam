@@ -57,4 +57,13 @@ export default `<h4>Version 1.2.0</h4>
     <li>The AI prompt used to rate scraped jobs is now displayed in the scraped job modal.</li>
     <li>User accounts can now be deleted in the user settings.</li>
     <li>Jobs with a Rejected, Offered, or Withdrawn application status are not shown in the Needs Chase table</li>
-</ul>`;
+</ul>
+
+<h4 style="margin-top: 3rem;">Version 1.2.1</h4>
+
+<ul>
+    <li>Added limits to scraped job description, title and company length for AI rating.</li>
+    <li>Fixed a bug hidding the scraped job location in the demo user.</li>
+    <li>Improved the feedback regarding job scraping and rating in the Scraped Job Modals</li>
+</ul>
+`;

@@ -279,9 +279,10 @@ def seed_demo_data(db: Session, user: models.User) -> None:
     for log in rating_log_data:
         log["user_found_ids"] = [owner_id] if log["user_found_ids"] else []
         log["user_processed_ids"] = [owner_id] if log["user_processed_ids"] else []
-        log["rated_job_found_ids"] = []
-        log["rated_job_succeeded_ids"] = []
-        log["rated_job_failed_ids"] = []
+        log["job_found_ids"] = []
+        log["job_succeeded_ids"] = []
+        log["job_failed_ids"] = []
+        log["job_skipped_ids"] = []
     create_db_entries(db, models.JobRatingServiceLog, rating_log_data)
 
     # Job Ratings (remap scraped_job_id using interleaved index map, remap user_qualification_id)
