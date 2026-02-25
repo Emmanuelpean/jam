@@ -1,31 +1,21 @@
 "use strict";
 
-const API_URL = "http://localhost:8000";
 const FRONTEND_URL = "http://localhost:3000/jam";
-
-const DEFAULT_EMAIL = "regular@example.com";
-const DEFAULT_PASSWORD = "password1";
 
 // ---------------------------------------------------------------------------
 // Element refs
 // ---------------------------------------------------------------------------
+
+const notLoggedInView = document.getElementById("notLoggedInView") as HTMLElement;
 const mainView = document.getElementById("mainView") as HTMLElement;
-const loginView = document.getElementById("loginView") as HTMLElement;
+const openJamBtn = document.getElementById("openJamBtn") as HTMLButtonElement;
 
 const addBtn = document.getElementById("addBtn") as HTMLButtonElement;
 const addBtnLabel = document.getElementById("addBtnLabel") as HTMLElement;
 const addSpinner = document.getElementById("addSpinner") as HTMLElement;
 const statusDiv = document.getElementById("status") as HTMLElement;
+
 const sessionEmail = document.getElementById("sessionEmail") as HTMLElement;
-const logoutBtn = document.getElementById("logoutBtn") as HTMLButtonElement;
-
-const emailInput = document.getElementById("emailInput") as HTMLInputElement;
-const passwordInput = document.getElementById("passwordInput") as HTMLInputElement;
-const loginBtn = document.getElementById("loginBtn") as HTMLButtonElement;
-const loginBtnLabel = document.getElementById("loginBtnLabel") as HTMLElement;
-const loginSpinner = document.getElementById("loginSpinner") as HTMLElement;
-const loginStatus = document.getElementById("loginStatus") as HTMLElement;
-
 const detectingRow = document.getElementById("detectingRow") as HTMLElement;
 const noJobMsg = document.getElementById("noJobMsg") as HTMLElement;
 const jobCard = document.getElementById("jobCard") as HTMLElement;
@@ -34,16 +24,37 @@ const jobCompany = document.getElementById("jobCompany") as HTMLElement;
 const platformBadge = document.getElementById("platformBadge") as HTMLElement;
 
 // ---------------------------------------------------------------------------
+// Auth — read JWT and email from the JAM frontend's localStorage
+// ---------------------------------------------------------------------------
+interface JamSession {
+	token: string;
+	email: string | null;
+}
+
+async function getJamSession(): Promise<JamSession | null> {
+	const tabs = await new Promise<chrome.tabs.Tab[]>((resolve) =>
+		chrome.tabs.query({ url: `${FRONTEND_URL}/*` }, resolve)
+	);
+	if (tabs.length === 0 || tabs[0].id == null) return null;
+
+	const results = await chrome.scripting.executeScript({
+		target: { tabId: tabs[0].id },
+		func: () => ({
+			token: localStorage.getItem("token"),
+			email: localStorage.getItem("userEmail"),
+		}),
+	});
+	const result = results[0]?.result as { token: string | null; email: string | null } | null;
+	if (!result?.token) return null;
+	return { token: result.token, email: result.email };
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 function setStatus(msg: string, type?: string): void {
 	statusDiv.textContent = msg;
 	statusDiv.className = type || "";
-}
-
-function setLoginStatus(msg: string, type?: string): void {
-	loginStatus.textContent = msg;
-	loginStatus.className = type || "";
 }
 
 function trimSlash(url: string): string {
@@ -94,19 +105,16 @@ function showJob(title: string | null, company: string | null, platform: string)
 // ---------------------------------------------------------------------------
 // UI state
 // ---------------------------------------------------------------------------
-function showLoggedIn(email: string): void {
-	loginView.style.display = "none";
+function showMain(email: string | null): void {
+	notLoggedInView.style.display = "none";
 	mainView.style.display = "flex";
 	sessionEmail.textContent = email || "";
 	detectJob();
 }
 
-function showLoggedOut(): void {
+function showNotLoggedIn(): void {
 	mainView.style.display = "none";
-	loginView.style.display = "flex";
-	if (!emailInput.value) emailInput.value = DEFAULT_EMAIL;
-	if (!passwordInput.value) passwordInput.value = DEFAULT_PASSWORD;
-	setLoginStatus("");
+	notLoggedInView.style.display = "flex";
 }
 
 // ---------------------------------------------------------------------------
@@ -150,93 +158,52 @@ function detectJob(): void {
 			return;
 		}
 
-		chrome.scripting.executeScript(
-			{ target: { tabId: tab.id! }, files: ["content.js", "linkedin.js", "indeed.js"] },
-			() => {
-				const injectErr = chrome.runtime.lastError;
-				if (injectErr) {
+		chrome.scripting.executeScript({ target: { tabId: tab.id! }, files: ["content.js"] }, () => {
+			const injectErr = chrome.runtime.lastError;
+			if (injectErr) {
+				showNoJob();
+				setStatus(`Inject: ${injectErr.message}`, "error");
+				return;
+			}
+
+			chrome.tabs.sendMessage(tab.id!, { action: "scrapeJob" }, (response: ScrapeResponse | undefined) => {
+				const msgErr = chrome.runtime.lastError;
+				if (msgErr) {
 					showNoJob();
-					setStatus(`Inject: ${injectErr.message}`, "error");
+					setStatus(`Msg: ${msgErr.message}`, "error");
 					return;
 				}
-
-				chrome.tabs.sendMessage(tab.id!, { action: "scrapeJob" }, (response: ScrapeResponse | undefined) => {
-					const msgErr = chrome.runtime.lastError;
-					if (msgErr) {
-						showNoJob();
-						setStatus(`Msg: ${msgErr.message}`, "error");
-						return;
-					}
-					if (!response?.success || !response.data?.title) {
-						showNoJob();
-						setStatus(response?.error || "No title found", "error");
-						return;
-					}
-					showJob(response.data.title, response.data.company, response.data.platform);
-				});
-			}
-		);
+				if (!response?.success || !response.data?.title) {
+					showNoJob();
+					setStatus(response?.error || "No title found", "error");
+					return;
+				}
+				showJob(response.data.title, response.data.company, response.data.platform);
+			});
+		});
 	});
 }
 
+// ---------------------------------------------------------------------------
 // Initialise on popup open
-chrome.storage.local.get(["jamApiToken", "jamUserEmail"], (r) => {
-	if (r["jamApiToken"]) showLoggedIn(r["jamUserEmail"] as string);
-	else showLoggedOut();
+// ---------------------------------------------------------------------------
+getJamSession().then((session) => {
+	if (session) showMain(session.email);
+	else showNotLoggedIn();
 });
 
 // ---------------------------------------------------------------------------
-// Login
+// Open JAM button
 // ---------------------------------------------------------------------------
-loginBtn.addEventListener("click", () => {
-	const email = emailInput.value.trim();
-	const password = passwordInput.value;
-
-	if (!email || !password) {
-		setLoginStatus("Email and password are required.", "error");
-		return;
-	}
-
-	spinOn(loginSpinner, loginBtn, loginBtnLabel, "Logging in…");
-	setLoginStatus("");
-
-	const body = new URLSearchParams({ username: email, password });
-
-	fetch(`${trimSlash(API_URL)}/login/`, {
-		method: "POST",
-		headers: { "Content-Type": "application/x-www-form-urlencoded" },
-		body: body.toString(),
-	})
-		.then(async (res) => {
-			const text = await res.text();
-			let data: { access_token?: string; detail?: string } | null = null;
-			try {
-				data = JSON.parse(text);
-			} catch (_) {
-				/* non-JSON */
-			}
-
-			if (res.ok && data?.access_token) {
-				chrome.storage.local.set({ jamApiToken: data.access_token, jamUserEmail: email }, () =>
-					showLoggedIn(email)
-				);
-			} else {
-				setLoginStatus(data?.detail || `Login failed (HTTP ${res.status})`, "error");
-			}
-		})
-		.catch((e: Error) => setLoginStatus(`Request failed: ${e.message}`, "error"))
-		.finally(() => spinOff(loginSpinner, loginBtn, loginBtnLabel, "Log in"));
-});
-
-passwordInput.addEventListener("keydown", (e: KeyboardEvent) => {
-	if (e.key === "Enter") loginBtn.click();
-});
-
-// ---------------------------------------------------------------------------
-// Logout
-// ---------------------------------------------------------------------------
-logoutBtn.addEventListener("click", () => {
-	chrome.storage.local.remove(["jamApiToken", "jamUserEmail"], () => showLoggedOut());
+openJamBtn.addEventListener("click", () => {
+	chrome.tabs.query({ url: `${FRONTEND_URL}/*` }, (tabs) => {
+		if (tabs.length > 0) {
+			chrome.tabs.update(tabs[0].id!, { active: true });
+			chrome.windows.update(tabs[0].windowId!, { focused: true });
+		} else {
+			chrome.tabs.create({ url: FRONTEND_URL });
+		}
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -246,10 +213,11 @@ addBtn.addEventListener("click", () => {
 	setStatus("");
 	spinOn(addSpinner, addBtn, addBtnLabel, "Scraping…");
 
-	chrome.storage.local.get(["jamApiToken"], (result) => {
-		if (!result["jamApiToken"]) {
-			setStatus("Please log in first.", "error");
+	getJamSession().then((session) => {
+		if (!session) {
+			setStatus("Please log in to JAM first.", "error");
 			spinOff(addSpinner, addBtn, addBtnLabel, "Save to JAM");
+			showNotLoggedIn();
 			return;
 		}
 
@@ -257,63 +225,60 @@ addBtn.addEventListener("click", () => {
 			const tab = tabs[0];
 			if (!tab) return;
 
-			chrome.scripting.executeScript(
-				{ target: { tabId: tab.id! }, files: ["content.js", "linkedin.js", "indeed.js"] },
-				() => {
+			chrome.scripting.executeScript({ target: { tabId: tab.id! }, files: ["content.js"] }, () => {
+				if (chrome.runtime.lastError) {
+					setStatus(`Injection failed: ${chrome.runtime.lastError.message}`, "error");
+					spinOff(addSpinner, addBtn, addBtnLabel, "Save to JAM");
+					return;
+				}
+
+				chrome.tabs.sendMessage(tab.id!, { action: "scrapeJob" }, (response: ScrapeResponse | undefined) => {
 					if (chrome.runtime.lastError) {
-						setStatus(`Injection failed: ${chrome.runtime.lastError.message}`, "error");
+						setStatus(`Script error: ${chrome.runtime.lastError.message}`, "error");
+						spinOff(addSpinner, addBtn, addBtnLabel, "Save to JAM");
+						return;
+					}
+					if (!response?.success) {
+						setStatus(response?.error || "Unknown scraping error.", "error");
 						spinOff(addSpinner, addBtn, addBtnLabel, "Save to JAM");
 						return;
 					}
 
-					chrome.tabs.sendMessage(tab.id!, { action: "scrapeJob" }, (response: ScrapeResponse | undefined) => {
-						if (chrome.runtime.lastError) {
-							setStatus(`Script error: ${chrome.runtime.lastError.message}`, "error");
-							spinOff(addSpinner, addBtn, addBtnLabel, "Save to JAM");
-							return;
+					const job = response.data as ScrapedJob;
+					const params = new URLSearchParams();
+					if (job.title) params.set("ext_title", job.title);
+					if (job.url) params.set("ext_url", job.url);
+					if (job.description) params.set("ext_description", job.description);
+					if (job.salary_min) params.set("ext_salary_min", String(job.salary_min));
+					if (job.salary_max) params.set("ext_salary_max", String(job.salary_max));
+					if (job.attendance_type) params.set("ext_attendance_type", job.attendance_type);
+					if (job.company) params.set("ext_company", job.company);
+					if (job.location) params.set("ext_location", job.location);
+					if (job.platform) params.set("ext_platform", job.platform);
+					if (job.application_status) params.set("ext_application_status", job.application_status);
+
+					const base = trimSlash(FRONTEND_URL);
+					const targetUrl = `${base}/jobs?${params.toString()}`;
+
+					chrome.tabs.query({ url: `${base}/*` }, (jamTabs) => {
+						if (jamTabs.length > 0) {
+							// Post job data directly — no URL change, no full reload
+							chrome.scripting.executeScript({
+								target: { tabId: jamTabs[0].id! },
+								func: (jobData: ScrapedJob) =>
+									window.postMessage({ type: "JAM_EXT_JOB", data: jobData }, "*"),
+								args: [job],
+							});
+							chrome.tabs.update(jamTabs[0].id!, { active: true });
+							chrome.windows.update(jamTabs[0].windowId!, { focused: true });
+						} else {
+							chrome.tabs.create({ url: targetUrl });
 						}
-						if (!response?.success) {
-							setStatus(response?.error || "Unknown scraping error.", "error");
-							spinOff(addSpinner, addBtn, addBtnLabel, "Save to JAM");
-							return;
-						}
-
-						const job = response.data as ScrapedJob;
-						const params = new URLSearchParams();
-						if (job.title) params.set("ext_title", job.title);
-						if (job.url) params.set("ext_url", job.url);
-						if (job.description) params.set("ext_description", job.description);
-						if (job.salary_min) params.set("ext_salary_min", String(job.salary_min));
-						if (job.salary_max) params.set("ext_salary_max", String(job.salary_max));
-						if (job.attendance_type) params.set("ext_attendance_type", job.attendance_type);
-						if (job.company) params.set("ext_company", job.company);
-						if (job.location) params.set("ext_location", job.location);
-						if (job.platform) params.set("ext_platform", job.platform);
-						if (job.application_status) params.set("ext_application_status", job.application_status);
-
-						const base = trimSlash(FRONTEND_URL);
-						const targetUrl = `${base}/jobs?${params.toString()}`;
-
-						chrome.tabs.query({ url: `${base}/*` }, (jamTabs) => {
-							if (jamTabs.length > 0) {
-								// Post job data directly — no URL change, no full reload
-								chrome.scripting.executeScript({
-									target: { tabId: jamTabs[0].id! },
-									func: (jobData: ScrapedJob) =>
-										window.postMessage({ type: "JAM_EXT_JOB", data: jobData }, "*"),
-									args: [job],
-								});
-								chrome.tabs.update(jamTabs[0].id!, { active: true });
-								chrome.windows.update(jamTabs[0].windowId!, { focused: true });
-							} else {
-								chrome.tabs.create({ url: targetUrl });
-							}
-							setStatus(`Saved: ${job.title}`, "success");
-							spinOff(addSpinner, addBtn, addBtnLabel, "Save to JAM");
-						});
-					}); // sendMessage
-				}
-			); // executeScript
+						setStatus(`Saved: ${job.title}`, "success");
+						spinOff(addSpinner, addBtn, addBtnLabel, "Save to JAM");
+					});
+				}); // sendMessage
+			}); // executeScript
 		}); // tabs.query
-	}); // storage.get
+	}); // getJamToken
 }); // addBtn click

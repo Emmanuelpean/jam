@@ -56,6 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			try {
 				const userData: ApiResponse<UserData> = await authApi.getCurrentUser(authToken);
 
+				localStorage.setItem("userEmail", userData.data.email);
 				setCurrentUser({
 					token: authToken,
 					...userData.data,
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 				// Invalid token — log out user
 				if (status === 401 || status === 403) {
 					localStorage.removeItem("token");
+					localStorage.removeItem("userEmail");
 					setToken(null);
 					setCurrentUser(null);
 				} else {
@@ -135,6 +137,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 
 		localStorage.removeItem("token");
+		localStorage.removeItem("userEmail");
 		setToken(null);
 		setCurrentUser(null);
 		setUserFetched(false);
