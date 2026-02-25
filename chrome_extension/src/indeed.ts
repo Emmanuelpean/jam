@@ -1,25 +1,24 @@
-"use strict";
-
-// ---------------------------------------------------------------------------
-// Indeed scraper
-// Depends on shared globals defined in content.ts:
-//   ATTENDANCE_MAP, parseSalary, descriptionToText, queryFirst
-// ---------------------------------------------------------------------------
+import { queryFirst, parseSalary, descriptionToText, ATTENDANCE_MAP } from "./utils";
 
 function cleanIndeedUrl(): string {
 	try {
 		const u = new URL(window.location.href);
-		// Canonical /viewjob page — keep jk param only
-		const jk = u.searchParams.get("jk") || u.searchParams.get("vjk");
+		const jk: string | null = u.searchParams.get("jk") || u.searchParams.get("vjk");
 		if (jk) return `https://www.indeed.com/viewjob?jk=${jk}`;
 	} catch (_) {}
 	return window.location.href;
 }
 
-function scrapeIndeedJob(): ScrapedJob {
-	const title = window.queryFirst(['[data-testid="jobsearch-JobInfoHeader-title"]', "h1[class*='jobTitle']", "h1"]);
+export function scrapeIndeedJob(): ScrapedJob {
+	// Title
+	const title: string | null = queryFirst([
+		'[data-testid="jobsearch-JobInfoHeader-title"]',
+		"h1[class*='jobTitle']",
+		"h1",
+	]);
 
-	const company = window.queryFirst([
+	// Company
+	const company: string | null = queryFirst([
 		"[data-testid='inlineHeader-companyName'] a",
 		"[data-testid='inlineHeader-companyName']",
 		"[data-testid='jobsearch-JobInfoHeader-companyName'] a",
@@ -27,12 +26,17 @@ function scrapeIndeedJob(): ScrapedJob {
 		".jobsearch-CompanyInfoWithoutHeaderImage a[data-tn-element='reviewsLink']",
 	]);
 
-	const descEl = document.querySelector("[data-testid='jobsearch-jobDescriptionText'], #jobDescriptionText");
-	const description = descEl ? window.descriptionToText(descEl) : null;
+	// Description
+	const descEl: Element | null = document.querySelector(
+		"[data-testid='jobsearch-jobDescriptionText'], #jobDescriptionText"
+	);
+	const description: string | null = descEl ? descriptionToText(descEl) : null;
 
-	const url = cleanIndeedUrl();
+	// URL
+	const url: string = cleanIndeedUrl();
 
-	const location = window.queryFirst([
+	// Location
+	const location: string | null = queryFirst([
 		"[data-testid='inlineHeader-companyLocation']",
 		"[data-testid='jobsearch-JobInfoHeader-companyLocation']",
 		".jobsearch-JobInfoHeader-subtitle [data-testid]",
@@ -44,8 +48,8 @@ function scrapeIndeedJob(): ScrapedJob {
 		"[data-testid='attribute_snippet_testid'], .css-k5flys, [class*='jobType'], [class*='remote']"
 	);
 	for (const el of jobTypeEls) {
-		const text = el.textContent?.trim() ?? "";
-		for (const entry of window.ATTENDANCE_MAP) {
+		const text: string = el.textContent?.trim() ?? "";
+		for (const entry of ATTENDANCE_MAP) {
 			if (entry.re.test(text)) {
 				attendance_type = entry.value;
 				break;
@@ -55,12 +59,12 @@ function scrapeIndeedJob(): ScrapedJob {
 	}
 
 	// Salary
-	const salaryText = window.queryFirst([
-		"[data-testid='attribute_snippet_testid']",
-		"[class*='salary']",
+	const salaryText: string | null = queryFirst([
 		"#salaryInfoAndJobType span",
+		"[data-testid='jobsearch-OtherJobDetailsContainer'] span",
+		"[class*='salary']",
 	]);
-	const salary = window.parseSalary(salaryText);
+	const salary: SalaryResult = parseSalary(salaryText);
 
 	return {
 		title,
@@ -73,6 +77,3 @@ function scrapeIndeedJob(): ScrapedJob {
 		...salary,
 	};
 }
-
-// Expose to window so Selenium execute_script can call it across injection boundaries
-window.scrapeIndeedJob = scrapeIndeedJob;

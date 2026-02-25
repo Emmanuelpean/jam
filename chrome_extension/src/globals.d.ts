@@ -29,11 +29,7 @@ interface ScrapeResponse {
 }
 
 interface Window {
-	ATTENDANCE_MAP: AttendanceEntry[];
-	parseSalary: (text: string | null) => SalaryResult;
-	descriptionToText: (el: Element) => string;
-	queryFirst: (selectors: string[]) => string | null;
+	__jamInjected?: boolean;
 	scrapeLinkedInJob: () => ScrapedJob;
 	scrapeIndeedJob: () => ScrapedJob;
-	__jamInjected?: boolean;
 }
