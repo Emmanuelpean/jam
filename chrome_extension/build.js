@@ -8,9 +8,10 @@ const { join } = require("path");
 mkdirSync("dist", { recursive: true });
 
 esbuild.buildSync({
-	entryPoints: ["src/content.ts", "src/linkedin.ts", "src/indeed.ts", "src/popup.ts"],
+	entryPoints: ["src/content.ts", "src/popup.ts"],
 	outdir: "dist",
-	bundle: false,
+	bundle: true,
+	format: "iife",
 	sourcemap: true,
 	target: "es2020",
 });
