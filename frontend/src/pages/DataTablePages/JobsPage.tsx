@@ -17,6 +17,7 @@ const EXT_PARAMS = [
 	"ext_location",
 	"ext_platform",
 	"ext_application_status",
+	"ext_deadline",
 ];
 
 const JobsPage = (): JSX.Element => {
@@ -42,6 +43,7 @@ const JobsPage = (): JSX.Element => {
 			location: searchParams.get("ext_location") || null,
 			platform: searchParams.get("ext_platform") || null,
 			application_status: searchParams.get("ext_application_status") || null,
+			deadline: searchParams.get("ext_deadline") || null,
 		};
 	}, []);
 
