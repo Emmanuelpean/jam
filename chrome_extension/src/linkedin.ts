@@ -2,19 +2,19 @@
 
 // ---------------------------------------------------------------------------
 // LinkedIn scraper
-// Depends on shared globals defined in content.js:
+// Depends on shared globals defined in content.ts:
 //   ATTENDANCE_MAP, parseSalary, descriptionToText, queryFirst
 // ---------------------------------------------------------------------------
 
-function getFitLevelTexts() {
+function getFitLevelTexts(): string[] {
 	const container = document.querySelector("div.job-details-fit-level-preferences");
 	if (!container) return [];
 	return Array.from(
 		container.querySelectorAll("button.artdeco-button.artdeco-button--secondary.artdeco-button--muted")
-	).map((btn) => btn.textContent.trim());
+	).map((btn) => btn.textContent?.trim() ?? "");
 }
 
-function findSalaryText() {
+function findSalaryText(): string | null {
 	// Salary may appear in the tertiary description or insight items
 	const salarySelectors = [
 		// ".compensation__salary",
@@ -26,7 +26,7 @@ function findSalaryText() {
 	for (const sel of salarySelectors) {
 		const el = document.querySelector(sel);
 		if (el) {
-			const text = el.textContent.trim();
+			const text = el.textContent?.trim();
 			if (text) return text;
 		}
 	}
@@ -35,34 +35,34 @@ function findSalaryText() {
 		".job-details-jobs-unified-top-card__tertiary-description-container span"
 	);
 	for (const el of allText) {
-		const text = el.textContent.trim();
-		if (/[£$€¥₹]/.test(text) && /[-–—]|to/.test(text)) return text;
+		const text = el.textContent?.trim();
+		if (text && /[£$€¥₹]/.test(text) && /[-–—]|to/.test(text)) return text;
 	}
 	return null;
 }
 
-function getTopCardChips() {
+function getTopCardChips(): string[] {
 	// Insight chips in the top-card tertiary section (location, work type, etc.)
 	return Array.from(
 		document.querySelectorAll(
 			".job-details-jobs-unified-top-card__tertiary-description-container .job-details-jobs-unified-top-card__job-insight-view-model-secondary"
 		)
-	).map((el) => el.textContent.trim());
+	).map((el) => el.textContent?.trim() ?? "");
 }
 
-function parseLinkedInLocationAndAttendance() {
+function parseLinkedInLocationAndAttendance(): { location: string | null; attendance_type: string | null } {
 	// Location: first span.tvm__text--low-emphasis inside the tertiary container
-	let location = null;
+	let location: string | null = null;
 	const locEl = document.querySelector(
 		"div.t-black--light.mt2.job-details-jobs-unified-top-card__tertiary-description-container span.tvm__text.tvm__text--low-emphasis"
 	);
-	if (locEl) location = locEl.textContent.trim() || null;
+	if (locEl) location = locEl.textContent?.trim() || null;
 
 	// Attendance: buttons inside .job-details-fit-level-preferences
-	let attendance_type = null;
+	let attendance_type: string | null = null;
 	const fitTexts = getFitLevelTexts();
 	for (const text of fitTexts) {
-		for (const entry of ATTENDANCE_MAP) {
+		for (const entry of window.ATTENDANCE_MAP) {
 			if (entry.re.test(text)) {
 				attendance_type = entry.value;
 				break;
@@ -74,7 +74,7 @@ function parseLinkedInLocationAndAttendance() {
 	// Fallback: scan tertiary chips for attendance keywords
 	if (!attendance_type) {
 		for (const chip of getTopCardChips()) {
-			for (const entry of ATTENDANCE_MAP) {
+			for (const entry of window.ATTENDANCE_MAP) {
 				if (entry.re.test(chip)) {
 					attendance_type = entry.value;
 					break;
@@ -87,7 +87,7 @@ function parseLinkedInLocationAndAttendance() {
 	return { location, attendance_type };
 }
 
-function cleanLinkedInUrl() {
+function cleanLinkedInUrl(): string {
 	try {
 		const u = new URL(window.location.href);
 		// /jobs/view/<id>/... → keep only the canonical path
@@ -101,7 +101,7 @@ function cleanLinkedInUrl() {
 	return window.location.href;
 }
 
-function detectApplicationStatus() {
+function detectApplicationStatus(): string | null {
 	const text = document.body.innerText;
 	if (text.includes("Application status") && text.includes("Application submitted")) {
 		return "Applied";
@@ -109,9 +109,8 @@ function detectApplicationStatus() {
 	return null;
 }
 
-function scrapeLinkedInJob() {
-	console.log("here");
-	const title = queryFirst([
+function scrapeLinkedInJob(): ScrapedJob {
+	const title = window.queryFirst([
 		".job-details-jobs-unified-top-card__job-title",
 		".jobs-unified-top-card__job-title h1",
 		".t-24.t-bold.inline h1",
@@ -119,7 +118,7 @@ function scrapeLinkedInJob() {
 		"h1",
 	]);
 
-	const company = queryFirst([
+	const company = window.queryFirst([
 		".job-details-jobs-unified-top-card__company-name a",
 		".job-details-jobs-unified-top-card__company-name",
 		".jobs-unified-top-card__company-name a",
@@ -131,13 +130,13 @@ function scrapeLinkedInJob() {
 	const descEl = document.querySelector(
 		"div.jobs-description-content__text, div.jobs-box__html-content, div#job-details"
 	);
-	const description = descEl ? descriptionToText(descEl) : null;
+	const description = descEl ? window.descriptionToText(descEl) : null;
 
 	const url = cleanLinkedInUrl();
 
 	const { location, attendance_type } = parseLinkedInLocationAndAttendance();
 
-	const salary = parseSalary(findSalaryText());
+	const salary = window.parseSalary(findSalaryText());
 
 	return {
 		title,
