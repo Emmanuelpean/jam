@@ -3,19 +3,19 @@ from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-EXTENSION_DIR = Path(__file__).parent.parent.resolve()
+EXTENSION_DIR = Path(__file__).parent.parent / "dist"
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
 def _read_script(filename: str) -> str:
-    return (EXTENSION_DIR / "src" / filename).read_text(encoding="utf-8")
+    return (EXTENSION_DIR / filename).read_text(encoding="utf-8")
 
 
 @pytest.fixture(scope="session")
 def driver():
     options = Options()
     options.add_argument(f"--load-extension={EXTENSION_DIR}")
-    options.add_argument("--headless=new")
+    # options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     drv = webdriver.Chrome(options=options)

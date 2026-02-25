@@ -2,11 +2,11 @@
 
 // ---------------------------------------------------------------------------
 // Indeed scraper
-// Depends on shared globals defined in content.js:
+// Depends on shared globals defined in content.ts:
 //   ATTENDANCE_MAP, parseSalary, descriptionToText, queryFirst
 // ---------------------------------------------------------------------------
 
-function cleanIndeedUrl() {
+function cleanIndeedUrl(): string {
 	try {
 		const u = new URL(window.location.href);
 		// Canonical /viewjob page — keep jk param only
@@ -16,10 +16,10 @@ function cleanIndeedUrl() {
 	return window.location.href;
 }
 
-function scrapeIndeedJob() {
-	const title = queryFirst(['[data-testid="jobsearch-JobInfoHeader-title"]', "h1[class*='jobTitle']", "h1"]);
+function scrapeIndeedJob(): ScrapedJob {
+	const title = window.queryFirst(['[data-testid="jobsearch-JobInfoHeader-title"]', "h1[class*='jobTitle']", "h1"]);
 
-	const company = queryFirst([
+	const company = window.queryFirst([
 		"[data-testid='inlineHeader-companyName'] a",
 		"[data-testid='inlineHeader-companyName']",
 		"[data-testid='jobsearch-JobInfoHeader-companyName'] a",
@@ -28,24 +28,24 @@ function scrapeIndeedJob() {
 	]);
 
 	const descEl = document.querySelector("[data-testid='jobsearch-jobDescriptionText'], #jobDescriptionText");
-	const description = descEl ? descriptionToText(descEl) : null;
+	const description = descEl ? window.descriptionToText(descEl) : null;
 
 	const url = cleanIndeedUrl();
 
-	const location = queryFirst([
+	const location = window.queryFirst([
 		"[data-testid='inlineHeader-companyLocation']",
 		"[data-testid='jobsearch-JobInfoHeader-companyLocation']",
 		".jobsearch-JobInfoHeader-subtitle [data-testid]",
 	]);
 
 	// Attendance type from job type/remote label
-	let attendance_type = null;
+	let attendance_type: string | null = null;
 	const jobTypeEls = document.querySelectorAll(
 		"[data-testid='attribute_snippet_testid'], .css-k5flys, [class*='jobType'], [class*='remote']"
 	);
 	for (const el of jobTypeEls) {
-		const text = el.textContent.trim();
-		for (const entry of ATTENDANCE_MAP) {
+		const text = el.textContent?.trim() ?? "";
+		for (const entry of window.ATTENDANCE_MAP) {
 			if (entry.re.test(text)) {
 				attendance_type = entry.value;
 				break;
@@ -55,12 +55,12 @@ function scrapeIndeedJob() {
 	}
 
 	// Salary
-	const salaryText = queryFirst([
+	const salaryText = window.queryFirst([
 		"[data-testid='attribute_snippet_testid']",
 		"[class*='salary']",
 		"#salaryInfoAndJobType span",
 	]);
-	const salary = parseSalary(salaryText);
+	const salary = window.parseSalary(salaryText);
 
 	return {
 		title,
