@@ -24,9 +24,12 @@ function scrapeLinkedInNewLayout(): NewLayoutResult | null {
 	const titleP: Element | null = allPs.find((p) => !p.querySelector("a")) ?? null;
 	const title: string | null = titleP?.textContent?.trim() ?? null;
 
-	// Company: first link to a /company/ page; take text before the first '|'
+	// Company: first link to a /company/ page. Chrome auto-closes the containing <p> when it
+	// encounters a nested block element, leaving the <a> with no text content. Read the text
+	// from the link's parent element instead and take the part before the first '|'.
 	const companyLink: Element | null = container?.querySelector('a[href*="/company/"]') ?? null;
-	const company: string | null = companyLink?.textContent?.split("|")[0]?.trim() || null;
+	const companyRaw: string = (companyLink?.parentElement ?? companyLink)?.textContent?.trim() ?? "";
+	const company: string | null = companyRaw.split("|")[0]?.trim() || null;
 
 	// Location: walk up from titleP until we find a sibling <p>, split by middle dot (U+00B7)
 	let location: string | null = null;
@@ -72,8 +75,17 @@ function scrapeLinkedInNewLayout(): NewLayoutResult | null {
 		}
 	}
 
-	// Description: the expandable-text-box span contains the full job description HTML
-	const description: string | null = descSpan ? descriptionToText(descSpan) : null;
+	// Description: Chrome's HTML parser breaks nested <p> elements out of the expandable-text-box
+	// span, so the span ends up empty. Instead, use the grandparent of the "About the job" h2 —
+	// that element contains all the description <p>/<ul>/<li> siblings as direct children.
+	let descEl: Element | null = null;
+	for (const h2 of document.querySelectorAll("h2")) {
+		if (h2.textContent?.trim() === "About the job") {
+			descEl = h2.parentElement?.parentElement ?? null;
+			break;
+		}
+	}
+	const description: string | null = descEl ? descriptionToText(descEl) : null;
 
 	return { title, company, location, attendance_type, salaryText, description };
 }
