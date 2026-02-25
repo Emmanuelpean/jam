@@ -3,19 +3,26 @@
 import { queryFirst } from "./utils";
 import { scrapeLinkedInJob } from "./linkedin";
 import { scrapeIndeedJob } from "./indeed";
+import { scrapeNhsJob } from "./nhs";
+import { scrapeVeganJobsJob } from "./veganjobs";
 
 // ---------------------------------------------------------------------------
 // Scraper dispatcher — selects scraper based on current hostname
 // ---------------------------------------------------------------------------
 
 function scrapeJob(): ScrapedJob {
-	if (window.location.hostname.endsWith("indeed.com")) return scrapeIndeedJob();
+	const hostname = window.location.hostname;
+	if (hostname.endsWith("indeed.com")) return scrapeIndeedJob();
+	if (hostname === "www.jobs.nhs.uk") return scrapeNhsJob();
+	if (hostname === "veganjobs.com") return scrapeVeganJobsJob();
 	return scrapeLinkedInJob();
 }
 
 // Expose scrapers to window for Selenium test access
 window.scrapeLinkedInJob = scrapeLinkedInJob;
 window.scrapeIndeedJob = scrapeIndeedJob;
+window.scrapeNhsJob = scrapeNhsJob;
+window.scrapeVeganJobsJob = scrapeVeganJobsJob;
 
 // ---------------------------------------------------------------------------
 // SPA navigation + message handler — registered only once per tab

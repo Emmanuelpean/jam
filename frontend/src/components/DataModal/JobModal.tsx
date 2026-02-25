@@ -177,7 +177,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 								);
 							},
 						}),
-						modalViewFields.url({ label: "Job URL" }),
+						modalViewFields.jobUrl(),
 					],
 				],
 			} as SectionConfig,

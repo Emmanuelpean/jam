@@ -34,6 +34,7 @@ export interface ExtensionJobData {
 	location: string | null;
 	platform: string | null;
 	application_status: string | null;
+	deadline?: string | null;
 	geolocation?: GeoLocationData | null;
 }
 
@@ -73,13 +74,11 @@ export const ExtensionJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				title: "Basic Information",
 				icon: "bi-briefcase",
 				fields: [
-					formFields.jobTitle({ placeholder: "Python Software Engineer" }),
-					[
-						formFields.scrapedCompany(companies, companyModalRef, (data: ExtensionJobData) => ({
-							name: data.company,
-						})),
-						formFields.jobURl(),
-					],
+					modalViewFields.title({ isTitle: true }),
+					formFields.scrapedCompany(companies, companyModalRef, (data: ExtensionJobData) => ({
+						name: data.company,
+					})),
+					formFields.jobURl(),
 				],
 			} as SectionConfig,
 			{
