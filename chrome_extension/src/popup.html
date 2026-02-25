@@ -65,12 +65,13 @@
             cursor: not-allowed;
         }
 
-        /* ── Login view ── */
-        #loginView {
-            padding: 24px 20px 20px;
+        /* ── Not logged in view ── */
+        #notLoggedInView {
+            padding: 28px 20px 24px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            align-items: center;
+            gap: 14px;
         }
 
         .logo {
@@ -78,7 +79,6 @@
             flex-direction: column;
             align-items: center;
             gap: 6px;
-            margin-bottom: 4px;
         }
 
         .logo-icon-wrap {
@@ -109,61 +109,25 @@
             letter-spacing: 0.3px;
         }
 
-        .field {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+        .not-logged-in-msg {
+            font-size: 12.5px;
+            color: #8a9bb0;
+            text-align: center;
+            line-height: 1.6;
         }
 
-        label {
-            font-size: 12px;
-            color: #5c6b78;
-            font-weight: 500;
-        }
-
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            padding: 9px 11px;
-            border: 1.5px solid #e0e6ef;
-            border-radius: 7px;
-            font-size: 13px;
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.15s, box-shadow 0.15s;
-            background: #f7f9fd;
-            color: #2c3e50;
-        }
-
-        input:focus {
-            border-color: #686de0;
-            box-shadow: 0 0 0 3px rgba(104, 109, 224, 0.12);
-            background: #fff;
-        }
-
-        #loginBtn {
+        #openJamBtn {
             background: linear-gradient(135deg, #a8edea 0%, #686de0 50%, #4834d4 100%);
             color: #fff;
-            margin-top: 2px;
         }
 
-        #loginBtn:hover:not(:disabled) {
+        #openJamBtn:hover:not(:disabled) {
             opacity: 0.88;
-        }
-
-        #loginStatus {
-            font-size: 12px;
-            min-height: 15px;
-            text-align: center;
-        }
-
-        #loginStatus.error {
-            color: #e74c3c;
         }
 
         /* ── Main (logged-in) view ── */
         #mainView {
-            display: flex;
+            display: none;
             flex-direction: column;
         }
 
@@ -320,43 +284,23 @@
         #status.success { color: #2d8c56; }
         #status.error   { color: #e74c3c; }
 
-        /* ── Footer ── */
+        /* ── Session footer ── */
         #sessionBar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 9px 14px;
+            padding: 8px 14px;
             border-top: 1px solid #ededed;
             font-size: 11px;
             color: #b0bcca;
-        }
-
-        #sessionEmail {
+            text-align: center;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            max-width: 180px;
-        }
-
-        #logoutBtn {
-            width: auto;
-            padding: 4px 10px;
-            background: #f0f2f5;
-            color: #5c6b78;
-            font-size: 11px;
-            font-weight: 500;
-            border-radius: 6px;
-        }
-
-        #logoutBtn:hover {
-            background: #e4e7ed;
         }
     </style>
 </head>
 <body>
 
-<!-- ── Login view ── -->
-<div id="loginView">
+<!-- ── Not logged in view ── -->
+<div id="notLoggedInView">
     <div class="logo">
         <div class="logo-icon-wrap">
             <img alt="JAM" src="icons/icon128.png"/>
@@ -364,25 +308,12 @@
         <div class="logo-name">JAM</div>
         <div class="logo-sub">Job Application Manager</div>
     </div>
-
-    <div class="field">
-        <label for="emailInput">Email</label>
-        <input autocomplete="email" id="emailInput" placeholder="you@example.com" type="email"/>
-    </div>
-    <div class="field">
-        <label for="passwordInput">Password</label>
-        <input autocomplete="current-password" id="passwordInput" type="password"/>
-    </div>
-
-    <button id="loginBtn">
-        <span id="loginBtnLabel">Log in</span>
-        <span class="spinner hidden" id="loginSpinner"></span>
-    </button>
-    <div id="loginStatus"></div>
+    <p class="not-logged-in-msg">Open JAM and log in<br/>to start saving jobs.</p>
+    <button id="openJamBtn">Open JAM</button>
 </div>
 
 <!-- ── Main (logged-in) view ── -->
-<div id="mainView" style="display:none">
+<div id="mainView">
     <div class="main-header">
         <div class="header-icon-wrap">
             <img alt="JAM" src="icons/icon128.png"/>
@@ -427,7 +358,6 @@
 
     <div id="sessionBar">
         <span id="sessionEmail"></span>
-        <button id="logoutBtn">Log out</button>
     </div>
 </div>
 

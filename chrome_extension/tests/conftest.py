@@ -38,7 +38,7 @@ def scrape(driver):
         driver.get(fixture_path.as_uri())
         # Mock chrome.runtime so the message-listener guard doesn't error
         driver.execute_script("window.chrome = { runtime: { onMessage: { addListener: function() {} } } };")
-        for filename in ["content.js", "linkedin.js", "indeed.js"]:
+        for filename in ["content.js"]:
             driver.execute_script(_read_script(filename))
         return driver
 

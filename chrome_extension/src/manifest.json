@@ -25,7 +25,7 @@
 				"https://www.linkedin.com/jobs/collections/*",
 				"https://*.indeed.com/*"
 			],
-			"js": ["content.js", "linkedin.js", "indeed.js"],
+			"js": ["content.js"],
 			"run_at": "document_idle"
 		}
 	],
