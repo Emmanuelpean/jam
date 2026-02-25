@@ -59,9 +59,15 @@ export function scrapeNhsJob(): ScrapedJob {
 		}
 	}
 
-	// Description: the desktop-visible job description container
-	const descEl = document.querySelector<Element>("div.hide-mobile");
-	const description = descEl ? descriptionToText(descEl) : null;
+	// Description: job summary, main duties, about us, job description, person specification
+	// The main column holds all sections; strip show-mobile panels (date/salary sidebar, mobile expanders)
+	let description: string | null = null;
+	const mainCol = document.querySelector<Element>(".nhsuk-grid-column-two-thirds.wrap-paragraphs");
+	if (mainCol) {
+		const clone = mainCol.cloneNode(true) as Element;
+		clone.querySelectorAll(".show-mobile").forEach((el) => el.remove());
+		description = descriptionToText(clone) || null;
+	}
 
 	const deadline = parseNhsDate(getText("#closing_date"));
 

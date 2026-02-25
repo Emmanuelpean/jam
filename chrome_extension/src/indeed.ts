@@ -10,12 +10,13 @@ function cleanIndeedUrl(): string {
 }
 
 export function scrapeIndeedJob(): ScrapedJob {
-	// Title
-	const title: string | null = queryFirst([
+	// Title — strip Indeed's " - job post" suffix if present
+	const rawTitle: string | null = queryFirst([
 		'[data-testid="jobsearch-JobInfoHeader-title"]',
 		"h1[class*='jobTitle']",
 		"h1",
 	]);
+	const title: string | null = rawTitle ? rawTitle.replace(/\s*-\s*job post\s*$/i, "") : null;
 
 	// Company
 	const company: string | null = queryFirst([
