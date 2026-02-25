@@ -52,7 +52,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				title: "Basic Information",
 				icon: "bi-briefcase",
 				fields: [
-					formFields.jobTitle({ placeholder: "Python Software Engineer" }),
+					modalViewFields.title({ isTitle: true }),
 					[
 						formFields.scrapedCompany(companies, companyModalRef, (scrapedJob: ScrapedJobData) => ({
 							name: scrapedJob.company,
