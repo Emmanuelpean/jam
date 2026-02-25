@@ -112,7 +112,7 @@ function findSalaryText(): string | null {
 	for (const sel of salarySelectors) {
 		const el: Element | null = document.querySelector(sel);
 		if (el) {
-			const text: string = el.textContent?.trim();
+			const text: string | undefined = el.textContent?.trim();
 			if (text) return text;
 		}
 	}
