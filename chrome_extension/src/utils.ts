@@ -105,5 +105,11 @@ export function descriptionToText(el: Element): string {
 		.replace(/ *\n */g, "\n") // strip spaces around newlines (indentation artifacts)
 		.replace(/\n{3,}/g, "\n\n") // max one blank line between blocks
 		.replace(/^(- .+)\n\n+(?=- )/gm, "$1\n") // no blank lines between bullets
+		// Normalise typographic Unicode to plain ASCII equivalents
+		.replace(/[\u2013\u2014]/g, "-") // en-dash / em-dash → hyphen
+		.replace(/[\u2018\u2019]/g, "'") // curly single quotes → straight
+		.replace(/[\u201C\u201D]/g, '"') // curly double quotes → straight
+		.replace(/\u2026/g, "...") // ellipsis → three dots
+		.replace(/\u00A0/g, " ") // non-breaking space → regular space
 		.trim();
 }
