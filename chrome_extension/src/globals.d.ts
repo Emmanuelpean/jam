@@ -20,6 +20,7 @@ interface ScrapedJob extends SalaryResult {
 	location: string | null;
 	attendance_type: string | null;
 	application_status?: string | null;
+	deadline?: string | null;
 }
 
 interface ScrapeResponse {
@@ -32,4 +33,6 @@ interface Window {
 	__jamInjected?: boolean;
 	scrapeLinkedInJob: () => ScrapedJob;
 	scrapeIndeedJob: () => ScrapedJob;
+	scrapeNhsJob: () => ScrapedJob;
+	scrapeVeganJobsJob: () => ScrapedJob;
 }
