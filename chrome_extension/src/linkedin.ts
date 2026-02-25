@@ -1,5 +1,85 @@
 import { queryFirst, parseSalary, descriptionToText, ATTENDANCE_MAP } from "./utils";
 
+// ---------------------------------------------------------------------------
+// New LinkedIn layout (randomised/obfuscated class names)
+// Detected via stable `data-view-name` and `data-testid` attributes.
+// ---------------------------------------------------------------------------
+
+interface NewLayoutResult {
+	title: string | null;
+	company: string | null;
+	location: string | null;
+	attendance_type: string | null;
+	salaryText: string | null;
+	description: string | null;
+}
+
+function scrapeLinkedInNewLayout(): NewLayoutResult | null {
+	const container: Element | null = document.querySelector('[data-view-name="job-detail-page"]');
+	const descSpan: Element | null = document.querySelector('[data-testid="expandable-text-box"]');
+	if (!container && !descSpan) return null;
+
+	// Title: first <p> inside the container that has no <a> child
+	const allPs: Element[] = container ? Array.from(container.querySelectorAll("p")) : [];
+	const titleP: Element | null = allPs.find((p) => !p.querySelector("a")) ?? null;
+	const title: string | null = titleP?.textContent?.trim() ?? null;
+
+	// Company: first link to a /company/ page; take text before the first '|'
+	const companyLink: Element | null = container?.querySelector('a[href*="/company/"]') ?? null;
+	const company: string | null = companyLink?.textContent?.split("|")[0]?.trim() || null;
+
+	// Location: walk up from titleP until we find a sibling <p>, split by middle dot (U+00B7)
+	let location: string | null = null;
+	if (titleP && container) {
+		let node: Element | null = titleP.parentElement;
+		outer: while (node && node !== container) {
+			let sib: Element | null = node.nextElementSibling;
+			while (sib) {
+				if (sib.tagName === "P") {
+					location = sib.textContent?.split("\u00b7")[0]?.trim() || null;
+					break outer;
+				}
+				sib = sib.nextElementSibling;
+			}
+			node = node.parentElement;
+		}
+	}
+
+	// Attendance: scan buttons inside the container for known keywords
+	let attendance_type: string | null = null;
+	if (container) {
+		for (const btn of container.querySelectorAll("button")) {
+			const text: string = btn.textContent?.trim() ?? "";
+			for (const entry of ATTENDANCE_MAP) {
+				if (entry.re.test(text)) {
+					attendance_type = entry.value;
+					break;
+				}
+			}
+			if (attendance_type) break;
+		}
+	}
+
+	// Salary: spans with a currency symbol + range/rate pattern, brief text only
+	let salaryText: string | null = null;
+	if (container) {
+		for (const span of container.querySelectorAll("span")) {
+			const text: string = span.textContent?.trim() ?? "";
+			if (/[£$€¥₹]/.test(text) && /[-\u2013\u2014]|to|\/yr/.test(text) && text.length < 50) {
+				salaryText = text;
+				break;
+			}
+		}
+	}
+
+	// Description: the expandable-text-box span contains the full job description HTML
+	const description: string | null = descSpan ? descriptionToText(descSpan) : null;
+
+	return { title, company, location, attendance_type, salaryText, description };
+}
+
+// ---------------------------------------------------------------------------
+
 function getFitLevelTexts(): string[] {
 	const container: Element | null = document.querySelector("div.job-details-fit-level-preferences");
 	if (!container) return [];
@@ -103,8 +183,8 @@ function detectApplicationStatus(): string | null {
 }
 
 export function scrapeLinkedInJob(): ScrapedJob {
-	// Title
-	const title: string | null = queryFirst([
+	// Title — old layout (stable class names)
+	const titleOld: string | null = queryFirst([
 		".job-details-jobs-unified-top-card__job-title",
 		".jobs-unified-top-card__job-title h1",
 		".t-24.t-bold.inline h1",
@@ -112,8 +192,8 @@ export function scrapeLinkedInJob(): ScrapedJob {
 		"h1",
 	]);
 
-	// Company
-	const company: string | null = queryFirst([
+	// Company — old layout
+	const companyOld: string | null = queryFirst([
 		".job-details-jobs-unified-top-card__company-name a",
 		".job-details-jobs-unified-top-card__company-name",
 		".jobs-unified-top-card__company-name a",
@@ -122,26 +202,33 @@ export function scrapeLinkedInJob(): ScrapedJob {
 		".topcard__flavor--black-link",
 	]);
 
-	// Description
+	// Description — old layout
 	const descEl: Element | null = document.querySelector(
 		"div.jobs-description-content__text, div.jobs-box__html-content, div#job-details"
 	);
-	const description: string | null = descEl ? descriptionToText(descEl) : null;
+	const descriptionOld: string | null = descEl ? descriptionToText(descEl) : null;
 
-	// URL
-	const url: string = cleanLinkedInUrl();
+	// Location and attendance type — old layout
+	const { location: locationOld, attendance_type: attendanceOld } = parseLinkedInLocationAndAttendance();
 
-	// Location and attendance type
-	const { location, attendance_type } = parseLinkedInLocationAndAttendance();
+	// Salary — old layout
+	const salaryTextOld: string | null = findSalaryText();
 
-	// Salary
-	const salary: SalaryResult = parseSalary(findSalaryText());
+	// New layout fallback (randomised class names): only used when old selectors all failed
+	const newLayout: NewLayoutResult | null = titleOld == null ? scrapeLinkedInNewLayout() : null;
+
+	const title: string | null = titleOld ?? newLayout?.title ?? null;
+	const company: string | null = companyOld ?? newLayout?.company ?? null;
+	const description: string | null = descriptionOld ?? newLayout?.description ?? null;
+	const location: string | null = locationOld ?? newLayout?.location ?? null;
+	const attendance_type: string | null = attendanceOld ?? newLayout?.attendance_type ?? null;
+	const salary: SalaryResult = parseSalary(salaryTextOld ?? newLayout?.salaryText ?? null);
 
 	return {
 		title,
 		company,
 		description,
-		url,
+		url: cleanLinkedInUrl(),
 		platform: "linkedin",
 		location,
 		attendance_type,
