@@ -2,21 +2,34 @@
 "use strict";
 
 const esbuild = require("esbuild");
-const { copyFileSync, mkdirSync, readdirSync, statSync } = require("fs");
+const { copyFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync, statSync } = require("fs");
 const { join } = require("path");
+
+const isProd = process.env.NODE_ENV === "production";
+const frontendUrl = isProd ? "https://emmanuelpean.me/jam" : "http://localhost:3000/jam";
 
 mkdirSync("dist", { recursive: true });
 
 esbuild.buildSync({
-	entryPoints: ["src/content.ts", "src/popup.ts"],
+	entryPoints: ["src/content.ts", "src/popup.ts", "src/jam_bridge.ts"],
 	outdir: "dist",
 	bundle: true,
 	format: "iife",
 	sourcemap: true,
 	target: "es2020",
+	define: {
+		__FRONTEND_URL__: JSON.stringify(frontendUrl),
+	},
 });
 
-copyFileSync("src/manifest.json", "dist/manifest.json");
+const manifest = JSON.parse(readFileSync("src/manifest.json", "utf8"));
+manifest.host_permissions.push(`${frontendUrl}/*`);
+manifest.content_scripts.push({
+	matches: [`${frontendUrl}/*`],
+	js: ["jam_bridge.js"],
+	run_at: "document_idle",
+});
+writeFileSync("dist/manifest.json", JSON.stringify(manifest, null, "\t"));
 copyFileSync("src/popup.html", "dist/popup.html");
 
 function copyDir(src, dest) {

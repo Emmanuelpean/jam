@@ -1,21 +1,15 @@
 {
 	"manifest_version": 3,
-	"name": "JAM",
+	"name": "SPREAD",
 	"version": "1.0.0",
-	"description": "Save LinkedIn and Indeed job listings to JAM with one click.",
-	"permissions": [
-		"storage",
-		"activeTab",
-		"tabs",
-		"scripting"
-	],
+	"description": "Save LinkedIn, Indeed and other platform job listings to JAM with one click.",
+	"permissions": ["storage", "activeTab", "tabs", "scripting"],
 	"host_permissions": [
 		"https://www.linkedin.com/jobs/view/*",
 		"https://www.linkedin.com/jobs/collections/*",
 		"https://*.indeed.com/*",
 		"https://www.jobs.nhs.uk/*",
-		"https://veganjobs.com/*",
-		"http://localhost:*/*"
+		"https://veganjobs.com/*"
 	],
 	"action": {
 		"default_popup": "popup.html",
@@ -34,9 +28,7 @@
 				"https://www.jobs.nhs.uk/candidate/jobadvert/*",
 				"https://veganjobs.com/job/*"
 			],
-			"js": [
-				"content.js"
-			],
+			"js": ["content.js"],
 			"run_at": "document_idle"
 		}
 	],

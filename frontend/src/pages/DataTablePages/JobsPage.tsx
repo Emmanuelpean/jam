@@ -26,7 +26,6 @@ const JobsPage = (): JSX.Element => {
 	const navigate = useNavigate();
 	const extensionModalRef = useRef<DataModalHandle>(null);
 
-	// Pure computation — no side effects. Captures ext_* params on the initial render.
 	const autoOpenWith: ExtensionJobData | null = useMemo((): ExtensionJobData | null => {
 		const title: string | null = searchParams.get("ext_title");
 		if (!title) return null;
