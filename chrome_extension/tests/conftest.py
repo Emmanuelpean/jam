@@ -15,7 +15,7 @@ def _read_script(filename: str) -> str:
 def driver():
     options = Options()
     options.add_argument(f"--load-extension={EXTENSION_DIR}")
-    # options.add_argument("--headless=new")
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     drv = webdriver.Chrome(options=options)
