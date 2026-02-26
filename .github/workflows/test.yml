@@ -117,6 +117,10 @@ jobs:
           cd frontend
           npm install
           cd ..
+          cd chrome_extension
+          npm install
+          npm run build
+          cd ..
 
       - name: Install Stripe CLI
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
@@ -136,17 +140,17 @@ jobs:
             --cov-report=xml \
             --junitxml=reports/tests/backend.xml
 
+      - name: Run extension (Selenium) tests
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
+        run: |
+          pytest ./chrome_extension/tests \
+            --junitxml=reports/tests/extension.xml -v
+
       - name: Run frontend (Selenium) tests
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
           pytest -n auto --dist loadgroup ./frontend/tests \
             --junitxml=reports/tests/frontend.xml -v
-
-      - name: Run extension (Selenium) tests
-        if: "!contains(github.event.head_commit.message, '[skip tests]')"
-        run: |
-          pytest ./chrome-extension/tests \
-            --junitxml=reports/tests/extension.xml -v
 
       - name: Install junitparser
         run: pip install junitparser
@@ -230,13 +234,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set production URLs
+      - name: Build extension with production URLs
         run: |
-          sed -i 's|http://localhost:8000|${{ secrets.CHROME_EXT_API_URL }}|g' chrome_extension/src/popup.js
-          sed -i 's|http://localhost:3000/jam|${{ secrets.CHROME_EXT_FRONTEND_URL }}|g' chrome_extension/src/popup.js
+          cd chrome_extension
+          npm install
+          CHROME_EXT_API_URL="${{ secrets.CHROME_EXT_API_URL }}" \
+          CHROME_EXT_FRONTEND_URL="${{ secrets.CHROME_EXT_FRONTEND_URL }}" \
+          npm run build
+          cd ..
+          sed -i 's|http://localhost:8000|${{ secrets.CHROME_EXT_API_URL }}|g' chrome_extension/dist/popup.js
+          sed -i 's|http://localhost:3000/jam|${{ secrets.CHROME_EXT_FRONTEND_URL }}|g' chrome_extension/dist/popup.js
 
       - name: Zip extension
-        run: zip -r extension.zip chrome_extension/src/
+        run: zip -r extension.zip chrome_extension/dist/
 
       - name: Upload and publish to Chrome Web Store
         uses: mnao305/chrome-extension-upload@v5.0.0
