@@ -560,6 +560,8 @@ textarea.form-control {
 .global-loading-overlay {
     position: fixed;
     inset: 0 0 0 70px; /* Account for sidebar width */
+    background-color: var(--bs-body-bg);
+    z-index: 1060; /* Above Bootstrap modals (1055) */
 }
 
 /* ---------------------------------------------------- SCROLLBAR --------------------------------------------------- */
