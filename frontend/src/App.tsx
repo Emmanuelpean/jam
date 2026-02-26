@@ -117,7 +117,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 								</div>
 							</div>
 						)}
-						{!isLoading && <div style={isAuthPage ? { height: "100%" } : undefined}>{children}</div>}
+						<div style={isAuthPage ? { height: "100%" } : undefined}>{children}</div>
 					</div>
 				</div>
 			</div>
