@@ -1,4 +1,5 @@
-const FRONTEND_URL = "http://localhost:3000/jam";
+declare const __FRONTEND_URL__: string;
+const FRONTEND_URL = __FRONTEND_URL__;
 
 // ---------------------------------------------------------------------------
 // Element refs
@@ -202,7 +203,7 @@ addBtn.addEventListener("click", () => {
 
 				chrome.tabs.query({ url: `${base}/*` }, (jamTabs) => {
 					if (jamTabs.length > 0) {
-						// Post job data directly — no URL change, no full reload
+						// Existing JAM tab — inject postMessage directly (no URL needed)
 						chrome.scripting.executeScript({
 							target: { tabId: jamTabs[0].id! },
 							func: (jobData: ScrapedJob) =>
@@ -212,7 +213,9 @@ addBtn.addEventListener("click", () => {
 						chrome.tabs.update(jamTabs[0].id!, { active: true });
 						chrome.windows.update(jamTabs[0].windowId!, { focused: true });
 					} else {
-						chrome.tabs.create({ url: targetUrl });
+						// New tab — store job in local storage; jam_bridge.ts picks it up on load
+						chrome.storage.local.set({ pendingExtJob: job });
+						chrome.tabs.create({ url: `${base}/jobs` });
 					}
 					setStatus(`Saved: ${job.title}`, "success");
 					spinOff(addSpinner, addBtn, addBtnLabel, "Save to JAM");
