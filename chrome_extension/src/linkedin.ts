@@ -19,9 +19,9 @@ function scrapeLinkedInNewLayout(): NewLayoutResult | null {
 	const descSpan: Element | null = document.querySelector('[data-testid="expandable-text-box"]');
 	if (!container && !descSpan) return null;
 
-	// Title: first <p> inside the container that has no <a> child
+	// Title: first <p> that isn't the company card (the company card always links to a /company/ page)
 	const allPs: Element[] = container ? Array.from(container.querySelectorAll("p")) : [];
-	const titleP: Element | null = allPs.find((p) => !p.querySelector("a")) ?? null;
+	const titleP: Element | null = allPs.find((p) => !p.querySelector('a[href*="/company/"]')) ?? null;
 	const title: string | null = titleP?.textContent?.trim() ?? null;
 
 	// Company: first link to a /company/ page. Chrome auto-closes the containing <p> when it
@@ -31,15 +31,28 @@ function scrapeLinkedInNewLayout(): NewLayoutResult | null {
 	const companyRaw: string = (companyLink?.parentElement ?? companyLink)?.textContent?.trim() ?? "";
 	const company: string | null = companyRaw.split("|")[0]?.trim() || null;
 
-	// Location: walk up from titleP until we find a sibling <p>, split by middle dot (U+00B7)
+	// Location + attendance: walk up from titleP until we find a sibling <p>.
+	// The text is dot-separated, e.g. "Coleshill · Remote" or "United Kingdom · 4 days ago".
+	// The first segment is the location; remaining segments are checked for attendance keywords.
 	let location: string | null = null;
+	let attendance_type_from_location: string | null = null;
 	if (titleP && container) {
 		let node: Element | null = titleP.parentElement;
 		outer: while (node && node !== container) {
 			let sib: Element | null = node.nextElementSibling;
 			while (sib) {
 				if (sib.tagName === "P") {
-					location = sib.textContent?.split("\u00b7")[0]?.trim() || null;
+					const parts = (sib.textContent ?? "").split(/[\u00b7\u2022]/).map((s) => s.trim());
+					location = parts[0] || null;
+					for (const part of parts.slice(1)) {
+						for (const entry of ATTENDANCE_MAP) {
+							if (entry.re.test(part)) {
+								attendance_type_from_location = entry.value;
+								break;
+							}
+						}
+						if (attendance_type_from_location) break;
+					}
 					break outer;
 				}
 				sib = sib.nextElementSibling;
@@ -48,9 +61,9 @@ function scrapeLinkedInNewLayout(): NewLayoutResult | null {
 		}
 	}
 
-	// Attendance: scan buttons inside the container for known keywords
-	let attendance_type: string | null = null;
-	if (container) {
+	// Attendance: scan buttons inside the container for known keywords (fallback)
+	let attendance_type: string | null = attendance_type_from_location;
+	if (!attendance_type && container) {
 		for (const btn of container.querySelectorAll("button")) {
 			const text: string = btn.textContent?.trim() ?? "";
 			for (const entry of ATTENDANCE_MAP) {

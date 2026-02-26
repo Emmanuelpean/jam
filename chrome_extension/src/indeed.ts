@@ -36,27 +36,40 @@ export function scrapeIndeedJob(): ScrapedJob {
 	// URL
 	const url: string = cleanIndeedUrl();
 
-	// Location
-	const location: string | null = queryFirst([
+	// Location + attendance: Indeed encodes both in a single element, e.g. "Coleshill•Remote"
+	// Split on middle dot (·) or bullet (•) — first part is location, rest checked for attendance.
+	const locationSelectors = [
 		"[data-testid='inlineHeader-companyLocation']",
 		"[data-testid='jobsearch-JobInfoHeader-companyLocation']",
 		".jobsearch-JobInfoHeader-subtitle [data-testid]",
-	]);
+	];
+	let locationRaw: string | null = null;
+	for (const sel of locationSelectors) {
+		const text = document.querySelector(sel)?.textContent?.trim();
+		if (text) { locationRaw = text; break; }
+	}
+	const locationParts = (locationRaw ?? "").split(/[\u00b7\u2022]/).map((s) => s.trim());
+	const location: string | null = locationParts[0] || null;
 
-	// Attendance type from job type/remote label
 	let attendance_type: string | null = null;
-	const jobTypeEls = document.querySelectorAll(
-		"[data-testid='attribute_snippet_testid'], .css-k5flys, [class*='jobType'], [class*='remote']"
-	);
-	for (const el of jobTypeEls) {
-		const text: string = el.textContent?.trim() ?? "";
+	for (const part of locationParts.slice(1)) {
 		for (const entry of ATTENDANCE_MAP) {
-			if (entry.re.test(text)) {
-				attendance_type = entry.value;
-				break;
-			}
+			if (entry.re.test(part)) { attendance_type = entry.value; break; }
 		}
 		if (attendance_type) break;
+	}
+
+	// Fallback: scan job-type / remote label elements
+	if (!attendance_type) {
+		for (const el of document.querySelectorAll(
+			"[data-testid='attribute_snippet_testid'], .css-k5flys, [class*='jobType'], [class*='remote']"
+		)) {
+			const text: string = el.textContent?.trim() ?? "";
+			for (const entry of ATTENDANCE_MAP) {
+				if (entry.re.test(text)) { attendance_type = entry.value; break; }
+			}
+			if (attendance_type) break;
+		}
 	}
 
 	// Salary
