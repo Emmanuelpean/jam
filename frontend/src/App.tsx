@@ -1,4 +1,5 @@
 import React, { createContext, JSX, ReactNode, useEffect } from "react";
+import { Button } from "react-bootstrap";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
@@ -56,9 +57,9 @@ interface AppLayoutProps {
 }
 
 function AppLayout({ children }: AppLayoutProps): JSX.Element {
-	const { isLoading, loadingMessage, progress } = useLoading();
+	const { isLoading, loadingMessage, progress, hideLoading } = useLoading();
 	const location = useLocation();
-	const { currentUser, isAuthenticated } = useAuth();
+	const { currentUser, isAuthenticated, logout } = useAuth();
 	const navigate = useNavigate();
 	useSwetrixPageViews();
 
@@ -93,7 +94,10 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
 				{currentUser && <Sidebar />}
 				<div style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
-					<div className={!isAuthPage ? `main-content` : ""} style={isAuthPage ? { height: "100%" } : undefined}>
+					<div
+						className={!isAuthPage ? `main-content` : ""}
+						style={isAuthPage ? { height: "100%" } : undefined}
+					>
 						{isLoading && (
 							<div className="global-loading-overlay">
 								<div className="d-flex flex-column justify-content-center align-items-center h-100">
@@ -115,6 +119,15 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 										</div>
 									)}
 								</div>
+								{isAuthenticated && (
+									<Button
+										variant="primary-outline"
+										className="loading-overlay-logout logout-item"
+										onClick={() => { hideLoading(); logout(); }}
+									>
+										<i className="bi bi-box-arrow-right me-2"></i>Log out
+									</Button>
+								)}
 							</div>
 						)}
 						<div style={isAuthPage ? { height: "100%" } : undefined}>{children}</div>

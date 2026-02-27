@@ -923,15 +923,14 @@ class DataModalUtils(BaseUtilsClass):
                 else:
                     self.set_text(self.get_element(key), value)
 
-    def check_edit_modal(self, entry_id: int, **values) -> None:
+    def check_edit_modal(self, **values) -> None:
         """Check that the modal in edit mode contains the expected data
-        :param entry_id: entry ID
         :param values: values to check"""
 
         if any(isinstance(v, dict) for v in values.values()):
             for tab_key in values:
                 self.get_element(f"{tab_key}-tab").click()
-                self.check_edit_modal(entry_id, **values[tab_key])
+                self.check_edit_modal(**values[tab_key])
         else:
             for key in values:
                 if "date" in key:
