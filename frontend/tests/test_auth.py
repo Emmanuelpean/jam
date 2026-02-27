@@ -474,6 +474,7 @@ class TestDemoLogin(BaseTest):
         """Cancelling the demo logout confirmation must keep the user on the dashboard."""
 
         self.auth_utils.try_button.click()
+        self.wait_for_disappear("loading-spinner")
         self.auth_utils.wait_for_dashboard()
 
         # Click logout
