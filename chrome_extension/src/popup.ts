@@ -1,3 +1,5 @@
+export {};
+
 declare const __FRONTEND_URL__: string;
 const FRONTEND_URL = __FRONTEND_URL__;
 
@@ -22,7 +24,7 @@ const platformBadge = document.getElementById("platformBadge") as HTMLElement;
 // ---------------------------------------------------------------------------
 function setStatus(msg: string, type?: string): void {
 	statusDiv.textContent = msg;
-	statusDiv.className = msg ? (type || "") : "hidden";
+	statusDiv.className = msg ? type || "" : "hidden";
 }
 
 function trimSlash(url: string): string {
@@ -218,7 +220,6 @@ addBtn.addEventListener("click", () => {
 						chrome.storage.local.set({ pendingExtJob: job });
 						chrome.tabs.create({ url: `${base}/jobs` });
 					}
-					setStatus(`Saved: ${job.title}`, "success");
 					spinOff(addSpinner, addBtn, addBtnLabel, "Save to JAM");
 				});
 			});

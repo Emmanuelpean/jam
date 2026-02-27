@@ -172,6 +172,7 @@
             border-radius: 10px;
             padding: 11px 12px;
             display: flex;
+            width: 100%;
             flex-direction: column;
             gap: 5px;
         }
@@ -231,6 +232,58 @@
 
         #status.error {
             color: #e74c3c;
+        }
+
+        /* ── Dark mode ── */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1a1b1e;
+                color: #e8e8ec;
+            }
+
+            .main-header {
+                border-bottom-color: #2e2e38;
+            }
+
+            .main-header-sub {
+                color: #8a8f96;
+            }
+
+            .detecting-row {
+                color: #e0e0e8;
+                background:
+                    linear-gradient(#1a1b1e, #1a1b1e) padding-box,
+                    conic-gradient(from var(--border-angle), #a8edea, #686de0, #4834d4, #686de0, #a8edea) border-box;
+            }
+
+            .no-job-icon {
+                color: #e0e0e8;
+            }
+
+            .no-job-text {
+                color: #9a9fa8;
+            }
+
+            .job-card {
+                background: #1e2038;
+                border-color: #2d3258;
+            }
+
+            .job-title {
+                color: #d0d8f0;
+            }
+
+            .job-company {
+                color: #7a8a9a;
+            }
+
+            #status.success {
+                color: #3dba72;
+            }
+
+            #status.error {
+                color: #ff6b6b;
+            }
         }
     </style>
 </head>
