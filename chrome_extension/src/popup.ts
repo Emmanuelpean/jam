@@ -9,6 +9,7 @@ const addBtnLabel = document.getElementById("addBtnLabel") as HTMLElement;
 const addSpinner = document.getElementById("addSpinner") as HTMLElement;
 const statusDiv = document.getElementById("status") as HTMLElement;
 
+const actionArea = document.getElementById("actionArea") as HTMLElement;
 const detectingRow = document.getElementById("detectingRow") as HTMLElement;
 const noJobMsg = document.getElementById("noJobMsg") as HTMLElement;
 const jobCard = document.getElementById("jobCard") as HTMLElement;
@@ -21,7 +22,7 @@ const platformBadge = document.getElementById("platformBadge") as HTMLElement;
 // ---------------------------------------------------------------------------
 function setStatus(msg: string, type?: string): void {
 	statusDiv.textContent = msg;
-	statusDiv.className = type || "";
+	statusDiv.className = msg ? (type || "") : "hidden";
 }
 
 function trimSlash(url: string): string {
@@ -47,14 +48,14 @@ function showDetecting(): void {
 	detectingRow.classList.remove("hidden");
 	noJobMsg.classList.add("hidden");
 	jobCard.classList.add("hidden");
-	addBtn.classList.add("hidden");
+	actionArea.classList.add("hidden");
 }
 
 function showNoJob(): void {
 	detectingRow.classList.add("hidden");
 	noJobMsg.classList.remove("hidden");
 	jobCard.classList.add("hidden");
-	addBtn.classList.add("hidden");
+	actionArea.classList.add("hidden");
 }
 
 function showJob(title: string | null, company: string | null, platform: string): void {
@@ -66,7 +67,7 @@ function showJob(title: string | null, company: string | null, platform: string)
 	const badge = getBadgeContent(platform);
 	platformBadge.innerHTML = badge.html;
 	platformBadge.style.background = badge.bg;
-	addBtn.classList.remove("hidden");
+	actionArea.classList.remove("hidden");
 }
 
 // ---------------------------------------------------------------------------
