@@ -1638,7 +1638,7 @@ class AuthentificationUtils(BaseUtilsClass):
     def go_to_verification_url(self, token: str) -> None:
         """Navigate to login page with verification token"""
 
-        self.go_to_page(f"verify-email/?token={token}")
+        self.driver.get(f"{self.frontend_base_url}/verify-email/?token={token}")
 
     def switch_to_forgot_password(self) -> None:
         """Navigate to forgot password page"""
