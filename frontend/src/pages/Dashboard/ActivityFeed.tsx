@@ -160,7 +160,7 @@ export const renderUpcomingInterviewItem = (
 				{/* Interview icon */}
 				<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
 					<div
-						className={`rounded-circle d-flex align-items-center justify-content-center ${activityColor}`}
+						className={`rounded-circle d-flex align-items-center justify-content-center badge ${activityColor}`}
 						style={{
 							width: "35px",
 							height: "35px",
