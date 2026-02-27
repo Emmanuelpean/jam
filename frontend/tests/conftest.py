@@ -2351,7 +2351,7 @@ class BaseTest(BaseUtils):
 
         self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
         self.wait_for_page(self.page_url)
-        time.sleep(0.25)
+        self.wait_for_disappear("loading-spinner")
 
     # ---------------------------------------------------- DATABASE ----------------------------------------------------
 
