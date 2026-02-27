@@ -8,7 +8,7 @@ import { useWhatsNew } from "../../contexts/WhatsNewContext";
 import { Accordion } from "../../components/Accordion/Accordion";
 
 const ReleaseNotesPage = (): JSX.Element => {
-	const [openVersion, setOpenVersion] = useState<string | null>(null);
+	const [openVersion, setOpenVersion] = useState<string | null>(LAST_VERSION);
 	const { showWhatsNew } = useWhatsNew();
 
 	return (
@@ -87,7 +87,10 @@ const ReleaseNotesPage = (): JSX.Element => {
 											{ name: "FastAPI", url: "https://fastapi.tiangolo.com" },
 											{ name: "SQLAlchemy", url: "https://www.sqlalchemy.org" },
 											{ name: "Pydantic", url: "https://docs.pydantic.dev" },
-											{ name: "Beautiful Soup", url: "https://www.crummy.com/software/BeautifulSoup" },
+											{
+												name: "Beautiful Soup",
+												url: "https://www.crummy.com/software/BeautifulSoup",
+											},
 											{ name: "Gunicorn", url: "https://gunicorn.org" },
 											{ name: "PostgreSQL", url: "https://www.postgresql.org" },
 										],
