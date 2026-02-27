@@ -103,7 +103,15 @@ export const Sidebar = (): JSX.Element => {
 			],
 		},
 		{ path: "/settings", text: "User Settings", position: "bottom" },
-		{ path: "/about", text: "About", position: "bottom" },
+		{
+			text: "About",
+			position: "bottom",
+			submenu: [
+				{ path: "/about", text: "About JAM" },
+				{ path: "/browser-extension", text: "Browser Extension" },
+				{ path: "/release-notes", text: "Release Notes" },
+			],
+		},
 		{
 			text: "Admin",
 			condition: (user: UserData): boolean => user.is_admin,

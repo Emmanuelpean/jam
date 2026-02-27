@@ -131,3 +131,40 @@ body[data-mode="dark"] .link-gradient-purple:hover {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* ── SPREAD extension section ── */
+.extension-about-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    background: var(--primary-gradient);
+    color: white;
+    font-size: 1.75rem;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 15%);
+}
+
+.extension-about-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--primary-gradient);
+    color: white;
+    letter-spacing: 0.3px;
+    vertical-align: middle;
+    text-transform: uppercase;
+}
+
+.extension-platform-badge {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 6px;
+    color: white;
+    letter-spacing: 0.2px;
+}

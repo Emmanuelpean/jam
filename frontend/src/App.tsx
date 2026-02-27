@@ -23,6 +23,8 @@ import { useToast, UseToastReturn } from "./hooks/useNotificationToast";
 import { ToastStack } from "./components/Toasts/Toast";
 import SettingsPage from "./pages/DataTablePages/SettingsPage";
 import AboutPage from "./pages/About/AboutPage";
+import ExtensionPage from "./pages/About/ExtensionPage";
+import ReleaseNotesPage from "./pages/About/ReleaseNotesPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.scss";
 import "./Themes.scss";
@@ -93,7 +95,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 			<DemoBanner />
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
 				{currentUser && <Sidebar />}
-				<div style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
+				<div style={{ flex: 1, minWidth: 0, overflowY: "auto", display: "flex", flexDirection: "column" }}>
 					<div
 						className={!isAuthPage ? `main-content` : ""}
 						style={isAuthPage ? { height: "100%" } : undefined}
@@ -123,14 +125,17 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 									<Button
 										variant="primary-outline"
 										className="loading-overlay-logout logout-item"
-										onClick={() => { hideLoading(); logout(); }}
+										onClick={() => {
+											hideLoading();
+											logout();
+										}}
 									>
 										<i className="bi bi-box-arrow-right me-2"></i>Log out
 									</Button>
 								)}
 							</div>
 						)}
-						<div style={isAuthPage ? { height: "100%" } : undefined}>{children}</div>
+						{children}
 					</div>
 				</div>
 			</div>
@@ -174,6 +179,8 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/verify-new-email", element: <Login /> },
 	{ path: "/", element: <Navigate to="/dashboard" replace /> },
 	{ path: "/about", element: <AboutPage />, protected: true },
+	{ path: "/browser-extension", element: <ExtensionPage />, protected: true },
+	{ path: "/release-notes", element: <ReleaseNotesPage />, protected: true },
 	{ path: "/locations", element: <LocationsPage />, protected: true },
 	{ path: "/companies", element: <CompaniesPage />, protected: true },
 	{ path: "/jobs", element: <JobsPage />, protected: true },

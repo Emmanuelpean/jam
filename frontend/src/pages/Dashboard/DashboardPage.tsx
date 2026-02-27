@@ -22,6 +22,7 @@ import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
 import { scrapedJobApi } from "../../services/api/Services";
 import { sortByKey } from "../../utils/Utils";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
+import ExtensionBanner from "./ExtensionBanner";
 
 const Dashboard: React.FC = () => {
 	const dataContext: DataContextValue = useDataContext();
@@ -116,6 +117,7 @@ const Dashboard: React.FC = () => {
 
 	return (
 		<>
+			<ExtensionBanner />
 			<Row className="g-4 mb-4">
 				<Col xs={6} md={6} lg={3}>
 					<StatCard
