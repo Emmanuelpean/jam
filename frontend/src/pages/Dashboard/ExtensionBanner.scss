@@ -1,0 +1,88 @@
+.extension-banner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(var(--primary-start-rgb, 104, 109, 224), 0.08) 0%, rgba(var(--primary-end-rgb, 72, 52, 212), 0.06) 100%);
+    border: 1px solid rgba(var(--primary-end-rgb, 72, 52, 212), 0.18);
+    position: relative;
+}
+
+.extension-banner-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--primary-gradient);
+    color: white;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.extension-banner-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.extension-banner-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--bs-body-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+}
+
+.extension-banner-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--primary-gradient);
+    color: white;
+    letter-spacing: 0.2px;
+}
+
+.extension-banner-subtitle {
+    font-size: 0.8rem;
+    color: var(--bs-secondary-color);
+    line-height: 1.45;
+}
+
+.extension-banner-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    color: var(--bs-secondary-color);
+    border-radius: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.07);
+        color: var(--bs-body-color);
+    }
+}
+
+@media (width <= 576px) {
+    .extension-banner {
+        flex-wrap: wrap;
+    }
+
+    .extension-banner-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+}
