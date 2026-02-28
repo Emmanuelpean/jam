@@ -22,6 +22,8 @@ import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 import { useToast, UseToastReturn } from "./hooks/useNotificationToast";
 import { ToastStack } from "./components/Toasts/Toast";
 import SettingsPage from "./pages/DataTablePages/SettingsPage";
+import TermsPage from "./pages/Auth/TermsPage";
+import PrivacyPolicyPage from "./pages/Auth/PrivacyPolicyPage";
 import AboutPage from "./pages/About/AboutPage";
 import ExtensionPage from "./pages/About/ExtensionPage";
 import ReleaseNotesPage from "./pages/About/ReleaseNotesPage";
@@ -178,6 +180,8 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/verify-email", element: <Login /> },
 	{ path: "/verify-new-email", element: <Login /> },
 	{ path: "/", element: <Navigate to="/dashboard" replace /> },
+	{ path: "/terms", element: <TermsPage /> },
+	{ path: "/privacy", element: <PrivacyPolicyPage /> },
 	{ path: "/about", element: <AboutPage />, protected: true },
 	{ path: "/browser-extension", element: <ExtensionPage />, protected: true },
 	{ path: "/release-notes", element: <ReleaseNotesPage />, protected: true },
