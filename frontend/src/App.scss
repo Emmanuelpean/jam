@@ -517,6 +517,9 @@ textarea.form-control {
 .form-check {
     padding-right: 0.5rem;
     padding-left: 0.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
 }
 
 /* ----------------------------------------------------- TOGGLE ----------------------------------------------------- */
