@@ -189,7 +189,7 @@ class BaseTablePage(BaseTest):
 
         # Reopen in edit mode and check contents
         self.table_utils.table_context_menu(entry_id, "edit")
-        self.modal_utils.check_edit_modal(entry_id, **self.test_data)
+        self.modal_utils.check_edit_modal(**self.test_data)
 
     def test_add_duplicate_entry(self) -> None:
         """Test that adding a new entry with an existing name shows validation error"""

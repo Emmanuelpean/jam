@@ -1,5 +1,6 @@
 import React, { createContext, JSX, ReactNode, useEffect } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Button } from "react-bootstrap";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
 import Login from "./pages/Auth/AuthPage";
@@ -21,7 +22,11 @@ import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 import { useToast, UseToastReturn } from "./hooks/useNotificationToast";
 import { ToastStack } from "./components/Toasts/Toast";
 import SettingsPage from "./pages/DataTablePages/SettingsPage";
+import TermsPage from "./pages/Auth/TermsPage";
+import PrivacyPolicyPage from "./pages/Auth/PrivacyPolicyPage";
 import AboutPage from "./pages/About/AboutPage";
+import ExtensionPage from "./pages/About/ExtensionPage";
+import ReleaseNotesPage from "./pages/About/ReleaseNotesPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.scss";
 import "./Themes.scss";
@@ -56,10 +61,21 @@ interface AppLayoutProps {
 }
 
 function AppLayout({ children }: AppLayoutProps): JSX.Element {
-	const { isLoading, loadingMessage, progress } = useLoading();
+	const { isLoading, loadingMessage, progress, hideLoading } = useLoading();
 	const location = useLocation();
-	const { currentUser } = useAuth();
+	const { currentUser, isAuthenticated, logout } = useAuth();
+	const navigate = useNavigate();
 	useSwetrixPageViews();
+
+	useEffect(() => {
+		if (!isAuthenticated) return;
+		const handler = (event: MessageEvent): void => {
+			if (event.data?.type !== "JAM_EXT_JOB") return;
+			navigate("/jobs", { state: { extJob: event.data.data } });
+		};
+		window.addEventListener("message", handler);
+		return () => window.removeEventListener("message", handler);
+	}, [isAuthenticated, navigate]);
 
 	const normalisedPathname: string =
 		location.pathname !== "/" && location.pathname.endsWith("/")
@@ -81,8 +97,11 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 			<DemoBanner />
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
 				{currentUser && <Sidebar />}
-				<div style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
-					<div className={!isAuthPage ? `main-content` : ""} style={isAuthPage ? { height: "100%" } : undefined}>
+				<div style={{ flex: 1, minWidth: 0, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+					<div
+						className={!isAuthPage ? `main-content` : ""}
+						style={isAuthPage ? { height: "100%" } : undefined}
+					>
 						{isLoading && (
 							<div className="global-loading-overlay">
 								<div className="d-flex flex-column justify-content-center align-items-center h-100">
@@ -104,9 +123,21 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 										</div>
 									)}
 								</div>
+								{isAuthenticated && (
+									<Button
+										variant="primary-outline"
+										className="loading-overlay-logout logout-item"
+										onClick={() => {
+											hideLoading();
+											logout();
+										}}
+									>
+										<i className="bi bi-box-arrow-right me-2"></i>Log out
+									</Button>
+								)}
 							</div>
 						)}
-						{!isLoading && <div style={isAuthPage ? { height: "100%" } : undefined}>{children}</div>}
+						{children}
 					</div>
 				</div>
 			</div>
@@ -149,7 +180,11 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/verify-email", element: <Login /> },
 	{ path: "/verify-new-email", element: <Login /> },
 	{ path: "/", element: <Navigate to="/dashboard" replace /> },
+	{ path: "/terms", element: <TermsPage /> },
+	{ path: "/privacy", element: <PrivacyPolicyPage /> },
 	{ path: "/about", element: <AboutPage />, protected: true },
+	{ path: "/browser-extension", element: <ExtensionPage />, protected: true },
+	{ path: "/release-notes", element: <ReleaseNotesPage />, protected: true },
 	{ path: "/locations", element: <LocationsPage />, protected: true },
 	{ path: "/companies", element: <CompaniesPage />, protected: true },
 	{ path: "/jobs", element: <JobsPage />, protected: true },

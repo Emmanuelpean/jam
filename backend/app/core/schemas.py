@@ -86,6 +86,7 @@ class UserPreferencesCreate(BaseModel):
     deadline_threshold: int | None = None
     update_limit: int | None = None
     default_currency: str | None = None
+    extension_banner_dismissed: bool | None = None
 
 
 class UserPreferencesUpdate(UserPreferencesCreate):

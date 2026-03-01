@@ -1,4 +1,4 @@
-import { GeoLocation, OwnedOut } from "./Base";
+import { GeoLocationData, OwnedOut } from "./Base";
 
 // ------------------------------------------------------- KEYWORD ------------------------------------------------------
 
@@ -51,7 +51,7 @@ export interface LocationData extends OwnedOut {
 	postcode?: string | null;
 	country?: string | null;
 	name: string;
-	geolocation: GeoLocation | null;
+	geolocation: GeoLocationData | null;
 }
 
 // ------------------------------------------------------- PERSON ------------------------------------------------------

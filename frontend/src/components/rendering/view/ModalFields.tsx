@@ -192,6 +192,13 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	jobUrl: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "job_url",
+		label: "Job URL",
+		render: (params: RenderParams) => renderFunctions.url({ ...params, view: true }),
+		...overrides,
+	}),
+
 	applicationUrl: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_url",
 		label: "Application URL",
