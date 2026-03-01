@@ -1,4 +1,4 @@
-import React, { useState, JSX } from "react";
+import React, { useState, JSX, useEffect, useRef } from "react";
 import { Form } from "react-bootstrap";
 import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ValidationErrors } from "../../components/DataModal/DataModal";
@@ -21,7 +21,7 @@ interface PreferencesFormData {
 }
 
 export const PreferencesTab: React.FC = () => {
-	const { currentUser, updateCurrentUser, token } = useAuth();
+	const { currentUser, updateCurrentUser, token, fetchUserInfo } = useAuth();
 	const { currencyNames } = useFormOptions();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [formData, setFormData] = useState<PreferencesFormData>(() => ({
@@ -32,8 +32,21 @@ export const PreferencesTab: React.FC = () => {
 	}));
 	const [errors, setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState(false);
+	const formInitialized = useRef(false);
+
+	useEffect(() => {
+		if (currentUser && !formInitialized.current) {
+			formInitialized.current = true;
+			setFormData({
+				default_currency: currentUser.preferences.default_currency || "",
+				chase_threshold: currentUser.preferences.chase_threshold || 0,
+				deadline_threshold: currentUser.preferences.deadline_threshold || 0,
+				update_limit: currentUser.preferences.update_limit || 0,
+			});
+		}
+	}, [currentUser]);
 	const [hoveredTheme, setHoveredTheme] = useState<string | null>(null);
-	const currentTheme = currentUser?.preferences.theme || "default";
+	const currentTheme: string = currentUser?.preferences.theme || "default";
 
 	const handleThemeChange = async (themeKey: string): Promise<void> => {
 		try {
@@ -44,11 +57,11 @@ export const PreferencesTab: React.FC = () => {
 		}
 	};
 
-	const handleInputChange = (e: SyntheticEvent) => {
+	const handleInputChange = (e: SyntheticEvent): void => {
 		const { name, value } = e.target;
-		setFormData((prev) => ({ ...prev, [name]: value }));
+		setFormData((prev: PreferencesFormData): PreferencesFormData => ({ ...prev, [name]: value }));
 		if (errors[name]) {
-			setErrors((prev) => ({ ...prev, [name]: "" }));
+			setErrors((prev: ValidationErrors): ValidationErrors => ({ ...prev, [name]: "" }));
 		}
 	};
 
@@ -77,7 +90,7 @@ export const PreferencesTab: React.FC = () => {
 		return Object.keys(newErrors).length === 0;
 	};
 
-	const handleSubmit = async (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent): Promise<void> => {
 		e.preventDefault();
 		if (!validateForm() || !token) return;
 		setSubmitting(true);
@@ -165,9 +178,9 @@ export const PreferencesTab: React.FC = () => {
 								themeName={theme.name}
 								isActive={currentTheme === theme.key}
 								isHovered={hoveredTheme === theme.key}
-								onClick={() => handleThemeChange(theme.key)}
-								onMouseEnter={() => setHoveredTheme(theme.key)}
-								onMouseLeave={() => setHoveredTheme(null)}
+								onClick={(): Promise<void> => handleThemeChange(theme.key)}
+								onMouseEnter={(): void => setHoveredTheme(theme.key)}
+								onMouseLeave={(): void => setHoveredTheme(null)}
 							/>
 						)
 					)}

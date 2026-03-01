@@ -27,6 +27,7 @@ export interface UserPreferences {
 	deadline_threshold: number;
 	update_limit: number;
 	default_currency: string;
+	extension_banner_dismissed: boolean;
 }
 
 export type UserPreferencesUpdate = Partial<UserPreferences>;

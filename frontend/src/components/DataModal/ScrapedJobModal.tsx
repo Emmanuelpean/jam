@@ -4,7 +4,6 @@ import DataModal, {
 	Fields,
 	JamDataModalProps,
 	SectionConfig,
-	ValidationErrors,
 	WarningMessageConfig,
 } from "./DataModal";
 import { formFields } from "../rendering/form/FormRenders";
@@ -16,8 +15,8 @@ import { LocationModal } from "./LocationModal";
 import { KeywordModal } from "./KeywordModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
-import { DataContextValue, JamData, useDataContext } from "../../contexts/DataContext";
-import { EnrichedJobData, JobData, JobDataTransform, LocationDataTransform } from "../../services/schemas/DataTables";
+import { JamData, useDataContext } from "../../contexts/DataContext";
+import { JobData, JobDataTransform, LocationDataTransform } from "../../services/schemas/DataTables";
 import { ScrapedJobData, ScrapedJobUpdate } from "../../services/schemas/Services";
 import { useConfig } from "../../contexts/ConfigContext";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
@@ -25,7 +24,6 @@ import { ApiResponse } from "../../services/api/Base";
 
 export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 	({ size = "xl", onDelete, onSuccess: parentOnSuccess, canEdit = true }: JamDataModalProps, ref): JSX.Element => {
-		const dataContext: DataContextValue = useDataContext();
 		const { addEntity } = useDataContext();
 		const { config } = useConfig();
 		const companyModalRef = useRef<DataModalHandle>(null);
@@ -54,16 +52,12 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				title: "Basic Information",
 				icon: "bi-briefcase",
 				fields: [
-					formFields.jobTitle({ placeholder: "Python Software Engineer" }),
+					modalViewFields.title({ isTitle: true }),
 					[
 						formFields.scrapedCompany(companies, companyModalRef, (scrapedJob: ScrapedJobData) => ({
 							name: scrapedJob.company,
 						})),
-						formFields.url({
-							label: "Job URL",
-							placeholder: "https://linkedin.com/jobs/453635",
-							required: true,
-						}),
+						formFields.jobURl(),
 					],
 				],
 			} as SectionConfig,
@@ -172,18 +166,6 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			[modalViewFields.platform(), modalViewFields.url()],
 			modalViewFields.scrapedLocationMap(),
 		];
-
-		const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
-			const errors: ValidationErrors = {};
-			const duplicates: EnrichedJobData[] = dataContext.jobs.filter(
-				(job: EnrichedJobData): boolean =>
-					job.url?.trim().toLowerCase() === formData.url?.trim().toLowerCase() && job.id !== formData?.id
-			);
-			if (duplicates.length > 0) {
-				errors.name = `A Job with this URL already exists`;
-			}
-			return errors;
-		};
 
 		const warningMessage = (data: ScrapedJobData): WarningMessageConfig[] | null => {
 			const result: WarningMessageConfig[] = [];
@@ -323,7 +305,6 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 					transformInputData={transformInputData}
 					entityType="scrapedJob"
 					size={size}
-					validation={customValidation}
 					onSuccess={onSuccess}
 					onDelete={onDelete}
 					warningMessage={warningMessage}

@@ -244,6 +244,9 @@ GEOLOCATION_DATA = [
             "country": "United States",
             "country_code": "us",
         },
+        "city": "New York",
+        "postcode": "10001",
+        "country": "United States",
     },
     {
         "query": "90210, Beverly Hills, United States",
@@ -257,6 +260,9 @@ GEOLOCATION_DATA = [
             "country": "United States",
             "country_code": "us",
         },
+        "city": "Beverly Hills",
+        "postcode": "90210",
+        "country": "United States",
     },
     {
         "query": "SW1A 1AA, London, United Kingdom",
@@ -271,6 +277,9 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "City of Westminster",
+        "postcode": "SW1A 1AA",
+        "country": "United Kingdom",
     },
     {
         "query": "San Francisco, United States",
@@ -283,12 +292,15 @@ GEOLOCATION_DATA = [
             "country": "United States",
             "country_code": "us",
         },
+        "city": "San Francisco",
+        "country": "United States",
     },
     {
         "query": "Germany",
         "latitude": "51.1638175",
         "longitude": "10.4478313",
         "data": {"country": "Deutschland", "country_code": "de"},
+        "country": "Deutschland",
     },
     {
         "query": "OX1 2JD, Oxford, United Kingdom",
@@ -306,12 +318,16 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Oxford",
+        "postcode": "OX1 2JD",
+        "country": "United Kingdom",
     },
     {
         "query": "Canada",
         "latitude": "61.0666922",
         "longitude": "-107.9917070",
         "data": {"country": "Canada", "country_code": "ca"},
+        "country": "Canada",
     },
     {
         "query": "75001, Paris, France",
@@ -329,6 +345,9 @@ GEOLOCATION_DATA = [
             "country": "France",
             "country_code": "fr",
         },
+        "city": "Paris",
+        "postcode": "75001",
+        "country": "France",
     },
     {
         "query": "10115, Germany",
@@ -343,12 +362,16 @@ GEOLOCATION_DATA = [
             "country": "Deutschland",
             "country_code": "de",
         },
+        "city": "Berlin",
+        "postcode": "10115",
+        "country": "Deutschland",
     },
     {
         "query": "Tokyo, Japan",
         "latitude": "35.6768601",
         "longitude": "139.7638947",
         "data": {"province": "東京都", "ISO3166-2-lvl4": "JP-13", "country": "日本", "country_code": "jp"},
+        "country": "日本",
     },
     {
         "query": "M5V 3A8, Toronto, Canada",
@@ -364,6 +387,9 @@ GEOLOCATION_DATA = [
             "country": "Canada",
             "country_code": "ca",
         },
+        "city": "Toronto",
+        "postcode": "M5V 3A8",
+        "country": "Canada",
     },
     {
         "query": "Amsterdam, Netherlands",
@@ -377,12 +403,15 @@ GEOLOCATION_DATA = [
             "country": "Nederland",
             "country_code": "nl",
         },
+        "city": "Amsterdam",
+        "country": "Nederland",
     },
     {
         "query": "Brazil",
         "latitude": "-10.3333333",
         "longitude": "-53.2000000",
         "data": {"country": "Brasil", "country_code": "br"},
+        "country": "Brasil",
     },
     {
         "query": "M1 1AA, Manchester, United Kingdom",
@@ -403,6 +432,9 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Manchester",
+        "postcode": "M15 6SZ",
+        "country": "United Kingdom",
     },
     {
         "query": "Edinburgh, United Kingdom",
@@ -416,14 +448,17 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "City of Edinburgh",
+        "country": "United Kingdom",
     },
     {
         "query": "United Kingdom",
         "latitude": "54.7023545",
         "longitude": "-3.2765753",
         "data": {"country": "United Kingdom", "country_code": "gb"},
+        "country": "United Kingdom",
     },
-    {"query": "BS1 1AA, Bristol, United Kingdom"},
+    {"query": "BS1 1AA, Bristol, United Kingdom", "postcode": "BS1 1AA", "country": "United Kingdom"},
     {
         "query": "San Francisco",
         "latitude": "37.7879363",
@@ -435,6 +470,8 @@ GEOLOCATION_DATA = [
             "country": "United States",
             "country_code": "us",
         },
+        "city": "San Francisco",
+        "country": "United States",
     },
     {
         "query": "New York",
@@ -447,6 +484,8 @@ GEOLOCATION_DATA = [
             "country": "United States",
             "country_code": "us",
         },
+        "city": "New York",
+        "country": "United States",
     },
     {
         "query": "London, UK",
@@ -459,12 +498,15 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Greater London",
+        "country": "United Kingdom",
     },
     {
         "query": "UK",
         "latitude": "54.7023545",
         "longitude": "-3.2765753",
         "data": {"country": "United Kingdom", "country_code": "gb"},
+        "country": "United Kingdom",
     },
     {
         "query": "Edinburgh, UK",
@@ -478,6 +520,8 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "City of Edinburgh",
+        "country": "United Kingdom",
     },
     {
         "query": "Manchester, UK",
@@ -492,6 +536,8 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Manchester",
+        "country": "United Kingdom",
     },
     {
         "query": "London",
@@ -504,6 +550,8 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Greater London",
+        "country": "United Kingdom",
     },
     {
         "query": "Leeds, UK",
@@ -518,6 +566,8 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Leeds",
+        "country": "United Kingdom",
     },
     {
         "query": "Liverpool, UK",
@@ -532,6 +582,8 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Liverpool",
+        "country": "United Kingdom",
     },
     {
         "query": "Cardiff, UK",
@@ -547,6 +599,9 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Cardiff",
+        "postcode": "CF10 2AF",
+        "country": "United Kingdom",
     },
     {
         "query": "Newcastle, UK",
@@ -562,6 +617,8 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Newcastle upon Tyne",
+        "country": "United Kingdom",
     },
     {
         "query": "Birmingham, UK",
@@ -576,6 +633,8 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Birmingham",
+        "country": "United Kingdom",
     },
     {
         "query": "Bristol, UK",
@@ -588,6 +647,8 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Bristol",
+        "country": "United Kingdom",
     },
     {
         "query": "Glasgow, UK",
@@ -603,6 +664,9 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Glasgow",
+        "postcode": "G2 1AL",
+        "country": "United Kingdom",
     },
     {
         "query": "Cambridge, UK",
@@ -618,6 +682,8 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Cambridge",
+        "country": "United Kingdom",
     },
     {
         "query": "Oxford, UK",
@@ -632,6 +698,8 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Oxford",
+        "country": "United Kingdom",
     },
     {
         "query": "Reading, UK",
@@ -645,6 +713,7 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "country": "United Kingdom",
     },
     {
         "query": "Brighton, UK",
@@ -660,6 +729,9 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Brighton",
+        "postcode": "BN1 1HH",
+        "country": "United Kingdom",
     },
     {
         "query": "Southampton, UK",
@@ -673,6 +745,8 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Southampton",
+        "country": "United Kingdom",
     },
     {
         "query": "Nottingham, UK",
@@ -688,6 +762,8 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "City of Nottingham",
+        "country": "United Kingdom",
     },
     {
         "query": "Sheffield, UK",
@@ -702,8 +778,11 @@ GEOLOCATION_DATA = [
             "country": "United Kingdom",
             "country_code": "gb",
         },
+        "city": "Sheffield",
+        "country": "United Kingdom",
     },
 ]
+
 
 # ----------------------------------------------------- AGGREGATORS ----------------------------------------------------
 

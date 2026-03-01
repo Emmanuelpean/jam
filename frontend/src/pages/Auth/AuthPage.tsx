@@ -5,6 +5,7 @@ import "./AuthPage.scss";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Alert, Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
+import { PrivacyPolicyModal } from "./PrivacyPolicyPage";
 import { Errors, renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
@@ -59,6 +60,7 @@ function AuthForm(): JSX.Element {
 	const [showMobileWarning, setShowMobileWarning] = useState<boolean>(false);
 	const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 	const [showTerms, setShowTerms] = useState<boolean>(false);
+	const [showPrivacy, setShowPrivacy] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [demoLoading, setDemoLoading] = useState<boolean>(false);
 	const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
@@ -256,8 +258,9 @@ function AuthForm(): JSX.Element {
 				}
 
 				if (!acceptedTerms) {
-					errors.terms = "You must accept the Terms and Conditions to register.";
+					errors.terms = "You must accept the Terms and Conditions and Privacy Policy to register.";
 				}
+
 			} else if (step === 2) {
 				if (!formData.firstName || formData.firstName.trim().length === 0) {
 					errors.firstName = "First name is required.";
@@ -455,9 +458,15 @@ function AuthForm(): JSX.Element {
 		setAcceptedTerms(e.target.checked);
 	};
 
+
 	const handleShowTerms = (e: React.MouseEvent<HTMLButtonElement>): void => {
 		e.preventDefault();
 		setShowTerms(true);
+	};
+
+	const handleShowPrivacy = (e: React.MouseEvent<HTMLButtonElement>): void => {
+		e.preventDefault();
+		setShowPrivacy(true);
 	};
 
 	const emailField: ModalFormField = {
@@ -529,6 +538,15 @@ function AuthForm(): JSX.Element {
 					style={{ cursor: "pointer" }}
 				>
 					Terms and Conditions
+				</button>
+				{" and the "}
+				<button
+					type="button"
+					onClick={handleShowPrivacy}
+					className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+					style={{ cursor: "pointer" }}
+				>
+					Privacy Policy
 				</button>
 			</span>
 		),
@@ -881,6 +899,7 @@ function AuthForm(): JSX.Element {
 			</div>
 
 			<TermsAndConditions show={showTerms} onHide={() => setShowTerms(false)} />
+			<PrivacyPolicyModal show={showPrivacy} onHide={() => setShowPrivacy(false)} />
 		</div>
 	);
 }

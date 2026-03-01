@@ -1,7 +1,7 @@
 """Script to delete and generate geolocations for all the scraped jobs and locations"""
 
 from app.database import session_local
-from app.geolocation import geocode_location
+from app.geolocation.geolocation import geocode_location
 from app.models import ScrapedJob, Geolocation, Location
 from app.job_email_scraping.location_parser import LocationParser
 

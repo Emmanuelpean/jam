@@ -13,13 +13,12 @@ import { getApplicationStatusBadgeClass } from "../rendering/view/Icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
-import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { CompanyModal } from "./CompanyModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { KeywordModal } from "./KeywordModal";
 import { LocationModal } from "./LocationModal";
-import { EnrichedJobData, JobData, JobDataTransform } from "../../services/schemas/DataTables";
+import { JobData, JobDataTransform } from "../../services/schemas/DataTables";
 
 interface JobAndApplicationProps extends JamDataModalProps {
 	defaultActiveTab?: "job" | "application";
@@ -33,7 +32,6 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 		const aggregatorModalRef = useRef<DataModalHandle>(null);
 		const keywordModalRef = useRef<DataModalHandle>(null);
 		const { currentUser } = useAuth();
-		const dataContext: DataContextValue = useDataContext();
 		const { companies, locations, keywords, persons, aggregators } = useFormOptions();
 
 		const jobFormFields: Fields = [
@@ -44,13 +42,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				icon: "bi-briefcase",
 				fields: [
 					formFields.jobTitle({ placeholder: "Python Software Engineer" }),
-					[
-						formFields.company(companies, companyModalRef),
-						formFields.url({
-							label: "Job URL",
-							placeholder: "https://linkedin.com/jobs/453635",
-						}),
-					],
+					[formFields.company(companies, companyModalRef), formFields.jobURl()],
 				],
 			} as SectionConfig,
 			{
@@ -185,7 +177,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 								);
 							},
 						}),
-						modalViewFields.url({ label: "Job URL" }),
+						modalViewFields.jobUrl(),
 					],
 				],
 			} as SectionConfig,
@@ -295,23 +287,11 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 
 		const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
 			const errors: ValidationErrors = {};
-
 			if (formData.salary_min && isNaN(Number(formData.salary_min))) {
 				errors.salary_min = "Minimum Salary must be a valid number";
 			}
 			if (formData.salary_max && isNaN(Number(formData.salary_max))) {
 				errors.salary_max = "Maximum Salary must be a valid number";
-			}
-
-			if (formData.url) {
-				const urlDuplicates: EnrichedJobData[] = dataContext.jobs.filter((job: EnrichedJobData): boolean => {
-					return (
-						job.url?.trim().toLowerCase() === formData.url?.trim().toLowerCase() && job.id !== formData?.id
-					);
-				});
-				if (urlDuplicates.length > 0) {
-					errors.url = `A Job with this URL already exists`;
-				}
 			}
 			return errors;
 		};

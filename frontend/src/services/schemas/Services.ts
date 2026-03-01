@@ -1,4 +1,4 @@
-import { BaseOut, GeoLocation, OwnedOut } from "./Base";
+import { BaseOut, GeoLocationData, OwnedOut } from "./Base";
 
 export interface ServiceLog extends BaseOut {
 	run_datetime: string;
@@ -89,7 +89,7 @@ export interface ScrapedJobData extends OwnedOut {
 	location: string | null;
 	emails: number[];
 	job_rating: JobRatingData | null;
-	geolocation: GeoLocation | null;
+	geolocation: GeoLocationData | null;
 }
 
 export interface ScrapedJobUpdate {
