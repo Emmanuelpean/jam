@@ -573,7 +573,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 
 		return (
 			<>
-				<div className={"table-container"}>
+				<div className={`table-container${!compact ? " table-container--full-height" : ""}`}>
 					{title && <PageHeader title={title} count={totalCount || data.length} icon={getTableIcon(title)} />}
 
 					<div
@@ -623,8 +623,13 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 						<>
 							<div className="table-responsive">
 								<table
-									className={`table table-striped table-hover rounded-3 overflow-hidden ${compact ? "table-sm" : ""}`}
-									style={compact ? { fontSize: "0.875rem" } : {}}
+									className={`table table-striped table-hover ${compact ? "table-sm rounded-3 overflow-hidden" : ""}`}
+									style={{
+										...(compact ? { fontSize: "0.875rem" } : {}),
+										...(!compact
+											? { gridTemplateColumns: `repeat(${columns.length}, minmax(min-content, 1fr))` }
+											: {}),
+									}}
 								>
 									<thead className="custom-header">
 										<tr>

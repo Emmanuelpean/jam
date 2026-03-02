@@ -16,4 +16,58 @@ thead.custom-header th {
 
 .table-container {
     margin: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    &.table-container--full-height {
+        flex: 1 1 0;
+        min-height: 0;
+
+        .table-responsive {
+            flex: 1 1 0;
+            min-height: 0;
+            overflow: clip;
+            border-radius: var(--bs-border-radius-lg);
+        }
+
+        .table {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            height: 100%;
+        }
+
+        thead {
+            display: contents;
+        }
+
+        thead tr {
+            display: grid;
+            grid-column: 1 / -1;
+            grid-template-columns: subgrid;
+        }
+
+        // Apply header gradient to tr since thead has display:contents
+        thead.custom-header tr {
+            background: var(--primary-gradient);
+            --bs-table-bg: transparent;
+        }
+
+        tbody {
+            grid-column: 1 / -1;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: subgrid;
+        }
+
+        tbody tr {
+            display: grid;
+            grid-column: 1 / -1;
+            grid-template-columns: subgrid;
+        }
+    }
 }
