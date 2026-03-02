@@ -627,7 +627,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 									style={{
 										...(compact ? { fontSize: "0.875rem" } : {}),
 										...(!compact
-											? { gridTemplateColumns: `repeat(${columns.length}, minmax(min-content, 1fr))` }
+											? { gridTemplateColumns: `1fr repeat(${columns.length - 1}, auto)` }
 											: {}),
 									}}
 								>
