@@ -15,7 +15,7 @@ interface SortableItemProps {
 	onToggle: (key: string) => void;
 }
 
-const SortableItem: React.FC<SortableItemProps> = ({ column, isVisible, onToggle }): JSX.Element => {
+const SortableItem: React.FC<SortableItemProps> = ({ column, isVisible, onToggle }: SortableItemProps): JSX.Element => {
 	const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: column.key });
 
 	const style = {
@@ -31,7 +31,7 @@ const SortableItem: React.FC<SortableItemProps> = ({ column, isVisible, onToggle
 			<Form.Check
 				type="checkbox"
 				checked={isVisible}
-				onChange={() => onToggle(column.key)}
+				onChange={(): void => onToggle(column.key)}
 				label={column.label}
 				id={`col-toggle-${column.key}`}
 			/>
@@ -51,6 +51,11 @@ interface ColumnConfigSidebarProps {
 	onSortChange: (sort: SortConfig) => Promise<void>;
 }
 
+interface ColumnState {
+	key: string;
+	visible: boolean;
+}
+
 const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 	isOpen,
 	onClose,
@@ -61,19 +66,24 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 	onReset,
 	currentSort,
 	onSortChange,
-}): JSX.Element => {
-	const [items, setItems] = useState<{ key: string; visible: boolean }[]>([]);
+}: ColumnConfigSidebarProps): JSX.Element => {
+	const [items, setItems] = useState<ColumnState[]>([]);
 	const [saving, setSaving] = useState<boolean>(false);
 	const [sortKey, setSortKey] = useState(currentSort.key);
 	const [sortDirection, setSortDirection] = useState<Direction>(currentSort.direction);
 	const initialised = useRef<boolean>(false);
 
-	useEffect(() => {
+	useEffect((): void => {
 		if (isOpen) {
 			initialised.current = false;
 			const visibleSet = new Set(columnOrder);
-			const ordered: { key: string; visible: boolean }[] = columnOrder.map((key) => ({ key, visible: true }));
-			allColumns.forEach((col) => {
+			const ordered: ColumnState[] = columnOrder.map(
+				(key: string): ColumnState => ({
+					key,
+					visible: true,
+				})
+			);
+			allColumns.forEach((col: TableColumn): void => {
 				if (!visibleSet.has(col.key)) {
 					ordered.push({ key: col.key, visible: false });
 				}
@@ -88,8 +98,10 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 	}, [isOpen]);
 
 	const persistConfig = useCallback(
-		async (currentItems: { key: string; visible: boolean }[]) => {
-			const visibleKeys = currentItems.filter((item) => item.visible).map((item) => item.key);
+		async (currentItems: ColumnState[]): Promise<void> => {
+			const visibleKeys: string[] = currentItems
+				.filter((item: ColumnState): boolean => item.visible)
+				.map((item: ColumnState): string => item.key);
 			if (visibleKeys.length === 0) return;
 			setSaving(true);
 			try {
@@ -101,44 +113,46 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 		[onSave]
 	);
 
-	useEffect(() => {
+	useEffect((): void => {
 		if (!initialised.current || items.length === 0) return;
 		persistConfig(items);
 	}, [items]);
 
 	const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-	const handleDragEnd = (event: DragEndEvent) => {
+	const handleDragEnd = (event: DragEndEvent): void => {
 		const { active, over } = event;
 		if (!over || active.id === over.id) return;
 
-		setItems((prev) => {
-			const oldIndex = prev.findIndex((item) => item.key === active.id);
-			const newIndex = prev.findIndex((item) => item.key === over.id);
+		setItems((prev: ColumnState[]): ColumnState[] => {
+			const oldIndex: number = prev.findIndex((item: ColumnState): boolean => item.key === active.id);
+			const newIndex: number = prev.findIndex((item: ColumnState): boolean => item.key === over.id);
 			return arrayMove(prev, oldIndex, newIndex);
 		});
 	};
 
-	const handleToggle = (key: string) => {
-		setItems((prev) => {
-			const updated = prev.map((item) => (item.key === key ? { ...item, visible: !item.visible } : item));
-			if (!updated.some((item) => item.visible)) return prev;
+	const handleToggle = (key: string): void => {
+		setItems((prev: ColumnState[]): ColumnState[] => {
+			const updated: ColumnState[] = prev.map(
+				(item: ColumnState): ColumnState => (item.key === key ? { ...item, visible: !item.visible } : item)
+			);
+			if (!updated.some((item: ColumnState): boolean => item.visible)) return prev;
 			return updated;
 		});
 	};
 
-	const handleSortKeyChange = (selected: SingleValue<SelectOption>) => {
+	const handleSortKeyChange = (selected: SingleValue<SelectOption>): void => {
 		if (!selected) return;
 		setSortKey(selected.value);
-		onSortChange({ key: selected.value, direction: sortDirection });
+		void onSortChange({ key: selected.value, direction: sortDirection });
 	};
 
-	const handleSortDirectionChange = (direction: Direction) => {
+	const handleSortDirectionChange = (direction: Direction): void => {
 		setSortDirection(direction);
-		onSortChange({ key: sortKey, direction });
+		void onSortChange({ key: sortKey, direction });
 	};
 
-	const handleReset = async () => {
+	const handleReset = async (): Promise<void> => {
 		setSaving(true);
 		try {
 			await onReset();
@@ -148,18 +162,21 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 		}
 	};
 
-	const sortableColumns = allColumns.filter(
-		(col) => col.sortable && items.some((item) => item.key === col.key && item.visible)
+	const sortableColumns: TableColumn[] = allColumns.filter(
+		(col: TableColumn): boolean | undefined =>
+			col.sortable && items.some((item: ColumnState): boolean => item.key === col.key && item.visible)
 	);
 
 	const sortOptions: SelectOption[] = useMemo(
-		() => sortableColumns.map((col) => ({ value: col.key, label: col.label })),
+		(): SelectOption[] =>
+			sortableColumns.map((col: TableColumn): SelectOption => ({ value: col.key, label: col.label })),
 		[sortableColumns]
 	);
 
-	const selectedSortOption = sortOptions.find((opt) => opt.value === sortKey) || null;
+	const selectedSortOption: SelectOption | null =
+		sortOptions.find((opt: SelectOption): boolean => opt.value === sortKey) || null;
 
-	const visibleCount = items.filter((i) => i.visible).length;
+	const visibleCount: number = items.filter((i: ColumnState): boolean => i.visible).length;
 
 	return (
 		<>
@@ -179,9 +196,14 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 						</span>
 					</div>
 					<DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-						<SortableContext items={items.map((i) => i.key)} strategy={verticalListSortingStrategy}>
-							{items.map((item) => {
-								const column = allColumns.find((col) => col.key === item.key);
+						<SortableContext
+							items={items.map((i: ColumnState): string => i.key)}
+							strategy={verticalListSortingStrategy}
+						>
+							{items.map((item: ColumnState): JSX.Element | null => {
+								const column: TableColumn | undefined = allColumns.find(
+									(col: TableColumn): boolean => col.key === item.key
+								);
 								if (!column) return null;
 								return (
 									<SortableItem

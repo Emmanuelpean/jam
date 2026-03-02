@@ -18,7 +18,7 @@ export interface ColumnConfig {
 export function useColumnConfig(entityType: string): ColumnConfig {
 	const { currentUser, updateCurrentUser } = useAuth();
 
-	const savedKeys: string[] | null = useMemo(() => {
+	const savedKeys: string[] | null = useMemo((): string[] | null => {
 		return currentUser?.preferences?.table_columns?.[entityType] ?? null;
 	}, [currentUser, entityType]);
 
@@ -28,21 +28,21 @@ export function useColumnConfig(entityType: string): ColumnConfig {
 		return { key: s.key, direction: s.direction as SortConfig["direction"] };
 	}, [currentUser, entityType]);
 
-	const allColumns = useMemo(() => getDefaultColumns(entityType), [entityType]);
+	const allColumns: TableColumn[] = useMemo((): TableColumn[] => getDefaultColumns(entityType), [entityType]);
 
-	const defaultKeys = useMemo(() => getDefaultColumnKeys(entityType), [entityType]);
+	const defaultKeys: string[] = useMemo((): string[] => getDefaultColumnKeys(entityType), [entityType]);
 
-	const isDefault = savedKeys === null && savedSort === null;
+	const isDefault: boolean = savedKeys === null && savedSort === null;
 
-	const columnOrder = savedKeys ?? defaultKeys;
+	const columnOrder: string[] = savedKeys ?? defaultKeys;
 
-	const visibleColumns = useMemo(() => {
+	const visibleColumns: TableColumn[] = useMemo((): TableColumn[] => {
 		if (savedKeys === null) return allColumns;
 		return resolveColumns(entityType, columnOrder);
 	}, [savedKeys, allColumns, entityType, columnOrder]);
 
 	const setColumnConfig = useCallback(
-		async (keys: string[]) => {
+		async (keys: string[]): Promise<void> => {
 			const existing = currentUser?.preferences?.table_columns ?? {};
 			await updateCurrentUser({
 				preferences: {
@@ -65,7 +65,7 @@ export function useColumnConfig(entityType: string): ColumnConfig {
 		[currentUser, entityType, updateCurrentUser]
 	);
 
-	const resetToDefaults = useCallback(async () => {
+	const resetToDefaults = useCallback(async (): Promise<void> => {
 		const existingCols = currentUser?.preferences?.table_columns ?? {};
 		const existingSort = currentUser?.preferences?.table_sort ?? {};
 		const updatedCols = { ...existingCols };
