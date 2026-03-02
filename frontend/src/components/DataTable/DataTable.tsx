@@ -39,6 +39,8 @@ import "./DataTable.scss";
 import FollowUpModal, { FollowUpModalHandle } from "../FollowUpModal/FollowUpModal";
 import { useContextMenu } from "../../contexts/ContextMenuContext";
 import PageHeader from "../../pages/PageHeader/PageHeader";
+import { ColumnConfig, useColumnConfig } from "../../hooks/useColumnConfig";
+import ColumnConfigSidebar from "./ColumnConfigSidebar";
 
 export type Direction = "asc" | "desc";
 
@@ -93,6 +95,9 @@ export interface GenericTableProps {
 	toolbarAddon?: React.ReactNode;
 	reloadTrigger?: number;
 	queryParams?: Record<string, string>;
+
+	// Column configuration
+	enableColumnConfig?: boolean;
 }
 
 export interface DataTableHandle {
@@ -124,10 +129,14 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			reloadTrigger,
 			queryParams,
 			defaultModalMode = "view",
+			enableColumnConfig = false,
 		}: GenericTableProps,
 		ref
 	): JSX.Element => {
 		const { token } = useAuth();
+		const columnConfig: ColumnConfig = useColumnConfig(entityType);
+		const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
+		const effectiveColumns: TableColumn[] = enableColumnConfig ? columnConfig.visibleColumns : columns;
 		const modalRef = useRef<DataModalHandle>(null);
 		const openViewModal = (item: any): void | undefined => modalRef.current?.showView(item);
 		const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
@@ -146,10 +155,24 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const [fetchedData, setFetchedData] = useState<any[]>([]);
 		const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
 
-		// Search and sort
-		const [sortConfig, setSortConfig] = useState<SortConfig>(
-			(initialSortConfig as SortConfig) || { key: "created_at", direction: "desc" }
-		);
+		// Search and sort — saved sort preference takes priority over prop default
+		const effectiveInitialSort: SortConfig =
+			(enableColumnConfig && columnConfig.savedSort) ||
+			(initialSortConfig as SortConfig) ||
+			{ key: "created_at", direction: "desc" };
+		const [sortConfig, setSortConfig] = useState<SortConfig>(effectiveInitialSort);
+		const prevSavedSortRef = useRef(columnConfig.savedSort);
+
+		// Sync sortConfig when saved sort changes externally (e.g. from sidebar)
+		useEffect(() => {
+			const prev = prevSavedSortRef.current;
+			const next = columnConfig.savedSort;
+			if (enableColumnConfig && next && (prev?.key !== next.key || prev?.direction !== next.direction)) {
+				setSortConfig(next);
+			}
+			prevSavedSortRef.current = next;
+		}, [columnConfig.savedSort, enableColumnConfig]);
+
 		const [searchTerm, setSearchTerm] = useState<string>("");
 
 		// UI state
@@ -256,9 +279,9 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			const searchTermLower: string = searchTerm.toLowerCase();
 
 			// Filter by search term
-			if (searchTermLower && columns.some((col: TableColumn): boolean | undefined => col.searchable)) {
+			if (searchTermLower && effectiveColumns.some((col: TableColumn): boolean | undefined => col.searchable)) {
 				filteredData = filteredData.filter((item: JamData): boolean => {
-					return columns.some((column: TableColumn): boolean | undefined => {
+					return effectiveColumns.some((column: TableColumn): boolean | undefined => {
 						if (!column.searchable) return false;
 						let value: string | null | Date | number;
 						if (column.searchFields) {
@@ -278,7 +301,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			// Sort data
 			if (sortConfig.key) {
 				filteredData.sort((a: any, b: any): 0 | 1 | -1 => {
-					const column: TableColumn | undefined = columns.find(
+					const column: TableColumn | undefined = effectiveColumns.find(
 						(col: TableColumn): boolean => col.key === sortConfig.key
 					);
 					let aValue: any, bValue: any;
@@ -614,6 +637,15 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								{getAddButtonText()}
 							</Button>
 						)}
+						{enableColumnConfig && !compact && (
+							<Button
+								variant="outline-primary"
+								onClick={() => setColumnSidebarOpen(!columnSidebarOpen)}
+								style={{ aspectRatio: "1", padding: "0 1rem" }}
+							>
+								<i className="bi bi-gear"></i>
+							</Button>
+						)}
 					</div>
 
 					{/* Table */}
@@ -621,19 +653,20 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 						<LoadingSpinner text="Loading..." />
 					) : (
 						<>
-							<div className="table-responsive">
+							<div style={{ display: "flex", minHeight: 0, flex: 1 }}>
+							<div className="table-responsive" style={{ minWidth: 0 }}>
 								<table
 									className={`table table-striped table-hover ${compact ? "table-sm rounded-3 overflow-hidden" : ""}`}
 									style={{
 										...(compact ? { fontSize: "0.875rem" } : {}),
 										...(!compact
-											? { gridTemplateColumns: `1fr repeat(${columns.length - 1}, auto)` }
+											? { gridTemplateColumns: `1fr repeat(${effectiveColumns.length - 1}, auto)` }
 											: {}),
 									}}
 								>
 									<thead className="custom-header">
 										<tr>
-											{columns.map(
+											{effectiveColumns.map(
 												(column: TableColumn): JSX.Element => (
 													<th key={column.key} style={compact ? { padding: "0.5rem" } : {}}>
 														<div className="d-flex align-items-center justify-content-between">
@@ -688,7 +721,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 													onContextMenu={(e) => handleRowRightClick(item, e)}
 													style={{ cursor: "pointer" }}
 												>
-													{columns.map((column, columnIndex) => (
+													{effectiveColumns.map((column, columnIndex) => (
 														<td
 															key={column.key}
 															className="align-middle"
@@ -715,7 +748,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 										{currentPageData.length === 0 && (
 											<tr>
 												<td
-													colSpan={columns.length}
+													colSpan={effectiveColumns.length}
 													className="text-center py-4 text-muted"
 													style={
 														compact
@@ -732,6 +765,20 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 										)}
 									</tbody>
 								</table>
+							</div>
+							{enableColumnConfig && (
+								<ColumnConfigSidebar
+									isOpen={columnSidebarOpen}
+									onClose={() => setColumnSidebarOpen(false)}
+									allColumns={columnConfig.allColumns}
+									columnOrder={columnConfig.columnOrder}
+									isDefault={columnConfig.isDefault}
+									onSave={columnConfig.setColumnConfig}
+									onReset={columnConfig.resetToDefaults}
+									currentSort={sortConfig}
+									onSortChange={columnConfig.setSortConfig}
+								/>
+							)}
 							</div>
 
 							{/* Pagination */}

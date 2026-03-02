@@ -4,7 +4,7 @@ import datetime as dt
 import math
 from typing import Any
 
-from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, CheckConstraint, event
+from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, CheckConstraint, JSON, event
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
@@ -165,6 +165,8 @@ class UserPreferences(Owned, Base):
     deadline_threshold = Column(Integer, nullable=False, server_default="7")
     update_limit = Column(Integer, nullable=False, server_default="10")
     default_currency = Column(String, nullable=False, server_default="GBP")
+    table_columns = Column(JSON, nullable=True)
+    table_sort = Column(JSON, nullable=True)
     extension_banner_dismissed = Column(Boolean, nullable=False, server_default="false")
 
 

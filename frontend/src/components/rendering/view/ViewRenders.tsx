@@ -196,6 +196,14 @@ export const renderFunctions = {
 		return getScrapingFilterName(param.item);
 	},
 
+	attendanceType: (param: RenderParams): ReactNode => {
+		const attendanceType: string | null = param.item.attendance_type;
+		return (
+			attendanceTypeOptions.filter((option: SelectOption): boolean => option.value === attendanceType)[0]
+				?.label || null
+		);
+	},
+
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
 	_url: (param: RenderParams, attribute: string, displayText: string | null = null): ReactNode => {
@@ -444,6 +452,14 @@ export const renderFunctions = {
 		return param.item?.filtered_jobs?.length || 0;
 	},
 
+	interviewCount: (param: RenderParams): number => {
+		return param.item?.interviews?.length || 0;
+	},
+
+	jobApplicationUpdateCount: (param: RenderParams): number => {
+		return param.item?.updates?.length || 0;
+	},
+
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
 	jobBadge: (param: RenderParams): ReactNode => {
@@ -591,6 +607,16 @@ export const renderFunctions = {
 					))}
 				</div>
 			);
+		}
+		return null;
+	},
+
+	_personBadge: (param: RenderParams, idKey: keyof JobData): ReactNode => {
+		const ctx: DataContextValue = param.dataContext;
+		const person: PersonData | undefined = getJamData(ctx.persons, param.item?.[idKey]);
+
+		if (person) {
+			return <PersonBadge item={person} badgeId={param.id} />;
 		}
 		return null;
 	},
