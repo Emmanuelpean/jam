@@ -9,8 +9,8 @@ from app import models as models
 from app import utils
 from app.config import settings
 from app.database import get_db
-from app.job_rating.chatgpt import openai_query
-from app.job_rating.prompts import create_ai_prompt
+from app.job_rating.claude import claude_query
+from app.job_rating.prompts import create_job_only_prompt, create_system_prompt_with_profile
 from app.service_runner.service_runner import ServiceRunner
 
 SERVICE_NAME = "job_rating_service"
@@ -158,6 +158,17 @@ class ScrapedJobRater:
         service_log.job_found_ids = service_log.job_found_ids + [job.id for job in scraped_jobs]
         self.logger.info(f"Found {len(scraped_jobs)} scraped jobs to rate")
 
+        # Build the combined system prompt (instructions + candidate profile) once per user
+        # so Anthropic caches it across all jobs for this user
+        combined_system_prompt = create_system_prompt_with_profile(
+            prompt_template=system_prompt.prompt,
+            user_experience=user_qualification.experience,
+            user_education=user_qualification.education,
+            user_skills=user_qualification.skills,
+            user_qualities=user_qualification.qualities,
+            user_interests=user_qualification.interests,
+        )
+
         for scraped_job in scraped_jobs:
             self._rate_job(
                 db,
@@ -167,6 +178,7 @@ class ScrapedJobRater:
                 service_log,
                 system_prompt,
                 job_prompt_template,
+                combined_system_prompt,
             )
 
         service_log.user_processed_ids = service_log.user_processed_ids + [user_id]
@@ -181,6 +193,7 @@ class ScrapedJobRater:
         service_log: models.JobRatingServiceLog,
         system_prompt: models.AiSystemPrompt,
         job_prompt_template: models.AiJobPromptTemplate,
+        combined_system_prompt: str,
     ) -> None:
         """Rate a single scraped job.
         :param db: Database session
@@ -189,7 +202,8 @@ class ScrapedJobRater:
         :param user_qualification: The user's qualification
         :param service_log: Job rating service log entry
         :param system_prompt: Latest system prompt template
-        :param job_prompt_template: Latest job prompt template"""
+        :param job_prompt_template: Latest job prompt template
+        :param combined_system_prompt: Pre-built system prompt with candidate profile embedded"""
 
         self.logger.info(f"Processing job ID {scraped_job.id}")
         notes = []
@@ -236,18 +250,13 @@ class ScrapedJobRater:
         score = None
         try:
             self.logger.info(f"Scoring job ID {scraped_job.id}")
-            job_prompt = create_ai_prompt(
+            job_prompt = create_job_only_prompt(
                 prompt_template=job_prompt_template.prompt,
-                user_experience=user_qualification.experience,
-                user_education=user_qualification.education,
-                user_skills=user_qualification.skills,
-                user_qualities=user_qualification.qualities,
-                user_interests=user_qualification.interests,
                 job_title=title,
                 job_company=company,
                 job_description=description,
             )
-            score = openai_query(system_prompt.prompt, job_prompt)
+            score = claude_query(combined_system_prompt, job_prompt)
             job_rating = models.JobRating(
                 overall_score=score["overall_score"],
                 technical_score=score["technical_fit"],

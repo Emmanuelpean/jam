@@ -2,7 +2,6 @@ import React, { JSX } from "react";
 import { Card, Col, Container, Row } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.scss";
-import ExtensionBanner from "../Dashboard/ExtensionBanner";
 
 interface Feature {
 	icon: string;
@@ -37,8 +36,6 @@ const ExtensionPage = (): JSX.Element => {
 	return (
 		<div className="gradient-bg" style={{ borderRadius: "20px", overflow: "hidden", minHeight: "100%" }}>
 			<Container className="py-5">
-				<ExtensionBanner />
-
 				<div className="text-center mb-4">
 					<div className="extension-about-icon">
 						<i className="bi bi-puzzle-fill" />
