@@ -37,6 +37,13 @@ const getJobText = (item: JamData, context: DataContextValue): string | null => 
 	return null;
 };
 
+const getSourceAggregatorText = (item: JamData, context: DataContextValue): string | null => {
+	if ("source_aggregator_id" in item && item.source_aggregator_id) {
+		return findItemById(context.aggregators, item.source_aggregator_id)?.name ?? null;
+	}
+	return null;
+};
+
 const _getPersonsText = (item: JamData, context: DataContextValue, key: string): string | null => {
 	if (!(key in item)) return null;
 	const ids: number = (item as any)[key];
@@ -112,7 +119,7 @@ export const tableColumns = {
 	noteColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "note",
 		label: "Notes",
-		sortable: false,
+		sortable: true,
 		searchable: true,
 		type: "text",
 		render: renderFunctions.note,
@@ -278,6 +285,16 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	attendanceTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "attendance_type",
+		label: "Attendance Type",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.attendanceType,
+		...overrides,
+	}),
+
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
 	urlColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
@@ -365,6 +382,17 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	applicationDeadline: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "deadline",
+		label: "Deadline",
+		sortable: true,
+		searchable: true,
+		type: "date",
+		searchFields: (item: JamData) => ("deadline" in item && item.deadline ? toDdMmYyyy(item.deadline) : ""),
+		render: (params: RenderParams) => renderFunctions._date(params, "deadline"),
+		...overrides,
+	}),
+
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
 	locationBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
@@ -424,6 +452,38 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	sourceAggregatorBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "sourceAggregatorBadge",
+		label: "Source Aggregator",
+		sortable: true,
+		searchable: true,
+		searchFields: getSourceAggregatorText,
+		sortField: getSourceAggregatorText,
+		render: (params: RenderParams) => renderFunctions._aggregatorBadge(params, "source_aggregator_id"),
+		...overrides,
+	}),
+
+	sourceContactBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "sourceContactBadge",
+		label: "Source Contact",
+		sortable: true,
+		searchable: true,
+		searchFields: (item: JamData, dataContext: DataContextValue) =>
+			_getPersonsText(item, dataContext, "recruiter_id"),
+		render: (params: RenderParams) => renderFunctions._personBadge(params, "recruiter_id"),
+		...overrides,
+	}),
+
+	KeywordBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "keywords",
+		label: "Tags",
+		sortable: false,
+		searchable: true,
+		// searchFields: (item: JamData, dataContext: DataContextValue) => getSourceAggregatorText(),
+		render: renderFunctions.KeywordBadges,
+		...overrides,
+	}),
+
 	// ----------------------------------------------------- OTHERS ----------------------------------------------------
 
 	isAdminColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
@@ -433,6 +493,16 @@ export const tableColumns = {
 		searchable: false,
 		type: "text",
 		render: renderFunctions.isAdmin,
+		...overrides,
+	}),
+
+	isRecruiterColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_recruiter",
+		label: "Recruiter",
+		sortable: true,
+		searchable: false,
+		type: "text",
+		render: renderFunctions.isRecruiter,
 		...overrides,
 	}),
 
@@ -576,6 +646,24 @@ export const tableColumns = {
 		sortable: true,
 		searchable: false,
 		render: renderFunctions.filteredJobCount,
+		...overrides,
+	}),
+
+	interviewCountColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "interviews",
+		label: "Interviews",
+		sortable: true,
+		searchable: false,
+		render: renderFunctions.interviewCount,
+		...overrides,
+	}),
+
+	jobApplicationUpdateCountColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "updates",
+		label: "Updates",
+		sortable: true,
+		searchable: false,
+		render: renderFunctions.jobApplicationUpdateCount,
 		...overrides,
 	}),
 };

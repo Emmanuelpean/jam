@@ -28,6 +28,8 @@ export interface UserPreferences {
 	update_limit: number;
 	default_currency: string;
 	extension_banner_dismissed: boolean;
+	table_columns: Record<string, string[]> | null;
+	table_sort: Record<string, { key: string; direction: string }> | null;
 }
 
 export type UserPreferencesUpdate = Partial<UserPreferences>;

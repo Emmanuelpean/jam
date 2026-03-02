@@ -84,6 +84,7 @@ const JobsPage = (): JSX.Element => {
 				Modal={JobModal}
 				modalSize="xl"
 				menuItems={["view", "edit", "delete", "followup"]}
+				enableColumnConfig={true}
 			/>
 			<ExtensionJobModal ref={extensionModalRef} />
 		</>
