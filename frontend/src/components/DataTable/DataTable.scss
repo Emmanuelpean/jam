@@ -15,7 +15,6 @@ thead.custom-header th {
 }
 
 .table-container {
-    margin: auto;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -62,6 +61,13 @@ thead.custom-header th {
             overflow-y: auto;
             display: grid;
             grid-template-columns: subgrid;
+            align-content: start;
+        }
+
+        thead th,
+        tbody td {
+            display: flex;
+            align-items: center;
         }
 
         tbody tr {
