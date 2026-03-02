@@ -403,7 +403,7 @@ export const tableColumns = {
 		type: "text",
 		sortField: getLocationText,
 		searchFields: getLocationText,
-		render: renderFunctions.LocationBadge,
+		render: (params: RenderParams) => renderFunctions.LocationBadge(params, true),
 		...overrides,
 	}),
 

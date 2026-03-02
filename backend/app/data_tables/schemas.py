@@ -111,6 +111,7 @@ class LocationOut(LocationCreate, OwnedOut):
     """Location output schema with job and interview data"""
 
     name: str | None = None
+    short_name: str | None = None
     geolocation: GeolocationOut | None = None
     jobs: list[OwnedOut] = []
     interviews: list[OwnedOut] = []

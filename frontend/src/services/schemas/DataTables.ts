@@ -51,6 +51,7 @@ export interface LocationData extends OwnedOut {
 	postcode?: string | null;
 	country?: string | null;
 	name: string;
+	short_name: string;
 	geolocation: GeoLocationData | null;
 }
 

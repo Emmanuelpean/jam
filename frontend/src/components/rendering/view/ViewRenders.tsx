@@ -491,7 +491,7 @@ export const renderFunctions = {
 		}
 	},
 
-	LocationBadge: (param: RenderParams): ReactNode => {
+	LocationBadge: (param: RenderParams, shortName: boolean = false): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
 		const location: LocationData | undefined = getJamData(ctx.locations, param.item?.location_id);
 		const attendanceType: string | null = param.item?.attendance_type;
@@ -509,11 +509,18 @@ export const renderFunctions = {
 			attendanceTypeOptions.filter((option: SelectOption): boolean => option.value === attendanceType)[0]
 				?.label || null;
 
+		let locationName: string | null = null;
+		if (shortName && location) {
+			locationName = location.short_name;
+		} else if (!shortName && location) {
+			locationName = location.name;
+		}
+
 		let displayText: string | null = null;
-		if (location && attendanceString) {
-			displayText = `${location.name} (${attendanceString})`;
-		} else if (location) {
-			displayText = location.name;
+		if (locationName && attendanceString) {
+			displayText = `${locationName} (${attendanceString})`;
+		} else if (locationName) {
+			displayText = locationName;
 		} else if (attendanceString) {
 			displayText = attendanceString;
 		} else {
