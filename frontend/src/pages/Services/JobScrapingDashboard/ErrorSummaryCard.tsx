@@ -135,9 +135,9 @@ export const ErrorSummaryCard = ({
 						)}
 					</div>
 
-					{/* Scrape Errors Column */}
+					{/* Scraping Errors Column */}
 					<div style={{ flex: 1 }}>
-						<h5 className="mb-3">Scrape Errors ({Object.keys(scrapeErrors).length} unique)</h5>
+						<h5 className="mb-3">Scraping Errors ({Object.keys(scrapeErrors).length} unique)</h5>
 						{Object.keys(scrapeErrors).length === 0 ? (
 							<div className="text-muted">No scrape errors</div>
 						) : (

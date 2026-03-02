@@ -72,6 +72,9 @@ class Settings(BaseSettings):
     # OpenAI
     openai_api_key: str
 
+    # Anthropic
+    anthropic_api_key: str
+
     # Apify
     apify_api_key: str
 

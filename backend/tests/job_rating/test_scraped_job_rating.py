@@ -5,6 +5,7 @@ import datetime as dt
 from app import models
 from app.config import settings
 from app.job_email_scraping.email_parsers import Platform
+from app.job_rating.prompts import create_system_prompt_with_profile
 from app.job_rating.scraped_job_rating import (
     ScrapedJobRater,
     ensure_length_limit,
@@ -244,8 +245,24 @@ class TestScrapedJobRaterRateJob:
         service_log = self.make_service_log(session)
         scraped_job = self.make_scraped_job(session, user.id, "Short", test_job_scraping_service_logs[0].id)
 
+        combined_system_prompt = create_system_prompt_with_profile(
+            system_prompt.prompt,
+            qualification.experience,
+            qualification.education,
+            qualification.skills,
+            qualification.qualities,
+            qualification.interests,
+        )
+
         ScrapedJobRater()._rate_job(
-            session, scraped_job, user.id, qualification, service_log, system_prompt, job_prompt_template
+            session,
+            scraped_job,
+            user.id,
+            qualification,
+            service_log,
+            system_prompt,
+            job_prompt_template,
+            combined_system_prompt,
         )
 
         session.refresh(service_log)
@@ -272,8 +289,24 @@ class TestScrapedJobRaterRateJob:
         description = "A" * (settings.min_scraping_description_length + 1)
         scraped_job = self.make_scraped_job(session, user.id, description, test_job_scraping_service_logs[0].id)
 
+        combined_system_prompt = create_system_prompt_with_profile(
+            system_prompt.prompt,
+            qualification.experience,
+            qualification.education,
+            qualification.skills,
+            qualification.qualities,
+            qualification.interests,
+        )
+
         ScrapedJobRater()._rate_job(
-            session, scraped_job, user.id, qualification, service_log, system_prompt, job_prompt_template
+            session,
+            scraped_job,
+            user.id,
+            qualification,
+            service_log,
+            system_prompt,
+            job_prompt_template,
+            combined_system_prompt,
         )
 
         session.refresh(service_log)
@@ -307,10 +340,26 @@ class TestScrapedJobRaterRateJob:
         def raise_error(*_args, **_kwargs):
             raise RuntimeError("AI service unavailable")
 
-        monkeypatch.setattr(rating_module, "openai_query", raise_error)
+        monkeypatch.setattr(rating_module, "claude_query", raise_error)
+
+        combined_system_prompt = create_system_prompt_with_profile(
+            system_prompt.prompt,
+            qualification.experience,
+            qualification.education,
+            qualification.skills,
+            qualification.qualities,
+            qualification.interests,
+        )
 
         ScrapedJobRater()._rate_job(
-            session, scraped_job, user.id, qualification, service_log, system_prompt, job_prompt_template
+            session,
+            scraped_job,
+            user.id,
+            qualification,
+            service_log,
+            system_prompt,
+            job_prompt_template,
+            combined_system_prompt,
         )
 
         session.refresh(service_log)
@@ -337,8 +386,24 @@ class TestScrapedJobRaterRateJob:
         description = "A" * (settings.max_scraping_description_length + 100)
         scraped_job = self.make_scraped_job(session, user.id, description, test_job_scraping_service_logs[0].id)
 
+        combined_system_prompt = create_system_prompt_with_profile(
+            system_prompt.prompt,
+            qualification.experience,
+            qualification.education,
+            qualification.skills,
+            qualification.qualities,
+            qualification.interests,
+        )
+
         ScrapedJobRater()._rate_job(
-            session, scraped_job, user.id, qualification, service_log, system_prompt, job_prompt_template
+            session,
+            scraped_job,
+            user.id,
+            qualification,
+            service_log,
+            system_prompt,
+            job_prompt_template,
+            combined_system_prompt,
         )
 
         rating = session.query(models.JobRating).filter(models.JobRating.scraped_job_id == scraped_job.id).first()
@@ -433,16 +498,9 @@ class TestScoreScrapedJobs(object):
         assert len(service_log.user_found_ids) == 3
         assert len(service_log.user_processed_ids) == 3
 
-        # Check that the job prompt is correct
+        # Check that the job prompt contains only job details (candidate profile is in system prompt)
         job_rating = [job_rating for job_rating in job_ratings if job_rating.is_success][0]
-        job_prompt = f"""### Candidate Profile
-- **Experience**: Not provided
-- **Education**: BSc Computer Science
-- **Skills**: Not provided
-- **Qualities**: Not provided
-- **Interests**: Not provided
-
-### Job Details
+        job_prompt = f"""### Job Details
 - **Title**: {job_rating.scraped_job.title}
 - **Company**: {job_rating.scraped_job.company}
 - **Description**: {job_rating.scraped_job.description}
