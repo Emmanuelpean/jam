@@ -156,10 +156,8 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
 
 		// Search and sort — saved sort preference takes priority over prop default
-		const effectiveInitialSort: SortConfig =
-			(enableColumnConfig && columnConfig.savedSort) ||
-			(initialSortConfig as SortConfig) ||
-			{ key: "created_at", direction: "desc" };
+		const effectiveInitialSort: SortConfig = (enableColumnConfig && columnConfig.savedSort) ||
+			(initialSortConfig as SortConfig) || { key: "created_at", direction: "desc" };
 		const [sortConfig, setSortConfig] = useState<SortConfig>(effectiveInitialSort);
 		const prevSavedSortRef = useRef(columnConfig.savedSort);
 
@@ -654,131 +652,138 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 					) : (
 						<>
 							<div style={{ display: "flex", minHeight: 0, flex: 1 }}>
-							<div className="table-responsive" style={{ minWidth: 0 }}>
-								<table
-									className={`table table-striped table-hover ${compact ? "table-sm rounded-3 overflow-hidden" : ""}`}
-									style={{
-										...(compact ? { fontSize: "0.875rem" } : {}),
-										...(!compact
-											? { gridTemplateColumns: `1fr repeat(${effectiveColumns.length - 1}, auto)` }
-											: {}),
-									}}
-								>
-									<thead className="custom-header">
-										<tr>
-											{effectiveColumns.map(
-												(column: TableColumn): JSX.Element => (
-													<th key={column.key} style={compact ? { padding: "0.5rem" } : {}}>
-														<div className="d-flex align-items-center justify-content-between">
-															<div
-																className={
-																	column.sortable
-																		? "cursor-pointer user-select-none"
-																		: ""
-																}
-																onClick={() =>
-																	column.sortable && handleSort(column.key)
-																}
-																id={`table-header-${column.key}`}
-																style={compact ? { fontSize: "0.875rem" } : {}}
-															>
-																{column.label}
-																{column.sortable && (
-																	<span className="ms-1">
-																		<i
-																			className={`bi bi-arrow-${
-																				sortConfig.key === column.key
-																					? sortConfig.direction === "asc"
-																						? "up"
-																						: "down"
-																					: "down-up"
-																			}`}
-																			style={
-																				compact
-																					? {
-																							fontSize: "0.75rem",
-																						}
-																					: {}
-																			}
-																		></i>
-																	</span>
-																)}
+								<div className="table-responsive" style={{ minWidth: 0, width: "100%" }}>
+									<table
+										className={`table table-striped table-hover ${compact ? "table-sm rounded-3 overflow-hidden" : ""}`}
+										style={{
+											...(compact ? { fontSize: "0.875rem" } : {}),
+											...(!compact
+												? {
+														gridTemplateColumns: `1fr repeat(${effectiveColumns.length - 1}, auto)`,
+													}
+												: {}),
+										}}
+									>
+										<thead className="custom-header">
+											<tr>
+												{effectiveColumns.map(
+													(column: TableColumn): JSX.Element => (
+														<th
+															key={column.key}
+															style={compact ? { padding: "0.5rem" } : {}}
+														>
+															<div className="d-flex align-items-center justify-content-between">
+																<div
+																	className={
+																		column.sortable
+																			? "cursor-pointer user-select-none"
+																			: ""
+																	}
+																	onClick={() =>
+																		column.sortable && handleSort(column.key)
+																	}
+																	id={`table-header-${column.key}`}
+																	style={compact ? { fontSize: "0.875rem" } : {}}
+																>
+																	{column.label}
+																	{column.sortable && (
+																		<span className="ms-1">
+																			<i
+																				className={`bi bi-arrow-${
+																					sortConfig.key === column.key
+																						? sortConfig.direction === "asc"
+																							? "up"
+																							: "down"
+																						: "down-up"
+																				}`}
+																				style={
+																					compact
+																						? {
+																								fontSize: "0.75rem",
+																							}
+																						: {}
+																				}
+																			></i>
+																		</span>
+																	)}
+																</div>
 															</div>
-														</div>
-													</th>
+														</th>
+													)
+												)}
+											</tr>
+										</thead>
+										<tbody>
+											{currentPageData.map(
+												(item: JamData, index: number): JSX.Element => (
+													<tr
+														key={item.id || index}
+														id={`table-row-${entityType}-${item.id}`}
+														className={`table-row-clickable`}
+														onClick={(e) => handleRowClick(e, item)}
+														onContextMenu={(e) => handleRowRightClick(item, e)}
+														style={{ cursor: "pointer" }}
+													>
+														{effectiveColumns.map((column, columnIndex) => (
+															<td
+																key={column.key}
+																className="align-middle"
+																style={{
+																	...(columnIndex === 0
+																		? { fontWeight: "bold" }
+																		: {}),
+																	...(compact
+																		? {
+																				padding: "0.5rem",
+																				fontSize: "0.875rem",
+																			}
+																		: {}),
+																}}
+															>
+																<RenderViewFieldWithContext
+																	field={column}
+																	item={item}
+																	id={`table-row-${item.id}`}
+																/>
+															</td>
+														))}
+													</tr>
 												)
 											)}
-										</tr>
-									</thead>
-									<tbody>
-										{currentPageData.map(
-											(item: JamData, index: number): JSX.Element => (
-												<tr
-													key={item.id || index}
-													id={`table-row-${entityType}-${item.id}`}
-													className={`table-row-clickable`}
-													onClick={(e) => handleRowClick(e, item)}
-													onContextMenu={(e) => handleRowRightClick(item, e)}
-													style={{ cursor: "pointer" }}
-												>
-													{effectiveColumns.map((column, columnIndex) => (
-														<td
-															key={column.key}
-															className="align-middle"
-															style={{
-																...(columnIndex === 0 ? { fontWeight: "bold" } : {}),
-																...(compact
-																	? {
-																			padding: "0.5rem",
-																			fontSize: "0.875rem",
-																		}
-																	: {}),
-															}}
-														>
-															<RenderViewFieldWithContext
-																field={column}
-																item={item}
-																id={`table-row-${item.id}`}
-															/>
-														</td>
-													))}
+											{currentPageData.length === 0 && (
+												<tr>
+													<td
+														colSpan={effectiveColumns.length}
+														className="text-center py-4 text-muted"
+														style={
+															compact
+																? {
+																		padding: "1rem",
+																		fontSize: "0.875rem",
+																	}
+																: {}
+														}
+													>
+														{emptyMessage || `No ${pluralize(entityName)} found`}
+													</td>
 												</tr>
-											)
-										)}
-										{currentPageData.length === 0 && (
-											<tr>
-												<td
-													colSpan={effectiveColumns.length}
-													className="text-center py-4 text-muted"
-													style={
-														compact
-															? {
-																	padding: "1rem",
-																	fontSize: "0.875rem",
-																}
-															: {}
-													}
-												>
-													{emptyMessage || `No ${pluralize(entityName)} found`}
-												</td>
-											</tr>
-										)}
-									</tbody>
-								</table>
-							</div>
-							{enableColumnConfig && (
-								<ColumnConfigSidebar
-									isOpen={columnSidebarOpen}
-									onClose={() => setColumnSidebarOpen(false)}
-									allColumns={columnConfig.allColumns}
-									columnOrder={columnConfig.columnOrder}
-									isDefault={columnConfig.isDefault}
-									onSave={columnConfig.setColumnConfig}
-									onReset={columnConfig.resetToDefaults}
-									currentSort={sortConfig}
-									onSortChange={columnConfig.setSortConfig}
-								/>
-							)}
+											)}
+										</tbody>
+									</table>
+								</div>
+								{enableColumnConfig && (
+									<ColumnConfigSidebar
+										isOpen={columnSidebarOpen}
+										onClose={() => setColumnSidebarOpen(false)}
+										allColumns={columnConfig.allColumns}
+										columnOrder={columnConfig.columnOrder}
+										isDefault={columnConfig.isDefault}
+										onSave={columnConfig.setColumnConfig}
+										onReset={columnConfig.resetToDefaults}
+										currentSort={sortConfig}
+										onSortChange={columnConfig.setSortConfig}
+									/>
+								)}
 							</div>
 
 							{/* Pagination */}

@@ -21,6 +21,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
+from app import resources
 from app.base_models import CommonBase, Owned
 from app.database import Base
 
@@ -161,6 +162,7 @@ class Location(Owned, Base):
     - `city` (str, optional): City of the location.
     - `country` (str, optional): Country where the location resides.
     - `name` (str): Computed property combining city, country, and postcode
+    - `short_name` (str): Computed property combining city and country code.
 
     Relationships:
     --------------
@@ -196,6 +198,24 @@ class Location(Owned, Base):
             parts.append(self.country)
         if self.postcode:
             parts.append(self.postcode)
+
+        return ", ".join(parts)
+
+    @hybrid_property
+    def short_name(self) -> str:
+        """Returns a shortened version of the location name"""
+
+        parts = []
+        if self.city:
+            parts.append(self.city)
+        elif self.postcode:
+            parts.append(self.postcode)
+        if self.country:
+            try:
+                country_code = [country["code"] for country in resources.COUNTRIES if country["name"] == self.country]
+                parts.append(country_code[0])
+            except:
+                pass
 
         return ", ".join(parts)
 

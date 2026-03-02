@@ -238,7 +238,7 @@ export const modalViewFields = {
 	locationBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location",
 		label: "Location",
-		render: (params: RenderParams) => renderFunctions.LocationBadge({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.LocationBadge({ ...params, view: true }, false),
 		...overrides,
 	}),
 
