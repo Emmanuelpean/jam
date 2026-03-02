@@ -30,14 +30,18 @@ thead.custom-header th {
         .table-responsive {
             flex: 1 1 0;
             min-height: 0;
-            overflow: clip;
+            overflow-x: auto;
+            overflow-y: hidden;
             border-radius: var(--bs-border-radius-lg);
+            display: flex;
+            flex-direction: column;
         }
 
         .table {
             display: grid;
             grid-template-rows: auto 1fr;
-            height: 100%;
+            flex: 1 1 0;
+            min-height: 0;
         }
 
         thead {
@@ -59,6 +63,7 @@ thead.custom-header th {
         tbody {
             grid-column: 1 / -1;
             overflow-y: auto;
+            scrollbar-gutter: stable;
             display: grid;
             grid-template-columns: subgrid;
             align-content: start;
