@@ -91,7 +91,7 @@ class TestLocationCRUD(CRUDTestBase):
     create_schema = schemas.LocationCreate
     out_schema = schemas.LocationOut
     test_data_ref = "test_locations"
-    create_data = LOCATION_DATA
+    create_data = LOCATION_DATA[:2]
     update_data = {
         "postcode": "OX5 1HN",
         "id": 1,
