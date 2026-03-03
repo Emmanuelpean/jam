@@ -32,6 +32,7 @@ const ReferenceFilter = ({ config, value, onChange, dataContext }: Props): JSX.E
 	return (
 		<Select
 			isMulti
+			closeMenuOnSelect={false}
 			options={options}
 			value={selected}
 			onChange={(picked) =>
