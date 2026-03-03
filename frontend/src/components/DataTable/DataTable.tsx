@@ -659,7 +659,14 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 											...(compact ? { fontSize: "0.875rem" } : {}),
 											...(!compact
 												? {
-														gridTemplateColumns: `1fr repeat(${effectiveColumns.length - 1}, auto)`,
+														gridTemplateColumns: effectiveColumns
+															.map((col, i) => {
+																const min = col.minWidth ?? "auto";
+																return i === 0
+																	? `minmax(${min}, 1fr)`
+																	: `minmax(${min}, auto)`;
+															})
+															.join(" "),
 													}
 												: {}),
 										}}
@@ -672,7 +679,10 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 															key={column.key}
 															style={compact ? { padding: "0.5rem" } : {}}
 														>
-															<div className="d-flex align-items-center justify-content-between">
+															<div
+																className="d-flex align-items-center justify-content-between"
+																style={{ whiteSpace: "nowrap" }}
+															>
 																<div
 																	className={
 																		column.sortable

@@ -9,6 +9,7 @@ export interface TableColumn extends ViewField {
 	sortable?: boolean;
 	searchable?: boolean;
 	type?: string;
+	minWidth?: string;
 	sortField?: string | ((item: JamData, dataContext: DataContextValue) => string | number | null);
 	searchFields?: string | ((item: JamData, dataContext: DataContextValue) => string | null);
 }
@@ -112,6 +113,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
+		minWidth: "200px",
 		render: renderFunctions.description,
 		...overrides,
 	}),
@@ -122,6 +124,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
+		minWidth: "150px",
 		render: renderFunctions.note,
 		...overrides,
 	}),
