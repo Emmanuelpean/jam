@@ -508,6 +508,7 @@ export const tableColumns = {
 		searchable: true,
 		// searchFields: (item: JamData, dataContext: DataContextValue) => getSourceAggregatorText(),
 		render: renderFunctions.KeywordBadges,
+		filterConfig: { type: "reference", entityKey: "keywords", valueField: "keywords" },
 		...overrides,
 	}),
 

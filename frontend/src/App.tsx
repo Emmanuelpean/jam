@@ -123,18 +123,6 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 										</div>
 									)}
 								</div>
-								{isAuthenticated && (
-									<Button
-										variant="primary-outline"
-										className="loading-overlay-logout logout-item"
-										onClick={() => {
-											hideLoading();
-											logout();
-										}}
-									>
-										<i className="bi bi-box-arrow-right me-2"></i>Log out
-									</Button>
-								)}
 							</div>
 						)}
 						{children}

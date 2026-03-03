@@ -113,7 +113,7 @@ const FilterSidebar = ({
 
 			<div className="filter-sidebar-body">
 				{filterableColumns.length === 0 ? (
-					<p className="text-muted text-center small py-3">No filterable columns visible.</p>
+					<p className="text-muted text-center small py-3">No filterable columns.</p>
 				) : (
 					filterableColumns.map((col) => (
 						<FilterSection

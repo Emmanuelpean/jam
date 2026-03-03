@@ -860,14 +860,11 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 													<td
 														colSpan={effectiveColumns.length}
 														className="text-center py-4 text-muted"
-														style={
-															compact
-																? {
-																		padding: "1rem",
-																		fontSize: "0.875rem",
-																	}
-																: {}
-														}
+														style={{
+															gridColumn: "1 / -1",
+															justifyContent: "center",
+															...(compact ? { padding: "1rem", fontSize: "0.875rem" } : {}),
+														}}
 													>
 														{emptyMessage || `No ${pluralize(entityName)} found`}
 													</td>
@@ -893,7 +890,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 									<FilterSidebar
 										isOpen={filterSidebarOpen}
 										onClose={() => setFilterSidebarOpen(false)}
-										columns={effectiveColumns}
+										columns={columnConfig.allColumns}
 										filters={filters}
 										onFiltersChange={setFilters}
 									/>
