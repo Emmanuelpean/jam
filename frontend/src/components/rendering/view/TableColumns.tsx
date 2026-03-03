@@ -3,6 +3,14 @@ import { toDdMmYyyy } from "../../../utils/TimeUtils";
 import { DataContextValue, JamData } from "../../../contexts/DataContext";
 import { findItemById } from "../../../utils/Utils";
 import { PersonData } from "../../../services/schemas/DataTables";
+import { FilterConfig } from "../../DataTable/FilterTypes";
+import {
+	applicationStatusOptions,
+	attendanceTypeOptions,
+	interviewTypeOptions,
+	sourceTypeOptions,
+	updateTypeOptions,
+} from "../form/FormOptions";
 
 export interface TableColumn extends ViewField {
 	label: string;
@@ -12,6 +20,7 @@ export interface TableColumn extends ViewField {
 	minWidth?: string;
 	sortField?: string | ((item: JamData, dataContext: DataContextValue) => string | number | null);
 	searchFields?: string | ((item: JamData, dataContext: DataContextValue) => string | null);
+	filterConfig?: FilterConfig;
 }
 
 const getCompanyText = (item: JamData, context: DataContextValue): string | null => {
@@ -85,6 +94,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
+		filterConfig: { type: "text" },
 		...overrides,
 	}),
 
@@ -104,6 +114,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
+		filterConfig: { type: "text" },
 		...overrides,
 	}),
 
@@ -145,6 +156,7 @@ export const tableColumns = {
 		searchable: true,
 		type: "text",
 		render: renderFunctions.interviewType,
+		filterConfig: { type: "select", options: interviewTypeOptions },
 		...overrides,
 	}),
 
@@ -155,6 +167,7 @@ export const tableColumns = {
 		searchable: true,
 		type: "text",
 		render: renderFunctions.updateType,
+		filterConfig: { type: "select", options: updateTypeOptions },
 		...overrides,
 	}),
 
@@ -219,6 +232,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
+		filterConfig: { type: "text" },
 		...overrides,
 	}),
 
@@ -255,6 +269,7 @@ export const tableColumns = {
 		searchable: true,
 		type: "text",
 		render: (params: RenderParams) => renderFunctions.capitalise(params, "platform"),
+		filterConfig: { type: "select", options: sourceTypeOptions },
 		...overrides,
 	}),
 
@@ -265,6 +280,7 @@ export const tableColumns = {
 		searchable: false,
 		type: "number",
 		render: renderFunctions.overallScore,
+		filterConfig: { type: "number", step: 0.1 },
 		...overrides,
 	}),
 
@@ -295,6 +311,7 @@ export const tableColumns = {
 		searchable: true,
 		type: "text",
 		render: renderFunctions.attendanceType,
+		filterConfig: { type: "select", options: attendanceTypeOptions },
 		...overrides,
 	}),
 
@@ -360,6 +377,7 @@ export const tableColumns = {
 		searchable: true,
 		searchFields: (item: JamData) => toDdMmYyyy(item.created_at),
 		render: (params: RenderParams) => renderFunctions._date(params, "created_at"),
+		filterConfig: { type: "date" },
 		...overrides,
 	}),
 
@@ -371,6 +389,7 @@ export const tableColumns = {
 		type: "date",
 		searchFields: (item: JamData) => ("date" in item && item.date ? toDdMmYyyy(item.date) : ""),
 		render: (params: RenderParams) => renderFunctions._date(params, "date"),
+		filterConfig: { type: "date" },
 		...overrides,
 	}),
 
@@ -393,6 +412,7 @@ export const tableColumns = {
 		type: "date",
 		searchFields: (item: JamData) => ("deadline" in item && item.deadline ? toDdMmYyyy(item.deadline) : ""),
 		render: (params: RenderParams) => renderFunctions._date(params, "deadline"),
+		filterConfig: { type: "date" },
 		...overrides,
 	}),
 
@@ -407,6 +427,7 @@ export const tableColumns = {
 		sortField: getLocationText,
 		searchFields: getLocationText,
 		render: (params: RenderParams) => renderFunctions.LocationBadge(params, true),
+		filterConfig: { type: "reference", entityKey: "locations", valueField: "location_id" },
 		...overrides,
 	}),
 
@@ -419,6 +440,7 @@ export const tableColumns = {
 		sortField: getCompanyText,
 		searchFields: getCompanyText,
 		render: renderFunctions.CompanyBadge,
+		filterConfig: { type: "reference", entityKey: "companies", valueField: "company_id" },
 		...overrides,
 	}),
 
@@ -452,6 +474,7 @@ export const tableColumns = {
 		searchFields: getJobText,
 		sortField: getJobText,
 		render: (params: RenderParams) => renderFunctions.jobBadge(params),
+		filterConfig: { type: "reference", entityKey: "jobs", valueField: "job_id", labelKey: "title" },
 		...overrides,
 	}),
 
@@ -463,6 +486,7 @@ export const tableColumns = {
 		searchFields: getSourceAggregatorText,
 		sortField: getSourceAggregatorText,
 		render: (params: RenderParams) => renderFunctions._aggregatorBadge(params, "source_aggregator_id"),
+		filterConfig: { type: "reference", entityKey: "aggregators", valueField: "source_aggregator_id" },
 		...overrides,
 	}),
 
@@ -566,6 +590,7 @@ export const tableColumns = {
 		sortable: true,
 		type: "number",
 		render: renderFunctions.personalRating,
+		filterConfig: { type: "number", step: 1 },
 		...overrides,
 	}),
 
@@ -575,6 +600,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		render: renderFunctions.applicationStatus,
+		filterConfig: { type: "select", options: applicationStatusOptions },
 		...overrides,
 	}),
 

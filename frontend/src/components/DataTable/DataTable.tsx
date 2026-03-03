@@ -6,6 +6,7 @@ import React, {
 	useCallback,
 	useEffect,
 	useImperativeHandle,
+	useMemo,
 	useRef,
 	useState,
 } from "react";
@@ -38,9 +39,19 @@ import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
 import "./DataTable.scss";
 import FollowUpModal, { FollowUpModalHandle } from "../FollowUpModal/FollowUpModal";
 import { useContextMenu } from "../../contexts/ContextMenuContext";
-import PageHeader from "../../pages/PageHeader/PageHeader";
+import PageHeader, { FilterPill } from "../../pages/PageHeader/PageHeader";
 import { ColumnConfig, useColumnConfig } from "../../hooks/useColumnConfig";
 import ColumnConfigSidebar from "./ColumnConfigSidebar";
+import FilterSidebar from "./FilterSidebar";
+import {
+	ActiveFilters,
+	countActiveFilters,
+	DatePreset,
+	isFilterActive,
+	ReferenceFilterConfig,
+	SelectFilterConfig,
+} from "./FilterTypes";
+import { applyFilters } from "./filterLogic";
 
 export type Direction = "asc" | "desc";
 
@@ -136,6 +147,8 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const { token } = useAuth();
 		const columnConfig: ColumnConfig = useColumnConfig(entityType);
 		const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
+		const [filterSidebarOpen, setFilterSidebarOpen] = useState<boolean>(false);
+		const [filters, setFilters] = useState<ActiveFilters>({});
 		const effectiveColumns: TableColumn[] = enableColumnConfig ? columnConfig.visibleColumns : columns;
 		const modalRef = useRef<DataModalHandle>(null);
 		const openViewModal = (item: any): void | undefined => modalRef.current?.showView(item);
@@ -150,6 +163,69 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 
 		// Data management
 		const dataContext: DataContextValue = useDataContext();
+		const filterPills: FilterPill[] = useMemo(() => {
+			return Object.entries(filters)
+				.filter(([, val]) => isFilterActive(val))
+				.flatMap(([key, val]) => {
+					const col = effectiveColumns.find((c) => c.key === key);
+					if (!col) return [];
+					let summary = "";
+					switch (val.type) {
+						case "text":
+							summary = `"${val.value}"`;
+							break;
+						case "select": {
+							const cfg = col.filterConfig as SelectFilterConfig;
+							const names = val.selected.map((v) => cfg.options.find((o) => o.value === v)?.label ?? v);
+							summary = names.slice(0, 2).join(", ");
+							if (names.length > 2) summary += ` +${names.length - 2}`;
+							break;
+						}
+						case "date": {
+							const presetLabels: Record<DatePreset, string> = {
+								last7: "Last 7 days",
+								last30: "Last 30 days",
+								thisMonth: "This month",
+								custom: "",
+							};
+							if (val.preset && val.preset !== "custom") {
+								summary = presetLabels[val.preset];
+							} else if (val.from && val.to) {
+								summary = `${val.from} \u2013 ${val.to}`;
+							} else if (val.from) {
+								summary = `From ${val.from}`;
+							} else {
+								summary = `Until ${val.to}`;
+							}
+							break;
+						}
+						case "number": {
+							if (val.min !== null && val.max !== null) summary = `${val.min} \u2013 ${val.max}`;
+							else if (val.min !== null) summary = `\u2265 ${val.min}`;
+							else summary = `\u2264 ${val.max}`;
+							break;
+						}
+						case "reference": {
+							const cfg = col.filterConfig as ReferenceFilterConfig;
+							const entities: any[] = (dataContext as any)[cfg.entityKey] ?? [];
+							const lk = cfg.labelKey ?? "name";
+							const names = val.selectedIds.map((id) => {
+								const e = entities.find((en) => String(en.id) === id);
+								return e ? String(e[lk] ?? e.id) : id;
+							});
+							summary = names.slice(0, 2).join(", ");
+							if (names.length > 2) summary += ` +${names.length - 2}`;
+							break;
+						}
+					}
+					return [{
+						key,
+						label: col.label,
+						summary,
+						onRemove: () => setFilters((prev) => { const u = { ...prev }; delete u[key]; return u; }),
+					}];
+				});
+		}, [filters, effectiveColumns, dataContext]);
 		const [isLoading, setIsLoading] = useState<boolean>(false);
 		const [loadError, setLoadError] = useState<string | null>(null);
 		const [fetchedData, setFetchedData] = useState<any[]>([]);
@@ -201,10 +277,10 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			return (): void => clearTimeout(timer);
 		}, [searchTerm]);
 
-		// Reset page when debounced search changes
+		// Reset page when debounced search or filters change
 		useEffect(() => {
 			setCurrentPage(0);
-		}, [debouncedSearchTerm, sortConfig, pageSize]);
+		}, [debouncedSearchTerm, sortConfig, pageSize, filters]);
 
 		const fetchData = async (): Promise<void> => {
 			setIsLoading(true);
@@ -294,6 +370,11 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 						return value?.toString().toLowerCase().includes(searchTermLower);
 					});
 				});
+			}
+
+			// Apply column filters
+			if (Object.keys(filters).length > 0) {
+				filteredData = applyFilters(filteredData, filters, effectiveColumns, dataContext);
 			}
 
 			// Sort data
@@ -595,7 +676,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		return (
 			<>
 				<div className={`table-container${!compact ? " table-container--full-height" : ""}`}>
-					{title && <PageHeader title={title} count={totalCount || data.length} icon={getTableIcon(title)} />}
+					{title && <PageHeader title={title} count={totalCount || data.length} icon={getTableIcon(title)} filterPills={filterPills} />}
 
 					<div
 						className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
@@ -642,6 +723,20 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								style={{ aspectRatio: "1", padding: "0 1rem" }}
 							>
 								<i className="bi bi-gear"></i>
+							</Button>
+						)}
+						{enableColumnConfig && !compact && (
+							<Button
+								variant={countActiveFilters(filters) > 0 ? "primary" : "outline-secondary"}
+								onClick={() => setFilterSidebarOpen(!filterSidebarOpen)}
+								style={{ aspectRatio: "1", padding: "0 1rem", position: "relative" }}
+							>
+								<i className="bi bi-funnel"></i>
+								{countActiveFilters(filters) > 0 && (
+									<span className="filter-sidebar-count" style={{ position: "absolute", top: "-6px", right: "-6px", fontSize: "0.65rem" }}>
+										{countActiveFilters(filters)}
+									</span>
+								)}
 							</Button>
 						)}
 					</div>
@@ -792,6 +887,15 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 										onReset={columnConfig.resetToDefaults}
 										currentSort={sortConfig}
 										onSortChange={columnConfig.setSortConfig}
+									/>
+								)}
+								{enableColumnConfig && (
+									<FilterSidebar
+										isOpen={filterSidebarOpen}
+										onClose={() => setFilterSidebarOpen(false)}
+										columns={effectiveColumns}
+										filters={filters}
+										onFiltersChange={setFilters}
 									/>
 								)}
 							</div>
