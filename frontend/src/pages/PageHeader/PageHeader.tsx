@@ -2,12 +2,20 @@ import React, { JSX } from "react";
 import "./PageHeader.scss";
 import { Card } from "react-bootstrap";
 
+export interface FilterPill {
+	key: string;
+	label: string;
+	summary: string;
+	onRemove: () => void;
+}
+
 interface TableHeaderProps {
 	title: string;
 	subtitle?: string;
 	count?: number;
 	icon: string;
 	className?: string;
+	filterPills?: FilterPill[];
 }
 
 const PageHeader: React.FC<TableHeaderProps> = ({
@@ -16,6 +24,7 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 	icon,
 	subtitle,
 	className = "",
+	filterPills,
 }: TableHeaderProps): JSX.Element => {
 	return (
 		<div className={`mb-4 ${className}`}>
@@ -32,6 +41,24 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 					</div>
 					{count !== undefined && <div className="table-count-badge">{count}</div>}
 				</div>
+				{filterPills && filterPills.length > 0 && (
+					<div className="header-filter-pills">
+						{filterPills.map((pill) => (
+							<span key={pill.key} className="header-filter-pill">
+								<span className="header-filter-pill-label">{pill.label}:</span>
+								<span className="header-filter-pill-value">{pill.summary}</span>
+								<button
+									type="button"
+									className="header-filter-pill-remove"
+									onClick={pill.onRemove}
+									aria-label={`Remove ${pill.label} filter`}
+								>
+									<i className="bi bi-x" />
+								</button>
+							</span>
+						))}
+					</div>
+				)}
 			</Card>
 		</div>
 	);

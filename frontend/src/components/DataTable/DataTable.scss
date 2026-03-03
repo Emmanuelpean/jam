@@ -33,10 +33,6 @@ thead.custom-header th {
             overflow: auto;
             border-radius: var(--bs-border-radius-lg);
 
-            &::-webkit-scrollbar {
-                width: 12px;
-                height: 8px;
-            }
         }
 
         .table {
