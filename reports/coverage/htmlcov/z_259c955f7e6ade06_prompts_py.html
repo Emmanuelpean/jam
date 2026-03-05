@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_259c955f7e6ade06_routers_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-03-02 12:26 +0000
+            created at 2026-03-05 18:14 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -190,7 +190,7 @@
     <p class="run run2"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t"><span class="str">- **Qualities**: {user_qualities_or_not_provided}</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t"><span class="str">- **Interests**: {user_interests_or_not_provided}"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t"><span class="nam">JOB_ONLY_PROMPT_TEMPLATE_V1</span> <span class="op">=</span> <span class="str">"""### Job Details</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t"><span class="nam">JOB_ONLY_PROMPT_TEMPLATE_V2</span> <span class="op">=</span> <span class="str">"""### Job Details</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t"><span class="str">- **Title**: {job_title_or_not_provided}</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t113" href="#t113">113</a></span><span class="t"><span class="str">- **Company**: {job_company_or_not_provided}</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t114" href="#t114">114</a></span><span class="t"><span class="str">- **Description**: {job_description_or_not_provided}</span>&nbsp;</span><span class="r"></span></p>
@@ -257,7 +257,7 @@
     <p class="run"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">    <span class="nam">system_prompt</span> <span class="op">=</span> <span class="nam">AiSystemPrompt</span><span class="op">(</span><span class="nam">prompt</span><span class="op">=</span><span class="nam">SYSTEM_PROMPT_V2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t176" href="#t176">176</a></span><span class="t">    <span class="nam">db</span><span class="op">.</span><span class="nam">add</span><span class="op">(</span><span class="nam">system_prompt</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t177" href="#t177">177</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">    <span class="nam">job_template</span> <span class="op">=</span> <span class="nam">AiJobPromptTemplate</span><span class="op">(</span><span class="nam">prompt</span><span class="op">=</span><span class="nam">JOB_ONLY_PROMPT_TEMPLATE_V1</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">    <span class="nam">job_template</span> <span class="op">=</span> <span class="nam">AiJobPromptTemplate</span><span class="op">(</span><span class="nam">prompt</span><span class="op">=</span><span class="nam">JOB_ONLY_PROMPT_TEMPLATE_V2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t179" href="#t179">179</a></span><span class="t">    <span class="nam">db</span><span class="op">.</span><span class="nam">add</span><span class="op">(</span><span class="nam">job_template</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t180" href="#t180">180</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t181" href="#t181">181</a></span><span class="t">    <span class="nam">db</span><span class="op">.</span><span class="nam">commit</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -284,7 +284,7 @@
     <p class="mis mis2 show_mis"><span class="n"><a id="t202" href="#t202">202</a></span><span class="t">        <span class="nam">qualities</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t203" href="#t203">203</a></span><span class="t">        <span class="nam">interests</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t204" href="#t204">204</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t205" href="#t205">205</a></span><span class="t">    <span class="nam">job_prompt</span> <span class="op">=</span> <span class="nam">create_job_only_prompt</span><span class="op">(</span><span class="nam">JOB_ONLY_PROMPT_TEMPLATE_V1</span><span class="op">,</span> <span class="nam">title</span><span class="op">,</span> <span class="nam">company</span><span class="op">,</span> <span class="nam">description</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t205" href="#t205">205</a></span><span class="t">    <span class="nam">job_prompt</span> <span class="op">=</span> <span class="nam">create_job_only_prompt</span><span class="op">(</span><span class="nam">JOB_ONLY_PROMPT_TEMPLATE_V2</span><span class="op">,</span> <span class="nam">title</span><span class="op">,</span> <span class="nam">company</span><span class="op">,</span> <span class="nam">description</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t206" href="#t206">206</a></span><span class="t">    <span class="nam">print</span><span class="op">(</span><span class="nam">openai_query</span><span class="op">(</span><span class="nam">SYSTEM_PROMPT_V1</span><span class="op">,</span> <span class="nam">user_system_prompt</span> <span class="op">+</span> <span class="str">"\n"</span> <span class="op">+</span> <span class="nam">job_prompt</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t207" href="#t207">207</a></span><span class="t">    <span class="nam">print</span><span class="op">(</span><span class="nam">claude_query</span><span class="op">(</span><span class="nam">user_system_prompt</span><span class="op">,</span> <span class="nam">job_prompt</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
@@ -296,7 +296,7 @@
             <a class="nav" href="z_259c955f7e6ade06_routers_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-03-02 12:26 +0000
+            created at 2026-03-05 18:14 +0000
         </p>
     </div>
 </footer>

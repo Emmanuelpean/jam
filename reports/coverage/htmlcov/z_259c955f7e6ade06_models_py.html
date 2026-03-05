@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_259c955f7e6ade06_prompts_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-03-05 09:23 +0000
+            created at 2026-03-05 18:14 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -148,7 +148,7 @@
     <p class="pln"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t"><span class="str">    - `is_success` (bool, optional): Indicates whether the rating process was successful.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t"><span class="str">    - `error` (str, optional): Error message if the rating process failed.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t"><span class="str">    - `job_prompt` (str, optional): Job prompt used for the rating.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t"><span class="str">    - `llm_model` (str, optional): LLM model used for the rating.</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t"><span class="str">    - `llm_model` (str): LLM model used for the rating.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t"><span class="str">    - `notes` (List[str], optional): Additional notes or comments about the rating.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t"><span class="str">    Foreign keys:</span>&nbsp;</span><span class="r"></span></p>
@@ -176,7 +176,7 @@
     <p class="run"><span class="n"><a id="t94" href="#t94">94</a></span><span class="t">    <span class="nam">is_success</span> <span class="op">=</span> <span class="nam">Column</span><span class="op">(</span><span class="nam">Boolean</span><span class="op">,</span> <span class="nam">nullable</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">    <span class="nam">error</span> <span class="op">=</span> <span class="nam">Column</span><span class="op">(</span><span class="nam">String</span><span class="op">,</span> <span class="nam">nullable</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">    <span class="nam">job_prompt</span> <span class="op">=</span> <span class="nam">Column</span><span class="op">(</span><span class="nam">String</span><span class="op">,</span> <span class="nam">nullable</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">    <span class="nam">llm_model</span> <span class="op">=</span> <span class="nam">Column</span><span class="op">(</span><span class="nam">String</span><span class="op">,</span> <span class="nam">nullable</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">    <span class="nam">llm_model</span> <span class="op">=</span> <span class="nam">Column</span><span class="op">(</span><span class="nam">String</span><span class="op">,</span> <span class="nam">nullable</span><span class="op">=</span><span class="key">False</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">    <span class="nam">notes</span> <span class="op">=</span> <span class="nam">Column</span><span class="op">(</span><span class="nam">PG_ARRAY</span><span class="op">(</span><span class="nam">String</span><span class="op">)</span><span class="op">,</span> <span class="nam">server_default</span><span class="op">=</span><span class="str">"{}"</span><span class="op">,</span> <span class="nam">nullable</span><span class="op">=</span><span class="key">False</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t99" href="#t99">99</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t100" href="#t100">100</a></span><span class="t">    <span class="com"># Foreign keys</span>&nbsp;</span><span class="r"></span></p>
@@ -238,7 +238,7 @@
             <a class="nav" href="z_259c955f7e6ade06_prompts_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.4">coverage.py v7.13.4</a>,
-            created at 2026-03-05 09:23 +0000
+            created at 2026-03-05 18:14 +0000
         </p>
     </div>
 </footer>
