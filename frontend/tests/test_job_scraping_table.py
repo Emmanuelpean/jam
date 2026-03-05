@@ -227,6 +227,7 @@ class TestJobScrapingTable(BaseTest):
             interest_score=4,
             is_success=True,
             feedback="Moderate match. The candidate has some relevant skills but lacks specific experience.",
+            llm_model="chatgpt",
         )
         self.driver.refresh()
         self.show_job(scraped_job)
@@ -239,9 +240,7 @@ class TestJobScrapingTable(BaseTest):
 
         scraped_job = self._make_scraped_job(title="Failed Rating Test Job", is_scraped=True)
         self._make_job_rating(
-            scraped_job,
-            is_success=False,
-            error="Failed to scrape job details: Page not found",
+            scraped_job, is_success=False, error="Failed to scrape job details: Page not found", llm_model="chatgpt"
         )
         self.driver.refresh()
         self.show_job(scraped_job)
@@ -259,6 +258,7 @@ class TestJobScrapingTable(BaseTest):
             is_success=False,
             is_skipped=True,
             skip_reason="Job description too short (minimum length is 100 characters)",
+            llm_model="chatgpt",
         )
         self.driver.refresh()
         self.show_job(scraped_job)
@@ -280,6 +280,7 @@ class TestJobScrapingTable(BaseTest):
             interest_score=7,
             is_success=True,
             feedback="Moderate match with potential for growth.",
+            llm_model="chatgpt",
             notes=[
                 "Description was truncated as it was too long (5234 characters. Limit is 5000 characters)",
                 "Title was truncated as it was too long (5234 characters. Limit is 5000 characters)",
