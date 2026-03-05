@@ -2,6 +2,7 @@
 
 import datetime as dt
 
+from app.job_rating import scraped_job_rating
 from app import models
 from app.config import settings
 from app.job_email_scraping.email_parsers import Platform
@@ -148,6 +149,7 @@ class TestGetUserUnratedScrapedJobs:
                 system_prompt_id=system_prompt.id,
                 job_prompt_template_id=job_prompt_template.id,
                 is_success=True,
+                llm_model="chatgpt",
             )
         )
         session.commit()
@@ -506,3 +508,18 @@ class TestScoreScrapedJobs(object):
 - **Description**: {job_rating.scraped_job.description}
 """
         assert job_rating.job_prompt == job_prompt
+
+    def test_critical_error_is_recorded_in_service_log(
+        self, session, test_scraped_jobs, test_user_qualifications, test_ai_prompts, monkeypatch
+    ) -> None:
+        """Test that an unexpected error in the rating workflow is recorded in the service log."""
+
+        def raise_error(_):
+            raise RuntimeError("DB connection lost")
+
+        monkeypatch.setattr(scraped_job_rating, "get_rating_active_users", raise_error)
+
+        service_log = ScrapedJobRater().run(session)
+
+        assert service_log.is_success is False
+        assert "DB connection lost" in service_log.error_message

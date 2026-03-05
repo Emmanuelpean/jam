@@ -17,6 +17,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 2,
@@ -32,6 +33,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 3,
@@ -47,6 +49,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 4,
@@ -62,6 +65,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 5,
@@ -77,6 +81,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 6,
@@ -87,6 +92,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 7,
@@ -97,6 +103,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 8,
@@ -112,6 +119,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 9,
@@ -127,6 +135,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 10,
@@ -142,6 +151,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 11,
@@ -152,6 +162,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 12,
@@ -167,6 +178,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 13,
@@ -177,6 +189,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 14,
@@ -192,6 +205,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 15,
@@ -207,6 +221,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 16,
@@ -222,6 +237,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 17,
@@ -237,6 +253,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 18,
@@ -252,6 +269,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 19,
@@ -267,6 +285,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 20,
@@ -282,6 +301,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 21,
@@ -297,6 +317,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 22,
@@ -312,6 +333,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 23,
@@ -327,6 +349,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 24,
@@ -342,6 +365,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 25,
@@ -357,6 +381,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 26,
@@ -372,6 +397,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 27,
@@ -387,6 +413,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 28,
@@ -402,6 +429,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 29,
@@ -417,6 +445,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 30,
@@ -432,6 +461,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 31,
@@ -447,6 +477,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 32,
@@ -462,6 +493,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 33,
@@ -477,6 +509,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 34,
@@ -492,6 +525,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 35,
@@ -507,6 +541,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 36,
@@ -522,6 +557,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 37,
@@ -537,6 +573,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 38,
@@ -552,6 +589,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 39,
@@ -567,6 +605,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 40,
@@ -582,6 +621,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 41,
@@ -597,6 +637,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 42,
@@ -612,6 +653,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 43,
@@ -627,6 +669,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 44,
@@ -642,6 +685,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 45,
@@ -657,6 +701,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 46,
@@ -676,6 +721,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 47,
@@ -692,6 +738,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 48,
@@ -707,6 +754,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 49,
@@ -722,6 +770,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 50,
@@ -737,6 +786,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 51,
@@ -752,6 +802,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 52,
@@ -767,6 +818,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 53,
@@ -782,6 +834,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 54,
@@ -797,6 +850,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 55,
@@ -812,6 +866,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 56,
@@ -827,6 +882,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 57,
@@ -842,6 +898,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 58,
@@ -852,6 +909,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 59,
@@ -862,6 +920,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 60,
@@ -872,6 +931,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 61,
@@ -882,6 +942,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 62,
@@ -892,6 +953,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 63,
@@ -902,6 +964,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 64,
@@ -912,6 +975,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
     {
         "scraped_job_id": 65,
@@ -922,6 +986,7 @@ JOB_RATING_DATA = [
         "system_prompt_id": 1,
         "job_prompt_template_id": 1,
         "job_prompt": "This is the AI prompt",
+        "llm_model": "gpt-4.1-mini",
     },
 ]
 

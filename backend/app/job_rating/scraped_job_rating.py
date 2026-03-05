@@ -9,7 +9,7 @@ from app import models as models
 from app import utils
 from app.config import settings
 from app.database import get_db
-from app.job_rating.claude import claude_query
+from app.job_rating.claude import MODEL as CLAUDE_MODEL, claude_query
 from app.job_rating.prompts import create_job_only_prompt, create_system_prompt_with_profile
 from app.service_runner.service_runner import ServiceRunner
 
@@ -214,6 +214,7 @@ class ScrapedJobRater:
             user_qualification_id=user_qualification.id,
             system_prompt_id=system_prompt.id,
             job_prompt_template_id=job_prompt_template.id,
+            llm_model=CLAUDE_MODEL,
         )
 
         if scraped_job.description and len(scraped_job.description) < settings.min_scraping_description_length:
