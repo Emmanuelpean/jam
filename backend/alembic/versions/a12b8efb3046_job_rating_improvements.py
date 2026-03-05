@@ -22,6 +22,8 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.add_column("job_rating", sa.Column("is_skipped", sa.Boolean(), server_default=sa.text("false"), nullable=False))
     op.add_column("job_rating", sa.Column("skip_reason", sa.String(), nullable=True))
+    op.add_column("job_rating", sa.Column("llm_model", sa.String(), nullable=False))
+    op.execute("UPDATE job_rating SET llm_model = 'gpt-4.1-mini'")
     op.add_column("job_rating", sa.Column("notes", postgresql.ARRAY(sa.String()), server_default="{}", nullable=False))
     op.alter_column("job_rating_service_log", "rated_job_found_ids", new_column_name="job_found_ids")
     op.alter_column("job_rating_service_log", "rated_job_succeeded_ids", new_column_name="job_succeeded_ids")
@@ -41,3 +43,4 @@ def downgrade() -> None:
     op.drop_column("job_rating", "notes")
     op.drop_column("job_rating", "skip_reason")
     op.drop_column("job_rating", "is_skipped")
+    op.drop_column("job_rating", "llm_model")

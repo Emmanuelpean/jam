@@ -73,6 +73,7 @@ export default `<h4>Version 1.2.0</h4>
 <ul>
     <li>Added length limits on scraped job title, company, and description fields to improve AI rating consistency and limit token usage.</li>
     <li>Improved status feedback in the Scraped Job modal, giving clearer information about the scraping and rating state of each job.</li>
+    <li>Switched from OpenAI gpt-4.1-mini to Anthropic Claude-Haiku 4.5 model for job rating.</li>
 </ul>
 
 <h5>Bug Fixes</h5>
