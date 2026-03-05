@@ -66,7 +66,7 @@ class JobRating(Owned, Base):
     - `is_success` (bool, optional): Indicates whether the rating process was successful.
     - `error` (str, optional): Error message if the rating process failed.
     - `job_prompt` (str, optional): Job prompt used for the rating.
-    - `llm_model` (str, optional): LLM model used for the rating.
+    - `llm_model` (str): LLM model used for the rating.
     - `notes` (List[str], optional): Additional notes or comments about the rating.
 
     Foreign keys:
@@ -94,7 +94,7 @@ class JobRating(Owned, Base):
     is_success = Column(Boolean, nullable=True)
     error = Column(String, nullable=True)
     job_prompt = Column(String, nullable=True)
-    llm_model = Column(String, nullable=True)
+    llm_model = Column(String, nullable=False)
     notes = Column(PG_ARRAY(String), server_default="{}", nullable=False)
 
     # Foreign keys

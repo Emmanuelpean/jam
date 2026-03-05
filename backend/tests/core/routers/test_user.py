@@ -674,6 +674,7 @@ class TestDeleteAccount:
             scraped_job_id=scraped_job_id,
             user_qualification_id=user_qualification_id,
             owner_id=user_id,
+            llm_model="chatgpt",
         )
         session.add(job_rating)
         session.commit()
@@ -891,6 +892,7 @@ class TestUserQualificationsCRUD(CRUDTestBase):
             scraped_job_id=test_scraped_jobs[0].id,
             overall_score=10,
             user_qualification_id=test_user_qualifications[0].id,
+            llm_model="chatgpt",
         )
         session.add(job_rating)
         session.commit()

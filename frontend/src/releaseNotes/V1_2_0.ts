@@ -63,8 +63,8 @@ export default `<h4>Version 1.2.0</h4>
 
 <h5>SPREAD Chrome Extension</h5>
 <ul>
-    <li>Introducing SPREAD — Smart Plugin for Recruitment Extraction &amp; Aggregation of Data. SPREAD is a Google Chrome extension that lets you import job listings from LinkedIn, Indeed, NHS Jobs, and VeganJobs directly into JAM with a single click.</li>
-    <li>Job details including title, company, salary, location, and description are automatically extracted from the page and pre-filled in the JAM job form — no copy-pasting required.</li>
+    <li>Introducing SPREAD - Smart Plugin for Recruitment Extraction &amp; Aggregation of Data. SPREAD is a Google Chrome extension that lets you import job listings from LinkedIn, Indeed, NHS Jobs, and VeganJobs directly into JAM with a single click.</li>
+    <li>Job details including title, company, salary, location, and description are automatically extracted from the page and pre-filled in the JAM job form - no copy-pasting required.</li>
     <li>SPREAD intelligently detects when you are on a supported job listing page and activates automatically.</li>
     <li>The extension is available from the <strong>Browser Extension</strong> page under the About section.</li>
 </ul>
