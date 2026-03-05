@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 client = Anthropic(api_key=settings.anthropic_api_key)
 
+MODEL = "claude-haiku-4-5-20251001"
+
 
 class ClaudeError(Exception):
     """Raised when AI query fails."""
@@ -28,7 +30,7 @@ def claude_query(system_prompt: str, llm_prompt: str, max_tokens: int = 1024) ->
     try:
         # noinspection PyTypeChecker
         response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
+            model=MODEL,
             system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}],
             messages=[
                 {"role": "user", "content": llm_prompt},

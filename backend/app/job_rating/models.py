@@ -61,18 +61,27 @@ class JobRating(Owned, Base):
     - `educational_score` (int, optional): Educational score for the job.
     - `interest_score` (int, optional): Interest score for the job.
     - `feedback` (str, optional): Additional feedback or comments about the job rating.
+    - `is_skipped` (bool, optional): Indicates whether the rating process was skipped.
+    - `skip_reason` (str, optional): Reason for skipping the rating process.
     - `is_success` (bool, optional): Indicates whether the rating process was successful.
     - `error` (str, optional): Error message if the rating process failed.
+    - `job_prompt` (str, optional): Job prompt used for the rating.
+    - `llm_model` (str, optional): LLM model used for the rating.
+    - `notes` (List[str], optional): Additional notes or comments about the rating.
 
     Foreign keys:
     -------------
     - `scraped_job_id` (int): Identifier for the job being rated.
     - `user_qualification_id` (int): Identifier for the user qualification entry used to rate the job
+    - `system_prompt_id` (int, optional): Identifier for the AI system prompt used to rate the job.
+    - `job_prompt_template_id` (int, optional): Identifier for the AI job prompt template used to rate the job.
 
     Relationships:
     --------------
     - `scraped_job` (ScrapedJob): ScrapedJob object related to the rating.
-    - `use_qualification` (UserQualification): UserQualification object related to the rating."""
+    - `use_qualification` (UserQualification): UserQualification object related to the rating.
+    - `system_prompt` (AiSystemPrompt, optional): AiSystemPrompt object related to the rating.
+    - `job_prompt_template` (AiJobPromptTemplate, optional): AiJobPromptTemplate object related to the rating."""
 
     overall_score = Column(Integer, nullable=True)
     technical_score = Column(Integer, nullable=True)
@@ -85,6 +94,7 @@ class JobRating(Owned, Base):
     is_success = Column(Boolean, nullable=True)
     error = Column(String, nullable=True)
     job_prompt = Column(String, nullable=True)
+    llm_model = Column(String, nullable=True)
     notes = Column(PG_ARRAY(String), server_default="{}", nullable=False)
 
     # Foreign keys
