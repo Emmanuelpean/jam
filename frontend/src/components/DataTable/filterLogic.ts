@@ -52,10 +52,15 @@ function matchesFilter(
 		}
 
 		case "number": {
-			if (filter.min === null && filter.max === null) return true;
+			if (filter.min === null && filter.max === null && filter.includeEmpty !== false) return true;
 			const val = getItemValue(item, column, dataContext);
+			const isEmpty = val == null || val === "" || isNaN(Number(val));
+			if (isEmpty) {
+				if (filter.includeEmpty === true) return true;
+				if (filter.includeEmpty === false) return false;
+				return filter.min === null && filter.max === null;
+			}
 			const num = Number(val);
-			if (isNaN(num)) return false;
 			if (filter.min !== null && num < filter.min) return false;
 			if (filter.max !== null && num > filter.max) return false;
 			return true;

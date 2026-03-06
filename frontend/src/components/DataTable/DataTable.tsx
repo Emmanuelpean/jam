@@ -223,9 +223,12 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 							break;
 						}
 						case "number": {
-							if (val.min !== null && val.max !== null) summary = `${val.min} \u2013 ${val.max}`;
-							else if (val.min !== null) summary = `\u2265 ${val.min}`;
-							else summary = `\u2264 ${val.max}`;
+							const parts: string[] = [];
+							if (val.min !== null && val.max !== null) parts.push(`${val.min} \u2013 ${val.max}`);
+							else if (val.min !== null) parts.push(`\u2265 ${val.min}`);
+							else if (val.max !== null) parts.push(`\u2264 ${val.max}`);
+							if (val.includeEmpty === false) parts.push("Not null");
+							summary = parts.join(", ");
 							break;
 						}
 						case "reference": {

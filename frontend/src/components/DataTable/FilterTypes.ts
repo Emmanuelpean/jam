@@ -21,6 +21,7 @@ export interface NumberFilterConfig {
 	max: number | ((ctx: any) => number);
 	step?: number;
 	display?: "slider" | "input";
+	nullable?: boolean;
 }
 
 export interface ReferenceFilterConfig {
@@ -65,6 +66,7 @@ export interface NumberFilterValue {
 	type: "number";
 	min: number | null;
 	max: number | null;
+	includeEmpty?: boolean;
 }
 
 export interface ReferenceFilterValue {
@@ -92,7 +94,7 @@ export function isFilterActive(filter: FilterValue): boolean {
 		case "date":
 			return filter.from !== null || filter.to !== null;
 		case "number":
-			return filter.min !== null || filter.max !== null;
+			return filter.min !== null || filter.max !== null || filter.includeEmpty === false;
 		case "reference":
 			return filter.selectedIds.length > 0;
 	}

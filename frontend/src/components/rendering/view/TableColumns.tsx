@@ -291,7 +291,7 @@ export const tableColumns = {
 		searchable: false,
 		type: "number",
 		render: renderFunctions.overallScore,
-		filterConfig: { type: "number", min: 0, max: 10, step: 0.1, display: "slider" },
+		filterConfig: { type: "number", min: 0, max: 10, step: 1, display: "slider", nullable: true },
 		...overrides,
 	}),
 
@@ -302,7 +302,7 @@ export const tableColumns = {
 		searchable: false,
 		type: "number",
 		render: renderFunctions.technicalScore,
-		filterConfig: { type: "number", min: 0, max: 10, step: 0.1, display: "slider" },
+		filterConfig: { type: "number", min: 0, max: 10, step: 1, display: "slider", nullable: true },
 		...overrides,
 	}),
 
@@ -313,7 +313,7 @@ export const tableColumns = {
 		searchable: false,
 		type: "number",
 		render: renderFunctions.experienceScore,
-		filterConfig: { type: "number", min: 0, max: 10, step: 0.1, display: "slider" },
+		filterConfig: { type: "number", min: 0, max: 10, step: 1, display: "slider", nullable: true },
 		...overrides,
 	}),
 
@@ -324,7 +324,7 @@ export const tableColumns = {
 		searchable: false,
 		type: "number",
 		render: renderFunctions.educationalScore,
-		filterConfig: { type: "number", min: 0, max: 10, step: 0.1, display: "slider" },
+		filterConfig: { type: "number", min: 0, max: 10, step: 1, display: "slider", nullable: true },
 		...overrides,
 	}),
 
@@ -335,7 +335,7 @@ export const tableColumns = {
 		searchable: false,
 		type: "number",
 		render: renderFunctions.interestScore,
-		filterConfig: { type: "number", min: 0, max: 10, step: 0.1, display: "slider" },
+		filterConfig: { type: "number", min: 0, max: 10, step: 1, display: "slider", nullable: true },
 		...overrides,
 	}),
 

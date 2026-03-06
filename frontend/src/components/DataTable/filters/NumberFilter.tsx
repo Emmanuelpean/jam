@@ -119,9 +119,29 @@ const NumberInputs = ({ config, value, onChange }: Props): JSX.Element => {
 	);
 };
 
-const NumberFilter = (props: Props): JSX.Element => {
-	const display = props.config.display ?? "input";
-	return display === "slider" ? <NumberSlider {...props} /> : <NumberInputs {...props} />;
+const NumberFilter = ({ config, value, onChange, dataContext }: Props): JSX.Element => {
+	const display = config.display ?? "input";
+
+	const handleRangeChange = (v: NumberFilterValue) => {
+		onChange({ ...v, includeEmpty: value.includeEmpty });
+	};
+
+	const sliderProps = { config, value, onChange: handleRangeChange, dataContext };
+
+	return (
+		<>
+			{display === "slider" ? <NumberSlider {...sliderProps} /> : <NumberInputs {...sliderProps} />}
+			{config.nullable && (
+				<Form.Check
+					type="switch"
+					label="Include empty"
+					checked={value.includeEmpty !== false}
+					onChange={(e) => onChange({ ...value, includeEmpty: e.target.checked })}
+					className="mt-2"
+				/>
+			)}
+		</>
+	);
 };
 
 export default NumberFilter;
