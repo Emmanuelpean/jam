@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import { Form } from "react-bootstrap";
+import Select from "react-select";
 import { SelectFilterConfig, SelectFilterValue } from "../FilterTypes";
 
 interface Props {
@@ -9,27 +9,30 @@ interface Props {
 }
 
 const SelectFilter = ({ config, value, onChange }: Props): JSX.Element => {
-	const toggle = (optValue: string) => {
-		const selected = value.selected.includes(optValue)
-			? value.selected.filter((v) => v !== optValue)
-			: [...value.selected, optValue];
-		onChange({ type: "select", selected });
-	};
+	const options = config.options.map((opt) => ({ value: String(opt.value), label: opt.label }));
+	const selected = options.filter((o) => value.selected.includes(o.value));
 
 	return (
-		<div className="filter-checkbox-list">
-			{config.options.map((opt) => (
-				<Form.Check
-					key={opt.value}
-					type="checkbox"
-					id={`filter-sel-${opt.value}`}
-					label={opt.label}
-					checked={value.selected.includes(String(opt.value))}
-					onChange={() => toggle(String(opt.value))}
-					className="filter-checkbox-item"
-				/>
-			))}
-		</div>
+		<Select
+			isMulti
+			closeMenuOnSelect={false}
+			options={options}
+			value={selected}
+			onChange={(picked) =>
+				onChange({ type: "select", selected: (picked ?? []).map((p) => p.value) })
+			}
+			className="react-select-container react-select-container--sm"
+			classNamePrefix="react-select"
+			placeholder="Select..."
+			menuPortalTarget={document.body}
+			isClearable={false}
+			styles={{
+				menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+			}}
+			classNames={{
+				menuPortal: () => "react-select--sm-menu",
+			}}
+		/>
 	);
 };
 

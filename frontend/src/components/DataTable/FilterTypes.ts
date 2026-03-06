@@ -17,7 +17,10 @@ export interface DateFilterConfig {
 
 export interface NumberFilterConfig {
 	type: "number";
+	min: number;
+	max: number;
 	step?: number;
+	display?: "slider" | "input";
 }
 
 export interface ReferenceFilterConfig {

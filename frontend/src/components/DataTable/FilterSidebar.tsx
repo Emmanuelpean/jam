@@ -1,13 +1,7 @@
-import React, { JSX, useMemo, useState } from "react";
+import React, { JSX, useMemo } from "react";
 import { Button } from "react-bootstrap";
 import { TableColumn } from "../rendering/view/TableColumns";
-import {
-	ActiveFilters,
-	createEmptyFilter,
-	FilterValue,
-	countActiveFilters,
-	isFilterActive,
-} from "./FilterTypes";
+import { ActiveFilters, createEmptyFilter, FilterValue, countActiveFilters, isFilterActive } from "./FilterTypes";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import TextFilter from "./filters/TextFilter";
 import SelectFilter from "./filters/SelectFilter";
@@ -16,7 +10,7 @@ import NumberFilter from "./filters/NumberFilter";
 import ReferenceFilter from "./filters/ReferenceFilter";
 import "./FilterSidebar.scss";
 
-// ---- Filter section (collapsible per-column) ----
+// ---- Filter section per-column ----
 
 interface FilterSectionProps {
 	column: TableColumn;
@@ -28,43 +22,32 @@ interface FilterSectionProps {
 const FilterSection = ({ column, value, onChange, dataContext }: FilterSectionProps): JSX.Element => {
 	const config = column.filterConfig!;
 	const active = value ? isFilterActive(value) : false;
-	const [collapsed, setCollapsed] = useState(!active);
 	const current = value ?? createEmptyFilter(config);
 
 	return (
 		<div className={`filter-section${active ? " filter-section--active" : ""}`}>
-			<div className="filter-section-header" onClick={() => setCollapsed((c) => !c)}>
-				<span className="filter-section-label">
-					{column.label}
-					{active && <i className="bi bi-circle-fill filter-active-dot" />}
-				</span>
-				<i className={`bi bi-chevron-${collapsed ? "down" : "up"}`} />
+			<label className="filter-section-label">
+				{column.label}
+				{active && <i className="bi bi-circle-fill filter-active-dot" />}
+			</label>
+			<div className="filter-section-body">
+				{config.type === "text" && <TextFilter value={current as any} onChange={onChange} />}
+				{config.type === "select" && (
+					<SelectFilter config={config} value={current as any} onChange={onChange} />
+				)}
+				{config.type === "date" && <DateFilter value={current as any} onChange={onChange} />}
+				{config.type === "number" && (
+					<NumberFilter config={config} value={current as any} onChange={onChange} />
+				)}
+				{config.type === "reference" && (
+					<ReferenceFilter
+						config={config}
+						value={current as any}
+						onChange={onChange}
+						dataContext={dataContext}
+					/>
+				)}
 			</div>
-
-			{!collapsed && (
-				<div className="filter-section-body">
-					{config.type === "text" && (
-						<TextFilter value={current as any} onChange={onChange} />
-					)}
-					{config.type === "select" && (
-						<SelectFilter config={config} value={current as any} onChange={onChange} />
-					)}
-					{config.type === "date" && (
-						<DateFilter value={current as any} onChange={onChange} />
-					)}
-					{config.type === "number" && (
-						<NumberFilter config={config} value={current as any} onChange={onChange} />
-					)}
-					{config.type === "reference" && (
-						<ReferenceFilter
-							config={config}
-							value={current as any}
-							onChange={onChange}
-							dataContext={dataContext}
-						/>
-					)}
-				</div>
-			)}
 		</div>
 	);
 };
@@ -79,13 +62,7 @@ interface FilterSidebarProps {
 	onFiltersChange: (f: ActiveFilters) => void;
 }
 
-const FilterSidebar = ({
-	isOpen,
-	onClose,
-	columns,
-	filters,
-	onFiltersChange,
-}: FilterSidebarProps): JSX.Element => {
+const FilterSidebar = ({ isOpen, onClose, columns, filters, onFiltersChange }: FilterSidebarProps): JSX.Element => {
 	const dataContext = useDataContext();
 	const filterableColumns = useMemo(() => columns.filter((c) => c.filterConfig), [columns]);
 	const activeCount = countActiveFilters(filters);
@@ -128,7 +105,7 @@ const FilterSidebar = ({
 			</div>
 
 			<div className="filter-sidebar-footer">
-				<Button variant="outline-secondary" style={{ width: "100%" }} onClick={() => onFiltersChange({})} disabled={activeCount === 0}>
+				<Button style={{ width: "100%" }} onClick={() => onFiltersChange({})} disabled={activeCount === 0}>
 					<i className="bi bi-x-circle me-1" />
 					Clear all filters
 				</Button>

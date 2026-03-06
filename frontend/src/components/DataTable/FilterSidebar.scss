@@ -1,7 +1,7 @@
 .filter-sidebar {
 	flex-shrink: 0;
 	min-height: 0;
-	width: 280px;
+	width: 340px;
 	background: var(--bs-body-bg, #fff);
 	display: flex;
 	flex-direction: column;
@@ -66,7 +66,7 @@
 	padding: 0.5rem;
 	display: flex;
 	flex-direction: column;
-	gap: 0.35rem;
+	gap: 1rem;
 
 	&::-webkit-scrollbar {
 		width: 4px;
@@ -83,47 +83,21 @@
 	}
 }
 
-// ---- Collapsible section per column ----
+// ---- Filter section per column ----
 
 .filter-section {
-	border: 1px solid var(--bs-border-color, #dee2e6);
-	border-radius: 0.375rem;
-	overflow: hidden;
-
-	&--active {
-		border-color: var(--primary-mid, #6c5ce7);
-	}
-}
-
-.filter-section-header {
 	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 0.4rem 0.6rem;
-	cursor: pointer;
-	user-select: none;
-	font-size: 0.82rem;
-	font-weight: 600;
-	gap: 0.5rem;
-
-	&:hover {
-		background: var(--bs-tertiary-bg, #f8f9fa);
-	}
-
-	i.bi-chevron-up,
-	i.bi-chevron-down {
-		font-size: 0.75rem;
-		flex-shrink: 0;
-		color: var(--bs-secondary-color, #6c757d);
-	}
+	flex-direction: column;
+	gap: 0.25rem;
 }
 
 .filter-section-label {
 	display: flex;
 	align-items: center;
 	gap: 0.35rem;
-	flex: 1;
-	min-width: 0;
+	font-size: 0.78rem;
+	font-weight: 600;
+	color: var(--bs-secondary-color, #6c757d);
 }
 
 .filter-active-dot {
@@ -133,29 +107,6 @@
 }
 
 .filter-section-body {
-	padding: 0.5rem 0.6rem 0.6rem;
-	border-top: 1px solid var(--bs-border-color, #dee2e6);
-}
-
-// ---- Select filter (checkboxes) ----
-
-.filter-checkbox-list {
-	display: flex;
-	flex-direction: column;
-	gap: 0.1rem;
-	max-height: 180px;
-	overflow-y: auto;
-}
-
-.filter-checkbox-item {
-	.form-check-label {
-		font-size: 0.8rem;
-		cursor: pointer;
-	}
-
-	.form-check-input {
-		cursor: pointer;
-	}
 }
 
 // ---- Date filter ----
@@ -188,7 +139,7 @@
 	}
 }
 
-// ---- Shared range layout (date + number) ----
+// ---- Date & number range layout ----
 
 .filter-date-range,
 .filter-number-range {
@@ -197,7 +148,6 @@
 	gap: 0.4rem;
 
 	.form-control {
-		font-size: 0.8rem;
 		min-width: 0;
 	}
 }
@@ -209,26 +159,3 @@
 	flex-shrink: 0;
 }
 
-// ---- Reference filter (React Select) ----
-
-.filter-reference-select {
-	.react-select__control {
-		min-height: 34px !important;
-		font-size: 0.8rem;
-	}
-
-	.react-select__value-container {
-		min-height: unset !important;
-		padding: 2px 6px;
-	}
-
-	.react-select__multi-value {
-		font-size: 0.72rem;
-		min-height: unset !important;
-	}
-
-	.react-select__indicator {
-		padding: 4px;
-	}
-
-}

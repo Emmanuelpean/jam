@@ -1,6 +1,7 @@
-import React, { JSX } from "react";
+import React, { JSX, useCallback } from "react";
 import { Form } from "react-bootstrap";
 import { NumberFilterConfig, NumberFilterValue } from "../FilterTypes";
+import "./NumberFilter.scss";
 
 interface Props {
 	config: NumberFilterConfig;
@@ -8,34 +9,109 @@ interface Props {
 	onChange: (v: NumberFilterValue) => void;
 }
 
-const NumberFilter = ({ config, value, onChange }: Props): JSX.Element => {
+const NumberSlider = ({ config, value, onChange }: Props): JSX.Element => {
+	const { min: rangeMin, max: rangeMax, step = 1 } = config;
+	const currentMin = value.min ?? rangeMin;
+	const currentMax = value.max ?? rangeMax;
+
+	const toPercent = (v: number) => ((v - rangeMin) / (rangeMax - rangeMin)) * 100;
+
+	const handleMinChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const v = Number(e.target.value);
+			const newMin = Math.min(v, currentMax);
+			onChange({
+				type: "number",
+				min: newMin <= rangeMin ? null : newMin,
+				max: currentMax >= rangeMax ? null : currentMax,
+			});
+		},
+		[currentMax, rangeMin, rangeMax, onChange]
+	);
+
+	const handleMaxChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const v = Number(e.target.value);
+			const newMax = Math.max(v, currentMin);
+			onChange({
+				type: "number",
+				min: currentMin <= rangeMin ? null : currentMin,
+				max: newMax >= rangeMax ? null : newMax,
+			});
+		},
+		[currentMin, rangeMin, rangeMax, onChange]
+	);
+
+	return (
+		<div className="filter-range-slider">
+			<div className="filter-range-slider-track">
+				<div
+					className="filter-range-slider-fill"
+					style={{
+						left: `${toPercent(currentMin)}%`,
+						width: `${toPercent(currentMax) - toPercent(currentMin)}%`,
+					}}
+				/>
+				<input
+					type="range"
+					min={rangeMin}
+					max={rangeMax}
+					step={step}
+					value={currentMin}
+					onChange={handleMinChange}
+					className="filter-range-slider-input"
+				/>
+				<input
+					type="range"
+					min={rangeMin}
+					max={rangeMax}
+					step={step}
+					value={currentMax}
+					onChange={handleMaxChange}
+					className="filter-range-slider-input"
+				/>
+			</div>
+			<div className="filter-range-slider-labels">
+				<span>{currentMin}</span>
+				<span>{currentMax}</span>
+			</div>
+		</div>
+	);
+};
+
+const NumberInputs = ({ config, value, onChange }: Props): JSX.Element => {
 	const step = config.step ?? 1;
 
 	return (
 		<div className="filter-number-range">
 			<Form.Control
 				type="number"
-				size="sm"
 				placeholder="Min"
 				step={step}
 				value={value.min ?? ""}
 				onChange={(e) =>
 					onChange({ type: "number", min: e.target.value === "" ? null : Number(e.target.value), max: value.max })
 				}
+				className="form-control--sm"
 			/>
 			<span className="filter-range-sep">–</span>
 			<Form.Control
 				type="number"
-				size="sm"
 				placeholder="Max"
 				step={step}
 				value={value.max ?? ""}
 				onChange={(e) =>
 					onChange({ type: "number", min: value.min, max: e.target.value === "" ? null : Number(e.target.value) })
 				}
+				className="form-control--sm"
 			/>
 		</div>
 	);
+};
+
+const NumberFilter = (props: Props): JSX.Element => {
+	const display = props.config.display ?? "input";
+	return display === "slider" ? <NumberSlider {...props} /> : <NumberInputs {...props} />;
 };
 
 export default NumberFilter;

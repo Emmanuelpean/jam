@@ -280,7 +280,7 @@ export const tableColumns = {
 		searchable: false,
 		type: "number",
 		render: renderFunctions.overallScore,
-		filterConfig: { type: "number", step: 0.1 },
+		filterConfig: { type: "number", min: 0, max: 10, step: 0.1, display: "slider" },
 		...overrides,
 	}),
 
@@ -582,6 +582,7 @@ export const tableColumns = {
 		type: "text",
 		sortField: "salary_min",
 		render: renderFunctions.salaryRange,
+		filterConfig: { type: "number", min: 0, max: 200000, step: 1000, display: "input" },
 		...overrides,
 	}),
 
@@ -591,7 +592,7 @@ export const tableColumns = {
 		sortable: true,
 		type: "number",
 		render: renderFunctions.personalRating,
-		filterConfig: { type: "number", step: 1 },
+		filterConfig: { type: "number", min: 0, max: 5, step: 1, display: "slider" },
 		...overrides,
 	}),
 

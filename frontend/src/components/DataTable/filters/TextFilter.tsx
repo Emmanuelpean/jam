@@ -10,10 +10,10 @@ interface Props {
 const TextFilter = ({ value, onChange }: Props): JSX.Element => (
 	<Form.Control
 		type="text"
-		size="sm"
 		placeholder="Contains..."
 		value={value.value}
 		onChange={(e) => onChange({ type: "text", value: e.target.value })}
+		className="form-control--sm"
 	/>
 );
 

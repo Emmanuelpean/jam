@@ -58,20 +58,20 @@ const DateFilter = ({ value, onChange }: Props): JSX.Element => {
 				<div className="filter-date-range">
 					<Form.Control
 						type="date"
-						size="sm"
 						value={value.from ?? ""}
 						onChange={(e) =>
 							onChange({ ...value, preset: "custom", from: e.target.value || null })
 						}
+						className="form-control--sm"
 					/>
 					<span className="filter-range-sep">to</span>
 					<Form.Control
 						type="date"
-						size="sm"
 						value={value.to ?? ""}
 						onChange={(e) =>
 							onChange({ ...value, preset: "custom", to: e.target.value || null })
 						}
+						className="form-control--sm"
 					/>
 				</div>
 			)}
