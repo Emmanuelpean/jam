@@ -334,6 +334,12 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 					});
 				}
 
+				// Send active column filters to the backend
+				const activeFilterEntries = Object.entries(filters).filter(([, v]) => isFilterActive(v));
+				if (activeFilterEntries.length > 0) {
+					params.set("filters", JSON.stringify(Object.fromEntries(activeFilterEntries)));
+				}
+
 				const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
 				setFetchedData(response.data.items);
 				setTotalCount(response.data.total);
@@ -354,7 +360,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			if (isServerPagination) {
 				fetchData().then((_): null => null);
 			}
-		}, [endpoint, token, currentPage, pageSize, sortConfig, isServerPagination, debouncedSearchTerm, queryParams]);
+		}, [endpoint, token, currentPage, pageSize, sortConfig, isServerPagination, debouncedSearchTerm, queryParams, filters]);
 
 		const getData = (): JamData[] => {
 			if (providedData !== undefined) {

@@ -4,13 +4,13 @@ Provides REST API endpoints for managing job alert emails, scraped job postings,
 and service execution logs with CRUD operations and admin access controls."""
 
 import datetime as dt
+import json
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy import asc, desc, or_
+from sqlalchemy import asc, desc, or_, and_
 from sqlalchemy.orm import Session, joinedload
 from starlette import status
-from starlette.requests import Request
 
 from app import models as models
 from app.core.oauth2 import get_current_user
@@ -21,7 +21,7 @@ from app.job_email_scraping.job_scrapers.indeed import IndeedBrightdataJobScrape
 from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
 from app.job_email_scraping.job_scrapers.nhs import NhsJobScraper
 from app.job_email_scraping.job_scrapers.veganjobs import VeganJobsJobScraper
-from app.routers import generate_data_table_crud_router, filter_query, NOT_ALLOWED_EXCEPTION
+from app.routers import generate_data_table_crud_router, NOT_ALLOWED_EXCEPTION
 from app.service_runner import routers
 
 # --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
@@ -54,7 +54,6 @@ scraped_job_router = generate_data_table_crud_router(
 
 @scraped_job_router.get("/paged", response_model=schemas.PaginatedScrapedJobResponse)
 def get_all(
-    request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
     page: int = 0,
@@ -64,9 +63,9 @@ def get_all(
     show_past_deadline: bool = False,
     since_last_login: bool = False,
     search: str | None = None,
+    filters: str | None = None,
 ) -> dict:
     """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped.
-    :param request: Request
     :param db: Database session
     :param current_user: Current user
     :param page: Page number
@@ -112,33 +111,89 @@ def get_all(
             )
         )
 
-    # Apply filters
-    filter_params = dict(request.query_params)
-    filter_params.pop("page", None)
-    filter_params.pop("page_size", None)
-    filter_params.pop("sort_by", None)
-    filter_params.pop("sort_direction", None)
-    filter_params.pop("search", None)
-    filter_params.pop("show_past_deadline", None)
-    filter_params.pop("since_last_login", None)
-    query = filter_query(query, models.ScrapedJob, filter_params)
+    # Determine if we need a JobRating join (for filters or sorting)
+    needs_rating_join = sort_by.startswith("job_rating.")
+    filter_conditions = []
+
+    # Parse JSON column filters
+    if filters:
+        filter_dict = json.loads(filters)
+        for key, fval in filter_dict.items():
+            ftype = fval.get("type")
+
+            # Resolve the SQLAlchemy column
+            if key.startswith("job_rating."):
+                attr_name = key.split(".", 1)[1]
+                if not hasattr(models.JobRating, attr_name):
+                    continue
+                col = getattr(models.JobRating, attr_name)
+                needs_rating_join = True
+            elif hasattr(models.ScrapedJob, key):
+                col = getattr(models.ScrapedJob, key)
+            else:
+                continue
+
+            if ftype == "text":
+                value = (fval.get("value") or "").strip()
+                if value:
+                    filter_conditions.append(col.ilike(f"%{value}%"))
+
+            elif ftype == "select":
+                selected = fval.get("selected", [])
+                if selected:
+                    filter_conditions.append(col.in_(selected))
+
+            elif ftype == "number":
+                min_val = fval.get("min")
+                max_val = fval.get("max")
+                include_empty = fval.get("includeEmpty")
+
+                range_parts = []
+                if min_val is not None:
+                    range_parts.append(col >= min_val)
+                if max_val is not None:
+                    range_parts.append(col <= max_val)
+
+                if range_parts:
+                    range_cond = and_(*range_parts)
+                    if include_empty is True:
+                        filter_conditions.append(or_(range_cond, col.is_(None)))
+                    else:
+                        filter_conditions.append(range_cond)
+                elif include_empty is False:
+                    filter_conditions.append(col.isnot(None))
+
+            elif ftype == "date":
+                from_val = fval.get("from")
+                to_val = fval.get("to")
+                if from_val:
+                    filter_conditions.append(col >= from_val)
+                if to_val:
+                    filter_conditions.append(col <= to_val + "T23:59:59")
+
+            elif ftype == "reference":
+                selected_ids = fval.get("selectedIds", [])
+                if selected_ids:
+                    filter_conditions.append(col.in_([int(sid) for sid in selected_ids]))
+
+    # Apply the join once if needed
+    if needs_rating_join:
+        query = query.outerjoin(models.JobRating)
+
+    # Apply all filter conditions
+    for cond in filter_conditions:
+        query = query.filter(cond)
 
     # Apply sorting
     if sort_by.startswith("job_rating."):
-        # Handle sorting by job_rating relationship attributes
-        rating_attribute = sort_by.split(".", 1)[1]  # e.g., "overall_score"
-
+        rating_attribute = sort_by.split(".", 1)[1]
         if hasattr(models.JobRating, rating_attribute):
-            # Need explicit join for ORDER BY to work
-            query = query.outerjoin(models.JobRating)
             sort_column = getattr(models.JobRating, rating_attribute)
-
             if sort_direction == "desc":
                 query = query.order_by(desc(sort_column).nulls_last())
             else:
                 query = query.order_by(asc(sort_column).nulls_last())
         else:
-            # Default sorting if invalid column
             query = query.order_by(desc(models.ScrapedJob.scrape_datetime).nulls_last())
     elif hasattr(models.ScrapedJob, sort_by):
         sort_column = getattr(models.ScrapedJob, sort_by)
@@ -147,7 +202,6 @@ def get_all(
         else:
             query = query.order_by(asc(sort_column).nulls_last())
     else:
-        # Default sorting if invalid column
         query = query.order_by(desc(models.ScrapedJob.scrape_datetime).nulls_last())
 
     # Get total count before pagination
