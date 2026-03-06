@@ -167,7 +167,8 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			return Object.entries(filters)
 				.filter(([, val]) => isFilterActive(val))
 				.flatMap(([key, val]) => {
-					const col = effectiveColumns.find((c) => c.key === key);
+					const allCols = enableColumnConfig ? columnConfig.allColumns : effectiveColumns;
+				const col = allCols.find((c) => c.key === key);
 					if (!col) return [];
 					let summary = "";
 					switch (val.type) {
@@ -232,7 +233,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 						},
 					];
 				});
-		}, [filters, effectiveColumns, dataContext]);
+		}, [filters, effectiveColumns, dataContext, enableColumnConfig, columnConfig.allColumns]);
 		const [isLoading, setIsLoading] = useState<boolean>(false);
 		const [loadError, setLoadError] = useState<string | null>(null);
 		const [fetchedData, setFetchedData] = useState<any[]>([]);
@@ -381,7 +382,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 
 			// Apply column filters
 			if (Object.keys(filters).length > 0) {
-				filteredData = applyFilters(filteredData, filters, effectiveColumns, dataContext);
+				filteredData = applyFilters(filteredData, filters, enableColumnConfig ? columnConfig.allColumns : effectiveColumns, dataContext);
 			}
 
 			// Sort data
@@ -732,7 +733,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 						)}
 						{enableColumnConfig && !compact && (
 							<Button
-								variant="outline-primary"
+								variant={columnSidebarOpen ? "primary" : "outline-primary"}
 								onClick={() => setColumnSidebarOpen(!columnSidebarOpen)}
 								style={{ width: "64px", height: "64px", padding: "0" }}
 							>
@@ -741,7 +742,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 						)}
 						{enableColumnConfig && !compact && (
 							<Button
-								variant={countActiveFilters(filters) > 0 ? "primary" : "outline-primary"}
+								variant={filterSidebarOpen ? "primary" : "outline-primary"}
 								onClick={() => setFilterSidebarOpen(!filterSidebarOpen)}
 								style={{ width: "64px", height: "64px", padding: "0", position: "relative" }}
 							>
