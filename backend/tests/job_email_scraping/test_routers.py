@@ -1,6 +1,7 @@
 """Tests for Job Scraping routers."""
 
 import datetime as dt
+import json
 
 import pytest
 from starlette import status
@@ -149,6 +150,339 @@ class TestScrapedJobCRUDAdminUser(CRUDTestBase):
     test_data_ref = "test_scraped_jobs"
     actions_to_test = ["get_all"]
     admin_only = True
+
+
+class TestPagedFilters:
+    """Tests for the JSON `filters` query parameter on /scraped-jobs/paged."""
+
+    endpoint = "/scraped-jobs/paged"
+
+    @staticmethod
+    def _create_job(session, owner_id: int, service_log_id: int, **kwargs) -> models.ScrapedJob:
+        """Helper to create a scraped job with sensible defaults."""
+
+        data = {
+            "external_job_id": f"filter_test_{id(kwargs)}_{kwargs.get('title', '')}",
+            "platform": kwargs.pop("platform", "linkedin"),
+            "owner_id": owner_id,
+            "is_processed": True,
+            "is_scraped": True,
+            "is_active": True,
+            "is_imported": False,
+            "service_log_id": service_log_id,
+            **kwargs,
+        }
+        return create_db_entries(session, models.ScrapedJob, data)[0]
+
+    @staticmethod
+    def _create_rating(session, scraped_job, owner_id: int, qualification_id: int, **kwargs) -> models.JobRating:
+        """Helper to create a job rating for a scraped job."""
+
+        data = {
+            "scraped_job_id": scraped_job.id,
+            "owner_id": owner_id,
+            "user_qualification_id": qualification_id,
+            "llm_model": "test-model",
+            "is_success": True,
+            **kwargs,
+        }
+        return create_db_entries(session, models.JobRating, data)[0]
+
+    @pytest.fixture()
+    def setup(self, session, test_regular_user, test_user_qualifications, test_job_scraping_service_logs):
+        """Provide common objects needed by every test in this class."""
+
+        class Ctx:
+            user = test_regular_user
+            service_log_id = test_job_scraping_service_logs[0].id
+            qualification_id = test_user_qualifications[0].id
+
+        return Ctx()
+
+    # --------------------------------------------------- TEXT FILTER --------------------------------------------------
+
+    def test_text_filter_on_title(self, session, regular_user_client, setup):
+        """Text filter should match title via case-insensitive substring."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Senior Python Developer")
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Junior Java Developer")
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Data Scientist")
+
+        filters = json.dumps({"title": {"type": "text", "value": "python"}})
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total"] == 1
+        assert data["items"][0]["title"] == "Senior Python Developer"
+
+    def test_text_filter_on_company(self, session, regular_user_client, setup):
+        """Text filter should match company name."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="A", company="Acme Corp")
+        self._create_job(session, setup.user.id, setup.service_log_id, title="B", company="Beta Inc")
+
+        filters = json.dumps({"company": {"type": "text", "value": "acme"}})
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["total"] == 1
+        assert response.json()["items"][0]["company"] == "Acme Corp"
+
+    # -------------------------------------------------- SELECT FILTER -------------------------------------------------
+
+    def test_select_filter_on_platform(self, session, regular_user_client, setup):
+        """Select filter should match exact platform values."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="A", platform="linkedin")
+        self._create_job(session, setup.user.id, setup.service_log_id, title="B", platform="indeed")
+        self._create_job(session, setup.user.id, setup.service_log_id, title="C", platform="nhs")
+
+        filters = json.dumps({"platform": {"type": "select", "selected": ["indeed", "nhs"]}})
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total"] == 2
+        platforms = {item["platform"] for item in data["items"]}
+        assert platforms == {"indeed", "nhs"}
+
+    # -------------------------------------------------- NUMBER FILTER -------------------------------------------------
+
+    def test_number_filter_min_on_salary(self, session, regular_user_client, setup):
+        """Number filter with min should return jobs with salary_min >= value."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Low", salary_min=20000)
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Mid", salary_min=50000)
+        self._create_job(session, setup.user.id, setup.service_log_id, title="High", salary_min=80000)
+
+        filters = json.dumps({"salary_min": {"type": "number", "min": 45000, "max": None}})
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total"] == 2
+        titles = {item["title"] for item in data["items"]}
+        assert titles == {"Mid", "High"}
+
+    def test_number_filter_range(self, session, regular_user_client, setup):
+        """Number filter with both min and max should return jobs in range."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Low", salary_min=20000)
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Mid", salary_min=50000)
+        self._create_job(session, setup.user.id, setup.service_log_id, title="High", salary_min=80000)
+
+        filters = json.dumps({"salary_min": {"type": "number", "min": 30000, "max": 60000}})
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["total"] == 1
+        assert response.json()["items"][0]["title"] == "Mid"
+
+    # --------------------------------------------- NUMBER FILTER + SCORES ---------------------------------------------
+
+    def test_number_filter_on_overall_score(self, session, regular_user_client, setup):
+        """Number filter on job_rating.overall_score should filter via the related JobRating."""
+
+        job_a = self._create_job(session, setup.user.id, setup.service_log_id, title="Scored3")
+        self._create_rating(session, job_a, setup.user.id, setup.qualification_id, overall_score=3)
+
+        job_b = self._create_job(session, setup.user.id, setup.service_log_id, title="Scored7")
+        self._create_rating(session, job_b, setup.user.id, setup.qualification_id, overall_score=7)
+
+        job_c = self._create_job(session, setup.user.id, setup.service_log_id, title="Scored9")
+        self._create_rating(session, job_c, setup.user.id, setup.qualification_id, overall_score=9)
+
+        filters = json.dumps({"job_rating.overall_score": {"type": "number", "min": 5, "max": 8}})
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total"] == 1
+        assert data["items"][0]["title"] == "Scored7"
+
+    # ---------------------------------------------- NULL FILTER (nullFilter) -------------------------------------------
+
+    def test_null_filter_not_null_excludes_unscored(self, session, regular_user_client, setup):
+        """nullFilter='not_null' should exclude jobs without a score."""
+
+        job_a = self._create_job(session, setup.user.id, setup.service_log_id, title="HasScore")
+        self._create_rating(session, job_a, setup.user.id, setup.qualification_id, overall_score=5)
+        self._create_job(session, setup.user.id, setup.service_log_id, title="NoScore")
+
+        filters = json.dumps({
+            "job_rating.overall_score": {"type": "number", "min": None, "max": None, "nullFilter": "not_null"}
+        })
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total"] == 1
+        assert data["items"][0]["title"] == "HasScore"
+
+    def test_null_filter_null_shows_only_unscored(self, session, regular_user_client, setup):
+        """nullFilter='null' should show only jobs without a score."""
+
+        job_a = self._create_job(session, setup.user.id, setup.service_log_id, title="HasScore")
+        self._create_rating(session, job_a, setup.user.id, setup.qualification_id, overall_score=5)
+        self._create_job(session, setup.user.id, setup.service_log_id, title="NoScore")
+
+        filters = json.dumps({
+            "job_rating.overall_score": {"type": "number", "min": None, "max": None, "nullFilter": "null"}
+        })
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total"] == 1
+        assert data["items"][0]["title"] == "NoScore"
+
+    def test_null_filter_all_returns_everything(self, session, regular_user_client, setup):
+        """nullFilter='all' (or absent) should not filter on nullability."""
+
+        job_a = self._create_job(session, setup.user.id, setup.service_log_id, title="HasScore")
+        self._create_rating(session, job_a, setup.user.id, setup.qualification_id, overall_score=5)
+        self._create_job(session, setup.user.id, setup.service_log_id, title="NoScore")
+
+        filters = json.dumps({
+            "job_rating.overall_score": {"type": "number", "min": None, "max": None, "nullFilter": "all"}
+        })
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["total"] == 2
+
+    def test_null_filter_not_null_combined_with_range(self, session, regular_user_client, setup):
+        """nullFilter='not_null' combined with a range should apply both constraints."""
+
+        job_a = self._create_job(session, setup.user.id, setup.service_log_id, title="Score3")
+        self._create_rating(session, job_a, setup.user.id, setup.qualification_id, overall_score=3)
+
+        job_b = self._create_job(session, setup.user.id, setup.service_log_id, title="Score7")
+        self._create_rating(session, job_b, setup.user.id, setup.qualification_id, overall_score=7)
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="NoScore")
+
+        filters = json.dumps({
+            "job_rating.overall_score": {"type": "number", "min": 5, "max": None, "nullFilter": "not_null"}
+        })
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total"] == 1
+        assert data["items"][0]["title"] == "Score7"
+
+    # --------------------------------------------------- DATE FILTER --------------------------------------------------
+
+    def test_date_filter_from(self, session, regular_user_client, setup):
+        """Date filter with 'from' should exclude jobs with deadline before the date."""
+
+        self._create_job(
+            session, setup.user.id, setup.service_log_id,
+            title="Past", deadline=dt.datetime(2020, 1, 1, tzinfo=dt.timezone.utc),
+        )
+        self._create_job(
+            session, setup.user.id, setup.service_log_id,
+            title="Future", deadline=dt.datetime(2099, 6, 15, tzinfo=dt.timezone.utc),
+        )
+
+        filters = json.dumps({"deadline": {"type": "date", "from": "2025-01-01", "to": None}})
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total"] == 1
+        assert data["items"][0]["title"] == "Future"
+
+    def test_date_filter_range(self, session, regular_user_client, setup):
+        """Date filter with from and to should return jobs within the range."""
+
+        self._create_job(
+            session, setup.user.id, setup.service_log_id,
+            title="Early", deadline=dt.datetime(2025, 3, 1, tzinfo=dt.timezone.utc),
+        )
+        self._create_job(
+            session, setup.user.id, setup.service_log_id,
+            title="Mid", deadline=dt.datetime(2025, 3, 15, tzinfo=dt.timezone.utc),
+        )
+        self._create_job(
+            session, setup.user.id, setup.service_log_id,
+            title="Late", deadline=dt.datetime(2025, 4, 10, tzinfo=dt.timezone.utc),
+        )
+
+        filters = json.dumps({"deadline": {"type": "date", "from": "2025-03-10", "to": "2025-03-31"}})
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total"] == 1
+        assert data["items"][0]["title"] == "Mid"
+
+    # -------------------------------------------- MULTIPLE FILTERS COMBINED -------------------------------------------
+
+    def test_multiple_filters_combined(self, session, regular_user_client, setup):
+        """Multiple filters should be combined with AND logic."""
+
+        self._create_job(
+            session, setup.user.id, setup.service_log_id,
+            title="Python at Acme", company="Acme", platform="linkedin",
+        )
+        self._create_job(
+            session, setup.user.id, setup.service_log_id,
+            title="Python at Beta", company="Beta", platform="indeed",
+        )
+        self._create_job(
+            session, setup.user.id, setup.service_log_id,
+            title="Java at Acme", company="Acme", platform="linkedin",
+        )
+
+        filters = json.dumps({
+            "title": {"type": "text", "value": "python"},
+            "platform": {"type": "select", "selected": ["linkedin"]},
+        })
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total"] == 1
+        assert data["items"][0]["title"] == "Python at Acme"
+
+    # ------------------------------------------- EMPTY / INVALID FILTERS ----------------------------------------------
+
+    def test_empty_filters_returns_all(self, session, regular_user_client, setup):
+        """Empty filters JSON should return all jobs (no filtering)."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Job1")
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Job2")
+
+        response = regular_user_client.get(
+            self.endpoint, params={"filters": json.dumps({}), "show_past_deadline": "true"}
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["total"] >= 2
+
+    def test_no_filters_param_returns_all(self, session, regular_user_client, setup):
+        """Omitting the filters param entirely should return all jobs."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Job1")
+
+        response = regular_user_client.get(self.endpoint, params={"show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["total"] >= 1
+
+    def test_filter_on_unknown_column_is_ignored(self, session, regular_user_client, setup):
+        """Filters referencing non-existent columns should be silently ignored."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Job1")
+
+        filters = json.dumps({"nonexistent_column": {"type": "text", "value": "test"}})
+        response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["total"] >= 1
 
 
 # ------------------------------------=--------- JOB SCRAPING SERVICE LOGS ---------------------------------------------

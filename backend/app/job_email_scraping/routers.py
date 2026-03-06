@@ -186,13 +186,16 @@ def get_all(
     # Apply sorting
     if sort_by.startswith("job_rating."):
         rating_attribute = sort_by.split(".", 1)[1]
+
         if hasattr(models.JobRating, rating_attribute):
             sort_column = getattr(models.JobRating, rating_attribute)
+
             if sort_direction == "desc":
                 query = query.order_by(desc(sort_column).nulls_last())
             else:
                 query = query.order_by(asc(sort_column).nulls_last())
         else:
+            # Default sorting if invalid column
             query = query.order_by(desc(models.ScrapedJob.scrape_datetime).nulls_last())
     elif hasattr(models.ScrapedJob, sort_by):
         sort_column = getattr(models.ScrapedJob, sort_by)
@@ -201,6 +204,7 @@ def get_all(
         else:
             query = query.order_by(asc(sort_column).nulls_last())
     else:
+        # Default sorting if invalid column
         query = query.order_by(desc(models.ScrapedJob.scrape_datetime).nulls_last())
 
     # Get total count before pagination
