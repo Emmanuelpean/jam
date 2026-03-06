@@ -734,7 +734,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 							<Button
 								variant="outline-primary"
 								onClick={() => setColumnSidebarOpen(!columnSidebarOpen)}
-								style={{ aspectRatio: "1", padding: "0 1rem" }}
+								style={{ width: "64px", height: "64px", padding: "0" }}
 							>
 								<i className="bi bi-gear"></i>
 							</Button>
@@ -743,16 +743,16 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 							<Button
 								variant={countActiveFilters(filters) > 0 ? "primary" : "outline-primary"}
 								onClick={() => setFilterSidebarOpen(!filterSidebarOpen)}
-								style={{ aspectRatio: "1", padding: "0 1rem", position: "relative" }}
+								style={{ width: "64px", height: "64px", padding: "0", position: "relative" }}
 							>
 								<i className="bi bi-funnel"></i>
 								{countActiveFilters(filters) > 0 && (
 									<span
-										className="filter-sidebar-count"
+										className="filter-button-count"
 										style={{
 											position: "absolute",
 											top: "-6px",
-											right: "-6px",
+											left: "-6px",
 											fontSize: "0.65rem",
 										}}
 									>

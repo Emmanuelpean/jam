@@ -38,27 +38,27 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 							<h4 className="mb-0 fw-bold">{title}</h4>
 							{subtitle && <small className="text-muted">{subtitle}</small>}
 						</div>
+						{filterPills && filterPills.length > 0 && (
+							<div className="header-filter-pills">
+								{filterPills.map((pill) => (
+									<span key={pill.key} className="header-filter-pill">
+										<span className="header-filter-pill-label">{pill.label}:</span>
+										<span className="header-filter-pill-value">{pill.summary}</span>
+										<button
+											type="button"
+											className="header-filter-pill-remove"
+											onClick={pill.onRemove}
+											aria-label={`Remove ${pill.label} filter`}
+										>
+											<i className="bi bi-x" />
+										</button>
+									</span>
+								))}
+							</div>
+						)}
 					</div>
 					{count !== undefined && <div className="table-count-badge">{count}</div>}
 				</div>
-				{filterPills && filterPills.length > 0 && (
-					<div className="header-filter-pills">
-						{filterPills.map((pill) => (
-							<span key={pill.key} className="header-filter-pill">
-								<span className="header-filter-pill-label">{pill.label}:</span>
-								<span className="header-filter-pill-value">{pill.summary}</span>
-								<button
-									type="button"
-									className="header-filter-pill-remove"
-									onClick={pill.onRemove}
-									aria-label={`Remove ${pill.label} filter`}
-								>
-									<i className="bi bi-x" />
-								</button>
-							</span>
-						))}
-					</div>
-				)}
 			</Card>
 		</div>
 	);

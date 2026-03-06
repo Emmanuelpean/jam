@@ -25,6 +25,7 @@ const SelectFilter = ({ config, value, onChange }: Props): JSX.Element => {
 			classNamePrefix="react-select"
 			placeholder="Select..."
 			menuPortalTarget={document.body}
+			menuPlacement="auto"
 			isClearable={false}
 			styles={{
 				menuPortal: (base) => ({ ...base, zIndex: 9999 }),

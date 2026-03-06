@@ -8,7 +8,7 @@
 	margin-left: 1rem;
 	overflow: hidden;
 	transform: translateX(100%);
-	margin-right: -296px;
+	margin-right: -356px;
 	transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
 		margin-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -57,6 +57,21 @@
 	padding: 0 0.3rem;
 	margin-left: 0.4rem;
 	line-height: 1;
+}
+
+.filter-button-count {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: white;
+	color: var(--primary-mid, #6c5ce7);
+	font-weight: 700;
+	border-radius: 999px;
+	min-width: 1.2rem;
+	height: 1.2rem;
+	padding: 0 0.3rem;
+	line-height: 1;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .filter-sidebar-body {
