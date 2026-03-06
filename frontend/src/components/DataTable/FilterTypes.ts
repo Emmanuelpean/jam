@@ -18,7 +18,7 @@ export interface DateFilterConfig {
 export interface NumberFilterConfig {
 	type: "number";
 	min: number;
-	max: number;
+	max: number | ((ctx: any) => number);
 	step?: number;
 	display?: "slider" | "input";
 }

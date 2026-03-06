@@ -20,6 +20,7 @@ const CompaniesPage = () => {
 			title="Companies"
 			columns={columns}
 			Modal={CompanyModal}
+			enableColumnConfig={true}
 		/>
 	);
 };

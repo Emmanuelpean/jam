@@ -20,6 +20,7 @@ const InterviewsPage = () => {
 			title="Interviews"
 			columns={columns}
 			Modal={InterviewModal}
+			enableColumnConfig={true}
 		/>
 	);
 };

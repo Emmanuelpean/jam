@@ -150,6 +150,8 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const [filterSidebarOpen, setFilterSidebarOpen] = useState<boolean>(false);
 		const [filters, setFilters] = useState<ActiveFilters>({});
 		const effectiveColumns: TableColumn[] = enableColumnConfig ? columnConfig.visibleColumns : columns;
+		const columnSidebarRef = useRef<HTMLDivElement>(null);
+		const filterSidebarRef = useRef<HTMLDivElement>(null);
 		const modalRef = useRef<DataModalHandle>(null);
 		const openViewModal = (item: any): void | undefined => modalRef.current?.showView(item);
 		const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
@@ -157,6 +159,26 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const openImportModal = (item: any): void | undefined => modalRef.current?.showImport(item);
 
 		useImperativeHandle(ref, () => ({ openAddModal }));
+
+		// Close sidebars on outside click
+		useEffect(() => {
+			if (!columnSidebarOpen && !filterSidebarOpen) return;
+			const handleClickOutside = (e: Event) => {
+				const target = e.target as Element;
+				// Ignore clicks on portalled menus (react-select dropdowns)
+				if (target?.closest?.(".react-select__menu-portal")) return;
+				// Ignore clicks on sidebar toggle buttons
+				if (target?.closest?.("[data-sidebar-toggle]")) return;
+				if (columnSidebarOpen && columnSidebarRef.current && !columnSidebarRef.current.contains(target)) {
+					setColumnSidebarOpen(false);
+				}
+				if (filterSidebarOpen && filterSidebarRef.current && !filterSidebarRef.current.contains(target)) {
+					setFilterSidebarOpen(false);
+				}
+			};
+			document.addEventListener("mousedown", handleClickOutside);
+			return () => document.removeEventListener("mousedown", handleClickOutside);
+		}, [columnSidebarOpen, filterSidebarOpen]);
 
 		// Add context menu hook
 		const { openContextMenu } = useContextMenu();
@@ -736,6 +758,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								variant={columnSidebarOpen ? "primary" : "outline-primary"}
 								onClick={() => setColumnSidebarOpen(!columnSidebarOpen)}
 								style={{ width: "64px", height: "64px", padding: "0" }}
+								data-sidebar-toggle="column"
 							>
 								<i className="bi bi-gear"></i>
 							</Button>
@@ -745,6 +768,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								variant={filterSidebarOpen ? "primary" : "outline-primary"}
 								onClick={() => setFilterSidebarOpen(!filterSidebarOpen)}
 								style={{ width: "64px", height: "64px", padding: "0", position: "relative" }}
+								data-sidebar-toggle="filter"
 							>
 								<i className="bi bi-funnel"></i>
 								{countActiveFilters(filters) > 0 && (
@@ -899,26 +923,30 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 									</table>
 								</div>
 								{enableColumnConfig && (
-									<ColumnConfigSidebar
-										isOpen={columnSidebarOpen}
-										onClose={() => setColumnSidebarOpen(false)}
-										allColumns={columnConfig.allColumns}
-										columnOrder={columnConfig.columnOrder}
-										isDefault={columnConfig.isDefault}
-										onSave={columnConfig.setColumnConfig}
-										onReset={columnConfig.resetToDefaults}
-										currentSort={sortConfig}
-										onSortChange={columnConfig.setSortConfig}
-									/>
+									<div ref={columnSidebarRef}>
+										<ColumnConfigSidebar
+											isOpen={columnSidebarOpen}
+											onClose={() => setColumnSidebarOpen(false)}
+											allColumns={columnConfig.allColumns}
+											columnOrder={columnConfig.columnOrder}
+											isDefault={columnConfig.isDefault}
+											onSave={columnConfig.setColumnConfig}
+											onReset={columnConfig.resetToDefaults}
+											currentSort={sortConfig}
+											onSortChange={columnConfig.setSortConfig}
+										/>
+									</div>
 								)}
 								{enableColumnConfig && (
-									<FilterSidebar
-										isOpen={filterSidebarOpen}
-										onClose={() => setFilterSidebarOpen(false)}
-										columns={columnConfig.allColumns}
-										filters={filters}
-										onFiltersChange={setFilters}
-									/>
+									<div ref={filterSidebarRef}>
+										<FilterSidebar
+											isOpen={filterSidebarOpen}
+											onClose={() => setFilterSidebarOpen(false)}
+											columns={columnConfig.allColumns}
+											filters={filters}
+											onFiltersChange={setFilters}
+										/>
+									</div>
 								)}
 							</div>
 

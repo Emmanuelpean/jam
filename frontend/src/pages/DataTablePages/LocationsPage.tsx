@@ -32,6 +32,7 @@ const LocationsPage = () => {
 			title="Locations"
 			columns={columns}
 			Modal={LocationModal}
+			enableColumnConfig={true}
 			children={locationMap}
 		></DataTable>
 	);

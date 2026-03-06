@@ -20,6 +20,7 @@ const JobApplicationUpdatesPage = () => {
 			columns={columns}
 			Modal={JobApplicationUpdateModal}
 			modalSize="lg"
+			enableColumnConfig={true}
 		/>
 	);
 };

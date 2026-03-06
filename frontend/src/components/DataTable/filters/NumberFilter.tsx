@@ -1,4 +1,4 @@
-import React, { JSX, useCallback } from "react";
+import React, { JSX, useCallback, useMemo } from "react";
 import { Form } from "react-bootstrap";
 import { NumberFilterConfig, NumberFilterValue } from "../FilterTypes";
 import "./NumberFilter.scss";
@@ -7,10 +7,20 @@ interface Props {
 	config: NumberFilterConfig;
 	value: NumberFilterValue;
 	onChange: (v: NumberFilterValue) => void;
+	dataContext?: any;
 }
 
-const NumberSlider = ({ config, value, onChange }: Props): JSX.Element => {
-	const { min: rangeMin, max: rangeMax, step = 1 } = config;
+function resolveMax(config: NumberFilterConfig, dataContext?: any): number {
+	if (typeof config.max === "function") {
+		return config.max(dataContext) || 1;
+	}
+	return config.max;
+}
+
+const NumberSlider = ({ config, value, onChange, dataContext }: Props): JSX.Element => {
+	const rangeMin = config.min;
+	const rangeMax = useMemo(() => resolveMax(config, dataContext), [config, dataContext]);
+	const step = config.step ?? 1;
 	const currentMin = value.min ?? rangeMin;
 	const currentMax = value.max ?? rangeMax;
 

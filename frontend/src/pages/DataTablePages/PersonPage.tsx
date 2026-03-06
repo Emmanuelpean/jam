@@ -21,6 +21,7 @@ const PersonsPage = () => {
 			title="People"
 			columns={columns}
 			Modal={PersonModal}
+			enableColumnConfig={true}
 		/>
 	);
 };

@@ -226,6 +226,7 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 							isSearchable={false}
 							isClearable={false}
 							menuPortalTarget={document.body}
+							menuPlacement="auto"
 							className="react-select-container react-select-container--sm column-config-sort-select"
 							classNamePrefix="react-select"
 							classNames={{
