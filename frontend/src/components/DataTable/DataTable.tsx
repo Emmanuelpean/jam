@@ -218,12 +218,19 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 							break;
 						}
 					}
-					return [{
-						key,
-						label: col.label,
-						summary,
-						onRemove: () => setFilters((prev) => { const u = { ...prev }; delete u[key]; return u; }),
-					}];
+					return [
+						{
+							key,
+							label: col.label,
+							summary,
+							onRemove: () =>
+								setFilters((prev) => {
+									const u = { ...prev };
+									delete u[key];
+									return u;
+								}),
+						},
+					];
 				});
 		}, [filters, effectiveColumns, dataContext]);
 		const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -676,7 +683,14 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		return (
 			<>
 				<div className={`table-container${!compact ? " table-container--full-height" : ""}`}>
-					{title && <PageHeader title={title} count={totalCount || data.length} icon={getTableIcon(title)} filterPills={filterPills} />}
+					{title && (
+						<PageHeader
+							title={title}
+							count={totalCount || data.length}
+							icon={getTableIcon(title)}
+							filterPills={filterPills}
+						/>
+					)}
 
 					<div
 						className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
@@ -727,13 +741,21 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 						)}
 						{enableColumnConfig && !compact && (
 							<Button
-								variant={countActiveFilters(filters) > 0 ? "primary" : "outline-secondary"}
+								variant={countActiveFilters(filters) > 0 ? "primary" : "outline-primary"}
 								onClick={() => setFilterSidebarOpen(!filterSidebarOpen)}
 								style={{ aspectRatio: "1", padding: "0 1rem", position: "relative" }}
 							>
 								<i className="bi bi-funnel"></i>
 								{countActiveFilters(filters) > 0 && (
-									<span className="filter-sidebar-count" style={{ position: "absolute", top: "-6px", right: "-6px", fontSize: "0.65rem" }}>
+									<span
+										className="filter-sidebar-count"
+										style={{
+											position: "absolute",
+											top: "-6px",
+											right: "-6px",
+											fontSize: "0.65rem",
+										}}
+									>
 										{countActiveFilters(filters)}
 									</span>
 								)}
@@ -863,7 +885,9 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 														style={{
 															gridColumn: "1 / -1",
 															justifyContent: "center",
-															...(compact ? { padding: "1rem", fontSize: "0.875rem" } : {}),
+															...(compact
+																? { padding: "1rem", fontSize: "0.875rem" }
+																: {}),
 														}}
 													>
 														{emptyMessage || `No ${pluralize(entityName)} found`}

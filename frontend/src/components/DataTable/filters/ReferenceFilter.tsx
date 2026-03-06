@@ -38,11 +38,17 @@ const ReferenceFilter = ({ config, value, onChange, dataContext }: Props): JSX.E
 			onChange={(picked) =>
 				onChange({ type: "reference", selectedIds: (picked ?? []).map((p) => p.value) })
 			}
-			className="react-select-container filter-reference-select"
+			className="react-select-container react-select-container--sm"
 			classNamePrefix="react-select"
 			placeholder="Select..."
 			menuPortalTarget={document.body}
 			isClearable={false}
+			styles={{
+				menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+			}}
+			classNames={{
+				menuPortal: () => "react-select--sm-menu",
+			}}
 		/>
 	);
 };
