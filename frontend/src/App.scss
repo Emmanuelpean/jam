@@ -103,6 +103,7 @@ body {
 }
 
 html {
+    zoom: 0.9;
     scroll-behavior: smooth;
 }
 
@@ -153,7 +154,7 @@ html {
     transition: var(--transition);
     border: 3px solid;
     border-color: var(--bs-border-color);
-    border-radius: 12px;
+    border-radius: 10px;
     background-color: var(--input-background-color);
 }
 
@@ -337,7 +338,7 @@ textarea.form-control {
     padding: 0.75rem 2rem;
     transition: var(--transition);
     border: none;
-    border-radius: 12px;
+    border-radius: 10px;
     text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
 }
 
