@@ -190,7 +190,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 				.filter(([, val]) => isFilterActive(val))
 				.flatMap(([key, val]) => {
 					const allCols = enableColumnConfig ? columnConfig.allColumns : effectiveColumns;
-				const col = allCols.find((c) => c.key === key);
+					const col = allCols.find((c) => c.key === key);
 					if (!col) return [];
 					let summary = "";
 					switch (val.type) {
@@ -208,6 +208,8 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 							const presetLabels: Record<DatePreset, string> = {
 								last7: "Last 7 days",
 								last30: "Last 30 days",
+								next7: "Next 7 days",
+								next30: "Next 30 days",
 								thisMonth: "This month",
 								custom: "",
 							};
@@ -227,7 +229,8 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 							if (val.min !== null && val.max !== null) parts.push(`${val.min} \u2013 ${val.max}`);
 							else if (val.min !== null) parts.push(`\u2265 ${val.min}`);
 							else if (val.max !== null) parts.push(`\u2264 ${val.max}`);
-							if (val.includeEmpty === false) parts.push("Not null");
+							if (val.nullFilter === "not_null") parts.push("Not null");
+							else if (val.nullFilter === "null") parts.push("Null only");
 							summary = parts.join(", ");
 							break;
 						}
@@ -360,7 +363,17 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			if (isServerPagination) {
 				fetchData().then((_): null => null);
 			}
-		}, [endpoint, token, currentPage, pageSize, sortConfig, isServerPagination, debouncedSearchTerm, queryParams, filters]);
+		}, [
+			endpoint,
+			token,
+			currentPage,
+			pageSize,
+			sortConfig,
+			isServerPagination,
+			debouncedSearchTerm,
+			queryParams,
+			filters,
+		]);
 
 		const getData = (): JamData[] => {
 			if (providedData !== undefined) {
@@ -413,7 +426,12 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 
 			// Apply column filters
 			if (Object.keys(filters).length > 0) {
-				filteredData = applyFilters(filteredData, filters, enableColumnConfig ? columnConfig.allColumns : effectiveColumns, dataContext);
+				filteredData = applyFilters(
+					filteredData,
+					filters,
+					enableColumnConfig ? columnConfig.allColumns : effectiveColumns,
+					dataContext
+				);
 			}
 
 			// Sort data
@@ -766,7 +784,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 							<Button
 								variant={columnSidebarOpen ? "primary" : "outline-primary"}
 								onClick={() => setColumnSidebarOpen(!columnSidebarOpen)}
-								style={{ width: "64px", height: "64px", padding: "0" }}
+								style={{ width: "56px", height: "56px", padding: "0" }}
 								data-sidebar-toggle="column"
 							>
 								<i className="bi bi-gear"></i>
@@ -776,7 +794,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 							<Button
 								variant={filterSidebarOpen ? "primary" : "outline-primary"}
 								onClick={() => setFilterSidebarOpen(!filterSidebarOpen)}
-								style={{ width: "64px", height: "64px", padding: "0", position: "relative" }}
+								style={{ width: "56px", height: "56px", padding: "0", position: "relative" }}
 								data-sidebar-toggle="filter"
 							>
 								<i className="bi bi-funnel"></i>

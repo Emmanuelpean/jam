@@ -61,3 +61,30 @@
 	font-size: 0.72rem;
 	color: var(--bs-secondary-color, #6c757d);
 }
+
+.filter-null-buttons {
+	display: flex;
+	gap: 0.3rem;
+	margin-top: 0.4rem;
+}
+
+.filter-null-btn {
+	border: 1px solid var(--bs-border-color, #dee2e6);
+	background: none;
+	border-radius: 999px;
+	padding: 0.15rem 0.55rem;
+	font-size: 0.72rem;
+	cursor: pointer;
+	color: var(--bs-body-color);
+	transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+	&:hover {
+		background: var(--bs-tertiary-bg, #f8f9fa);
+	}
+
+	&.active {
+		background: var(--primary-mid, #6c5ce7);
+		color: white;
+		border-color: var(--primary-mid, #6c5ce7);
+	}
+}

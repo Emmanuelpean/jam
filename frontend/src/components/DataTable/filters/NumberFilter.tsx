@@ -1,6 +1,6 @@
 import React, { JSX, useCallback, useMemo } from "react";
 import { Form } from "react-bootstrap";
-import { NumberFilterConfig, NumberFilterValue } from "../FilterTypes";
+import { NullFilter, NumberFilterConfig, NumberFilterValue } from "../FilterTypes";
 import "./NumberFilter.scss";
 
 interface Props {
@@ -119,11 +119,18 @@ const NumberInputs = ({ config, value, onChange }: Props): JSX.Element => {
 	);
 };
 
+const nullFilterOptions: { value: NullFilter; label: string }[] = [
+	{ value: "all", label: "All" },
+	{ value: "not_null", label: "Not null" },
+	{ value: "null", label: "Null" },
+];
+
 const NumberFilter = ({ config, value, onChange, dataContext }: Props): JSX.Element => {
 	const display = config.display ?? "input";
+	const currentNullFilter = value.nullFilter ?? "all";
 
 	const handleRangeChange = (v: NumberFilterValue) => {
-		onChange({ ...v, includeEmpty: value.includeEmpty });
+		onChange({ ...v, nullFilter: value.nullFilter });
 	};
 
 	const sliderProps = { config, value, onChange: handleRangeChange, dataContext };
@@ -132,13 +139,18 @@ const NumberFilter = ({ config, value, onChange, dataContext }: Props): JSX.Elem
 		<>
 			{display === "slider" ? <NumberSlider {...sliderProps} /> : <NumberInputs {...sliderProps} />}
 			{config.nullable && (
-				<Form.Check
-					type="switch"
-					label="Include empty"
-					checked={value.includeEmpty !== false}
-					onChange={(e) => onChange({ ...value, includeEmpty: e.target.checked })}
-					className="mt-2"
-				/>
+				<div className="filter-null-buttons">
+					{nullFilterOptions.map((opt) => (
+						<button
+							key={opt.value}
+							type="button"
+							className={`filter-null-btn${currentNullFilter === opt.value ? " active" : ""}`}
+							onClick={() => onChange({ ...value, nullFilter: opt.value === "all" ? undefined : opt.value })}
+						>
+							{opt.label}
+						</button>
+					))}
+				</div>
 			)}
 		</>
 	);

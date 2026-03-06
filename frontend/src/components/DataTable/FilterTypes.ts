@@ -11,8 +11,14 @@ export interface SelectFilterConfig {
 	options: SelectOption[];
 }
 
+export interface DatePresetOption {
+	key: DatePreset;
+	label: string;
+}
+
 export interface DateFilterConfig {
 	type: "date";
+	presets?: DatePresetOption[];
 }
 
 export interface NumberFilterConfig {
@@ -53,7 +59,7 @@ export interface SelectFilterValue {
 	selected: string[];
 }
 
-export type DatePreset = "last7" | "last30" | "thisMonth" | "custom";
+export type DatePreset = "last7" | "last30" | "next7" | "next30" | "thisMonth" | "custom";
 
 export interface DateFilterValue {
 	type: "date";
@@ -62,11 +68,13 @@ export interface DateFilterValue {
 	to: string | null;   // YYYY-MM-DD
 }
 
+export type NullFilter = "all" | "null" | "not_null";
+
 export interface NumberFilterValue {
 	type: "number";
 	min: number | null;
 	max: number | null;
-	includeEmpty?: boolean;
+	nullFilter?: NullFilter;
 }
 
 export interface ReferenceFilterValue {
@@ -94,7 +102,7 @@ export function isFilterActive(filter: FilterValue): boolean {
 		case "date":
 			return filter.from !== null || filter.to !== null;
 		case "number":
-			return filter.min !== null || filter.max !== null || filter.includeEmpty === false;
+			return filter.min !== null || filter.max !== null || (!!filter.nullFilter && filter.nullFilter !== "all");
 		case "reference":
 			return filter.selectedIds.length > 0;
 	}

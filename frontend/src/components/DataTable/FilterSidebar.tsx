@@ -35,7 +35,7 @@ const FilterSection = ({ column, value, onChange, dataContext }: FilterSectionPr
 				{config.type === "select" && (
 					<SelectFilter config={config} value={current as any} onChange={onChange} />
 				)}
-				{config.type === "date" && <DateFilter value={current as any} onChange={onChange} />}
+				{config.type === "date" && <DateFilter config={config} value={current as any} onChange={onChange} />}
 				{config.type === "number" && (
 					<NumberFilter config={config} value={current as any} onChange={onChange} dataContext={dataContext} />
 				)}

@@ -470,7 +470,15 @@ export const tableColumns = {
 		type: "date",
 		searchFields: (item: JamData) => ("deadline" in item && item.deadline ? toDdMmYyyy(item.deadline) : ""),
 		render: (params: RenderParams) => renderFunctions._date(params, "deadline"),
-		filterConfig: { type: "date" },
+		filterConfig: {
+			type: "date",
+			presets: [
+				{ key: "next7", label: "Next 7 days" },
+				{ key: "next30", label: "Next 30 days" },
+				{ key: "thisMonth", label: "This month" },
+				{ key: "custom", label: "Custom" },
+			],
+		},
 		...overrides,
 	}),
 

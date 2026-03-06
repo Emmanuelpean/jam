@@ -1,13 +1,14 @@
 import React, { JSX } from "react";
 import { Form } from "react-bootstrap";
-import { DateFilterValue, DatePreset } from "../FilterTypes";
+import { DateFilterConfig, DateFilterValue, DatePreset, DatePresetOption } from "../FilterTypes";
 
 interface Props {
+	config: DateFilterConfig;
 	value: DateFilterValue;
 	onChange: (v: DateFilterValue) => void;
 }
 
-const PRESETS: { key: DatePreset; label: string }[] = [
+const DEFAULT_PRESETS: DatePresetOption[] = [
 	{ key: "last7", label: "Last 7 days" },
 	{ key: "last30", label: "Last 30 days" },
 	{ key: "thisMonth", label: "This month" },
@@ -28,21 +29,33 @@ function applyPreset(preset: DatePreset): DateFilterValue {
 		d.setDate(d.getDate() - 30);
 		return { type: "date", preset, from: d.toISOString().split("T")[0] ?? null, to: today };
 	}
+	if (preset === "next7") {
+		const d = new Date(now);
+		d.setDate(d.getDate() + 7);
+		return { type: "date", preset, from: today, to: d.toISOString().split("T")[0] ?? null };
+	}
+	if (preset === "next30") {
+		const d = new Date(now);
+		d.setDate(d.getDate() + 30);
+		return { type: "date", preset, from: today, to: d.toISOString().split("T")[0] ?? null };
+	}
 	if (preset === "thisMonth") {
 		const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0] ?? null;
-		return { type: "date", preset, from, to: today };
+		const to = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0] ?? null;
+		return { type: "date", preset, from, to };
 	}
 	// custom — keep existing range, just switch preset
 	return { type: "date", preset: "custom", from: null, to: null };
 }
 
-const DateFilter = ({ value, onChange }: Props): JSX.Element => {
+const DateFilter = ({ config, value, onChange }: Props): JSX.Element => {
+	const presets = config.presets ?? DEFAULT_PRESETS;
 	const showCustomRange = value.preset === "custom" || value.preset === null;
 
 	return (
 		<div className="filter-date">
 			<div className="filter-date-presets">
-				{PRESETS.map((p) => (
+				{presets.map((p) => (
 					<button
 						key={p.key}
 						type="button"

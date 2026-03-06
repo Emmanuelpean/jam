@@ -146,22 +146,21 @@ def get_all(
             elif ftype == "number":
                 min_val = fval.get("min")
                 max_val = fval.get("max")
-                include_empty = fval.get("includeEmpty")
+                null_filter = fval.get("nullFilter")
 
-                range_parts = []
-                if min_val is not None:
-                    range_parts.append(col >= min_val)
-                if max_val is not None:
-                    range_parts.append(col <= max_val)
-
-                if range_parts:
-                    range_cond = and_(*range_parts)
-                    if include_empty is True:
-                        filter_conditions.append(or_(range_cond, col.is_(None)))
-                    else:
-                        filter_conditions.append(range_cond)
-                elif include_empty is False:
+                if null_filter == "null":
+                    filter_conditions.append(col.is_(None))
+                elif null_filter == "not_null":
                     filter_conditions.append(col.isnot(None))
+                    if min_val is not None:
+                        filter_conditions.append(col >= min_val)
+                    if max_val is not None:
+                        filter_conditions.append(col <= max_val)
+                else:
+                    if min_val is not None:
+                        filter_conditions.append(col >= min_val)
+                    if max_val is not None:
+                        filter_conditions.append(col <= max_val)
 
             elif ftype == "date":
                 from_val = fval.get("from")
