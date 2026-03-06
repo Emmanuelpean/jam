@@ -21,6 +21,7 @@ const KeywordsPage = (): JSX.Element => {
 			Modal={KeywordModal}
 			initialSortConfig={{ key: "name", direction: "asc" }}
 			title="Tags"
+			enableColumnConfig={true}
 		/>
 	);
 };

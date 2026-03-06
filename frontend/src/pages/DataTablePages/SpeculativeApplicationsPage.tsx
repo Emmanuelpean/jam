@@ -20,6 +20,7 @@ const SpeculativeApplicationsPage = (): JSX.Element => {
 			columns={columns}
 			Modal={SpeculativeApplicationModal}
 			modalSize="xl"
+			enableColumnConfig={true}
 		/>
 	);
 };
