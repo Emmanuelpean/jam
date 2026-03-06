@@ -295,6 +295,50 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	technicalScoreColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "job_rating.technical_score",
+		label: "Technical Score",
+		sortable: true,
+		searchable: false,
+		type: "number",
+		render: renderFunctions.technicalScore,
+		filterConfig: { type: "number", min: 0, max: 10, step: 0.1, display: "slider" },
+		...overrides,
+	}),
+
+	experienceScoreColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "job_rating.experience_score",
+		label: "Experience Score",
+		sortable: true,
+		searchable: false,
+		type: "number",
+		render: renderFunctions.experienceScore,
+		filterConfig: { type: "number", min: 0, max: 10, step: 0.1, display: "slider" },
+		...overrides,
+	}),
+
+	educationalScoreColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "job_rating.educational_score",
+		label: "Education Score",
+		sortable: true,
+		searchable: false,
+		type: "number",
+		render: renderFunctions.educationalScore,
+		filterConfig: { type: "number", min: 0, max: 10, step: 0.1, display: "slider" },
+		...overrides,
+	}),
+
+	interestScoreColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "job_rating.interest_score",
+		label: "Interest Score",
+		sortable: true,
+		searchable: false,
+		type: "number",
+		render: renderFunctions.interestScore,
+		filterConfig: { type: "number", min: 0, max: 10, step: 0.1, display: "slider" },
+		...overrides,
+	}),
+
 	filterTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "type",
 		label: "Filter Type",

@@ -54,6 +54,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 				showAdd={false}
 				showSearch={true}
 				queryParams={queryParams}
+				enableColumnConfig={true}
 				toolbarAddon={
 					<div style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.75rem" }}>
 						<Button

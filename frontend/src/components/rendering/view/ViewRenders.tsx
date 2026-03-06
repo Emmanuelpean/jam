@@ -184,6 +184,22 @@ export const renderFunctions = {
 		return param.item?.job_rating?.overall_score;
 	},
 
+	technicalScore: (param: RenderParams): number | null => {
+		return param.item?.job_rating?.technical_score;
+	},
+
+	experienceScore: (param: RenderParams): number | null => {
+		return param.item?.job_rating?.experience_score;
+	},
+
+	educationalScore: (param: RenderParams): number | null => {
+		return param.item?.job_rating?.educational_score;
+	},
+
+	interestScore: (param: RenderParams): number | null => {
+		return param.item?.job_rating?.interest_score;
+	},
+
 	filterType: (param: RenderParams): ReactNode => {
 		return getScrapingFilterTypeLabel(param.item);
 	},
