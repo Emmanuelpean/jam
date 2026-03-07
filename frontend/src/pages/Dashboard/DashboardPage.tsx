@@ -34,6 +34,7 @@ import {
 } from "./widgetRegistry";
 import WidgetPickerModal from "./WidgetPickerModal";
 import GraphWidget from "./GraphWidget";
+import AlertModal, { AlertState } from "../../components/AlertModal/AlertModal";
 
 const Dashboard: React.FC = () => {
 	const dataContext: DataContextValue = useDataContext();
@@ -43,6 +44,7 @@ const Dashboard: React.FC = () => {
 	const [showWidgetPicker, setShowWidgetPicker] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
+	const [alertState, setAlertState] = useState<AlertState>({ show: false });
 
 	const isPremium = currentUser?.premium.is_active ?? false;
 
@@ -173,6 +175,7 @@ const Dashboard: React.FC = () => {
 					<GraphWidget
 						config={config}
 						onConfigChange={(updated) => handleUpdateWidgetConfig(widgetId, updated)}
+						isEditMode={isEditMode}
 					/>
 				);
 		}
@@ -375,16 +378,26 @@ const Dashboard: React.FC = () => {
 		});
 	};
 
-	const handleRemoveWidget = (widgetId: string) => {
-		setLayoutData((prev) => ({
-			...prev,
-			widgets: prev.widgets.filter((w) => w.id !== widgetId),
-			layouts: {
-				lg: prev.layouts.lg.filter((l) => l.i !== widgetId),
-				md: prev.layouts.md.filter((l) => l.i !== widgetId),
-				sm: prev.layouts.sm.filter((l) => l.i !== widgetId),
+	const confirmRemoveWidget = (widgetId: string) => {
+		setAlertState({
+			show: true,
+			type: "danger",
+			title: "Remove Widget",
+			message: "Are you sure you want to remove this widget?",
+			confirmText: "Remove",
+			cancelText: "Cancel",
+			onSuccess: () => {
+				setLayoutData((prev) => ({
+					...prev,
+					widgets: prev.widgets.filter((w) => w.id !== widgetId),
+					layouts: {
+						lg: prev.layouts.lg.filter((l) => l.i !== widgetId),
+						md: prev.layouts.md.filter((l) => l.i !== widgetId),
+						sm: prev.layouts.sm.filter((l) => l.i !== widgetId),
+					},
+				}));
 			},
-		}));
+		});
 	};
 
 	const widgetIds = new Set(layoutData.widgets.map((w) => w.id));
@@ -417,16 +430,18 @@ const Dashboard: React.FC = () => {
 							{layoutData.widgets.map((widget) => (
 								<div key={widget.id} className="dashboard-grid-item">
 									{isEditMode && (
-										<div className="drag-handle">
-											<i className="bi bi-grip-horizontal"></i>
+										<>
+											<div className="drag-handle">
+												<i className="bi bi-grip-horizontal"></i>
+											</div>
 											<button
 												className="widget-remove-btn"
-												onClick={() => handleRemoveWidget(widget.id)}
+												onClick={() => confirmRemoveWidget(widget.id)}
 												title="Remove widget"
 											>
-												<i className="bi bi-x"></i>
+												<i className="bi bi-trash3"></i>
 											</button>
-										</div>
+										</>
 									)}
 									<div className="grid-item-content">{renderWidget(widget.config, widget.id)}</div>
 								</div>
@@ -491,6 +506,8 @@ const Dashboard: React.FC = () => {
 				onAddWidget={handleAddWidget}
 				isPremium={isPremium}
 			/>
+
+			<AlertModal alertState={alertState} hideAlert={() => setAlertState({ show: false })} />
 		</div>
 	);
 };
