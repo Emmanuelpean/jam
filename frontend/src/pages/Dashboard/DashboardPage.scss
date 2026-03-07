@@ -107,6 +107,7 @@
 
 /* Drag handle */
 .drag-handle {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -123,6 +124,34 @@
 
     &:active {
         cursor: grabbing;
+    }
+}
+
+/* Widget remove button */
+.widget-remove-btn {
+    position: absolute;
+    top: -2px;
+    right: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    font-size: 0.75rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--bs-secondary);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 50%;
+    background: var(--bs-body-bg);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    z-index: 10;
+
+    &:hover {
+        color: white;
+        border-color: var(--bs-danger);
+        background: var(--bs-danger);
     }
 }
 

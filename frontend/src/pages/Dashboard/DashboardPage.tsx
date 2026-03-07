@@ -23,16 +23,24 @@ import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
 import { scrapedJobApi } from "../../services/api/Services";
 import { sortByKey } from "../../utils/Utils";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
-import ExtensionBanner from "./ExtensionBanner";
-import { CARD_REGISTRY, DashboardLayoutData, getDefaultLayout, parseLayoutData } from "./cardRegistry";
-import CardSelectorModal from "./CardSelectorModal";
+import {
+	DashboardLayoutDataV2,
+	WidgetConfig,
+	WidgetInstance,
+	generateWidgetId,
+	getDefaultLayout,
+	getDefaultLayoutsForConfig,
+	parseLayoutData,
+} from "./widgetRegistry";
+import WidgetPickerModal from "./WidgetPickerModal";
+import GraphWidget from "./GraphWidget";
 
 const Dashboard: React.FC = () => {
 	const dataContext: DataContextValue = useDataContext();
 	const { token, currentUser, updateCurrentUser } = useAuth();
 	const [scrapedJobCount, setScrapedJobCount] = useState<number>(0);
 	const [isEditMode, setIsEditMode] = useState(false);
-	const [showCardSelector, setShowCardSelector] = useState(false);
+	const [showWidgetPicker, setShowWidgetPicker] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
 
@@ -40,10 +48,10 @@ const Dashboard: React.FC = () => {
 
 	const { width, containerRef, mounted } = useContainerWidth();
 
-	const [layoutData, setLayoutData] = useState<DashboardLayoutData>(() =>
+	const [layoutData, setLayoutData] = useState<DashboardLayoutDataV2>(() =>
 		parseLayoutData(currentUser?.preferences.dashboard_layout ?? null, isPremium)
 	);
-	const savedLayoutRef = useRef<DashboardLayoutData>(layoutData);
+	const savedLayoutRef = useRef<DashboardLayoutDataV2>(layoutData);
 
 	// Track small screen
 	useEffect(() => {
@@ -144,125 +152,170 @@ const Dashboard: React.FC = () => {
 	allUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 	const recentActivity = allUpdates.slice(0, currentUser.preferences.update_limit);
 
-	// Card renderers
-	const cardRenderers: Record<string, () => React.ReactNode> = {
-		"stat-total-jobs": () => (
-			<StatCard
-				name="Total Jobs"
-				value={dataContext.jobs.length}
-				icon="briefcase"
-				variant="primary"
-				description="Jobs in your database"
-			/>
-		),
-		"stat-applications": () => (
-			<StatCard
-				name="Applications"
-				value={jobApplications.length}
-				icon="send"
-				variant="success"
-				description="Total applications sent"
-			/>
-		),
-		"stat-pending": () => (
-			<StatCard
-				name="Pending"
-				value={jobApplicationPending.length}
-				icon="clock"
-				variant="warning"
-				description="Applications awaiting response"
-			/>
-		),
-		"stat-follow-up": () => (
-			<StatCard
-				name="Need Follow-up"
-				value={needsChase.length}
-				icon="telephone"
-				variant="danger"
-				description="Applications requiring action"
-			/>
-		),
-		"recent-activity": () => (
-			<ActivityFeedCard
-				icon="clock-history"
-				title="Recent Activity"
-				badgeValue={recentActivity.length}
-				emptyIcon="inbox"
-				emptyTitle="No recent activity"
-				emptyDescription="Your recent activity will appear here"
-				items={recentActivity}
-				renderItem={renderRecentActivityItem}
-			/>
-		),
-		"follow-up-table": () => (
-			<DashboardCard
-				icon="telephone"
-				title="Applications Requiring Follow-up"
-				badgeValue={needsChase.length}
-				isEmpty={needsChase.length === 0}
-				emptyState={{
-					icon: "telephone-x",
-					title: "No follow-ups needed",
-					description: "All your applications are up to date",
-				}}
-			>
-				<JobsToChase data={needsChase} />
-			</DashboardCard>
-		),
-		"upcoming-deadlines": () => (
-			<DashboardCard
-				icon="clock"
-				title="Upcoming Deadlines"
-				badgeValue={upcomingDeadlines.length}
-				isEmpty={upcomingDeadlines.length === 0}
-				emptyState={{
-					icon: "calendar-check",
-					title: "No upcoming deadlines",
-					description: "You have no application deadlines approaching",
-				}}
-			>
-				<UpcomingDeadlinesTable data={upcomingDeadlines} />
-			</DashboardCard>
-		),
-		"upcoming-interviews": () => (
-			<ActivityFeedCard
-				icon="calendar-event"
-				title="Upcoming Interviews"
-				badgeValue={upcomingInterviews.length}
-				emptyIcon="calendar-x"
-				emptyTitle="No upcoming interviews"
-				emptyDescription="Your scheduled interviews will appear here"
-				items={upcomingInterviews}
-				renderItem={renderUpcomingInterviewItem}
-			/>
-		),
-		"job-alerts": () => (
-			<DashboardCard
-				icon={getEntityIcon("scrapedJob")}
-				title="Job Alerts"
-				subtitle="Jobs that you received from job boards"
-				badgeValue={scrapedJobCount}
-				path="/scraped-jobs"
-				isEmpty={scrapedJobCount === 0}
-				emptyState={{
-					icon: "bell-slash",
-					title: "No job alerts",
-					description: "Job alerts from your scrapers will appear here",
-				}}
-			>
-				<div style={{ paddingTop: "10px", paddingBottom: "20px" }}>
-					<ScrapedJobsTable />
-				</div>
-			</DashboardCard>
-		),
+	const handleUpdateWidgetConfig = (widgetId: string, newConfig: WidgetConfig) => {
+		setLayoutData((prev) => ({
+			...prev,
+			widgets: prev.widgets.map((w) => (w.id === widgetId ? { ...w, config: newConfig } : w)),
+		}));
 	};
 
-	const visibleCards = layoutData.visibleCards.filter((id) => {
-		const def = CARD_REGISTRY.find((c) => c.id === id);
-		if (!def) return false;
-		if (def.premiumOnly && !isPremium) return false;
-		return true;
-	});
+	// Widget renderers by type
+	const renderWidget = (config: WidgetConfig, widgetId: string): React.ReactNode => {
+		switch (config.type) {
+			case "metric":
+				return renderMetricWidget(config.metric);
+			case "table":
+				return renderTableWidget(config.source);
+			case "timeline":
+				return renderTimelineWidget(config.feed);
+			case "graph":
+				return (
+					<GraphWidget
+						config={config}
+						onConfigChange={(updated) => handleUpdateWidgetConfig(widgetId, updated)}
+					/>
+				);
+		}
+	};
+
+	const renderMetricWidget = (metric: string): React.ReactNode => {
+		switch (metric) {
+			case "total_jobs":
+				return (
+					<StatCard
+						name="Total Jobs"
+						value={dataContext.jobs.length}
+						icon="briefcase"
+						variant="primary"
+						description="Jobs in your database"
+					/>
+				);
+			case "applications":
+				return (
+					<StatCard
+						name="Applications"
+						value={jobApplications.length}
+						icon="send"
+						variant="success"
+						description="Total applications sent"
+					/>
+				);
+			case "pending":
+				return (
+					<StatCard
+						name="Pending"
+						value={jobApplicationPending.length}
+						icon="clock"
+						variant="warning"
+						description="Applications awaiting response"
+					/>
+				);
+			case "follow_up":
+				return (
+					<StatCard
+						name="Need Follow-up"
+						value={needsChase.length}
+						icon="telephone"
+						variant="danger"
+						description="Applications requiring action"
+					/>
+				);
+			default:
+				return null;
+		}
+	};
+
+	const renderTableWidget = (source: string): React.ReactNode => {
+		switch (source) {
+			case "follow_up":
+				return (
+					<DashboardCard
+						icon="telephone"
+						title="Applications Requiring Follow-up"
+						badgeValue={needsChase.length}
+						isEmpty={needsChase.length === 0}
+						emptyState={{
+							icon: "telephone-x",
+							title: "No follow-ups needed",
+							description: "All your applications are up to date",
+						}}
+					>
+						<JobsToChase data={needsChase} />
+					</DashboardCard>
+				);
+			case "upcoming_deadlines":
+				return (
+					<DashboardCard
+						icon="clock"
+						title="Upcoming Deadlines"
+						badgeValue={upcomingDeadlines.length}
+						isEmpty={upcomingDeadlines.length === 0}
+						emptyState={{
+							icon: "calendar-check",
+							title: "No upcoming deadlines",
+							description: "You have no application deadlines approaching",
+						}}
+					>
+						<UpcomingDeadlinesTable data={upcomingDeadlines} />
+					</DashboardCard>
+				);
+			case "job_alerts":
+				return (
+					<DashboardCard
+						icon={getEntityIcon("scrapedJob")}
+						title="Job Alerts"
+						subtitle="Jobs that you received from job boards"
+						badgeValue={scrapedJobCount}
+						path="/scraped-jobs"
+						isEmpty={scrapedJobCount === 0}
+						emptyState={{
+							icon: "bell-slash",
+							title: "No job alerts",
+							description: "Job alerts from your scrapers will appear here",
+						}}
+					>
+						<div style={{ paddingTop: "10px", paddingBottom: "20px" }}>
+							<ScrapedJobsTable />
+						</div>
+					</DashboardCard>
+				);
+			default:
+				return null;
+		}
+	};
+
+	const renderTimelineWidget = (feed: string): React.ReactNode => {
+		switch (feed) {
+			case "recent_activity":
+				return (
+					<ActivityFeedCard
+						icon="clock-history"
+						title="Recent Activity"
+						badgeValue={recentActivity.length}
+						emptyIcon="inbox"
+						emptyTitle="No recent activity"
+						emptyDescription="Your recent activity will appear here"
+						items={recentActivity}
+						renderItem={renderRecentActivityItem}
+					/>
+				);
+			case "upcoming_interviews":
+				return (
+					<ActivityFeedCard
+						icon="calendar-event"
+						title="Upcoming Interviews"
+						badgeValue={upcomingInterviews.length}
+						emptyIcon="calendar-x"
+						emptyTitle="No upcoming interviews"
+						emptyDescription="Your scheduled interviews will appear here"
+						items={upcomingInterviews}
+						renderItem={renderUpcomingInterviewItem}
+					/>
+				);
+			default:
+				return null;
+		}
+	};
 
 	const handleLayoutChange = (_currentLayout: Layout, allLayouts: ResponsiveLayouts) => {
 		if (!isEditMode) return;
@@ -301,43 +354,44 @@ const Dashboard: React.FC = () => {
 		setLayoutData(defaultLayout);
 	};
 
-	const handleCardsChange = (newVisibleCards: string[]) => {
+	const handleAddWidget = (config: WidgetConfig) => {
 		setLayoutData((prev) => {
-			const addedCards = newVisibleCards.filter((id) => !prev.visibleCards.includes(id));
+			const id = generateWidgetId();
+			const newWidget: WidgetInstance = { id, config };
+			const defaults = getDefaultLayoutsForConfig(config);
 			const newLayouts = { ...prev.layouts };
 
-			// Add default layouts for newly added cards
-			for (const cardId of addedCards) {
-				const def = CARD_REGISTRY.find((c) => c.id === cardId);
-				if (!def) continue;
-				const maxY = (bp: "lg" | "md" | "sm") => {
-					const items = newLayouts[bp];
-					if (items.length === 0) return 0;
-					return Math.max(...items.map((l) => l.y + l.h));
-				};
-				for (const bp of ["lg", "md", "sm"] as const) {
-					newLayouts[bp] = [...newLayouts[bp], { ...def.layouts[bp], y: maxY(bp) }];
-				}
-			}
-
-			// Remove layouts for removed cards
-			const visibleSet = new Set(newVisibleCards);
 			for (const bp of ["lg", "md", "sm"] as const) {
-				newLayouts[bp] = newLayouts[bp].filter((l) => visibleSet.has(l.i));
+				const items = newLayouts[bp];
+				const maxY = items.length === 0 ? 0 : Math.max(...items.map((l) => l.y + l.h));
+				newLayouts[bp] = [...items, { ...defaults[bp], i: id, y: maxY }];
 			}
 
 			return {
 				...prev,
-				visibleCards: newVisibleCards,
+				widgets: [...prev.widgets, newWidget],
 				layouts: newLayouts,
 			};
 		});
 	};
 
+	const handleRemoveWidget = (widgetId: string) => {
+		setLayoutData((prev) => ({
+			...prev,
+			widgets: prev.widgets.filter((w) => w.id !== widgetId),
+			layouts: {
+				lg: prev.layouts.lg.filter((l) => l.i !== widgetId),
+				md: prev.layouts.md.filter((l) => l.i !== widgetId),
+				sm: prev.layouts.sm.filter((l) => l.i !== widgetId),
+			},
+		}));
+	};
+
+	const widgetIds = new Set(layoutData.widgets.map((w) => w.id));
 	const currentLayouts: ResponsiveLayouts = {
-		lg: layoutData.layouts.lg.filter((l) => visibleCards.includes(l.i)),
-		md: layoutData.layouts.md.filter((l) => visibleCards.includes(l.i)),
-		sm: layoutData.layouts.sm.filter((l) => visibleCards.includes(l.i)),
+		lg: layoutData.layouts.lg.filter((l) => widgetIds.has(l.i)),
+		md: layoutData.layouts.md.filter((l) => widgetIds.has(l.i)),
+		sm: layoutData.layouts.sm.filter((l) => widgetIds.has(l.i)),
 	};
 
 	const hasChanges = JSON.stringify(layoutData) !== JSON.stringify(savedLayoutRef.current);
@@ -360,14 +414,21 @@ const Dashboard: React.FC = () => {
 							resizeConfig={{ enabled: dragEnabled }}
 							onLayoutChange={handleLayoutChange}
 						>
-							{visibleCards.map((cardId) => (
-								<div key={cardId} className="dashboard-grid-item">
+							{layoutData.widgets.map((widget) => (
+								<div key={widget.id} className="dashboard-grid-item">
 									{isEditMode && (
 										<div className="drag-handle">
 											<i className="bi bi-grip-horizontal"></i>
+											<button
+												className="widget-remove-btn"
+												onClick={() => handleRemoveWidget(widget.id)}
+												title="Remove widget"
+											>
+												<i className="bi bi-x"></i>
+											</button>
 										</div>
 									)}
-									<div className="grid-item-content">{cardRenderers[cardId]?.()}</div>
+									<div className="grid-item-content">{renderWidget(widget.config, widget.id)}</div>
 								</div>
 							))}
 						</ResponsiveGridLayout>
@@ -383,10 +444,10 @@ const Dashboard: React.FC = () => {
 								variant="outline-secondary"
 								size="sm"
 								className="w-100"
-								onClick={() => setShowCardSelector(true)}
+								onClick={() => setShowWidgetPicker(true)}
 							>
 								<i className="bi bi-plus-circle me-1"></i>
-								Cards
+								Add Widget
 							</Button>
 							<Button variant="outline-warning" size="sm" className="w-100" onClick={handleReset}>
 								<i className="bi bi-arrow-counterclockwise me-1"></i>
@@ -397,7 +458,6 @@ const Dashboard: React.FC = () => {
 								size="sm"
 								className="w-100"
 								onClick={handleCancel}
-								disabled={!hasChanges}
 							>
 								<i className="bi bi-x-lg me-1"></i>
 								Cancel
@@ -425,11 +485,10 @@ const Dashboard: React.FC = () => {
 				</div>
 			)}
 
-			<CardSelectorModal
-				show={showCardSelector}
-				onHide={() => setShowCardSelector(false)}
-				visibleCards={layoutData.visibleCards}
-				onCardsChange={handleCardsChange}
+			<WidgetPickerModal
+				show={showWidgetPicker}
+				onHide={() => setShowWidgetPicker(false)}
+				onAddWidget={handleAddWidget}
 				isPremium={isPremium}
 			/>
 		</div>
