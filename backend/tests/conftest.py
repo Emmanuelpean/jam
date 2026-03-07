@@ -54,7 +54,10 @@ def mock_nominatim_get():
         mock_response.json.return_value = MOCK_GEOCODING_RESPONSES.get(query, [])
         return mock_response
 
-    with patch("app.geolocation.geolocation.requests.get", side_effect=side_effect) as mock:
+    with (
+        patch("app.geolocation.geolocation.requests.get", side_effect=side_effect) as mock,
+        patch("app.geolocation.geolocation.time.sleep"),
+    ):
         yield mock
 
 
