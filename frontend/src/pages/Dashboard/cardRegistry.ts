@@ -19,9 +19,9 @@ export const CARD_REGISTRY: CardDefinition[] = [
 		icon: "briefcase",
 		premiumOnly: false,
 		layouts: {
-			lg: { i: "stat-total-jobs", x: 0, y: 0, w: 3, h: 4, minW: 2, minH: 2 },
-			md: { i: "stat-total-jobs", x: 0, y: 0, w: 3, h: 4, minW: 2, minH: 2 },
-			sm: { i: "stat-total-jobs", x: 0, y: 0, w: 6, h: 4, minW: 3, minH: 2 },
+			lg: { i: "stat-total-jobs", x: 0, y: 0, w: 3, h: 8, minW: 2, minH: 4 },
+			md: { i: "stat-total-jobs", x: 0, y: 0, w: 3, h: 8, minW: 2, minH: 4 },
+			sm: { i: "stat-total-jobs", x: 0, y: 0, w: 6, h: 8, minW: 3, minH: 4 },
 		},
 	},
 	{
@@ -30,9 +30,9 @@ export const CARD_REGISTRY: CardDefinition[] = [
 		icon: "send",
 		premiumOnly: false,
 		layouts: {
-			lg: { i: "stat-applications", x: 3, y: 0, w: 3, h: 4, minW: 2, minH: 4 },
-			md: { i: "stat-applications", x: 3, y: 0, w: 3, h: 4, minW: 2, minH: 4 },
-			sm: { i: "stat-applications", x: 6, y: 0, w: 6, h: 4, minW: 3, minH: 4 },
+			lg: { i: "stat-applications", x: 3, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
+			md: { i: "stat-applications", x: 3, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
+			sm: { i: "stat-applications", x: 6, y: 0, w: 6, h: 8, minW: 3, minH: 8 },
 		},
 	},
 	{
@@ -41,9 +41,9 @@ export const CARD_REGISTRY: CardDefinition[] = [
 		icon: "clock",
 		premiumOnly: false,
 		layouts: {
-			lg: { i: "stat-pending", x: 6, y: 0, w: 3, h: 4, minW: 2, minH: 4 },
-			md: { i: "stat-pending", x: 6, y: 0, w: 3, h: 4, minW: 2, minH: 4 },
-			sm: { i: "stat-pending", x: 0, y: 4, w: 6, h: 4, minW: 3, minH: 4 },
+			lg: { i: "stat-pending", x: 6, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
+			md: { i: "stat-pending", x: 6, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
+			sm: { i: "stat-pending", x: 0, y: 8, w: 6, h: 8, minW: 3, minH: 8 },
 		},
 	},
 	{
@@ -52,9 +52,9 @@ export const CARD_REGISTRY: CardDefinition[] = [
 		icon: "telephone",
 		premiumOnly: false,
 		layouts: {
-			lg: { i: "stat-follow-up", x: 9, y: 0, w: 3, h: 4, minW: 2, minH: 4 },
-			md: { i: "stat-follow-up", x: 9, y: 0, w: 3, h: 4, minW: 2, minH: 4 },
-			sm: { i: "stat-follow-up", x: 6, y: 4, w: 6, h: 4, minW: 3, minH: 4 },
+			lg: { i: "stat-follow-up", x: 9, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
+			md: { i: "stat-follow-up", x: 9, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
+			sm: { i: "stat-follow-up", x: 6, y: 8, w: 6, h: 8, minW: 3, minH: 8 },
 		},
 	},
 	{
@@ -63,9 +63,9 @@ export const CARD_REGISTRY: CardDefinition[] = [
 		icon: "clock-history",
 		premiumOnly: false,
 		layouts: {
-			lg: { i: "recent-activity", x: 0, y: 4, w: 4, h: 6, minW: 3, minH: 4 },
-			md: { i: "recent-activity", x: 0, y: 4, w: 4, h: 6, minW: 3, minH: 4 },
-			sm: { i: "recent-activity", x: 0, y: 8, w: 12, h: 6, minW: 6, minH: 4 },
+			lg: { i: "recent-activity", x: 0, y: 8, w: 4, h: 12, minW: 3, minH: 8 },
+			md: { i: "recent-activity", x: 0, y: 8, w: 4, h: 12, minW: 3, minH: 8 },
+			sm: { i: "recent-activity", x: 0, y: 16, w: 12, h: 12, minW: 6, minH: 8 },
 		},
 	},
 	{
@@ -74,9 +74,9 @@ export const CARD_REGISTRY: CardDefinition[] = [
 		icon: "telephone",
 		premiumOnly: false,
 		layouts: {
-			lg: { i: "follow-up-table", x: 4, y: 4, w: 8, h: 6, minW: 4, minH: 4 },
-			md: { i: "follow-up-table", x: 4, y: 4, w: 8, h: 6, minW: 4, minH: 4 },
-			sm: { i: "follow-up-table", x: 0, y: 14, w: 12, h: 6, minW: 6, minH: 4 },
+			lg: { i: "follow-up-table", x: 4, y: 8, w: 8, h: 12, minW: 4, minH: 8 },
+			md: { i: "follow-up-table", x: 4, y: 8, w: 8, h: 12, minW: 4, minH: 8 },
+			sm: { i: "follow-up-table", x: 0, y: 28, w: 12, h: 12, minW: 6, minH: 8 },
 		},
 	},
 	{
@@ -85,9 +85,9 @@ export const CARD_REGISTRY: CardDefinition[] = [
 		icon: "clock",
 		premiumOnly: false,
 		layouts: {
-			lg: { i: "upcoming-deadlines", x: 0, y: 10, w: 8, h: 6, minW: 4, minH: 4 },
-			md: { i: "upcoming-deadlines", x: 0, y: 10, w: 8, h: 6, minW: 4, minH: 4 },
-			sm: { i: "upcoming-deadlines", x: 0, y: 20, w: 12, h: 6, minW: 6, minH: 4 },
+			lg: { i: "upcoming-deadlines", x: 0, y: 20, w: 8, h: 12, minW: 4, minH: 8 },
+			md: { i: "upcoming-deadlines", x: 0, y: 20, w: 8, h: 12, minW: 4, minH: 8 },
+			sm: { i: "upcoming-deadlines", x: 0, y: 40, w: 12, h: 12, minW: 6, minH: 8 },
 		},
 	},
 	{
@@ -96,9 +96,9 @@ export const CARD_REGISTRY: CardDefinition[] = [
 		icon: "calendar-event",
 		premiumOnly: false,
 		layouts: {
-			lg: { i: "upcoming-interviews", x: 8, y: 10, w: 4, h: 6, minW: 3, minH: 4 },
-			md: { i: "upcoming-interviews", x: 8, y: 10, w: 4, h: 6, minW: 3, minH: 4 },
-			sm: { i: "upcoming-interviews", x: 0, y: 26, w: 12, h: 6, minW: 6, minH: 4 },
+			lg: { i: "upcoming-interviews", x: 8, y: 20, w: 4, h: 12, minW: 3, minH: 8 },
+			md: { i: "upcoming-interviews", x: 8, y: 20, w: 4, h: 12, minW: 3, minH: 8 },
+			sm: { i: "upcoming-interviews", x: 0, y: 52, w: 12, h: 12, minW: 6, minH: 8 },
 		},
 	},
 	{
@@ -107,9 +107,9 @@ export const CARD_REGISTRY: CardDefinition[] = [
 		icon: "bell",
 		premiumOnly: true,
 		layouts: {
-			lg: { i: "job-alerts", x: 0, y: 16, w: 12, h: 6, minW: 6, minH: 4 },
-			md: { i: "job-alerts", x: 0, y: 16, w: 12, h: 6, minW: 6, minH: 4 },
-			sm: { i: "job-alerts", x: 0, y: 32, w: 12, h: 6, minW: 6, minH: 4 },
+			lg: { i: "job-alerts", x: 0, y: 32, w: 12, h: 12, minW: 6, minH: 8 },
+			md: { i: "job-alerts", x: 0, y: 32, w: 12, h: 12, minW: 6, minH: 8 },
+			sm: { i: "job-alerts", x: 0, y: 64, w: 12, h: 12, minW: 6, minH: 8 },
 		},
 	},
 ];
