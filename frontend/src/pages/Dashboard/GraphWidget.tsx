@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import Select, { SingleValue } from "react-select";
+import { Button } from "react-bootstrap";
 import {
 	ResponsiveContainer,
 	LineChart,
@@ -21,9 +22,21 @@ import { DashboardCard } from "./DashboardCard";
 import "./GraphWidget.scss";
 
 const CHART_COLORS = [
-	"#6366f1", "#8b5cf6", "#a855f7", "#ec4899", "#f43f5e",
-	"#f97316", "#eab308", "#22c55e", "#14b8a6", "#06b6d4",
-	"#3b82f6", "#6d28d9", "#059669", "#dc2626", "#0891b2",
+	"#6366f1",
+	"#8b5cf6",
+	"#a855f7",
+	"#ec4899",
+	"#f43f5e",
+	"#f97316",
+	"#eab308",
+	"#22c55e",
+	"#14b8a6",
+	"#06b6d4",
+	"#3b82f6",
+	"#6d28d9",
+	"#059669",
+	"#dc2626",
+	"#0891b2",
 ];
 
 interface GraphWidgetProps {
@@ -160,14 +173,12 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange }) => 
 				description: "Add some data to see this chart",
 			}}
 			bodyPadding={false}
+			headerAction={
+				<Button className="graph-sidebar-toggle" onClick={() => setSidebarOpen((prev) => !prev)} title="Configure">
+					<i className={`bi bi-${sidebarOpen ? "x-lg" : "gear"}`}></i>
+				</Button>
+			}
 		>
-			<button
-				className="graph-sidebar-toggle"
-				onClick={() => setSidebarOpen((prev) => !prev)}
-				title="Configure"
-			>
-				<i className={`bi bi-${sidebarOpen ? "x-lg" : "gear"}`}></i>
-			</button>
 			<div className="graph-body">
 				<div className="graph-chart-container">{renderChart()}</div>
 				<div className={`graph-sidebar ${sidebarOpen ? "open" : ""}`}>
@@ -175,7 +186,9 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange }) => 
 						<label className="graph-sidebar-label">Source</label>
 						<Select<SelectOption>
 							value={sourceOptions.find((o) => o.value === config.source)}
-							onChange={(opt: SingleValue<SelectOption>) => opt && handleSourceChange(opt.value as GraphSource)}
+							onChange={(opt: SingleValue<SelectOption>) =>
+								opt && handleSourceChange(opt.value as GraphSource)
+							}
 							options={sourceOptions}
 							isSearchable={false}
 							isClearable={false}
@@ -190,7 +203,12 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange }) => 
 						<Select<SelectOption>
 							value={fieldOptions.find((o) => o.value === config.field)}
 							onChange={(opt: SingleValue<SelectOption>) =>
-								opt && onConfigChange({ type: "graph", source: config.source, field: opt.value as GraphConfig["field"] })
+								opt &&
+								onConfigChange({
+									type: "graph",
+									source: config.source,
+									field: opt.value as GraphConfig["field"],
+								})
 							}
 							options={fieldOptions}
 							isSearchable={false}
@@ -208,7 +226,8 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange }) => 
 								<Select<SelectOption>
 									value={chartTypeOptions.find((o) => o.value === effectiveChartType)}
 									onChange={(opt: SingleValue<SelectOption>) =>
-										opt && onConfigChange({ ...config, chartType: opt.value as GraphConfig["chartType"] })
+										opt &&
+										onConfigChange({ ...config, chartType: opt.value as GraphConfig["chartType"] })
 									}
 									options={chartTypeOptions}
 									isSearchable={false}
@@ -228,7 +247,11 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange }) => 
 								<Select<SelectOption>
 									value={granularityOptions.find((o) => o.value === effectiveGranularity)}
 									onChange={(opt: SingleValue<SelectOption>) =>
-										opt && onConfigChange({ ...config, granularity: opt.value as GraphConfig["granularity"] })
+										opt &&
+										onConfigChange({
+											...config,
+											granularity: opt.value as GraphConfig["granularity"],
+										})
 									}
 									options={granularityOptions}
 									isSearchable={false}
