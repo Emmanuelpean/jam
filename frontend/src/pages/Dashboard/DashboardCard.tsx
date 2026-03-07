@@ -21,6 +21,7 @@ export interface DashboardCardProps {
 	children: ReactNode;
 	className?: string;
 	bodyPadding?: boolean;
+	headerAction?: ReactNode;
 }
 
 export const DashboardCard: React.FC<DashboardCardProps> = ({
@@ -35,6 +36,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 	children,
 	className = "",
 	bodyPadding = true,
+	headerAction,
 }: DashboardCardProps): JSX.Element => {
 	const navigate = useNavigate();
 
@@ -78,7 +80,10 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 							{subtitle && <small className="text-muted">{subtitle}</small>}
 						</div>
 					</div>
-					{badgeValue != null && <div className="table-count-badge">{badgeValue}</div>}
+					<div className="d-flex align-items-center gap-2" style={{ height: "100%" }}>
+						{badgeValue != null && <div className="table-count-badge">{badgeValue}</div>}
+						{headerAction}
+					</div>
 				</div>
 			</Card.Header>
 			<Card.Body className="p-0 flex-grow-1 d-flex flex-column overflow-auto" style={{ minHeight: 0 }}>

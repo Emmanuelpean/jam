@@ -1,26 +1,7 @@
 .graph-sidebar-toggle {
-    position: absolute;
-    top: 18px;
-    right: 14px;
-    z-index: 5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    padding: 0;
-    font-size: 0.8rem;
-    cursor: pointer;
-    color: var(--bs-secondary);
-    border: 1px solid var(--bs-border-color);
-    border-radius: 0.375rem;
-    background: var(--bs-body-bg);
-    transition: color 0.15s, border-color 0.15s;
-
-    &:hover {
-        color: var(--bs-body-color);
-        border-color: var(--bs-body-color);
-    }
+    width: 48px;
+    height: 48px;
+    padding: 0 !important;
 }
 
 .graph-body {
