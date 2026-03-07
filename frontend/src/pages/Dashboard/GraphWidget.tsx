@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Select, { SingleValue } from "react-select";
 import { Button } from "react-bootstrap";
 import {
@@ -42,6 +42,7 @@ const CHART_COLORS = [
 interface GraphWidgetProps {
 	config: GraphConfig;
 	onConfigChange: (updated: GraphConfig) => void;
+	isEditMode?: boolean;
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -112,9 +113,14 @@ const renderBarChart = (data: ChartDataPoint[]) => (
 	</ResponsiveContainer>
 );
 
-const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange }) => {
+const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEditMode }) => {
 	const dataContext = useDataContext();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
+
+	useEffect(() => {
+		if (!isEditMode) setSidebarOpen(false);
+	}, [isEditMode]);
+
 	const sourceMeta = GRAPH_SOURCES[config.source];
 	const fieldMeta = getFieldMeta(config.source, config.field);
 	const effectiveChartType = config.chartType ?? fieldMeta?.defaultChartType ?? "bar";
@@ -174,9 +180,16 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange }) => 
 			}}
 			bodyPadding={false}
 			headerAction={
-				<Button className="graph-sidebar-toggle" onClick={() => setSidebarOpen((prev) => !prev)} title="Configure">
-					<i className={`bi bi-${sidebarOpen ? "x-lg" : "gear"}`}></i>
-				</Button>
+				isEditMode ? (
+					<Button
+						className="graph-sidebar-toggle"
+						variant={`${sidebarOpen ? "primary" : "outline-primary"}`}
+						onClick={(): void => setSidebarOpen((prev: boolean): boolean => !prev)}
+						title="Configure"
+					>
+						<i className={`bi bi-gear`}></i>
+					</Button>
+				) : undefined
 			}
 		>
 			<div className="graph-body">
