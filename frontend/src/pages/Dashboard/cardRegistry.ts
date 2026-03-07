@@ -124,36 +124,3 @@ export interface DashboardLayoutData {
 	};
 }
 
-export function getDefaultLayout(isPremium: boolean): DashboardLayoutData {
-	const cards = CARD_REGISTRY.filter((c) => !c.premiumOnly || isPremium);
-	return {
-		version: 1,
-		visibleCards: cards.map((c) => c.id),
-		layouts: {
-			lg: cards.map((c) => c.layouts.lg),
-			md: cards.map((c) => c.layouts.md),
-			sm: cards.map((c) => c.layouts.sm),
-		},
-	};
-}
-
-export function parseLayoutData(json: string | null, isPremium: boolean): DashboardLayoutData {
-	if (!json) return getDefaultLayout(isPremium);
-	try {
-		const parsed = JSON.parse(json) as DashboardLayoutData;
-		if (parsed.version !== 1 || !parsed.layouts || !parsed.visibleCards) {
-			return getDefaultLayout(isPremium);
-		}
-		// Filter out premium cards if user is not premium
-		if (!isPremium) {
-			const premiumIds = new Set(CARD_REGISTRY.filter((c) => c.premiumOnly).map((c) => c.id));
-			parsed.visibleCards = parsed.visibleCards.filter((id) => !premiumIds.has(id));
-			for (const bp of ["lg", "md", "sm"] as const) {
-				parsed.layouts[bp] = parsed.layouts[bp].filter((l) => !premiumIds.has(l.i));
-			}
-		}
-		return parsed;
-	} catch {
-		return getDefaultLayout(isPremium);
-	}
-}
