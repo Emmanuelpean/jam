@@ -1,12 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "react-bootstrap";
-import {
-	ResponsiveGridLayout,
-	useContainerWidth,
-	Layout,
-	LayoutItem,
-	ResponsiveLayouts,
-} from "react-grid-layout";
+import { ResponsiveGridLayout, useContainerWidth, Layout, LayoutItem, ResponsiveLayouts } from "react-grid-layout";
 import { useAuth } from "../../contexts/AuthContext";
 import "./DashboardPage.scss";
 import {
@@ -30,12 +24,7 @@ import { scrapedJobApi } from "../../services/api/Services";
 import { sortByKey } from "../../utils/Utils";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
 import ExtensionBanner from "./ExtensionBanner";
-import {
-	CARD_REGISTRY,
-	DashboardLayoutData,
-	getDefaultLayout,
-	parseLayoutData,
-} from "./cardRegistry";
+import { CARD_REGISTRY, DashboardLayoutData, getDefaultLayout, parseLayoutData } from "./cardRegistry";
 import CardSelectorModal from "./CardSelectorModal";
 
 const Dashboard: React.FC = () => {
@@ -327,10 +316,7 @@ const Dashboard: React.FC = () => {
 					return Math.max(...items.map((l) => l.y + l.h));
 				};
 				for (const bp of ["lg", "md", "sm"] as const) {
-					newLayouts[bp] = [
-						...newLayouts[bp],
-						{ ...def.layouts[bp], y: maxY(bp) },
-					];
+					newLayouts[bp] = [...newLayouts[bp], { ...def.layouts[bp], y: maxY(bp) }];
 				}
 			}
 
@@ -354,76 +340,90 @@ const Dashboard: React.FC = () => {
 		sm: layoutData.layouts.sm.filter((l) => visibleCards.includes(l.i)),
 	};
 
+	const hasChanges = JSON.stringify(layoutData) !== JSON.stringify(savedLayoutRef.current);
 	const dragEnabled = isEditMode && !isSmallScreen;
 
 	return (
-		<>
-			{/* Toolbar */}
+		<div className="dashboard-wrapper">
+			<div className="dashboard-main" ref={containerRef as React.RefObject<HTMLDivElement>}>
+				<div className={isEditMode ? "dashboard-edit-mode" : ""}>
+					{mounted && (
+						<ResponsiveGridLayout
+							className="dashboard-grid"
+							width={width}
+							layouts={currentLayouts}
+							breakpoints={{ lg: 992, md: 768, sm: 0 }}
+							cols={{ lg: 12, md: 12, sm: 12 }}
+							rowHeight={30}
+							margin={[16, 16]}
+							dragConfig={{ enabled: dragEnabled, handle: ".drag-handle" }}
+							resizeConfig={{ enabled: dragEnabled }}
+							onLayoutChange={handleLayoutChange}
+						>
+							{visibleCards.map((cardId) => (
+								<div key={cardId} className="dashboard-grid-item">
+									{isEditMode && (
+										<div className="drag-handle">
+											<i className="bi bi-grip-horizontal"></i>
+										</div>
+									)}
+									<div className="grid-item-content">{cardRenderers[cardId]?.()}</div>
+								</div>
+							))}
+						</ResponsiveGridLayout>
+					)}
+				</div>
+			</div>
+
 			{!isSmallScreen && (
-				<div className="d-flex justify-content-end mb-3 gap-2">
+				<div className={`dashboard-right-sidebar ${isEditMode ? "expanded" : ""}`}>
 					{isEditMode ? (
-						<>
+						<div className="sidebar-edit-controls">
 							<Button
 								variant="outline-secondary"
 								size="sm"
+								className="w-100"
 								onClick={() => setShowCardSelector(true)}
 							>
 								<i className="bi bi-plus-circle me-1"></i>
-								Add / Remove Cards
+								Cards
 							</Button>
-							<Button variant="outline-warning" size="sm" onClick={handleReset}>
+							<Button variant="outline-warning" size="sm" className="w-100" onClick={handleReset}>
 								<i className="bi bi-arrow-counterclockwise me-1"></i>
 								Reset
 							</Button>
-							<Button variant="outline-secondary" size="sm" onClick={handleCancel}>
+							<Button
+								variant="secondary"
+								size="sm"
+								className="w-100"
+								onClick={handleCancel}
+								disabled={!hasChanges}
+							>
+								<i className="bi bi-x-lg me-1"></i>
 								Cancel
 							</Button>
-							<Button variant="primary" size="sm" onClick={handleSave} disabled={isSaving}>
-								{isSaving ? "Saving..." : "Save Layout"}
+							<Button
+								variant="primary"
+								size="sm"
+								className="w-100"
+								onClick={handleSave}
+								disabled={isSaving || !hasChanges}
+							>
+								<i className={`bi bi-${isSaving ? "hourglass-split" : "check-lg"} me-1`}></i>
+								{isSaving ? "Saving..." : "Save"}
 							</Button>
-						</>
+						</div>
 					) : (
-						<Button
-							variant="outline-secondary"
-							size="sm"
+						<button
+							className="sidebar-customize-btn"
 							onClick={() => setIsEditMode(true)}
+							title="Customize dashboard"
 						>
-							<i className="bi bi-grid me-1"></i>
-							Customize
-						</Button>
+							<i className="bi bi-grid"></i>
+						</button>
 					)}
 				</div>
 			)}
-
-			<div ref={containerRef as React.RefObject<HTMLDivElement>} className={isEditMode ? "dashboard-edit-mode" : ""}>
-				{mounted && (
-					<ResponsiveGridLayout
-						className="dashboard-grid"
-						width={width}
-						layouts={currentLayouts}
-						breakpoints={{ lg: 992, md: 768, sm: 0 }}
-						cols={{ lg: 12, md: 12, sm: 12 }}
-						rowHeight={60}
-						margin={[16, 16]}
-						dragConfig={{ enabled: dragEnabled, handle: ".drag-handle" }}
-						resizeConfig={{ enabled: dragEnabled }}
-						onLayoutChange={handleLayoutChange}
-					>
-						{visibleCards.map((cardId) => (
-							<div key={cardId} className="dashboard-grid-item">
-								{isEditMode && (
-									<div className="drag-handle">
-										<i className="bi bi-grip-horizontal"></i>
-									</div>
-								)}
-								<div className="grid-item-content">
-									{cardRenderers[cardId]?.()}
-								</div>
-							</div>
-						))}
-					</ResponsiveGridLayout>
-				)}
-			</div>
 
 			<CardSelectorModal
 				show={showCardSelector}
@@ -432,7 +432,7 @@ const Dashboard: React.FC = () => {
 				onCardsChange={handleCardsChange}
 				isPremium={isPremium}
 			/>
-		</>
+		</div>
 	);
 };
 
