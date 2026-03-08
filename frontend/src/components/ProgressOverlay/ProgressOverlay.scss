@@ -20,16 +20,16 @@
     display: flex;
     align-items: center;
     flex-direction: column;
-    min-width: 300px;
-    max-width: 500px;
+    min-width: 270px;
+    max-width: 450px;
     padding: 2rem;
     transition: opacity 200ms ease-out,
     transform 200ms ease-out;
     transform: scale(0.95);
     opacity: 0;
-    border-radius: 8px;
+    border-radius: 7.2px;
     background-color: var(--bs-secondary-bg);
-    box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
+    box-shadow: 0 3.6px 5.4px rgb(0 0 0 / 10%);
 }
 
 .progress-overlay.show .progress-overlay-card {

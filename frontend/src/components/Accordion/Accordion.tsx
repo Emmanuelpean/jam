@@ -32,7 +32,7 @@ export const Accordion = ({
 	};
 
 	return (
-		<div className={`simple-accordion ${className || ""}`} style={{ paddingLeft: "10px", paddingRight: "10px" }}>
+		<div className={`simple-accordion ${className || ""}`} style={{ paddingLeft: "9px", paddingRight: "9px" }}>
 			<div
 				className="simple-accordion-header d-flex align-items-center justify-content-between py-2"
 				onClick={handleToggle}

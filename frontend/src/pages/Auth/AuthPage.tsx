@@ -648,7 +648,7 @@ function AuthForm(): JSX.Element {
 							dismissible
 							onClose={() => setShowMobileWarning(false)}
 							className="mb-3"
-							style={{ maxWidth: "500px" }}
+							style={{ maxWidth: "450px" }}
 						>
 							<Alert.Heading className="h6 d-flex align-items-center mb-2">
 								<i className="bi bi-exclamation-triangle-fill me-2"></i>
@@ -684,7 +684,7 @@ function AuthForm(): JSX.Element {
 										<div className="d-flex justify-content-between align-items-center mb-2">
 											<small className="text-muted">Step {displayedStep} of 2</small>
 										</div>
-										<div className="progress" style={{ height: "4px" }}>
+										<div className="progress" style={{ height: "3.6px" }}>
 											<div
 												className="progress-bar"
 												role="progressbar"

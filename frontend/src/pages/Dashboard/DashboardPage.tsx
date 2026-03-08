@@ -234,7 +234,7 @@ const Dashboard: React.FC = () => {
 								description: "Job alerts from your scrapers will appear here",
 							}}
 						>
-							<div style={{ paddingTop: "10px", paddingBottom: "20px" }}>
+							<div style={{ paddingTop: "9px", paddingBottom: "18px" }}>
 								<ScrapedJobsTable />
 							</div>
 						</DashboardCard>
