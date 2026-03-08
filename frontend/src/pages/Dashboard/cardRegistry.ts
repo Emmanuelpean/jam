@@ -19,9 +19,9 @@ export const CARD_REGISTRY: CardDefinition[] = [
 		icon: "briefcase",
 		premiumOnly: false,
 		layouts: {
-			lg: { i: "stat-total-jobs", x: 0, y: 0, w: 3, h: 8, minW: 2, minH: 4 },
-			md: { i: "stat-total-jobs", x: 0, y: 0, w: 3, h: 8, minW: 2, minH: 4 },
-			sm: { i: "stat-total-jobs", x: 0, y: 0, w: 6, h: 8, minW: 3, minH: 4 },
+			lg: { i: "stat-total-jobs", x: 0, y: 0, w: 3, h: 4, minW: 2, minH: 4 },
+			md: { i: "stat-total-jobs", x: 0, y: 0, w: 3, h: 4, minW: 2, minH: 4 },
+			sm: { i: "stat-total-jobs", x: 0, y: 0, w: 6, h: 4, minW: 3, minH: 4 },
 		},
 	},
 	{
@@ -30,9 +30,9 @@ export const CARD_REGISTRY: CardDefinition[] = [
 		icon: "send",
 		premiumOnly: false,
 		layouts: {
-			lg: { i: "stat-applications", x: 3, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
-			md: { i: "stat-applications", x: 3, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
-			sm: { i: "stat-applications", x: 6, y: 0, w: 6, h: 8, minW: 3, minH: 8 },
+			lg: { i: "stat-applications", x: 3, y: 0, w: 3, h: 4, minW: 2, minH: 8 },
+			md: { i: "stat-applications", x: 3, y: 0, w: 3, h: 4, minW: 2, minH: 8 },
+			sm: { i: "stat-applications", x: 6, y: 0, w: 6, h: 4, minW: 3, minH: 8 },
 		},
 	},
 	{
@@ -41,9 +41,9 @@ export const CARD_REGISTRY: CardDefinition[] = [
 		icon: "clock",
 		premiumOnly: false,
 		layouts: {
-			lg: { i: "stat-pending", x: 6, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
-			md: { i: "stat-pending", x: 6, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
-			sm: { i: "stat-pending", x: 0, y: 8, w: 6, h: 8, minW: 3, minH: 8 },
+			lg: { i: "stat-pending", x: 6, y: 0, w: 3, h: 4, minW: 2, minH: 8 },
+			md: { i: "stat-pending", x: 6, y: 0, w: 3, h: 4, minW: 2, minH: 8 },
+			sm: { i: "stat-pending", x: 0, y: 8, w: 6, h: 4, minW: 3, minH: 8 },
 		},
 	},
 	{
@@ -52,9 +52,9 @@ export const CARD_REGISTRY: CardDefinition[] = [
 		icon: "telephone",
 		premiumOnly: false,
 		layouts: {
-			lg: { i: "stat-follow-up", x: 9, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
-			md: { i: "stat-follow-up", x: 9, y: 0, w: 3, h: 8, minW: 2, minH: 8 },
-			sm: { i: "stat-follow-up", x: 6, y: 8, w: 6, h: 8, minW: 3, minH: 8 },
+			lg: { i: "stat-follow-up", x: 9, y: 0, w: 3, h: 4, minW: 2, minH: 8 },
+			md: { i: "stat-follow-up", x: 9, y: 0, w: 3, h: 4, minW: 2, minH: 8 },
+			sm: { i: "stat-follow-up", x: 6, y: 8, w: 6, h: 4, minW: 3, minH: 8 },
 		},
 	},
 	{
@@ -123,4 +123,3 @@ export interface DashboardLayoutData {
 		sm: LayoutItem[];
 	};
 }
-
