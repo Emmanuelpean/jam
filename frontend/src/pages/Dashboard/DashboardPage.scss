@@ -190,7 +190,8 @@
 .dashboard-right-sidebar {
     position: relative;
     flex-shrink: 0;
-    width: 20px;
+    width: 0;
+    overflow: visible;
 
     &.open {
         width: 76px;

@@ -468,54 +468,6 @@ const Dashboard: React.FC = () => {
 				</div>
 			</div>
 
-			{!isSmallScreen && (
-				<div className={`dashboard-right-sidebar ${isEditMode ? "open" : ""}`}>
-					<button
-						className="sidebar-tab"
-						onClick={() => setIsEditMode((prev) => !prev)}
-						title={isEditMode ? "Close panel" : "Customize dashboard"}
-					>
-						<i className={`bi bi-chevron-${isEditMode ? "right" : "left"}`}></i>
-					</button>
-					<div className="sidebar-panel">
-						<div className="sidebar-edit-controls">
-							<Button
-								variant="outline-secondary"
-								className="sidebar-icon-btn"
-								onClick={() => setShowWidgetPicker(true)}
-								title="Add Widget"
-							>
-								<i className="bi bi-plus-circle"></i>
-							</Button>
-							<Button
-								variant="outline-warning"
-								className="sidebar-icon-btn"
-								onClick={confirmReset}
-								title="Reset to default"
-							>
-								<i className="bi bi-arrow-counterclockwise"></i>
-							</Button>
-							<Button
-								variant="secondary"
-								className="sidebar-icon-btn"
-								onClick={confirmCancel}
-								title="Cancel"
-							>
-								<i className="bi bi-x-lg"></i>
-							</Button>
-							<Button
-								variant="primary"
-								className="sidebar-icon-btn"
-								onClick={handleSave}
-								disabled={isSaving || !hasChanges}
-								title={isSaving ? "Saving..." : "Save"}
-							>
-								<i className={`bi bi-${isSaving ? "hourglass-split" : "check-lg"}`}></i>
-							</Button>
-						</div>
-					</div>
-				</div>
-			)}
 
 			<WidgetPickerModal
 				show={showWidgetPicker}
