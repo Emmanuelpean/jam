@@ -10,7 +10,7 @@
 
 /* Sidebar Column */
 .settings-sidebar-col {
-    max-width: 300px !important;
+    max-width: 18.75rem !important;
     border-right: 1px solid var(--bs-border-color);
 }
 
@@ -65,8 +65,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 2.25rem;
+    height: 2.25rem;
     aspect-ratio: 1 !important;
     font-size: 1rem;
     color: var(--primary-mid);
@@ -166,8 +166,8 @@
 /* Premium Tab Styles */
 
 .premium-status-icon {
-    width: 80px;
-    height: 80px;
+    width: 5rem;
+    height: 5rem;
     border-radius: 50%;
     background: var(--primary-gradient);
     color: white;
@@ -228,8 +228,8 @@
 }
 
 .premium-feature-icon-wrapper {
-    width: 56px;
-    height: 56px;
+    width: 3.5rem;
+    height: 3.5rem;
     border-radius: 12px;
     background: var(--primary-gradient);
     display: flex;

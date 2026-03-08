@@ -1,5 +1,5 @@
 .floating-preview-container {
-    margin-left: 6px;
+    margin-left: 0.375rem;
     animation: fadeIn 0.2s ease-in;
     pointer-events: none;
     border-radius: 4px;
@@ -7,8 +7,8 @@
 
 .floating-preview-container .card {
     overflow-y: auto;
-    width: 500px;
-    max-height: 500px;
+    width: 31.25rem;
+    max-height: 31.25rem;
     margin: 0;
     pointer-events: auto;
     border: solid 1px #ccc;
@@ -19,36 +19,36 @@
 .floating-preview-arrow {
     position: absolute;
     z-index: 1;
-    left: -13px;
+    left: -0.8125rem;
     width: 0;
     height: 0;
     pointer-events: none;
-    border-top: 13px solid transparent;
-    border-bottom: 13px solid transparent;
+    border-top: 0.8125rem solid transparent;
+    border-bottom: 0.8125rem solid transparent;
 }
 
 /* Arrow fill (white triangle) - drawn on top, slightly smaller */
 .floating-preview-arrow::after {
     position: absolute;
-    top: -12px;
+    top: -0.75rem;
     left: 2px;
     width: 0;
     height: 0;
     content: "";
-    border-top: 12px solid transparent;
-    border-right: 12px solid white;
-    border-bottom: 12px solid transparent;
+    border-top: 0.75rem solid transparent;
+    border-right: 0.75rem solid white;
+    border-bottom: 0.75rem solid transparent;
 }
 
 /* Arrow border for shadow effect */
 .floating-preview-arrow::before {
     position: absolute;
-    top: -12px;
+    top: -0.75rem;
     left: 2px;
     width: 0;
     height: 0;
     content: "";
-    border-top: 12px solid transparent;
-    border-right: 12px solid rgb(0 0 0 / 5%);
-    border-bottom: 12px solid transparent;
+    border-top: 0.75rem solid transparent;
+    border-right: 0.75rem solid rgb(0 0 0 / 5%);
+    border-bottom: 0.75rem solid transparent;
 }

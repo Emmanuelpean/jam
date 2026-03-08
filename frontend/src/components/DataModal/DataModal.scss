@@ -79,7 +79,7 @@
     justify-content: center;
     width: 100%;
     margin: 0 auto;
-    gap: 15px;
+    gap: 0.9375rem;
 }
 
 .modal:not(:last-of-type) .modal-content::after {
@@ -115,7 +115,7 @@
     flex-shrink: 0;
     justify-content: center;
     margin-bottom: 1rem;
-    gap: 25px;
+    gap: 1.5625rem;
 }
 
 .custom-tab-button {

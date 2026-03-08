@@ -49,8 +49,8 @@
 }
 
 .feature-icon {
-    width: 48px;
-    height: 48px;
+    width: 3rem;
+    height: 3rem;
     background: var(--primary-gradient);
     border-radius: 0.75rem;
     display: flex;
@@ -105,7 +105,7 @@ body[data-mode="dark"] .link-gradient-purple:hover {
 
 .release-notes-content ul {
     list-style: disc outside none;
-    padding-left: 20px;
+    padding-left: 1.25rem;
     margin-bottom: 1em;
 }
 
@@ -137,8 +137,8 @@ body[data-mode="dark"] .link-gradient-purple:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 64px;
-    height: 64px;
+    width: 4rem;
+    height: 4rem;
     border-radius: 18px;
     background: var(--primary-gradient);
     color: white;
@@ -150,7 +150,7 @@ body[data-mode="dark"] .link-gradient-purple:hover {
     display: inline-block;
     font-size: 0.65rem;
     font-weight: 700;
-    padding: 3px 10px;
+    padding: 0.1875rem 0.625rem;
     border-radius: 20px;
     background: var(--primary-gradient);
     color: white;
@@ -163,7 +163,7 @@ body[data-mode="dark"] .link-gradient-purple:hover {
     display: inline-block;
     font-size: 0.8rem;
     font-weight: 600;
-    padding: 5px 14px;
+    padding: 0.3125rem 0.875rem;
     border-radius: 6px;
     color: white;
     letter-spacing: 0.2px;

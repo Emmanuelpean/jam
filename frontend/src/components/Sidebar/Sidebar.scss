@@ -1,4 +1,3 @@
-/* Sidebar */
 .custom-sidebar {
     position: sticky;
     z-index: 1000;
@@ -7,7 +6,7 @@
     display: flex;
     overflow: hidden;
     flex-direction: column;
-    width: 64px;
+    width: 4rem;
     height: 100%;
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.4s ease;
@@ -16,7 +15,7 @@
 }
 
 .custom-sidebar.expanded {
-    width: 300px !important;
+    width: 18.75rem !important;
 }
 
 @media (width <= 990px) {
@@ -43,16 +42,16 @@
 .sidebar-header {
     display: flex;
     align-items: center;
-    height: 100px;
-    padding-left: 11px;
+    height: 6.25rem;
+    padding-left: 0.6875rem;
 }
 
 /* Gradient logo text */
 .logo-text {
     font-family: var(--logo-font-family);
-    font-size: 50px !important;
+    font-size: 3.125rem !important;
     font-weight: 700;
-    padding-left: 13.5px;
+    padding-left: 0.84375rem;
     user-select: none;
     background: var(--primary-gradient);
     background-clip: text;
@@ -64,10 +63,10 @@
 .theme-dropdown {
     position: fixed;
     z-index: 1100;
-    top: 80px;
-    left: 70px;
-    min-width: 200px;
-    margin-top: 5px;
+    top: 5rem;
+    left: 4.375rem;
+    min-width: 12.5rem;
+    margin-top: 0.3125rem;
     padding: 0.5rem;
     border: 1px solid var(--bs-card-border-color);
     border-radius: 6px;
@@ -111,7 +110,7 @@
 .nav-item {
     display: flex;
     margin: 0.1rem 0.2rem;
-    padding: 10px 16.5px;
+    padding: 0.625rem 1.058rem;
     cursor: pointer;
     text-decoration: none;
     color: var(--bs-body-color);
@@ -139,7 +138,7 @@
 /* Text container with clipping mask */
 .nav-text-container {
     align-content: center;
-    padding-left: 24px;
+    padding-left: 1.5rem;
 }
 
 .nav-text {
@@ -213,7 +212,7 @@
 
 /* Submenu visible when open (collapsed state - no left border/padding) */
 .submenu.open {
-    max-height: 300px;
+    max-height: 18.75rem;
     transform: translateY(0) scaleY(1);
     opacity: 1;
 }
@@ -221,7 +220,7 @@
 .submenu-item {
     transition: transform 0.2s ease-out,
     opacity 0.2s ease-out;
-    transform: translateX(-15px);
+    transform: translateX(-0.9375rem);
     opacity: 0;
 }
 
@@ -309,12 +308,12 @@
 .sidebar-open-btn {
     position: fixed;
     z-index: 1;
-    top: 16px;
+    top: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 2.5rem;
+    height: 2.5rem;
     cursor: pointer;
     border: none;
     border-radius: 6px;
@@ -324,15 +323,15 @@
 
 .sidebar-open-btn {
     position: fixed;
-    left: 16px;
+    left: 1rem;
 }
 
 .sidebar-close-btn {
     position: absolute;
-    right: 16px;
+    right: 1rem;
 }
 
 /* Vertical scrollbar width */
 .sidebar-nav::-webkit-scrollbar {
-    width: 4px;
+    width: 0.25rem;
 }
