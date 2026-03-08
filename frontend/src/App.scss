@@ -107,6 +107,11 @@ html {
     scroll-behavior: smooth;
 }
 
+.modal-backdrop {
+    width: calc(100% / 0.9);
+    height: calc(100% / 0.9);
+}
+
 .form-control.is-invalid {
     background-image: none !important;
 }
