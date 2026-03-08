@@ -92,7 +92,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	].includes(normalisedPathname);
 
 	return (
-		<div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+		<div style={{ display: "flex", flexDirection: "column", height: "calc(100vh / 0.9)" }}>
 			<MaintenanceBanner />
 			<DemoBanner />
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
