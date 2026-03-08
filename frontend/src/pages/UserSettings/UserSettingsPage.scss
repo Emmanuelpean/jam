@@ -1,16 +1,16 @@
 .user-settings-page {
-    min-height: calc(100% - 80px);
+    min-height: calc(100% - 72px);
 }
 
 .settings-layout {
     background-color: var(--bs-body-bg);
-    border-radius: 10px;
+    border-radius: 9px;
     overflow: hidden;
 }
 
 /* Sidebar Column */
 .settings-sidebar-col {
-    max-width: 18.75rem !important;
+    max-width: 270px !important;
     border-right: 1px solid var(--bs-border-color);
 }
 
@@ -40,7 +40,7 @@
     text-align: left;
     background: transparent;
     border: none;
-    border-radius: 10px;
+    border-radius: 9px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -52,7 +52,7 @@
 .settings-nav-item.active {
     color: white;
     background: var(--primary-gradient);
-    box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+    box-shadow: 0 3.6px 10.8px rgb(0 0 0 / 15%);
 }
 
 .settings-nav-item.active .settings-nav-icon {
@@ -65,13 +65,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 32.4px;
+    height: 32.4px;
     aspect-ratio: 1 !important;
     font-size: 1rem;
     color: var(--primary-mid);
     background: var(--bs-tertiary-bg);
-    border-radius: 8px;
+    border-radius: 7.2px;
     transition: all 0.2s ease;
 }
 
@@ -166,8 +166,8 @@
 /* Premium Tab Styles */
 
 .premium-status-icon {
-    width: 5rem;
-    height: 5rem;
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
     background: var(--primary-gradient);
     color: white;
@@ -191,7 +191,7 @@
 
 .premium-why-section {
     background: var(--bs-tertiary-bg);
-    border-radius: 8px;
+    border-radius: 7.2px;
     padding: 1.5rem;
 }
 
@@ -210,8 +210,8 @@
 
 .premium-feature-card {
     border: none;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgb(0 0 0 / 8%);
+    border-radius: 10.8px;
+    box-shadow: 0 1.8px 10.8px rgb(0 0 0 / 8%);
 
     .card-body {
         padding: 1.5rem;
@@ -228,9 +228,9 @@
 }
 
 .premium-feature-icon-wrapper {
-    width: 3.5rem;
-    height: 3.5rem;
-    border-radius: 12px;
+    width: 50.4px;
+    height: 50.4px;
+    border-radius: 10.8px;
     background: var(--primary-gradient);
     display: flex;
     align-items: center;
@@ -262,7 +262,7 @@
 .email-highlight {
     background: var(--bs-tertiary-bg);
     border: 1px dashed var(--primary-mid);
-    border-radius: 8px;
+    border-radius: 7.2px;
     padding: 1rem;
     text-align: center;
     margin: 1rem 0;
@@ -302,10 +302,10 @@
 
     &::before {
         content: "";
-        width: 3px;
+        width: 2.7px;
         height: 1em;
         background: var(--primary-gradient);
-        border-radius: 2px;
+        border-radius: 1.8px;
     }
 }
 

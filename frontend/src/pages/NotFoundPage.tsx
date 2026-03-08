@@ -13,7 +13,7 @@ export const NotAllowed = (errorCode: string, errorTitle: string, errorMessage: 
 			className="container-fluid d-flex flex-column justify-content-center align-items-center text-center"
 			style={{ minHeight: "calc(100vh - 100px)" }}
 		>
-			<div className="col-12 col-md-8 col-lg-6" style={{ maxWidth: "700px" }}>
+			<div className="col-12 col-md-8 col-lg-6" style={{ maxWidth: "630px" }}>
 				<div className="error-content">
 					<h1 className="display-1 fw-bold text-primary mb-3">{errorCode}</h1>
 					<h2 className="h3 mb-3">{errorTitle}</h2>

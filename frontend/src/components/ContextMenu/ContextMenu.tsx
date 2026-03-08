@@ -147,7 +147,7 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 
 		// Root menu: place in the opposite quadrant relative to click
 		if (!isSubmenu) {
-			const minWidth = compact ? "120px" : "150px";
+			const minWidth = compact ? "108px" : "135px";
 
 			if (isLeftHalf && isTopHalf) {
 				return { top: position.y + margin, left: position.x + margin, transform: "none", minWidth };
@@ -166,7 +166,7 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 			top: position.y,
 			left: position.x,
 			transform: "none",
-			minWidth: compact ? "100px" : "120px",
+			minWidth: compact ? "90px" : "108px",
 		};
 	}, [compact, isSubmenu, position.x, position.y]);
 
@@ -192,8 +192,8 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 							key={menuItem.action}
 							className="context-menu-item"
 							style={{
-								padding: compact ? "6px 12px" : "8px 16px",
-								fontSize: compact ? "13px" : "14px",
+								padding: compact ? "5.4px 10.8px" : "7.2px 14.4px",
+								fontSize: compact ? "11.7px" : "12.6px",
 								borderBottom:
 									index !== filteredItems.length - 1
 										? "1px solid var(--bs-form-control-border-color)"
