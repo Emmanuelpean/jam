@@ -70,7 +70,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 		return (
 			<div className="modal-content-animated" style={{ height: containerHeight }}>
 				<div className="modal-content-animated-inner">
-					<div ref={contentRef} style={{ paddingTop: "5px" }}>
+					<div ref={contentRef} style={{ paddingTop: "4.5px" }}>
 						<DataTable
 							entityType="scrapingFilter"
 							data={data}
@@ -154,7 +154,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 			</Modal.Header>
 
 			<Modal.Body>
-				<i style={{ margin: "0 10px 10px 10px", display: "block" }}>
+				<i style={{ margin: "0 9px 9px 9px", display: "block" }}>
 					Filters allow you to filter out specific jobs from your job alerts. For example, if you do not want
 					to view jobs from company "ABC Corp", you can create a filter with Type "Company", Operator
 					"Equals", and Value "ABC Corp".

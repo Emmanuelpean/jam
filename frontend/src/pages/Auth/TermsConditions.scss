@@ -3,7 +3,7 @@
 }
 
 .terms-modal .modal-dialog {
-    max-width: 1000px;
+    max-width: 900px;
 }
 
 .terms-header {
@@ -25,7 +25,7 @@
 .terms-updated-date {
     background: var(--primary-light);
     border: 1px solid var(--primary-start);
-    border-radius: 8px;
+    border-radius: 7.2px;
     padding: 1rem;
     margin-bottom: 2rem;
     display: flex;
@@ -36,7 +36,7 @@
 /* Bootstrap Card styling for each section */
 .terms-section {
     margin-top: 2rem;
-    border-radius: 12px;
+    border-radius: 10.8px;
     transition: all 0.3s ease;
 }
 
@@ -53,8 +53,8 @@
 .section-number {
     background: var(--primary-gradient);
     color: white;
-    width: 32px;
-    height: 32px;
+    width: 28.8px;
+    height: 28.8px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -109,7 +109,7 @@
 }
 
 .terms-footer .btn {
-    min-width: 180px;
+    min-width: 162px;
     font-weight: 600;
     text-transform: uppercase;
     border: none;

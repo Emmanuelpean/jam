@@ -50,8 +50,8 @@ export const ThemeItem: React.FC<ThemeItemProps> = ({
 		const baseStyle: CSSProperties = {
 			display: "flex",
 			alignItems: "center",
-			padding: "8px 12px",
-			borderRadius: "6px",
+			padding: "7.2px 10.8px",
+			borderRadius: "5.4px",
 			cursor: "pointer",
 			transition: "background-color 0.2s ease, border-color 0.2s ease",
 			backgroundColor: "transparent",
@@ -83,16 +83,16 @@ export const ThemeItem: React.FC<ThemeItemProps> = ({
 			onMouseEnter={onMouseEnter}
 			onMouseLeave={onMouseLeave}
 		>
-			<div style={{ display: "flex", alignItems: "center", marginRight: "8px" }}>
+			<div style={{ display: "flex", alignItems: "center", marginRight: "7.2px" }}>
 				{Object.values(colors).map((color: string, index: number) => (
 					<div
 						key={index}
 						style={{
 							backgroundColor: color,
-							width: "10px",
-							height: "10px",
+							width: "9px",
+							height: "9px",
 							borderRadius: "50%",
-							marginRight: index < 2 ? "3px" : "0",
+							marginRight: index < 2 ? "2.7px" : "0",
 						}}
 					/>
 				))}

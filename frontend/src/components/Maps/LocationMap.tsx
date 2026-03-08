@@ -96,7 +96,7 @@ const MAP_TILES = {
 
 const LocationMap: React.FC<LocationMapProps> = ({
 	locations = [],
-	height = "400px",
+	height = "360px",
 	scrollWheelZoom = true,
 }: LocationMapProps): JSX.Element => {
 	// Track dark mode state
@@ -169,7 +169,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
 				className="location-map-container"
 				style={{
 					height,
-					borderRadius: "8px",
+					borderRadius: "7.2px",
 					overflow: "hidden",
 					boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
 				}}

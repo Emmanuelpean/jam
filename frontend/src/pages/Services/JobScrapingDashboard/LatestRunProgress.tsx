@@ -54,7 +54,7 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 					<strong>Error:</strong> {latestLog.error_message}
 				</div>
 			)}
-			<div style={{ display: "flex", width: "100%", gap: "20px", marginBottom: "20px" }}>
+			<div style={{ display: "flex", width: "100%", gap: "18px", marginBottom: "18px" }}>
 				<ProgressBar
 					title="Users Processed"
 					current={latestLog.user_processed_ids.length}

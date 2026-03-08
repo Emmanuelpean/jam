@@ -20,7 +20,7 @@ export const PasswordInput = ({ field, value, handleChange, error }: WidgetProps
 					size={"lg"}
 					isInvalid={!!error}
 					autoComplete={field.autoComplete || "current-password"}
-					style={{ paddingRight: "50px" }}
+					style={{ paddingRight: "45px" }}
 					disabled={field.isDisabled}
 				/>
 				<button

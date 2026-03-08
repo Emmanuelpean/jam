@@ -1,8 +1,8 @@
 .gradient-bg {
     background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bs-tertiary-bg) 100%);
     min-height: 100%;
-    border-radius: 2px;
-    border-width: 2px;
+    border-radius: 1.8px;
+    border-width: 1.8px;
     border-color: var(--bs-border-color);
 }
 
@@ -16,28 +16,28 @@
 
 .glass-card {
     background: var(--bs-card-bg);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(9px);
     border: 1px solid var(--bs-card-border-color);
     border-radius: 1.5rem;
-    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 25%);
+    box-shadow: 0 22.5px 45px -10.8px rgb(0 0 0 / 25%);
     transition: all 0.3s ease;
 }
 
 .glass-badge {
     background: var(--bs-secondary-bg);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(9px);
     border-radius: 9999px;
     padding: 0.75rem 1.5rem;
-    box-shadow: 0 10px 25px -5px rgb(0 0 0 / 10%);
+    box-shadow: 0 9px 22.5px -4.5px rgb(0 0 0 / 10%);
     border: 1px solid var(--bs-border-color-translucent);
 }
 
 .feature-card {
     background: var(--bs-card-bg);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(9px);
     border: 1px solid var(--bs-card-border-color);
     border-radius: 1rem;
-    box-shadow: 0 10px 25px -5px rgb(0 0 0 / 10%);
+    box-shadow: 0 9px 22.5px -4.5px rgb(0 0 0 / 10%);
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
@@ -45,12 +45,12 @@
 
 .feature-card:hover {
     transform: scale(1.02);
-    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 25%);
+    box-shadow: 0 22.5px 45px -10.8px rgb(0 0 0 / 25%);
 }
 
 .feature-icon {
-    width: 48px;
-    height: 48px;
+    width: 43.2px;
+    height: 43.2px;
     background: var(--primary-gradient);
     border-radius: 0.75rem;
     display: flex;
@@ -105,7 +105,7 @@ body[data-mode="dark"] .link-gradient-purple:hover {
 
 .release-notes-content ul {
     list-style: disc outside none;
-    padding-left: 20px;
+    padding-left: 18px;
     margin-bottom: 1em;
 }
 
@@ -121,7 +121,7 @@ body[data-mode="dark"] .link-gradient-purple:hover {
 
 .features-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
     gap: 1.5rem;
     grid-auto-rows: 1fr;
 }
@@ -137,21 +137,21 @@ body[data-mode="dark"] .link-gradient-purple:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 64px;
-    height: 64px;
-    border-radius: 18px;
+    width: 57.6px;
+    height: 57.6px;
+    border-radius: 16.2px;
     background: var(--primary-gradient);
     color: white;
     font-size: 1.75rem;
-    box-shadow: 0 8px 24px rgb(0 0 0 / 15%);
+    box-shadow: 0 7.2px 21.6px rgb(0 0 0 / 15%);
 }
 
 .extension-about-badge {
     display: inline-block;
     font-size: 0.65rem;
     font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 20px;
+    padding: 2.7px 9px;
+    border-radius: 18px;
     background: var(--primary-gradient);
     color: white;
     letter-spacing: 0.3px;
@@ -163,8 +163,8 @@ body[data-mode="dark"] .link-gradient-purple:hover {
     display: inline-block;
     font-size: 0.8rem;
     font-weight: 600;
-    padding: 5px 14px;
-    border-radius: 6px;
+    padding: 4.5px 12.6px;
+    border-radius: 5.4px;
     color: white;
     letter-spacing: 0.2px;
 }

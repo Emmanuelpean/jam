@@ -1,10 +1,10 @@
 /* Apply gradient to the button group container */
 .email-service-dropdown {
     padding: 0;
-    border-radius: 12px !important;
+    border-radius: 10.8px !important;
     background: var(--primary-gradient);
-    box-shadow: 0 6px 20px var(--jam-glow),
-    0 2px 4px rgb(0 0 0 / 10%);
+    box-shadow: 0 5.4px 18px var(--jam-glow),
+    0 1.8px 3.6px rgb(0 0 0 / 10%);
 }
 
 /* Make both buttons transparent so the gradient shows through */
@@ -13,7 +13,7 @@
     border: none !important;
     background: transparent !important;
     box-shadow: none !important;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+    text-shadow: 0 1px 1.8px rgb(0 0 0 / 20%);
 }
 
 /* Remove Bootstrap's default borders between buttons */
@@ -24,10 +24,10 @@
 /* Hover effect - darken slightly */
 .email-service-dropdown:hover {
     transition: var(--transition);
-    transform: translateY(-2px);
+    transform: translateY(-1.8px);
     background: var(--primary-hover-gradient);
-    box-shadow: 0 8px 25px var(--jam-glow),
-    0 4px 8px rgb(0 0 0 / 15%);
+    box-shadow: 0 7.2px 22.5px var(--jam-glow),
+    0 3.6px 7.2px rgb(0 0 0 / 15%);
 }
 
 /* Active state */
@@ -43,23 +43,23 @@
 }
 
 .email-service-dropdown .dropdown-toggle-split {
-    flex: 0 0 60px !important; /* Override the flex property */
-    width: 60px !important; /* Override the existing !important */
-    min-width: 60px !important;
-    max-width: 60px !important;
+    flex: 0 0 54px !important; /* Override the flex property */
+    width: 54px !important; /* Override the existing !important */
+    min-width: 54px !important;
+    max-width: 54px !important;
     padding-right: 0.5rem !important;
     padding-left: 0.5rem !important;
 }
 
 /* Dropdown menu */
 .email-dropdown-menu {
-    min-width: 220px;
+    min-width: 198px;
     margin-top: 0.5rem;
     padding: 0.5rem;
     border: 2px solid #e8eaed;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgb(0 0 0 / 15%),
-    0 2px 4px rgb(0 0 0 / 10%);
+    border-radius: 10.8px;
+    box-shadow: 0 5.4px 18px rgb(0 0 0 / 15%),
+    0 1.8px 3.6px rgb(0 0 0 / 10%);
 }
 
 .email-dropdown-item {
@@ -69,7 +69,7 @@
     align-items: center;
     padding: 0.75rem 1rem;
     color: #2c3e50;
-    border-radius: 8px;
+    border-radius: 7.2px;
 }
 
 .email-dropdown-item:hover {

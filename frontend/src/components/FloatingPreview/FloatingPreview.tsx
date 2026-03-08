@@ -77,7 +77,7 @@ export const FloatingPreview = ({ data, fields, position, show }: FloatingPrevie
 				top: `${adjustedPosition.top}px`,
 				left: `${adjustedPosition.left}px`,
 				zIndex: 9999,
-				maxWidth: "400px",
+				maxWidth: "360px",
 			}}
 			onMouseDown={handleMouseDown}
 		>
