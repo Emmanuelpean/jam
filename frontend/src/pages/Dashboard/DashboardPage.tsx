@@ -34,7 +34,7 @@ import {
 } from "./widgetRegistry";
 import WidgetPickerModal from "./WidgetPickerModal";
 import GraphWidget from "./GraphWidget";
-import AlertModal, { AlertState } from "../../components/AlertModal/AlertModal";
+import { useAlert } from "../../contexts/AlertContext";
 
 const Dashboard: React.FC = () => {
 	const dataContext: DataContextValue = useDataContext();
@@ -44,7 +44,7 @@ const Dashboard: React.FC = () => {
 	const [showWidgetPicker, setShowWidgetPicker] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
-	const [alertState, setAlertState] = useState<AlertState>({ show: false });
+	const { showDelete, showWarning, showConfirm } = useAlert();
 
 	const isPremium = currentUser?.premium.is_active ?? false;
 
@@ -347,14 +347,35 @@ const Dashboard: React.FC = () => {
 		}
 	};
 
-	const handleCancel = () => {
-		setLayoutData(savedLayoutRef.current);
-		setIsEditMode(false);
+	const hasChanges = JSON.stringify(layoutData) !== JSON.stringify(savedLayoutRef.current);
+
+	const confirmCancel = async () => {
+		if (!hasChanges) {
+			setIsEditMode(false);
+			return;
+		}
+		const confirmed = await showWarning({
+			title: "Discard Changes",
+			message: "Are you sure you want to discard your unsaved changes?",
+			confirmText: "Discard",
+			cancelText: "Keep Editing",
+		});
+		if (confirmed) {
+			setLayoutData(savedLayoutRef.current);
+			setIsEditMode(false);
+		}
 	};
 
-	const handleReset = () => {
-		const defaultLayout = getDefaultLayout(isPremium);
-		setLayoutData(defaultLayout);
+	const confirmReset = async () => {
+		const confirmed = await showConfirm({
+			title: "Reset to Default",
+			message: "Are you sure you want to reset the dashboard to its default layout? You can still cancel before saving.",
+			confirmText: "Reset",
+			cancelText: "Keep Current",
+		});
+		if (confirmed) {
+			setLayoutData(getDefaultLayout(isPremium));
+		}
 	};
 
 	const handleAddWidget = (config: WidgetConfig) => {
@@ -378,26 +399,23 @@ const Dashboard: React.FC = () => {
 		});
 	};
 
-	const confirmRemoveWidget = (widgetId: string) => {
-		setAlertState({
-			show: true,
-			type: "danger",
+	const confirmRemoveWidget = async (widgetId: string) => {
+		const confirmed = await showDelete({
 			title: "Remove Widget",
 			message: "Are you sure you want to remove this widget?",
 			confirmText: "Remove",
-			cancelText: "Cancel",
-			onSuccess: () => {
-				setLayoutData((prev) => ({
-					...prev,
-					widgets: prev.widgets.filter((w) => w.id !== widgetId),
-					layouts: {
-						lg: prev.layouts.lg.filter((l) => l.i !== widgetId),
-						md: prev.layouts.md.filter((l) => l.i !== widgetId),
-						sm: prev.layouts.sm.filter((l) => l.i !== widgetId),
-					},
-				}));
-			},
 		});
+		if (confirmed) {
+			setLayoutData((prev) => ({
+				...prev,
+				widgets: prev.widgets.filter((w) => w.id !== widgetId),
+				layouts: {
+					lg: prev.layouts.lg.filter((l) => l.i !== widgetId),
+					md: prev.layouts.md.filter((l) => l.i !== widgetId),
+					sm: prev.layouts.sm.filter((l) => l.i !== widgetId),
+				},
+			}));
+		}
 	};
 
 	const widgetIds = new Set(layoutData.widgets.map((w) => w.id));
@@ -407,7 +425,6 @@ const Dashboard: React.FC = () => {
 		sm: layoutData.layouts.sm.filter((l) => widgetIds.has(l.i)),
 	};
 
-	const hasChanges = JSON.stringify(layoutData) !== JSON.stringify(savedLayoutRef.current);
 	const dragEnabled = isEditMode && !isSmallScreen;
 
 	return (
@@ -452,51 +469,51 @@ const Dashboard: React.FC = () => {
 			</div>
 
 			{!isSmallScreen && (
-				<div className={`dashboard-right-sidebar ${isEditMode ? "expanded" : ""}`}>
-					{isEditMode ? (
+				<div className={`dashboard-right-sidebar ${isEditMode ? "open" : ""}`}>
+					<button
+						className="sidebar-tab"
+						onClick={() => setIsEditMode((prev) => !prev)}
+						title={isEditMode ? "Close panel" : "Customize dashboard"}
+					>
+						<i className={`bi bi-chevron-${isEditMode ? "right" : "left"}`}></i>
+					</button>
+					<div className="sidebar-panel">
 						<div className="sidebar-edit-controls">
 							<Button
 								variant="outline-secondary"
-								size="sm"
-								className="w-100"
+								className="sidebar-icon-btn"
 								onClick={() => setShowWidgetPicker(true)}
+								title="Add Widget"
 							>
-								<i className="bi bi-plus-circle me-1"></i>
-								Add Widget
+								<i className="bi bi-plus-circle"></i>
 							</Button>
-							<Button variant="outline-warning" size="sm" className="w-100" onClick={handleReset}>
-								<i className="bi bi-arrow-counterclockwise me-1"></i>
-								Reset
+							<Button
+								variant="outline-warning"
+								className="sidebar-icon-btn"
+								onClick={confirmReset}
+								title="Reset to default"
+							>
+								<i className="bi bi-arrow-counterclockwise"></i>
 							</Button>
 							<Button
 								variant="secondary"
-								size="sm"
-								className="w-100"
-								onClick={handleCancel}
+								className="sidebar-icon-btn"
+								onClick={confirmCancel}
+								title="Cancel"
 							>
-								<i className="bi bi-x-lg me-1"></i>
-								Cancel
+								<i className="bi bi-x-lg"></i>
 							</Button>
 							<Button
 								variant="primary"
-								size="sm"
-								className="w-100"
+								className="sidebar-icon-btn"
 								onClick={handleSave}
 								disabled={isSaving || !hasChanges}
+								title={isSaving ? "Saving..." : "Save"}
 							>
-								<i className={`bi bi-${isSaving ? "hourglass-split" : "check-lg"} me-1`}></i>
-								{isSaving ? "Saving..." : "Save"}
+								<i className={`bi bi-${isSaving ? "hourglass-split" : "check-lg"}`}></i>
 							</Button>
 						</div>
-					) : (
-						<button
-							className="sidebar-customize-btn"
-							onClick={() => setIsEditMode(true)}
-							title="Customize dashboard"
-						>
-							<i className="bi bi-grid"></i>
-						</button>
-					)}
+					</div>
 				</div>
 			)}
 
@@ -507,7 +524,6 @@ const Dashboard: React.FC = () => {
 				isPremium={isPremium}
 			/>
 
-			<AlertModal alertState={alertState} hideAlert={() => setAlertState({ show: false })} />
 		</div>
 	);
 };
