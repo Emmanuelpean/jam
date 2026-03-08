@@ -19,8 +19,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 3rem;
+    height: 3rem;
     color: white;
     border-radius: 12px;
     background: var(--primary-gradient);
@@ -34,7 +34,7 @@
     align-items: center;
     justify-content: center;
     width: auto;
-    min-width: 52px;
+    min-width: 3.25rem;
     height: auto;
     padding: 0.5rem 0.875rem;
     text-align: center;
@@ -46,7 +46,7 @@
 .activity-count-badge {
     font-size: 0.875rem;
     font-weight: 600;
-    min-width: 32px;
+    min-width: 2rem;
     padding: 0.5rem 0.875rem;
     text-align: center;
     color: white;
@@ -73,8 +73,8 @@
 
 .activity-line {
     z-index: 0;
-    top: 20px;
-    left: 17px;
+    top: 1.25rem;
+    left: 1.0625rem;
     width: 2px;
     height: 110%;
     background-color: #e5e7eb;
@@ -82,20 +82,20 @@
 
 .table-column,
 .activity-column {
-    height: 500px;
+    height: 31.25rem;
     min-height: 0;
 }
 
 .toast-table {
     min-height: 0;
-    max-height: 700px;
+    max-height: 43.75rem;
 }
 
 @media (width <= 991px) {
     .table-column,
     .activity-column {
         height: auto;
-        min-height: 400px;
+        min-height: 25rem;
     }
 }
 
