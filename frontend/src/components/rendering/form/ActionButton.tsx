@@ -81,7 +81,7 @@ export const ActionButton = ({
 					}
 					style={{ width: "100%", gap: "0.5rem" }} // reserve space for spinner/icon
 				>
-					{defaultIcon && <i className={`${defaultIcon}`} style={{ fontSize: "20px" }} />}
+					{defaultIcon && <i className={`${defaultIcon}`} style={{ fontSize: "18px" }} />}
 					{defaultText}
 				</span>
 

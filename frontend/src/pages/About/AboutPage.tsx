@@ -54,7 +54,7 @@ const AboutPage = (): JSX.Element => {
 
 	return (
 		<>
-			<div className="gradient-bg" style={{ borderRadius: "20px", overflow: "hidden" }}>
+			<div className="gradient-bg" style={{ borderRadius: "18px", overflow: "hidden" }}>
 				{/* Hero Section */}
 				<div className="hero-overlay">
 					<Container className="py-5">
@@ -62,10 +62,10 @@ const AboutPage = (): JSX.Element => {
 							<Col lg={8}>
 								<div className="auth-logo">
 									<div className="logo-container logo-container-vertical">
-										<JamLogo style={{ height: "175px", width: "auto" }} />
+										<JamLogo style={{ height: "157.5px", width: "auto" }} />
 										<div
 											className="logo-text-below text-gradient-primary"
-											style={{ fontSize: "50px", fontWeight: "bold" }}
+											style={{ fontSize: "45px", fontWeight: "bold" }}
 										>
 											Job Application Manager
 										</div>
@@ -74,7 +74,7 @@ const AboutPage = (): JSX.Element => {
 
 								<div
 									className="d-flex flex-column flex-sm-row align-items-center justify-content-center gap-3"
-									style={{ fontSize: "17px" }}
+									style={{ fontSize: "15.3px" }}
 								>
 									<div className="glass-badge">
 										<span className="about-text-muted">Version</span>

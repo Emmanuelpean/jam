@@ -109,7 +109,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 									</div>
 									<p className="mb-3">{loadingMessage}</p>
 									{progress !== undefined && (
-										<div className="progress" style={{ width: "350px" }}>
+										<div className="progress" style={{ width: "315px" }}>
 											<div
 												className="progress-bar progress-bar-striped progress-bar-animated"
 												role="progressbar"
