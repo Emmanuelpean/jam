@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "react-bootstrap";
-import { ResponsiveGridLayout, useContainerWidth, Layout, LayoutItem, ResponsiveLayouts } from "react-grid-layout";
+import { Layout, LayoutItem, ResponsiveGridLayout, ResponsiveLayouts, useContainerWidth } from "react-grid-layout";
 import { useAuth } from "../../contexts/AuthContext";
 import "./DashboardPage.scss";
 import {
@@ -25,12 +25,12 @@ import { sortByKey } from "../../utils/Utils";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
 import {
 	DashboardLayoutDataV2,
-	WidgetConfig,
-	WidgetInstance,
 	generateWidgetId,
 	getDefaultLayout,
 	getDefaultLayoutsForConfig,
 	parseLayoutData,
+	WidgetConfig,
+	WidgetInstance,
 } from "./widgetRegistry";
 import WidgetPickerModal from "./WidgetPickerModal";
 import GraphWidget from "./GraphWidget";
@@ -48,7 +48,7 @@ const Dashboard: React.FC = () => {
 
 	const isPremium = currentUser?.premium.is_active ?? false;
 
-	const { width, containerRef, mounted } = useContainerWidth();
+	const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
 
 	const [layoutData, setLayoutData] = useState<DashboardLayoutDataV2>(() =>
 		parseLayoutData(currentUser?.preferences.dashboard_layout ?? null, isPremium)
@@ -72,7 +72,11 @@ const Dashboard: React.FC = () => {
 	}, [token, isPremium]);
 
 	if (!currentUser) {
-		return null;
+		return (
+			<div className="dashboard-wrapper">
+				<div className="dashboard-main" ref={containerRef as React.RefObject<HTMLDivElement>} />
+			</div>
+		);
 	}
 
 	const now = new Date();
@@ -369,7 +373,8 @@ const Dashboard: React.FC = () => {
 	const confirmReset = async () => {
 		const confirmed = await showConfirm({
 			title: "Reset to Default",
-			message: "Are you sure you want to reset the dashboard to its default layout? You can still cancel before saving.",
+			message:
+				"Are you sure you want to reset the dashboard to its default layout? You can still cancel before saving.",
 			confirmText: "Reset",
 			cancelText: "Keep Current",
 		});
@@ -439,7 +444,7 @@ const Dashboard: React.FC = () => {
 							breakpoints={{ lg: 992, md: 768, sm: 0 }}
 							cols={{ lg: 12, md: 12, sm: 12 }}
 							rowHeight={30}
-							margin={[16, 16]}
+							// margin={[16, 16]}
 							dragConfig={{ enabled: dragEnabled, handle: ".drag-handle" }}
 							resizeConfig={{ enabled: dragEnabled }}
 							onLayoutChange={handleLayoutChange}
@@ -451,13 +456,13 @@ const Dashboard: React.FC = () => {
 											<div className="drag-handle">
 												<i className="bi bi-grip-horizontal"></i>
 											</div>
-											<button
+											<Button
 												className="widget-remove-btn"
 												onClick={() => confirmRemoveWidget(widget.id)}
 												title="Remove widget"
 											>
 												<i className="bi bi-trash3"></i>
-											</button>
+											</Button>
 										</>
 									)}
 									<div className="grid-item-content">{renderWidget(widget.config, widget.id)}</div>
@@ -468,14 +473,12 @@ const Dashboard: React.FC = () => {
 				</div>
 			</div>
 
-
 			<WidgetPickerModal
 				show={showWidgetPicker}
 				onHide={() => setShowWidgetPicker(false)}
 				onAddWidget={handleAddWidget}
 				isPremium={isPremium}
 			/>
-
 		</div>
 	);
 };

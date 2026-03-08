@@ -178,12 +178,12 @@
     min-height: 0;
     width: 100%;
     max-width: 100%;
+    overflow-x: clip;
 }
 
 .dashboard-main {
     flex: 1;
     min-width: 0;
-    overflow: hidden;
 }
 
 /* Right sidebar */
