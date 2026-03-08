@@ -89,6 +89,7 @@
 }
 
 .dashboard-grid-item {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -105,9 +106,13 @@
     height: 100%;
 }
 
-/* Drag handle */
+/* Drag handle — absolutely positioned so it doesn't consume widget height */
 .drag-handle {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -115,7 +120,7 @@
     cursor: grab;
     color: var(--bs-secondary);
     font-size: 1.25rem;
-    opacity: 0.6;
+    opacity: 0.4;
     transition: opacity 0.15s;
 
     &:hover {
@@ -135,8 +140,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 26px;
+    height: 26px;
     padding: 0;
     font-size: 0.85rem;
     line-height: 1;
