@@ -456,13 +456,13 @@ const Dashboard: React.FC = () => {
 											<div className="drag-handle">
 												<i className="bi bi-grip-horizontal"></i>
 											</div>
-											<Button
+											<button
 												className="widget-remove-btn"
 												onClick={() => confirmRemoveWidget(widget.id)}
 												title="Remove widget"
 											>
 												<i className="bi bi-trash3"></i>
-											</Button>
+											</button>
 										</>
 									)}
 									<div className="grid-item-content">{renderWidget(widget.config, widget.id)}</div>
@@ -470,6 +470,42 @@ const Dashboard: React.FC = () => {
 							))}
 						</ResponsiveGridLayout>
 					)}
+				</div>
+			</div>
+
+			<div className={`dashboard-right-sidebar ${isEditMode ? "open" : ""}`}>
+				<button
+					className="sidebar-tab"
+					onClick={() => (isEditMode ? confirmCancel() : setIsEditMode(true))}
+					title={isEditMode ? "Exit edit mode" : "Customise dashboard"}
+				>
+					<i className={`bi bi-${isEditMode ? "x" : "pencil"}`}></i>
+				</button>
+				<div className="sidebar-panel">
+					<div className="sidebar-edit-controls">
+						<Button
+							className="sidebar-icon-btn btn-primary"
+							onClick={handleSave}
+							disabled={!hasChanges || isSaving}
+							title="Save layout"
+						>
+							<i className={`bi bi-${isSaving ? "hourglass-split" : "check-lg"}`}></i>
+						</Button>
+						<Button
+							className="sidebar-icon-btn btn-outline-primary"
+							onClick={() => setShowWidgetPicker(true)}
+							title="Add widget"
+						>
+							<i className="bi bi-plus-lg"></i>
+						</Button>
+						<Button
+							className="sidebar-icon-btn btn-outline-danger"
+							onClick={confirmReset}
+							title="Reset to default"
+						>
+							<i className="bi bi-arrow-counterclockwise"></i>
+						</Button>
+					</div>
 				</div>
 			</div>
 
