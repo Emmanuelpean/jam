@@ -479,7 +479,7 @@ const Dashboard: React.FC = () => {
 					onClick={() => (isEditMode ? confirmCancel() : setIsEditMode(true))}
 					title={isEditMode ? "Exit edit mode" : "Customise dashboard"}
 				>
-					<i className={`bi bi-${isEditMode ? "x" : "pencil"}`}></i>
+					<i className="bi bi-chevron-left sidebar-tab-arrow"></i>
 				</button>
 				<div className="sidebar-panel">
 					<div className="sidebar-edit-controls">
