@@ -12,7 +12,7 @@
     flex-direction: column;
     height: 100%;
     max-height: 90vh;
-    border-radius: 14.4px !important;
+    border-radius: 14px !important;
 }
 
 .modal-body {
@@ -27,7 +27,7 @@
     font-weight: 600;
     overflow-y: auto;
     max-height: 80vh;
-    text-shadow: 0 1px 1.8px rgb(0 0 0 / 20%);
+    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
 }
 
 .modal-header {
@@ -35,7 +35,7 @@
     padding: 1.5rem 2rem;
     color: white;
     border-bottom: none;
-    border-radius: 14.4px 14.4px 0 0;
+    border-radius: 14px 14px 0 0;
     background: var(--primary-gradient);
 }
 
@@ -71,7 +71,7 @@
     flex-shrink: 0;
     padding: 1.25rem 2rem;
     border-top: 1px solid rgb(0 0 0 / 8%);
-    border-radius: 0 0 14.4px 14.4px;
+    border-radius: 0 0 14px 14px;
 }
 
 .modal-buttons-container {
@@ -79,7 +79,7 @@
     justify-content: center;
     width: 100%;
     margin: 0 auto;
-    gap: 13.5px;
+    gap: 14px;
 }
 
 .modal:not(:last-of-type) .modal-content::after {
@@ -94,7 +94,7 @@
 }
 
 .modal-body .card {
-    border-radius: 10.8px;
+    border-radius: 11px;
 }
 
 .modal-content-animated {
@@ -115,14 +115,14 @@
     flex-shrink: 0;
     justify-content: center;
     margin-bottom: 1rem;
-    gap: 22.5px;
+    gap: 22px;
 }
 
 .custom-tab-button {
     font-weight: 500;
     position: relative;
     width: 100%;
-    margin-bottom: -1.8px;
+    margin-bottom: -2px;
     padding: 0.5rem;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -155,8 +155,8 @@
 
 .modal-content-animated-inner {
     overflow: visible;
-    padding-right: 1.8px;
-    padding-left: 1.8px;
+    padding-right: 2px;
+    padding-left: 2px;
 }
 
 /* Mobile fullscreen slide-in from right */

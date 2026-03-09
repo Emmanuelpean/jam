@@ -192,8 +192,8 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 							key={menuItem.action}
 							className="context-menu-item"
 							style={{
-								padding: compact ? "5.4px 10.8px" : "7.2px 14.4px",
-								fontSize: compact ? "11.7px" : "12.6px",
+								padding: compact ? "5px 11px" : "7px 14px",
+								fontSize: compact ? "12px" : "13px",
 								borderBottom:
 									index !== filteredItems.length - 1
 										? "1px solid var(--bs-form-control-border-color)"

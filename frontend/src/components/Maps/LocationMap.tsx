@@ -169,7 +169,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
 				className="location-map-container"
 				style={{
 					height,
-					borderRadius: "7.2px",
+					borderRadius: "7px",
 					overflow: "hidden",
 					boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
 				}}

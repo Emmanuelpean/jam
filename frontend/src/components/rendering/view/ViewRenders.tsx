@@ -802,7 +802,7 @@ export const AccordionTable = <T,>({
 					{icon && <i className={`bi-${icon} me-2`}></i>}
 					<span className="fw-medium">{title}</span>
 					<span className="text-muted ms-2">({data?.length || 0})</span>
-					{helpText && <HelpBubble helpText={helpText} size="15.3px" />}
+					{helpText && <HelpBubble helpText={helpText} size="15px" />}
 				</>
 			}
 		>
