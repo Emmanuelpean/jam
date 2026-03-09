@@ -535,12 +535,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		]
 	);
 
-	// Show loading immediately before paint to prevent flash of empty content
+	// Show loading immediately on mount — DataProvider only renders when !!token,
+	// so this fires on login and on page refresh with an existing session.
 	useLayoutEffect((): void => {
-		if (token && currentUser) {
-			showLoading("Initialising Data Load...", 0);
-		}
-	}, [token, currentUser?.is_admin]);
+		showLoading("Initialising Data Load...", 0);
+	}, []);
 
 	useEffect((): void => {
 		if (!token || !currentUser) return;

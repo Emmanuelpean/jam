@@ -1,7 +1,7 @@
 import React, { useEffect, useState, JSX } from "react";
 import { Col, Row, Spinner } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { emailApi } from "../../services/api/Emails";
+import { emailApi } from "../../services/api/Others";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import PageHeader from "../PageHeader/PageHeader";
 import "../UserSettings/UserSettingsPage.scss";
@@ -53,7 +53,7 @@ export const EmailTemplatesPage: React.FC = (): JSX.Element => {
 		<div className="container-fluid d-flex flex-column" style={{ height: "calc(100vh - 40px)" }}>
 			<PageHeader title="Email Templates" icon={getTableIcon("Email Templates")} />
 			<Row className="g-0 settings-layout" style={{ flex: 1, minHeight: 0 }}>
-				<Col md={3} lg={2} className="settings-sidebar-col" style={{ width: "400px" }}>
+				<Col md={3} lg={2} className="settings-sidebar-col" style={{ width: "360px" }}>
 					<div className="settings-sidebar">
 						<nav className="settings-nav">
 							{TEMPLATES.map(
@@ -97,7 +97,7 @@ export const EmailTemplatesPage: React.FC = (): JSX.Element => {
 									flex: 1,
 									width: "100%",
 									border: "1px solid var(--bs-border-color)",
-									borderRadius: "8px",
+									borderRadius: "7.2px",
 									background: "#fff",
 								}}
 								sandbox="allow-same-origin"

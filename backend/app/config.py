@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     max_file_size_mb: int
     min_password_length: int
     monthly_scrape_quota: int
+    min_scraping_description_length: int
+    max_scraping_description_length: int
+    max_scraping_title_length: int
+    max_scraping_company_length: int
 
     # Other settings
     log_directory: str
@@ -67,6 +71,9 @@ class Settings(BaseSettings):
 
     # OpenAI
     openai_api_key: str
+
+    # Anthropic
+    anthropic_api_key: str
 
     # Apify
     apify_api_key: str

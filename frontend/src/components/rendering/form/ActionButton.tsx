@@ -22,9 +22,9 @@ export type ButtonVariant =
 type ButtonSize = "sm" | "md" | "lg";
 
 const BUTTON_HEIGHTS: Record<ButtonSize, number> = {
-	sm: 40,
-	md: 52,
-	lg: 60,
+	sm: 36,
+	md: 47,
+	lg: 54,
 };
 
 interface ActionButtonProps {
@@ -81,7 +81,7 @@ export const ActionButton = ({
 					}
 					style={{ width: "100%", gap: "0.5rem" }} // reserve space for spinner/icon
 				>
-					{defaultIcon && <i className={`${defaultIcon}`} style={{ fontSize: "20px" }} />}
+					{defaultIcon && <i className={`${defaultIcon}`} style={{ fontSize: "18px" }} />}
 					{defaultText}
 				</span>
 

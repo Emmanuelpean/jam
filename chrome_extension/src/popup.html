@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>JAM</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Quicksand:wght@700&display=swap"
+          rel="stylesheet"/>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-size: 14px;
+            width: 300px;
+            background: #fff;
+            color: #131313;
+            user-select: none;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* ── Spinner ── */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.65s linear infinite;
+            flex-shrink: 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ── Shared button base ── */
+        button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        /* ── Header strip ── */
+        .main-header {
+            display: flex;
+            align-items: center;
+            padding: 11px 14px;
+            border-bottom: 1px solid #ededed;
+        }
+
+        .header-icon-wrap {
+            width: 26px;
+            height: 26px;
+        }
+
+        .header-icon-wrap img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .main-logo-name {
+            font-family: "Quicksand", "Inter", sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #686de0, #4834d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .main-header-sub {
+            margin-left: auto;
+            font-size: 10.5px;
+            color: #6a7075;
+            white-space: nowrap;
+        }
+
+        /* ── Job detection area ── */
+        .job-area {
+            padding: 14px 14px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 100px;
+        }
+
+        /* Detecting state */
+        @property --border-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        @keyframes spin-border {
+            to { --border-angle: 360deg; }
+        }
+
+        .detecting-row {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #1c1c20;
+            font-size: 12.5px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 2.5px solid transparent;
+            background:
+                linear-gradient(#fff, #fff) padding-box,
+                conic-gradient(from var(--border-angle), #a8edea, #686de0, #4834d4, #686de0, #a8edea) border-box;
+            animation: spin-border 2s linear infinite;
+        }
+
+        /* No job state */
+        .no-job-msg {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 0 8px;
+            text-align: center;
+        }
+
+        .no-job-icon {
+            width: 24px;
+            height: 24px;
+            opacity: 0.22;
+            color: #1c1c20;
+        }
+
+        .no-job-text {
+            font-size: 12px;
+            color: #1c1c20;
+            line-height: 1.5;
+        }
+
+        /* Job card */
+        .job-card {
+            background: #f4f6ff;
+            border: 1px solid #dde2f5;
+            border-radius: 10px;
+            padding: 11px 12px;
+            display: flex;
+            width: 100%;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .platform-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #fff;
+            background: #0a66c2;
+            border-radius: 4px;
+            padding: 2px 7px 2px 5px;
+            letter-spacing: 0.2px;
+            width: fit-content;
+        }
+
+        .job-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.35;
+        }
+
+        .job-company {
+            font-size: 11.5px;
+            color: #5c6b78;
+        }
+
+        /* ── Action area ── */
+        .action-area {
+            padding: 0 14px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #addBtn {
+            background: linear-gradient(135deg, #a8edea 0%, #686de0 50%, #4834d4 100%);
+            color: #fff;
+        }
+
+        #addBtn:hover:not(:disabled) {
+            opacity: 0.88;
+        }
+
+        #status {
+            font-size: 12px;
+            min-height: 16px;
+            text-align: center;
+        }
+
+        #status.success {
+            color: #2d8c56;
+        }
+
+        #status.error {
+            color: #e74c3c;
+        }
+
+        /* ── Dark mode ── */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1a1b1e;
+                color: #e8e8ec;
+            }
+
+            .main-header {
+                border-bottom-color: #2e2e38;
+            }
+
+            .main-header-sub {
+                color: #8a8f96;
+            }
+
+            .detecting-row {
+                color: #e0e0e8;
+                background:
+                    linear-gradient(#1a1b1e, #1a1b1e) padding-box,
+                    conic-gradient(from var(--border-angle), #a8edea, #686de0, #4834d4, #686de0, #a8edea) border-box;
+            }
+
+            .no-job-icon {
+                color: #e0e0e8;
+            }
+
+            .no-job-text {
+                color: #9a9fa8;
+            }
+
+            .job-card {
+                background: #1e2038;
+                border-color: #2d3258;
+            }
+
+            .job-title {
+                color: #d0d8f0;
+            }
+
+            .job-company {
+                color: #7a8a9a;
+            }
+
+            #status.success {
+                color: #3dba72;
+            }
+
+            #status.error {
+                color: #ff6b6b;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-header">
+    <div class="header-icon-wrap">
+        <img alt="JAM" src="icons/icon128.png"/>
+    </div>
+    <span class="main-logo-name">JAM</span>
+    <span class="main-header-sub">Job Application Manager</span>
+</div>
+
+<div class="job-area">
+    <!-- Detecting state (default) -->
+    <div class="detecting-row" id="detectingRow">
+        <span>Detecting job…</span>
+    </div>
+
+    <!-- No job detected -->
+    <div class="no-job-msg hidden" id="noJobMsg">
+        <div class="no-job-icon">
+            <svg fill="currentColor" height="24" viewBox="0 0 16 16" width="24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11"/>
+            </svg>
+        </div>
+        <div class="no-job-text">Navigate to a job listing to save it to JAM.<br/>Supported job boards:<br/>LinkedIn,
+            Indeed, VeganJobs & NHS
+        </div>
+    </div>
+
+    <!-- Job detected card -->
+    <div class="job-card hidden" id="jobCard">
+        <div class="platform-badge" id="platformBadge">
+            <svg fill="white" height="10" viewBox="0 0 24 24" width="10">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+            LinkedIn
+        </div>
+        <div class="job-title" id="jobTitle">—</div>
+        <div class="job-company" id="jobCompany"></div>
+    </div>
+</div>
+
+<div class="action-area hidden" id="actionArea">
+    <button id="addBtn">
+        <span id="addBtnLabel">Save to JAM</span>
+        <span class="spinner hidden" id="addSpinner"></span>
+    </button>
+    <div class="hidden" id="status"></div>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>

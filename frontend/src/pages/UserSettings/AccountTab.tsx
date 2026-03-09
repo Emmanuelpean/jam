@@ -1,4 +1,4 @@
-import React, { JSX, useEffect, useState } from "react";
+import React, { JSX, useEffect, useRef, useState } from "react";
 import { Alert, Col, Form, Modal, Row } from "react-bootstrap";
 import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
@@ -38,6 +38,19 @@ export const AccountTab: React.FC = (): JSX.Element => {
 	const [errors, setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState(false);
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const formInitialized = useRef(false);
+
+	useEffect(() => {
+		if (currentUser && !formInitialized.current) {
+			formInitialized.current = true;
+			setFormData((prev) => ({
+				...prev,
+				email: currentUser.email || "",
+				first_name: currentUser.first_name || "",
+				last_name: currentUser.last_name || "",
+			}));
+		}
+	}, [currentUser]);
 	const [showConfirmModal, setShowConfirmModal] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 	const [downloadingData, setDownloadingData] = useState(false);

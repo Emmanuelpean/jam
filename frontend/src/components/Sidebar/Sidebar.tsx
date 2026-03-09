@@ -103,7 +103,15 @@ export const Sidebar = (): JSX.Element => {
 			],
 		},
 		{ path: "/settings", text: "User Settings", position: "bottom" },
-		{ path: "/about", text: "About", position: "bottom" },
+		{
+			text: "About",
+			position: "bottom",
+			submenu: [
+				{ path: "/about", text: "About JAM" },
+				{ path: "/browser-extension", text: "Browser Extension" },
+				{ path: "/release-notes", text: "Release Notes" },
+			],
+		},
 		{
 			text: "Admin",
 			condition: (user: UserData): boolean => user.is_admin,
@@ -267,7 +275,7 @@ export const Sidebar = (): JSX.Element => {
 		<>
 			{isMobile && !isExpanded && (
 				<button className="sidebar-open-btn" onClick={handleSidebarToggle} aria-label="Toggle sidebar">
-					<i className="bi bi-list" style={{ fontSize: 24 }}></i>
+					<i className="bi bi-list" style={{ fontSize: 21.6 }}></i>
 				</button>
 			)}
 			<div
@@ -277,7 +285,7 @@ export const Sidebar = (): JSX.Element => {
 			>
 				{isMobile && isExpanded && (
 					<button className="sidebar-close-btn" onClick={handleSidebarToggle} aria-label="Close sidebar">
-						<i className="bi bi-x-lg" style={{ fontSize: 24 }}></i>
+						<i className="bi bi-x-lg" style={{ fontSize: 21.6 }}></i>
 					</button>
 				)}
 				<div className="sidebar-header">
@@ -286,7 +294,7 @@ export const Sidebar = (): JSX.Element => {
 							<div className="logo-container">
 								<JamLogo
 									style={{
-										height: "57px",
+										height: "51px",
 										width: "auto",
 										userSelect: "none",
 									}}

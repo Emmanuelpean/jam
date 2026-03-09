@@ -12,7 +12,7 @@
     flex-direction: column;
     height: 100%;
     max-height: 90vh;
-    border-radius: 16px !important;
+    border-radius: 14px !important;
 }
 
 .modal-body {
@@ -35,7 +35,7 @@
     padding: 1.5rem 2rem;
     color: white;
     border-bottom: none;
-    border-radius: 16px 16px 0 0;
+    border-radius: 14px 14px 0 0;
     background: var(--primary-gradient);
 }
 
@@ -71,7 +71,7 @@
     flex-shrink: 0;
     padding: 1.25rem 2rem;
     border-top: 1px solid rgb(0 0 0 / 8%);
-    border-radius: 0 0 16px 16px;
+    border-radius: 0 0 14px 14px;
 }
 
 .modal-buttons-container {
@@ -79,7 +79,7 @@
     justify-content: center;
     width: 100%;
     margin: 0 auto;
-    gap: 15px;
+    gap: 14px;
 }
 
 .modal:not(:last-of-type) .modal-content::after {
@@ -94,7 +94,7 @@
 }
 
 .modal-body .card {
-    border-radius: 12px;
+    border-radius: 11px;
 }
 
 .modal-content-animated {
@@ -115,7 +115,7 @@
     flex-shrink: 0;
     justify-content: center;
     margin-bottom: 1rem;
-    gap: 25px;
+    gap: 22px;
 }
 
 .custom-tab-button {

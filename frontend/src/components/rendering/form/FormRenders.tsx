@@ -14,6 +14,8 @@ import {
 	updateTypeOptions,
 } from "./FormOptions";
 import { DataModalHandle } from "../../DataModal/DataModal";
+import { EnrichedJobData } from "../../../services/schemas/DataTables";
+import { DataContextValue } from "../../../contexts/DataContext";
 
 export interface ModalFormField {
 	name: string | string[];
@@ -24,7 +26,8 @@ export interface ModalFormField {
 	required?: boolean;
 	placeholder?: string;
 	options?: SelectOption[] | GroupedSelectOption[];
-	validation?: (value: string) => { isValid: boolean; message: string } | undefined;
+	validation?: (value: string) => string | null;
+	liveValidation?: (value: any, formData: any, dataContext: DataContextValue) => string | null;
 	rows?: number;
 	isSearchable?: boolean;
 	isMulti?: boolean;
@@ -99,10 +102,35 @@ export const formFields = {
 		label: "URL",
 		type: "url",
 		placeholder: "https://...",
+		validation: (value: string): string | null => {
+			if (value && !value.includes(".")) {
+				return "Please enter a valid URL";
+			} else {
+				return null;
+			}
+		},
+		...overrides,
+	}),
+
+	jobURl: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "url",
+		label: "Job URL",
+		type: "url",
+		placeholder: "https://linkedin.com/jobs/123456",
 		validation: (value: string) => {
 			if (value && !value.includes(".")) {
-				return { isValid: false, message: "Please enter a valid URL" };
+				return "Please enter a valid URL";
+			} else {
+				return null;
 			}
+		},
+		liveValidation: (value: string, formData: any, dataContext: DataContextValue): string | null => {
+			if (!value) return null;
+			const dup: EnrichedJobData | undefined = dataContext.jobs.find(
+				(j: EnrichedJobData): boolean =>
+					j.url?.trim().toLowerCase() === value.trim().toLowerCase() && j.id !== formData?.id
+			);
+			return dup ? "A job with this URL already exists" : null;
 		},
 		...overrides,
 	}),
@@ -217,7 +245,9 @@ export const formFields = {
 		placeholder: "person@company.com",
 		validation: (value: string) => {
 			if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-				return { isValid: false, message: "Please enter a valid email address" };
+				return "Please enter a valid email address";
+			} else {
+				return null;
 			}
 		},
 		...overrides,
@@ -238,7 +268,9 @@ export const formFields = {
 		placeholder: "https://linkedin.com/in/username",
 		validation: (value: string) => {
 			if (value && !value.includes("linkedin.com")) {
-				return { isValid: false, message: "Please enter a valid LinkedIn URL" };
+				return "Please enter a valid LinkedIn URL";
+			} else {
+				return null;
 			}
 		},
 		...overrides,

@@ -28,7 +28,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-reports/
+reports
 .coverage
 test_logs
 .claude
+
+chrome_extension/node_modules
+chrome_extension/dist
+chrome_extension/dist.zip

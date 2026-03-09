@@ -121,8 +121,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			localStorage.setItem("token", data.data.access_token);
 			setToken(data.data.access_token);
 			setUserFetched(false);
-
-			// Fetch user info after successful login
 			await fetchUserInfo(data.data.access_token);
 		}
 		return { success: true, message: "Login successful", error_code: null };

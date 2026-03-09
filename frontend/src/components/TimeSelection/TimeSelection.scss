@@ -14,7 +14,7 @@
     gap: 0.5rem;
     cursor: pointer;
     padding: 0.5rem 1rem;
-    border-radius: 8px;
+    border-radius: 7.2px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     user-select: none;
 }
@@ -26,8 +26,8 @@
 /* Hide default radio button */
 .custom-radio input[type="radio"] {
     appearance: none;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border: 2px solid var(--bs-border-color);
     background-color: var(--bg-tertiary);
     border-radius: 50%;
@@ -45,8 +45,8 @@
 .custom-radio input[type="radio"]:checked {
     border-color: var(--primary-end);
     background: var(--primary-gradient);
-    box-shadow: 0 0 0 4px var(--jam-glow),
-    0 2px 8px rgb(0 0 0 / 20%);
+    box-shadow: 0 0 0 3.6px var(--jam-glow),
+    0 1.8px 7.2px rgb(0 0 0 / 20%);
 }
 
 /* Radio label styling */

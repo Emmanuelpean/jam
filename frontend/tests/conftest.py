@@ -923,15 +923,14 @@ class DataModalUtils(BaseUtilsClass):
                 else:
                     self.set_text(self.get_element(key), value)
 
-    def check_edit_modal(self, entry_id: int, **values) -> None:
+    def check_edit_modal(self, **values) -> None:
         """Check that the modal in edit mode contains the expected data
-        :param entry_id: entry ID
         :param values: values to check"""
 
         if any(isinstance(v, dict) for v in values.values()):
             for tab_key in values:
                 self.get_element(f"{tab_key}-tab").click()
-                self.check_edit_modal(entry_id, **values[tab_key])
+                self.check_edit_modal(**values[tab_key])
         else:
             for key in values:
                 if "date" in key:
@@ -1440,10 +1439,20 @@ class DataTableUtils(BaseUtilsClass):
             re.search(rf"table-row-{self.entry_type}-(\d+)", self.table_rows[index].get_attribute("id")).group(1)
         )
 
-    def check_id_in_table(self, entry_id: int) -> bool:
+    def check_id_in_table(self, entry_id: int, **kwargs) -> bool:
         """Check if an ID is in the table"""
 
-        return any(row.get_attribute("id") == f"table-row-{self.entry_type}-{entry_id}" for row in self.table_rows)
+        try:
+            self.get_element("table-row-clickable", By.CLASS_NAME, **kwargs)
+        except AssertionError:
+            return False
+        rows = self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-{self.entry_type}-']")
+        return any(row.get_attribute("id") == f"table-row-{self.entry_type}-{entry_id}" for row in rows)
+
+    def check_id_not_in_table(self, entry_id: int) -> bool:
+        """Check if an ID is not in the table"""
+
+        return not self.check_id_in_table(entry_id, timeout=2)
 
     def set_search(self, search_text: str) -> None:
         """Set the search input to the given text"""
@@ -1629,7 +1638,7 @@ class AuthentificationUtils(BaseUtilsClass):
     def go_to_verification_url(self, token: str) -> None:
         """Navigate to login page with verification token"""
 
-        self.go_to_page(f"verify-email/?token={token}")
+        self.driver.get(f"{self.frontend_base_url}/verify-email/?token={token}")
 
     def switch_to_forgot_password(self) -> None:
         """Navigate to forgot password page"""
@@ -2342,7 +2351,7 @@ class BaseTest(BaseUtils):
 
         self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
         self.wait_for_page(self.page_url)
-        time.sleep(0.25)
+        self.wait_for_disappear("loading-spinner")
 
     # ---------------------------------------------------- DATABASE ----------------------------------------------------
 

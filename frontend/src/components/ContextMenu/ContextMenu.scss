@@ -13,7 +13,7 @@
 @keyframes side-in-from-right {
     from {
         opacity: 0;
-        transform: translateX(-10px);
+        transform: translateX(-9px);
     }
 
     to {
@@ -25,7 +25,7 @@
 @keyframes side-in-from-left {
     from {
         opacity: 0;
-        transform: translateX(10px);
+        transform: translateX(9px);
     }
 
     to {
@@ -50,9 +50,9 @@
     padding: 4px 0;
     animation: fade-in-scale 0.15s ease-out forwards;
     border: 1px solid var(--bs-form-control-border-color);
-    border-radius: 8px;
+    border-radius: 7px;
     background-color: var(--bs-body-bg);
-    box-shadow: 0 2px 10px rgb(0 0 0 / 10%);
+    box-shadow: 0 2px 9px rgb(0 0 0 / 10%);
 }
 
 .context-menu-item {
