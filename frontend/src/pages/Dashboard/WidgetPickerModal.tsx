@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Modal, Button } from "react-bootstrap";
+import React, { useEffect, useRef, useState } from "react";
+import { Modal } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import { WIDGET_TYPE_DEFS, WidgetConfig, WidgetType, WidgetTypeDef, GraphField } from "./widgetRegistry";
 import { getSourceForField } from "./graphAggregations";
 
@@ -12,6 +13,18 @@ interface WidgetPickerModalProps {
 
 const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onAddWidget, isPremium }) => {
 	const [selectedType, setSelectedType] = useState<WidgetType | null>(null);
+	const contentRef = useRef<HTMLDivElement>(null);
+	const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
+
+	useEffect(() => {
+		if (!show) return;
+		const el = contentRef.current;
+		if (!el) return;
+		setContentHeight(el.scrollHeight);
+		const ro = new ResizeObserver(() => setContentHeight(el.scrollHeight));
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, [show]);
 
 	const handleClose = () => {
 		setSelectedType(null);
@@ -24,13 +37,22 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 		let config: WidgetConfig;
 		switch (typeDef.type) {
 			case "metric":
-				config = { type: "metric", metric: variantKey as WidgetConfig & { type: "metric" } extends { metric: infer M } ? M : never };
+				config = {
+					type: "metric",
+					metric: variantKey as WidgetConfig & { type: "metric" } extends { metric: infer M } ? M : never,
+				};
 				break;
 			case "table":
-				config = { type: "table", source: variantKey as WidgetConfig & { type: "table" } extends { source: infer S } ? S : never };
+				config = {
+					type: "table",
+					source: variantKey as WidgetConfig & { type: "table" } extends { source: infer S } ? S : never,
+				};
 				break;
 			case "timeline":
-				config = { type: "timeline", feed: variantKey as WidgetConfig & { type: "timeline" } extends { feed: infer F } ? F : never };
+				config = {
+					type: "timeline",
+					feed: variantKey as WidgetConfig & { type: "timeline" } extends { feed: infer F } ? F : never,
+				};
 				break;
 			case "graph": {
 				const field = variantKey as GraphField;
@@ -44,13 +66,51 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 
 	const currentTypeDef = selectedType ? WIDGET_TYPE_DEFS.find((t) => t.type === selectedType) : null;
 
+	const gridStyle: React.CSSProperties = {
+		display: "grid",
+		gridTemplateColumns: "repeat(2, 1fr)",
+		gap: "0.5rem",
+	};
+
+	const cardBase: React.CSSProperties = {
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: "0.5rem",
+		padding: "1rem 0.75rem",
+		borderRadius: "0.5rem",
+		border: "1.5px solid var(--bs-border-color)",
+		background: "transparent",
+		cursor: "pointer",
+		textAlign: "center",
+		transition: "border-color 0.15s, background 0.15s",
+		width: "100%",
+		color: "inherit",
+	};
+
+	const cardDisabled: React.CSSProperties = {
+		...cardBase,
+		opacity: 0.45,
+		cursor: "not-allowed",
+	};
+
 	return (
 		<Modal show={show} onHide={handleClose} centered>
 			<Modal.Header closeButton>
 				<Modal.Title>
 					{selectedType ? (
 						<>
-							<Button variant="link" size="sm" className="p-0 me-2" onClick={handleBack}>
+							<Button
+								variant="link"
+								size="sm"
+								className="p-0 me-2"
+								onClick={handleBack}
+								style={{
+									color: "var(--bs-heading-color, var(--bs-body-color)) !important",
+									fontSize: "1.2rem",
+								}}
+							>
 								<i className="bi bi-arrow-left"></i>
 							</Button>
 							Add {currentTypeDef?.label} Widget
@@ -60,68 +120,101 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 					)}
 				</Modal.Title>
 			</Modal.Header>
-			<Modal.Body>
-				{!selectedType ? (
-					<div className="d-flex flex-column gap-2">
-						{WIDGET_TYPE_DEFS.map((typeDef) => {
-							const availableVariants = typeDef.variants.filter((v) => !v.premiumOnly || isPremium);
-							if (availableVariants.length === 0) return null;
-							return (
-								<button
-									key={typeDef.type}
-									className="btn btn-outline-secondary text-start d-flex align-items-center gap-3 p-3"
-									onClick={() => setSelectedType(typeDef.type)}
-								>
-									<div
-										className="d-flex align-items-center justify-content-center rounded-3"
-										style={{
-											width: 44,
-											height: 44,
-											background: "var(--primary-gradient)",
-											color: "white",
-											fontSize: "1.2rem",
-											flexShrink: 0,
-										}}
-									>
-										<i className={`bi bi-${typeDef.icon}`}></i>
-									</div>
-									<div>
-										<div className="fw-semibold">{typeDef.label}</div>
-										<small className="text-muted">{typeDef.description}</small>
-									</div>
-								</button>
-							);
-						})}
-					</div>
-				) : (
-					<div className="d-flex flex-column gap-2">
-						{currentTypeDef?.variants
-							.filter((v) => !v.premiumOnly || isPremium)
-							.map((variant, i, arr) => {
-								const showGroup = variant.group && (i === 0 || arr[i - 1]?.group !== variant.group);
-								return (
-									<React.Fragment key={variant.key}>
-										{showGroup && (
-											<div className="fw-semibold text-muted small mt-2 mb-1">{variant.group}</div>
-										)}
-										<div className="d-flex align-items-center justify-content-between p-2 border rounded">
-											<span className="d-flex align-items-center gap-2">
-												<i className={`bi bi-${variant.icon}`}></i>
-												{variant.label}
-											</span>
-											<Button
-												variant="primary"
-												size="sm"
-												onClick={() => handleAddVariant(currentTypeDef, variant.key)}
+			<Modal.Body className="p-0">
+				<div
+					className="modal-content-animated"
+					style={{ height: contentHeight !== "auto" ? contentHeight : undefined }}
+				>
+					<div ref={contentRef} className="p-3">
+						{!selectedType ? (
+							<div style={gridStyle}>
+								{WIDGET_TYPE_DEFS.map((typeDef) => {
+									const allPremium = !isPremium && typeDef.variants.every((v) => v.premiumOnly);
+									return (
+										<button
+											key={typeDef.type}
+											style={allPremium ? cardDisabled : cardBase}
+											className="widget-picker-card"
+											onClick={() => !allPremium && setSelectedType(typeDef.type)}
+											disabled={allPremium}
+										>
+											<div
+												style={{
+													width: 44,
+													height: 44,
+													borderRadius: 10,
+													background: "var(--primary-gradient)",
+													color: "white",
+													fontSize: "1.25rem",
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
+													flexShrink: 0,
+												}}
 											>
-												Add
-											</Button>
-										</div>
-									</React.Fragment>
-								);
-							})}
+												<i className={`bi bi-${typeDef.icon}`}></i>
+											</div>
+											<div className="fw-semibold" style={{ fontSize: "0.9rem" }}>
+												{typeDef.label}
+											</div>
+											<small
+												className="text-muted"
+												style={{ fontSize: "0.75rem", lineHeight: 1.3 }}
+											>
+												{typeDef.description}
+											</small>
+											{allPremium && (
+												<span
+													className="badge"
+													style={{
+														background: "var(--primary-gradient)",
+														fontSize: "0.65rem",
+													}}
+												>
+													<i className="bi bi-star-fill me-1"></i>Premium
+												</span>
+											)}
+										</button>
+									);
+								})}
+							</div>
+						) : (
+							<div style={gridStyle}>
+								{currentTypeDef?.variants.map((variant) => {
+									const locked = variant.premiumOnly && !isPremium;
+									return (
+										<button
+											key={variant.key}
+											style={locked ? cardDisabled : cardBase}
+											className="widget-picker-card"
+											onClick={() => !locked && handleAddVariant(currentTypeDef, variant.key)}
+											disabled={locked}
+										>
+											<i
+												className={`bi bi-${variant.icon}`}
+												style={{ fontSize: "1.4rem", color: "var(--primary-mid)" }}
+											></i>
+											<div className="fw-semibold" style={{ fontSize: "0.85rem" }}>
+												{variant.label}
+											</div>
+											{locked && (
+												<span
+													className="badge"
+													style={{
+														background: "var(--primary-gradient)",
+														fontSize: "0.65rem",
+													}}
+												>
+													<i className="bi bi-star-fill me-1"></i>Premium
+												</span>
+											)}
+										</button>
+									);
+								})}
+							</div>
+						)}
 					</div>
-				)}
+				</div>
 			</Modal.Body>
 		</Modal>
 	);

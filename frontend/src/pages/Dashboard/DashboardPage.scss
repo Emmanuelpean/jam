@@ -1,6 +1,11 @@
 @import "~react-grid-layout/css/styles.css";
 @import "~react-resizable/css/styles.css";
 
+.widget-picker-card:not(:disabled):hover {
+    border-color: var(--primary-mid) !important;
+    background: color-mix(in srgb, var(--primary-mid) 8%, transparent) !important;
+}
+
 .table-card-header {
     position: relative;
     background: var(--bs-body-bg) !important;

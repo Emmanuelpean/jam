@@ -92,9 +92,9 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 			{ key: "follow_up", label: "Need Follow-up", icon: "telephone", premiumOnly: false },
 		],
 		defaultLayouts: {
-			lg: { x: 0, y: 0, w: 3, h: 8, minW: 2, minH: 4 },
-			md: { x: 0, y: 0, w: 3, h: 8, minW: 2, minH: 4 },
-			sm: { x: 0, y: 0, w: 6, h: 8, minW: 3, minH: 4 },
+			lg: { x: 0, y: 0, w: 3, h: 4, minW: 1, minH: 4 },
+			md: { x: 0, y: 0, w: 3, h: 4, minW: 1, minH: 4 },
+			sm: { x: 0, y: 0, w: 6, h: 4, minW: 1, minH: 4 },
 		},
 	},
 	{
@@ -134,15 +134,33 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 		icon: "bar-chart-line",
 		description: "Charts and visualizations",
 		variants: [
-			{ key: "application_date", label: "Applications Over Time", icon: "graph-up", premiumOnly: false, group: "Jobs" },
-			{ key: "application_status", label: "Status Breakdown", icon: "pie-chart", premiumOnly: false, group: "Jobs" },
+			{
+				key: "application_date",
+				label: "Applications Over Time",
+				icon: "graph-up",
+				premiumOnly: false,
+				group: "Jobs",
+			},
+			{
+				key: "application_status",
+				label: "Status Breakdown",
+				icon: "pie-chart",
+				premiumOnly: false,
+				group: "Jobs",
+			},
 			{ key: "source_aggregator", label: "By Source", icon: "signpost-split", premiumOnly: false, group: "Jobs" },
 			{ key: "salary", label: "Salary Distribution", icon: "cash-stack", premiumOnly: false, group: "Jobs" },
 			{ key: "attendance_type", label: "By Attendance", icon: "building", premiumOnly: false, group: "Jobs" },
 			{ key: "personal_rating", label: "By Rating", icon: "star", premiumOnly: false, group: "Jobs" },
 			{ key: "city", label: "By City", icon: "geo-alt", premiumOnly: false, group: "Jobs" },
 			{ key: "country", label: "By Country", icon: "globe2", premiumOnly: false, group: "Jobs" },
-			{ key: "interview_date", label: "Interviews Over Time", icon: "graph-up-arrow", premiumOnly: false, group: "Interviews" },
+			{
+				key: "interview_date",
+				label: "Interviews Over Time",
+				icon: "graph-up-arrow",
+				premiumOnly: false,
+				group: "Interviews",
+			},
 		],
 		defaultLayouts: {
 			lg: { x: 0, y: 0, w: 6, h: 12, minW: 4, minH: 8 },
@@ -220,9 +238,7 @@ function migrateV1toV2(v1: DashboardLayoutData): DashboardLayoutDataV2 {
 	}
 
 	const remapLayout = (items: LayoutItem[]): LayoutItem[] =>
-		items
-			.filter((l) => l.i in oldToNewId)
-			.map((l) => ({ ...l, i: oldToNewId[l.i]! }));
+		items.filter((l) => l.i in oldToNewId).map((l) => ({ ...l, i: oldToNewId[l.i]! }));
 
 	return {
 		version: 2,
