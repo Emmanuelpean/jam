@@ -44,10 +44,9 @@ export function TermsContent(): JSX.Element {
 			<TermsSection number={1} title="Acceptance of Terms">
 				<p className="terms-text">
 					By accessing and using the Job Application Manager ("JAM", "the Service"), you accept and agree to
-					be bound by these Terms and Conditions and our{" "}
-					<Link to="/privacy">Privacy Policy</Link>. If you do not agree, please do not use this Service. We
-					reserve the right to update these terms at any time, and continued use of the Service constitutes
-					acceptance of any modifications.
+					be bound by these Terms and Conditions and our <Link to="/privacy">Privacy Policy</Link>. If you do
+					not agree, please do not use this Service. We reserve the right to update these terms at any time,
+					and continued use of the Service constitutes acceptance of any modifications.
 				</p>
 			</TermsSection>
 
@@ -82,9 +81,9 @@ export function TermsContent(): JSX.Element {
 				</TermsSubsection>
 				<TermsSubsection title="2.3 SPREAD Chrome Extension">
 					<p className="terms-text mb-0">
-						SPREAD (Smart Plugin for Recruitment Extraction &amp; Aggregation of Data) is an optional
-						Chrome browser extension that lets you import job listings from supported job boards directly
-						into JAM. For full details on how SPREAD handles your data, see our{" "}
+						SPREAD (Smart Plugin for Recruitment Extraction &amp; Aggregation of Data) is an optional Chrome
+						browser extension that lets you import job listings from supported job boards directly into JAM.
+						For full details on how SPREAD handles your data, see our{" "}
 						<Link to="/privacy">Privacy Policy</Link>.
 					</p>
 				</TermsSubsection>
@@ -134,9 +133,7 @@ export function TermsContent(): JSX.Element {
 					<ul className="terms-list">
 						<li>You must provide accurate, complete, and current information during registration</li>
 						<li>Email verification is required to activate your account</li>
-						<li>
-							You are responsible for maintaining the confidentiality of your account credentials
-						</li>
+						<li>You are responsible for maintaining the confidentiality of your account credentials</li>
 						<li>You are responsible for all activities that occur under your account</li>
 						<li>You must be at least 16 years old to use this Service</li>
 					</ul>
@@ -160,9 +157,9 @@ export function TermsContent(): JSX.Element {
 				</p>
 				<TermsSubsection title="5.1 AI Services">
 					<p className="terms-text mb-0">
-						Our AI job rating feature uses <strong>OpenAI's API</strong> to analyse job descriptions and
-						match them against your qualifications. Relevant job and qualification data is sent to OpenAI
-						for processing. OpenAI's data retention and privacy policies apply.
+						Our AI job rating feature uses <strong>Anthropic's API</strong> to analyse job descriptions and
+						match them against your qualifications. Relevant job and qualification data is sent to Anthropic
+						for processing. Anthropic's data retention and privacy policies apply.
 					</p>
 				</TermsSubsection>
 				<TermsSubsection title="5.2 Payment Processing">
@@ -204,8 +201,8 @@ export function TermsContent(): JSX.Element {
 				</TermsSubsection>
 				<TermsSubsection title="7.2 Third-Party Dependencies">
 					<p className="terms-text mb-0">
-						Premium features depend on third-party APIs (OpenAI, job platforms, data providers). We cannot
-						guarantee the availability or accuracy of these external services. Changes to third-party
+						Premium features depend on third-party APIs (Anthropic, job platforms, data providers). We
+						cannot guarantee the availability or accuracy of these external services. Changes to third-party
 						platforms may affect feature functionality.
 					</p>
 				</TermsSubsection>
@@ -228,28 +225,26 @@ export function TermsContent(): JSX.Element {
 						IMPLIED
 					</li>
 					<li>WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, SECURE, OR ERROR-FREE</li>
+					<li>WE ARE NOT LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES</li>
 					<li>
-						WE ARE NOT LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES
-					</li>
-					<li>
-						OUR TOTAL LIABILITY IS LIMITED TO THE AMOUNT YOU PAID FOR THE SERVICE IN THE 12 MONTHS
-						PRECEDING THE CLAIM
+						OUR TOTAL LIABILITY IS LIMITED TO THE AMOUNT YOU PAID FOR THE SERVICE IN THE 12 MONTHS PRECEDING
+						THE CLAIM
 					</li>
 					<li>
 						WE ARE NOT RESPONSIBLE FOR DATA LOSS, THOUGH WE IMPLEMENT REASONABLE SAFEGUARDS. YOU ARE
 						RESPONSIBLE FOR MAINTAINING YOUR OWN BACKUPS
 					</li>
 					<li>
-						WE ARE NOT LIABLE FOR ANY EMPLOYMENT DECISIONS, JOB OUTCOMES, OR CAREER CONSEQUENCES
-						RESULTING FROM YOUR USE OF THE SERVICE
+						WE ARE NOT LIABLE FOR ANY EMPLOYMENT DECISIONS, JOB OUTCOMES, OR CAREER CONSEQUENCES RESULTING
+						FROM YOUR USE OF THE SERVICE
 					</li>
 					<li>
 						AI-GENERATED JOB RATINGS AND RECOMMENDATIONS ARE PROVIDED FOR INFORMATIONAL PURPOSES ONLY AND
 						SHOULD NOT BE RELIED UPON AS THE SOLE BASIS FOR CAREER DECISIONS
 					</li>
 					<li>
-						WE ARE NOT RESPONSIBLE FOR THE ACCURACY, COMPLETENESS, OR AVAILABILITY OF JOB DATA OBTAINED
-						FROM THIRD-PARTY SOURCES
+						WE ARE NOT RESPONSIBLE FOR THE ACCURACY, COMPLETENESS, OR AVAILABILITY OF JOB DATA OBTAINED FROM
+						THIRD-PARTY SOURCES
 					</li>
 				</ul>
 			</TermsSection>
@@ -289,22 +284,22 @@ export function TermsContent(): JSX.Element {
 			<TermsSection number={11} title="General Provisions">
 				<TermsSubsection title="11.1 Governing Law">
 					<p className="terms-text mb-0">
-						These terms are governed by the laws of England and Wales. Any disputes shall be subject to
-						the exclusive jurisdiction of the courts of England and Wales.
+						These terms are governed by the laws of England and Wales. Any disputes shall be subject to the
+						exclusive jurisdiction of the courts of England and Wales.
 					</p>
 				</TermsSubsection>
 				<TermsSubsection title="11.2 Severability">
 					<p className="terms-text mb-0">
-						If any provision of these terms is found to be unenforceable or invalid, that provision shall
-						be limited or eliminated to the minimum extent necessary, and the remaining provisions shall
-						remain in full force and effect.
+						If any provision of these terms is found to be unenforceable or invalid, that provision shall be
+						limited or eliminated to the minimum extent necessary, and the remaining provisions shall remain
+						in full force and effect.
 					</p>
 				</TermsSubsection>
 				<TermsSubsection title="11.3 Entire Agreement">
 					<p className="terms-text mb-0">
-						These Terms and Conditions, together with the{" "}
-						<Link to="/privacy">Privacy Policy</Link>, constitute the entire agreement between you and JAM
-						regarding use of the Service, superseding any prior agreements.
+						These Terms and Conditions, together with the <Link to="/privacy">Privacy Policy</Link>,
+						constitute the entire agreement between you and JAM regarding use of the Service, superseding
+						any prior agreements.
 					</p>
 				</TermsSubsection>
 				<TermsSubsection title="11.4 Contact">
