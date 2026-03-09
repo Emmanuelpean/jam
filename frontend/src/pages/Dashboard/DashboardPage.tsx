@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Button } from "react-bootstrap";
+import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { Layout, LayoutItem, ResponsiveGridLayout, ResponsiveLayouts, useContainerWidth } from "react-grid-layout";
 import { useAuth } from "../../contexts/AuthContext";
 import "./DashboardPage.scss";
@@ -361,7 +361,7 @@ const Dashboard: React.FC = () => {
 			setIsEditMode(false);
 			return;
 		}
-		const confirmed = await showWarning({
+		const confirmed = await showConfirm({
 			title: "Discard Changes",
 			message: "Are you sure you want to discard your unsaved changes?",
 			confirmText: "Discard",
@@ -476,39 +476,53 @@ const Dashboard: React.FC = () => {
 				</div>
 			</div>
 
-			<div className={`dashboard-right-sidebar ${isEditMode ? "open" : ""}`}>
-				<button
-					className="sidebar-tab"
-					onClick={() => (isEditMode ? confirmCancel() : setIsEditMode(true))}
-					title={isEditMode ? "Exit edit mode" : "Customise dashboard"}
-				>
-					<i className="bi bi-chevron-left sidebar-tab-arrow"></i>
-				</button>
-				<div className="sidebar-panel">
-					<div className="sidebar-edit-controls">
-						<Button
-							className="sidebar-icon-btn btn-primary"
-							onClick={handleSave}
-							disabled={!hasChanges || isSaving}
-							title="Save layout"
-						>
-							<i className={`bi bi-${isSaving ? "hourglass-split" : "check-lg"}`}></i>
-						</Button>
-						<Button
-							className="sidebar-icon-btn btn-outline-primary"
-							onClick={() => setShowWidgetPicker(true)}
-							title="Add widget"
-						>
-							<i className="bi bi-plus-lg"></i>
-						</Button>
-						<Button
-							className="sidebar-icon-btn btn-outline-danger"
-							onClick={confirmReset}
-							title="Reset to default"
-						>
-							<i className="bi bi-arrow-counterclockwise"></i>
-						</Button>
-					</div>
+			<div className="dashboard-edit-toolbar">
+				<div className="dashboard-edit-toolbar-inner">
+					<button
+						className={`sidebar-icon-btn ${isEditMode ? "btn btn-outline-secondary active-edit" : "dashboard-edit-trigger-inline"}`}
+						onClick={() => (isEditMode ? confirmCancel() : setIsEditMode(true))}
+						title={isEditMode ? "Cancel" : "Customise dashboard"}
+					>
+						<i className={`bi bi-${isEditMode ? "x-lg" : "pencil-square"}`}></i>
+					</button>
+					{isEditMode && (
+						<>
+							<ActionButton
+								variant="primary"
+								size="sm"
+								fullWidth={false}
+								className="sidebar-icon-btn"
+								loading={isSaving}
+								defaultIcon="bi bi-check-lg"
+								style={{ width: 40 }}
+								onClick={handleSave}
+								tooltip="Save layout"
+								tooltipPlacement="left"
+							/>
+							<ActionButton
+								variant="outline-primary"
+								size="sm"
+								fullWidth={false}
+								className="sidebar-icon-btn"
+								defaultIcon="bi bi-plus-lg"
+								style={{ width: 36 }}
+								onClick={() => setShowWidgetPicker(true)}
+								tooltip="Add widget"
+								tooltipPlacement="left"
+							/>
+							<ActionButton
+								variant="outline-danger"
+								size="sm"
+								fullWidth={false}
+								className="sidebar-icon-btn"
+								defaultIcon="bi bi-arrow-counterclockwise"
+								style={{ width: 36 }}
+								onClick={confirmReset}
+								tooltip="Reset to default"
+								tooltipPlacement="left"
+							/>
+						</>
+					)}
 				</div>
 			</div>
 
