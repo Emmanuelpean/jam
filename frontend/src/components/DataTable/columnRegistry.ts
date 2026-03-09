@@ -14,6 +14,7 @@ function getDefaultColumnsMap(): Record<EntityType, TableColumn[]> {
 			tableColumns.urlGenericColumn(),
 			tableColumns.salaryRangeColumn(),
 			tableColumns.personalRatingColumn(),
+			tableColumns.isFavouriteColumn(),
 			tableColumns.contactBadgesColumn(),
 			tableColumns.applicationStatusColumn(),
 			tableColumns.interviewCountColumn(),

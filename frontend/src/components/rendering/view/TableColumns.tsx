@@ -666,6 +666,21 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	isFavouriteColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_favourite",
+		label: "Favourite",
+		sortable: true,
+		render: renderFunctions.isFavourite,
+		filterConfig: {
+			type: "select",
+			options: [
+				{ value: "true", label: "Yes" },
+				{ value: "false", label: "No" },
+			],
+		},
+		...overrides,
+	}),
+
 	applicationStatusColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "application_status",
 		label: "Status",
@@ -683,11 +698,16 @@ export const tableColumns = {
 		label: "Interviews",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) => ctx.interviews.filter((i: any) => i.location_id === item.id).length,
+		sortField: (item: JamData, ctx: DataContextValue) =>
+			ctx.interviews.filter((i: any) => i.location_id === item.id).length,
 		render: (param: RenderParams) => renderFunctions._interviewCount(param, "location_id"),
 		filterConfig: {
-			type: "number", min: 0, step: 1, display: "slider",
-			max: (ctx: DataContextValue) => maxCount(ctx.locations, (loc) => ctx.interviews.filter((i: any) => i.location_id === loc.id).length),
+			type: "number",
+			min: 0,
+			step: 1,
+			display: "slider",
+			max: (ctx: DataContextValue) =>
+				maxCount(ctx.locations, (loc) => ctx.interviews.filter((i: any) => i.location_id === loc.id).length),
 		},
 		...overrides,
 	}),
@@ -697,11 +717,16 @@ export const tableColumns = {
 		label: "Jobs",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) => ctx.jobs.filter((j: any) => j.company_id === item.id).length,
+		sortField: (item: JamData, ctx: DataContextValue) =>
+			ctx.jobs.filter((j: any) => j.company_id === item.id).length,
 		render: (param: RenderParams) => renderFunctions._jobCount(param, "company_id"),
 		filterConfig: {
-			type: "number", min: 0, step: 1, display: "slider",
-			max: (ctx: DataContextValue) => maxCount(ctx.companies, (c) => ctx.jobs.filter((j: any) => j.company_id === c.id).length),
+			type: "number",
+			min: 0,
+			step: 1,
+			display: "slider",
+			max: (ctx: DataContextValue) =>
+				maxCount(ctx.companies, (c) => ctx.jobs.filter((j: any) => j.company_id === c.id).length),
 		},
 		...overrides,
 	}),
@@ -711,11 +736,16 @@ export const tableColumns = {
 		label: "Jobs",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) => ctx.jobs.filter((j: any) => j.source_aggregator_id === item.id).length,
+		sortField: (item: JamData, ctx: DataContextValue) =>
+			ctx.jobs.filter((j: any) => j.source_aggregator_id === item.id).length,
 		render: (param: RenderParams) => renderFunctions._jobCount(param, "source_aggregator_id"),
 		filterConfig: {
-			type: "number", min: 0, step: 1, display: "slider",
-			max: (ctx: DataContextValue) => maxCount(ctx.aggregators, (a) => ctx.jobs.filter((j: any) => j.source_aggregator_id === a.id).length),
+			type: "number",
+			min: 0,
+			step: 1,
+			display: "slider",
+			max: (ctx: DataContextValue) =>
+				maxCount(ctx.aggregators, (a) => ctx.jobs.filter((j: any) => j.source_aggregator_id === a.id).length),
 		},
 		...overrides,
 	}),
@@ -725,11 +755,16 @@ export const tableColumns = {
 		label: "Jobs",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) => ctx.jobs.filter((j: any) => j.location_id === item.id).length,
+		sortField: (item: JamData, ctx: DataContextValue) =>
+			ctx.jobs.filter((j: any) => j.location_id === item.id).length,
 		render: (param: RenderParams) => renderFunctions._jobCount(param, "location_id"),
 		filterConfig: {
-			type: "number", min: 0, step: 1, display: "slider",
-			max: (ctx: DataContextValue) => maxCount(ctx.locations, (loc) => ctx.jobs.filter((j: any) => j.location_id === loc.id).length),
+			type: "number",
+			min: 0,
+			step: 1,
+			display: "slider",
+			max: (ctx: DataContextValue) =>
+				maxCount(ctx.locations, (loc) => ctx.jobs.filter((j: any) => j.location_id === loc.id).length),
 		},
 		...overrides,
 	}),
@@ -739,11 +774,19 @@ export const tableColumns = {
 		label: "Jobs",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) => ctx.jobs.filter((j: any) => Array.isArray(j.keywords) && j.keywords.includes(item.id)).length,
+		sortField: (item: JamData, ctx: DataContextValue) =>
+			ctx.jobs.filter((j: any) => Array.isArray(j.keywords) && j.keywords.includes(item.id)).length,
 		render: (param: RenderParams) => renderFunctions._jobCount(param, "keywords"),
 		filterConfig: {
-			type: "number", min: 0, step: 1, display: "slider",
-			max: (ctx: DataContextValue) => maxCount(ctx.keywords, (k) => ctx.jobs.filter((j: any) => Array.isArray(j.keywords) && j.keywords.includes(k.id)).length),
+			type: "number",
+			min: 0,
+			step: 1,
+			display: "slider",
+			max: (ctx: DataContextValue) =>
+				maxCount(
+					ctx.keywords,
+					(k) => ctx.jobs.filter((j: any) => Array.isArray(j.keywords) && j.keywords.includes(k.id)).length
+				),
 		},
 		...overrides,
 	}),
@@ -753,11 +796,19 @@ export const tableColumns = {
 		label: "Job Applications",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) => ctx.jobs.filter((j: any) => j.application_aggregator_id === item.id).length,
+		sortField: (item: JamData, ctx: DataContextValue) =>
+			ctx.jobs.filter((j: any) => j.application_aggregator_id === item.id).length,
 		render: (param: RenderParams) => renderFunctions._jobApplicationCount(param, "application_aggregator_id"),
 		filterConfig: {
-			type: "number", min: 0, step: 1, display: "slider",
-			max: (ctx: DataContextValue) => maxCount(ctx.aggregators, (a) => ctx.jobs.filter((j: any) => j.application_aggregator_id === a.id).length),
+			type: "number",
+			min: 0,
+			step: 1,
+			display: "slider",
+			max: (ctx: DataContextValue) =>
+				maxCount(
+					ctx.aggregators,
+					(a) => ctx.jobs.filter((j: any) => j.application_aggregator_id === a.id).length
+				),
 		},
 		...overrides,
 	}),
@@ -767,11 +818,16 @@ export const tableColumns = {
 		label: "Individuals",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) => ctx.persons.filter((p: any) => p.company_id === item.id).length,
+		sortField: (item: JamData, ctx: DataContextValue) =>
+			ctx.persons.filter((p: any) => p.company_id === item.id).length,
 		render: (param: RenderParams) => renderFunctions._personCount(param, "company_id"),
 		filterConfig: {
-			type: "number", min: 0, step: 1, display: "slider",
-			max: (ctx: DataContextValue) => maxCount(ctx.companies, (c) => ctx.persons.filter((p: any) => p.company_id === c.id).length),
+			type: "number",
+			min: 0,
+			step: 1,
+			display: "slider",
+			max: (ctx: DataContextValue) =>
+				maxCount(ctx.companies, (c) => ctx.persons.filter((p: any) => p.company_id === c.id).length),
 		},
 		...overrides,
 	}),
