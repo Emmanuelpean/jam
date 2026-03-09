@@ -678,6 +678,10 @@ textarea.form-control {
     background: var(--primary-end);
 }
 
+::-webkit-scrollbar-corner {
+    background: var(--bs-border-color);
+}
+
 .modal-body.resizing::-webkit-scrollbar {
     display: none;
 }

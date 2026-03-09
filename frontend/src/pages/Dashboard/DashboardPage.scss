@@ -87,13 +87,14 @@
 }
 
 .toast-table {
+    height: 630px;
     min-height: 0;
-    max-height: 630px;
 }
 
 @media (width <= 991px) {
     .table-column,
-    .activity-column {
+    .activity-column,
+    .toast-table {
         height: auto;
         min-height: 360px;
     }

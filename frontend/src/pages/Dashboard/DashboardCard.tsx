@@ -85,7 +85,10 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 				{isEmpty && emptyState ? (
 					renderEmptyState()
 				) : (
-					<div className={bodyPadding ? "px-3" : ""} style={{ flexGrow: 1 }}>
+					<div
+						className={bodyPadding ? "px-3" : ""}
+						style={{ flexGrow: 1, display: "flex", flexDirection: "column", minHeight: 0 }}
+					>
 						{children}
 					</div>
 				)}

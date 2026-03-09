@@ -145,7 +145,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		ref
 	): JSX.Element => {
 		const { token } = useAuth();
-		const columnConfig: ColumnConfig = useColumnConfig(entityType);
+		const columnConfig: ColumnConfig = useColumnConfig(entityType, enableColumnConfig ? columns : undefined);
 		const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
 		const [filterSidebarOpen, setFilterSidebarOpen] = useState<boolean>(false);
 		const [filters, setFilters] = useState<ActiveFilters>({});
@@ -169,11 +169,11 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 				if (target?.closest?.(".react-select__menu-portal")) return;
 				// Ignore clicks on sidebar toggle buttons
 				if (target?.closest?.("[data-sidebar-toggle]")) return;
-				if (columnSidebarOpen && columnSidebarRef.current && !columnSidebarRef.current.contains(target)) {
-					setColumnSidebarOpen(false);
-				}
-				if (filterSidebarOpen && filterSidebarRef.current && !filterSidebarRef.current.contains(target)) {
-					setFilterSidebarOpen(false);
+				const isInsideAnySidebar =
+					columnSidebarRef.current?.contains(target) || filterSidebarRef.current?.contains(target);
+				if (!isInsideAnySidebar) {
+					if (columnSidebarOpen) setColumnSidebarOpen(false);
+					if (filterSidebarOpen) setFilterSidebarOpen(false);
 				}
 			};
 			document.addEventListener("mousedown", handleClickOutside);
@@ -979,7 +979,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 
 							{/* Pagination */}
 							{!showAllEntries && displayTotal > 20 && (
-								<div className={`d-flex justify-content-between align-items-center mt-0`}>
+								<div className={`d-flex justify-content-between align-items-center mt-1`}>
 									<div className="d-flex align-items-center gap-0">
 										{[
 											{

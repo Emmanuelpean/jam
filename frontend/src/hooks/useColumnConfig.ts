@@ -15,7 +15,7 @@ export interface ColumnConfig {
 	resetToDefaults: () => Promise<void>;
 }
 
-export function useColumnConfig(entityType: string): ColumnConfig {
+export function useColumnConfig(entityType: string, defaultColumns?: TableColumn[]): ColumnConfig {
 	const { currentUser, updateCurrentUser } = useAuth();
 
 	const savedKeys: string[] | null = useMemo((): string[] | null => {
@@ -30,16 +30,19 @@ export function useColumnConfig(entityType: string): ColumnConfig {
 
 	const allColumns: TableColumn[] = useMemo((): TableColumn[] => getDefaultColumns(entityType), [entityType]);
 
-	const defaultKeys: string[] = useMemo((): string[] => getDefaultColumnKeys(entityType), [entityType]);
+	const defaultKeys: string[] = useMemo((): string[] => {
+		if (defaultColumns && defaultColumns.length > 0) return defaultColumns.map((col) => col.key);
+		return getDefaultColumnKeys(entityType);
+	}, [entityType, defaultColumns]);
 
 	const isDefault: boolean = savedKeys === null && savedSort === null;
 
 	const columnOrder: string[] = savedKeys ?? defaultKeys;
 
 	const visibleColumns: TableColumn[] = useMemo((): TableColumn[] => {
-		if (savedKeys === null) return allColumns;
+		if (savedKeys === null) return defaultColumns && defaultColumns.length > 0 ? defaultColumns : allColumns;
 		return resolveColumns(entityType, columnOrder);
-	}, [savedKeys, allColumns, entityType, columnOrder]);
+	}, [savedKeys, allColumns, defaultColumns, entityType, columnOrder]);
 
 	const setColumnConfig = useCallback(
 		async (keys: string[]): Promise<void> => {
