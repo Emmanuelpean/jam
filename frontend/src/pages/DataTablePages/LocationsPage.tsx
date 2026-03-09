@@ -20,7 +20,7 @@ const LocationsPage = () => {
 		return (
 			<div className="mt-4">
 				<h5 className="mb-3">Location Map</h5>
-				<LocationMap locations={locationData} height="500px" />
+				<LocationMap locations={locationData} height="450px" />
 			</div>
 		);
 	};

@@ -22,7 +22,7 @@ export default `<h4>Version 1.2.0</h4>
     <li>A new dedicated page has been added specifically for tracking speculative and spontaneous job applications.</li>
     <li>Each application entry stores comprehensive details including the company name, the date and time of submission, the email address used to contact the company, a list of relevant contacts at the organisation, and any additional notes you wish to record.</li>
 </ul>
-<img src="${speculativeApplicationGif}" alt="Follow-up email demo" width="100%" style="padding: 0 5rem;" />
+<img src="${speculativeApplicationGif}" alt="Speculative application demo" width="100%" style="padding: 0 5rem;" />
 
 <h5>Follow-Up Email Generator</h5>
 <ul>
@@ -50,11 +50,34 @@ export default `<h4>Version 1.2.0</h4>
     <li>A new option has been added to the person details page, allowing you to mark individual contacts as recruiters.</li>
     <li>Badge data (e.g. company) can now be edited or deleted directly via right-click</li>
     <li>Data export in the user settings now exports speculative application data and scraped job data.</li>
-    <li>The source of a job can now be specified as Recruiter, Recruitment Company, Aggregator, Aggregator Email or Other.</li>
-    <li>Error message have been improved. Right clicking on error toast messages allows the user to send an email to JAM support.</li>
+    <li>The source of a job can now be specified as Recruiter, Recruitment Company, Aggregator, Aggregator Email, or Other.</li>
+    <li>Error messages have been improved. Right-clicking on error toast messages allows the user to send an email to JAM support.</li>
     <li>Dark mode has been added.</li>
     <li>The user settings have been reworked.</li>
     <li>The AI prompt used to rate scraped jobs is now displayed in the scraped job modal.</li>
     <li>User accounts can now be deleted in the user settings.</li>
     <li>Jobs with a Rejected, Offered, or Withdrawn application status are not shown in the Needs Chase table</li>
-</ul>`;
+</ul>
+
+<h4 style="margin-top: 3rem;">Version 1.2.1</h4>
+
+<h5>SPREAD Chrome Extension</h5>
+<ul>
+    <li>Introducing SPREAD - Smart Plugin for Recruitment Extraction &amp; Aggregation of Data. SPREAD is a Google Chrome extension that lets you import job listings from LinkedIn, Indeed, NHS Jobs, and VeganJobs directly into JAM with a single click.</li>
+    <li>Job details including title, company, salary, location, and description are automatically extracted from the page and pre-filled in the JAM job form - no copy-pasting required.</li>
+    <li>SPREAD intelligently detects when you are on a supported job listing page and activates automatically.</li>
+    <li>The extension is available from the <strong>Browser Extension</strong> page under the About section.</li>
+</ul>
+
+<h5>TOAST Improvements</h5>
+<ul>
+    <li>Added length limits on scraped job title, company, and description fields to improve AI rating consistency and limit token usage.</li>
+    <li>Improved status feedback in the Scraped Job modal, giving clearer information about the scraping and rating state of each job.</li>
+    <li>Switched from OpenAI gpt-4.1-mini to Anthropic Claude-Haiku 4.5 model for job rating.</li>
+</ul>
+
+<h5>Bug Fixes</h5>
+<ul>
+    <li>Fixed a bug where the scraped job location was not displayed correctly for demo users.</li>
+</ul>
+`;

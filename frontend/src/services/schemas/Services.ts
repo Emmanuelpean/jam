@@ -1,4 +1,4 @@
-import { BaseOut, GeoLocation, OwnedOut } from "./Base";
+import { BaseOut, GeoLocationData, OwnedOut } from "./Base";
 
 export interface ServiceLog extends BaseOut {
 	run_datetime: string;
@@ -29,9 +29,10 @@ export interface JobScrapingServiceLogData extends ServiceLog {
 }
 
 export interface JobRatingServiceLogData extends ServiceLog {
-	rated_job_found_ids: number[];
-	rated_job_succeeded_ids: number[];
-	rated_job_failed_ids: number[];
+	job_found_ids: number[];
+	job_succeeded_ids: number[];
+	job_failed_ids: number[];
+	job_skipped_ids: number[];
 	user_found_ids: number[];
 	user_processed_ids: number[];
 }
@@ -88,7 +89,7 @@ export interface ScrapedJobData extends OwnedOut {
 	location: string | null;
 	emails: number[];
 	job_rating: JobRatingData | null;
-	geolocation: GeoLocation | null;
+	geolocation: GeoLocationData | null;
 }
 
 export interface ScrapedJobUpdate {
@@ -111,6 +112,7 @@ export interface JobRatingData extends BaseOut {
 	job_prompt_template_id: number | null;
 	system_prompt_id: number | null;
 	job_prompt: string | null;
+	notes: string[];
 }
 
 export interface ScrapingFilterTransform {

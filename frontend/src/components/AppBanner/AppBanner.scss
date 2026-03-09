@@ -4,17 +4,17 @@
 	align-items: center;
 	justify-content: center;
 	width: 100%;
-	padding: 8px 20px;
+	padding: 7.2px 18px;
 
 	&.has-dismiss {
-		padding-right: 40px;
+		padding-right: 36px;
 	}
 
 	.app-banner-content {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 10px;
+		gap: 9px;
 		font-size: 0.9rem;
 		text-align: center;
 		color: black;
@@ -29,18 +29,18 @@
 .app-banner-dismiss-btn {
 	position: absolute;
 	top: 50%;
-	right: 16px;
+	right: 14.4px;
 	transform: translateY(-50%);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 28px;
-	height: 28px;
+	width: 25.2px;
+	height: 25.2px;
 	padding: 0;
 	cursor: pointer;
 	color: black;
 	border: none;
-	border-radius: 6px;
+	border-radius: 5.4px;
 	background: transparent;
 	transition: background 0.2s ease;
 

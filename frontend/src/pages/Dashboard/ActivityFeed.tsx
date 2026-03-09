@@ -117,8 +117,8 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 					<div
 						className={`rounded-circle d-flex align-items-center justify-content-center badge ${activityColor}`}
 						style={{
-							width: "35px",
-							height: "35px",
+							width: "31.5px",
+							height: "31.5px",
 						}}
 					>
 						<i className={`bi-${activityIcon} text-white`} style={{ fontSize: "1rem" }}></i>
@@ -160,10 +160,10 @@ export const renderUpcomingInterviewItem = (
 				{/* Interview icon */}
 				<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
 					<div
-						className={`rounded-circle d-flex align-items-center justify-content-center ${activityColor}`}
+						className={`rounded-circle d-flex align-items-center justify-content-center badge ${activityColor}`}
 						style={{
-							width: "35px",
-							height: "35px",
+							width: "31.5px",
+							height: "31.5px",
 						}}
 					>
 						<i className={`bi-${activityIcon} text-white`} style={{ fontSize: "1rem" }}></i>

@@ -49,6 +49,9 @@ export function getTableIcon(title: string): string {
 		"Job Rating Dashboard": "star-half",
 		"Email Templates": "envelope-open",
 		Other: "three-dots",
+		"Release Notes": "file-earmark-text",
+		"Browser Extension": "puzzle-fill",
+		"About JAM": "info-circle",
 	};
 	return iconMap[title] || "bi-table";
 }

@@ -32,14 +32,13 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 
 				<div className="metric-group">
 					<p className="metric-item">
-						<span className="status-label">Jobs Found:</span> {latestLog.rated_job_found_ids.length}
+						<span className="status-label">Jobs Found:</span> {latestLog.job_found_ids.length}
 					</p>
 					<p className="metric-item">
-						<span className="status-label">Rating Succeeded:</span>{" "}
-						{latestLog.rated_job_succeeded_ids.length}
+						<span className="status-label">Rating Succeeded:</span> {latestLog.job_succeeded_ids.length}
 					</p>
 					<p className="metric-item">
-						<span className="status-label">Rating Failed:</span> {latestLog.rated_job_failed_ids.length}
+						<span className="status-label">Rating Failed:</span> {latestLog.job_failed_ids.length}
 					</p>
 				</div>
 			</div>
@@ -49,7 +48,7 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 					<strong>Error:</strong> {latestLog.error_message}
 				</div>
 			)}
-			<div style={{ display: "flex", width: "100%", gap: "20px", marginBottom: "20px" }}>
+			<div style={{ display: "flex", width: "100%", gap: "18px", marginBottom: "18px" }}>
 				<ProgressBar
 					title="Users Processed"
 					current={latestLog.user_processed_ids.length}
@@ -57,8 +56,8 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 				/>
 				<ProgressBar
 					title="Jobs Processed"
-					current={latestLog.rated_job_succeeded_ids.length + latestLog.rated_job_failed_ids.length}
-					total={latestLog.rated_job_found_ids.length}
+					current={latestLog.job_succeeded_ids.length + latestLog.job_failed_ids.length}
+					total={latestLog.job_found_ids.length}
 				/>
 			</div>
 		</div>

@@ -1,5 +1,6 @@
 import React, { forwardRef, JSX, ReactNode, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
+import LoadingSpinner from "../Spinner/Spinner";
 import { useAuth } from "../../contexts/AuthContext";
 import {
 	DataContextValue,
@@ -123,34 +124,58 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		const [mode, setMode] = useState<modalModes>("view");
 		const [effectiveData, setEffectiveData] = useState<any>(null);
 		useImperativeHandle(ref, () => ({
-			showView: (data: JamData): void => {
-				const processedData = transformInputData ? transformInputData(data) : data;
-				setEffectiveData(processedData);
+			showView: async (data: JamData): Promise<void> => {
 				setMode("view");
 				resetExpandedStates();
 				setInternalShow(true);
+				if (transformInputData) {
+					setInputDataLoading(true);
+					const processedData = await transformInputData(data);
+					setEffectiveData(processedData);
+					setInputDataLoading(false);
+				} else {
+					setEffectiveData(data);
+				}
 			},
-			showEdit: (data: JamData): void => {
-				const processedData = transformInputData ? transformInputData(data) : data;
-				setEffectiveData(processedData);
+			showEdit: async (data: JamData): Promise<void> => {
 				setMode("edit");
 				resetExpandedStates();
 				setInternalShow(true);
+				if (transformInputData) {
+					setInputDataLoading(true);
+					const processedData = await transformInputData(data);
+					setEffectiveData(processedData);
+					setInputDataLoading(false);
+				} else {
+					setEffectiveData(data);
+				}
 			},
-			showAdd: (data: JamData, successCallback?: (newData: JamData) => void) => {
-				const processedData = transformInputData ? transformInputData(data) : data;
-				setEffectiveData(processedData);
+			showAdd: async (data: JamData, successCallback?: (newData: JamData) => void): Promise<void> => {
 				setMode("add");
 				setOnSuccessCallback(() => successCallback || null);
 				resetExpandedStates();
 				setInternalShow(true);
+				if (transformInputData) {
+					setInputDataLoading(true);
+					const processedData = await transformInputData(data);
+					setEffectiveData(processedData);
+					setInputDataLoading(false);
+				} else {
+					setEffectiveData(data);
+				}
 			},
-			showImport: (data: JamData) => {
-				const processedData = transformInputData ? transformInputData(data) : data;
-				setEffectiveData(processedData);
+			showImport: async (data: JamData): Promise<void> => {
 				setMode("import");
 				resetExpandedStates();
 				setInternalShow(true);
+				if (transformInputData) {
+					setInputDataLoading(true);
+					const processedData = await transformInputData(data);
+					setEffectiveData(processedData);
+					setInputDataLoading(false);
+				} else {
+					setEffectiveData(data);
+				}
 			},
 		}));
 
@@ -159,6 +184,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		const [originalFormData, setOriginalFormData] = useState<Record<string, any>>({});
 		const [submitting, setSubmitting] = useState<boolean>(false);
 		const [activeLoading, setActiveLoading] = useState<boolean>(false);
+		const [inputDataLoading, setInputDataLoading] = useState<boolean>(false);
 		const [errors, setErrors] = useState<Errors>({});
 		const [isEditing, setIsEditing] = useState<boolean>(false);
 		const { currentUser } = useAuth();
@@ -367,6 +393,31 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				setActiveTab(defaultActiveTab || tabs[0]!.key);
 			}
 		}, [internalShow, mode, defaultActiveTab, effectiveData]);
+
+		// Run field-level liveValidation while the user types or when data loads into the form
+		useEffect((): void => {
+			if (!isEditing) return;
+
+			const allFields: Field[] = flattenFieldsWithSections(getAllFields().form);
+			const fieldsWithLive: ModalFormField[] = allFields.filter(
+				(f: Field): f is ModalFormField => "liveValidation" in f && !!(f as ModalFormField).liveValidation
+			);
+			if (fieldsWithLive.length === 0) return;
+			setErrors((prev: Errors): Errors => {
+				const next = { ...prev };
+				fieldsWithLive.forEach((field: ModalFormField): void => {
+					const fieldName: string | null = getFieldName(field);
+					if (!fieldName) return;
+					const result: string | null = field.liveValidation!(formData[fieldName], formData, dataContext);
+					if (result) {
+						next[fieldName] = result;
+					} else {
+						delete next[fieldName];
+					}
+				});
+				return next;
+			});
+		}, [formData, isEditing]);
 
 		// ---------------------------------------------------- CLOSING ----------------------------------------------------
 
@@ -613,10 +664,24 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			for (const field of allFields) {
 				const fieldName: string | null = getFieldName(field);
 				if ("validation" in field && field.validation && fieldName) {
-					let result = field.validation(formData[fieldName]);
-					const { isValid = true, message } = result || {};
-					if (!isValid && message) {
-						newErrors[fieldName] = message;
+					const error: string | null = field.validation(formData[fieldName]);
+					if (error) {
+						newErrors[fieldName] = error;
+					}
+				}
+			}
+
+			// 2b) Field live validation
+			for (const field of allFields) {
+				const fieldName: string | null = getFieldName(field);
+				if ("liveValidation" in field && (field as ModalFormField).liveValidation && fieldName) {
+					const error: string | null = (field as ModalFormField).liveValidation!(
+						formData[fieldName],
+						formData,
+						dataContext
+					);
+					if (error) {
+						newErrors[fieldName] = error;
 					}
 				}
 			}
@@ -686,7 +751,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			setErrors({});
 
 			try {
-				const validationErrors = await validateFormFields();
+				const validationErrors: Errors = await validateFormFields();
 				if (Object.keys(validationErrors).length > 0) {
 					setErrors(validationErrors);
 					setSubmitting(false);
@@ -770,6 +835,10 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		};
 
 		const renderBodyContent = (): JSX.Element => {
+			if (inputDataLoading) {
+				return <LoadingSpinner text="Loading..." />;
+			}
+
 			const currentFields = getCurrentFields();
 			const currentAdditionalFields: ModalViewField[] = getCurrentAdditionalFields();
 			const warnings: WarningMessageConfig[] | null = warningMessage ? warningMessage(effectiveData) : null;

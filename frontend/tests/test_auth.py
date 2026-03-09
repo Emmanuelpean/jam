@@ -292,7 +292,9 @@ class TestSignUp(BaseTest):
         self.auth_utils.confirm()
 
         # Verify error message and database
-        self.auth_utils.assert_accept_terms_error_message("You must accept the Terms and Conditions to register")
+        self.auth_utils.assert_accept_terms_error_message(
+            "You must accept the Terms and Conditions and Privacy Policy to register."
+        )
         assert not self.verify_user_in_database(test_email)
 
     def test_signup_limited(self, test_settings) -> None:
@@ -475,6 +477,7 @@ class TestDemoLogin(BaseTest):
 
         self.auth_utils.try_button.click()
         self.auth_utils.wait_for_dashboard()
+        self.wait_for_disappear("loading-spinner")
 
         # Click logout
         self.get_element("btn-close", By.CLASS_NAME).click()

@@ -71,13 +71,12 @@ export const useJobScraperErrors = (
 						const errorMsg: string = job.scrape_error.trim();
 						if (!errorCounts[errorMsg]) {
 							errorCounts[errorMsg] = { count: 0, jobs: [] };
-						} else {
-							errorCounts[errorMsg]!.count++;
-							errorCounts[errorMsg]!.jobs.push({
-								jobId: job.id,
-								platform: job.platform,
-							});
 						}
+						errorCounts[errorMsg]!.count++;
+						errorCounts[errorMsg]!.jobs.push({
+							jobId: job.id,
+							platform: job.platform,
+						});
 					}
 				});
 				setScraperErrors(errorCounts);

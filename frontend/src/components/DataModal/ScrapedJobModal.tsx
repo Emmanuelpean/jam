@@ -4,7 +4,6 @@ import DataModal, {
 	Fields,
 	JamDataModalProps,
 	SectionConfig,
-	ValidationErrors,
 	WarningMessageConfig,
 } from "./DataModal";
 import { formFields } from "../rendering/form/FormRenders";
@@ -16,8 +15,8 @@ import { LocationModal } from "./LocationModal";
 import { KeywordModal } from "./KeywordModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
-import { DataContextValue, JamData, useDataContext } from "../../contexts/DataContext";
-import { EnrichedJobData, JobData, JobDataTransform, LocationDataTransform } from "../../services/schemas/DataTables";
+import { JamData, useDataContext } from "../../contexts/DataContext";
+import { JobData, JobDataTransform, LocationDataTransform } from "../../services/schemas/DataTables";
 import { ScrapedJobData, ScrapedJobUpdate } from "../../services/schemas/Services";
 import { useConfig } from "../../contexts/ConfigContext";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
@@ -25,7 +24,6 @@ import { ApiResponse } from "../../services/api/Base";
 
 export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 	({ size = "xl", onDelete, onSuccess: parentOnSuccess, canEdit = true }: JamDataModalProps, ref): JSX.Element => {
-		const dataContext: DataContextValue = useDataContext();
 		const { addEntity } = useDataContext();
 		const { config } = useConfig();
 		const companyModalRef = useRef<DataModalHandle>(null);
@@ -54,16 +52,12 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				title: "Basic Information",
 				icon: "bi-briefcase",
 				fields: [
-					formFields.jobTitle({ placeholder: "Python Software Engineer" }),
+					modalViewFields.title({ isTitle: true }),
 					[
 						formFields.scrapedCompany(companies, companyModalRef, (scrapedJob: ScrapedJobData) => ({
 							name: scrapedJob.company,
 						})),
-						formFields.url({
-							label: "Job URL",
-							placeholder: "https://linkedin.com/jobs/453635",
-							required: true,
-						}),
+						formFields.jobURl(),
 					],
 				],
 			} as SectionConfig,
@@ -173,18 +167,6 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			modalViewFields.scrapedLocationMap(),
 		];
 
-		const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
-			const errors: ValidationErrors = {};
-			const duplicates: EnrichedJobData[] = dataContext.jobs.filter(
-				(job: EnrichedJobData): boolean =>
-					job.url?.trim().toLowerCase() === formData.url?.trim().toLowerCase() && job.id !== formData?.id
-			);
-			if (duplicates.length > 0) {
-				errors.name = `A Job with this URL already exists`;
-			}
-			return errors;
-		};
-
 		const warningMessage = (data: ScrapedJobData): WarningMessageConfig[] | null => {
 			const result: WarningMessageConfig[] = [];
 
@@ -204,19 +186,20 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				);
 			};
 
+			// Scraped Job Status
 			if (!data?.is_processed) {
 				result.push({
-					key: "not_processed",
-					message: "This job has yet to be processed. Please come back later.",
+					key: "scraping_not_processed",
+					message: "This job has yet to be processed. Please come back soon.",
 				});
 			}
 			if (data?.is_failed) {
 				const reportLink = createReportLink("Scraped Job Error Report", data?.scrape_error);
 				result.push({
-					key: "inactive",
+					key: "scraping_failed",
 					message: (
 						<>
-							This job could not be scraped properly due to an error.
+							This job could not be scraped properly due to an unexpected error.
 							{reportLink && <> You can {reportLink}.</>}
 						</>
 					),
@@ -225,11 +208,21 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			}
 			if (data?.is_skipped) {
 				result.push({
-					key: "skipped",
+					key: "scraping_skipped",
 					message: "This job was not scraped due to the following reason: " + data?.skip_reason,
 				});
 			}
-			if (data?.job_rating?.is_success === false) {
+
+			// Job rating
+			if (!data?.job_rating && data?.is_scraped && !data?.is_failed) {
+				result.push({
+					key: "no_rating",
+					message: "This job has yet to be rated. Please come back later.",
+					variant: "info",
+				});
+			}
+
+			if (!data?.job_rating?.is_success && data?.job_rating?.error) {
 				const reportLink: JSX.Element | null = createReportLink(
 					"Job Rating Error Report",
 					data?.job_rating?.error
@@ -238,7 +231,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 					key: "no_rating",
 					message: (
 						<>
-							This job could not be rated due to an error.
+							This job could not be rated due to an unexpected error.
 							{reportLink && <> You can {reportLink}.</>}
 						</>
 					),
@@ -248,8 +241,25 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 			if (data?.job_rating?.is_skipped) {
 				result.push({
-					key: "skipped",
-					message: "This job was not scraped as you have exhausted your monthly quota.",
+					key: "rating_skipped",
+					message: "This job was not rated due to the following reason: " + data?.job_rating?.skip_reason,
+					variant: "warning",
+				});
+			}
+
+			if (data?.job_rating?.notes.length) {
+				result.push({
+					key: "rating_notes",
+					message: (
+						<>
+							Please note the following, during AI rating:
+							<ul className="mb-0 mt-1">
+								{data.job_rating.notes.map((note: string, idx: number) => (
+									<li key={idx}>{note}</li>
+								))}
+							</ul>
+						</>
+					),
 					variant: "info",
 				});
 			}
@@ -295,7 +305,6 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 					transformInputData={transformInputData}
 					entityType="scrapedJob"
 					size={size}
-					validation={customValidation}
 					onSuccess={onSuccess}
 					onDelete={onDelete}
 					warningMessage={warningMessage}

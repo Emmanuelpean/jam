@@ -106,7 +106,7 @@ export const LineChart = ({
 			<div
 				style={{
 					backgroundColor: "var(--bs-card-bg)",
-					padding: "10px",
+					padding: "9px",
 					border: "1px solid var(--bs-border-color)",
 					borderRadius: "4px",
 					boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
@@ -156,7 +156,7 @@ export const LineChart = ({
 						cursor: "pointer",
 						color: "var(--bs-body-color)",
 						position: "relative",
-						marginTop: "20px",
+						marginTop: "18px",
 					}}
 					formatter={(value) => (
 						<span

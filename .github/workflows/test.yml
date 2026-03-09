@@ -34,6 +34,10 @@ jobs:
       TEST_MODE: ${{ vars.TEST_MODE }}
       MIN_PASSWORD_LENGTH: ${{ vars.MIN_PASSWORD_LENGTH }}
       MONTHLY_SCRAPE_QUOTA: ${{ vars.MONTHLY_SCRAPE_QUOTA }}
+      MIN_SCRAPING_DESCRIPTION_LENGTH: ${{ vars.MIN_SCRAPING_DESCRIPTION_LENGTH }}
+      MAX_SCRAPING_DESCRIPTION_LENGTH: ${{ vars.MAX_SCRAPING_DESCRIPTION_LENGTH }}
+      MAX_SCRAPING_TITLE_LENGTH: ${{ vars.MAX_SCRAPING_TITLE_LENGTH }}
+      MAX_SCRAPING_COMPANY_LENGTH: ${{ vars.MAX_SCRAPING_COMPANY_LENGTH }}
 
       # Email Configuration
       MAIN_EMAIL_USERNAME: ${{ secrets.MAIN_EMAIL_USERNAME }}
@@ -64,6 +68,7 @@ jobs:
       BRIGHTDATA_INDEED_DATASET_ID: ${{ secrets.BRIGHTDATA_INDEED_DATASET_ID }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       APIFY_API_KEY: ${{ secrets.APIFY_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
       # Payment Configuration
       STRIPE_API_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
@@ -113,6 +118,10 @@ jobs:
           cd frontend
           npm install
           cd ..
+          cd chrome_extension
+          npm install
+          npm run build
+          cd ..
 
       - name: Install Stripe CLI
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
@@ -132,6 +141,12 @@ jobs:
             --cov-report=xml \
             --junitxml=reports/tests/backend.xml
 
+      - name: Run extension (Selenium) tests
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
+        run: |
+          pytest ./chrome_extension/tests \
+            --junitxml=reports/tests/extension.xml -v
+
       - name: Run frontend (Selenium) tests
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
@@ -146,6 +161,7 @@ jobs:
           junitparser merge \
             reports/tests/backend.xml \
             reports/tests/frontend.xml \
+            reports/tests/extension.xml \
             reports/tests/tests.xml
 
       - name: Upload test logs and screenshots

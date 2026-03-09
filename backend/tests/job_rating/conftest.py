@@ -7,17 +7,18 @@ import pytest
 import app.job_rating.scraped_job_rating as rating
 
 
-def openai_query_mock(system_prompt: str, llm_prompt: str) -> dict[str, int | str | None]:
-    """Deterministic mock of openai_query for testing.
-
-    Parses the llm_prompt to extract candidate/job info and returns
+def claude_query_mock(system_prompt: str, llm_prompt: str, max_tokens: int = 1024) -> dict[str, int | str | None]:
+    """Deterministic mock of claude_query for testing.
+    Parses the system_prompt and llm_prompt to extract candidate/job info and returns
     heuristic-based scores matching the expected output schema.
-
-    :param system_prompt: System prompt (unused in mock, but kept for signature compatibility)
-    :param llm_prompt: The formatted job prompt containing candidate and job details
+    :param system_prompt: System prompt containing candidate profile
+    :param llm_prompt: The formatted job prompt containing job details
+    :param max_tokens: Maximum tokens (unused in mock)
     :return: Dict with scores and explanation matching the AI output schema"""
+    _ = max_tokens
 
-    _ = system_prompt  # unused in mock
+    # Candidate info is now in the system prompt; merge both for field extraction
+    combined = system_prompt + "\n" + llm_prompt
 
     def extract_field(prompt: str, field_name: str) -> str | None:
         """Extract a field value from the prompt."""
@@ -28,11 +29,11 @@ def openai_query_mock(system_prompt: str, llm_prompt: str) -> dict[str, int | st
             return None if value.lower() == "not provided" else value
         return None
 
-    # Extract fields from the prompt
-    user_skills = extract_field(llm_prompt, "Skills")
-    user_experience = extract_field(llm_prompt, "Experience")
-    user_education = extract_field(llm_prompt, "Education")
-    user_interests = extract_field(llm_prompt, "Interests")
+    # Extract fields from the combined prompt (candidate in system, job in user)
+    user_skills = extract_field(combined, "Skills")
+    user_experience = extract_field(combined, "Experience")
+    user_education = extract_field(combined, "Education")
+    user_interests = extract_field(combined, "Interests")
 
     missing = {
         "skills": user_skills is None,
@@ -117,6 +118,6 @@ def openai_query_mock(system_prompt: str, llm_prompt: str) -> dict[str, int | st
 
 @pytest.fixture(autouse=True)
 def mock_ai_score(monkeypatch) -> None:
-    """Mock ai_score_job for all tests"""
+    """Mock claude_query for all tests"""
 
-    monkeypatch.setattr(rating, "openai_query", openai_query_mock, raising=False)
+    monkeypatch.setattr(rating, "claude_query", claude_query_mock, raising=False)
