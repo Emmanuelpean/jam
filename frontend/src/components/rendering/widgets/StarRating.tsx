@@ -36,7 +36,7 @@ export const StarRating = ({ field, value, handleChange }: WidgetProps): JSX.Ele
 
 	return (
 		<>
-			<div className="star-rating-container">
+			<div className="star-rating-container" style={{ display: "flex", height: "50px" }}>
 				<div className="star-rating-stars" onMouseLeave={handleMouseLeave}>
 					{[...Array(maxRating)].map((_, index) => {
 						const starNumber = index + 1;

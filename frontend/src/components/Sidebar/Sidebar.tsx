@@ -294,7 +294,7 @@ export const Sidebar = (): JSX.Element => {
 							<div className="logo-container">
 								<JamLogo
 									style={{
-										height: "51.3px",
+										height: "51px",
 										width: "auto",
 										userSelect: "none",
 									}}

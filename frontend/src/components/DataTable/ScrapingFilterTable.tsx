@@ -70,7 +70,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 		return (
 			<div className="modal-content-animated" style={{ height: containerHeight }}>
 				<div className="modal-content-animated-inner">
-					<div ref={contentRef} style={{ paddingTop: "4.5px" }}>
+					<div ref={contentRef} style={{ paddingTop: "4px" }}>
 						<DataTable
 							entityType="scrapingFilter"
 							data={data}

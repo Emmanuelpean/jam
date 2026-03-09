@@ -108,7 +108,7 @@ export const LineChart = ({
 					backgroundColor: "var(--bs-card-bg)",
 					padding: "9px",
 					border: "1px solid var(--bs-border-color)",
-					borderRadius: "3.6px",
+					borderRadius: "4px",
 					boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
 				}}
 			>

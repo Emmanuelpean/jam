@@ -149,12 +149,12 @@ html {
 .form-control,
 .react-select-container .react-select__control {
     font-size: 0.95rem;
-    min-height: 50.4px;
+    min-height: 50px;
     padding: 0.875rem 1.25rem;
     transition: var(--transition);
     border: 3px solid;
     border-color: var(--bs-border-color);
-    border-radius: 9px;
+    border-radius: 10px;
     background-color: var(--input-background-color);
 }
 
@@ -172,7 +172,7 @@ html {
     border-color: var(--primary-mid);
     background-color: var(--input-background-color);
     box-shadow: 0 0 0 0.25rem var(--jam-glow),
-    0 3.6px 10.8px rgb(0 0 0 / 10%);
+    0 4px 12px rgb(0 0 0 / 10%);
 }
 
 .form-control::placeholder,
