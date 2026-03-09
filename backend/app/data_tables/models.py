@@ -382,6 +382,8 @@ class Job(Owned, Base):
     attendance_type = Column(String, nullable=True)
     source_type = Column(String, nullable=True)
 
+    is_favourite = Column(Boolean, nullable=False, server_default=expression.false())
+
     # Application-specific fields
     application_date = Column(TIMESTAMP(timezone=True), nullable=True)
     application_url = Column(String, nullable=True)

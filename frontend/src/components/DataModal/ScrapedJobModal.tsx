@@ -89,7 +89,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				icon: "bi-currency-pound",
 				fields: [
 					[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
-					[formFields.personalRating(), formFields.deadline()],
+					[formFields.personalRating(), formFields.isFavourite(), formFields.deadline()],
 				],
 			} as SectionConfig,
 
@@ -281,6 +281,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				salary_max: formData.salary_max || null,
 				salary_currency: formData.salary_currency || null,
 				personal_rating: formData.personal_rating || null,
+				is_favourite: formData.is_favourite ?? false,
 				company_id: formData.company_id || null,
 				location_id: formData.location_id || null,
 				source_type: formData.source_type || null,

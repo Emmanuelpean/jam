@@ -191,6 +191,7 @@ class JobCreate(BaseModel):
     """Job create schema"""
 
     title: str
+    is_favourite: bool = False
     description: str | None = None
     salary_min: float | None = None
     salary_max: float | None = None

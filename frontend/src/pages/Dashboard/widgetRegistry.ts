@@ -1,11 +1,10 @@
 import { LayoutItem } from "react-grid-layout";
 import { CARD_REGISTRY, DashboardLayoutData } from "./cardRegistry";
 
-// --- Widget types ---
-
 export type MetricVariant = "total_jobs" | "applications" | "pending" | "follow_up";
 export type TableVariant = "follow_up" | "upcoming_deadlines" | "job_alerts";
 export type TimelineVariant = "recent_activity" | "upcoming_interviews";
+export type CardVariant = "favourite_job";
 export type GraphSource = "jobs" | "interviews";
 export type GraphField =
 	| "application_date"
@@ -18,7 +17,7 @@ export type GraphField =
 	| "country"
 	| "interview_date";
 
-export type WidgetType = "metric" | "table" | "timeline" | "graph";
+export type WidgetType = "metric" | "table" | "timeline" | "graph" | "card";
 
 export interface MetricConfig {
 	type: "metric";
@@ -32,6 +31,10 @@ export interface TimelineConfig {
 	type: "timeline";
 	feed: TimelineVariant;
 }
+export interface CardConfig {
+	type: "card";
+	variant: CardVariant;
+}
 export interface GraphConfig {
 	type: "graph";
 	source: GraphSource;
@@ -39,7 +42,7 @@ export interface GraphConfig {
 	chartType?: "line" | "bar" | "pie";
 	granularity?: "week" | "month";
 }
-export type WidgetConfig = MetricConfig | TableConfig | TimelineConfig | GraphConfig;
+export type WidgetConfig = MetricConfig | TableConfig | TimelineConfig | CardConfig | GraphConfig;
 
 export interface WidgetInstance {
 	id: string;
@@ -62,6 +65,7 @@ export interface VariantDef {
 	key: string;
 	label: string;
 	icon: string;
+	description?: string;
 	premiumOnly: boolean;
 	group?: string;
 }
@@ -86,10 +90,10 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 		icon: "speedometer2",
 		description: "Key numbers at a glance",
 		variants: [
-			{ key: "total_jobs", label: "Total Jobs", icon: "briefcase", premiumOnly: false },
-			{ key: "applications", label: "Applications", icon: "send", premiumOnly: false },
-			{ key: "pending", label: "Pending", icon: "clock", premiumOnly: false },
-			{ key: "follow_up", label: "Need Follow-up", icon: "telephone", premiumOnly: false },
+			{ key: "total_jobs", label: "Total Jobs", icon: "briefcase", description: "Total jobs in your database", premiumOnly: false },
+			{ key: "applications", label: "Applications", icon: "send", description: "Total applications submitted", premiumOnly: false },
+			{ key: "pending", label: "Pending", icon: "clock", description: "Applications awaiting a response", premiumOnly: false },
+			{ key: "follow_up", label: "Need Follow-up", icon: "telephone", description: "Applications overdue for a chase", premiumOnly: false },
 		],
 		defaultLayouts: {
 			lg: { x: 0, y: 0, w: 3, h: 4, minW: 1, minH: 4 },
@@ -103,9 +107,9 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 		icon: "table",
 		description: "Data tables and lists",
 		variants: [
-			{ key: "follow_up", label: "Follow-up Required", icon: "telephone", premiumOnly: false },
-			{ key: "upcoming_deadlines", label: "Upcoming Deadlines", icon: "clock", premiumOnly: false },
-			{ key: "job_alerts", label: "Job Alerts", icon: "bell", premiumOnly: true },
+			{ key: "follow_up", label: "Follow-up Required", icon: "telephone", description: "Applications that need chasing", premiumOnly: false },
+			{ key: "upcoming_deadlines", label: "Upcoming Deadlines", icon: "clock", description: "Jobs with approaching deadlines", premiumOnly: false },
+			{ key: "job_alerts", label: "Job Alerts", icon: "bell", description: "Jobs received from your scrapers", premiumOnly: true },
 		],
 		defaultLayouts: {
 			lg: { x: 0, y: 0, w: 8, h: 12, minW: 4, minH: 8 },
@@ -119,8 +123,28 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 		icon: "clock-history",
 		description: "Activity feeds and schedules",
 		variants: [
-			{ key: "recent_activity", label: "Recent Activity", icon: "clock-history", premiumOnly: false },
-			{ key: "upcoming_interviews", label: "Upcoming Interviews", icon: "calendar-event", premiumOnly: false },
+			{ key: "recent_activity", label: "Recent Activity", icon: "clock-history", description: "Your latest applications and interviews", premiumOnly: false },
+			{ key: "upcoming_interviews", label: "Upcoming Interviews", icon: "calendar-event", description: "Scheduled interviews coming up", premiumOnly: false },
+		],
+		defaultLayouts: {
+			lg: { x: 0, y: 0, w: 4, h: 12, minW: 3, minH: 8 },
+			md: { x: 0, y: 0, w: 4, h: 12, minW: 3, minH: 8 },
+			sm: { x: 0, y: 0, w: 12, h: 12, minW: 6, minH: 8 },
+		},
+	},
+	{
+		type: "card",
+		label: "Card",
+		icon: "star",
+		description: "Pinned job spotlight",
+		variants: [
+			{
+				key: "favourite_job",
+				label: "Favourite Job",
+				icon: "star-fill",
+				description: "Pin your favourite job at a glance",
+				premiumOnly: false,
+			},
 		],
 		defaultLayouts: {
 			lg: { x: 0, y: 0, w: 4, h: 12, minW: 3, minH: 8 },
@@ -138,6 +162,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				key: "application_date",
 				label: "Applications Over Time",
 				icon: "graph-up",
+				description: "Application volume by date",
 				premiumOnly: false,
 				group: "Jobs",
 			},
@@ -145,19 +170,21 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				key: "application_status",
 				label: "Status Breakdown",
 				icon: "pie-chart",
+				description: "Applications split by status",
 				premiumOnly: false,
 				group: "Jobs",
 			},
-			{ key: "source_aggregator", label: "By Source", icon: "signpost-split", premiumOnly: false, group: "Jobs" },
-			{ key: "salary", label: "Salary Distribution", icon: "cash-stack", premiumOnly: false, group: "Jobs" },
-			{ key: "attendance_type", label: "By Attendance", icon: "building", premiumOnly: false, group: "Jobs" },
-			{ key: "personal_rating", label: "By Rating", icon: "star", premiumOnly: false, group: "Jobs" },
-			{ key: "city", label: "By City", icon: "geo-alt", premiumOnly: false, group: "Jobs" },
-			{ key: "country", label: "By Country", icon: "globe2", premiumOnly: false, group: "Jobs" },
+			{ key: "source_aggregator", label: "By Source", icon: "signpost-split", description: "Jobs grouped by job board", premiumOnly: false, group: "Jobs" },
+			{ key: "salary", label: "Salary Distribution", icon: "cash-stack", description: "Salary ranges across your jobs", premiumOnly: false, group: "Jobs" },
+			{ key: "attendance_type", label: "By Attendance", icon: "building", description: "Remote vs on-site breakdown", premiumOnly: false, group: "Jobs" },
+			{ key: "personal_rating", label: "By Rating", icon: "star", description: "Jobs grouped by your rating", premiumOnly: false, group: "Jobs" },
+			{ key: "city", label: "By City", icon: "geo-alt", description: "Jobs grouped by city", premiumOnly: false, group: "Jobs" },
+			{ key: "country", label: "By Country", icon: "globe2", description: "Jobs grouped by country", premiumOnly: false, group: "Jobs" },
 			{
 				key: "interview_date",
 				label: "Interviews Over Time",
 				icon: "graph-up-arrow",
+				description: "Interview volume by date",
 				premiumOnly: false,
 				group: "Interviews",
 			},
@@ -184,6 +211,8 @@ export function configToVariantKey(config: WidgetConfig): string {
 			return config.source;
 		case "timeline":
 			return config.feed;
+		case "card":
+			return config.variant;
 		case "graph":
 			return config.field;
 	}

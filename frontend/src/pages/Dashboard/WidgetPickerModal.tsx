@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { Button } from "react-bootstrap";
-import { WIDGET_TYPE_DEFS, WidgetConfig, WidgetType, WidgetTypeDef, GraphField } from "./widgetRegistry";
+import { WIDGET_TYPE_DEFS, WidgetConfig, WidgetType, WidgetTypeDef, GraphField, CardVariant } from "./widgetRegistry";
 import { getSourceForField } from "./graphAggregations";
 
 interface WidgetPickerModalProps {
@@ -53,6 +53,9 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 					type: "timeline",
 					feed: variantKey as WidgetConfig & { type: "timeline" } extends { feed: infer F } ? F : never,
 				};
+				break;
+			case "card":
+				config = { type: "card", variant: variantKey as CardVariant };
 				break;
 			case "graph": {
 				const field = variantKey as GraphField;
@@ -197,6 +200,11 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 											<div className="fw-semibold" style={{ fontSize: "0.85rem" }}>
 												{variant.label}
 											</div>
+											{variant.description && (
+												<small className="text-muted" style={{ fontSize: "0.72rem", lineHeight: 1.3 }}>
+													{variant.description}
+												</small>
+											)}
 											{locked && (
 												<span
 													className="badge"

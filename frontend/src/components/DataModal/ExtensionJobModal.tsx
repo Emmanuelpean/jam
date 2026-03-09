@@ -108,7 +108,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				icon: "bi-currency-pound",
 				fields: [
 					[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
-					[formFields.personalRating(), formFields.deadline()],
+					[formFields.personalRating(), formFields.isFavourite(), formFields.deadline()],
 				],
 			} as SectionConfig,
 			{
@@ -200,6 +200,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			salary_max: Number(jobData.salary_max) || null,
 			salary_currency: currentUser?.preferences.default_currency?.trim() || null,
 			personal_rating: jobData.personal_rating || null,
+			is_favourite: jobData.is_favourite ?? false,
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
 			deadline: jobData.deadline ? convertToEndOfDay(jobData.deadline) : null,

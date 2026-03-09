@@ -104,6 +104,7 @@ export interface EnrichedJobApplicationUpdateData extends JobApplicationUpdateDa
 
 export interface JobDataTransform {
 	title: string;
+	is_favourite: boolean;
 	description: string | null;
 	note: string | null;
 	url: string | null;
@@ -131,6 +132,7 @@ export interface JobDataTransform {
 
 export interface JobData extends OwnedOut {
 	title: string;
+	is_favourite: boolean;
 	name: string;
 	description: string | null;
 	note: string | null;

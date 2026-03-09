@@ -12,6 +12,7 @@ import { HelpBubble } from "../../HelpBubble/HelpBubble";
 import { UrlInput } from "./UrlInput";
 import { CurrentUser } from "../../../contexts/AuthContext";
 import { Toggle } from "./Toggle";
+import { FavouriteStar } from "./FavouriteStar";
 import get from "lodash/get";
 import { toKey } from "../../../utils/StringUtils";
 
@@ -148,6 +149,9 @@ export const renderFormField = (
 
 					case "url":
 						return <UrlInput {...widgetProps} />;
+
+					case "star_toggle":
+						return <FavouriteStar {...widgetProps} />;
 
 					default:
 						return <DefaultInput {...widgetProps} />;

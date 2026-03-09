@@ -345,6 +345,13 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	isFavourite: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "is_favourite",
+		label: "Favourite",
+		render: renderFunctions.isFavourite,
+		...overrides,
+	}),
+
 	applicationStatus: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_status",
 		label: "Status",

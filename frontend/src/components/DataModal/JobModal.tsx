@@ -59,7 +59,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				icon: "bi-currency-pound",
 				fields: [
 					[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
-					[formFields.personalRating(), formFields.deadline()],
+					[formFields.personalRating(), formFields.isFavourite(), formFields.deadline()],
 				],
 			} as SectionConfig,
 			{
@@ -143,8 +143,8 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				title: "Compensation & Priority",
 				icon: "bi-currency-pound",
 				fields: [
-					[modalViewFields.salaryRange(), modalViewFields.personalRating()],
-					[modalViewFields.deadline()],
+					[modalViewFields.salaryRange(), modalViewFields.deadline()],
+					[modalViewFields.personalRating(), modalViewFields.isFavourite()],
 				],
 			} as SectionConfig,
 			{
@@ -259,6 +259,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 		const transformData = (jobData: JobDataTransform): JobDataTransform => {
 			return {
 				title: jobData.title.trim(),
+				is_favourite: jobData.is_favourite ?? false,
 				description: jobData.description?.trim() || null,
 				note: jobData.note?.trim() || null,
 				url: jobData.url?.trim() || null,

@@ -34,6 +34,7 @@ import {
 } from "./widgetRegistry";
 import WidgetPickerModal from "./WidgetPickerModal";
 import GraphWidget from "./GraphWidget";
+import FavouriteJobWidget from "./FavouriteJobWidget";
 import { useAlert } from "../../contexts/AlertContext";
 
 const Dashboard: React.FC = () => {
@@ -174,6 +175,8 @@ const Dashboard: React.FC = () => {
 				return renderTableWidget(config.source);
 			case "timeline":
 				return renderTimelineWidget(config.feed);
+			case "card":
+				return <FavouriteJobWidget />;
 			case "graph":
 				return (
 					<GraphWidget

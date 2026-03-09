@@ -314,6 +314,13 @@ export const formFields = {
 
 	// ------------------------------------------------- JOB FIELDS --------------------------------------------------
 
+	isFavourite: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "is_favourite",
+		label: "Favourite",
+		type: "star_toggle",
+		...overrides,
+	}),
+
 	jobTitle: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "title",
 		label: "Job Title",

@@ -336,6 +336,19 @@ export const renderFunctions = {
 		return getTrueFalseBadge(param.item?.is_recruiter);
 	},
 
+	isFavourite: (param: RenderParams): ReactNode => {
+		const isFav: boolean = Boolean(param.item?.is_favourite);
+		return (
+			<i
+				className={`bi ${isFav ? "bi-star-fill" : "bi-star"}`}
+				style={{
+					fontSize: param.view ? "1.4rem" : "1rem",
+					color: isFav ? "#f5c518" : "var(--bs-secondary-color)",
+				}}
+			/>
+		);
+	},
+
 	caseSensitive: (param: RenderParams): ReactNode => {
 		return getTrueFalseBadge(param.item?.case_sensitive);
 	},
@@ -375,7 +388,7 @@ export const renderFunctions = {
 							<i
 								key={starNumber}
 								className={`star-rating-star ${starClass}`}
-								style={{ fontSize: "1rem", cursor: "auto" }}
+								style={{ fontSize: param.view ? "1.4rem" : "1rem", cursor: "auto" }}
 							/>
 						);
 					})}
