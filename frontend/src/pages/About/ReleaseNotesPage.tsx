@@ -98,7 +98,7 @@ const ReleaseNotesPage = (): JSX.Element => {
 									{
 										title: "Services",
 										packages: [
-											{ name: "OpenAI", url: "https://openai.com" },
+											{ name: "Anthropic", url: "https://www.anthropic.com/" },
 											{ name: "Stripe", url: "https://stripe.com" },
 											{ name: "Apify", url: "https://apify.com" },
 											{ name: "BrightData", url: "https://brightdata.com" },

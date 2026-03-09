@@ -136,7 +136,7 @@ export function PrivacyContent(): JSX.Element {
 					<li>To provide the core job tracking features of JAM</li>
 					<li>To process job alert emails and present extracted jobs in your dashboard (premium)</li>
 					<li>
-						To power AI job rating by sending job descriptions and your qualifications to OpenAI's API
+						To power AI job rating by sending job descriptions and your qualifications to Anthropic's API
 						(premium)
 					</li>
 					<li>
@@ -151,11 +151,11 @@ export function PrivacyContent(): JSX.Element {
 				<p className="terms-text">
 					We share data with the following processors only to the extent necessary to deliver the service:
 				</p>
-				<PrivacySubsection title="5.1 OpenAI (AI Job Rating - Premium)">
+				<PrivacySubsection title="5.1 Anthropic (AI Job Rating - Premium)">
 					<p className="terms-text mb-0">
-						Job descriptions and your qualifications profile are sent to OpenAI's API to generate job
-						ratings. Data is processed under OpenAI's API data usage policy. OpenAI does not use API data to
-						train its models by default.
+						Job descriptions and your qualifications profile are sent to Anthropic's API to generate job
+						ratings. Data is processed under Anthropic's API data usage policy. Anthropic does not use API
+						data to train its models by default.
 					</p>
 				</PrivacySubsection>
 				<PrivacySubsection title="5.2 Stripe (Payments)">
@@ -196,8 +196,8 @@ export function PrivacyContent(): JSX.Element {
 
 			<PrivacySection number={7} title="International Data Transfers">
 				<p className="terms-text mb-0">
-					JAM is hosted in the UK. Some third-party processors (OpenAI, Stripe, Apify, BrightData) operate in
-					the United States. Where personal data is transferred outside the UK, we rely on Standard
+					JAM is hosted in the UK. Some third-party processors (Anthropic, Stripe, Apify, BrightData) operate
+					in the United States. Where personal data is transferred outside the UK, we rely on Standard
 					Contractual Clauses or the processor's UK adequacy arrangements to ensure an equivalent level of
 					protection.
 				</p>

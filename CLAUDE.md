@@ -69,17 +69,17 @@ cd frontend && npm run build
 
 FastAPI app with modules organized by domain:
 
-| Module | Purpose |
-|--------|---------|
-| `core/` | Auth (JWT), user management, settings |
+| Module | Purpose                                                           |
+|--------|-------------------------------------------------------------------|
+| `core/` | Auth (JWT), user management, settings                             |
 | `data_tables/` | Core entities: Company, Job, Person, Interview, Location, Keyword |
-| `job_email_scraping/` | Email/web scraping from Indeed, LinkedIn, NHS, VeganJobs |
-| `job_rating/` | AI-powered job rating via OpenAI |
-| `demo/` | Demo schema isolation — setup, seeding, cleanup |
-| `payments/` | Stripe integration — checkout, webhooks, customer management |
-| `emails/` | SMTP email service, release notes, templates |
-| `service_runner/` | Background job scheduler |
-| `routers/` | Export endpoints, misc config |
+| `job_email_scraping/` | Email/web scraping from Indeed, LinkedIn, NHS, VeganJobs          |
+| `job_rating/` | AI-powered job rating via Anthropic                               |
+| `demo/` | Demo schema isolation — setup, seeding, cleanup                   |
+| `payments/` | Stripe integration — checkout, webhooks, customer management      |
+| `emails/` | SMTP email service, release notes, templates                      |
+| `service_runner/` | Background job scheduler                                          |
+| `routers/` | Export endpoints, misc config                                     |
 
 Key files:
 - `main.py` — FastAPI app setup, CORS, middleware, all router registrations, lifespan hooks
@@ -136,7 +136,7 @@ Backend reads from `backend/.env`. Key variable groups:
 - `DB_*` — PostgreSQL connection
 - `SECRET_KEY`, `ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES` — JWT
 - `SMTP_*`, `IMAP_*` — email (Hostinger)
-- `OPENAI_API_KEY` — job rating
+- `ANTHROPIC_API_KEY` — job rating
 - `STRIPE_*` — payments
 - `APIFY_*`, `BRIGHTDATA_*` — web scraping
 
