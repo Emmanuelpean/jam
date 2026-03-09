@@ -14,7 +14,7 @@
     <link href="%PUBLIC_URL%/site.webmanifest" rel="manifest"/>
     <title>JAM</title>
     <script>
-        if (process.env.REACT_APP_ENABLE_ANALYTICS === "true") {
+        if ("%REACT_APP_ENABLE_ANALYTICS%" === "true") {
             const s = document.createElement("script");
             s.src = "swetrix.js";
             s.onload = () => {
