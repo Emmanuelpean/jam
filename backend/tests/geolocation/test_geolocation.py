@@ -5,6 +5,7 @@ import time
 
 import pytest
 import requests
+from unittest.mock import MagicMock, patch
 
 import app.geolocation.geolocation as geolocation_module
 from app.geolocation.geolocation import call_geocoding_api, geocode_location
@@ -127,6 +128,15 @@ class TestGeocodeLocation:
 
 class TestRateLimiting:
     """Tests for Nominatim API rate limiting."""
+
+    @pytest.fixture(autouse=True)
+    def mock_nominatim_get(self):
+        """Override the global mock to keep real time.sleep for rate-limiting tests."""
+        with patch("app.geolocation.geolocation.requests.get") as mock:
+            mock.return_value = MagicMock()
+            mock.return_value.raise_for_status = MagicMock()
+            mock.return_value.json.return_value = []
+            yield mock
 
     def test_concurrent_calls_are_spaced_at_least_1s_apart(self) -> None:
         """When multiple threads call the API simultaneously, calls are spaced >= 1s apart."""
