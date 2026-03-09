@@ -1,7 +1,7 @@
 @keyframes fade-in-scale {
     from {
         opacity: 0;
-        transform: scale(0.95) translateY(-4.5px);
+        transform: scale(0.95) translateY(-5px);
     }
 
     to {
@@ -47,12 +47,12 @@
 .context-submenu {
     position: fixed;
     z-index: 10000;
-    padding: 3.6px 0;
+    padding: 4px 0;
     animation: fade-in-scale 0.15s ease-out forwards;
     border: 1px solid var(--bs-form-control-border-color);
-    border-radius: 7.2px;
+    border-radius: 7px;
     background-color: var(--bs-body-bg);
-    box-shadow: 0 1.8px 9px rgb(0 0 0 / 10%);
+    box-shadow: 0 2px 9px rgb(0 0 0 / 10%);
 }
 
 .context-menu-item {

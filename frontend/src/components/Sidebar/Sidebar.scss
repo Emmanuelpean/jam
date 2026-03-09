@@ -44,7 +44,7 @@
     display: flex;
     align-items: center;
     height: 90px;
-    padding-left: 9.9px;
+    padding-left: 10px;
 }
 
 /* Gradient logo text */
@@ -52,7 +52,7 @@
     font-family: var(--logo-font-family);
     font-size: 45px !important;
     font-weight: 700;
-    padding-left: 12.2px;
+    padding-left: 12px;
     user-select: none;
     background: var(--primary-gradient);
     background-clip: text;
@@ -67,12 +67,12 @@
     top: 72px;
     left: 63px;
     min-width: 180px;
-    margin-top: 4.5px;
+    margin-top: 5px;
     padding: 0.5rem;
     border: 1px solid var(--bs-card-border-color);
-    border-radius: 5.4px;
+    border-radius: 5px;
     background: var(--bs-secondary-bg);
-    box-shadow: 0 3.6px 10.8px rgb(0 0 0 / 15%);
+    box-shadow: 0 4px 11px rgb(0 0 0 / 15%);
 }
 
 /* Navigation sections */
@@ -96,8 +96,8 @@
 .sidebar-nav-bottom::before {
     position: absolute;
     top: 0;
-    right: 7.2px;
-    left: 7.2px;
+    right: 7px;
+    left: 7px;
     height: 1px;
     content: "";
     background-color: var(--bs-card-border-color);
@@ -111,11 +111,11 @@
 .nav-item {
     display: flex;
     margin: 0.1rem 0.2rem;
-    padding: 9px 14.9px;
+    padding: 9px 15.5px;
     cursor: pointer;
     text-decoration: none;
     color: var(--bs-body-color);
-    border-radius: 7.2px;
+    border-radius: 7px;
 }
 
 .nav-item:hover {
@@ -139,7 +139,7 @@
 /* Text container with clipping mask */
 .nav-text-container {
     align-content: center;
-    padding-left: 21.6px;
+    padding-left: 19px;
 }
 
 .nav-text {
@@ -199,8 +199,8 @@
     content: "";
     position: absolute;
     left: 0;
-    top: 4.5px;
-    bottom: 4.5px;
+    top: 5px;
+    bottom: 5px;
     width: 1px;
     background: var(--bs-muted-color);
     opacity: 0;

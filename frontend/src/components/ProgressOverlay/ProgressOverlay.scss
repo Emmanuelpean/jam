@@ -27,9 +27,9 @@
     transform 200ms ease-out;
     transform: scale(0.95);
     opacity: 0;
-    border-radius: 7.2px;
+    border-radius: 7px;
     background-color: var(--bs-secondary-bg);
-    box-shadow: 0 3.6px 5.4px rgb(0 0 0 / 10%);
+    box-shadow: 0 4px 5px rgb(0 0 0 / 10%);
 }
 
 .progress-overlay.show .progress-overlay-card {
