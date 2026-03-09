@@ -7,7 +7,7 @@ interface HelpBubbleProps {
 	size?: string;
 }
 
-export const HelpBubble: React.FC<HelpBubbleProps> = ({ helpText, placement = "right", size = "12.6px" }) => {
+export const HelpBubble: React.FC<HelpBubbleProps> = ({ helpText, placement = "right", size = "12px" }) => {
 	const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
 	const iconRef = useRef<HTMLSpanElement>(null);
 
@@ -35,7 +35,7 @@ export const HelpBubble: React.FC<HelpBubbleProps> = ({ helpText, placement = "r
 			ref={iconRef}
 			onMouseEnter={showTooltip}
 			onMouseLeave={() => setPosition(null)}
-			style={{ position: "relative", display: "inline-block", marginLeft: "7.2px" }}
+			style={{ position: "relative", display: "inline-block", marginLeft: "7px" }}
 		>
 			<i
 				className="bi bi-question-circle"

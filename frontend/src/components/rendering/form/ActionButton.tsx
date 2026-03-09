@@ -22,9 +22,9 @@ export type ButtonVariant =
 type ButtonSize = "sm" | "md" | "lg";
 
 const BUTTON_HEIGHTS: Record<ButtonSize, number> = {
-	sm: 40,
-	md: 52,
-	lg: 60,
+	sm: 36,
+	md: 47,
+	lg: 54,
 };
 
 interface ActionButtonProps {
