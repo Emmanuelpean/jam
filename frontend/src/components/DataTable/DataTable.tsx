@@ -700,22 +700,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 				compact
 			);
 		};
-		// Get button text based on mode
-		const getAddButtonText = (): string => {
-			if (mode === "import") {
-				return `Import ${entityName}`;
-			} else {
-				return `Add ${entityName}`;
-			}
-		};
 
-		// Get button icon based on mode
-		const getAddButtonIcon = () => {
-			if (mode === "import") {
-				return "bi-upload";
-			}
-			return "bi-plus-circle";
-		};
 		// Render
 		if (contextError) {
 			return <div className="alert alert-danger mt-3">{contextError.message}</div>;
@@ -776,15 +761,15 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								}}
 								id={`add-${entityType}-button`}
 							>
-								<i className={`${getAddButtonIcon()} me-2`} style={{ fontSize: "1.1rem" }}></i>
-								{getAddButtonText()}
+								<i className={`bi-plus-circle me-2`} style={{ fontSize: "1.1rem" }}></i>
+								{`Add ${entityName}`}
 							</Button>
 						)}
 						{enableColumnConfig && !compact && (
 							<Button
 								variant={columnSidebarOpen ? "primary" : "outline-primary"}
 								onClick={() => setColumnSidebarOpen(!columnSidebarOpen)}
-								style={{ width: "56px", height: "56px", padding: "0" }}
+								className={"config-btn"}
 								data-sidebar-toggle="column"
 							>
 								<i className="bi bi-gear"></i>
@@ -793,8 +778,8 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 						{enableColumnConfig && !compact && (
 							<Button
 								variant={filterSidebarOpen ? "primary" : "outline-primary"}
+								className={"config-btn"}
 								onClick={() => setFilterSidebarOpen(!filterSidebarOpen)}
-								style={{ width: "56px", height: "56px", padding: "0", position: "relative" }}
 								data-sidebar-toggle="filter"
 							>
 								<i className="bi bi-funnel"></i>

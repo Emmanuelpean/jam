@@ -14,23 +14,30 @@ thead.custom-header th {
     -webkit-text-fill-color: transparent;
 }
 
+.config-btn {
+    position: relative;
+    height: 100% !important;
+    padding: 0 !important;
+    aspect-ratio: 1/1 !important;
+}
+
 .table-container {
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 
     .table {
         margin-bottom: 0;
     }
 
     &.table-container--full-height {
+        overflow: hidden;
         flex: 1 1 0;
         min-height: 0;
 
         .table-responsive {
+            overflow: auto;
             flex: 1 1 0;
             min-height: 0;
-            overflow: auto;
             border-radius: var(--bs-border-radius-lg);
 
         }
@@ -45,12 +52,12 @@ thead.custom-header th {
         }
 
         thead tr {
+            position: sticky;
+            z-index: 1;
+            top: 0;
             display: grid;
             grid-column: 1 / -1;
             grid-template-columns: subgrid;
-            position: sticky;
-            top: 0;
-            z-index: 1;
         }
 
         // Apply header gradient to tr since thead has display:contents
@@ -60,10 +67,10 @@ thead.custom-header th {
         }
 
         tbody {
-            grid-column: 1 / -1;
             display: grid;
-            grid-template-columns: subgrid;
             align-content: start;
+            grid-column: 1 / -1;
+            grid-template-columns: subgrid;
         }
 
         thead th,
