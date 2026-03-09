@@ -118,13 +118,13 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 						<input
 							type="number"
 							className="form-control"
-							style={{ width: "100px", height: "52px" }}
+							style={{ width: "90px", height: "46.8px" }}
 							min="1"
 							value={amount}
 							onChange={handleAmountChange}
 							placeholder="Amount"
 						/>
-						<div style={{ minWidth: "150px" }}>
+						<div style={{ minWidth: "135px" }}>
 							<SelectInput
 								field={timeUnitField}
 								value={unit}
@@ -143,7 +143,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 						<input
 							type="datetime-local"
 							className="form-control"
-							style={{ width: "200px", height: "52px" }}
+							style={{ width: "180px", height: "46.8px" }}
 							value={startDate}
 							onChange={handleStartDateChange}
 						/>
@@ -151,7 +151,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 						<input
 							type="datetime-local"
 							className="form-control"
-							style={{ width: "200px", height: "52px" }}
+							style={{ width: "180px", height: "46.8px" }}
 							value={endDate}
 							onChange={handleEndDateChange}
 						/>

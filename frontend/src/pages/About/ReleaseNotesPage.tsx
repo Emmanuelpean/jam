@@ -12,7 +12,7 @@ const ReleaseNotesPage = (): JSX.Element => {
 	const { showWhatsNew } = useWhatsNew();
 
 	return (
-		<div className="gradient-bg" style={{ borderRadius: "20px", overflow: "hidden" }}>
+		<div className="gradient-bg" style={{ borderRadius: "18px", overflow: "hidden" }}>
 			<Container className="py-5">
 				<Row className="justify-content-center mb-4">
 					<Col lg={8} className="text-center">
@@ -25,7 +25,7 @@ const ReleaseNotesPage = (): JSX.Element => {
 				</Row>
 				<Row className="justify-content-center">
 					<Col lg={10}>
-						<div style={{ width: "100%", marginTop: "10px" }}>
+						<div style={{ width: "100%", marginTop: "9px" }}>
 							{[...VERSIONS].reverse().map(
 								(v: version): JSX.Element => (
 									<Accordion
@@ -35,7 +35,7 @@ const ReleaseNotesPage = (): JSX.Element => {
 										onToggle={() => setOpenVersion(openVersion === v ? null : v)}
 										header={<span className="fw-medium">V{v}</span>}
 									>
-										<div style={{ margin: "10px" }}>
+										<div style={{ margin: "9px" }}>
 											<div
 												className="release-notes-content"
 												dangerouslySetInnerHTML={{
@@ -65,7 +65,7 @@ const ReleaseNotesPage = (): JSX.Element => {
 								</span>
 							}
 						>
-							<div style={{ margin: "10px" }}>
+							<div style={{ margin: "9px" }}>
 								{[
 									{
 										title: "Frontend",

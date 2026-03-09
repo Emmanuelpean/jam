@@ -372,7 +372,7 @@ export function PrivacyPolicyModal({ show, onHide }: PrivacyPolicyModalProps): J
 }
 
 const PrivacyPolicyPage = (): JSX.Element => (
-	<div className="gradient-bg" style={{ borderRadius: "20px", overflow: "hidden", minHeight: "100%" }}>
+	<div className="gradient-bg" style={{ borderRadius: "18px", overflow: "hidden", minHeight: "100%" }}>
 		<Container className="py-5">
 			<Row className="justify-content-center mb-4">
 				<Col lg={8} className="text-center">

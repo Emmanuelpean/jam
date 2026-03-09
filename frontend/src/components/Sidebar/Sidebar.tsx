@@ -275,7 +275,7 @@ export const Sidebar = (): JSX.Element => {
 		<>
 			{isMobile && !isExpanded && (
 				<button className="sidebar-open-btn" onClick={handleSidebarToggle} aria-label="Toggle sidebar">
-					<i className="bi bi-list" style={{ fontSize: 24 }}></i>
+					<i className="bi bi-list" style={{ fontSize: 21.6 }}></i>
 				</button>
 			)}
 			<div
@@ -285,7 +285,7 @@ export const Sidebar = (): JSX.Element => {
 			>
 				{isMobile && isExpanded && (
 					<button className="sidebar-close-btn" onClick={handleSidebarToggle} aria-label="Close sidebar">
-						<i className="bi bi-x-lg" style={{ fontSize: 24 }}></i>
+						<i className="bi bi-x-lg" style={{ fontSize: 21.6 }}></i>
 					</button>
 				)}
 				<div className="sidebar-header">
@@ -294,7 +294,7 @@ export const Sidebar = (): JSX.Element => {
 							<div className="logo-container">
 								<JamLogo
 									style={{
-										height: "57px",
+										height: "51px",
 										width: "auto",
 										userSelect: "none",
 									}}

@@ -54,20 +54,20 @@ export const ErrorSummaryCard = ({
 			</div>
 
 			{loading ? (
-				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "300px" }}>
+				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "270px" }}>
 					<div className="spinner-border text-primary" role="status">
 						<span className="visually-hidden">Loading...</span>
 					</div>
 				</div>
 			) : (
-				<div style={{ display: "flex", gap: "20px", height: "600px", overflow: "auto" }}>
+				<div style={{ display: "flex", gap: "18px", height: "540px", overflow: "auto" }}>
 					{/* Critical Errors Column */}
 					<div style={{ flex: 1 }}>
 						<h5 className="mb-3">Critical Errors ({criticalErrorCount})</h5>
 						{criticalErrorCount === 0 ? (
 							<div className="text-muted">No critical errors</div>
 						) : (
-							<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
+							<div className="error-list d-flex flex-column" style={{ gap: "10.8px" }}>
 								{criticalErrorLogs
 									.slice()
 									.sort(
@@ -104,7 +104,7 @@ export const ErrorSummaryCard = ({
 						{Object.keys(scrapeErrors).length === 0 ? (
 							<div className="text-muted">No scrape errors</div>
 						) : (
-							<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
+							<div className="error-list d-flex flex-column" style={{ gap: "10.8px" }}>
 								{Object.entries(scrapeErrors)
 									.sort((a, b) => b[1] - a[1])
 									.map(([errorMsg, count], idx) => (

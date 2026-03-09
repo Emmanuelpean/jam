@@ -125,7 +125,7 @@ export const RunHistoryChart = ({
 					Run History
 					{isRunning && <span className="live-indicator ms-2"></span>}
 				</h2>
-				<div style={{ minWidth: "250px" }}>
+				<div style={{ minWidth: "225px" }}>
 					<SelectInput
 						field={platformField}
 						value={selectedPlatform}
@@ -137,7 +137,7 @@ export const RunHistoryChart = ({
 				</div>
 			</div>
 			{loading ? (
-				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "300px" }}>
+				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "270px" }}>
 					<div className="spinner-border text-primary" role="status">
 						<span className="visually-hidden">Loading...</span>
 					</div>

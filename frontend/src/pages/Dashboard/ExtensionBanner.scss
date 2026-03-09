@@ -1,9 +1,9 @@
 .extension-banner {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 14px 18px;
-    border-radius: 14px;
+    gap: 14.4px;
+    padding: 12.6px 16.2px;
+    border-radius: 12.6px;
     background: linear-gradient(135deg, rgba(var(--primary-start-rgb, 104, 109, 224), 0.08) 0%, rgba(var(--primary-end-rgb, 72, 52, 212), 0.06) 100%);
     border: 1px solid rgba(var(--primary-end-rgb, 72, 52, 212), 0.18);
     position: relative;
@@ -13,9 +13,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 39.6px;
+    height: 39.6px;
+    border-radius: 10.8px;
     background: var(--primary-gradient);
     color: white;
     font-size: 1.2rem;
@@ -33,16 +33,16 @@
     color: var(--bs-body-color);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 7.2px;
     flex-wrap: wrap;
-    margin-bottom: 2px;
+    margin-bottom: 1.8px;
 }
 
 .extension-banner-badge {
     font-size: 0.7rem;
     font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 20px;
+    padding: 1.8px 7.2px;
+    border-radius: 18px;
     background: var(--primary-gradient);
     color: white;
     letter-spacing: 0.2px;
@@ -58,12 +58,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 27px;
+    height: 27px;
     border: none;
     background: transparent;
     color: var(--bs-secondary-color);
-    border-radius: 8px;
+    border-radius: 7.2px;
     cursor: pointer;
     flex-shrink: 0;
     font-size: 0.75rem;
@@ -82,7 +82,7 @@
 
     .extension-banner-close {
         position: absolute;
-        top: 10px;
-        right: 10px;
+        top: 9px;
+        right: 9px;
     }
 }

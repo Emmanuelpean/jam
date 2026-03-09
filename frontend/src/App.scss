@@ -97,8 +97,8 @@ body {
 .main-content {
     width: 97%;
     margin: 0 auto;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    padding-top: 18px;
+    padding-bottom: 18px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -106,7 +106,7 @@ body {
 }
 
 html {
-    zoom: 0.9;
+    font-size: 90%;
     scroll-behavior: smooth;
 }
 
@@ -138,7 +138,7 @@ html {
 }
 
 .tooltip-inner {
-    max-width: 500px !important;
+    max-width: 450px !important;
 }
 
 /* ------------------------------------------------------ FORM ------------------------------------------------------ */
@@ -152,7 +152,7 @@ html {
 .form-control,
 .react-select-container .react-select__control {
     font-size: 0.95rem;
-    min-height: 56px;
+    min-height: 50px;
     padding: 0.875rem 1.25rem;
     transition: var(--transition);
     border: 3px solid;
@@ -195,15 +195,15 @@ textarea.form-control {
 /* Text + placeholder inside the selectbox */
 .react-select-container .react-select__value-container {
     align-items: center;
-    min-height: 48px;
-    padding: 4px 16px;
+    min-height: 43.2px;
+    padding: 3.6px 14.4px;
 }
 
 /* Indicators position */
 .react-select-container .react-select__indicators {
     align-items: center;
     height: auto;
-    padding-right: 12px;
+    padding-right: 10.8px;
 }
 
 .react-select__menu-portal {
@@ -237,20 +237,20 @@ textarea.form-control {
 /* Multi select element style */
 .react-select__multi-value {
     align-items: center !important;
-    min-height: 28px !important;
-    margin: 2px !important;
-    padding: 6px 8px !important;
+    min-height: 25.2px !important;
+    margin: 1.8px !important;
+    padding: 5.4px 7.2px !important;
     border: 0 solid !important;
-    border-radius: 6px !important;
+    border-radius: 5.4px !important;
     background-color: var(--primary-mid) !important;
 }
 
 /* Multi select element label style */
 .react-select__multi-value__label {
-    font-size: 14px !important;
+    font-size: 12.6px !important;
     font-weight: 500 !important;
     line-height: 1.4 !important;
-    padding: 2px 4px !important;
+    padding: 1.8px 3.6px !important;
     color: white !important;
 }
 
@@ -259,12 +259,12 @@ textarea.form-control {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    min-width: 20px !important;
-    min-height: 20px !important;
-    margin-left: 4px !important;
-    padding: 4px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    margin-left: 3.6px !important;
+    padding: 3.6px !important;
     color: white !important;
-    border-radius: 4px !important;
+    border-radius: 3.6px !important;
     background-color: var(--primary-end) !important;
 }
 
@@ -273,7 +273,7 @@ textarea.form-control {
     display: flex;
     align-items: center;
     box-sizing: border-box;
-    margin-left: 11px;
+    margin-left: 9.9px;
     cursor: pointer;
     transition: var(--transition);
     color: var(--bs-body-color) !important;
@@ -299,7 +299,7 @@ textarea.form-control {
 }
 
 .custom-dropdown-indicator .bi-plus-circle {
-    font-size: 21px;
+    font-size: 18.9px;
 }
 
 /* ---- Small input variant (filters, sidebars) ---- */
@@ -376,23 +376,23 @@ textarea.form-control {
     display: flex;
     align-items: center;
     width: 100%;
-    gap: 12px;
+    gap: 10.8px;
 }
 
 .select-widget-with-secondary .secondary-value {
-    font-size: 14px;
+    font-size: 12.6px;
     min-width: fit-content;
-    padding: 8px 12px;
+    padding: 7.2px 10.8px;
     white-space: nowrap;
     color: var(--bs-body-color);
     border: 1px solid var(--bs-border-color);
-    border-radius: 4px;
+    border-radius: 3.6px;
     background-color: var(--input-background-color) !important;
 }
 
 .select-widget-with-secondary .arrow-indicator {
-    font-size: 18px;
-    min-width: 20px;
+    font-size: 16.2px;
+    min-width: 18px;
     user-select: none;
     text-align: center;
     color: var(--bs-body-color);
@@ -411,8 +411,8 @@ textarea.form-control {
     padding: 0.75rem 2rem;
     transition: var(--transition);
     border: none;
-    border-radius: 10px;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+    border-radius: 9px;
+    text-shadow: 0 1px 1.8px rgb(0 0 0 / 20%);
 }
 
 // Primary button (e.g. submit)
@@ -421,7 +421,7 @@ textarea.form-control {
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1.8px);
     background: var(--primary-hover-gradient);
 }
 
@@ -462,7 +462,7 @@ textarea.form-control {
 }
 
 .btn-secondary:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1.8px);
     background: linear-gradient(135deg, #7a8db0 0%, #5a6268 100%);
 }
 
@@ -470,11 +470,11 @@ textarea.form-control {
 .btn-danger {
     color: white;
     background: linear-gradient(135deg, #fc8181 0%, #f56565 25%, #e53e3e 50%, #c53030 75%, #9b2c2c 100%);
-    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+    text-shadow: 0 1px 1.8px rgb(0 0 0 / 20%);
 }
 
 .btn-danger:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1.8px);
     background: linear-gradient(135deg, #f56565 0%, #e53e3e 25%, #c53030 50%, #9b2c2c 75%, #742a2a 100%);
 }
 
@@ -493,7 +493,7 @@ textarea.form-control {
     transition: all 0.2s ease;
     letter-spacing: 0.025em;
     text-transform: uppercase;
-    border-radius: 8px;
+    border-radius: 7.2px;
 }
 
 .badge:hover {
@@ -546,7 +546,7 @@ textarea.form-control {
 .badge-group {
     display: flex;
     flex-wrap: wrap;
-    row-gap: 5px;
+    row-gap: 4.5px;
 }
 
 // Make badges truncate on smaller screens
@@ -554,7 +554,7 @@ textarea.form-control {
     .badge {
         display: inline-block;
         overflow: hidden;
-        max-width: 200px;
+        max-width: 180px;
         white-space: nowrap;
         text-overflow: ellipsis;
     }
@@ -562,7 +562,7 @@ textarea.form-control {
 
 @media (width <= $mobile-breakpoint) {
     .badge {
-        max-width: 120px;
+        max-width: 108px;
     }
 }
 
@@ -571,9 +571,9 @@ textarea.form-control {
 .form-check-input {
     width: 1.2rem;
     height: 1.2rem;
-    margin-right: 10px !important;
+    margin-right: 9px !important;
     margin-left: 0 !important;
-    padding: 2px !important;
+    padding: 1.8px !important;
     border: 2px solid var(--bs-border-color) !important;
     outline-offset: 2px;
     background: var(--input-background-color);
@@ -611,9 +611,9 @@ textarea.form-control {
 .form-switch .form-check-input::before {
     position: absolute;
     top: 50%;
-    left: 2px;
-    width: 15px;
-    height: 15px;
+    left: 1.8px;
+    width: 13.5px;
+    height: 13.5px;
     content: "";
     transition: var(--transition);
     transform: translateY(-50%);
@@ -626,7 +626,7 @@ textarea.form-control {
 }
 
 .form-switch .form-check-input:checked::before {
-    left: calc(100% - 17px);
+    left: calc(100% - 15.3px);
 }
 
 /* ----------------------------------------------------- SPINNER ---------------------------------------------------- */
@@ -649,9 +649,9 @@ textarea.form-control {
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    padding: 10px 16.5px;
+    padding: 9px 14.9px;
     border: none;
-    border-radius: 8px;
+    border-radius: 7.2px;
     background: none;
     color: #dc3545;
 }
@@ -660,17 +660,17 @@ textarea.form-control {
 /* ---------------------------------------------------- SCROLLBAR --------------------------------------------------- */
 
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 7.2px;
+    height: 7.2px;
 }
 
 ::-webkit-scrollbar-track {
-    border-radius: 4px;
+    border-radius: 3.6px;
     background: var(--bs-border-color);
 }
 
 ::-webkit-scrollbar-thumb {
-    border-radius: 4px;
+    border-radius: 3.6px;
     background: var(--primary-mid);
 }
 
@@ -692,7 +692,7 @@ textarea.form-control {
     transition: all 0.3s ease;
     color: var(--bs-body-color) !important;
     border: none;
-    border-radius: 12px;
+    border-radius: 10.8px;
     background: var(--bg-tertiary);
     box-shadow: none;
     background-color: var(--bs-border-color) !important;
@@ -709,7 +709,7 @@ textarea.form-control {
 }
 
 .accordion-button:not(.collapsed) {
-    border-radius: 12px 12px 0 0;
+    border-radius: 10.8px 10.8px 0 0;
 
     &::after {
         transform: rotate(0deg);
@@ -732,10 +732,10 @@ textarea.form-control {
 /* ------------------------------------------------- PROGRESS BAR -------------------------------------------------- */
 
 .progress {
-    height: 20px;
-    border-radius: 12px;
+    height: 18px;
+    border-radius: 10.8px;
     background: var(--bs-border-color-translucent);
-    box-shadow: inset 0 2px 4px rgb(0 0 0 / 8%);
+    box-shadow: inset 0 1.8px 3.6px rgb(0 0 0 / 8%);
 }
 
 .progress-bar {

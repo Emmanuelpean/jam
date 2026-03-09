@@ -52,7 +52,7 @@ export const RunHistoryChart = ({ serviceLogData, isRunning, loading = false }: 
 				{isRunning && <span className="live-indicator ms-2"></span>}
 			</h2>
 			{loading ? (
-				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "300px" }}>
+				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "270px" }}>
 					<div className="spinner-border text-primary" role="status">
 						<span className="visually-hidden">Loading...</span>
 					</div>

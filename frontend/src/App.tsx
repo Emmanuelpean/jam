@@ -1,5 +1,4 @@
 import React, { createContext, JSX, ReactNode, useEffect } from "react";
-import { Button } from "react-bootstrap";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
@@ -61,9 +60,9 @@ interface AppLayoutProps {
 }
 
 function AppLayout({ children }: AppLayoutProps): JSX.Element {
-	const { isLoading, loadingMessage, progress, hideLoading } = useLoading();
+	const { isLoading, loadingMessage, progress } = useLoading();
 	const location = useLocation();
-	const { currentUser, isAuthenticated, logout } = useAuth();
+	const { currentUser, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
 	useSwetrixPageViews();
 
@@ -110,7 +109,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 									</div>
 									<p className="mb-3">{loadingMessage}</p>
 									{progress !== undefined && (
-										<div className="progress" style={{ width: "350px" }}>
+										<div className="progress" style={{ width: "315px" }}>
 											<div
 												className="progress-bar progress-bar-striped progress-bar-animated"
 												role="progressbar"
