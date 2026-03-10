@@ -10,7 +10,7 @@ export const emailApi = {
 
 export const geolocationApi = {
 	get: async (location: string, token: string): Promise<GeoLocationData> => {
-		const response: ApiResponse<GeoLocationData> = await baseApi.post("geolocation", location, token);
+		const response: ApiResponse<GeoLocationData> = await baseApi.post("geolocation/", location, token);
 		return response.data;
 	},
 };
