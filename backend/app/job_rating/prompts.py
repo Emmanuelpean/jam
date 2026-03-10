@@ -264,5 +264,5 @@ I pay close attention to detail, making sure my work is precise, consistent, and
         interests,
     )
     job_prompt = create_job_only_prompt(JOB_ONLY_PROMPT_TEMPLATE_V2, title, company, description)
-    # print(openai_query(SYSTEM_PROMPT_V1, user_system_prompt + "\n" + job_prompt))
+    print(openai_query(SYSTEM_PROMPT_V1, user_system_prompt + "\n" + job_prompt))
     print(claude_query(user_system_prompt, job_prompt))
