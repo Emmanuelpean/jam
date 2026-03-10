@@ -70,6 +70,7 @@ const NumberSlider = ({ config, value, onChange, dataContext }: Props): JSX.Elem
 					value={currentMin}
 					onChange={handleMinChange}
 					className="filter-range-slider-input"
+					style={{ zIndex: currentMax >= rangeMax ? 1 : undefined }}
 				/>
 				<input
 					type="range"
