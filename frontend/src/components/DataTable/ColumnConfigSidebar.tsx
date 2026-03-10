@@ -180,13 +180,13 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 
 	return (
 		<>
-			<div className={`column-config-sidebar${isOpen ? " open" : ""}`}>
+			<div id="column-config-sidebar" className={`column-config-sidebar${isOpen ? " open" : ""}`}>
 				<div className="column-config-header">
 					<h6 className="mb-0">
 						<i className="bi bi-layout-three-columns me-2"></i>
 						Column Configuration
 					</h6>
-					<button type="button" className="btn-close" onClick={onClose} aria-label="Close"></button>
+					<button type="button" id="column-config-close-btn" className="btn-close" onClick={onClose} aria-label="Close"></button>
 				</div>
 				<div className="column-config-body">
 					<div className="column-config-section-label">
@@ -234,6 +234,7 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 							}}
 						/>
 						<Button
+							id="column-config-sort-direction-btn"
 							variant="outline-primary"
 							className="column-config-sort-btn"
 							onClick={() => handleSortDirectionChange(sortDirection === "asc" ? "desc" : "asc")}
@@ -245,7 +246,7 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 					</div>
 				</div>
 				<div className="column-config-footer">
-					<Button style={{ width: "100%" }} onClick={handleReset} disabled={saving || isDefault}>
+					<Button id="column-config-reset-btn" style={{ width: "100%" }} onClick={handleReset} disabled={saving || isDefault}>
 						<i className="bi bi-arrow-counterclockwise me-1"></i>
 						Reset to Defaults
 					</Button>

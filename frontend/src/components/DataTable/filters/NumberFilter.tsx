@@ -4,6 +4,7 @@ import { NullFilter, NumberFilterConfig, NumberFilterValue } from "../FilterType
 import "./NumberFilter.scss";
 
 interface Props {
+	columnKey?: string;
 	config: NumberFilterConfig;
 	value: NumberFilterValue;
 	onChange: (v: NumberFilterValue) => void;
@@ -17,7 +18,7 @@ function resolveMax(config: NumberFilterConfig, dataContext?: any): number {
 	return config.max;
 }
 
-const NumberSlider = ({ config, value, onChange, dataContext }: Props): JSX.Element => {
+const NumberSlider = ({ columnKey, config, value, onChange, dataContext }: Props): JSX.Element => {
 	const rangeMin = config.min;
 	const rangeMax = useMemo(() => resolveMax(config, dataContext), [config, dataContext]);
 	const step = config.step ?? 1;
@@ -90,12 +91,13 @@ const NumberSlider = ({ config, value, onChange, dataContext }: Props): JSX.Elem
 	);
 };
 
-const NumberInputs = ({ config, value, onChange }: Props): JSX.Element => {
+const NumberInputs = ({ columnKey, config, value, onChange }: Props): JSX.Element => {
 	const step = config.step ?? 1;
 
 	return (
 		<div className="filter-number-range">
 			<Form.Control
+				id={columnKey ? `filter-num-min-${columnKey}` : undefined}
 				type="number"
 				placeholder="Min"
 				step={step}
@@ -107,6 +109,7 @@ const NumberInputs = ({ config, value, onChange }: Props): JSX.Element => {
 			/>
 			<span className="filter-range-sep">–</span>
 			<Form.Control
+				id={columnKey ? `filter-num-max-${columnKey}` : undefined}
 				type="number"
 				placeholder="Max"
 				step={step}
@@ -126,7 +129,7 @@ const nullFilterOptions: { value: NullFilter; label: string }[] = [
 	{ value: "null", label: "Null" },
 ];
 
-const NumberFilter = ({ config, value, onChange, dataContext }: Props): JSX.Element => {
+const NumberFilter = ({ columnKey, config, value, onChange, dataContext }: Props): JSX.Element => {
 	const display = config.display ?? "input";
 	const currentNullFilter = value.nullFilter ?? "all";
 
@@ -134,7 +137,7 @@ const NumberFilter = ({ config, value, onChange, dataContext }: Props): JSX.Elem
 		onChange({ ...v, nullFilter: value.nullFilter });
 	};
 
-	const sliderProps = { config, value, onChange: handleRangeChange, dataContext };
+	const sliderProps = { columnKey, config, value, onChange: handleRangeChange, dataContext };
 
 	return (
 		<>
@@ -144,6 +147,7 @@ const NumberFilter = ({ config, value, onChange, dataContext }: Props): JSX.Elem
 					{nullFilterOptions.map((opt) => (
 						<button
 							key={opt.value}
+							id={columnKey ? `filter-null-${opt.value}-${columnKey}` : undefined}
 							type="button"
 							className={`filter-null-btn${currentNullFilter === opt.value ? " active" : ""}`}
 							onClick={() => onChange({ ...value, nullFilter: opt.value === "all" ? undefined : opt.value })}

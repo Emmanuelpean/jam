@@ -25,22 +25,23 @@ const FilterSection = ({ column, value, onChange, dataContext }: FilterSectionPr
 	const current = value ?? createEmptyFilter(config);
 
 	return (
-		<div className={`filter-section${active ? " filter-section--active" : ""}`}>
+		<div id={`filter-section-${column.key}`} className={`filter-section${active ? " filter-section--active" : ""}`}>
 			<label className="filter-section-label">
 				{column.label}
 				{active && <i className="bi bi-circle-fill filter-active-dot" />}
 			</label>
 			<div className="filter-section-body">
-				{config.type === "text" && <TextFilter value={current as any} onChange={onChange} />}
+				{config.type === "text" && <TextFilter columnKey={column.key} value={current as any} onChange={onChange} />}
 				{config.type === "select" && (
-					<SelectFilter config={config} value={current as any} onChange={onChange} />
+					<SelectFilter columnKey={column.key} config={config} value={current as any} onChange={onChange} />
 				)}
-				{config.type === "date" && <DateFilter config={config} value={current as any} onChange={onChange} />}
+				{config.type === "date" && <DateFilter columnKey={column.key} config={config} value={current as any} onChange={onChange} />}
 				{config.type === "number" && (
-					<NumberFilter config={config} value={current as any} onChange={onChange} dataContext={dataContext} />
+					<NumberFilter columnKey={column.key} config={config} value={current as any} onChange={onChange} dataContext={dataContext} />
 				)}
 				{config.type === "reference" && (
 					<ReferenceFilter
+						columnKey={column.key}
 						config={config}
 						value={current as any}
 						onChange={onChange}
@@ -78,14 +79,14 @@ const FilterSidebar = ({ isOpen, onClose, columns, filters, onFiltersChange }: F
 	};
 
 	return (
-		<div className={`filter-sidebar${isOpen ? " open" : ""}`}>
+		<div id="filter-sidebar" className={`filter-sidebar${isOpen ? " open" : ""}`}>
 			<div className="filter-sidebar-header">
 				<h6 className="mb-0">
 					<i className="bi bi-funnel me-2" />
 					Filters
 					{activeCount > 0 && <span className="filter-sidebar-count">{activeCount}</span>}
 				</h6>
-				<button type="button" className="btn-close" onClick={onClose} aria-label="Close" />
+				<button id="filter-close-btn" type="button" className="btn-close" onClick={onClose} aria-label="Close" />
 			</div>
 
 			<div className="filter-sidebar-body">
@@ -105,7 +106,7 @@ const FilterSidebar = ({ isOpen, onClose, columns, filters, onFiltersChange }: F
 			</div>
 
 			<div className="filter-sidebar-footer">
-				<Button style={{ width: "100%" }} onClick={() => onFiltersChange({})} disabled={activeCount === 0}>
+				<Button id="filter-clear-btn" style={{ width: "100%" }} onClick={() => onFiltersChange({})} disabled={activeCount === 0}>
 					<i className="bi bi-x-circle me-1" />
 					Clear all filters
 				</Button>

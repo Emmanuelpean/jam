@@ -3,12 +3,14 @@ import { Form } from "react-bootstrap";
 import { TextFilterValue } from "../FilterTypes";
 
 interface Props {
+	columnKey?: string;
 	value: TextFilterValue;
 	onChange: (v: TextFilterValue) => void;
 }
 
-const TextFilter = ({ value, onChange }: Props): JSX.Element => (
+const TextFilter = ({ columnKey, value, onChange }: Props): JSX.Element => (
 	<Form.Control
+		id={columnKey ? `filter-input-${columnKey}` : undefined}
 		type="text"
 		placeholder="Contains..."
 		value={value.value}

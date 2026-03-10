@@ -767,6 +767,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 						)}
 						{enableColumnConfig && !compact && (
 							<Button
+								id="column-config-toggle-btn"
 								variant={columnSidebarOpen ? "primary" : "outline-primary"}
 								onClick={() => { setColumnSidebarOpen(!columnSidebarOpen); setFilterSidebarOpen(false); }}
 								className={"config-btn"}
@@ -777,6 +778,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 						)}
 						{enableColumnConfig && !compact && (
 							<Button
+								id="filter-toggle-btn"
 								variant={filterSidebarOpen ? "primary" : "outline-primary"}
 								className={"config-btn"}
 								onClick={() => { setFilterSidebarOpen(!filterSidebarOpen); setColumnSidebarOpen(false); }}

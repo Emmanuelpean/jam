@@ -3,17 +3,19 @@ import Select from "react-select";
 import { SelectFilterConfig, SelectFilterValue } from "../FilterTypes";
 
 interface Props {
+	columnKey?: string;
 	config: SelectFilterConfig;
 	value: SelectFilterValue;
 	onChange: (v: SelectFilterValue) => void;
 }
 
-const SelectFilter = ({ config, value, onChange }: Props): JSX.Element => {
+const SelectFilter = ({ columnKey, config, value, onChange }: Props): JSX.Element => {
 	const options = config.options.map((opt) => ({ value: String(opt.value), label: opt.label }));
 	const selected = options.filter((o) => value.selected.includes(o.value));
 
 	return (
 		<Select
+			inputId={columnKey ? `filter-select-${columnKey}` : undefined}
 			isMulti
 			closeMenuOnSelect={false}
 			options={options}
