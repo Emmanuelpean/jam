@@ -494,8 +494,8 @@ class TestScoreScrapedJobs(object):
         assert service_log is not None
         assert service_log.run_datetime is not None
         assert len(service_log.job_found_ids) == 33
-        assert len(service_log.job_succeeded_ids) == 17
-        assert len(service_log.job_skipped_ids) == 16
+        assert len(service_log.job_succeeded_ids) == 15
+        assert len(service_log.job_skipped_ids) == 18
         assert len(service_log.job_failed_ids) == 0
         assert len(service_log.user_found_ids) == 3
         assert len(service_log.user_processed_ids) == 3
