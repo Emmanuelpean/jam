@@ -10,7 +10,7 @@ const ExtensionBanner: React.FC = () => {
 
 	const handleDismiss = () => {
 		setDismissed(true);
-		updateCurrentUser({ preferences: { extension_banner_dismissed: true } });
+		void updateCurrentUser({ preferences: { extension_banner_dismissed: true } });
 	};
 
 	return (
