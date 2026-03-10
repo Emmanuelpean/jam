@@ -84,7 +84,7 @@ overall_score:
 - If all dimensions are null, set overall_score to null
 
 Rules:
-- 0 = poor fit, null = insufficient information
+- 0 = poor fit, 10 excellent fit, null if the associated user qualification is not provided.
 - Consider must-haves, nice-to-haves, and transferable skills
 - Be objective and evidence-based
 - Do not invent or infer missing data
