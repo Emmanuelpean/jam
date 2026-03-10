@@ -50,7 +50,7 @@ function applyPreset(preset: DatePreset): DateFilterValue {
 
 const DateFilter = ({ config, value, onChange }: Props): JSX.Element => {
 	const presets = config.presets ?? DEFAULT_PRESETS;
-	const showCustomRange = value.preset === "custom" || value.preset === null;
+	const showCustomRange: boolean = value.preset === "custom";
 
 	return (
 		<div className="filter-date">
@@ -60,7 +60,11 @@ const DateFilter = ({ config, value, onChange }: Props): JSX.Element => {
 						key={p.key}
 						type="button"
 						className={`filter-date-preset-btn${value.preset === p.key ? " active" : ""}`}
-						onClick={() => onChange(applyPreset(p.key))}
+						onClick={() =>
+						value.preset === p.key
+							? onChange({ type: "date", preset: null, from: null, to: null })
+							: onChange(applyPreset(p.key))
+					}
 					>
 						{p.label}
 					</button>
@@ -72,18 +76,14 @@ const DateFilter = ({ config, value, onChange }: Props): JSX.Element => {
 					<Form.Control
 						type="date"
 						value={value.from ?? ""}
-						onChange={(e) =>
-							onChange({ ...value, preset: "custom", from: e.target.value || null })
-						}
+						onChange={(e) => onChange({ ...value, preset: "custom", from: e.target.value || null })}
 						className="form-control--sm"
 					/>
 					<span className="filter-range-sep">to</span>
 					<Form.Control
 						type="date"
 						value={value.to ?? ""}
-						onChange={(e) =>
-							onChange({ ...value, preset: "custom", to: e.target.value || null })
-						}
+						onChange={(e) => onChange({ ...value, preset: "custom", to: e.target.value || null })}
 						className="form-control--sm"
 					/>
 				</div>

@@ -768,7 +768,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 						{enableColumnConfig && !compact && (
 							<Button
 								variant={columnSidebarOpen ? "primary" : "outline-primary"}
-								onClick={() => setColumnSidebarOpen(!columnSidebarOpen)}
+								onClick={() => { setColumnSidebarOpen(!columnSidebarOpen); setFilterSidebarOpen(false); }}
 								className={"config-btn"}
 								data-sidebar-toggle="column"
 							>
@@ -779,7 +779,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 							<Button
 								variant={filterSidebarOpen ? "primary" : "outline-primary"}
 								className={"config-btn"}
-								onClick={() => setFilterSidebarOpen(!filterSidebarOpen)}
+								onClick={() => { setFilterSidebarOpen(!filterSidebarOpen); setColumnSidebarOpen(false); }}
 								data-sidebar-toggle="filter"
 							>
 								<i className="bi bi-funnel"></i>

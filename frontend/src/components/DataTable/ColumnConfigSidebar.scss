@@ -10,12 +10,17 @@
 	border-radius: 0.5rem;
 	transform: translateX(100%);
 	margin-right: -320px;
+	visibility: hidden;
 	transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
 		margin-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
 	&.open {
 		transform: translateX(0);
 		margin-right: 0;
+		visibility: visible;
+		transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+			margin-right 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+			visibility 0s;
 	}
 }
 
