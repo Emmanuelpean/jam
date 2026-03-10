@@ -100,7 +100,7 @@ export function isFilterActive(filter: FilterValue): boolean {
 		case "select":
 			return filter.selected.length > 0;
 		case "date":
-			return filter.from !== null || filter.to !== null;
+			return filter.preset !== null || filter.from !== null || filter.to !== null;
 		case "number":
 			return filter.min !== null || filter.max !== null || (!!filter.nullFilter && filter.nullFilter !== "all");
 		case "reference":
