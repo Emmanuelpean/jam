@@ -34,12 +34,13 @@ def claude_query(system_prompt: str, llm_prompt: str, max_tokens: int = 1024) ->
             system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}],
             messages=[
                 {"role": "user", "content": llm_prompt},
+                {"role": "assistant", "content": "{"},  # forces JSON-only output
             ],
             max_tokens=max_tokens,
             temperature=0.2,
         )
 
-        content = response.content[0].text
+        content = "{" + response.content[0].text
 
         if not content:
             raise ClaudeError("Empty response from Claude")

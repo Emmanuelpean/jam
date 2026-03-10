@@ -138,13 +138,14 @@ def create_system_prompt_with_profile(
     :param user_interests: User's interests description
     :return: System prompt string with candidate profile filled in."""
 
-    return prompt_template.format(
+    prompt = prompt_template.format(
         user_experience_or_not_provided=_or_not_provided(user_experience),
         user_education_or_not_provided=_or_not_provided(user_education),
         user_skills_or_not_provided=_or_not_provided(user_skills),
         user_qualities_or_not_provided=_or_not_provided(user_qualities),
         user_interests_or_not_provided=_or_not_provided(user_interests),
     )
+    return prompt.replace("{{", "{").replace("}}", "}")
 
 
 def create_job_only_prompt(
