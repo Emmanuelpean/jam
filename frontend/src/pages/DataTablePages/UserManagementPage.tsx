@@ -25,7 +25,7 @@ export const UserManagementPage: React.FC = () => {
 		tableColumns.emailColumn(),
 		tableColumns.lastLoginColumn(),
 		tableColumns.isAdminColumn(),
-		tableColumns.isActiveColumn(),
+		tableColumns.isEnabledColumn(),
 		tableColumns.toastActiveColumn(),
 		tableColumns.createdAtColumn(),
 	];

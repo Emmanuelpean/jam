@@ -870,11 +870,12 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 const EmailScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 	const [data, setData] = useState<ScrapedJobData[] | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
+	const [reloadTick, setReloadTick] = useState<number>(0);
 
 	useEffect(() => {
 		const fetchData = async (): Promise<void> => {
 			if (!param.token || !param.item.id) return;
-			setLoading(true);
+			if (data === null) setLoading(true);
 			try {
 				const response = await scrapedJobApi.getByEmailId(param.item.id, param.token);
 				setData(response.data);
@@ -887,7 +888,7 @@ const EmailScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 		};
 
 		fetchData().then();
-	}, [param.item.id, param.token]);
+	}, [param.item.id, param.token, reloadTick]);
 
 	if (loading) return <LoadingSpinner size={"sm"} />;
 	if (!data?.length) return null;
@@ -899,7 +900,13 @@ const EmailScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 			icon={getTableIcon("Job Alerts")}
 			helpText="Scraped jobs found in this email."
 		>
-			{(rows: ScrapedJobData[]) => <ScrapedJobsTableReadOnly data={rows} columns={param.columns} />}
+			{(rows: ScrapedJobData[]) => (
+				<ScrapedJobsTableReadOnly
+					data={rows}
+					columns={param.columns}
+					onSuccess={() => setReloadTick((t) => t + 1)}
+				/>
+			)}
 		</AccordionTable>
 	);
 };

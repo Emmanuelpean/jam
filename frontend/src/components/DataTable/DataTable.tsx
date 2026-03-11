@@ -54,6 +54,7 @@ export interface DataTableProps {
 	menuItems?: string[] | ((item: any) => string[]);
 	title?: string;
 	onTotalCountChange?: (count: number) => void;
+	onSuccess?: () => void;
 }
 
 export interface GenericTableProps {
@@ -71,6 +72,7 @@ export interface GenericTableProps {
 	columns?: TableColumn[];
 	initialSortConfig?: Partial<SortConfig>;
 	menuItems?: string[] | ((item: any) => string[]);
+	rowMode?: (item: any) => "default" | "import";
 
 	// Modal configuration
 	Modal: React.ComponentType<any>;
@@ -95,6 +97,7 @@ export interface GenericTableProps {
 	reloadTrigger?: number;
 	queryParams?: Record<string, string>;
 	onTotalCountChange?: (count: number) => void;
+	onSuccess?: () => void;
 }
 
 export interface DataTableHandle {
@@ -122,11 +125,13 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			initialData = {},
 			children,
 			menuItems,
+			rowMode,
 			toolbarAddon,
 			reloadTrigger,
 			queryParams,
 			defaultModalMode = "view",
 			onTotalCountChange,
+			onSuccess,
 		}: GenericTableProps,
 		ref
 	): JSX.Element => {
@@ -341,7 +346,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 				currentElement = currentElement.parentElement;
 			}
 
-			if (mode === "import") {
+			if ((rowMode ? rowMode(item) : mode) === "import") {
 				openImportModal(item);
 			} else {
 				if (defaultModalMode === "edit") {
@@ -375,12 +380,14 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 				fetchData().then((): null => null);
 			}
 			showToastSuccess("Job imported successfully.");
+			onSuccess?.();
 		};
 
 		const handleDeleteSuccess = (): void => {
 			if (isServerPagination) {
 				fetchData().then((): null => null);
 			}
+			onSuccess?.();
 		};
 
 		// Pagination calculations
