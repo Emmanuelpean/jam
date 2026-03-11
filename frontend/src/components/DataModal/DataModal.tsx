@@ -970,16 +970,18 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 						<Modal.Footer>
 							<div className="d-flex flex-column w-100 gap-2">
 								<div className="modal-buttons-container">
-									<ActionButton
-										id={getModalId() + "-delete-button"}
-										variant="danger"
-										onClick={handleDeleteClick}
-										className="me-auto"
-										defaultText="Delete"
-										defaultIcon="bi bi-trash"
-										disabled={deleteState.disabled}
-										tooltip={deleteState.message}
-									/>
+									{effectiveData?.is_active !== false && (
+										<ActionButton
+											id={getModalId() + "-delete-button"}
+											variant="danger"
+											onClick={handleDeleteClick}
+											className="me-auto"
+											defaultText="Delete"
+											defaultIcon="bi bi-trash"
+											disabled={deleteState.disabled}
+											tooltip={deleteState.message}
+										/>
+									)}
 									<ActionButton
 										id={getModalId() + "-import-button"}
 										type="submit"
