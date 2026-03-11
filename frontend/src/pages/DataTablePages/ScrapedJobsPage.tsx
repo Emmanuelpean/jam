@@ -10,6 +10,8 @@ export const ScrapedJobsPage = (): JSX.Element => {
 	const [activeTab, setActiveTab] = useState<ActiveTab>("alerts");
 	const [alertsCount, setAlertsCount] = useState<number>(0);
 	const [emailsCount, setEmailsCount] = useState<number>(0);
+	const [alertsReload, setAlertsReload] = useState<number>(0);
+	const [emailsReload, setEmailsReload] = useState<number>(0);
 
 	return (
 		<div className="scraped-jobs-page">
@@ -19,7 +21,7 @@ export const ScrapedJobsPage = (): JSX.Element => {
 					title="Job Alerts"
 					icon={getEntityIcon("scrapedJob")}
 					count={alertsCount}
-					onClick={(): void => setActiveTab("alerts")}
+					onClick={(): void => { setActiveTab("alerts"); setAlertsReload((n) => n + 1); }}
 					active={activeTab === "alerts"}
 				/>
 				<PageHeader
@@ -27,16 +29,16 @@ export const ScrapedJobsPage = (): JSX.Element => {
 					title="Job Emails"
 					icon={getEntityIcon("jobEmail")}
 					count={emailsCount}
-					onClick={(): void => setActiveTab("emails")}
+					onClick={(): void => { setActiveTab("emails"); setEmailsReload((n) => n + 1); }}
 					active={activeTab === "emails"}
 				/>
 			</div>
 
 			<div style={{ display: activeTab === "alerts" ? "block" : "none" }}>
-				<ScrapedJobsTable onTotalCountChange={setAlertsCount} />
+				<ScrapedJobsTable onTotalCountChange={setAlertsCount} reloadTrigger={alertsReload} />
 			</div>
 			<div style={{ display: activeTab === "emails" ? "block" : "none" }}>
-				<JobEmailTable onTotalCountChange={setEmailsCount} />
+				<JobEmailTable onTotalCountChange={setEmailsCount} reloadTrigger={emailsReload} />
 			</div>
 		</div>
 	);
