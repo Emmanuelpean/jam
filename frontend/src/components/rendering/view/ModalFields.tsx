@@ -547,4 +547,11 @@ export const modalViewFields = {
 		displayCondition: (item) => Array.isArray(item.jobs) && item.jobs.length > 0,
 		...overrides,
 	}),
+
+	scrapedJobEmails: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "emails",
+		render: (params: RenderParams) => renderFunctions.scrapedJobEmailTable(params),
+		displayCondition: (item) => Array.isArray(item.emails) && item.emails.length > 0,
+		...overrides,
+	}),
 };

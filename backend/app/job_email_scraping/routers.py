@@ -247,6 +247,29 @@ def get_scraped_job_count(
     return {"count": count}
 
 
+@job_alert_email_router.get("/by-scraped-job/{job_id}", response_model=list[schemas.JobEmailOut])
+def get_job_emails_by_scraped_job(
+    job_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get job emails associated with a specific scraped job for the current user.
+    :param job_id: ID of the scraped job
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: List of job emails linked to the scraped job"""
+
+    job = (
+        db.query(models.ScrapedJob)
+        .filter(models.ScrapedJob.id == job_id)
+        .filter(models.ScrapedJob.owner_id == current_user.id)
+        .first()
+    )
+    if not job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scraped job not found")
+    return job.emails
+
+
 @scraped_job_router.get("/by-email/{email_id}", response_model=list[schemas.ScrapedJobOut])
 def get_scraped_jobs_by_email(
     email_id: int,
