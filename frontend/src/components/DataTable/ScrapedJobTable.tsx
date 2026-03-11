@@ -12,6 +12,7 @@ import ScrapingFilterTable from "./ScrapingFilterTable";
 const ScrapedJobsTable: React.FC<DataTableProps> = ({
 	columns = [],
 	title = undefined,
+	onTotalCountChange,
 }: DataTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 	const { currentUser } = useAuth();
@@ -45,6 +46,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 			<DataTable
 				title={title}
 				entityType="scrapedJob"
+				onTotalCountChange={onTotalCountChange}
 				mode="import"
 				columns={defaultColumns}
 				initialSortConfig={{ key: "created_at", direction: "desc" }}

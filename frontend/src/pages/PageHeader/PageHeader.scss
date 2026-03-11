@@ -15,3 +15,21 @@
     font-size: 1.5rem;
     color: white;
 }
+
+.page-header-clickable {
+    cursor: pointer;
+
+    .card {
+        transition: box-shadow 0.15s ease, border-color 0.15s ease;
+        border: 2px solid transparent !important;
+    }
+
+    &:hover .card {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+        border-color: var(--primary-light) !important;
+    }
+
+    &.page-header-active .card {
+        border-color: var(--primary-mid) !important;
+    }
+}

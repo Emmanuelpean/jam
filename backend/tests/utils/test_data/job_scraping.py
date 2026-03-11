@@ -10,6 +10,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 1,
         "external_email_id": "linkedin_alert_001",
+        "alert_name": "Python Developer",
+        "job_found_n": 15,
         "subject": "10 new jobs matching Python Developer",
         "sender": "jobs-noreply@linkedin.com",
         "date_received": "2024-01-15 09:30:00",
@@ -36,6 +38,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 1,
         "external_email_id": "indeed_alert_001",
+        "alert_name": "Software Engineer",
+        "job_found_n": 15,
         "subject": "New job alerts for Software Engineer",
         "sender": "noreply@indeed.com",
         "date_received": "2024-01-16 14:45:00",
@@ -60,6 +64,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 1,
         "external_email_id": "linkedin_alert_002",
+        "alert_name": "Data Scientist",
+        "job_found_n": 15,
         "subject": "Data Scientist positions you might like",
         "sender": "jobs-noreply@linkedin.com",
         "date_received": "2024-01-17 11:20:00",
@@ -86,6 +92,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "indeed_alert_002",
+        "alert_name": "Weekly Digest",
+        "job_found_n": 2,
         "subject": "Your weekly job digest - 5 new matches",
         "sender": "alerts@indeed.com",
         "date_received": "2024-01-18 08:15:00",
@@ -116,6 +124,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 1,
         "external_email_id": "linkedin_alert_003",
+        "alert_name": "Similar Jobs",
+        "job_found_n": 17,
         "subject": "3 jobs similar to ones you've viewed",
         "sender": "jobs-noreply@linkedin.com",
         "date_received": "2024-01-19 16:10:00",
@@ -139,6 +149,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "indeed_alert_003",
+        "alert_name": "Frontend Developer",
+        "job_found_n": 2,
         "subject": "Frontend Developer jobs in your area",
         "sender": "job-alerts@indeed.co.uk",
         "date_received": "2024-01-20 12:30:00",
@@ -166,6 +178,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "linkedin_alert_004",
+        "alert_name": "Java Developer",
+        "job_found_n": 1,
         "subject": "Java Developer opportunities in your area",
         "sender": "jobs-noreply@linkedin.com",
         "date_received": "2024-02-01T08:30:00",
@@ -190,6 +204,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "totaljobs_alert_001",
+        "alert_name": "Mobile App Developer",
+        "job_found_n": 1,
         "subject": "Mobile App Developer jobs near you",
         "sender": "alerts@totaljobs.com",
         "date_received": "2024-02-03T12:15:00",
@@ -213,6 +229,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "reed_alert_001",
+        "alert_name": "AI & Machine Learning",
+        "job_found_n": 0,
         "subject": "AI & Machine Learning weekly digest",
         "sender": "noreply@reed.co.uk",
         "date_received": "2024-02-05T16:40:00",
@@ -237,6 +255,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "cvlibrary_alert_001",
+        "alert_name": "Sustainability & Green Tech",
+        "job_found_n": 0,
         "subject": "Sustainability & Green Tech jobs",
         "sender": "jobs@cv-library.co.uk",
         "date_received": "2024-02-07T09:20:00",
@@ -260,6 +280,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "jobsite_alert_001",
+        "alert_name": "Full Stack Developer",
+        "job_found_n": 0,
         "subject": "Full Stack Developer positions",
         "sender": "alerts@jobsite.co.uk",
         "date_received": "2024-02-09T14:30:00",
@@ -283,6 +305,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "indeed_alert_004",
+        "alert_name": "Software Engineer Daily",
+        "job_found_n": 0,
         "subject": "Software Engineer jobs - Daily alerts",
         "sender": "noreply@indeed.com",
         "date_received": "2024-02-11T07:45:00",

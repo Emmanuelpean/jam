@@ -38,6 +38,61 @@ job_alert_email_router = generate_data_table_crud_router(
 )
 
 
+@job_alert_email_router.get("/paged", response_model=schemas.PaginatedJobEmailResponse)
+def get_job_emails_paged(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+    page: int = 0,
+    page_size: int = 10,
+    sort_by: str = "date_received",
+    sort_direction: Literal["asc", "desc"] = "desc",
+    search: str | None = None,
+) -> dict:
+    """Retrieve paginated job alert emails for the current user.
+    :param db: Database session
+    :param current_user: Current authenticated user
+    :param page: Page number
+    :param page_size: Page size
+    :param sort_by: Sort key
+    :param sort_direction: Sort direction
+    :param search: Search term"""
+
+    query = db.query(models.JobEmail).filter(models.JobEmail.owner_id == current_user.id)
+
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                models.JobEmail.subject.ilike(search_term),
+                models.JobEmail.sender.ilike(search_term),
+                models.JobEmail.platform.ilike(search_term),
+                models.JobEmail.alert_name.ilike(search_term),
+            )
+        )
+
+    if hasattr(models.JobEmail, sort_by):
+        sort_column = getattr(models.JobEmail, sort_by)
+        if sort_direction == "desc":
+            query = query.order_by(desc(sort_column).nulls_last())
+        else:
+            query = query.order_by(asc(sort_column).nulls_last())
+    else:
+        query = query.order_by(desc(models.JobEmail.date_received).nulls_last())
+
+    total = query.count()
+    offset = page * page_size
+    total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+    results = query.offset(offset).limit(page_size).all()
+
+    return {
+        "items": results,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    }
+
+
 # ---------------------------------------------------- SCRAPED JOBS ----------------------------------------------------
 
 
@@ -190,6 +245,29 @@ def get_scraped_job_count(
         .count()
     )
     return {"count": count}
+
+
+@scraped_job_router.get("/by-email/{email_id}", response_model=list[schemas.ScrapedJobOut])
+def get_scraped_jobs_by_email(
+    email_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get scraped jobs associated with a specific job email for the current user.
+    :param email_id: ID of the job email
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: List of scraped jobs linked to the email"""
+
+    email = (
+        db.query(models.JobEmail)
+        .filter(models.JobEmail.id == email_id)
+        .filter(models.JobEmail.owner_id == current_user.id)
+        .first()
+    )
+    if not email:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job email not found")
+    return email.jobs
 
 
 @scraped_job_router.get("/filtered-by-filter/{filter_id}", response_model=list[schemas.ScrapedJobOut])

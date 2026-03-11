@@ -116,6 +116,16 @@ class PaginatedScrapedJobResponse(BaseModel):
     total_pages: int
 
 
+class PaginatedJobEmailResponse(BaseModel):
+    """Paginated Job Email response schema"""
+
+    items: list[JobEmailOut]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
 # ----------------------------------------------------- SERVICE LOG ----------------------------------------------------
 
 
