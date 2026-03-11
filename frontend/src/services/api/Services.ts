@@ -1,6 +1,7 @@
 import {
 	AiSystemPromptData,
 	ForwardingConfirmationLinkData,
+	JobEmailData,
 	JobRatingData,
 	JobRatingServiceLogData,
 	JobScrapingServiceLogData,
@@ -13,6 +14,7 @@ import { createCrudApi, CrudApi } from "./Crud";
 export interface ScrapedJobCrudApi extends CrudApi<ScrapedJobData> {
 	getCount: (token: string) => ApiResponsePromise<{ count: number }>;
 	getByFilterId: (filterId: number, token: string) => ApiResponsePromise<ScrapedJobData[]>;
+	getByEmailId: (emailId: number, token: string) => ApiResponsePromise<ScrapedJobData[]>;
 }
 
 export const scrapedJobApi: ScrapedJobCrudApi = {
@@ -20,6 +22,8 @@ export const scrapedJobApi: ScrapedJobCrudApi = {
 	getCount: (token: string): ApiResponsePromise<{ count: number }> => baseApi.get("scraped-jobs/count", token),
 	getByFilterId: (filterId: number, token: string): ApiResponsePromise<ScrapedJobData[]> =>
 		baseApi.get(`scraped-jobs/filtered-by-filter/${filterId}`, token),
+	getByEmailId: (emailId: number, token: string): ApiResponsePromise<ScrapedJobData[]> =>
+		baseApi.get(`scraped-jobs/by-email/${emailId}`, token),
 };
 
 // Job Rating APIs
@@ -129,6 +133,9 @@ export const jobRatingServiceRunnerApi: JobRatingServiceRunnerApi = {
 };
 
 export const aiSystemPromptsApi: CrudApi<AiSystemPromptData> = createCrudApi("ai-system-prompts");
+
+// Job Email API
+export const jobEmailApi: CrudApi<JobEmailData> = createCrudApi("job-alert-emails");
 
 // Forwarding Confirmation Link API
 export interface ForwardingConfirmationLinkApi {

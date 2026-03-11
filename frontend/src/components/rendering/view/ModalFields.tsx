@@ -506,4 +506,45 @@ export const modalViewFields = {
 		...overrides,
 		displayCondition: (item: any) => item.followup_snooze_datetime !== null,
 	}),
+
+	// --------------------------------------------------- JOB EMAIL --------------------------------------------------
+
+	emailSender: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "sender",
+		label: "From",
+		...overrides,
+	}),
+
+	emailAlertName: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "alert_name",
+		label: "Alert Name",
+		...overrides,
+	}),
+
+	emailJobFoundN: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "job_found_n",
+		label: "Jobs Found",
+		...overrides,
+	}),
+
+	emailDateReceived: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "date_received",
+		label: "Date Received",
+		render: (params: RenderParams) => renderFunctions._date(params, "date_received"),
+		...overrides,
+	}),
+
+	emailBody: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "body",
+		label: "Email Body",
+		render: (params: RenderParams) => renderFunctions.htmlBody(params, "body"),
+		...overrides,
+	}),
+
+	emailScrapedJobs: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "jobs",
+		render: (params: RenderParams) => renderFunctions.emailScrapedJobTable(params),
+		displayCondition: (item) => Array.isArray(item.jobs) && item.jobs.length > 0,
+		...overrides,
+	}),
 };

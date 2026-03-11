@@ -52,7 +52,8 @@ import {
 	LocationBadge,
 	PersonBadge,
 } from "./DataBadge";
-import { JobRatingData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
+import { JobEmailData, JobRatingData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
+import EmailBody from "./EmailBody";
 import { Currency } from "../../../services/schemas/Others";
 import { Accordion } from "../../Accordion/Accordion";
 import { HelpBubble } from "../../HelpBubble/HelpBubble";
@@ -151,6 +152,13 @@ export const renderFunctions = {
 
 	description: (param: RenderParams): ReactNode => {
 		return renderFunctions._longText(param, "description");
+	},
+
+	htmlBody: (param: RenderParams, key: string): ReactNode => {
+		const body: string | undefined | null = (param.item as JobEmailData)?.[key as keyof JobEmailData] as string;
+		if (!body) return null;
+		const isHtml = /<[a-z][\s\S]*>/i.test(body);
+		return isHtml ? <EmailBody html={body} /> : <p style={{ whiteSpace: "pre-line" }}>{body}</p>;
 	},
 
 	value: (param: RenderParams): ReactNode => {
@@ -718,6 +726,8 @@ export const renderFunctions = {
 	},
 
 	accordionScrapedJobTable: (param: RenderParams) => <AccordionScrapedJobTable param={param} />,
+
+	emailScrapedJobTable: (param: RenderParams) => <EmailScrapedJobTable param={param} />,
 };
 
 export const RenderViewFieldWithContext: React.FC<{
@@ -847,6 +857,43 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 			data={data}
 			icon={getTableIcon("Scraped Jobs")}
 			helpText="Scraped Jobs that were filtered by this filter."
+		>
+			{(rows: ScrapedJobData[]) => <ScrapedJobsTableReadOnly data={rows} columns={param.columns} />}
+		</AccordionTable>
+	);
+};
+
+const EmailScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) => {
+	const [data, setData] = useState<ScrapedJobData[] | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
+
+	useEffect(() => {
+		const fetchData = async (): Promise<void> => {
+			if (!param.token || !param.item.id) return;
+			setLoading(true);
+			try {
+				const response = await scrapedJobApi.getByEmailId(param.item.id, param.token);
+				setData(response.data);
+			} catch (error) {
+				console.error("Error fetching scraped jobs for email:", error);
+				setData([]);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchData().then();
+	}, [param.item.id, param.token]);
+
+	if (loading) return <LoadingSpinner size={"sm"} />;
+	if (!data?.length) return null;
+
+	return (
+		<AccordionTable
+			title="Scraped Jobs"
+			data={data}
+			icon={getTableIcon("Job Alerts")}
+			helpText="Scraped jobs found in this email."
 		>
 			{(rows: ScrapedJobData[]) => <ScrapedJobsTableReadOnly data={rows} columns={param.columns} />}
 		</AccordionTable>

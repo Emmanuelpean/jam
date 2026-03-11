@@ -53,6 +53,7 @@ export interface DataTableProps {
 	showAdd?: boolean;
 	menuItems?: string[] | ((item: any) => string[]);
 	title?: string;
+	onTotalCountChange?: (count: number) => void;
 }
 
 export interface GenericTableProps {
@@ -93,6 +94,7 @@ export interface GenericTableProps {
 	toolbarAddon?: React.ReactNode;
 	reloadTrigger?: number;
 	queryParams?: Record<string, string>;
+	onTotalCountChange?: (count: number) => void;
 }
 
 export interface DataTableHandle {
@@ -124,6 +126,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			reloadTrigger,
 			queryParams,
 			defaultModalMode = "view",
+			onTotalCountChange,
 		}: GenericTableProps,
 		ref
 	): JSX.Element => {
@@ -158,6 +161,10 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const [pageSize, setPageSize] = useState<number>(20);
 		const [totalCount, setTotalCount] = useState<number>(0);
 		const [showSpinner, setShowSpinner] = useState<boolean>(false);
+
+		useEffect(() => {
+			onTotalCountChange?.(totalCount);
+		}, [totalCount, onTotalCountChange]);
 		const followUpModalRef = useRef<FollowUpModalHandle>(null);
 
 		useEffect(() => {

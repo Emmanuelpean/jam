@@ -131,6 +131,21 @@ export interface ScrapingFilterData extends OwnedOut {
 	filtered_jobs: number[];
 }
 
+// ----------------------------------------------------- JOB EMAIL -----------------------------------------------------
+
+export interface JobEmailData extends OwnedOut {
+	external_email_id: string | null;
+	subject: string | null;
+	sender: string | null;
+	date_received: Date | string | null;
+	platform: string | null;
+	body: string | null;
+	service_log_id: number | null;
+	job_found_n: number;
+	alert_name: string | null;
+	jobs: number[];
+}
+
 // ------------------------------------------- FORWARDING CONFIRMATION LINK -------------------------------------------
 
 export interface ForwardingConfirmationLinkData extends OwnedOut {
