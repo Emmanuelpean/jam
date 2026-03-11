@@ -38,9 +38,10 @@ import {
 	sourceTypeOptions,
 	updateTypeOptions,
 } from "../form/FormOptions";
-import { scrapedJobApi } from "../../../services/api/Services";
+import { jobEmailApi, scrapedJobApi } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import ScrapedJobsTableReadOnly from "../../DataTable/ScrapedJobTableReadOnly";
+import JobEmailTableReadOnly from "../../DataTable/JobEmailTableReadOnly";
 import LoadingSpinner from "../../Spinner/Spinner";
 import {
 	AggregatorBadge,
@@ -732,6 +733,8 @@ export const renderFunctions = {
 	accordionScrapedJobTable: (param: RenderParams) => <AccordionScrapedJobTable param={param} />,
 
 	emailScrapedJobTable: (param: RenderParams) => <EmailScrapedJobTable param={param} />,
+
+	scrapedJobEmailTable: (param: RenderParams) => <ScrapedJobEmailTable param={param} />,
 };
 
 export const RenderViewFieldWithContext: React.FC<{
@@ -909,4 +912,31 @@ const EmailScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 			)}
 		</AccordionTable>
 	);
+};
+
+const ScrapedJobEmailTable: React.FC<{ param: RenderParams }> = ({ param }) => {
+	const [data, setData] = useState<JobEmailData[] | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
+
+	useEffect(() => {
+		const fetchData = async (): Promise<void> => {
+			if (!param.token || !param.item.id) return;
+			setLoading(true);
+			try {
+				const response = await jobEmailApi.getByScrapedJobId(param.item.id, param.token);
+				setData(response.data);
+			} catch (error) {
+				console.error("Error fetching emails for scraped job:", error);
+				setData([]);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchData().then();
+	}, [param.item.id, param.token]);
+
+	if (loading) return <LoadingSpinner size={"sm"} />;
+	if (!data?.length) return null;
+	return <JobEmailTableReadOnly data={data} />;
 };

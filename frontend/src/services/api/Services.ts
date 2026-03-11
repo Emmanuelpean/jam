@@ -135,7 +135,15 @@ export const jobRatingServiceRunnerApi: JobRatingServiceRunnerApi = {
 export const aiSystemPromptsApi: CrudApi<AiSystemPromptData> = createCrudApi("ai-system-prompts");
 
 // Job Email API
-export const jobEmailApi: CrudApi<JobEmailData> = createCrudApi("job-alert-emails");
+export interface JobEmailCrudApi extends CrudApi<JobEmailData> {
+	getByScrapedJobId: (jobId: number, token: string) => ApiResponsePromise<JobEmailData[]>;
+}
+
+export const jobEmailApi: JobEmailCrudApi = {
+	...createCrudApi("job-alert-emails"),
+	getByScrapedJobId: (jobId: number, token: string): ApiResponsePromise<JobEmailData[]> =>
+		baseApi.get(`job-alert-emails/by-scraped-job/${jobId}`, token),
+};
 
 // Forwarding Confirmation Link API
 export interface ForwardingConfirmationLinkApi {
