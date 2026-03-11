@@ -15,6 +15,7 @@ const ScrapedJobsTableReadOnly: React.FC<DataTableProps> = ({
 					tableColumns.scrapedCompanyColumn(),
 					tableColumns.scrapedLocationColumn(),
 					tableColumns.salaryRangeColumn(),
+					tableColumns.isImportedColumn(),
 					tableColumns.urlGenericColumn(),
 					tableColumns.platformColumn(),
 					tableColumns.createdAtColumn({ label: "Date Received" }),
@@ -24,6 +25,7 @@ const ScrapedJobsTableReadOnly: React.FC<DataTableProps> = ({
 		<>
 			<DataTable
 				entityType="scrapedJob"
+				mode="import"
 				columns={defaultColumns}
 				initialSortConfig={{ key: "created_at", direction: "desc" }}
 				Modal={ScrapedJobModal}
@@ -32,8 +34,7 @@ const ScrapedJobsTableReadOnly: React.FC<DataTableProps> = ({
 				compact={true}
 				showAdd={false}
 				showSearch={false}
-				menuItems={["view"]}
-				modalProps={{ canEdit: false }}
+				menuItems={["import"]}
 			/>
 		</>
 	);

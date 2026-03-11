@@ -316,6 +316,10 @@ export const renderFunctions = {
 		return getTrueFalseBadge(param.item?.is_active);
 	},
 
+	isImported: (param: RenderParams): ReactNode => {
+		return getTrueFalseBadge(param.item?.is_imported);
+	},
+
 	isRecruiter: (param: RenderParams): ReactNode => {
 		return getTrueFalseBadge(param.item?.is_recruiter);
 	},
