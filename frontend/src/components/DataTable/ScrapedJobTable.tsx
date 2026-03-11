@@ -13,6 +13,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 	columns = [],
 	title = undefined,
 	onTotalCountChange,
+	reloadTrigger,
 }: DataTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 	const { currentUser } = useAuth();
@@ -56,6 +57,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 				showAdd={false}
 				showSearch={true}
 				queryParams={queryParams}
+				reloadTrigger={reloadTrigger}
 				toolbarAddon={
 					<div style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.75rem" }}>
 						<Button

@@ -1,6 +1,7 @@
 import React, { forwardRef, JSX } from "react";
-import DataModal, { DataModalHandle, Fields, JamDataModalProps } from "./DataModal";
+import DataModal, { DataModalHandle, Fields, JamDataModalProps, SectionConfig } from "./DataModal";
 import { modalViewFields } from "../rendering/view/ModalFields";
+import { formFields } from "../rendering/form/FormRenders";
 
 export const JobEmailModal = forwardRef<DataModalHandle, JamDataModalProps>(
 	({ size = "lg", onDelete }: JamDataModalProps, ref): JSX.Element => {
@@ -9,7 +10,13 @@ export const JobEmailModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			[modalViewFields.emailSender(), modalViewFields.platform({ label: "Platform" })],
 			[modalViewFields.emailAlertName(), modalViewFields.emailJobFoundN()],
 			modalViewFields.emailDateReceived(),
-			modalViewFields.emailBody(),
+			{
+				type: "section",
+				key: "email-content",
+				title: "Email content",
+				icon: "bi-envelope-open",
+				fields: [modalViewFields.emailBody({ label: "" })],
+			} as SectionConfig,
 		];
 
 		return (

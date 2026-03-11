@@ -55,6 +55,7 @@ export interface DataTableProps {
 	title?: string;
 	onTotalCountChange?: (count: number) => void;
 	onSuccess?: () => void;
+	reloadTrigger?: number;
 }
 
 export interface GenericTableProps {
