@@ -229,6 +229,19 @@ class ScrapedJobRater:
             db.commit()
             return
 
+        # Ensure that the job has a description
+        if not scraped_job.description:
+            self.logger.info(f"Skipping job ID {scraped_job.id} as it has no description")
+            job_rating = models.JobRating(
+                is_skipped=True,
+                skip_reason="Job has no description",
+                **job_rating_kwargs,
+            )
+            db.add(job_rating)
+            service_log.job_skipped_ids = service_log.job_skipped_ids + [scraped_job.id]
+            db.commit()
+            return
+
         description, description_note = ensure_length_limit(
             "description", scraped_job.description, settings.max_scraping_description_length, self.logger
         )

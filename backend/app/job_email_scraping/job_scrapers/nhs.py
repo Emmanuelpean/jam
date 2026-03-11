@@ -67,6 +67,10 @@ class NhsJobScraper:
             description = [job.get("jobSummaryText"), job.get("mainDutiesText"), job.get("aboutUsText")]
             description = "\n\n".join([d for d in description if d])
 
+            # Raise an exception if planned downtime
+            if job.get("title") == "NHS Jobs: Planned downtime":
+                raise Exception("NHS Jobs: Planned downtime")
+
             processed_job_data.append(
                 JobResult(
                     company=job.get("employer") or None,
