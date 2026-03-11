@@ -238,6 +238,16 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	isImportedColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_imported",
+		label: "Imported",
+		sortable: true,
+		searchable: false,
+		type: "boolean",
+		render: renderFunctions.isImported,
+		...overrides,
+	}),
+
 	platformColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "platform",
 		label: "Platform",
