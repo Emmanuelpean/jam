@@ -4,7 +4,10 @@ import { modalViewFields } from "../rendering/view/ModalFields";
 import { formFields } from "../rendering/form/FormRenders";
 
 export const JobEmailModal = forwardRef<DataModalHandle, JamDataModalProps & { scrapedJobsReadOnly?: boolean }>(
-	({ size = "lg", onDelete, scrapedJobsReadOnly = false }: JamDataModalProps & { scrapedJobsReadOnly?: boolean }, ref): JSX.Element => {
+	(
+		{ size = "lg", onDelete, scrapedJobsReadOnly = false }: JamDataModalProps & { scrapedJobsReadOnly?: boolean },
+		ref
+	): JSX.Element => {
 		const viewFields: Fields = [
 			modalViewFields.title({ isTitle: true, key: "subject", label: undefined }),
 			[modalViewFields.emailSender(), modalViewFields.platform({ label: "Platform" })],
@@ -12,9 +15,22 @@ export const JobEmailModal = forwardRef<DataModalHandle, JamDataModalProps & { s
 			modalViewFields.emailDateReceived(),
 			{
 				type: "section",
+				key: "scraped-jobs",
+				title: "Scraped Jobs",
+				icon: "bi-briefcase",
+				defaultExpanded: false,
+				fields: [
+					scrapedJobsReadOnly
+						? modalViewFields.emailScrapedJobsReadOnly()
+						: modalViewFields.emailScrapedJobs(),
+				],
+			} as SectionConfig,
+			{
+				type: "section",
 				key: "email-content",
 				title: "Email content",
 				icon: "bi-envelope-open",
+				defaultExpanded: false,
 				fields: [modalViewFields.emailBody({ label: "" })],
 			} as SectionConfig,
 		];
@@ -28,7 +44,6 @@ export const JobEmailModal = forwardRef<DataModalHandle, JamDataModalProps & { s
 				onDelete={onDelete}
 				canEdit={false}
 				canDelete={false}
-				additionalFields={[scrapedJobsReadOnly ? modalViewFields.emailScrapedJobsReadOnly() : modalViewFields.emailScrapedJobs()]}
 			/>
 		);
 	}
