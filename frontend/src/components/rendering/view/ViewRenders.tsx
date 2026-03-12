@@ -429,6 +429,16 @@ export const renderFunctions = {
 		return <JobRatingCard jobRating={job_rating} />;
 	},
 
+	platform: (param: RenderParams): ReactNode => {
+		const names: Record<string, string> = {
+			linkedin: "LinkedIn",
+			nhs: "NHS Jobs",
+			indeed: "Indeed",
+			veganjobs: "VeganJobs",
+		};
+		return names[param.item?.platform] || param.item?.platform;
+	},
+
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
 
 	_interviewCount: (param: RenderParams, key: keyof InterviewData): number => {
