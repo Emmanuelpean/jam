@@ -1,7 +1,7 @@
 """Settings router module."""
 
 from app.core import models, schemas
-from app.routers import generate_data_table_crud_router
+from app.routers.utility import generate_data_table_crud_router
 
 # Settings router
 settings_router = generate_data_table_crud_router(

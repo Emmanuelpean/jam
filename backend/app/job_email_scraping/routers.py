@@ -12,20 +12,13 @@ from sqlalchemy.orm import Session, joinedload
 from starlette import status
 from starlette.requests import Request
 
-from app import models as models
+from app import models
 from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.job_email_scraping import schemas
 from app.job_email_scraping.email_scraper import job_scraping_service_runner, SERVICE_NAME
-from app.job_email_scraping.job_scrapers.indeed import IndeedBrightdataJobScraper
-from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
-from app.job_email_scraping.job_scrapers.nhs import NhsJobScraper
-from app.job_email_scraping.job_scrapers.veganjobs import VeganJobsJobScraper
 from app.routers import generate_data_table_crud_router, filter_query, NOT_ALLOWED_EXCEPTION
 from app.service_runner import routers
-
-# --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
-
 
 # GET endpoint for admin user to get all job alert emails
 job_alert_email_router = generate_data_table_crud_router(
@@ -375,78 +368,6 @@ def get_latest(
     :return: Latest service log entry"""
 
     return routers.get_latest(current_user, db, models.JobEmailScrapingServiceLog)
-
-
-# ------------------------------------------------------ SCRAPING ------------------------------------------------------
-
-
-scraper_router = APIRouter(prefix="/scraper", tags=["scraper"])
-
-
-@scraper_router.get("/linkedin/{external_job_id}")
-def scrape_job(
-    external_job_id: str,
-    current_user: models.User = Depends(get_current_user),
-):
-    """Trigger scraping of a job posting from LinkedIn by job ID.
-    :param external_job_id: LinkedIn job ID to scrape
-    :param current_user: Current authenticated user"""
-
-    if not current_user.toast_active:
-        raise NOT_ALLOWED_EXCEPTION
-
-    scraper = LinkedinBrightdataJobScraper(external_job_id)
-    return scraper.scrape_job()[0]
-
-
-@scraper_router.get("/indeed/{external_job_id}")
-def scrape_job(
-    external_job_id: str,
-    current_user: models.User = Depends(get_current_user),
-):
-    """Trigger scraping of a job posting from Indeed by job ID.
-    :param external_job_id: Indeed job ID to scrape
-    :param current_user: Current authenticated user"""
-
-    if not current_user.toast_active:
-        raise NOT_ALLOWED_EXCEPTION
-
-    scraper = IndeedBrightdataJobScraper(external_job_id)
-    return scraper.scrape_job()[0]
-
-
-@scraper_router.get("/veganjobs/{external_job_id}")
-def scrape_job(
-    external_job_id: str,
-    current_user: models.User = Depends(get_current_user),
-):
-    """Trigger scraping of a job posting from Vegan Jobs by job ID.
-    :param external_job_id: LinkedIn job ID to scrape
-    :param current_user: Current authenticated user
-    :return: Success message or error"""
-
-    if not current_user.toast_active:
-        raise NOT_ALLOWED_EXCEPTION
-
-    scraper = VeganJobsJobScraper(external_job_id)
-    return scraper.scrape_job()[0]
-
-
-@scraper_router.get("/nhs/{external_job_id}")
-def scrape_job(
-    external_job_id: str,
-    current_user: models.User = Depends(get_current_user),
-):
-    """Trigger scraping of a job posting from the NHS website by job ID.
-    :param external_job_id: LinkedIn job ID to scrape
-    :param current_user: Current authenticated user
-    :return: Success message or error"""
-
-    if not current_user.toast_active:
-        raise NOT_ALLOWED_EXCEPTION
-
-    scraper = NhsJobScraper(external_job_id)
-    return scraper.scrape_job()[0]
 
 
 # ------------------------------------------------ EMAIL SCRAPER SERVICE -----------------------------------------------
