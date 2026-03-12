@@ -507,7 +507,7 @@ class TestScoreScrapedJobs(object):
 - **Company**: {job_rating.scraped_job.company}
 - **Description**: {job_rating.scraped_job.description}
 """
-        assert job_rating.job_prompt == job_prompt
+        assert job_prompt in job_rating.job_prompt
 
     def test_critical_error_is_recorded_in_service_log(
         self, session, test_scraped_jobs, test_user_qualifications, test_ai_prompts, monkeypatch

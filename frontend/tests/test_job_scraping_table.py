@@ -291,7 +291,7 @@ class TestJobScrapingTable(BaseTest):
         self.scrapedJob_table_utils.table_row(scraped_job.id).click()
         modal = self.scrapedJob_modal_utils.wait_for_import_modal()
         expected = (
-            "Please note the following, during AI rating:\nDescription was truncated as it was too long "
+            "Notes:\nDescription was truncated as it was too long "
             "(5234 characters. Limit is 5000 characters)\nTitle was truncated as it was too long "
             "(5234 characters. Limit is 5000 characters)"
         )
