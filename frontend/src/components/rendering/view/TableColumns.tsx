@@ -264,7 +264,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
-		render: (params: RenderParams) => renderFunctions.capitalise(params, "platform"),
+		render: renderFunctions.platform,
 		...overrides,
 	}),
 

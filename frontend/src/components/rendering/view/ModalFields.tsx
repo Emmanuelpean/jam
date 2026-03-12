@@ -72,7 +72,7 @@ export const modalViewFields = {
 	platform: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "platform",
 		label: "Aggregator",
-		render: (params: RenderParams) => renderFunctions.capitalise(params, "platform"),
+		render: renderFunctions.platform,
 		...overrides,
 	}),
 
