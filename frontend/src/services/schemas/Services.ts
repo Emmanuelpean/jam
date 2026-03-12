@@ -68,8 +68,10 @@ export interface ScrapedJobData extends OwnedOut {
 	is_processed: boolean;
 	is_skipped: boolean;
 	skip_reason: string | null;
-	scrape_error: string;
+	scrape_error: Array<{ datetime: string; error: string }>;
 	scrape_datetime: Date | string;
+	retry_count: number;
+	next_retry_at: string | null;
 	is_active: boolean;
 	is_imported: boolean;
 	title: string | null;

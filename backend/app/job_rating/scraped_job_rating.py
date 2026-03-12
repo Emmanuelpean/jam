@@ -5,8 +5,7 @@ import traceback
 
 from sqlalchemy.orm import Session
 
-from app import models as models
-from app import utils
+from app import models, utils
 from app.config import settings
 from app.database import get_db
 from app.job_rating.claude import MODEL as CLAUDE_MODEL, claude_query

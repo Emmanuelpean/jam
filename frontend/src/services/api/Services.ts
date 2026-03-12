@@ -12,14 +12,12 @@ import { createCrudApi, CrudApi } from "./Crud";
 
 // Scraped Job API
 export interface ScrapedJobCrudApi extends CrudApi<ScrapedJobData> {
-	getCount: (token: string) => ApiResponsePromise<{ count: number }>;
 	getByFilterId: (filterId: number, token: string) => ApiResponsePromise<ScrapedJobData[]>;
 	getByEmailId: (emailId: number, token: string) => ApiResponsePromise<ScrapedJobData[]>;
 }
 
 export const scrapedJobApi: ScrapedJobCrudApi = {
 	...createCrudApi("scraped-jobs"),
-	getCount: (token: string): ApiResponsePromise<{ count: number }> => baseApi.get("scraped-jobs/count", token),
 	getByFilterId: (filterId: number, token: string): ApiResponsePromise<ScrapedJobData[]> =>
 		baseApi.get(`scraped-jobs/filtered-by-filter/${filterId}`, token),
 	getByEmailId: (emailId: number, token: string): ApiResponsePromise<ScrapedJobData[]> =>

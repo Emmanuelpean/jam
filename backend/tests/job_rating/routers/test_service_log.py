@@ -5,24 +5,6 @@ import datetime as dt
 import pytest
 from starlette import status
 
-from app.job_rating import schemas
-from tests.conftest import CRUDTestBase
-
-
-# ----------------------------------------------------- JOB RATINGS ----------------------------------------------------
-
-
-class TestJobRatingCRUDAdminUser(CRUDTestBase):
-
-    endpoint = "/job-ratings"
-    out_schema = schemas.JobRatingOut
-    test_data_ref = "test_job_ratings"
-    actions_to_test = ["get_all"]
-    admin_only = True
-
-
-# ---------------------------------------------- JOB RATING SERVICE LOGS -----------------------------------------------
-
 
 class TestServiceLog:
     """Test suite for log endpoints"""

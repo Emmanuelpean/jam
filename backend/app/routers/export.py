@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 from app import database, models
 from app.core import oauth2
 
-router = APIRouter(prefix="/export", tags=["export"])
+export_router = APIRouter(prefix="/export", tags=["export"])
 
 
 JOB_FIELDS = {
@@ -127,7 +127,7 @@ def get_model_rows(
     return [getattr(instance, field) for field in fields]
 
 
-@router.get("/")
+@export_router.get("/")
 def export_all(
     db=Depends(database.get_db),
     current_user=Depends(oauth2.get_current_user),

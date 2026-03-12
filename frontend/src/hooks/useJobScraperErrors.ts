@@ -67,8 +67,8 @@ export const useJobScraperErrors = (
 
 				const errorCounts: Record<string, ErrorCount> = {};
 				scraped_jobs.data.forEach((job: ScrapedJobData): void => {
-					if (job.is_failed && job.scrape_error) {
-						const errorMsg: string = job.scrape_error.trim();
+					if (job.is_failed && job.scrape_error.length > 0) {
+						const errorMsg: string = job.scrape_error[job.scrape_error.length - 1]!.error.trim();
 						if (!errorCounts[errorMsg]) {
 							errorCounts[errorMsg] = { count: 0, jobs: [] };
 						}

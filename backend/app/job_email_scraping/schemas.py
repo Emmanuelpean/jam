@@ -61,7 +61,7 @@ class ScrapedJob(BaseModel):
     is_scraped: bool = False
     is_failed: bool = False
     scrape_datetime: datetime | None = None
-    scrape_error: str | None = None
+    scrape_error: list[dict] = []
     is_active: bool = True
     is_imported: bool = False
     is_skipped: bool = False

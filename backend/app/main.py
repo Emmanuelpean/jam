@@ -7,22 +7,17 @@ from fastapi import FastAPI, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import database
+from app import routers as app_routers
 from app.config import settings
-from app.core.routers import auth as auth_routers
-from app.core.routers import settings as settings_routers
-from app.core.routers import user as user_routers
+from app.core import routers as core_routers
 from app.data_tables import routers as data_table_routers
-from app.demo.router import demo_router
+from app.demo import routers as demo_routers
 from app.demo.setup import setup_demo_schema
-from app.emails.routers import templates as email_template_router
-from app.emails.routers import tests as email_test_router
-from app.job_email_scraping import routers as job_scraping_routers
-from app.job_rating import routers as job_rating_routers
-from app.payments import routers as payment_router
-from app.payments import test_routers as payment_test_routers
-from app.routers import export as export_routers
-from app.routers import others as other_routers
+from app.emails import routers as email_routers
 from app.geolocation import routers as geolocation_routers
+from app.job_email_scraping import routers as job_email_scraping_routers
+from app.job_rating import routers as job_rating_routers
+from app.payments import routers as payment_routers
 
 
 @asynccontextmanager
@@ -87,54 +82,53 @@ app.include_router(data_table_routers.job_application_update_router)
 app.include_router(data_table_routers.speculative_application_update_router)
 
 # Job Scraping routers
-app.include_router(job_scraping_routers.scraped_job_router)
-app.include_router(job_scraping_routers.job_alert_email_router)
-app.include_router(job_scraping_routers.job_scraping_service_log_router)
-app.include_router(job_scraping_routers.scraper_router)
-app.include_router(job_scraping_routers.email_scraper_service_router)
-app.include_router(job_scraping_routers.scraping_filter_router)
-app.include_router(job_scraping_routers.forwarding_confirmation_router)
+app.include_router(job_email_scraping_routers.scraped_job_router)
+app.include_router(job_email_scraping_routers.job_alert_email_router)
+app.include_router(job_email_scraping_routers.job_scraping_service_log_router)
+app.include_router(job_email_scraping_routers.email_scraper_service_router)
+app.include_router(job_email_scraping_routers.scraping_filter_router)
+app.include_router(job_email_scraping_routers.forwarding_confirmation_router)
 
 # Job Rating routers
-app.include_router(job_rating_routers.ai_system_prompt_router)
+app.include_router(job_rating_routers.llm_system_prompt_router)
 app.include_router(job_rating_routers.job_rating_router)
 app.include_router(job_rating_routers.job_rating_service_log_router)
 app.include_router(job_rating_routers.job_rating_service_router)
 
 # User routers
-app.include_router(user_routers.user_router)
-app.include_router(user_routers.current_user_router)
-app.include_router(user_routers.user_qualification_router)
+app.include_router(core_routers.user_router)
+app.include_router(core_routers.current_user_router)
+app.include_router(core_routers.user_qualification_router)
 
 # Auth routers
-app.include_router(auth_routers.login_router)
-app.include_router(auth_routers.register_router)
-app.include_router(auth_routers.password_router)
+app.include_router(core_routers.login_router)
+app.include_router(core_routers.register_router)
+app.include_router(core_routers.password_router)
 
 # Export router
-app.include_router(export_routers.router)
+app.include_router(app_routers.export_router)
 
 # Settings router
-app.include_router(settings_routers.settings_router)
+app.include_router(core_routers.settings_router)
 
 # Email admin
-app.include_router(email_template_router.router)
+app.include_router(email_routers.email_template_router)
 
 # Others
-app.include_router(other_routers.other_router)
-app.include_router(other_routers.config_router)
+app.include_router(app_routers.other_router)
+app.include_router(app_routers.config_router)
 app.include_router(geolocation_routers.router)
 
 # Demo
-app.include_router(demo_router)
+app.include_router(demo_routers.demo_router)
 
 # Stripe
-app.include_router(payment_router.payment_router)
+app.include_router(payment_routers.payment_router)
 
 # Testing
 if settings.test_mode:
-    app.include_router(email_test_router.router)
-    app.include_router(payment_test_routers.test_router)
+    app.include_router(email_routers.email_test_router)
+    app.include_router(payment_routers.payment_test_router)
 
 
 @app.get("/")

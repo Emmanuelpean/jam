@@ -202,14 +202,22 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			};
 
 			// Scraped Job Status
-			if (!data?.is_processed) {
+			if (!data?.is_processed && !data?.scrape_error.length) {
 				result.push({
 					key: "scraping_not_processed",
 					message: "This job has yet to be processed. Please come back soon.",
 				});
 			}
+			if (!data?.is_processed && data?.scrape_error.length) {
+				const retryAt = data?.next_retry_at ? new Date(data.next_retry_at).toLocaleString() : null;
+				result.push({
+					key: "scraping_retry_pending",
+					message: `Scraping failed (attempt ${data.retry_count}/3). It will be attempted again${retryAt ? ` on ${retryAt}` : " soon"}.`,
+					variant: "warning",
+				});
+			}
 			if (data?.is_failed) {
-				const reportLink = createReportLink("Scraped Job Error Report", data?.scrape_error);
+				const reportLink = createReportLink("Scraped Job Error Report", data?.scrape_error.map((e) => e.error).join("\n\n---\n\n") || null);
 				result.push({
 					key: "scraping_failed",
 					message: (

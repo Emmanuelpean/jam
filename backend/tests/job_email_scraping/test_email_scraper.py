@@ -644,7 +644,7 @@ class TestScrapeJobs:
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
         for job in scraped_jobs:
             assert job.is_scraped
-            assert job.scrape_error is None
+            assert job.scrape_error == []
 
         # Verify the platform stats
         platform_stat = (
@@ -669,7 +669,7 @@ class TestScrapeJobs:
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
         for job in scraped_jobs:
             assert job.is_scraped
-            assert job.scrape_error is None
+            assert job.scrape_error == []
 
         # Verify the platform stats
         platform_stat = (
@@ -694,7 +694,7 @@ class TestScrapeJobs:
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
         for job in scraped_jobs:
             assert job.is_scraped
-            assert job.scrape_error is None
+            assert job.scrape_error == []
 
         # Verify the platform stats
         platform_stat = (
@@ -717,7 +717,7 @@ class TestScrapeJobs:
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
         for job in scraped_jobs:
             assert job.is_scraped
-            assert job.scrape_error is None
+            assert job.scrape_error == []
 
         # Verify the platform stats
         platform_stat = (
@@ -790,7 +790,7 @@ class TestScrapeJobs:
                 assert job.exclusion_filter_id == filter_entry.id
             else:
                 assert job.is_scraped
-                assert job.scrape_error is None
+                assert job.scrape_error == []
 
         # Verify the platform stats
         platform_stat = (

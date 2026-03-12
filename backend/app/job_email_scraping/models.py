@@ -16,7 +16,7 @@ from sqlalchemy import (
     UniqueConstraint,
     CheckConstraint,
 )
-from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
+from sqlalchemy.dialects.postgresql import JSONB, ARRAY as PG_ARRAY
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
@@ -92,7 +92,7 @@ class ScrapedJob(Owned, Base):
     - `is_scraped` (bool): Indicates whether the job has been successfully scraped.
     - `is_failed` (bool): Indicates whether the job scraping failed.
     - `is_skipped` (bool): Indicates whether the job scraping was skipped (e.g., quota exceeded).
-    - `scrape_error` (str, optional): Error message if the job scraping failed.
+    - `scrape_error` (list of dict): List of error entries, each with 'datetime' and 'error' keys, recorded on each failed scrape attempt.
     - `skip_reason` (str, optional): Reason why the job scraping was skipped.
     - `scrape_datetime` (datetime, optional): Date and time when the job was scraped.
     - `is_active` (bool): Indicates whether the job is active
@@ -133,12 +133,14 @@ class ScrapedJob(Owned, Base):
     is_processed = Column(Boolean, nullable=False, server_default=expression.false())
     is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
     is_failed = Column(Boolean, nullable=False, server_default=expression.false())
-    scrape_error = Column(String, nullable=True)
+    scrape_error = Column(JSONB, server_default="[]", nullable=False)
     is_skipped = Column(Boolean, nullable=False, server_default=expression.false())
     skip_reason = Column(String, nullable=True)
     scrape_datetime = Column(TIMESTAMP(timezone=True), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
     is_imported = Column(Boolean, nullable=False, server_default=expression.false())
+    retry_count = Column(Integer, nullable=False, server_default="0")
+    next_retry_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     # Job data
     title = Column(String, nullable=True)
