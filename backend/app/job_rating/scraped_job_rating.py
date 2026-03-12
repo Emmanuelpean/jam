@@ -278,7 +278,7 @@ class ScrapedJobRater:
                 educational_score=score["educational_match"],
                 interest_score=score["interest_match"],
                 feedback=score["explanation"],
-                job_prompt=job_prompt,
+                job_prompt=combined_system_prompt + "\n\n" + job_prompt,
                 is_success=True,
                 **job_rating_kwargs,
             )
