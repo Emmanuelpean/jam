@@ -4,7 +4,12 @@ import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobEmailModal } from "../DataModal/JobEmailModal";
 import { renderFunctions, RenderParams } from "../rendering/view/ViewRenders";
 
-const JobEmailTable: React.FC<DataTableProps> = ({ columns = [], title = undefined, onTotalCountChange, reloadTrigger }: DataTableProps): JSX.Element => {
+const JobEmailTable: React.FC<DataTableProps> = ({
+	columns = [],
+	title = undefined,
+	onTotalCountChange,
+	reloadTrigger,
+}: DataTableProps): JSX.Element => {
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns
@@ -12,7 +17,13 @@ const JobEmailTable: React.FC<DataTableProps> = ({ columns = [], title = undefin
 					tableColumns.titleColumn({ key: "subject", label: "Subject" }),
 					{ key: "sender", label: "Sender", sortable: true, searchable: true, type: "text" } as TableColumn,
 					tableColumns.platformColumn(),
-					{ key: "alert_name", label: "Alert Name", sortable: true, searchable: true, type: "text" } as TableColumn,
+					{
+						key: "alert_name",
+						label: "Alert Name",
+						sortable: true,
+						searchable: true,
+						type: "text",
+					} as TableColumn,
 					{ key: "job_found_n", label: "Jobs Found", sortable: true, type: "number" } as TableColumn,
 					{
 						key: "date_received",
@@ -33,7 +44,7 @@ const JobEmailTable: React.FC<DataTableProps> = ({ columns = [], title = undefin
 			initialSortConfig={{ key: "date_received", direction: "desc" }}
 			Modal={JobEmailModal}
 			endpoint="job-alert-emails"
-			modalSize="lg"
+			modalSize="xl"
 			showAdd={false}
 			showSearch={true}
 			menuItems={["view"]}

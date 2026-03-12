@@ -380,6 +380,12 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	jobRatingSection: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "job_rating_section",
+		render: (params: RenderParams) => renderFunctions.jobRatingSection(params),
+		...overrides,
+	}),
+
 	// ----------------------------------------------------- TABLE -----------------------------------------------------
 
 	interviewTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({

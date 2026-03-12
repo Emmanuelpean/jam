@@ -50,7 +50,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				key: "rating",
 				title: "AI Rating",
 				icon: "bi-stars",
-				fields: [modalViewFields.jobRating()],
+				fields: [modalViewFields.jobRatingSection()],
 			} as SectionConfig,
 
 			{
@@ -168,12 +168,13 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				key: "emails",
 				title: "Job Alert Emails",
 				icon: "bi-envelope-open",
+				defaultExpanded: true,
 				fields: [modalViewFields.scrapedJobEmails()],
 			} as SectionConfig,
 		];
 
 		const viewFields: Fields = [
-			modalViewFields.jobRating(),
+			modalViewFields.jobRatingSection(),
 			modalViewFields.title({ isTitle: true }),
 			modalViewFields.description(),
 			[modalViewFields.company(), modalViewFields.location()],
@@ -224,57 +225,6 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				result.push({
 					key: "scraping_skipped",
 					message: "This job was not scraped due to the following reason: " + data?.skip_reason,
-				});
-			}
-
-			// Job rating
-			if (!data?.job_rating && data?.is_scraped && !data?.is_failed) {
-				result.push({
-					key: "no_rating",
-					message: "This job has yet to be rated. Please come back later.",
-					variant: "info",
-				});
-			}
-
-			if (!data?.job_rating?.is_success && data?.job_rating?.error) {
-				const reportLink: JSX.Element | null = createReportLink(
-					"Job Rating Error Report",
-					data?.job_rating?.error
-				);
-				result.push({
-					key: "no_rating",
-					message: (
-						<>
-							This job could not be rated due to an unexpected error.
-							{reportLink && <> You can {reportLink}.</>}
-						</>
-					),
-					variant: "warning",
-				});
-			}
-
-			if (data?.job_rating?.is_skipped) {
-				result.push({
-					key: "rating_skipped",
-					message: "This job was not rated due to the following reason: " + data?.job_rating?.skip_reason,
-					variant: "warning",
-				});
-			}
-
-			if (data?.job_rating?.notes.length) {
-				result.push({
-					key: "rating_notes",
-					message: (
-						<>
-							Please note the following, during AI rating:
-							<ul className="mb-0 mt-1">
-								{data.job_rating.notes.map((note: string, idx: number) => (
-									<li key={idx}>{note}</li>
-								))}
-							</ul>
-						</>
-					),
-					variant: "info",
 				});
 			}
 
