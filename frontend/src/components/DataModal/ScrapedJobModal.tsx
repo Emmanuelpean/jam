@@ -45,7 +45,14 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		};
 
 		const jobFormFields: Fields = [
-			modalViewFields.jobRating(),
+			{
+				type: "section",
+				key: "rating",
+				title: "AI Rating",
+				icon: "bi-stars",
+				fields: [modalViewFields.jobRating()],
+			} as SectionConfig,
+
 			{
 				type: "section",
 				key: "basic-info",

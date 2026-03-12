@@ -426,8 +426,6 @@ export const renderFunctions = {
 	jobRating: (param: RenderParams): ReactNode => {
 		const job_rating: JobRatingData | undefined | null = param.item?.job_rating;
 		if (!job_rating) return null;
-
-		// @ts-ignore
 		return <JobRatingCard jobRating={job_rating} />;
 	},
 
