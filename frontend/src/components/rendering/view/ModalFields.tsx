@@ -548,6 +548,13 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	emailScrapedJobsReadOnly: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "jobs",
+		render: (params: RenderParams) => renderFunctions.emailScrapedJobTableReadOnly(params),
+		displayCondition: (item) => Array.isArray(item.jobs) && item.jobs.length > 0,
+		...overrides,
+	}),
+
 	scrapedJobEmails: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "emails",
 		render: (params: RenderParams) => renderFunctions.scrapedJobEmailTable(params),
