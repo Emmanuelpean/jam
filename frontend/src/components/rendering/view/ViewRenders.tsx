@@ -897,21 +897,12 @@ const EmailScrapedJobTable: React.FC<{ param: RenderParams; viewOnly?: boolean }
 	if (!data?.length) return null;
 
 	return (
-		<AccordionTable
-			title="Scraped Jobs"
+		<ScrapedJobsTableReadOnly
 			data={data}
-			icon={getTableIcon("Job Alerts")}
-			helpText="Scraped jobs found in this email."
-		>
-			{(rows: ScrapedJobData[]) => (
-				<ScrapedJobsTableReadOnly
-					data={rows}
-					columns={param.columns}
-					onSuccess={() => setReloadTick((t) => t + 1)}
-					viewOnly={viewOnly}
-				/>
-			)}
-		</AccordionTable>
+			columns={param.columns}
+			onSuccess={() => setReloadTick((t) => t + 1)}
+			viewOnly={viewOnly}
+		/>
 	);
 };
 
