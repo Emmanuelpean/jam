@@ -7,6 +7,7 @@ import { renderFunctions, RenderParams } from "../rendering/view/ViewRenders";
 const JobEmailTableReadOnly: React.FC<DataTableProps> = ({
 	data = [],
 	columns = [],
+	modalProps,
 }: DataTableProps): JSX.Element => {
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
@@ -37,6 +38,7 @@ const JobEmailTableReadOnly: React.FC<DataTableProps> = ({
 			showAdd={false}
 			showSearch={false}
 			menuItems={["view"]}
+			modalProps={modalProps}
 		/>
 	);
 };

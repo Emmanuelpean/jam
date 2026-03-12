@@ -158,7 +158,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			} as SectionConfig,
 			{
 				type: "section",
-				key: "details",
+				key: "emails",
 				title: "Job Alert Emails",
 				icon: "bi-envelope-open",
 				fields: [modalViewFields.scrapedJobEmails()],

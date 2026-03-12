@@ -734,6 +734,8 @@ export const renderFunctions = {
 
 	emailScrapedJobTable: (param: RenderParams) => <EmailScrapedJobTable param={param} />,
 
+	emailScrapedJobTableReadOnly: (param: RenderParams) => <EmailScrapedJobTable param={param} viewOnly={true} />,
+
 	scrapedJobEmailTable: (param: RenderParams) => <ScrapedJobEmailTable param={param} />,
 };
 
@@ -870,7 +872,7 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 	);
 };
 
-const EmailScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) => {
+const EmailScrapedJobTable: React.FC<{ param: RenderParams; viewOnly?: boolean }> = ({ param, viewOnly = false }) => {
 	const [data, setData] = useState<ScrapedJobData[] | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [reloadTick, setReloadTick] = useState<number>(0);
@@ -908,6 +910,7 @@ const EmailScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 					data={rows}
 					columns={param.columns}
 					onSuccess={() => setReloadTick((t) => t + 1)}
+					viewOnly={viewOnly}
 				/>
 			)}
 		</AccordionTable>
@@ -938,5 +941,5 @@ const ScrapedJobEmailTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 
 	if (loading) return <LoadingSpinner size={"sm"} />;
 	if (!data?.length) return null;
-	return <JobEmailTableReadOnly data={data} />;
+	return <JobEmailTableReadOnly data={data} modalProps={{ scrapedJobsReadOnly: true }} />;
 };
