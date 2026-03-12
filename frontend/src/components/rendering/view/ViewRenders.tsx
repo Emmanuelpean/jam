@@ -54,6 +54,7 @@ import {
 	PersonBadge,
 } from "./DataBadge";
 import { JobEmailData, JobRatingData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
+import JobRatingSection from "./JobRatingSection";
 import EmailBody from "./EmailBody";
 import { Currency } from "../../../services/schemas/Others";
 import { Accordion } from "../../Accordion/Accordion";
@@ -427,6 +428,10 @@ export const renderFunctions = {
 		const job_rating: JobRatingData | undefined | null = param.item?.job_rating;
 		if (!job_rating) return null;
 		return <JobRatingCard jobRating={job_rating} />;
+	},
+
+	jobRatingSection: (param: RenderParams): ReactNode => {
+		return <JobRatingSection scrapedJob={param.item} />;
 	},
 
 	platform: (param: RenderParams): ReactNode => {

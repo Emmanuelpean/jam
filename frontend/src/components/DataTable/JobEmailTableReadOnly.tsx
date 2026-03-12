@@ -16,7 +16,13 @@ const JobEmailTableReadOnly: React.FC<DataTableProps> = ({
 					tableColumns.titleColumn({ key: "subject", label: "Subject" }),
 					{ key: "sender", label: "Sender", sortable: true, searchable: true, type: "text" } as TableColumn,
 					tableColumns.platformColumn(),
-					{ key: "alert_name", label: "Alert Name", sortable: true, searchable: true, type: "text" } as TableColumn,
+					{
+						key: "alert_name",
+						label: "Alert Name",
+						sortable: true,
+						searchable: true,
+						type: "text",
+					} as TableColumn,
 					{
 						key: "date_received",
 						label: "Date Received",
@@ -33,7 +39,7 @@ const JobEmailTableReadOnly: React.FC<DataTableProps> = ({
 			initialSortConfig={{ key: "date_received", direction: "desc" }}
 			Modal={JobEmailModal}
 			data={data}
-			modalSize="lg"
+			modalSize="xl"
 			compact={true}
 			showAdd={false}
 			showSearch={false}

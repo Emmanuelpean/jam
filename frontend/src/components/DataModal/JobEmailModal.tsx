@@ -1,11 +1,10 @@
 import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, Fields, JamDataModalProps, SectionConfig } from "./DataModal";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { formFields } from "../rendering/form/FormRenders";
 
 export const JobEmailModal = forwardRef<DataModalHandle, JamDataModalProps & { scrapedJobsReadOnly?: boolean }>(
 	(
-		{ size = "lg", onDelete, scrapedJobsReadOnly = false }: JamDataModalProps & { scrapedJobsReadOnly?: boolean },
+		{ size = "xl", onDelete, scrapedJobsReadOnly = false }: JamDataModalProps & { scrapedJobsReadOnly?: boolean },
 		ref
 	): JSX.Element => {
 		const viewFields: Fields = [
