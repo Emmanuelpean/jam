@@ -51,6 +51,8 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				title: "AI Rating",
 				icon: "bi-stars",
 				fields: [modalViewFields.jobRatingSection()],
+				displayCondition: (data: any): boolean =>
+					!(data?.is_closed || (data?.deadline != null && data.deadline < new Date())),
 			} as SectionConfig,
 
 			{
@@ -217,7 +219,10 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				});
 			}
 			if (data?.is_failed) {
-				const reportLink = createReportLink("Scraped Job Error Report", data?.scrape_error.map((e) => e.error).join("\n\n---\n\n") || null);
+				const reportLink = createReportLink(
+					"Scraped Job Error Report",
+					data?.scrape_error.map((e) => e.error).join("\n\n---\n\n") || null
+				);
 				result.push({
 					key: "scraping_failed",
 					message: (
@@ -233,6 +238,13 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				result.push({
 					key: "scraping_skipped",
 					message: "This job was not scraped due to the following reason: " + data?.skip_reason,
+				});
+			}
+			if (data?.is_closed || (data?.deadline != null && data.deadline < new Date())) {
+				result.push({
+					key: "job_closed",
+					message: "This job is now closed and you may not be able to apply to it.",
+					variant: "warning",
 				});
 			}
 

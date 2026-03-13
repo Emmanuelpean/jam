@@ -102,11 +102,15 @@ class BrightdataJobScraper(object):
         headers = {"Authorization": f"Bearer {self.api_key}"}
 
         data_resp = requests.get(snapshot_url, headers=headers, params=params)
+
+        # Handle data not ready
         attempted = 0
         while data_resp.status_code == 202 and attempted < 10:
             data_resp = requests.get(snapshot_url, headers=headers, params=params)
             attempted += 1
         json_data = data_resp.json()
+
+        # Handle other errors
         if data_resp.status_code != 200:
             raise Exception(f"Failed to get snapshot data: {data_resp.status_code} {data_resp.text}")
         if isinstance(json_data, list) and "error_code" in json_data[0]:

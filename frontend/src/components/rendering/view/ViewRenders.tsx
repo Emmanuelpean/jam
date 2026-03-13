@@ -26,7 +26,7 @@ import {
 	getTrueFalseBadge,
 	getUpdateTypeIcon,
 } from "./Icons";
-import { capitalise, ensureHttpPrefix } from "../../../utils/StringUtils";
+import { ensureHttpPrefix } from "../../../utils/StringUtils";
 import {
 	applicationStatusOptions,
 	appliedViaOptions,
@@ -414,14 +414,6 @@ export const renderFunctions = {
 		if (seconds) {
 			return <span className={"text-danger"}>{formatTimedelta(seconds)}</span>;
 		}
-	},
-
-	capitalise: (param: RenderParams, key: string): ReactNode => {
-		const text: string | undefined | null = param.item?.[key];
-		if (text) {
-			return capitalise(text);
-		}
-		return null;
 	},
 
 	jobRating: (param: RenderParams): ReactNode => {

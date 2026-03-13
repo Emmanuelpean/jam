@@ -16,7 +16,6 @@ class TestJobScrapingTable(BaseTest):
 
         request.getfixturevalue("test_job_scraping_service_logs")
         request.getfixturevalue("test_user_qualifications")
-        # request.getfixturevalue("test_job_ratings")
         self.login()
 
     def _make_scraped_job(self, **kwargs) -> models.ScrapedJob:
@@ -200,6 +199,17 @@ class TestJobScrapingTable(BaseTest):
         self.scrapedJob_table_utils.table_row(scraped_job.id).click()
         modal = self.scrapedJob_modal_utils.wait_for_import_modal()
         expected = "This job could not be scraped properly due to an unexpected error. You can report it here."
+        assert expected in modal.text
+
+    def test_scraped_job_closed(self) -> None:
+        """Test a scraped job that failed to be processed."""
+
+        scraped_job = self._make_scraped_job(title="Closed Test Job", is_closed=True)
+        self.driver.refresh()
+        self.show_job(scraped_job)
+        self.scrapedJob_table_utils.table_row(scraped_job.id).click()
+        modal = self.scrapedJob_modal_utils.wait_for_import_modal()
+        expected = "This job is now closed and you may not be able to apply to it."
         assert expected in modal.text
 
     # --------------------------------------------------- JOB RATING ---------------------------------------------------

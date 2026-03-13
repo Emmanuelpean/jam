@@ -97,6 +97,8 @@ class ScrapedJob(Owned, Base):
     - `scrape_datetime` (datetime, optional): Date and time when the job was scraped.
     - `is_active` (bool): Indicates whether the job is active
     - `is_imported` (bool): Indicates whether the job was imported into a job.
+    - `retry_count` (int): Number of times the job has been retried.
+    - `next_retry_at` (datetime, optional): Date and time when the next retry is scheduled.
 
     # Job data
     - `title` (str, optional): Title of the job.
@@ -113,6 +115,7 @@ class ScrapedJob(Owned, Base):
     - `location_country` (str, optional): Country of the job location.
     - `parsed_location` (str, optional): Parsed location of the job posting.
     - `attendance_type` (str, optional): Attendance type of the job (e.g., remote, on-site).
+    - `is_closed` (bool): Indicates whether the job is closed.
 
     Foreign keys:
     -------------
@@ -158,6 +161,7 @@ class ScrapedJob(Owned, Base):
     location_country = Column(String, nullable=True)
     parsed_location = Column(String, nullable=True)
     attendance_type = Column(String, nullable=True)
+    is_closed = Column(Boolean, nullable=False, default=expression.false())
 
     # Foreign keys
     service_log_id = Column(
