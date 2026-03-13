@@ -216,6 +216,20 @@ class ScrapedJobRater:
             llm_model=CLAUDE_MODEL,
         )
 
+        # Check that the job is not closed
+        if scraped_job.is_closed or (scraped_job.deadline and scraped_job.deadline < dt.datetime.now(dt.timezone.utc)):
+            self.logger.info(f"Skipping job ID {scraped_job.id} as it is closed")
+            job_rating = models.JobRating(
+                is_skipped=True,
+                skip_reason="Job is closed",
+                **job_rating_kwargs,
+            )
+            db.add(job_rating)
+            service_log.job_skipped_ids = service_log.job_skipped_ids + [scraped_job.id]
+            db.commit()
+            return
+
+        # Check that the job description is not too short
         if scraped_job.description and len(scraped_job.description) < settings.min_scraping_description_length:
             self.logger.info(f"Skipping job ID {scraped_job.id} as its description is too short")
             job_rating = models.JobRating(

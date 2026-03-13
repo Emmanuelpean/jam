@@ -262,7 +262,7 @@ class JobEmailScraper(EmailService):
         :param job_result: JobResult instance
         :return dictionary of extracted job data"""
 
-        result = {}
+        result = {}  # noqa
 
         # Location & attendance type
         result["location"] = job_result.location
@@ -295,6 +295,7 @@ class JobEmailScraper(EmailService):
         result["deadline"] = job_result.job.deadline
         result["external_job_id"] = job_result.job_id
         result["platform"] = job_result.platform
+        result["is_closed"] = job_result.job.is_closed
 
         return result
 
@@ -395,6 +396,7 @@ class JobEmailScraper(EmailService):
             "url",
             "deadline",
             "company",
+            "is_closed",
             "location",
             "location_city",
             "location_country",

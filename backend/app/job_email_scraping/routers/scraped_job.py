@@ -73,7 +73,8 @@ def get_all(
             or_(
                 models.ScrapedJob.deadline.is_(None),
                 models.ScrapedJob.deadline >= dt.datetime.now(dt.timezone.utc),
-            )
+            ),
+            models.ScrapedJob.is_closed.is_(False),
         )
 
     if since_last_login and current_user.previous_login:

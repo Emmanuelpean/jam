@@ -77,6 +77,7 @@ class ScrapedJob(BaseModel):
     deadline: datetime | None = None
     parsed_location: str | None = None
     attendance_type: str | None = None
+    is_closed: bool = False
     location: str | None = None
     location_city: str | None = None
     location_postcode: str | None = None
@@ -275,6 +276,7 @@ class JobInfo(BaseModel):
     raw_url: str | None = None
     deadline: dt.datetime | None = None
     salary: Salary = Field(default_factory=Salary)
+    is_closed: bool = False
 
 
 class JobResult(BaseModel):

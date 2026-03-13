@@ -7,7 +7,7 @@ interface JobRatingSectionProps {
 	scrapedJob: ScrapedJobData;
 }
 
-const JobRatingSection = ({ scrapedJob }: JobRatingSectionProps): JSX.Element => {
+const JobRatingSection = ({ scrapedJob }: JobRatingSectionProps): JSX.Element | null => {
 	const { config } = useConfig();
 	const rating = scrapedJob?.job_rating;
 

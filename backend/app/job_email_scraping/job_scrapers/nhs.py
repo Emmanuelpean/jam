@@ -45,10 +45,15 @@ class NhsJobScraper:
         for job in job_data:
 
             # Deadline
-            try:
-                deadline = dt.datetime.strptime(job.get("closingDate"), "%d %B %Y")
-            except:
-                deadline = None
+            deadline = None
+            is_closed = False
+            if job.get("closingDate", "").upper() == "THIS JOB IS NOW CLOSED":
+                is_closed = True
+            else:
+                try:
+                    deadline = dt.datetime.strptime(job.get("closingDate"), "%d %B %Y")
+                except:
+                    pass
 
             # Salary
             pattern = r"(?P<currency>£)\s*(?P<min>[\d,]+)\s*to\s*(?P=currency)\s*(?P<max>[\d,]+).*?(?P<frequency>a year|per annum)"
@@ -82,6 +87,7 @@ class NhsJobScraper:
                         title=job.get("title") or None,
                         description=description or None,
                         deadline=deadline,
+                        is_closed=is_closed,
                         salary=Salary(
                             min_amount=min_salary,
                             max_amount=max_salary,

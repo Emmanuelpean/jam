@@ -1004,6 +1004,7 @@ SCRAPED_JOB_DATA = [
         "description": "We are looking for an experienced developer to join our growing team...",
         "company": "TechCorp Inc",
         "location": "London, UK (hybrid)",
+        "deadline": "3000-01-01 00:00:00",
         "location_city": "London",
         "location_country": "United Kingdom",
         "salary_min": 75000.0,
@@ -2058,6 +2059,30 @@ SCRAPED_JOB_DATA = [
         "geolocation_id": 3,
         "parsed_location": "London, UK",
     },
+    # Closed
+    {
+        "external_job_id": "job_1159rg",
+        "platform": "linkedin",
+        "owner_id": 1,
+        "is_closed": True,
+        "is_scraped": True,
+        "is_processed": True,
+        "title": "Blockchain Developer 2",
+        "description": "Join our innovative startup and help build cutting-edge solutions...",
+        "company": "StartupXYZ",
+        "location": "Manchester, UK (hybrid)",
+        "location_city": "Manchester",
+        "location_country": "United Kingdom",
+        "salary_min": 70000.0,
+        "salary_max": 92000.0,
+        "salary_currency": "GBP",
+        "attendance_type": "hybrid",
+        "url": "https://linkedin.com/jobs/view/job_1159",
+        "scrape_datetime": "2024-11-27T13:45:00.000+00:00",
+        "service_log_id": 1,
+        "geolocation_id": 14,
+        "parsed_location": "Manchester, UK",
+    },
 ]
 
 
@@ -2076,11 +2101,11 @@ SCRAPED_JOB_FAILED_INDEX = find_index(is_failed=True)
 SCRAPED_JOB_SKIPPED_INDEX = find_index(is_skipped=True)
 
 EMAIL_SCRAPEDJOB_MAPPINGS = [
-    # owner_id=1 emails -> owner_id=1 jobs (ids: 1-5, 10-48, 51-66)
+    # owner_id=1 emails -> owner_id=1 jobs (ids: 1-5, 10-48, 51-67)
     {"email_id": 1, "scraped_job_ids": [1, 2, 4, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]},
     {"email_id": 2, "scraped_job_ids": [3, 5, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]},
     {"email_id": 3, "scraped_job_ids": [2, 5, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47]},
-    {"email_id": 5, "scraped_job_ids": [48, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66]},
+    {"email_id": 5, "scraped_job_ids": [48, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67]},
     # owner_id=2 emails -> owner_id=2 jobs (ids: 6-9, 49-50)
     {"email_id": 4, "scraped_job_ids": [6, 7]},
     {"email_id": 6, "scraped_job_ids": [49, 50]},

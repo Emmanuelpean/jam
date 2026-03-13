@@ -84,11 +84,10 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
 
         self.get_user_data(test_users, test_scraped_jobs)
         client = self._get_authorised_client(authorised_clients)
-        # user = self._get_admin_authorised_user(test_users)
         response = client.get(self.endpoint + "/paged/?page=1&page_size=5&show_past_deadline=true")
         assert response.status_code == status.HTTP_200_OK
         scraped_jobs = response.json()
-        assert scraped_jobs["total"] == 48
+        assert scraped_jobs["total"] == 49
         assert len(scraped_jobs["items"]) == 5
 
     def test_get_all_no_past_deadlines(
@@ -104,7 +103,7 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         response = client.get(self.endpoint + "/paged/?page=1&page_size=5")
         assert response.status_code == status.HTTP_200_OK
         scraped_jobs = response.json()
-        assert scraped_jobs["total"] == 48
+        assert scraped_jobs["total"] == 49
         assert scraped_jobs["total_filtered"] == 46
         assert len(scraped_jobs["items"]) == 5
 

@@ -487,15 +487,15 @@ class TestScoreScrapedJobs(object):
         monkeypatch.setattr(settings, "min_scraping_description_length", 70)
         ScrapedJobRater().run(session)
         job_ratings = session.query(models.JobRating).all()
-        assert len(job_ratings) == 33
+        assert len(job_ratings) == 34
         for job_rating in job_ratings:
             assert job_rating.is_success is True or job_rating.is_skipped is True
         service_log = session.query(models.JobRatingServiceLog).first()
         assert service_log is not None
         assert service_log.run_datetime is not None
-        assert len(service_log.job_found_ids) == 33
-        assert len(service_log.job_succeeded_ids) == 15
-        assert len(service_log.job_skipped_ids) == 18
+        assert len(service_log.job_found_ids) == 34
+        assert len(service_log.job_succeeded_ids) == 13
+        assert len(service_log.job_skipped_ids) == 21
         assert len(service_log.job_failed_ids) == 0
         assert len(service_log.user_found_ids) == 3
         assert len(service_log.user_processed_ids) == 3
@@ -508,6 +508,31 @@ class TestScoreScrapedJobs(object):
 - **Description**: {job_rating.scraped_job.description}
 """
         assert job_prompt in job_rating.job_prompt
+
+        # Check that the is_closed jobs are skipped
+        scraped_job = [scraped_job for scraped_job in test_scraped_jobs if scraped_job.is_closed][0]
+        job_rating = [job_rating for job_rating in job_ratings if job_rating.scraped_job.id == scraped_job.id][0]
+        assert job_rating.is_skipped is True
+        assert "is closed" in job_rating.skip_reason.lower()
+
+        # Check that past deadline jobs are skipped
+        scraped_job = [
+            scraped_job
+            for scraped_job in test_scraped_jobs
+            if scraped_job.deadline and scraped_job.deadline < dt.datetime.now(dt.timezone.utc)
+        ][0]
+        job_rating = [job_rating for job_rating in job_ratings if job_rating.scraped_job.id == scraped_job.id][0]
+        assert job_rating.is_skipped is True
+        assert "is closed" in job_rating.skip_reason.lower()
+
+        # Check that upcoming deadline jobs are not skipped
+        scraped_job = [
+            scraped_job
+            for scraped_job in test_scraped_jobs
+            if scraped_job.deadline and scraped_job.deadline > dt.datetime.now(dt.timezone.utc)
+        ][0]
+        job_rating = [job_rating for job_rating in job_ratings if job_rating.scraped_job.id == scraped_job.id][0]
+        assert job_rating.is_skipped is False
 
     def test_critical_error_is_recorded_in_service_log(
         self, session, test_scraped_jobs, test_user_qualifications, test_ai_prompts, monkeypatch

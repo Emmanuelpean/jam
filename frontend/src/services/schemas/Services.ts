@@ -80,6 +80,7 @@ export interface ScrapedJobData extends OwnedOut {
 	salary_max: number | null;
 	salary_currency: string | null;
 	platform: string | null;
+	is_closed: boolean;
 	url: string | null;
 	deadline: Date | string | null;
 	company: string | null;
