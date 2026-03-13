@@ -2,11 +2,12 @@
 
 import datetime as dt
 
+import pytest
 from starlette import status
 
 from app import models
 from app.job_email_scraping import schemas
-from tests.conftest import CRUDTestBase
+from tests.conftest import CRUDTestBase, make_undefined_method_params
 from tests.utils.create_data.utils import create_db_entries
 
 
@@ -103,7 +104,8 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         response = client.get(self.endpoint + "/paged/?page=1&page_size=5")
         assert response.status_code == status.HTTP_200_OK
         scraped_jobs = response.json()
-        assert scraped_jobs["total"] == 46
+        assert scraped_jobs["total"] == 48
+        assert scraped_jobs["total_filtered"] == 46
         assert len(scraped_jobs["items"]) == 5
 
     @staticmethod
@@ -143,7 +145,8 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         response = regular_user_client.get(self.endpoint + "/paged", params={"since_last_login": "true"})
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["total"] == 2
+        assert response.json()["total"] == 3
+        assert response.json()["total_filtered"] == 2
 
     def test_since_last_login_no_previous_login_returns_all_jobs(
         self, session, test_regular_user, regular_user_client, test_job_scraping_service_logs
@@ -171,3 +174,19 @@ class TestScrapedJobCRUDAdminUser(CRUDTestBase):
     test_data_ref = "test_scraped_jobs"
     actions_to_test = ["get_all"]
     admin_only = True
+
+
+class TestScrapedJobRegularUserUndefinedMethods:
+    ENDPOINT = "/scraped-jobs"
+    DEFINED_ACTIONS = ["PUT", "GET_ALL"]
+    UNDEFINED_ACTIONS = ["POST", "GET_ONE", "DELETE"]
+
+    @pytest.mark.parametrize(
+        "http_method,path_suffix,expected_status",
+        make_undefined_method_params(DEFINED_ACTIONS, UNDEFINED_ACTIONS),
+    )
+    def test_undefined_methods(self, admin_client, regular_user_client, http_method, path_suffix, expected_status):
+        response = admin_client.request(http_method, f"{self.ENDPOINT}{path_suffix}")
+        assert response.status_code == expected_status
+        response = regular_user_client.request(http_method, f"{self.ENDPOINT}{path_suffix}")
+        assert response.status_code == expected_status

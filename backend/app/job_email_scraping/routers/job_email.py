@@ -6,6 +6,7 @@ and service execution logs with CRUD operations and admin access controls."""
 from typing import Literal
 
 from fastapi import Depends, HTTPException
+from fastapi.routing import APIRouter
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session
 from starlette import status
@@ -14,17 +15,10 @@ from app import models
 from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.job_email_scraping import schemas
-from app.routers.utility import generate_data_table_crud_router
 
-
-# GET endpoint for admin user to get all job alert emails
-job_alert_email_router = generate_data_table_crud_router(
-    table_model=models.JobEmail,
-    out_schema=schemas.JobEmailOut,
-    endpoint="job-alert-emails",
-    not_found_msg="Job alert email not found",
-    allowed_actions=["get_all"],
-    admin_only=True,
+job_alert_email_router = APIRouter(
+    prefix="/job-alert-emails",
+    tags=["job-alert-emails"],
 )
 
 

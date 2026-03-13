@@ -1,18 +1,12 @@
 """Tests for Job Scraping routers."""
 
-import datetime as dt
-
-import pytest
 from starlette import status
 
 from app import models
 from app.job_email_scraping import schemas
 from tests.conftest import CRUDTestBase
 from tests.utils.create_data.utils import create_db_entries
-from tests.utils.test_data.job_scraping import JOB_EMAIL_DATA, SCRAPING_FILTER_DATA
-
-
-# ------------------------------------------------- SCRAPED JOB FILTERS ------------------------------------------------
+from tests.utils.test_data.job_scraping import SCRAPING_FILTER_DATA
 
 
 class TestScrapingFilters(CRUDTestBase):
@@ -33,6 +27,8 @@ class TestScrapingFilters(CRUDTestBase):
 
         data = {"type": "title", "operator": "contains", "value": "Some", "owner_id": owner_id, **kwargs}
         return create_db_entries(session, models.ScrapingExclusionFilter, data)[0]
+
+    # ----------------------------------------------------- DELETE -----------------------------------------------------
 
     def test_delete_filter_without_filtered_jobs(self, session, authorised_clients, test_users) -> None:
         """Should delete filter completely when it has no filtered jobs"""

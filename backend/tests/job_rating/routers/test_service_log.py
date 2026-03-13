@@ -5,6 +5,8 @@ import datetime as dt
 import pytest
 from starlette import status
 
+from tests.conftest import make_undefined_method_params
+
 
 class TestServiceLog:
     """Test suite for log endpoints"""
@@ -149,3 +151,17 @@ class TestServiceLog:
         response = client.get("/job-rating-service-logs/latest")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+class TestJobRatingUndefinedMethods:
+    ENDPOINT = "/job-rating-service-logs"
+    DEFINED_ACTIONS = ["GET_ALL"]
+    UNDEFINED_ACTIONS = ["PUT", "POST", "GET_ONE", "DELETE"]
+
+    @pytest.mark.parametrize(
+        "http_method,path_suffix,expected_status",
+        make_undefined_method_params(DEFINED_ACTIONS, UNDEFINED_ACTIONS),
+    )
+    def test_undefined_methods(self, admin_client, regular_user_client, http_method, path_suffix, expected_status):
+        response = admin_client.request(http_method, f"{self.ENDPOINT}{path_suffix}")
+        assert response.status_code == expected_status

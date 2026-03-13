@@ -1,9 +1,6 @@
 """Tests for utility functions."""
 
-import os
 from unittest.mock import patch
-
-import pytest
 
 from app.utils import get_last_log_line, hash_password, verify_password
 

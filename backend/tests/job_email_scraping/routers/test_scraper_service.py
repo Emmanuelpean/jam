@@ -5,11 +5,7 @@ import datetime as dt
 import pytest
 from starlette import status
 
-from app import models
-from app.job_email_scraping import schemas
-from tests.conftest import CRUDTestBase
-from tests.utils.create_data.utils import create_db_entries
-from tests.utils.test_data.job_scraping import JOB_EMAIL_DATA, SCRAPING_FILTER_DATA
+from tests.conftest import make_undefined_method_params
 
 
 class TestJobScrapingServiceLog:
@@ -159,3 +155,17 @@ class TestJobScrapingServiceLog:
         response = client.get("/job-scraping-service-logs/latest")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+class TestUndefinedMethods:
+    ENDPOINT = "//job-scraping-service-logs"
+    DEFINED_ACTIONS = ["GET_ALL"]
+    UNDEFINED_ACTIONS = ["PUT", "POST", "GET_ONE", "DELETE"]
+
+    @pytest.mark.parametrize(
+        "http_method,path_suffix,expected_status",
+        make_undefined_method_params(DEFINED_ACTIONS, UNDEFINED_ACTIONS),
+    )
+    def test_undefined_methods(self, admin_client, regular_user_client, http_method, path_suffix, expected_status):
+        response = admin_client.request(http_method, f"{self.ENDPOINT}{path_suffix}")
+        assert response.status_code == expected_status
