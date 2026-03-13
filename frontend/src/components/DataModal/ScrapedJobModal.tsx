@@ -211,10 +211,9 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				});
 			}
 			if (!data?.is_processed && data?.scrape_error.length) {
-				const retryAt = data?.next_retry_at ? new Date(data.next_retry_at).toLocaleString() : null;
 				result.push({
 					key: "scraping_retry_pending",
-					message: `Scraping failed (attempt ${data.retry_count}/3). It will be attempted again${retryAt ? ` on ${retryAt}` : " soon"}.`,
+					message: `Scraping failed (attempt ${data.retry_count}/3). It will be reattempted soon.`,
 					variant: "warning",
 				});
 			}

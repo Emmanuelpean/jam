@@ -66,6 +66,8 @@ class ScrapedJob(BaseModel):
     is_imported: bool = False
     is_skipped: bool = False
     skip_reason: str | None = None
+    retry_count: int = 0
+    next_retry_at: datetime | None = None
 
     # Job data
     title: str | None = None
