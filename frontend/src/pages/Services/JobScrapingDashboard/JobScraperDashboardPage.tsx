@@ -30,8 +30,7 @@ const JobScraperDashboard = (): JSX.Element => {
 		end: new Date(),
 	});
 	const [selectedPlatform, setSelectedPlatform] = useState("all");
-	const { serviceStatus, remainingTime, fetchStatus, statusError } =
-		useServiceRunnerStatus(jobScraperServiceApi);
+	const { serviceStatus, remainingTime, fetchStatus, statusError } = useServiceRunnerStatus(jobScraperServiceApi);
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: 0,
 		timedelta_days: 0,
@@ -68,10 +67,11 @@ const JobScraperDashboard = (): JSX.Element => {
 		error: previousScraperRequestError,
 		loading: previousScraperErrorsLoading,
 	} = useJobScraperErrors(previousServiceLogs, selectedPlatform, true);
-	const { serviceErrors: lastServiceErrors, loading: lastServiceErrorsLoading } =
-		useServiceErrors(latestServiceLog);
-	const { serviceErrors: previousServiceErrors, loading: previousServiceErrorsLoading } =
-		useServiceErrors(previousServiceLogs, true);
+	const { serviceErrors: lastServiceErrors, loading: lastServiceErrorsLoading } = useServiceErrors(latestServiceLog);
+	const { serviceErrors: previousServiceErrors, loading: previousServiceErrorsLoading } = useServiceErrors(
+		previousServiceLogs,
+		true
+	);
 
 	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
 		const target = event.target as HTMLInputElement;
@@ -141,7 +141,6 @@ const JobScraperDashboard = (): JSX.Element => {
 
 	return (
 		<div>
-			<PageHeader title={"Job Scraping Dashboard"} icon={getTableIcon("Job Scraping Dashboard")} />
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
 					<div className="d-flex align-items-start">

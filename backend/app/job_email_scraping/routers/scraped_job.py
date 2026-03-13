@@ -66,6 +66,8 @@ def get_all(
         .filter(models.ScrapedJob.exclusion_filter_id == None)
     )
 
+    total = query.count()
+
     if not show_past_deadline:
         query = query.filter(
             or_(
@@ -129,11 +131,11 @@ def get_all(
         query = query.order_by(desc(models.ScrapedJob.scrape_datetime).nulls_last())
 
     # Get total count before pagination
-    total = query.count()
+    total_filtered = query.count()
 
     # Calculate pagination
     offset = page * page_size
-    total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+    total_pages = (total_filtered + page_size - 1) // page_size if total_filtered > 0 else 1
 
     # Apply pagination
     results = query.offset(offset).limit(page_size).all()
@@ -141,6 +143,7 @@ def get_all(
     return {
         "items": results,
         "total": total,
+        "total_filtered": total_filtered,
         "page": page,
         "page_size": page_size,
         "total_pages": total_pages,

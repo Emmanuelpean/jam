@@ -117,8 +117,7 @@ export const Sidebar = (): JSX.Element => {
 			condition: (user: UserData): boolean => user.is_admin,
 			position: "bottom",
 			submenu: [
-				{ path: "/job-scraping-dashboard", text: "Job Scraping Dashboard" },
-				{ path: "/job-rating-dashboard", text: "Job Rating Dashboard" },
+				{ path: "/service-dashboards", text: "Service Dashboards" },
 				{ path: "/users", text: "Users" },
 				{ path: "/app-settings", text: "Settings" },
 				{ path: "/email-templates", text: "Email Templates" },
