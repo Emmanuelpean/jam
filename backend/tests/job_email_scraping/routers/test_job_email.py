@@ -1,24 +1,9 @@
 """Tests for Job Scraping routers."""
 
+import pytest
 from starlette import status
 
-from app.job_email_scraping import schemas
-from tests.conftest import CRUDTestBase
-from tests.utils.test_data.job_scraping import JOB_EMAIL_DATA
-
-
-class TestJobAlertEmailCRUD(CRUDTestBase):
-    endpoint = "/job-alert-emails"
-    out_schema = schemas.JobEmailOut
-    test_data_ref = "test_job_alert_emails"
-    create_data = JOB_EMAIL_DATA
-    update_data = {
-        "id": 1,
-        "subject": "Updated Python",
-    }
-    required_fixture = ["test_job_scraping_service_logs"]
-    actions_to_test = ["get_all"]
-    admin_only = True
+from tests.conftest import make_undefined_method_params
 
 
 class TestJobEmailsByScrapedJob:
@@ -175,7 +160,8 @@ class TestJobAlertEmailsPaged:
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["total"] == 0
+        assert data["total"] == 4
+        assert data["total_filtered"] == 0
         assert len(data["items"]) == 0
 
     def test_only_returns_own_emails(self, regular_user_client, test_job_alert_emails) -> None:
@@ -193,3 +179,19 @@ class TestJobAlertEmailsPaged:
 
         response = client.get(self.endpoint)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+class TestJobEmailUndefinedMethods:
+    ENDPOINT = "/job-alert-emails"
+    DEFINED_ACTIONS = []
+    UNDEFINED_ACTIONS = ["GET_ALL", "PUT", "POST", "GET_ONE", "DELETE"]
+
+    @pytest.mark.parametrize(
+        "http_method,path_suffix,expected_status",
+        make_undefined_method_params(DEFINED_ACTIONS, UNDEFINED_ACTIONS),
+    )
+    def test_undefined_methods(self, admin_client, regular_user_client, http_method, path_suffix, expected_status):
+        response = admin_client.request(http_method, f"{self.ENDPOINT}{path_suffix}")
+        assert response.status_code == expected_status
+        response = regular_user_client.request(http_method, f"{self.ENDPOINT}{path_suffix}")
+        assert response.status_code == expected_status

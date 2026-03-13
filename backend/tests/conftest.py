@@ -20,10 +20,9 @@ from requests import Response
 from starlette import status
 from starlette.testclient import TestClient
 
-from tests.utils.test_data.geolocation import MOCK_GEOCODING_RESPONSES
-
 from app import models
 from tests.utils import test_data as td
+from tests.utils.test_data.geolocation import MOCK_GEOCODING_RESPONSES
 
 # Load fixtures from separate modules
 pytest_plugins = [
@@ -505,3 +504,37 @@ class CRUDTestBase:
         client = self._get_admin_unauthorised_client(authorised_clients)
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def _expected_status(undefined_action: str, defined_actions: set[str]) -> int:
+    """Return 405 if the path is already registered by another action, else 404."""
+
+    collection_actions = {"GET_ALL", "POST"}
+    item_actions = {"GET_ONE", "PUT", "DELETE"}
+
+    if undefined_action in collection_actions:
+        path_exists = bool(defined_actions & collection_actions)
+    else:
+        path_exists = bool(defined_actions & item_actions)
+
+    return status.HTTP_405_METHOD_NOT_ALLOWED if path_exists else status.HTTP_404_NOT_FOUND
+
+
+_ACTION_META = {
+    "GET_ALL": ("GET", "/"),
+    "POST": ("POST", "/"),
+    "GET_ONE": ("GET", "/1"),
+    "PUT": ("PUT", "/1"),
+    "DELETE": ("DELETE", "/1"),
+}
+
+
+def make_undefined_method_params(defined: list[str], undefined: list[str]):
+    defined_upper = {a.upper() for a in defined}
+    params = []
+    for action in undefined:
+        action = action.upper()
+        http_method, path_suffix = _ACTION_META[action]
+        expected = _expected_status(action, defined_upper)
+        params.append(pytest.param(http_method, path_suffix, expected, id=f"{action}_expects_{expected}"))
+    return params
