@@ -167,6 +167,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const [currentPage, setCurrentPage] = useState<number>(0);
 		const [pageSize, setPageSize] = useState<number>(20);
 		const [totalCount, setTotalCount] = useState<number>(0);
+		const [totalFilteredCount, setTotalFilteredCount] = useState<number>(0);
 		const [showSpinner, setShowSpinner] = useState<boolean>(false);
 
 		useEffect(() => {
@@ -221,6 +222,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 				const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
 				setFetchedData(response.data.items);
 				setTotalCount(response.data.total);
+				setTotalFilteredCount(response.data.total_filtered);
 			} catch (error: any) {
 				setLoadError(error.message || "Failed to load data");
 			} finally {
@@ -396,17 +398,14 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const sortedData: JamData[] = isServerPagination ? data : getSortedData();
 		let currentPageData: any[];
 		let totalPages: number;
-		let displayTotal: number;
 
 		if (isServerPagination) {
 			// Server-side: data already paginated
 			currentPageData = sortedData;
-			displayTotal = totalCount;
-			totalPages = Math.ceil(totalCount / pageSize);
+			totalPages = Math.ceil(totalFilteredCount / pageSize);
 		} else {
 			// Client-side: do pagination ourselves
-			displayTotal = sortedData.length;
-			totalPages = Math.ceil(displayTotal / pageSize);
+			totalPages = Math.ceil(sortedData.length / pageSize);
 
 			if (showAllEntries) {
 				currentPageData = sortedData;
@@ -416,6 +415,18 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 				currentPageData = sortedData.slice(startIndex, endIndex);
 			}
 		}
+
+		useEffect(() => {
+			if (!isServerPagination) {
+				setTotalFilteredCount(sortedData.length);
+			}
+		}, [sortedData, isServerPagination]);
+
+		useEffect(() => {
+			if (!isServerPagination) {
+				setTotalCount(data.length);
+			}
+		}, [data, isServerPagination]);
 
 		const handleSnoozeItem = (weeks: number): ((item: JamData) => Promise<void>) => {
 			return async (item: JamData): Promise<void> => {
@@ -590,7 +601,13 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		return (
 			<>
 				<div className={"table-container"}>
-					{title && <PageHeader title={title} count={totalCount || data.length} icon={getTableIcon(title)} />}
+					{title && (
+						<PageHeader
+							title={title}
+							count={totalFilteredCount || data.length}
+							icon={getTableIcon(title)}
+						/>
+					)}
 
 					<div
 						className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
@@ -607,7 +624,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 									id="search-input"
 								/>
 								<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
-									Showing {displayTotal} Entries
+									Showing {totalFilteredCount} of {totalCount} Entries
 								</span>
 							</div>
 						)}
@@ -746,7 +763,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 							</div>
 
 							{/* Pagination */}
-							{!showAllEntries && displayTotal > 20 && (
+							{!showAllEntries && totalFilteredCount > 20 && (
 								<div className={`d-flex justify-content-between align-items-center mt-0`}>
 									<div className="d-flex align-items-center gap-0">
 										{[
@@ -792,15 +809,15 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 										)}
 									</div>
 									<div className="d-flex align-items-center gap-2">
-										{isServerPagination && (
-											<span
-												className={`small text-muted text-nowrap`}
-												style={compact ? { fontSize: "0.75rem" } : {}}
-											>
-												{currentPage * pageSize + 1} to{" "}
-												{Math.min((currentPage + 1) * pageSize, totalCount)} of {totalCount}
-											</span>
-										)}
+										<span
+											className={`small text-muted text-nowrap`}
+											style={compact ? { fontSize: "0.75rem" } : {}}
+										>
+											{currentPage * pageSize + 1} to{" "}
+											{Math.min((currentPage + 1) * pageSize, totalFilteredCount)} of{" "}
+											{totalFilteredCount}
+										</span>
+
 										<span
 											className={`small text-muted text-nowrap`}
 											style={compact ? { fontSize: "0.75rem" } : {}}

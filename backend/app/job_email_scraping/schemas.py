@@ -111,6 +111,7 @@ class PaginatedScrapedJobResponse(BaseModel):
 
     items: list[ScrapedJobOut]
     total: int
+    total_filtered: int
     page: int
     page_size: int
     total_pages: int
@@ -121,6 +122,7 @@ class PaginatedJobEmailResponse(BaseModel):
 
     items: list[JobEmailOut]
     total: int
+    total_filtered: int
     page: int
     page_size: int
     total_pages: int

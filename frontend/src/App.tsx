@@ -9,7 +9,6 @@ import JobsPage from "./pages/DataTablePages/JobsPage";
 import PersonPage from "./pages/DataTablePages/PersonPage";
 import KeywordsPage from "./pages/DataTablePages/KeywordsPage";
 import InterviewsPage from "./pages/DataTablePages/InterviewsPage";
-import JobScraperDashboard from "./pages/Services/JobScrapingDashboard/JobScraperDashboardPage";
 import AggregatorsPage from "./pages/DataTablePages/AggregatorsPage";
 import { NotAuthorisedPage, NotFoundPage } from "./pages/NotFoundPage";
 import { Sidebar } from "./components/Sidebar/Sidebar";
@@ -30,7 +29,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.scss";
 import "./Themes.scss";
 import { AlertProvider } from "./contexts/AlertContext";
-import JobRatingDashboard from "./pages/Services/JobRatingDashboard/JobRatingDashboardPage";
 import SpeculativeApplicationsPage from "./pages/DataTablePages/SpeculativeApplicationsPage";
 import { ContextMenuProvider } from "./contexts/ContextMenuContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -43,6 +41,7 @@ import { StatusProvider } from "./contexts/StatusContext";
 import { MaintenanceBanner } from "./components/AppBanner/MaintenanceBanner";
 import { DemoBanner } from "./components/AppBanner/DemoBanner";
 import { WhatsNewProvider } from "./contexts/WhatsNewContext";
+import ServiceDashboards from "./pages/Services/ServiceDashboards";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -191,18 +190,7 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/settings/:tab", element: <UserSettingsPage />, protected: true },
 	{ path: "/settings", element: <Navigate to="/settings/account" replace />, protected: true },
 	{ path: "/users", element: <UserManagementPage />, protected: true, adminOnly: true },
-	{
-		path: "/job-scraping-dashboard",
-		element: <JobScraperDashboard />,
-		protected: true,
-		adminOnly: true,
-	},
-	{
-		path: "/job-rating-dashboard",
-		element: <JobRatingDashboard />,
-		protected: true,
-		adminOnly: true,
-	},
+	{ path: "service-dashboards", element: <ServiceDashboards />, protected: true, adminOnly: true },
 	{ path: "/app-settings", element: <SettingsPage />, protected: true, adminOnly: true },
 	{ path: "/email-templates", element: <EmailTemplatesPage />, protected: true, adminOnly: true },
 	{ path: "*", element: <NotFoundPage /> },

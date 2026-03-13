@@ -122,7 +122,6 @@ const JobRatingDashboard = (): JSX.Element => {
 
 	return (
 		<div>
-			<PageHeader title={"Job Rating Dashboard"} icon={getTableIcon("Job Rating Dashboard")} />
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
 					<div className="d-flex align-items-start">

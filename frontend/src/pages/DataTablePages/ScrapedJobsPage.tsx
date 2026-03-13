@@ -17,19 +17,23 @@ export const ScrapedJobsPage = (): JSX.Element => {
 		<div className="scraped-jobs-page">
 			<div className="d-flex gap-3">
 				<PageHeader
-					className="flex-fill"
 					title="Job Alerts"
 					icon={getEntityIcon("scrapedJob")}
 					count={alertsCount}
-					onClick={(): void => { setActiveTab("alerts"); setAlertsReload((n) => n + 1); }}
+					onClick={(): void => {
+						setActiveTab("alerts");
+						setAlertsReload((n) => n + 1);
+					}}
 					active={activeTab === "alerts"}
 				/>
 				<PageHeader
-					className="flex-fill"
 					title="Job Emails"
 					icon={getEntityIcon("jobEmail")}
 					count={emailsCount}
-					onClick={(): void => { setActiveTab("emails"); setEmailsReload((n) => n + 1); }}
+					onClick={(): void => {
+						setActiveTab("emails");
+						setEmailsReload((n) => n + 1);
+					}}
 					active={activeTab === "emails"}
 				/>
 			</div>

@@ -49,6 +49,8 @@ def get_job_emails_paged(
 
     query = db.query(models.JobEmail).filter(models.JobEmail.owner_id == current_user.id)
 
+    total = query.count()
+
     if search:
         search_term = f"%{search}%"
         query = query.filter(
@@ -69,14 +71,15 @@ def get_job_emails_paged(
     else:
         query = query.order_by(desc(models.JobEmail.date_received).nulls_last())
 
-    total = query.count()
+    total_filtered = query.count()
     offset = page * page_size
-    total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+    total_pages = (total_filtered + page_size - 1) // page_size if total_filtered > 0 else 1
     results = query.offset(offset).limit(page_size).all()
 
     return {
         "items": results,
         "total": total,
+        "total_filtered": total_filtered,
         "page": page,
         "page_size": page_size,
         "total_pages": total_pages,

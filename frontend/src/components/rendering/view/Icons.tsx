@@ -53,6 +53,7 @@ export function getTableIcon(title: string): string {
 		"Release Notes": "file-earmark-text",
 		"Browser Extension": "puzzle-fill",
 		"About JAM": "info-circle",
+		"Service Dashboards": "stack",
 	};
 	return iconMap[title] || "bi-table";
 }
