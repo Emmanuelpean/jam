@@ -39,6 +39,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 					tableColumns.overallScore(),
 					tableColumns.urlGenericColumn(),
 					tableColumns.platformColumn(),
+					tableColumns.scrapingStatusColumn(),
 					tableColumns.createdAtColumn({ label: "Date Received" }),
 				];
 

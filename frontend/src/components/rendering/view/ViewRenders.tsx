@@ -436,6 +436,16 @@ export const renderFunctions = {
 		return names[param.item?.platform] || param.item?.platform;
 	},
 
+	scrapingStatus: (param: RenderParams): ReactNode => {
+		if (!param.item) return null;
+		if (param.item.is_failed) return <span className="badge bg-danger">Failed</span>;
+		if (!param.item.is_processed && param.item.scrape_error?.length) {
+			return <span className="badge bg-warning text-dark">Retrying ({param.item.retry_count}/3)</span>;
+		}
+		if (!param.item.is_processed) return <span className="badge bg-secondary">Pending</span>;
+		return <span className="badge bg-success">Scraped</span>;
+	},
+
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
 
 	_interviewCount: (param: RenderParams, key: keyof InterviewData): number => {
