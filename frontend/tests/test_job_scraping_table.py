@@ -3,6 +3,8 @@
 import datetime as dt
 import uuid
 
+from selenium.webdriver.common.by import By
+
 from conftest import BaseTest, models
 
 
@@ -200,6 +202,40 @@ class TestJobScrapingTable(BaseTest):
         modal = self.scrapedJob_modal_utils.wait_for_import_modal()
         expected = "This job could not be scraped properly due to an unexpected error. You can report it here."
         assert expected in modal.text
+
+    def test_scraped_job_retry_pending_badge(self) -> None:
+        """Test that a job pending retry shows the correct badge in the table."""
+
+        scraped_job = self._make_scraped_job(
+            title="Retry Pending Test Job",
+            is_processed=False,
+            retry_count=1,
+            scrape_error=[{"datetime": "2025-01-01T00:00:00+00:00", "error": "Simulated scraping failure"}],
+        )
+        self.driver.refresh()
+        self.show_job(scraped_job)
+
+        row = self.scrapedJob_table_utils.table_row(scraped_job.id)
+        badge = row.find_element(By.CSS_SELECTOR, ".badge")
+        assert badge.text == "Retrying (1/3)"
+
+    def test_scraped_job_retry_pending_modal_warning(self) -> None:
+        """Test that a job pending retry shows the correct warning in the modal."""
+
+        scraped_job = self._make_scraped_job(
+            title="Retry Warning Test Job",
+            is_processed=False,
+            retry_count=2,
+            scrape_error=[
+                {"datetime": "2025-01-01T00:00:00+00:00", "error": "First failure"},
+                {"datetime": "2025-01-02T00:00:00+00:00", "error": "Second failure"},
+            ],
+        )
+        self.driver.refresh()
+        self.show_job(scraped_job)
+        self.scrapedJob_table_utils.table_row(scraped_job.id).click()
+        modal = self.scrapedJob_modal_utils.wait_for_import_modal()
+        assert "Scraping failed (attempt 2/3). It will be reattempted soon." in modal.text
 
     def test_scraped_job_closed(self) -> None:
         """Test a scraped job that failed to be processed."""

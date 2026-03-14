@@ -598,4 +598,13 @@ export const tableColumns = {
 		render: renderFunctions.filteredJobCount,
 		...overrides,
 	}),
+
+	scrapingStatusColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_processed",
+		label: "Status",
+		sortable: true,
+		searchable: false,
+		render: renderFunctions.scrapingStatus,
+		...overrides,
+	}),
 };
