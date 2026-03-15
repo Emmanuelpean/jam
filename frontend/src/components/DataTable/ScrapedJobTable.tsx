@@ -1,6 +1,6 @@
-import React, { JSX, useMemo, useState } from "react";
+import React, { JSX, useCallback, useMemo, useRef, useState } from "react";
 import { Button } from "react-bootstrap";
-import { DataTable, DataTableProps } from "./DataTable";
+import { DataTable, DataTableHandle, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../DataModal/ScrapedJobModal";
 import { ScrapingFilterData } from "../../services/schemas/Services";
@@ -8,6 +8,9 @@ import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionToggle } from "../rendering/form/ActionToggle";
 import ScrapingFilterTable from "./ScrapingFilterTable";
+import { useAlert } from "../../contexts/AlertContext";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { ProgressOverlay } from "../ProgressOverlay/ProgressOverlay";
 
 const ScrapedJobsTable: React.FC<DataTableProps> = ({
 	columns = [],
@@ -15,9 +18,40 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 }: DataTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 	const { currentUser } = useAuth();
+	const { updateEntity } = dataContext;
+	const { showDelete } = useAlert();
+	const { showToastSuccess, showToastError } = useGlobalToast();
+	const tableRef = useRef<DataTableHandle>(null);
 	const [showFilters, setShowFilters] = useState<boolean>(false);
 	const [showPastDeadline, setShowPastDeadline] = useState<boolean>(false);
 	const [sincePreviousLogin, setSincePreviousLogin] = useState<boolean>(false);
+	const [reloadTrigger, setReloadTrigger] = useState<number>(0);
+	const [progress, setProgress] = useState<{ show: boolean; title: string; message: string }>({
+		show: false, title: "", message: "",
+	});
+
+	const n = (ids: string[]) => `${ids.length} alert${ids.length > 1 ? "s" : ""}`;
+
+	const handleBulkDismiss = useCallback(async (ids: string[]) => {
+		const confirmed = await showDelete({
+			title: "Dismiss Job Alerts",
+			message: `Dismiss ${n(ids)}? They will no longer appear in your alerts.`,
+			confirmText: "Dismiss",
+			cancelText: "Cancel",
+		});
+		if (!confirmed) return;
+		setProgress({ show: true, title: "Dismissing alerts…", message: `Dismissing ${n(ids)}, please wait.` });
+		try {
+			await Promise.all(ids.map((id) => updateEntity("scrapedJob", Number(id), { is_active: false })));
+			showToastSuccess(`${n(ids)} dismissed.`);
+			tableRef.current?.clearSelection();
+			setReloadTrigger((t) => t + 1);
+		} catch {
+			showToastError("Failed to dismiss some alerts. Please try again.");
+		} finally {
+			setProgress((p) => ({ ...p, show: false }));
+		}
+	}, [updateEntity, showDelete, showToastSuccess, showToastError]);
 
 	const queryParams = useMemo(
 		() => ({
@@ -43,6 +77,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 	return (
 		<>
 			<DataTable
+				ref={tableRef}
 				title={title}
 				entityType="scrapedJob"
 				mode="import"
@@ -55,6 +90,11 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 				showSearch={true}
 				queryParams={queryParams}
 				enableColumnConfig={true}
+				reloadTrigger={reloadTrigger}
+				enableMultiSelect={true}
+				bulkActions={[
+					{ label: "Dismiss", icon: "x-circle", variant: "outline-danger", onClick: (ids) => handleBulkDismiss(ids) },
+				]}
 				toolbarAddon={
 					<div style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.75rem", height: "100%" }}>
 						<Button
@@ -93,6 +133,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 					setShowFilters(false);
 				}}
 			/>
+			<ProgressOverlay show={progress.show} title={progress.title} message={progress.message} />
 		</>
 	);
 };

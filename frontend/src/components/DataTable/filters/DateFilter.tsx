@@ -3,6 +3,7 @@ import { Form } from "react-bootstrap";
 import { DateFilterConfig, DateFilterValue, DatePreset, DatePresetOption } from "../FilterTypes";
 
 interface Props {
+	columnKey: string;
 	config: DateFilterConfig;
 	value: DateFilterValue;
 	onChange: (v: DateFilterValue) => void;

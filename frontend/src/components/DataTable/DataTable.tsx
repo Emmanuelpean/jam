@@ -11,6 +11,7 @@ import React, {
 	useState,
 } from "react";
 import { Button, Form } from "react-bootstrap";
+import BulkActionsDropdown from "./BulkActionsDropdown";
 import { useAuth } from "../../contexts/AuthContext";
 import {
 	DataContextValue,
@@ -68,6 +69,17 @@ export interface DataTableProps {
 	title?: string;
 }
 
+export type BulkAction =
+	| {
+			type?: "action";
+			label: string;
+			icon?: string;
+			variant?: string;
+			onClick: (selectedIds: string[], selectedItems: JamData[]) => void;
+	  }
+	| { type: "header"; label: string }
+	| { type: "divider" };
+
 export interface GenericTableProps {
 	// Data source - entity type from DataContext
 	entityType: EntityType;
@@ -109,10 +121,16 @@ export interface GenericTableProps {
 
 	// Column configuration
 	enableColumnConfig?: boolean;
+
+	// Multi-select
+	enableMultiSelect?: boolean;
+	bulkActions?: BulkAction[];
+	onSelectionChange?: (selectedIds: string[], selectedItems: JamData[]) => void;
 }
 
 export interface DataTableHandle {
 	openAddModal: (data?: any) => void;
+	clearSelection: () => void;
 }
 
 export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
@@ -141,6 +159,9 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			queryParams,
 			defaultModalMode = "view",
 			enableColumnConfig = false,
+			enableMultiSelect = false,
+			bulkActions = [],
+			onSelectionChange,
 		}: GenericTableProps,
 		ref
 	): JSX.Element => {
@@ -149,6 +170,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
 		const [filterSidebarOpen, setFilterSidebarOpen] = useState<boolean>(false);
 		const [filters, setFilters] = useState<ActiveFilters>({});
+		const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 		const effectiveColumns: TableColumn[] = enableColumnConfig ? columnConfig.visibleColumns : columns;
 		const columnSidebarRef = useRef<HTMLDivElement>(null);
 		const filterSidebarRef = useRef<HTMLDivElement>(null);
@@ -158,7 +180,16 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const openAddModal = (data?: any) => modalRef.current?.showAdd(data ?? initialData);
 		const openImportModal = (item: any): void | undefined => modalRef.current?.showImport(item);
 
-		useImperativeHandle(ref, () => ({ openAddModal }));
+		const toggleSelectRow = (id: string): void => {
+			setSelectedIds((prev) => {
+				const next = new Set(prev);
+				if (next.has(id)) next.delete(id);
+				else next.add(id);
+				return next;
+			});
+		};
+
+		useImperativeHandle(ref, () => ({ openAddModal, clearSelection: () => setSelectedIds(new Set()) }));
 
 		// Close sidebars on outside click
 		useEffect(() => {
@@ -560,6 +591,61 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			}
 		}
 
+		const toggleSelectAll = (): void => {
+			const pageIds = currentPageData.map((item: JamData) => String(item.id));
+			const allSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+			if (allSelected) {
+				setSelectedIds((prev) => {
+					const next = new Set(prev);
+					pageIds.forEach((id) => next.delete(id));
+					return next;
+				});
+			} else {
+				setSelectedIds((prev) => {
+					const next = new Set(prev);
+					pageIds.forEach((id) => next.add(id));
+					return next;
+				});
+			}
+		};
+
+		// Resolve the items to act on: selected rows, or all filtered rows if nothing is selected
+		const getActionTargets = async (): Promise<{ ids: string[]; items: JamData[] }> => {
+			if (selectedIds.size > 0) {
+				return {
+					ids: Array.from(selectedIds),
+					items: data.filter((item) => selectedIds.has(String(item.id))),
+				};
+			}
+			if (isServerPagination) {
+				const params = new URLSearchParams({
+					page: "0",
+					page_size: String(totalCount || 9999),
+					sort_by: sortConfig.key,
+					sort_direction: sortConfig.direction,
+					search: debouncedSearchTerm,
+				});
+				if (queryParams) Object.entries(queryParams).forEach(([k, v]) => params.set(k, v));
+				const activeFilterEntries = Object.entries(filters).filter(([, v]) => isFilterActive(v));
+				if (activeFilterEntries.length > 0)
+					params.set("filters", JSON.stringify(Object.fromEntries(activeFilterEntries)));
+				const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
+				const allItems = response.data.items as JamData[];
+				return { ids: allItems.map((item) => String(item.id)), items: allItems };
+			}
+			// Client-side: use all filtered data
+			return { ids: sortedData.map((item) => String(item.id)), items: sortedData };
+		};
+
+		// Notify parent when selection changes
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		useEffect(() => {
+			if (onSelectionChange && enableMultiSelect) {
+				const selectedItems = data.filter((item) => selectedIds.has(String(item.id)));
+				onSelectionChange(Array.from(selectedIds), selectedItems);
+			}
+		}, [selectedIds]); // eslint-disable-line react-hooks/exhaustive-deps
+
 		const handleSnoozeItem = (weeks: number): ((item: JamData) => Promise<void>) => {
 			return async (item: JamData): Promise<void> => {
 				try {
@@ -765,11 +851,26 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								{`Add ${entityName}`}
 							</Button>
 						)}
+						{enableMultiSelect && !compact && (
+							<BulkActionsDropdown
+								selectedCount={selectedIds.size}
+								totalCount={displayTotal}
+								actions={bulkActions}
+								onAction={async (action) => {
+									const t = await getActionTargets();
+									action.onClick(t.ids, t.items);
+								}}
+								onClearSelection={() => setSelectedIds(new Set())}
+							/>
+						)}
 						{enableColumnConfig && !compact && (
 							<Button
 								id="column-config-toggle-btn"
 								variant={columnSidebarOpen ? "primary" : "outline-primary"}
-								onClick={() => { setColumnSidebarOpen(!columnSidebarOpen); setFilterSidebarOpen(false); }}
+								onClick={() => {
+									setColumnSidebarOpen(!columnSidebarOpen);
+									setFilterSidebarOpen(false);
+								}}
 								className={"config-btn"}
 								data-sidebar-toggle="column"
 							>
@@ -781,7 +882,10 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								id="filter-toggle-btn"
 								variant={filterSidebarOpen ? "primary" : "outline-primary"}
 								className={"config-btn"}
-								onClick={() => { setFilterSidebarOpen(!filterSidebarOpen); setColumnSidebarOpen(false); }}
+								onClick={() => {
+									setFilterSidebarOpen(!filterSidebarOpen);
+									setColumnSidebarOpen(false);
+								}}
 								data-sidebar-toggle="filter"
 							>
 								<i className="bi bi-funnel"></i>
@@ -815,14 +919,15 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 											...(compact ? { fontSize: "0.875rem" } : {}),
 											...(!compact
 												? {
-														gridTemplateColumns: effectiveColumns
-															.map((col, i) => {
+														gridTemplateColumns: [
+															...effectiveColumns.map((col, i) => {
 																const min = col.minWidth ?? "auto";
 																return i === 0
-																	? `minmax(${min}, 1fr)`
+																	? `minmax(0, 1fr)`
 																	: `minmax(${min}, auto)`;
-															})
-															.join(" "),
+															}),
+															...(enableMultiSelect ? ["2.5rem"] : []),
+														].join(" "),
 													}
 												: {}),
 										}}
@@ -877,6 +982,32 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 														</th>
 													)
 												)}
+												{enableMultiSelect && (
+													<th className="checkbox-col" style={{ justifyContent: "center" }}>
+														<Form.Check.Input
+															type="checkbox"
+															checked={
+																currentPageData.length > 0 &&
+																currentPageData.every((item: JamData) =>
+																	selectedIds.has(String(item.id))
+																)
+															}
+															ref={(el: HTMLInputElement | null) => {
+																if (el)
+																	el.indeterminate =
+																		currentPageData.some((item: JamData) =>
+																			selectedIds.has(String(item.id))
+																		) &&
+																		!currentPageData.every((item: JamData) =>
+																			selectedIds.has(String(item.id))
+																		);
+															}}
+															onChange={toggleSelectAll}
+															aria-label="Select all rows"
+															style={{ margin: "0 !important", marginRight: 0 }}
+														/>
+													</th>
+												)}
 											</tr>
 										</thead>
 										<tbody>
@@ -885,7 +1016,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 													<tr
 														key={item.id || index}
 														id={`table-row-${entityType}-${item.id}`}
-														className={`table-row-clickable`}
+														className={`table-row-clickable${enableMultiSelect && selectedIds.has(String(item.id)) ? " table-row-selected" : ""}`}
 														onClick={(e) => handleRowClick(e, item)}
 														onContextMenu={(e) => handleRowRightClick(item, e)}
 														style={{ cursor: "pointer" }}
@@ -913,6 +1044,27 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 																/>
 															</td>
 														))}
+														{enableMultiSelect && (
+															<td
+																className="align-middle checkbox-col"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	toggleSelectRow(String(item.id));
+																}}
+															>
+																<Form.Check.Input
+																	type="checkbox"
+																	checked={selectedIds.has(String(item.id))}
+																	onChange={() => {}}
+																	aria-label={`Select row ${item.id}`}
+																	style={{
+																		margin: 0,
+																		marginRight: 0,
+																		pointerEvents: "none",
+																	}}
+																/>
+															</td>
+														)}
 													</tr>
 												)
 											)}

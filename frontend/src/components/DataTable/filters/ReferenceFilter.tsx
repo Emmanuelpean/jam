@@ -4,6 +4,7 @@ import { ReferenceFilterConfig, ReferenceFilterValue } from "../FilterTypes";
 import { DataContextValue } from "../../../contexts/DataContext";
 
 interface Props {
+	columnKey: string;
 	config: ReferenceFilterConfig;
 	value: ReferenceFilterValue;
 	onChange: (v: ReferenceFilterValue) => void;

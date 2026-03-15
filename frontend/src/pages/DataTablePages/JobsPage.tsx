@@ -1,10 +1,14 @@
-import React, { JSX, useEffect, useMemo, useRef } from "react";
+import React, { JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { DataTable } from "../../components/DataTable/DataTable";
+import { DataTable, DataTableHandle } from "../../components/DataTable/DataTable";
 import { JobModal } from "../../components/DataModal/JobModal";
 import { ExtensionJobData, ExtensionJobModal } from "../../components/DataModal/ExtensionJobModal";
 import { DataModalHandle } from "../../components/DataModal/DataModal";
 import { TableColumn, tableColumns } from "../../components/rendering/view/TableColumns";
+import { useDataContext } from "../../contexts/DataContext";
+import { useAlert } from "../../contexts/AlertContext";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { ProgressOverlay } from "../../components/ProgressOverlay/ProgressOverlay";
 
 const EXT_PARAMS = [
 	"ext_title",
@@ -25,6 +29,81 @@ const JobsPage = (): JSX.Element => {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const extensionModalRef = useRef<DataModalHandle>(null);
+	const tableRef = useRef<DataTableHandle>(null);
+	const { deleteEntity, updateEntity } = useDataContext();
+	const { showDelete, showConfirm } = useAlert();
+	const { showToastSuccess, showToastError } = useGlobalToast();
+	const [progress, setProgress] = useState<{ show: boolean; title: string; message: string }>({
+		show: false, title: "", message: "",
+	});
+
+	const showProgress = (title: string, message: string) => setProgress({ show: true, title, message });
+	const hideProgress = () => setProgress((p) => ({ ...p, show: false }));
+
+	const n = (ids: string[]) => `${ids.length} job${ids.length > 1 ? "s" : ""}`;
+
+	const handleBulkDelete = useCallback(async (ids: string[]) => {
+		const confirmed = await showDelete({
+			title: "Delete Jobs",
+			message: `Are you sure you want to permanently delete ${n(ids)}? This action cannot be undone.`,
+			confirmText: "Delete",
+			cancelText: "Cancel",
+		});
+		if (!confirmed) return;
+		showProgress("Deleting jobs…", `Deleting ${n(ids)}, please wait.`);
+		try {
+			await Promise.all(ids.map((id) => deleteEntity("job", Number(id))));
+			showToastSuccess(`${n(ids)} deleted.`);
+			tableRef.current?.clearSelection();
+		} catch {
+			showToastError("Failed to delete some jobs. Please try again.");
+		} finally {
+			hideProgress();
+		}
+	}, [deleteEntity, showDelete, showToastSuccess, showToastError]);
+
+	const handleBulkSetStatus = useCallback(async (ids: string[], status: string | null) => {
+		const label = status ? `"${status}"` : "cleared";
+		const confirmed = await showConfirm({
+			title: "Set Application Status",
+			message: `Set status to ${label} for ${n(ids)}?`,
+			confirmText: "Confirm",
+			cancelText: "Cancel",
+		});
+		if (!confirmed) return;
+		showProgress("Updating status…", `Setting status for ${n(ids)}, please wait.`);
+		try {
+			await Promise.all(ids.map((id) => updateEntity("job", Number(id), { application_status: status })));
+			showToastSuccess(`Status set to ${label} for ${n(ids)}.`);
+			tableRef.current?.clearSelection();
+		} catch {
+			showToastError("Failed to update status for some jobs. Please try again.");
+		} finally {
+			hideProgress();
+		}
+	}, [updateEntity, showConfirm, showToastSuccess, showToastError]);
+
+	const handleBulkSnooze = useCallback(async (ids: string[], weeks: number) => {
+		const confirmed = await showConfirm({
+			title: "Snooze Jobs",
+			message: `Snooze ${n(ids)} for ${weeks} week${weeks > 1 ? "s" : ""}?`,
+			confirmText: "Snooze",
+			cancelText: "Cancel",
+		});
+		if (!confirmed) return;
+		showProgress("Snoozing jobs…", `Snoozing ${n(ids)}, please wait.`);
+		try {
+			const snoozeDate = new Date();
+			snoozeDate.setDate(snoozeDate.getDate() + weeks * 7);
+			await Promise.all(ids.map((id) => updateEntity("job", Number(id), { followup_snooze_datetime: snoozeDate.toISOString() })));
+			showToastSuccess(`${n(ids)} snoozed for ${weeks} week${weeks > 1 ? "s" : ""}.`);
+			tableRef.current?.clearSelection();
+		} catch {
+			showToastError("Failed to snooze some jobs. Please try again.");
+		} finally {
+			hideProgress();
+		}
+	}, [updateEntity, showConfirm, showToastSuccess, showToastError]);
 
 	const autoOpenWith: ExtensionJobData | null = useMemo((): ExtensionJobData | null => {
 		const title: string | null = searchParams.get("ext_title");
@@ -77,6 +156,7 @@ const JobsPage = (): JSX.Element => {
 	return (
 		<>
 			<DataTable
+				ref={tableRef}
 				entityType="job"
 				initialSortConfig={{ key: "created_at", direction: "desc" }}
 				title="Jobs"
@@ -85,8 +165,27 @@ const JobsPage = (): JSX.Element => {
 				modalSize="xl"
 				menuItems={["view", "edit", "delete", "followup"]}
 				enableColumnConfig={true}
+				enableMultiSelect={true}
+				bulkActions={[
+					{ type: "header", label: "Set Status" },
+					{ label: "Applied", icon: "send", onClick: (ids) => handleBulkSetStatus(ids, "applied") },
+					{ label: "Interview", icon: "camera-video", onClick: (ids) => handleBulkSetStatus(ids, "interview") },
+					{ label: "Offer", icon: "trophy", onClick: (ids) => handleBulkSetStatus(ids, "offer") },
+					{ label: "Rejected", icon: "x-circle", onClick: (ids) => handleBulkSetStatus(ids, "rejected") },
+					{ label: "Withdrawn", icon: "slash-circle", onClick: (ids) => handleBulkSetStatus(ids, "withdrawn") },
+					{ label: "Clear Status", icon: "eraser", onClick: (ids) => handleBulkSetStatus(ids, null) },
+					{ type: "divider" },
+					{ type: "header", label: "Snooze" },
+					{ label: "Snooze 1 week", icon: "alarm", onClick: (ids) => handleBulkSnooze(ids, 1) },
+					{ label: "Snooze 2 weeks", icon: "alarm", onClick: (ids) => handleBulkSnooze(ids, 2) },
+					{ label: "Snooze 3 weeks", icon: "alarm", onClick: (ids) => handleBulkSnooze(ids, 3) },
+					{ label: "Snooze 4 weeks", icon: "alarm", onClick: (ids) => handleBulkSnooze(ids, 4) },
+					{ type: "divider" },
+					{ label: "Delete", icon: "trash", variant: "outline-danger", onClick: (ids) => handleBulkDelete(ids) },
+				]}
 			/>
 			<ExtensionJobModal ref={extensionModalRef} />
+			<ProgressOverlay show={progress.show} title={progress.title} message={progress.message} />
 		</>
 	);
 };
