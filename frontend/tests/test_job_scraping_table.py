@@ -217,7 +217,7 @@ class TestJobScrapingTable(BaseTest):
 
         row = self.scrapedJob_table_utils.table_row(scraped_job.id)
         badge = row.find_element(By.CSS_SELECTOR, ".badge")
-        assert badge.text == "Retrying (1/3)"
+        assert badge.text == "RETRYING (1/3)"
 
     def test_scraped_job_retry_pending_modal_warning(self) -> None:
         """Test that a job pending retry shows the correct warning in the modal."""
