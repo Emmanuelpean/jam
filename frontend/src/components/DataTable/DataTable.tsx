@@ -1003,7 +1003,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 													<tr
 														key={item.id || index}
 														id={`table-row-${entityType}-${item.id}`}
-														className={`table-row-clickable`}
+														className={`table-row-clickable${rowIndicator && rowIndicator(item) ? " table-row--new" : ""}`}
 														onClick={(e) => handleRowClick(e, item)}
 														onContextMenu={(e) => handleRowRightClick(item, e)}
 														style={{ cursor: "pointer" }}
@@ -1044,6 +1044,9 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 																		: {}),
 																}}
 															>
+																{columnIndex === 0 && rowIndicator && rowIndicator(item) && (
+																	<span className="badge rounded-pill bg-primary me-2" style={{ fontSize: "0.6rem" }}>NEW</span>
+																)}
 																<RenderViewFieldWithContext
 																	field={column}
 																	item={item}

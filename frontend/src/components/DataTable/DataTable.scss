@@ -26,16 +26,13 @@ thead.custom-header th {
     -webkit-text-fill-color: transparent;
 }
 
-.table-cell--new::before {
-    content: '';
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--bs-primary);
-    margin-right: 0.5rem;
-    flex-shrink: 0;
-    vertical-align: middle;
+.table-row--new {
+    --bs-table-bg: rgba(var(--bs-primary-rgb), 0.06) !important;
+    background-color: rgba(var(--bs-primary-rgb), 0.06) !important;
+}
+
+.table-cell--new {
+    box-shadow: inset 3px 0 0 var(--bs-primary);
 }
 
 .config-btn {
