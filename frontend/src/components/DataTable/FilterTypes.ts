@@ -59,7 +59,7 @@ export interface SelectFilterValue {
 	selected: string[];
 }
 
-export type DatePreset = "last7" | "last30" | "next7" | "next30" | "thisMonth" | "custom";
+export type DatePreset = "last7" | "last30" | "next7" | "next30" | "thisMonth" | "pastDeadline" | "custom";
 
 export interface DateFilterValue {
 	type: "date";

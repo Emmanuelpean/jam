@@ -45,6 +45,11 @@ function applyPreset(preset: DatePreset): DateFilterValue {
 		const to = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0] ?? null;
 		return { type: "date", preset, from, to };
 	}
+	if (preset === "pastDeadline") {
+		const yesterday = new Date(now);
+		yesterday.setDate(yesterday.getDate() - 1);
+		return { type: "date", preset, from: null, to: yesterday.toISOString().split("T")[0] ?? null };
+	}
 	// custom — keep existing range, just switch preset
 	return { type: "date", preset: "custom", from: null, to: null };
 }

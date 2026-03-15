@@ -473,6 +473,7 @@ export const tableColumns = {
 		filterConfig: {
 			type: "date",
 			presets: [
+				{ key: "pastDeadline", label: "Past deadline" },
 				{ key: "next7", label: "Next 7 days" },
 				{ key: "next30", label: "Next 30 days" },
 				{ key: "thisMonth", label: "This month" },

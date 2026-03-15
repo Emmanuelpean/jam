@@ -231,6 +231,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								next7: "Next 7 days",
 								next30: "Next 30 days",
 								thisMonth: "This month",
+								pastDeadline: "Past deadline",
 								custom: "",
 							};
 							if (val.preset && val.preset !== "custom") {
@@ -741,10 +742,33 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		};
 
 		const handleBulkAction = async (action: Extract<BulkAction, { type?: "action" }>): Promise<void> => {
-			const ids: string[] =
-				selectedIds.size > 0
-					? [...selectedIds].map(String)
-					: currentPageData.map((item: any) => String(item.id));
+			let ids: string[];
+			if (selectedIds.size > 0) {
+				ids = [...selectedIds].map(String);
+			} else if (isServerPagination && totalCount > 0) {
+				try {
+					const params = new URLSearchParams({
+						page: "0",
+						page_size: totalCount.toString(),
+						sort_by: sortConfig.key,
+						sort_direction: sortConfig.direction,
+						search: debouncedSearchTerm,
+					});
+					if (queryParams) {
+						Object.entries(queryParams).forEach(([key, value]) => params.set(key, value));
+					}
+					const activeFilterEntries = Object.entries(filters).filter(([, v]) => isFilterActive(v));
+					if (activeFilterEntries.length > 0) {
+						params.set("filters", JSON.stringify(Object.fromEntries(activeFilterEntries)));
+					}
+					const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
+					ids = response.data.items.map((item: any) => String(item.id));
+				} catch {
+					ids = currentPageData.map((item: any) => String(item.id));
+				}
+			} else {
+				ids = sortedData.map((item: any) => String(item.id));
+			}
 			await action.onClick(ids);
 			setSelectedIds(new Set());
 		};

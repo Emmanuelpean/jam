@@ -8,8 +8,8 @@ import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionToggle } from "../rendering/form/ActionToggle";
 import ScrapingFilterTable from "./ScrapingFilterTable";
-import { useAlert } from "../../contexts/AlertContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { useAlert } from "../../contexts/AlertContext";
 import { ProgressOverlay } from "../ProgressOverlay/ProgressOverlay";
 
 const ScrapedJobsTable: React.FC<DataTableProps> = ({

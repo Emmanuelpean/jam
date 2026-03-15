@@ -50,6 +50,7 @@ export const Sidebar = (): JSX.Element => {
 		}
 	};
 
+	const expandTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const dropdownRef = useRef<HTMLDivElement | null>(null);
 	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 990);
@@ -160,10 +161,16 @@ export const Sidebar = (): JSX.Element => {
 			clearTimeout(collapseTimeoutRef.current);
 			collapseTimeoutRef.current = null;
 		}
-		setIsExpanded(true);
+		expandTimeoutRef.current = setTimeout(() => {
+			setIsExpanded(true);
+		}, 200);
 	};
 
 	const handleMouseLeave = () => {
+		if (expandTimeoutRef.current) {
+			clearTimeout(expandTimeoutRef.current);
+			expandTimeoutRef.current = null;
+		}
 		collapseTimeoutRef.current = setTimeout(() => {
 			setIsExpanded(false);
 			setShowDropdown(false);
