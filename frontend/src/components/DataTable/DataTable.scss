@@ -1,46 +1,22 @@
-.table-row-selected {
-    --bs-table-bg: var(--bs-primary-bg-subtle, #cfe2ff) !important;
-    --bs-table-striped-bg: var(--bs-primary-bg-subtle, #cfe2ff) !important;
-}
-
 thead.custom-header {
     color: white;
     background: var(--primary-gradient);
     --bs-table-bg: transparent;
-
-    .form-check-input:indeterminate {
-        background-color: transparent;
-        border-color: rgba(255, 255, 255, 0.8);
-        background-image: repeating-linear-gradient(
-            45deg,
-            rgba(255, 255, 255, 0.75) 0px,
-            rgba(255, 255, 255, 0.75) 2px,
-            transparent 2px,
-            transparent 6px
-        );
-    }
 }
 
 thead.custom-header th {
     color: white;
-}
 
-// Sticky checkbox column (right side)
-.table-container--full-height {
-    thead th.checkbox-col,
-    tbody td.checkbox-col {
-        position: sticky;
-        right: 0;
-        padding-left: 0.25rem;
-        padding-right: 0.25rem;
-        justify-content: center;
-        min-width: 0;
-        overflow: hidden;
-    }
-
-    thead th.checkbox-col {
-        background-color: var(--primary-end);
-        z-index: 2;
+    .form-check-input:indeterminate {
+        border-color: rgba(255, 255, 255, 0.8);
+        background-color: transparent;
+        background-image: repeating-linear-gradient(
+                        45deg,
+                        rgba(255, 255, 255, 0.75) 0px,
+                        rgba(255, 255, 255, 0.75) 2px,
+                        transparent 2px,
+                        transparent 6px
+        );
     }
 }
 

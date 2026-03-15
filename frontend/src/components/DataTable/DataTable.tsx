@@ -11,7 +11,6 @@ import React, {
 	useState,
 } from "react";
 import { Button, Form } from "react-bootstrap";
-import BulkActionsDropdown from "./BulkActionsDropdown";
 import { useAuth } from "../../contexts/AuthContext";
 import {
 	DataContextValue,
@@ -53,6 +52,18 @@ import {
 	SelectFilterConfig,
 } from "./FilterTypes";
 import { applyFilters } from "./filterLogic";
+import BulkActionsDropdown from "./BulkActionsDropdown";
+
+export type BulkAction =
+	| {
+			type?: "action";
+			label: string;
+			icon?: string;
+			variant?: string;
+			onClick: (ids: string[]) => void | Promise<void>;
+	  }
+	| { type: "divider" }
+	| { type: "header"; label: string };
 
 export type Direction = "asc" | "desc";
 
@@ -68,17 +79,6 @@ export interface DataTableProps {
 	menuItems?: string[] | ((item: any) => string[]);
 	title?: string;
 }
-
-export type BulkAction =
-	| {
-			type?: "action";
-			label: string;
-			icon?: string;
-			variant?: string;
-			onClick: (selectedIds: string[], selectedItems: JamData[]) => void;
-	  }
-	| { type: "header"; label: string }
-	| { type: "divider" };
 
 export interface GenericTableProps {
 	// Data source - entity type from DataContext
@@ -125,7 +125,6 @@ export interface GenericTableProps {
 	// Multi-select
 	enableMultiSelect?: boolean;
 	bulkActions?: BulkAction[];
-	onSelectionChange?: (selectedIds: string[], selectedItems: JamData[]) => void;
 }
 
 export interface DataTableHandle {
@@ -161,7 +160,6 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			enableColumnConfig = false,
 			enableMultiSelect = false,
 			bulkActions = [],
-			onSelectionChange,
 		}: GenericTableProps,
 		ref
 	): JSX.Element => {
@@ -170,7 +168,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
 		const [filterSidebarOpen, setFilterSidebarOpen] = useState<boolean>(false);
 		const [filters, setFilters] = useState<ActiveFilters>({});
-		const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+		const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
 		const effectiveColumns: TableColumn[] = enableColumnConfig ? columnConfig.visibleColumns : columns;
 		const columnSidebarRef = useRef<HTMLDivElement>(null);
 		const filterSidebarRef = useRef<HTMLDivElement>(null);
@@ -179,15 +177,6 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
 		const openAddModal = (data?: any) => modalRef.current?.showAdd(data ?? initialData);
 		const openImportModal = (item: any): void | undefined => modalRef.current?.showImport(item);
-
-		const toggleSelectRow = (id: string): void => {
-			setSelectedIds((prev) => {
-				const next = new Set(prev);
-				if (next.has(id)) next.delete(id);
-				else next.add(id);
-				return next;
-			});
-		};
 
 		useImperativeHandle(ref, () => ({ openAddModal, clearSelection: () => setSelectedIds(new Set()) }));
 
@@ -347,6 +336,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		// Reset page when debounced search or filters change
 		useEffect(() => {
 			setCurrentPage(0);
+			setSelectedIds(new Set());
 		}, [debouncedSearchTerm, sortConfig, pageSize, filters]);
 
 		const fetchData = async (): Promise<void> => {
@@ -591,61 +581,6 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			}
 		}
 
-		const toggleSelectAll = (): void => {
-			const pageIds = currentPageData.map((item: JamData) => String(item.id));
-			const allSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
-			if (allSelected) {
-				setSelectedIds((prev) => {
-					const next = new Set(prev);
-					pageIds.forEach((id) => next.delete(id));
-					return next;
-				});
-			} else {
-				setSelectedIds((prev) => {
-					const next = new Set(prev);
-					pageIds.forEach((id) => next.add(id));
-					return next;
-				});
-			}
-		};
-
-		// Resolve the items to act on: selected rows, or all filtered rows if nothing is selected
-		const getActionTargets = async (): Promise<{ ids: string[]; items: JamData[] }> => {
-			if (selectedIds.size > 0) {
-				return {
-					ids: Array.from(selectedIds),
-					items: data.filter((item) => selectedIds.has(String(item.id))),
-				};
-			}
-			if (isServerPagination) {
-				const params = new URLSearchParams({
-					page: "0",
-					page_size: String(totalCount || 9999),
-					sort_by: sortConfig.key,
-					sort_direction: sortConfig.direction,
-					search: debouncedSearchTerm,
-				});
-				if (queryParams) Object.entries(queryParams).forEach(([k, v]) => params.set(k, v));
-				const activeFilterEntries = Object.entries(filters).filter(([, v]) => isFilterActive(v));
-				if (activeFilterEntries.length > 0)
-					params.set("filters", JSON.stringify(Object.fromEntries(activeFilterEntries)));
-				const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
-				const allItems = response.data.items as JamData[];
-				return { ids: allItems.map((item) => String(item.id)), items: allItems };
-			}
-			// Client-side: use all filtered data
-			return { ids: sortedData.map((item) => String(item.id)), items: sortedData };
-		};
-
-		// Notify parent when selection changes
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		useEffect(() => {
-			if (onSelectionChange && enableMultiSelect) {
-				const selectedItems = data.filter((item) => selectedIds.has(String(item.id)));
-				onSelectionChange(Array.from(selectedIds), selectedItems);
-			}
-		}, [selectedIds]); // eslint-disable-line react-hooks/exhaustive-deps
-
 		const handleSnoozeItem = (weeks: number): ((item: JamData) => Promise<void>) => {
 			return async (item: JamData): Promise<void> => {
 				try {
@@ -787,6 +722,33 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			);
 		};
 
+		// Bulk selection handlers
+		const handleSelectAll = (checked: boolean): void => {
+			if (checked) {
+				setSelectedIds(new Set(currentPageData.map((item: any) => item.id)));
+			} else {
+				setSelectedIds(new Set());
+			}
+		};
+
+		const handleSelectRow = (id: string | number, checked: boolean): void => {
+			setSelectedIds((prev) => {
+				const next = new Set(prev);
+				if (checked) next.add(id);
+				else next.delete(id);
+				return next;
+			});
+		};
+
+		const handleBulkAction = async (action: Extract<BulkAction, { type?: "action" }>): Promise<void> => {
+			const ids: string[] =
+				selectedIds.size > 0
+					? [...selectedIds].map(String)
+					: currentPageData.map((item: any) => String(item.id));
+			await action.onClick(ids);
+			setSelectedIds(new Set());
+		};
+
 		// Render
 		if (contextError) {
 			return <div className="alert alert-danger mt-3">{contextError.message}</div>;
@@ -851,18 +813,6 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								{`Add ${entityName}`}
 							</Button>
 						)}
-						{enableMultiSelect && !compact && (
-							<BulkActionsDropdown
-								selectedCount={selectedIds.size}
-								totalCount={displayTotal}
-								actions={bulkActions}
-								onAction={async (action) => {
-									const t = await getActionTargets();
-									action.onClick(t.ids, t.items);
-								}}
-								onClearSelection={() => setSelectedIds(new Set())}
-							/>
-						)}
 						{enableColumnConfig && !compact && (
 							<Button
 								id="column-config-toggle-btn"
@@ -904,6 +854,15 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								)}
 							</Button>
 						)}
+						{enableMultiSelect && (
+							<BulkActionsDropdown
+								selectedCount={selectedIds.size}
+								totalCount={displayTotal}
+								actions={bulkActions}
+								onAction={handleBulkAction}
+								onClearSelection={() => setSelectedIds(new Set())}
+							/>
+						)}
 					</div>
 
 					{/* Table */}
@@ -920,20 +879,48 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 											...(!compact
 												? {
 														gridTemplateColumns: [
-															...effectiveColumns.map((col, i) => {
-																const min = col.minWidth ?? "auto";
-																return i === 0
-																	? `minmax(0, 1fr)`
-																	: `minmax(${min}, auto)`;
-															}),
-															...(enableMultiSelect ? ["2.5rem"] : []),
-														].join(" "),
+																...(enableMultiSelect ? ["2rem"] : []),
+																...effectiveColumns.map((col, i) => {
+																	const min = col.minWidth ?? "auto";
+																	return i === 0
+																		? `minmax(${min}, 1fr)`
+																		: `minmax(${min}, auto)`;
+																}),
+															].join(" "),
 													}
 												: {}),
 										}}
 									>
 										<thead className="custom-header">
 											<tr>
+												{enableMultiSelect && (
+													<th
+														style={{
+															width: "2rem",
+															...(compact ? { padding: "0.5rem" } : {}),
+														}}
+													>
+														<input
+															type="checkbox"
+															className="form-check-input"
+															ref={(el) => {
+																if (el) {
+																	const allSel =
+																		currentPageData.length > 0 &&
+																		currentPageData.every((i: any) =>
+																			selectedIds.has(i.id)
+																		);
+																	const someSel = currentPageData.some((i: any) =>
+																		selectedIds.has(i.id)
+																	);
+																	el.indeterminate = someSel && !allSel;
+																	el.checked = allSel;
+																}
+															}}
+															onChange={(e) => handleSelectAll(e.target.checked)}
+														/>
+													</th>
+												)}
 												{effectiveColumns.map(
 													(column: TableColumn): JSX.Element => (
 														<th
@@ -982,32 +969,6 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 														</th>
 													)
 												)}
-												{enableMultiSelect && (
-													<th className="checkbox-col" style={{ justifyContent: "center" }}>
-														<Form.Check.Input
-															type="checkbox"
-															checked={
-																currentPageData.length > 0 &&
-																currentPageData.every((item: JamData) =>
-																	selectedIds.has(String(item.id))
-																)
-															}
-															ref={(el: HTMLInputElement | null) => {
-																if (el)
-																	el.indeterminate =
-																		currentPageData.some((item: JamData) =>
-																			selectedIds.has(String(item.id))
-																		) &&
-																		!currentPageData.every((item: JamData) =>
-																			selectedIds.has(String(item.id))
-																		);
-															}}
-															onChange={toggleSelectAll}
-															aria-label="Select all rows"
-															style={{ margin: "0 !important", marginRight: 0 }}
-														/>
-													</th>
-												)}
 											</tr>
 										</thead>
 										<tbody>
@@ -1016,11 +977,31 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 													<tr
 														key={item.id || index}
 														id={`table-row-${entityType}-${item.id}`}
-														className={`table-row-clickable${enableMultiSelect && selectedIds.has(String(item.id)) ? " table-row-selected" : ""}`}
+														className={`table-row-clickable`}
 														onClick={(e) => handleRowClick(e, item)}
 														onContextMenu={(e) => handleRowRightClick(item, e)}
 														style={{ cursor: "pointer" }}
 													>
+														{enableMultiSelect && (
+															<td
+																style={{
+																	width: "2rem",
+																	...(compact
+																		? { padding: "0.5rem", fontSize: "0.875rem" }
+																		: {}),
+																}}
+																onClick={(e) => e.stopPropagation()}
+															>
+																<input
+																	type="checkbox"
+																	className="form-check-input"
+																	checked={selectedIds.has(item.id)}
+																	onChange={(e) =>
+																		handleSelectRow(item.id, e.target.checked)
+																	}
+																/>
+															</td>
+														)}
 														{effectiveColumns.map((column, columnIndex) => (
 															<td
 																key={column.key}
@@ -1044,34 +1025,13 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 																/>
 															</td>
 														))}
-														{enableMultiSelect && (
-															<td
-																className="align-middle checkbox-col"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	toggleSelectRow(String(item.id));
-																}}
-															>
-																<Form.Check.Input
-																	type="checkbox"
-																	checked={selectedIds.has(String(item.id))}
-																	onChange={() => {}}
-																	aria-label={`Select row ${item.id}`}
-																	style={{
-																		margin: 0,
-																		marginRight: 0,
-																		pointerEvents: "none",
-																	}}
-																/>
-															</td>
-														)}
 													</tr>
 												)
 											)}
 											{currentPageData.length === 0 && (
 												<tr>
 													<td
-														colSpan={effectiveColumns.length}
+														colSpan={effectiveColumns.length + (enableMultiSelect ? 1 : 0)}
 														className="text-center py-4 text-muted"
 														style={{
 															gridColumn: "1 / -1",
