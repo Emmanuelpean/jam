@@ -4,6 +4,7 @@ import datetime as dt
 import uuid
 
 from conftest import BaseTest, models
+from selenium.webdriver.common.by import By
 
 
 class TestJobScrapingTable(BaseTest):
@@ -266,6 +267,39 @@ class TestJobScrapingTable(BaseTest):
         modal = self.scrapedJob_modal_utils.wait_for_import_modal()
         assert "Job description too short (minimum length is 100 characters)" in modal.text
         assert "Job Rating" not in modal.text
+
+    def test_new_alert_dot_indicator(self) -> None:
+        """Test that alerts created after previous_login are highlighted with a dot indicator,
+        and alerts created before previous_login are not."""
+
+        previous_login = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=12)
+
+        # Create an old job (before previous_login) and backdate its created_at
+        old_job = self._make_scraped_job(title="Old Alert - No Dot", is_scraped=True)
+        old_job.created_at = previous_login - dt.timedelta(hours=1)
+        self.db.commit()
+        self.db.refresh(old_job)
+
+        # Set previous_login on the user
+        user = self.db_user
+        user.previous_login = previous_login
+        self.db.commit()
+        self.db.expire_all()
+
+        # Create a new job (after previous_login — created_at will be now)
+        new_job = self._make_scraped_job(title="New Alert - Has Dot", is_scraped=True)
+
+        self.driver.refresh()
+
+        # Old job: first data cell should NOT have the table-cell--new class
+        self.scrapedJob_table_utils.set_search(old_job.title)
+        old_row = self.scrapedJob_table_utils.table_row(old_job.id)
+        assert not old_row.find_elements(By.CSS_SELECTOR, "td.table-cell--new")
+
+        # New job: first data cell SHOULD have the table-cell--new class
+        self.scrapedJob_table_utils.set_search(new_job.title)
+        new_row = self.scrapedJob_table_utils.table_row(new_job.id)
+        assert new_row.find_elements(By.CSS_SELECTOR, "td.table-cell--new")
 
     def test_scraped_job_with_job_rating_with_notes(self) -> None:
         """Test that a scraped job with a rating with notes is displayed correctly."""

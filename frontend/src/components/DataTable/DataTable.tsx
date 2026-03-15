@@ -125,6 +125,7 @@ export interface GenericTableProps {
 	// Multi-select
 	enableMultiSelect?: boolean;
 	bulkActions?: BulkAction[];
+	rowIndicator?: (item: JamData) => boolean;
 }
 
 export interface DataTableHandle {
@@ -160,6 +161,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			enableColumnConfig = false,
 			enableMultiSelect = false,
 			bulkActions = [],
+			rowIndicator,
 		}: GenericTableProps,
 		ref
 	): JSX.Element => {
@@ -1029,7 +1031,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 														{effectiveColumns.map((column, columnIndex) => (
 															<td
 																key={column.key}
-																className="align-middle"
+																className={`align-middle${columnIndex === 0 && rowIndicator && rowIndicator(item) ? " table-cell--new" : ""}`}
 																style={{
 																	...(columnIndex === 0
 																		? { fontWeight: "bold" }

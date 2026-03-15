@@ -24,7 +24,6 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 	const tableRef = useRef<DataTableHandle>(null);
 	const [showFilters, setShowFilters] = useState<boolean>(false);
 	const [showPastDeadline, setShowPastDeadline] = useState<boolean>(false);
-	const [sincePreviousLogin, setSincePreviousLogin] = useState<boolean>(false);
 	const [reloadTrigger, setReloadTrigger] = useState<number>(0);
 	const [progress, setProgress] = useState<{ show: boolean; title: string; message: string }>({
 		show: false, title: "", message: "",
@@ -56,9 +55,8 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 	const queryParams = useMemo(
 		() => ({
 			show_past_deadline: showPastDeadline.toString(),
-			since_last_login: sincePreviousLogin.toString(),
 		}),
-		[showPastDeadline, sincePreviousLogin]
+		[showPastDeadline]
 	);
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
@@ -91,6 +89,10 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 				queryParams={queryParams}
 				enableColumnConfig={true}
 				reloadTrigger={reloadTrigger}
+				rowIndicator={(item: any) =>
+					!!currentUser?.previous_login &&
+					new Date(item.created_at) > new Date(currentUser.previous_login as string)
+				}
 				enableMultiSelect={true}
 				bulkActions={[
 					{ label: "Dismiss", icon: "x-circle", variant: "outline-danger", onClick: (ids) => handleBulkDismiss(ids) },
@@ -116,13 +118,6 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 							label="Show past deadline jobs"
 							checked={showPastDeadline}
 							onChange={(): void => setShowPastDeadline((prev: boolean): boolean => !prev)}
-						/>
-						<ActionToggle
-							id="since-last-login-toggle"
-							label="Since last login"
-							checked={sincePreviousLogin}
-							onChange={(): void => setSincePreviousLogin((prev: boolean): boolean => !prev)}
-							disabled={!currentUser?.previous_login}
 						/>
 					</div>
 				}

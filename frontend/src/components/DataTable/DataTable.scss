@@ -26,6 +26,18 @@ thead.custom-header th {
     -webkit-text-fill-color: transparent;
 }
 
+.table-cell--new::before {
+    content: '';
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--bs-primary);
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
 .config-btn {
     position: relative;
     height: 100% !important;
