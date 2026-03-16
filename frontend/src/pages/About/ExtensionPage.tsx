@@ -41,7 +41,16 @@ const ExtensionPage = (): JSX.Element => {
 						<i className="bi bi-puzzle-fill" />
 					</div>
 					<h2 className="display-5 fw-bold mt-3">SPREAD Chrome Extension</h2>
-					<span className="extension-about-badge m-1">Coming Soon</span>
+					<a
+						href="https://chromewebstore.google.com/detail/spread/dnkmbfflallehleblligcokipgijnbhe"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="extension-about-badge m-1"
+						style={{ textDecoration: "none" }}
+					>
+						<i className="bi bi-download me-1" />
+						Install from Chrome Web Store
+					</a>
 					<p
 						className="about-text-muted mt-2"
 						style={{ fontSize: "1.3rem", letterSpacing: "0.06em", textTransform: "uppercase" }}
