@@ -24,14 +24,14 @@ export const ErrorSummaryCard = ({
 	).length;
 
 	return (
-		<div className="status-card mt-4">
+		<div id="error-summary-card" className="status-card mt-4">
 			<h2 className="card-title">
 				<i className="bi bi-exclamation-triangle me-2"></i>
 				Error Summary
 				{isRunning && <span className="live-indicator ms-2"></span>}
 			</h2>
 
-			<div className="form-check mb-3">
+			<div className="form-check form-switch mb-3">
 				<input
 					type="checkbox"
 					className="form-check-input"

@@ -13,7 +13,7 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 	if (!latestLog) return null;
 
 	return (
-		<div className="status-card">
+		<div id="latest-run-progress" className="status-card">
 			<h2 className="card-title">
 				<i className="bi bi-clock-history me-2"></i>
 				Latest Run Progress

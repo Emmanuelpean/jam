@@ -262,10 +262,12 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     # Set environment variables for frontend
     env = os.environ.copy()
     env["REACT_APP_API_BASE_URL"] = test_backend_server  # Use worker-specific backend
+    env["REACT_APP_API_SERVICE_URL"] = test_backend_server  # Scheduler routes also served by test backend
     env["PORT"] = str(port)
     env["BROWSER"] = "none"
     print(f"Environment variables:")
     print(f"  REACT_APP_API_BASE_URL: {env['REACT_APP_API_BASE_URL']}")
+    print(f"  REACT_APP_API_SERVICE_URL: {env['REACT_APP_API_SERVICE_URL']}")
     print(f"  PORT: {env['PORT']}")
 
     # Find npm executable

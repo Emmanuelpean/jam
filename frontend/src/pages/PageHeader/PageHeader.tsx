@@ -7,6 +7,7 @@ interface TableHeaderProps {
 	subtitle?: string;
 	count?: number;
 	icon: string;
+	id?: string;
 	onClick?: () => void;
 	active?: boolean;
 }
@@ -16,11 +17,13 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 	count,
 	icon,
 	subtitle,
+	id,
 	onClick,
 	active = false,
 }: TableHeaderProps): JSX.Element => {
 	return (
 		<div
+			id={id}
 			className={`mb-4 page-header ${onClick ? "page-header-clickable" : ""} ${onClick && active ? "page-header-active" : ""} flex-fill`}
 			onClick={onClick}
 		>
