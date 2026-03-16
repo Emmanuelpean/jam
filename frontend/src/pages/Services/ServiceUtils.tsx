@@ -14,10 +14,20 @@ export interface ServiceStatusCardProps {
 	status: ServiceStatus | null;
 	remainingTime: number | null;
 	loading: boolean;
-	onFormChange: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void;
 	onStart: () => Promise<void>;
 	onStop: () => Promise<void>;
 }
+
+export const formatErrorMessage = (err: unknown): string => {
+	if (!err) return "";
+	if (typeof err === "string") return err;
+	if (err instanceof Error) return err.message;
+	try {
+		return JSON.stringify(err);
+	} catch {
+		return String(err);
+	}
+};
 
 export const serviceRunnerStatusIcons: Record<ThreadStatus, string> = {
 	started: "bi-check-circle-fill",
