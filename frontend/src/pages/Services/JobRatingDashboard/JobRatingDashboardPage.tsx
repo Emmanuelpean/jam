@@ -147,7 +147,7 @@ const JobRatingDashboard = (): JSX.Element => {
 				serviceStatus={serviceStatus}
 			/>
 
-			<div className="status-card mt-4">
+			<div id="history-filters" className="status-card mt-4">
 				<h2 className="card-title">
 					<i className="bi bi-funnel me-2"></i>
 					History Filters
