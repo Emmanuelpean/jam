@@ -58,6 +58,17 @@ const DateFilter = ({ config, value, onChange }: Props): JSX.Element => {
 	const presets = config.presets ?? DEFAULT_PRESETS;
 	const showCustomRange: boolean = value.preset === "custom";
 
+	const handleDateChange = (field: "from" | "to", raw: string) => {
+		const val = raw || null;
+		const updated: DateFilterValue = { ...value, preset: "custom", [field]: val };
+		if (updated.from && updated.to && updated.from > updated.to) {
+			const tmp = updated.from;
+			updated.from = updated.to;
+			updated.to = tmp;
+		}
+		onChange(updated);
+	};
+
 	return (
 		<div className="filter-date">
 			<div className="filter-date-presets">
@@ -78,18 +89,18 @@ const DateFilter = ({ config, value, onChange }: Props): JSX.Element => {
 			</div>
 
 			{showCustomRange && (
-				<div className="filter-date-range">
+				<div className="filter-date-range" key={`${value.from}-${value.to}`}>
 					<Form.Control
 						type="date"
-						value={value.from ?? ""}
-						onChange={(e) => onChange({ ...value, preset: "custom", from: e.target.value || null })}
+						defaultValue={value.from ?? ""}
+						onChange={(e) => handleDateChange("from", e.target.value)}
 						className="form-control--sm"
 					/>
 					<span className="filter-range-sep">to</span>
 					<Form.Control
 						type="date"
-						value={value.to ?? ""}
-						onChange={(e) => onChange({ ...value, preset: "custom", to: e.target.value || null })}
+						defaultValue={value.to ?? ""}
+						onChange={(e) => handleDateChange("to", e.target.value)}
 						className="form-control--sm"
 					/>
 				</div>

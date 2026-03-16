@@ -227,6 +227,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 							break;
 						}
 						case "date": {
+							if (val.preset === "custom" && !val.from && !val.to) return [];
 							const presetLabels: Record<DatePreset, string> = {
 								last7: "Last 7 days",
 								last30: "Last 30 days",
