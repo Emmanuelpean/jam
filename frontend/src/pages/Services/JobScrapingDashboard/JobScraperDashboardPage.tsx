@@ -4,19 +4,18 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { SyntheticEvent } from "../../../components/rendering/widgets/WidgetRenders";
 import LogViewer from "../LogViewer/LogViewer";
 import { useGlobalToast } from "../../../hooks/useNotificationToast";
-import { ServiceStatusCard } from "./ServiceStatusCard";
+import { ServiceStatusCard } from "../ServiceStatusCard";
 import { LatestRunProgress } from "./LatestRunProgress";
 import { RunHistoryChart } from "./RunHistoryChart";
 import { ErrorSummaryCard } from "./ErrorSummaryCard";
 import { useServiceRunnerStatus } from "../../../hooks/useServiceRunnerStatus";
 import { useJobScraperServiceLogs } from "../../../hooks/useJobScraperServiceLogs";
 import { useJobScraperErrors } from "../../../hooks/useJobScraperErrors";
-import { getTableIcon } from "../../../components/rendering/view/Icons";
 import { useServiceErrors } from "../../../hooks/useServiceErrors";
 import { DateRange } from "../../../utils/TimeUtils";
 import TimeSelection from "../../../components/TimeSelection/TimeSelection";
+import { formatErrorMessage, RenderLabeledInput } from "../ServiceUtils";
 import "../Service.scss";
-import PageHeader from "../../PageHeader/PageHeader";
 
 export interface FormData {
 	period_hours: number;
@@ -25,18 +24,13 @@ export interface FormData {
 
 const JobScraperDashboard = (): JSX.Element => {
 	const { token } = useAuth();
-	const [dateRange, setDateRange] = useState<DateRange>({
-		start: new Date(),
-		end: new Date(),
-	});
+	const [dateRange, setDateRange] = useState<DateRange>({ start: new Date(), end: new Date() });
 	const [selectedPlatform, setSelectedPlatform] = useState("all");
 	const { serviceStatus, remainingTime, fetchStatus, statusError } = useServiceRunnerStatus(jobScraperServiceApi);
-	const [formData, setFormData] = useState<FormData>({
-		period_hours: 0,
-		timedelta_days: 0,
-	});
+	const [formData, setFormData] = useState<FormData>({ period_hours: 0, timedelta_days: 0 });
 	const hasInitializedForm = useRef(false);
 	const [loading, setLoading] = useState<boolean>(false);
+	const { showToastSuccess } = useGlobalToast();
 
 	useEffect(() => {
 		if (serviceStatus && !hasInitializedForm.current) {
@@ -48,7 +42,6 @@ const JobScraperDashboard = (): JSX.Element => {
 		}
 	}, [serviceStatus]);
 
-	const { showToastSuccess } = useGlobalToast();
 	const {
 		previousServiceLogs,
 		latestServiceLog,
@@ -57,6 +50,7 @@ const JobScraperDashboard = (): JSX.Element => {
 		serviceLogError,
 		loading: logsLoading,
 	} = useJobScraperServiceLogs(serviceStatus?.service_running || false, dateRange);
+
 	const {
 		scraperErrors: latestScraperErrors,
 		error: lastestScraperRequestError,
@@ -76,7 +70,6 @@ const JobScraperDashboard = (): JSX.Element => {
 	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
 		const target = event.target as HTMLInputElement;
 		const { name, value } = target;
-
 		setFormData((prevData: FormData) => ({
 			...prevData,
 			[name]: value === "" ? "" : Number(value) || 3,
@@ -113,30 +106,11 @@ const JobScraperDashboard = (): JSX.Element => {
 		}
 	};
 
-	const formatErrorMessage = (err: unknown): string => {
-		if (!err) return "";
-		if (typeof err === "string") return err;
-		if (err instanceof Error) return err.message;
-		try {
-			return JSON.stringify(err);
-		} catch {
-			return String(err);
-		}
-	};
-
 	const collectedErrors = [
 		{ key: "status", label: "Service status", value: statusError },
 		{ key: "serviceLogs", label: "Service logs", value: serviceLogError },
-		{
-			key: "lastestScraperRequestError",
-			label: "Last rating error",
-			value: lastestScraperRequestError,
-		},
-		{
-			key: "previousScraperRequestError",
-			label: "Latest rating error",
-			value: previousScraperRequestError,
-		},
+		{ key: "lastestScraperRequestError", label: "Last rating error", value: lastestScraperRequestError },
+		{ key: "previousScraperRequestError", label: "Latest rating error", value: previousScraperRequestError },
 	].filter((e) => e.value);
 
 	return (
@@ -162,11 +136,34 @@ const JobScraperDashboard = (): JSX.Element => {
 			<ServiceStatusCard
 				status={serviceStatus}
 				remainingTime={remainingTime}
-				formData={formData}
 				loading={loading}
-				onFormChange={onChangeFormField}
 				onStart={handleStart}
 				onStop={handleStop}
+				serviceLabel="Scraper Service"
+				renderFields={(status) => (
+					<>
+						{RenderLabeledInput(
+							"period_hours",
+							"Scraping Period",
+							"Time between scraping runs.",
+							formData.period_hours,
+							"Hour(s)",
+							status.service_runner_status === "stopped",
+							onChangeFormField,
+							status.service_runner_status !== "stopped"
+						)}
+						{RenderLabeledInput(
+							"timedelta_days",
+							"Time Delta",
+							"Number of days back to scrape job postings for each run.",
+							formData.timedelta_days,
+							"Day(s)",
+							status.service_runner_status === "stopped",
+							onChangeFormField,
+							status.service_runner_status !== "stopped"
+						)}
+					</>
+				)}
 			/>
 
 			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.service_running || false} />
