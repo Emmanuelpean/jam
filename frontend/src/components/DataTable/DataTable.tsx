@@ -6,7 +6,6 @@ import React, {
 	useCallback,
 	useEffect,
 	useImperativeHandle,
-	useMemo,
 	useRef,
 	useState,
 } from "react";
@@ -39,20 +38,14 @@ import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
 import "./DataTable.scss";
 import FollowUpModal, { FollowUpModalHandle } from "../FollowUpModal/FollowUpModal";
 import { useContextMenu } from "../../contexts/ContextMenuContext";
-import PageHeader, { FilterPill } from "../../pages/PageHeader/PageHeader";
+import PageHeader from "../../pages/PageHeader/PageHeader";
 import { ColumnConfig, useColumnConfig } from "../../hooks/useColumnConfig";
 import ColumnConfigSidebar from "./ColumnConfigSidebar";
 import FilterSidebar from "./FilterSidebar";
-import {
-	ActiveFilters,
-	countActiveFilters,
-	DatePreset,
-	isFilterActive,
-	ReferenceFilterConfig,
-	SelectFilterConfig,
-} from "./FilterTypes";
+import { isFilterActive } from "./FilterTypes";
 import { applyFilters } from "./filterLogic";
 import BulkActionsDropdown from "./BulkActionsDropdown";
+import { useTableFilters } from "./useTableFilters";
 
 export type BulkAction =
 	| {
@@ -168,12 +161,12 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const { token } = useAuth();
 		const columnConfig: ColumnConfig = useColumnConfig(entityType, enableColumnConfig ? columns : undefined);
 		const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
-		const [filterSidebarOpen, setFilterSidebarOpen] = useState<boolean>(false);
-		const [filters, setFilters] = useState<ActiveFilters>({});
 		const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
 		const effectiveColumns: TableColumn[] = enableColumnConfig ? columnConfig.visibleColumns : columns;
 		const columnSidebarRef = useRef<HTMLDivElement>(null);
-		const filterSidebarRef = useRef<HTMLDivElement>(null);
+		const dataContext: DataContextValue = useDataContext();
+		const { filters, setFilters, filterSidebarOpen, setFilterSidebarOpen, filterSidebarRef, filterPills, activeFilterCount } =
+			useTableFilters({ enableColumnConfig, columnConfig, effectiveColumns, dataContext });
 		const modalRef = useRef<DataModalHandle>(null);
 		const openViewModal = (item: any): void | undefined => modalRef.current?.showView(item);
 		const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
@@ -205,87 +198,6 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		// Add context menu hook
 		const { openContextMenu } = useContextMenu();
 
-		// Data management
-		const dataContext: DataContextValue = useDataContext();
-		const filterPills: FilterPill[] = useMemo(() => {
-			return Object.entries(filters)
-				.filter(([, val]) => isFilterActive(val))
-				.flatMap(([key, val]) => {
-					const allCols = enableColumnConfig ? columnConfig.allColumns : effectiveColumns;
-					const col = allCols.find((c) => c.key === key);
-					if (!col) return [];
-					let summary = "";
-					switch (val.type) {
-						case "text":
-							summary = `"${val.value}"`;
-							break;
-						case "select": {
-							const cfg = col.filterConfig as SelectFilterConfig;
-							const names = val.selected.map((v) => cfg.options.find((o) => o.value === v)?.label ?? v);
-							summary = names.slice(0, 2).join(", ");
-							if (names.length > 2) summary += ` +${names.length - 2}`;
-							break;
-						}
-						case "date": {
-							if (val.preset === "custom" && !val.from && !val.to) return [];
-							const presetLabels: Record<DatePreset, string> = {
-								last7: "Last 7 days",
-								last30: "Last 30 days",
-								next7: "Next 7 days",
-								next30: "Next 30 days",
-								thisMonth: "This month",
-								pastDeadline: "Past deadline",
-								custom: "",
-							};
-							if (val.preset && val.preset !== "custom") {
-								summary = presetLabels[val.preset];
-							} else if (val.from && val.to) {
-								summary = `${val.from} \u2013 ${val.to}`;
-							} else if (val.from) {
-								summary = `From ${val.from}`;
-							} else {
-								summary = `Until ${val.to}`;
-							}
-							break;
-						}
-						case "number": {
-							const parts: string[] = [];
-							if (val.min !== null && val.max !== null) parts.push(`${val.min} \u2013 ${val.max}`);
-							else if (val.min !== null) parts.push(`\u2265 ${val.min}`);
-							else if (val.max !== null) parts.push(`\u2264 ${val.max}`);
-							if (val.nullFilter === "not_null") parts.push("Not null");
-							else if (val.nullFilter === "null") parts.push("Null only");
-							summary = parts.join(", ");
-							break;
-						}
-						case "reference": {
-							const cfg = col.filterConfig as ReferenceFilterConfig;
-							const entities: any[] = (dataContext as any)[cfg.entityKey] ?? [];
-							const lk = cfg.labelKey ?? "name";
-							const names = val.selectedIds.map((id) => {
-								const e = entities.find((en) => String(en.id) === id);
-								return e ? String(e[lk] ?? e.id) : id;
-							});
-							summary = names.slice(0, 2).join(", ");
-							if (names.length > 2) summary += ` +${names.length - 2}`;
-							break;
-						}
-					}
-					return [
-						{
-							key,
-							label: col.label,
-							summary,
-							onRemove: () =>
-								setFilters((prev) => {
-									const u = { ...prev };
-									delete u[key];
-									return u;
-								}),
-						},
-					];
-				});
-		}, [filters, effectiveColumns, dataContext, enableColumnConfig, columnConfig.allColumns]);
 		const [isLoading, setIsLoading] = useState<boolean>(false);
 		const [loadError, setLoadError] = useState<string | null>(null);
 		const [fetchedData, setFetchedData] = useState<any[]>([]);
@@ -343,31 +255,29 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			setSelectedIds(new Set());
 		}, [debouncedSearchTerm, sortConfig, pageSize, filters]);
 
+		const buildPagedParams = (page: number, size: number): URLSearchParams => {
+			const params = new URLSearchParams({
+				page: page.toString(),
+				page_size: size.toString(),
+				sort_by: sortConfig.key,
+				sort_direction: sortConfig.direction,
+				search: debouncedSearchTerm,
+			});
+			if (queryParams) {
+				Object.entries(queryParams).forEach(([key, value]) => params.set(key, value));
+			}
+			const activeFilterEntries = Object.entries(filters).filter(([, v]) => isFilterActive(v));
+			if (activeFilterEntries.length > 0) {
+				params.set("filters", JSON.stringify(Object.fromEntries(activeFilterEntries)));
+			}
+			return params;
+		};
+
 		const fetchData = async (): Promise<void> => {
 			setIsLoading(true);
 			setLoadError(null);
-
 			try {
-				const params = new URLSearchParams({
-					page: currentPage.toString(),
-					page_size: pageSize.toString(),
-					sort_by: sortConfig.key,
-					sort_direction: sortConfig.direction,
-					search: debouncedSearchTerm,
-				});
-
-				if (queryParams) {
-					Object.entries(queryParams).forEach(([key, value]) => {
-						params.set(key, value);
-					});
-				}
-
-				// Send active column filters to the backend
-				const activeFilterEntries = Object.entries(filters).filter(([, v]) => isFilterActive(v));
-				if (activeFilterEntries.length > 0) {
-					params.set("filters", JSON.stringify(Object.fromEntries(activeFilterEntries)));
-				}
-
+				const params: URLSearchParams = buildPagedParams(currentPage, pageSize);
 				const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
 				setFetchedData(response.data.items);
 				setTotalCount(response.data.total);
@@ -745,35 +655,22 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		};
 
 		const handleBulkAction = async (action: Extract<BulkAction, { type?: "action" }>): Promise<void> => {
-			let ids: string[];
-			if (selectedIds.size > 0) {
-				ids = [...selectedIds].map(String);
-			} else if (isServerPagination && totalCount > 0) {
-				try {
-					const params = new URLSearchParams({
-						page: "0",
-						page_size: totalCount.toString(),
-						sort_by: sortConfig.key,
-						sort_direction: sortConfig.direction,
-						search: debouncedSearchTerm,
-					});
-					if (queryParams) {
-						Object.entries(queryParams).forEach(([key, value]) => params.set(key, value));
-					}
-					const activeFilterEntries = Object.entries(filters).filter(([, v]) => isFilterActive(v));
-					if (activeFilterEntries.length > 0) {
-						params.set("filters", JSON.stringify(Object.fromEntries(activeFilterEntries)));
-					}
+			try {
+				let ids: string[];
+				if (selectedIds.size > 0) {
+					ids = [...selectedIds].map(String);
+				} else if (isServerPagination && totalCount > 0) {
+					const params: URLSearchParams = buildPagedParams(0, totalCount);
 					const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
 					ids = response.data.items.map((item: any) => String(item.id));
-				} catch {
-					ids = currentPageData.map((item: any) => String(item.id));
+				} else {
+					ids = sortedData.map((item: any) => String(item.id));
 				}
-			} else {
-				ids = sortedData.map((item: any) => String(item.id));
+				await action.onClick(ids);
+				setSelectedIds(new Set());
+			} catch (error: any) {
+				showToastError(error?.message || "Bulk action failed. Please try again.");
 			}
-			await action.onClick(ids);
-			setSelectedIds(new Set());
 		};
 
 		// Render
@@ -875,7 +772,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								data-sidebar-toggle="filter"
 							>
 								<i className="bi bi-funnel"></i>
-								{countActiveFilters(filters) > 0 && (
+								{activeFilterCount > 0 && (
 									<span
 										className="filter-button-count"
 										style={{
@@ -885,7 +782,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 											fontSize: "0.65rem",
 										}}
 									>
-										{countActiveFilters(filters)}
+										{activeFilterCount}
 									</span>
 								)}
 							</Button>
