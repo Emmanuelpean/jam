@@ -1,7 +1,6 @@
 import React, { JSX } from "react";
 import { Dropdown } from "react-bootstrap";
 import { BulkAction } from "./DataTable";
-import { JamData } from "../../contexts/DataContext";
 
 interface BulkActionsDropdownProps {
 	selectedCount: number;
@@ -24,7 +23,7 @@ const BulkActionsDropdown = ({
 			: `Apply to all ${totalCount} ${totalCount === 1 ? "item" : "items"}`;
 
 	return (
-		<Dropdown align="end">
+		<Dropdown align="end" className="bulk-actions-dropdown">
 			<Dropdown.Toggle
 				id="bulk-actions-dropdown"
 				variant={selectedCount > 0 ? "primary" : "outline-primary"}

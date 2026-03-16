@@ -840,6 +840,15 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								{`Add ${entityName}`}
 							</Button>
 						)}
+						{enableMultiSelect && (
+							<BulkActionsDropdown
+								selectedCount={selectedIds.size}
+								totalCount={displayTotal}
+								actions={bulkActions}
+								onAction={handleBulkAction}
+								onClearSelection={() => setSelectedIds(new Set())}
+							/>
+						)}
 						{enableColumnConfig && !compact && (
 							<Button
 								id="column-config-toggle-btn"
@@ -881,15 +890,6 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								)}
 							</Button>
 						)}
-						{enableMultiSelect && (
-							<BulkActionsDropdown
-								selectedCount={selectedIds.size}
-								totalCount={displayTotal}
-								actions={bulkActions}
-								onAction={handleBulkAction}
-								onClearSelection={() => setSelectedIds(new Set())}
-							/>
-						)}
 					</div>
 
 					{/* Table */}
@@ -906,14 +906,14 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 											...(!compact
 												? {
 														gridTemplateColumns: [
-																...(enableMultiSelect ? ["2rem"] : []),
-																...effectiveColumns.map((col, i) => {
-																	const min = col.minWidth ?? "auto";
-																	return i === 0
-																		? `minmax(${min}, 1fr)`
-																		: `minmax(${min}, auto)`;
-																}),
-															].join(" "),
+															...(enableMultiSelect ? ["2rem"] : []),
+															...effectiveColumns.map((col, i) => {
+																const min = col.minWidth ?? "auto";
+																return i === 0
+																	? `minmax(${min}, 1fr)`
+																	: `minmax(${min}, auto)`;
+															}),
+														].join(" "),
 													}
 												: {}),
 										}}
@@ -1045,9 +1045,16 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 																		: {}),
 																}}
 															>
-																{columnIndex === 0 && rowIndicator && rowIndicator(item) && (
-																	<span className="badge rounded-pill bg-primary me-2" style={{ fontSize: "0.6rem" }}>NEW</span>
-																)}
+																{columnIndex === 0 &&
+																	rowIndicator &&
+																	rowIndicator(item) && (
+																		<span
+																			className="badge rounded-pill bg-primary me-2"
+																			style={{ fontSize: "0.6rem" }}
+																		>
+																			NEW
+																		</span>
+																	)}
 																<RenderViewFieldWithContext
 																	field={column}
 																	item={item}

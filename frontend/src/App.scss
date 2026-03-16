@@ -214,6 +214,16 @@ textarea.form-control {
 .react-select__menu-portal .react-select__menu {
     border: 1px solid var(--bs-border-color) !important;
     background-color: var(--bs-secondary-bg) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.13), 0 1px 6px rgba(0, 0, 0, 0.07) !important;
+    overflow: hidden;
+    padding: 6px;
+    animation: selectMenuFadeIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: top center;
+}
+
+.react-select__menu-portal .react-select__menu-list {
+    padding: 0;
 }
 
 /* Dropdown value hovering and focus */
@@ -221,12 +231,14 @@ textarea.form-control {
 .react-select__option--is-focused {
     color: white !important;
     background-color: var(--primary-mid) !important;
+    border-radius: 6px;
 }
 
 /* Dropdown value hovering and focus */
 .react-select__option--is-selected {
     color: white !important;
     background-color: var(--primary-end) !important;
+    border-radius: 6px;
 }
 
 /* Text colour */
@@ -370,11 +382,31 @@ textarea.form-control {
 .react-select-container--sm ~ .react-select__menu-portal .react-select__option,
 .react-select--sm-menu .react-select__option {
     font-size: 0.8rem;
-    padding: 4px 8px;
+    padding: 5px 8px;
+    border-radius: 5px;
 }
 
 .react-select--sm-menu .react-select__menu-list {
-    padding: 2px 0;
+    padding: 4px;
+}
+
+@keyframes selectMenuFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.react-select--sm-menu .react-select__menu {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.13), 0 1px 6px rgba(0, 0, 0, 0.07) !important;
+    overflow: hidden;
+    animation: selectMenuFadeIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: top center;
 }
 
 .select-widget-with-secondary {
