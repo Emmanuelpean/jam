@@ -27,7 +27,7 @@ def upgrade() -> None:
         ALTER COLUMN scrape_error TYPE JSONB
         USING CASE
             WHEN scrape_error IS NULL THEN '[]'::jsonb
-            ELSE jsonb_build_array(jsonb_build_object('datetime', now()::text, 'error', scrape_error))
+            ELSE jsonb_build_array(jsonb_build_object('datetime', scrape_datetime::text, 'error', scrape_error))
         END
         """
     )
