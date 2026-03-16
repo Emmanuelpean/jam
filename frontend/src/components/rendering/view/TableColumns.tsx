@@ -663,7 +663,7 @@ export const tableColumns = {
 		sortable: true,
 		type: "number",
 		render: renderFunctions.personalRating,
-		filterConfig: { type: "number", min: 0, max: 5, step: 1, display: "slider" },
+		filterConfig: { type: "number", min: 0, max: 5, step: 1, display: "slider", nullable: true },
 		...overrides,
 	}),
 
@@ -795,7 +795,10 @@ export const tableColumns = {
 		searchable: false,
 		sortField: (item: JamData) => (item as any).interviews?.length || 0,
 		render: renderFunctions.interviewCount,
-		filterConfig: { type: "number", min: 0, max: 20, step: 1, display: "slider" },
+		filterConfig: {
+			type: "number", min: 0, step: 1, display: "slider",
+			max: (ctx: DataContextValue) => maxCount(ctx.jobs, (j: any) => j.interviews?.length || 0),
+		},
 		...overrides,
 	}),
 
@@ -806,7 +809,10 @@ export const tableColumns = {
 		searchable: false,
 		sortField: (item: JamData) => (item as any).updates?.length || 0,
 		render: renderFunctions.jobApplicationUpdateCount,
-		filterConfig: { type: "number", min: 0, max: 20, step: 1, display: "slider" },
+		filterConfig: {
+			type: "number", min: 0, step: 1, display: "slider",
+			max: (ctx: DataContextValue) => maxCount(ctx.jobs, (j: any) => j.updates?.length || 0),
+		},
 		...overrides,
 	}),
 };
