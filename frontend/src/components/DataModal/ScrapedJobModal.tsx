@@ -213,7 +213,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			if (!data?.is_processed && data?.scrape_error.length) {
 				result.push({
 					key: "scraping_retry_pending",
-					message: `Scraping failed (attempt ${data.retry_count}/3). It will be reattempted soon.`,
+					message: `Scraping failed (attempt ${data.retry_count}/${config.scrape_max_retry}). It will be reattempted soon.`,
 					variant: "warning",
 				});
 			}
