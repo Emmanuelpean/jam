@@ -21,7 +21,7 @@ class ServiceDashboardBase(BaseTest):
     """Shared helpers for service dashboard tests."""
 
     user_index = 1  # admin user required for service dashboards
-    page_url = "service-dashboards"
+    page_url = "services/job-scraping"
 
     def _go_to_scraping_tab(self) -> None:
         self.get_element("tab-scraping").click()

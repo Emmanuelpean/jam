@@ -653,7 +653,7 @@ class TestSettingsPage(BaseTablePage):
     """Test class for Job Application Update Page functionalities"""
 
     endpoint = "settings"
-    page_url = "app-settings"
+    page_url = "app/settings"
     test_fixture = "test_settings"
     entry_type = "setting"
     required_fields = ["name", "value"]

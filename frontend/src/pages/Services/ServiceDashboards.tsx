@@ -1,4 +1,5 @@
-import React, { JSX, useState } from "react";
+import React, { JSX } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import PageHeader from "../PageHeader/PageHeader";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import JobRatingDashboard from "./JobRatingDashboard/JobRatingDashboardPage";
@@ -7,7 +8,9 @@ import JobScraperDashboard from "./JobScrapingDashboard/JobScraperDashboardPage"
 type ActiveTab = "scraping" | "rating";
 
 const ServiceDashboards = (): JSX.Element => {
-	const [activeTab, setActiveTab] = useState<ActiveTab>("scraping");
+	const location = useLocation();
+	const navigate = useNavigate();
+	const activeTab: ActiveTab = location.pathname === "/services/job-rating" ? "rating" : "scraping";
 
 	return (
 		<div className="scraped-jobs-page">
@@ -17,7 +20,7 @@ const ServiceDashboards = (): JSX.Element => {
 					title="Job Scraping"
 					icon={getTableIcon("Job Scraping Dashboard")}
 					onClick={(): void => {
-						setActiveTab("scraping");
+						navigate("/services/job-scraping");
 					}}
 					active={activeTab === "scraping"}
 				/>
@@ -26,7 +29,7 @@ const ServiceDashboards = (): JSX.Element => {
 					title="Job Rating"
 					icon={getTableIcon("Job Rating Dashboard")}
 					onClick={(): void => {
-						setActiveTab("rating");
+						navigate("/services/job-rating");
 					}}
 					active={activeTab === "rating"}
 				/>
