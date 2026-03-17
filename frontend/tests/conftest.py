@@ -1367,7 +1367,7 @@ class DataTableUtils(BaseUtilsClass):
         """Get all table rows on the page"""
 
         time.sleep(0.5)
-        self.get_element("table-row-clickable", By.CLASS_NAME)
+        self.get_element(f"[id^='table-row-{self.entry_type}-']", By.CSS_SELECTOR)
         return self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-{self.entry_type}-']")
 
     def table_row(self, item_id: int, *args, **kwargs) -> WebElement:
@@ -1445,7 +1445,7 @@ class DataTableUtils(BaseUtilsClass):
         """Check if an ID is in the table"""
 
         try:
-            self.get_element("table-row-clickable", By.CLASS_NAME, **kwargs)
+            self.get_element(f"[id^='table-row-{self.entry_type}-']", By.CSS_SELECTOR, **kwargs)
         except AssertionError:
             return False
         rows = self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-{self.entry_type}-']")
