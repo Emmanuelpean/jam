@@ -33,6 +33,7 @@ def upgrade() -> None:
     )
     op.execute("ALTER TABLE scraped_job ALTER COLUMN scrape_error SET NOT NULL")
     op.execute("ALTER TABLE scraped_job ALTER COLUMN scrape_error SET DEFAULT '[]'")
+    op.add_column("scraped_job", sa.Column("is_closed", sa.BOOLEAN, nullable=False))
 
 
 def downgrade() -> None:
@@ -50,3 +51,4 @@ def downgrade() -> None:
     )
     op.execute("ALTER TABLE scraped_job ALTER COLUMN scrape_error DROP NOT NULL")
     op.execute("ALTER TABLE scraped_job ALTER COLUMN scrape_error DROP DEFAULT")
+    op.drop_column("scraped_job", "is_closed")
