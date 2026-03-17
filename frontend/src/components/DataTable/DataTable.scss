@@ -51,7 +51,7 @@ thead.custom-header th {
     }
 
     &.table-container--full-height {
-        overflow: hidden;
+        overflow: visible;
         flex: 1 1 0;
         min-height: 0;
 

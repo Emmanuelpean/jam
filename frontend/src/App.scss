@@ -466,6 +466,13 @@ textarea.form-control {
     border-color: var(--primary-mid);
 }
 
+.btn:focus,
+.btn:focus-visible {
+    outline: 2px solid var(--primary-mid) !important;
+    outline-offset: 2px;
+    box-shadow: none !important;
+}
+
 .btn-outline-primary,
 .btn-outline-danger {
     transition: all 0.3s;
@@ -481,7 +488,15 @@ textarea.form-control {
     border-color: var(--danger-color);
 }
 
+.btn-outline-primary:focus:not(:focus-visible) {
+    background: var(--primary-gradient);
+    color: white;
+    border-color: var(--primary-mid);
+    box-shadow: none !important;
+}
+
 .btn-outline-primary:hover,
+.btn-outline-primary:focus-visible,
 .dropdown-toggle.btn-outline-primary.show{
     color: white;
     border-color: transparent;
