@@ -72,7 +72,7 @@ export const modalViewFields = {
 	platform: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "platform",
 		label: "Aggregator",
-		render: (params: RenderParams) => renderFunctions.capitalise(params, "platform"),
+		render: renderFunctions.platform,
 		...overrides,
 	}),
 
@@ -375,10 +375,14 @@ export const modalViewFields = {
 
 	jobRating: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job_rating",
-		label: "Job Rating",
-		icon: "bi-stars",
 		render: (params: RenderParams) => renderFunctions.jobRating({ ...params, view: true }),
 		displayCondition: (item: ScrapedJobData): boolean => item.job_rating?.is_success === true,
+		...overrides,
+	}),
+
+	jobRatingSection: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "job_rating_section",
+		render: (params: RenderParams) => renderFunctions.jobRatingSection(params),
 		...overrides,
 	}),
 
@@ -505,5 +509,60 @@ export const modalViewFields = {
 		render: (param: RenderParams) => renderFunctions._date(param, "followup_snooze_datetime"),
 		...overrides,
 		displayCondition: (item: any) => item.followup_snooze_datetime !== null,
+	}),
+
+	// --------------------------------------------------- JOB EMAIL --------------------------------------------------
+
+	emailSender: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "sender",
+		label: "From",
+		...overrides,
+	}),
+
+	emailAlertName: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "alert_name",
+		label: "Alert Name",
+		...overrides,
+	}),
+
+	emailJobFoundN: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "job_found_n",
+		label: "Jobs Found",
+		...overrides,
+	}),
+
+	emailDateReceived: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "date_received",
+		label: "Date Received",
+		render: (params: RenderParams) => renderFunctions._date(params, "date_received"),
+		...overrides,
+	}),
+
+	emailBody: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "body",
+		label: "Email Body",
+		render: (params: RenderParams) => renderFunctions.htmlBody(params, "body"),
+		...overrides,
+	}),
+
+	emailScrapedJobs: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "jobs",
+		render: (params: RenderParams) => renderFunctions.emailScrapedJobTable(params),
+		displayCondition: (item) => Array.isArray(item.jobs) && item.jobs.length > 0,
+		...overrides,
+	}),
+
+	emailScrapedJobsReadOnly: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "jobs",
+		render: (params: RenderParams) => renderFunctions.emailScrapedJobTableReadOnly(params),
+		displayCondition: (item) => Array.isArray(item.jobs) && item.jobs.length > 0,
+		...overrides,
+	}),
+
+	scrapedJobEmails: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "emails",
+		render: (params: RenderParams) => renderFunctions.scrapedJobEmailTable(params),
+		displayCondition: (item) => Array.isArray(item.emails) && item.emails.length > 0,
+		...overrides,
 	}),
 };

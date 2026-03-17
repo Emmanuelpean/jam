@@ -12,7 +12,7 @@ from app.core.utils import send_email_change_email
 from app.emails.email_service import email_service
 from app.emails.release_data import get_release_slides
 from app.payments import stripe
-from app.routers import generate_data_table_crud_router, assert_admin
+from app.routers.utility import generate_data_table_crud_router, assert_admin
 from app.utils import AppLogger
 
 

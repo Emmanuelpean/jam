@@ -3,10 +3,16 @@ import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../DataModal/ScrapedJobModal";
 
-const ScrapedJobsTableReadOnly: React.FC<DataTableProps> = ({
+interface ScrapedJobsTableReadOnlyProps extends DataTableProps {
+	viewOnly?: boolean;
+}
+
+const ScrapedJobsTableReadOnly: React.FC<ScrapedJobsTableReadOnlyProps> = ({
 	data = [],
 	columns = [],
-}: DataTableProps): JSX.Element => {
+	onSuccess,
+	viewOnly = false,
+}: ScrapedJobsTableReadOnlyProps): JSX.Element => {
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns
@@ -15,8 +21,9 @@ const ScrapedJobsTableReadOnly: React.FC<DataTableProps> = ({
 					tableColumns.scrapedCompanyColumn(),
 					tableColumns.scrapedLocationColumn(),
 					tableColumns.salaryRangeColumn(),
+					tableColumns.isImportedColumn(),
+					tableColumns.isActiveColumn(),
 					tableColumns.urlGenericColumn(),
-					tableColumns.platformColumn(),
 					tableColumns.createdAtColumn({ label: "Date Received" }),
 				];
 
@@ -24,16 +31,24 @@ const ScrapedJobsTableReadOnly: React.FC<DataTableProps> = ({
 		<>
 			<DataTable
 				entityType="scrapedJob"
+				mode={viewOnly ? "default" : "import"}
 				columns={defaultColumns}
-				initialSortConfig={{ key: "created_at", direction: "desc" }}
+				initialSortConfig={{ key: "title", direction: "asc" }}
 				Modal={ScrapedJobModal}
 				data={data}
 				modalSize="xl"
 				compact={true}
 				showAdd={false}
 				showSearch={false}
-				menuItems={["view"]}
+				menuItems={viewOnly ? ["view"] : (item: any): string[] => (item.is_imported ? ["view"] : ["import"])}
 				modalProps={{ canEdit: false }}
+				rowMode={
+					viewOnly
+						? undefined
+						: (item: any): "default" | "import" =>
+								item.is_imported || !item.is_active ? "default" : "import"
+				}
+				onSuccess={onSuccess}
 			/>
 		</>
 	);

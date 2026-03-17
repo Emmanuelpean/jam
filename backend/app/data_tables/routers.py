@@ -9,7 +9,7 @@ from app import models, database
 from app.core import oauth2
 from app.data_tables import schemas
 from app.geolocation.geolocation import geocode_location
-from app.routers import generate_data_table_crud_router
+from app.routers.utility import generate_data_table_crud_router
 
 # ---------------------------------------------------- SIMPLE TABLES ---------------------------------------------------
 

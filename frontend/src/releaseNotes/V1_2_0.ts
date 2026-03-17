@@ -74,6 +74,11 @@ export default `<h4>Version 1.2.0</h4>
     <li>Added length limits on scraped job title, company, and description fields to improve AI rating consistency and limit token usage.</li>
     <li>Improved status feedback in the Scraped Job modal, giving clearer information about the scraping and rating state of each job.</li>
     <li>Switched from OpenAI gpt-4.1-mini to Anthropic Claude-Haiku 4.5 model for job rating.</li>
+	<li>Scraped jobs sourced from NHS Jobs now detect whether the listing has been closed at the time of scraping.</li>
+	<li>Closed scraped jobs or with past deadline are now highlighted.</li>
+    <li>Scraped jobs with a past deadline or that have been marked as closed now display a message indicating the listing is no longer active.</li>
+    <li>The scraper will now automatically retry up to a configurable number of times if an attempt fails, improving reliability.</li>
+    <li>The scraped job page now displays the job alert emails associated with each scraped job.</li>
 </ul>
 
 <h5>Bug Fixes</h5>

@@ -7,7 +7,9 @@ interface TableHeaderProps {
 	subtitle?: string;
 	count?: number;
 	icon: string;
-	className?: string;
+	id?: string;
+	onClick?: () => void;
+	active?: boolean;
 }
 
 const PageHeader: React.FC<TableHeaderProps> = ({
@@ -15,10 +17,16 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 	count,
 	icon,
 	subtitle,
-	className = "",
+	id,
+	onClick,
+	active = false,
 }: TableHeaderProps): JSX.Element => {
 	return (
-		<div className={`mb-4 ${className}`}>
+		<div
+			id={id}
+			className={`mb-4 page-header ${onClick ? "page-header-clickable" : ""} ${onClick && active ? "page-header-active" : ""} flex-fill`}
+			onClick={onClick}
+		>
 			<Card className="h-100 shadow-sm border-0 rounded-3">
 				<div className="d-flex align-items-center justify-content-between p-4">
 					<div className="d-flex align-items-center">
