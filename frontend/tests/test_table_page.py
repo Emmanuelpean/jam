@@ -530,10 +530,10 @@ class TestJobPage(BaseTablePage):
             note="Initial HR screening interview",
         )
 
-        interview_count = len(self.interview_table_utils.table_rows)
         self.table_utils.table_row_click(self.test_entry.id)
         self.modal_utils.wait_for_view_modal()
         self.get_element("application-tab").click()
+        interview_count = len(self.interview_table_utils.table_rows)
         self.interview_table_utils.add_entity_button.click()
         self.interview_modal_utils._fill_modal(**interview_data)
         self.interview_modal_utils.confirm_button("edit").click()
@@ -653,7 +653,7 @@ class TestSettingsPage(BaseTablePage):
     """Test class for Job Application Update Page functionalities"""
 
     endpoint = "settings"
-    page_url = "app-settings"
+    page_url = "app/settings"
     test_fixture = "test_settings"
     entry_type = "setting"
     required_fields = ["name", "value"]

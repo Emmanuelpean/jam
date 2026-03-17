@@ -1,7 +1,6 @@
 """Demo cleanup endpoint."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from impit.impit import delete
 from sqlalchemy.orm import Session
 
 from app import models, database, base_schemas

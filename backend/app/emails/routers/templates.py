@@ -10,9 +10,9 @@ from starlette import status
 from app import models
 from app.config import settings
 from app.core import oauth2
-from app.routers import assert_admin
+from app.routers.utility import assert_admin
 
-router = APIRouter(prefix="/email-templates", tags=["email-templates"])
+email_template_router = APIRouter(prefix="/email-templates", tags=["email-templates"])
 
 _templates = Jinja2Templates(directory=str(Path(__file__).parent.parent / "templates"))
 
@@ -68,7 +68,7 @@ _SAMPLE_DATA: dict[str, dict] = {
 }
 
 
-@router.get("/preview/{template_name}", response_class=HTMLResponse)
+@email_template_router.get("/preview/{template_name}", response_class=HTMLResponse)
 def preview_email_template(
     template_name: str,
     current_user: models.User = Depends(oauth2.get_current_user),

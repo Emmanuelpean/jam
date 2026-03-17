@@ -10,6 +10,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 1,
         "external_email_id": "linkedin_alert_001",
+        "alert_name": "Python Developer",
+        "job_found_n": 15,
         "subject": "10 new jobs matching Python Developer",
         "sender": "jobs-noreply@linkedin.com",
         "date_received": "2024-01-15 09:30:00",
@@ -36,6 +38,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 1,
         "external_email_id": "indeed_alert_001",
+        "alert_name": "Software Engineer",
+        "job_found_n": 15,
         "subject": "New job alerts for Software Engineer",
         "sender": "noreply@indeed.com",
         "date_received": "2024-01-16 14:45:00",
@@ -60,6 +64,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 1,
         "external_email_id": "linkedin_alert_002",
+        "alert_name": "Data Scientist",
+        "job_found_n": 15,
         "subject": "Data Scientist positions you might like",
         "sender": "jobs-noreply@linkedin.com",
         "date_received": "2024-01-17 11:20:00",
@@ -86,6 +92,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "indeed_alert_002",
+        "alert_name": "Weekly Digest",
+        "job_found_n": 2,
         "subject": "Your weekly job digest - 5 new matches",
         "sender": "alerts@indeed.com",
         "date_received": "2024-01-18 08:15:00",
@@ -116,6 +124,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 1,
         "external_email_id": "linkedin_alert_003",
+        "alert_name": "Similar Jobs",
+        "job_found_n": 17,
         "subject": "3 jobs similar to ones you've viewed",
         "sender": "jobs-noreply@linkedin.com",
         "date_received": "2024-01-19 16:10:00",
@@ -139,6 +149,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "indeed_alert_003",
+        "alert_name": "Frontend Developer",
+        "job_found_n": 2,
         "subject": "Frontend Developer jobs in your area",
         "sender": "job-alerts@indeed.co.uk",
         "date_received": "2024-01-20 12:30:00",
@@ -166,6 +178,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "linkedin_alert_004",
+        "alert_name": "Java Developer",
+        "job_found_n": 1,
         "subject": "Java Developer opportunities in your area",
         "sender": "jobs-noreply@linkedin.com",
         "date_received": "2024-02-01T08:30:00",
@@ -190,6 +204,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "totaljobs_alert_001",
+        "alert_name": "Mobile App Developer",
+        "job_found_n": 1,
         "subject": "Mobile App Developer jobs near you",
         "sender": "alerts@totaljobs.com",
         "date_received": "2024-02-03T12:15:00",
@@ -213,6 +229,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "reed_alert_001",
+        "alert_name": "AI & Machine Learning",
+        "job_found_n": 0,
         "subject": "AI & Machine Learning weekly digest",
         "sender": "noreply@reed.co.uk",
         "date_received": "2024-02-05T16:40:00",
@@ -237,6 +255,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "cvlibrary_alert_001",
+        "alert_name": "Sustainability & Green Tech",
+        "job_found_n": 0,
         "subject": "Sustainability & Green Tech jobs",
         "sender": "jobs@cv-library.co.uk",
         "date_received": "2024-02-07T09:20:00",
@@ -260,6 +280,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "jobsite_alert_001",
+        "alert_name": "Full Stack Developer",
+        "job_found_n": 0,
         "subject": "Full Stack Developer positions",
         "sender": "alerts@jobsite.co.uk",
         "date_received": "2024-02-09T14:30:00",
@@ -283,6 +305,8 @@ JOB_EMAIL_DATA = [
     {
         "owner_id": 2,
         "external_email_id": "indeed_alert_004",
+        "alert_name": "Software Engineer Daily",
+        "job_found_n": 0,
         "subject": "Software Engineer jobs - Daily alerts",
         "sender": "noreply@indeed.com",
         "date_received": "2024-02-11T07:45:00",
@@ -395,7 +419,7 @@ JOB_SCRAPING_PLATFORM_STAT_DATA = [
         "name": "linkedin",
         "job_found_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
         "job_scrape_succeeded_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-        "job_scrape_failed_ids": [12, 13],
+        "job_scrape_failed_ids": [51, 52],
         "job_scrape_copied_ids": [14, 15, 16],
         "email_saved_ids": [1, 2, 3, 4, 5],
         "email_skipped_ids": [6],
@@ -405,7 +429,7 @@ JOB_SCRAPING_PLATFORM_STAT_DATA = [
         "name": "indeed",
         "job_found_ids": [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28],
         "job_scrape_succeeded_ids": [17, 18, 19, 20, 21, 22, 23, 24, 25],
-        "job_scrape_failed_ids": [26, 27],
+        "job_scrape_failed_ids": [48, 50],
         "job_scrape_copied_ids": [28],
         "email_saved_ids": [7, 8],
         "email_skipped_ids": [],
@@ -424,8 +448,8 @@ JOB_SCRAPING_PLATFORM_STAT_DATA = [
     {
         "name": "linkedin",
         "job_found_ids": list(range(29, 69)),
-        "job_scrape_succeeded_ids": list(range(29, 64)),
-        "job_scrape_failed_ids": [64],
+        "job_scrape_succeeded_ids": list(range(29, 51)) + list(range(59, 64)),
+        "job_scrape_failed_ids": [53, 68],
         "job_scrape_copied_ids": list(range(65, 75)),
         "email_saved_ids": list(range(9, 21)),
         "email_skipped_ids": [21, 22, 23],
@@ -435,7 +459,7 @@ JOB_SCRAPING_PLATFORM_STAT_DATA = [
         "name": "indeed",
         "job_found_ids": list(range(75, 83)),
         "job_scrape_succeeded_ids": list(range(75, 81)),
-        "job_scrape_failed_ids": [81, 82],
+        "job_scrape_failed_ids": [60],
         "job_scrape_copied_ids": [83, 84],
         "email_saved_ids": [24],
         "email_skipped_ids": [25],
@@ -455,7 +479,7 @@ JOB_SCRAPING_PLATFORM_STAT_DATA = [
         "name": "indeed",
         "job_found_ids": list(range(109, 119)),
         "job_scrape_succeeded_ids": list(range(109, 118)),
-        "job_scrape_failed_ids": [118],
+        "job_scrape_failed_ids": [],
         "job_scrape_copied_ids": [119],
         "email_saved_ids": [33, 34, 35],
         "email_skipped_ids": [36, 37],
@@ -485,7 +509,7 @@ JOB_SCRAPING_PLATFORM_STAT_DATA = [
         "name": "linkedin",
         "job_found_ids": list(range(129, 135)),
         "job_scrape_succeeded_ids": list(range(129, 134)),
-        "job_scrape_failed_ids": [134],
+        "job_scrape_failed_ids": [54],
         "job_scrape_copied_ids": [135, 136],
         "email_saved_ids": [39, 40, 41, 42],
         "email_skipped_ids": [43],
@@ -493,9 +517,9 @@ JOB_SCRAPING_PLATFORM_STAT_DATA = [
     },
     {
         "name": "cv-library",
-        "job_found_ids": [137, 138, 139, 140],
+        "job_found_ids": [49],
         "job_scrape_succeeded_ids": [],
-        "job_scrape_failed_ids": [137, 138, 139, 140],
+        "job_scrape_failed_ids": [49],
         "job_scrape_copied_ids": [],
         "email_saved_ids": [],
         "email_skipped_ids": [44, 45],
@@ -980,6 +1004,7 @@ SCRAPED_JOB_DATA = [
         "description": "We are looking for an experienced developer to join our growing team...",
         "company": "TechCorp Inc",
         "location": "London, UK (hybrid)",
+        "deadline": "3000-01-01 00:00:00",
         "location_city": "London",
         "location_country": "United Kingdom",
         "salary_min": 75000.0,
@@ -1732,7 +1757,9 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": "Page not found - job posting may have been removed",
+        "scrape_error": [
+            {"datetime": "2025-08-18T08:30:00+00:00", "error": "Page not found - job posting may have been removed"}
+        ],
         "title": "Data Engineer",
         "scrape_datetime": "2025-08-18T08:30:55.567890+00:00",
         "is_imported": True,
@@ -1746,7 +1773,9 @@ SCRAPED_JOB_DATA = [
         "owner_id": 2,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": "Access denied - company blocked scraping",
+        "scrape_error": [
+            {"datetime": "2025-09-07T11:45:00+00:00", "error": "Access denied - company blocked scraping"}
+        ],
         "title": "Sustainability Software Engineer",
         "scrape_datetime": "2025-09-07T11:45:28.456789+00:00",
         "url": "test",
@@ -1758,7 +1787,9 @@ SCRAPED_JOB_DATA = [
         "owner_id": 2,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": "Rate limit exceeded - retry after 24 hours",
+        "scrape_error": [
+            {"datetime": "2025-09-11T15:30:00+00:00", "error": "Rate limit exceeded - retry after 24 hours"}
+        ],
         "title": "Software Engineer",
         "scrape_datetime": "2025-09-11T15:30:42.678901+00:00",
         "url": "test",
@@ -1770,7 +1801,9 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": "Page not found - job posting may have been removed",
+        "scrape_error": [
+            {"datetime": "2025-01-05T11:15:00+00:00", "error": "Page not found - job posting may have been removed"}
+        ],
         "title": "Angular Developer",
         "url": "test",
         "scrape_datetime": "2025-01-05T11:15:00.000+00:00",
@@ -1782,7 +1815,7 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": "Scraping blocked - rate limit exceeded",
+        "scrape_error": [{"datetime": "2025-01-04T14:30:00+00:00", "error": "Scraping blocked - rate limit exceeded"}],
         "title": "Data Scientist",
         "url": "test",
         "scrape_datetime": "2025-01-04T14:30:00.000+00:00",
@@ -1794,7 +1827,9 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": "Access denied - company blocked scraping",
+        "scrape_error": [
+            {"datetime": "2025-01-03T16:45:00+00:00", "error": "Access denied - company blocked scraping"}
+        ],
         "title": "AI Software Developer",
         "url": "test",
         "scrape_datetime": "2025-01-03T16:45:00.000+00:00",
@@ -1806,7 +1841,9 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": "Rate limit exceeded - retry after 24 hours",
+        "scrape_error": [
+            {"datetime": "2025-01-02T08:00:00+00:00", "error": "Rate limit exceeded - retry after 24 hours"}
+        ],
         "title": "iOS Developer",
         "url": "test",
         "scrape_datetime": "2025-01-02T08:00:00.000+00:00",
@@ -1818,7 +1855,9 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": "Connection timeout - server not responding",
+        "scrape_error": [
+            {"datetime": "2025-01-01T13:20:00+00:00", "error": "Connection timeout - server not responding"}
+        ],
         "title": "Android Developer",
         "url": "test",
         "scrape_datetime": "2025-01-01T13:20:00.000+00:00",
@@ -1830,7 +1869,7 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": "Invalid job posting format",
+        "scrape_error": [{"datetime": "2024-12-06T14:15:00+00:00", "error": "Invalid job posting format"}],
         "title": "Vue.js Developer",
         "url": "test",
         "scrape_datetime": "2024-12-06T14:15:00.000+00:00",
@@ -1842,7 +1881,9 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": "Page not found - job posting may have been removed",
+        "scrape_error": [
+            {"datetime": "2024-12-05T16:30:00+00:00", "error": "Page not found - job posting may have been removed"}
+        ],
         "title": "Angular Developer",
         "url": "test",
         "scrape_datetime": "2024-12-05T16:30:00.000+00:00",
@@ -1854,7 +1895,9 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": "Connection timeout - server not responding",
+        "scrape_error": [
+            {"datetime": "2024-12-04T08:45:00+00:00", "error": "Connection timeout - server not responding"}
+        ],
         "title": "Data Scientist",
         "url": "test",
         "scrape_datetime": "2024-12-04T08:45:00.000+00:00",
@@ -1887,7 +1930,7 @@ SCRAPED_JOB_DATA = [
         "platform": "indeed",
         "owner_id": 1,
         "is_processed": False,
-        "scrape_error": "Scraping blocked - rate limit exceeded",
+        "scrape_error": [{"datetime": "2025-08-20T19:25:00+00:00", "error": "Scraping blocked - rate limit exceeded"}],
         "title": "ML Engineer",
         "scrape_datetime": "2025-08-20T19:25:08.678901+00:00",
         "is_active": False,
@@ -2016,6 +2059,58 @@ SCRAPED_JOB_DATA = [
         "geolocation_id": 3,
         "parsed_location": "London, UK",
     },
+    # Closed
+    {
+        "external_job_id": "job_1159rg",
+        "platform": "linkedin",
+        "owner_id": 1,
+        "is_closed": True,
+        "is_scraped": True,
+        "is_processed": True,
+        "title": "Blockchain Developer 2",
+        "description": "Join our innovative startup and help build cutting-edge solutions...",
+        "company": "StartupXYZ",
+        "location": "Manchester, UK (hybrid)",
+        "location_city": "Manchester",
+        "location_country": "United Kingdom",
+        "salary_min": 70000.0,
+        "salary_max": 92000.0,
+        "salary_currency": "GBP",
+        "attendance_type": "hybrid",
+        "url": "https://linkedin.com/jobs/view/job_1159",
+        "scrape_datetime": "2024-11-27T13:45:00.000+00:00",
+        "service_log_id": 1,
+        "geolocation_id": 14,
+        "parsed_location": "Manchester, UK",
+    },
+    # Scraping retry
+    {
+        "external_job_id": "job_11sefwfw59rg",
+        "platform": "linkedin",
+        "owner_id": 1,
+        "is_closed": False,
+        "is_scraped": False,
+        "is_processed": False,
+        "retry_count": 1,
+        "scrape_error": [
+            {"datetime": "2025-08-18T08:30:00+00:00", "error": "Page not found - job posting may have been removed"}
+        ],
+        "title": "Blockchain Developer 3",
+        "description": "Join our innovative startup and help build cutting-edge solutions...",
+        "company": "StartupXYZ",
+        "location": "Manchester, UK (hybrid)",
+        "location_city": "Manchester",
+        "location_country": "United Kingdom",
+        "salary_min": 70000.0,
+        "salary_max": 92000.0,
+        "salary_currency": "GBP",
+        "attendance_type": "hybrid",
+        "url": "https://linkedin.com/jobs/view/job_1159",
+        "scrape_datetime": "2024-11-27T13:45:00.000+00:00",
+        "service_log_id": 1,
+        "geolocation_id": 14,
+        "parsed_location": "Manchester, UK",
+    },
 ]
 
 
@@ -2034,11 +2129,11 @@ SCRAPED_JOB_FAILED_INDEX = find_index(is_failed=True)
 SCRAPED_JOB_SKIPPED_INDEX = find_index(is_skipped=True)
 
 EMAIL_SCRAPEDJOB_MAPPINGS = [
-    # owner_id=1 emails -> owner_id=1 jobs (ids: 1-5, 10-48, 51-66)
+    # owner_id=1 emails -> owner_id=1 jobs (ids: 1-5, 10-48, 51-68)
     {"email_id": 1, "scraped_job_ids": [1, 2, 4, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]},
     {"email_id": 2, "scraped_job_ids": [3, 5, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]},
     {"email_id": 3, "scraped_job_ids": [2, 5, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47]},
-    {"email_id": 5, "scraped_job_ids": [48, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66]},
+    {"email_id": 5, "scraped_job_ids": [48, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68]},
     # owner_id=2 emails -> owner_id=2 jobs (ids: 6-9, 49-50)
     {"email_id": 4, "scraped_job_ids": [6, 7]},
     {"email_id": 6, "scraped_job_ids": [49, 50]},

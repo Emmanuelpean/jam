@@ -45,7 +45,16 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		};
 
 		const jobFormFields: Fields = [
-			modalViewFields.jobRating(),
+			{
+				type: "section",
+				key: "rating",
+				title: "AI Rating",
+				icon: "bi-stars",
+				fields: [modalViewFields.jobRatingSection()],
+				displayCondition: (data: any): boolean =>
+					!(data?.is_closed || (data?.deadline != null && data.deadline < new Date())),
+			} as SectionConfig,
+
 			{
 				type: "section",
 				key: "basic-info",
@@ -156,10 +165,18 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 					}),
 				],
 			} as SectionConfig,
+			{
+				type: "section",
+				key: "emails",
+				title: "Job Alert Emails",
+				icon: "bi-envelope-open",
+				defaultExpanded: true,
+				fields: [modalViewFields.scrapedJobEmails()],
+			} as SectionConfig,
 		];
 
 		const viewFields: Fields = [
-			modalViewFields.jobRating(),
+			modalViewFields.jobRatingSection(),
 			modalViewFields.title({ isTitle: true }),
 			modalViewFields.description(),
 			[modalViewFields.company(), modalViewFields.location()],
@@ -187,14 +204,24 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			};
 
 			// Scraped Job Status
-			if (!data?.is_processed) {
+			if (!data?.is_processed && !data?.scrape_error.length) {
 				result.push({
 					key: "scraping_not_processed",
 					message: "This job has yet to be processed. Please come back soon.",
 				});
 			}
+			if (!data?.is_processed && data?.scrape_error.length) {
+				result.push({
+					key: "scraping_retry_pending",
+					message: `Scraping failed (attempt ${data.retry_count}/${config.scrape_max_retry}). It will be reattempted soon.`,
+					variant: "warning",
+				});
+			}
 			if (data?.is_failed) {
-				const reportLink = createReportLink("Scraped Job Error Report", data?.scrape_error);
+				const reportLink = createReportLink(
+					"Scraped Job Error Report",
+					data?.scrape_error.map((e) => e.error).join("\n\n---\n\n") || null
+				);
 				result.push({
 					key: "scraping_failed",
 					message: (
@@ -212,55 +239,11 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 					message: "This job was not scraped due to the following reason: " + data?.skip_reason,
 				});
 			}
-
-			// Job rating
-			if (!data?.job_rating && data?.is_scraped && !data?.is_failed) {
+			if (data?.is_closed || (data?.deadline != null && data.deadline < new Date())) {
 				result.push({
-					key: "no_rating",
-					message: "This job has yet to be rated. Please come back later.",
-					variant: "info",
-				});
-			}
-
-			if (!data?.job_rating?.is_success && data?.job_rating?.error) {
-				const reportLink: JSX.Element | null = createReportLink(
-					"Job Rating Error Report",
-					data?.job_rating?.error
-				);
-				result.push({
-					key: "no_rating",
-					message: (
-						<>
-							This job could not be rated due to an unexpected error.
-							{reportLink && <> You can {reportLink}.</>}
-						</>
-					),
+					key: "job_closed",
+					message: "This job is now closed and you may not be able to apply to it.",
 					variant: "warning",
-				});
-			}
-
-			if (data?.job_rating?.is_skipped) {
-				result.push({
-					key: "rating_skipped",
-					message: "This job was not rated due to the following reason: " + data?.job_rating?.skip_reason,
-					variant: "warning",
-				});
-			}
-
-			if (data?.job_rating?.notes.length) {
-				result.push({
-					key: "rating_notes",
-					message: (
-						<>
-							Please note the following, during AI rating:
-							<ul className="mb-0 mt-1">
-								{data.job_rating.notes.map((note: string, idx: number) => (
-									<li key={idx}>{note}</li>
-								))}
-							</ul>
-						</>
-					),
-					variant: "info",
 				});
 			}
 

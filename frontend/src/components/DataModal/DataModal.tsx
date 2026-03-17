@@ -39,6 +39,7 @@ export interface SectionConfig {
 	icon?: string;
 	fields: (Field | Field[])[];
 	displayCondition?: (data: any) => boolean;
+	defaultExpanded?: boolean;
 }
 
 export type FieldItem = Field | Field[] | SectionConfig;
@@ -220,6 +221,8 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				// In view mode, collapse sections without data
 				const allFields = getAllSectionFields();
 				const section = allFields.find((f): f is SectionConfig => isSectionConfig(f) && f.key === sectionKey);
+				// Use explicit defaultExpanded if set, otherwise collapse sections without data
+				if (section?.defaultExpanded !== undefined) return section.defaultExpanded;
 				return section ? sectionHasData(section, effectiveData) : true;
 			}
 
@@ -970,16 +973,18 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 						<Modal.Footer>
 							<div className="d-flex flex-column w-100 gap-2">
 								<div className="modal-buttons-container">
-									<ActionButton
-										id={getModalId() + "-delete-button"}
-										variant="danger"
-										onClick={handleDeleteClick}
-										className="me-auto"
-										defaultText="Delete"
-										defaultIcon="bi bi-trash"
-										disabled={deleteState.disabled}
-										tooltip={deleteState.message}
-									/>
+									{effectiveData?.is_active !== false && (
+										<ActionButton
+											id={getModalId() + "-delete-button"}
+											variant="danger"
+											onClick={handleDeleteClick}
+											className="me-auto"
+											defaultText="Delete"
+											defaultIcon="bi bi-trash"
+											disabled={deleteState.disabled}
+											tooltip={deleteState.message}
+										/>
+									)}
 									<ActionButton
 										id={getModalId() + "-import-button"}
 										type="submit"

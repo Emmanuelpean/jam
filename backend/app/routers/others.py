@@ -50,6 +50,7 @@ def get_config(
         "platform_sender_emails": {value: key for key, value in PLATFORM_SENDER_EMAILS.items()},
         "min_password_length": settings.min_password_length,
         "app_demo_username": get_demo_credentials(db),
+        "scrape_max_retry": settings.scrape_max_retry,
     }
 
 

@@ -25,6 +25,7 @@ interface NavigationSubItem {
 	path: string;
 	icon?: string;
 	text: string;
+	alsoActiveFor?: string[];
 }
 
 export const Sidebar = (): JSX.Element => {
@@ -117,11 +118,12 @@ export const Sidebar = (): JSX.Element => {
 			condition: (user: UserData): boolean => user.is_admin,
 			position: "bottom",
 			submenu: [
-				{ path: "/job-scraping-dashboard", text: "Job Scraping Dashboard" },
-				{ path: "/job-rating-dashboard", text: "Job Rating Dashboard" },
-				{ path: "/users", text: "Users" },
-				{ path: "/app-settings", text: "Settings" },
-				{ path: "/email-templates", text: "Email Templates" },
+				{ path: "/services/job-scraping", text: "Service Dashboards", alsoActiveFor: ["/services/job-rating"] },
+				{
+					path: "/app/users",
+					text: "App Management",
+					alsoActiveFor: ["/app/settings", "/app/email-templates"],
+				},
 			],
 		},
 		{
@@ -176,14 +178,17 @@ export const Sidebar = (): JSX.Element => {
 		}, 300);
 	};
 
+	const isSubMenuItemActive = (item: NavigationSubItem): boolean => {
+		if (location.pathname.startsWith(item.path)) return true;
+		return item.alsoActiveFor?.some((p: string): boolean => location.pathname.startsWith(p)) ?? false;
+	};
+
 	const isMenuActive = (path: string): boolean => {
-		// Check if the current path starts with the menu item's path
 		return location.pathname.startsWith(path);
 	};
 
 	const isGroupMenuActive = (submenu: NavigationSubItem[]): boolean => {
-		// Check if any item in the group menu matches the current path
-		return submenu.some((item: NavigationSubItem): boolean => location.pathname === item.path);
+		return submenu.some(isSubMenuItemActive);
 	};
 
 	const handleGroupMenuToggle = (submenuText: string): void => {
@@ -232,7 +237,7 @@ export const Sidebar = (): JSX.Element => {
 								<Link
 									key={subItem.text}
 									to={subItem.path}
-									className={`nav-item submenu-item ${isMenuActive(subItem.path) ? "active" : ""}`}
+									className={`nav-item submenu-item ${isSubMenuItemActive(subItem) ? "active" : ""}`}
 									style={{
 										transitionDelay: showSubmenu
 											? `${subIndex * 0.05 + 0.1}s`

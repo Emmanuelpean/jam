@@ -1,7 +1,5 @@
 """Create real mock geolocations for testing using the Nominatim API."""
 
-import time
-
 import requests
 
 from app.config import settings

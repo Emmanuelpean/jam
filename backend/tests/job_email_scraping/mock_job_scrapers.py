@@ -24,6 +24,9 @@ class MockLinkedinBrightdataJobScraper(object):
     def scrape_job(self) -> list[JobResult]:
         """Return mock LinkedIn job data"""
 
+        if self.simulate_exception:
+            raise RuntimeError("Simulated scraping failure")
+
         mock_jobs = []
 
         for i, job_id in enumerate(self.job_ids):
@@ -83,6 +86,9 @@ class MockIndeedBrightdataJobScraper(object):
     def scrape_job(self) -> list[JobResult]:
         """Return mock Indeed job data"""
 
+        if self.simulate_exception:
+            raise RuntimeError("Simulated scraping failure")
+
         mock_jobs = []
 
         for i, job_id in enumerate(self.job_ids):
@@ -133,6 +139,9 @@ class MockVeganJobsBrightdataJobScraper(object):
     def scrape_job(self) -> list[JobResult]:
         """Return mock VeganJobs job data"""
 
+        if self.simulate_exception:
+            raise RuntimeError("Simulated scraping failure")
+
         return [
             JobResult.model_validate(
                 {
@@ -169,6 +178,9 @@ class MockNhsBrightdataJobScraper(object):
 
     def scrape_job(self) -> list[JobResult]:
         """Return mock NHS job data"""
+
+        if self.simulate_exception:
+            raise RuntimeError("Simulated scraping failure")
 
         return [
             JobResult.model_validate(

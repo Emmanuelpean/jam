@@ -1,30 +1,30 @@
 import React, { JSX } from "react";
-import { ActionButton } from "../../../components/rendering/form/ActionButton";
-import Spinner from "../../../components/Spinner/Spinner";
-import { FormData } from "./JobRatingDashboardPage";
+import { ActionButton } from "../../components/rendering/form/ActionButton";
+import Spinner from "../../components/Spinner/Spinner";
+import { ServiceStatus } from "../../services/api/Services";
 import {
 	getServiceStatus,
 	getServiceStatusMessage,
-	RenderLabeledInput,
 	serviceRunnerButtonLabels,
 	serviceRunnerStatusIcons,
 	serviceRunnerStatusLabels,
 	ServiceStatusCardProps,
-} from "../ServiceUtils";
+} from "./ServiceUtils";
 
-interface JobRatingServiceStatusCardProps extends ServiceStatusCardProps {
-	formData: FormData;
+interface SharedServiceStatusCardProps extends ServiceStatusCardProps {
+	serviceLabel?: string;
+	renderFields?: (status: ServiceStatus) => React.ReactNode;
 }
 
 export const ServiceStatusCard = ({
 	status,
 	remainingTime,
-	formData,
 	loading,
-	onFormChange,
 	onStart,
 	onStop,
-}: JobRatingServiceStatusCardProps): JSX.Element => {
+	serviceLabel = "Service",
+	renderFields,
+}: SharedServiceStatusCardProps): JSX.Element => {
 	return (
 		<div className="status-card">
 			<h2 className="card-title">
@@ -44,7 +44,7 @@ export const ServiceStatusCard = ({
 							</span>
 						</div>
 						<div className="indicator-item">
-							<span className="indicator-label">Scraper Service</span>
+							<span className="indicator-label">{serviceLabel}</span>
 							<span
 								className={`status-badge ${status.service_running ? "badge-success" : "badge-danger"}`}
 							>
@@ -54,20 +54,11 @@ export const ServiceStatusCard = ({
 						</div>
 					</div>
 
-					<div>
-						<div className="config-fields">
-							{RenderLabeledInput(
-								"period_hours",
-								"Scraping Period",
-								"Time between scraping runs.",
-								formData.period_hours,
-								"Hour(s)",
-								status.service_runner_status === "stopped",
-								onFormChange,
-								status.service_runner_status !== "stopped"
-							)}
+					{renderFields && (
+						<div>
+							<div className="config-fields">{renderFields(status)}</div>
 						</div>
-					</div>
+					)}
 
 					<div className="actions-section">
 						<ActionButton

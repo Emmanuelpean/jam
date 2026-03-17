@@ -22,3 +22,5 @@
 * [ ] Create free coupons for TOAST for first few users for a couple months
 * [ ] On Small screens, modal elements on multiple columns and rows are all on same column but spacing differs
 * [ ] In the frontend, when sending the version email, when counting the number of users, it should ignore non-verified users
+
+* [ ] Do not rate jobs with past deadline or closed and skip them
