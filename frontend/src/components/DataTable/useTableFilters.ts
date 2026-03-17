@@ -7,6 +7,7 @@ import {
 	ActiveFilters,
 	countActiveFilters,
 	DatePreset,
+	FilterValue,
 	isFilterActive,
 	ReferenceFilterConfig,
 	SelectFilterConfig,
@@ -41,8 +42,8 @@ export const useTableFilters = ({
 
 	const filterPills: FilterPill[] = useMemo(() => {
 		return Object.entries(filters)
-			.filter(([, val]) => isFilterActive(val))
-			.flatMap(([key, val]) => {
+			.filter(([, val]: [string, FilterValue]): boolean => isFilterActive(val))
+			.flatMap(([key, val]: [string, FilterValue]) => {
 				const allCols = enableColumnConfig ? columnConfig.allColumns : effectiveColumns;
 				const col = allCols.find((c) => c.key === key);
 				if (!col) return [];

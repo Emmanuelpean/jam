@@ -52,7 +52,7 @@ scraped_job_router = generate_data_table_crud_router(
 )
 
 
-@scraped_job_router.get("/paged", response_model=schemas.PaginatedScrapedJobResponse)
+@scraped_job_router.get("/paged", response_model=schemas.PaginatedScrapedJobResponse | schemas.PaginatedScrapedJobIdsResponse)
 def get_all(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
@@ -64,6 +64,7 @@ def get_all(
     since_last_login: bool = False,
     search: str | None = None,
     filters: str | None = None,
+    ids_only: bool = False,
 ) -> dict:
     """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped.
     :param db: Database session
@@ -76,12 +77,13 @@ def get_all(
     :param since_last_login: Only show jobs created since last login
     :param search: Search term"""
 
-    # Base query with eager loading of job_rating
+    # Base query
     # noinspection PyComparisonWithNone
+    query = db.query(models.ScrapedJob)
+    if not ids_only:
+        query = query.options(joinedload(models.ScrapedJob.job_rating))  # Eager load rating for full response
     query = (
-        db.query(models.ScrapedJob)
-        .options(joinedload(models.ScrapedJob.job_rating))  # Always load rating
-        .filter(models.ScrapedJob.owner_id == current_user.id)
+        query.filter(models.ScrapedJob.owner_id == current_user.id)
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.is_active.is_(True))
         .filter(models.ScrapedJob.exclusion_filter_id == None)
@@ -213,6 +215,16 @@ def get_all(
     # Calculate pagination
     offset = page * page_size
     total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+
+    if ids_only:
+        ids = query.with_entities(models.ScrapedJob.id).offset(offset).limit(page_size).all()
+        return {
+            "items": [row[0] for row in ids],
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+        }
 
     # Apply pagination
     results = query.offset(offset).limit(page_size).all()
