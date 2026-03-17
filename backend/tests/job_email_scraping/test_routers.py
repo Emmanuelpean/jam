@@ -61,6 +61,23 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         assert scraped_jobs["total"] == 48
         assert len(scraped_jobs["items"]) == 5
 
+    def test_get_all_ids_only(
+        self,
+        test_users,
+        authorised_clients,
+        test_scraped_jobs,
+    ) -> None:
+        """Test ids_only=true returns just a list of integer IDs instead of full objects"""
+
+        self.get_user_data(test_users, test_scraped_jobs)
+        client = self._get_authorised_client(authorised_clients)
+        response = client.get(self.endpoint + "/paged/?page=0&page_size=10&show_past_deadline=true&ids_only=true")
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total"] == 48
+        assert len(data["items"]) == 10
+        assert all(isinstance(item, int) for item in data["items"])
+
     def test_get_all_no_past_deadlines(
         self,
         test_users,

@@ -7,10 +7,12 @@ import {
 	ActiveFilters,
 	countActiveFilters,
 	DatePreset,
+	FilterValue,
 	isFilterActive,
 	ReferenceFilterConfig,
 	SelectFilterConfig,
 } from "./FilterTypes";
+import { SelectOption } from "../rendering/form/FormOptions";
 
 interface UseTableFiltersOptions {
 	enableColumnConfig: boolean;
@@ -41,19 +43,22 @@ export const useTableFilters = ({
 
 	const filterPills: FilterPill[] = useMemo(() => {
 		return Object.entries(filters)
-			.filter(([, val]) => isFilterActive(val))
-			.flatMap(([key, val]) => {
-				const allCols = enableColumnConfig ? columnConfig.allColumns : effectiveColumns;
-				const col = allCols.find((c) => c.key === key);
+			.filter(([, val]: [string, FilterValue]): boolean => isFilterActive(val))
+			.flatMap(([key, val]: [string, FilterValue]) => {
+				const allCols: TableColumn[] = enableColumnConfig ? columnConfig.allColumns : effectiveColumns;
+				const col: TableColumn | undefined = allCols.find((c: TableColumn): boolean => c.key === key);
 				if (!col) return [];
-				let summary = "";
+				let summary: string = "";
 				switch (val.type) {
 					case "text":
 						summary = `"${val.value}"`;
 						break;
 					case "select": {
 						const cfg = col.filterConfig as SelectFilterConfig;
-						const names = val.selected.map((v) => cfg.options.find((o) => o.value === v)?.label ?? v);
+						const names: string[] = val.selected.map(
+							(v: string): string =>
+								cfg.options.find((o: SelectOption): boolean => o.value === v)?.label ?? v
+						);
 						summary = names.slice(0, 2).join(", ");
 						if (names.length > 2) summary += ` +${names.length - 2}`;
 						break;
@@ -82,20 +87,23 @@ export const useTableFilters = ({
 					}
 					case "number": {
 						const parts: string[] = [];
-						if (val.min !== null && val.max !== null) parts.push(`${val.min} \u2013 ${val.max}`);
-						else if (val.min !== null) parts.push(`\u2265 ${val.min}`);
-						else if (val.max !== null) parts.push(`\u2264 ${val.max}`);
-						if (val.nullFilter === "not_null") parts.push("Not null");
-						else if (val.nullFilter === "null") parts.push("Null only");
+						if (val.nullFilter === "null") {
+							parts.push("Null only");
+						} else {
+							if (val.min !== null && val.max !== null) parts.push(`${val.min} \u2013 ${val.max}`);
+							else if (val.min !== null) parts.push(`\u2265 ${val.min}`);
+							else if (val.max !== null) parts.push(`\u2264 ${val.max}`);
+							if (val.nullFilter === "not_null") parts.push("Not null");
+						}
 						summary = parts.join(", ");
 						break;
 					}
 					case "reference": {
 						const cfg = col.filterConfig as ReferenceFilterConfig;
 						const entities: any[] = (dataContext as any)[cfg.entityKey] ?? [];
-						const lk = cfg.labelKey ?? "name";
-						const names = val.selectedIds.map((id) => {
-							const e = entities.find((en) => String(en.id) === id);
+						const lk: string = cfg.labelKey ?? "name";
+						const names: string[] = val.selectedIds.map((id: string): string => {
+							const e = entities.find((en): boolean => String(en.id) === id);
 							return e ? String(e[lk] ?? e.id) : id;
 						});
 						summary = names.slice(0, 2).join(", ");
@@ -108,8 +116,8 @@ export const useTableFilters = ({
 						key,
 						label: col.label,
 						summary,
-						onRemove: () =>
-							setFilters((prev) => {
+						onRemove: (): void =>
+							setFilters((prev: ActiveFilters): ActiveFilters => {
 								const u = { ...prev };
 								delete u[key];
 								return u;

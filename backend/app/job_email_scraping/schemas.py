@@ -116,6 +116,16 @@ class PaginatedScrapedJobResponse(BaseModel):
     total_pages: int
 
 
+class PaginatedScrapedJobIdsResponse(BaseModel):
+    """Paginated Scraped Job IDs-only response schema"""
+
+    items: list[int]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
 # ----------------------------------------------------- SERVICE LOG ----------------------------------------------------
 
 

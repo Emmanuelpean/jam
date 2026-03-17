@@ -661,8 +661,9 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 					ids = [...selectedIds].map(String);
 				} else if (isServerPagination && totalCount > 0) {
 					const params: URLSearchParams = buildPagedParams(0, totalCount);
+					params.set("ids_only", "true");
 					const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
-					ids = response.data.items.map((item: any) => String(item.id));
+					ids = response.data.items.map(String);
 				} else {
 					ids = sortedData.map((item: any) => String(item.id));
 				}
