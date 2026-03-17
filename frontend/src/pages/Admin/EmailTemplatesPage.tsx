@@ -2,8 +2,6 @@ import React, { useEffect, useState, JSX } from "react";
 import { Col, Row, Spinner } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { emailApi } from "../../services/api/Others";
-import { getTableIcon } from "../../components/rendering/view/Icons";
-import PageHeader from "../PageHeader/PageHeader";
 import "../UserSettings/UserSettingsPage.scss";
 
 interface TemplateItem {
@@ -22,7 +20,7 @@ const TEMPLATES: TemplateItem[] = [
 	{ id: "new_version", label: "New Version Announcement", icon: "stars" },
 ];
 
-export const EmailTemplatesPage: React.FC = (): JSX.Element => {
+export const EmailTemplatesContent: React.FC = (): JSX.Element => {
 	const { token } = useAuth();
 	const [selected, setSelected] = useState<string>(TEMPLATES[0]!.id);
 	const [html, setHtml] = useState<string>("");
@@ -50,8 +48,7 @@ export const EmailTemplatesPage: React.FC = (): JSX.Element => {
 	}, [selected, token]);
 
 	return (
-		<div className="container-fluid d-flex flex-column" style={{ height: "calc(100vh - 40px)" }}>
-			<PageHeader title="Email Templates" icon={getTableIcon("Email Templates")} />
+		<div className="container-fluid d-flex flex-column" style={{ height: "calc(100vh - 140px)" }}>
 			<Row className="g-0 settings-layout" style={{ flex: 1, minHeight: 0 }}>
 				<Col md={3} lg={2} className="settings-sidebar-col" style={{ width: "360px" }}>
 					<div className="settings-sidebar">

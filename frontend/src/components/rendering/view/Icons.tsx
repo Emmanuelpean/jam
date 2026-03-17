@@ -54,6 +54,7 @@ export function getTableIcon(title: string): string {
 		"Browser Extension": "puzzle-fill",
 		"About JAM": "info-circle",
 		"Service Dashboards": "stack",
+		"App Management": "terminal",
 	};
 	return iconMap[title] || "bi-table";
 }
