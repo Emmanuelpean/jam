@@ -1367,7 +1367,10 @@ class DataTableUtils(BaseUtilsClass):
         """Get all table rows on the page"""
 
         time.sleep(0.5)
-        self.get_element(f"[id^='table-row-{self.entry_type}-']", By.CSS_SELECTOR)
+        try:
+            self.get_element(f"[id^='table-row-{self.entry_type}-']", By.CSS_SELECTOR, 1)
+        except AssertionError:
+            return []
         return self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-{self.entry_type}-']")
 
     def table_row(self, item_id: int, *args, **kwargs) -> WebElement:
