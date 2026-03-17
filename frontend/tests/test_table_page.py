@@ -652,7 +652,7 @@ class TestSpeculativeApplicationPage(BaseTablePage):
 class TestSettingsPage(BaseTablePage):
     """Test class for Job Application Update Page functionalities"""
 
-    endpoint = "settings"
+    endpoint = "app/settings"
     page_url = "app-settings"
     test_fixture = "test_settings"
     entry_type = "setting"
