@@ -1,0 +1,277 @@
+"""FastAPI routers for the job email scraping service endpoints.
+
+Provides REST API endpoints for managing job alert emails, scraped job postings,
+and service execution logs with CRUD operations and admin access controls."""
+
+import datetime as dt
+import json
+from typing import Literal
+
+from fastapi import Depends, HTTPException
+from sqlalchemy import asc, desc, or_, and_
+from sqlalchemy.orm import Session, joinedload
+from starlette import status
+
+from app import models
+from app.core.oauth2 import get_current_user
+from app.database import get_db
+from app.job_email_scraping import schemas
+from app.routers.utility import generate_data_table_crud_router, NOT_ALLOWED_EXCEPTION
+
+
+# GET endpoint for admin user to get all scraped jobs
+scraped_job_router = generate_data_table_crud_router(
+    table_model=models.ScrapedJob,
+    out_schema=schemas.ScrapedJobOut,
+    endpoint="scraped-jobs",
+    not_found_msg="Scraped Job not found",
+    allowed_actions=["get_all"],
+    admin_only=True,
+)
+
+
+@scraped_job_router.get("/paged", response_model=schemas.PaginatedScrapedJobResponse | schemas.PaginatedScrapedJobIdsResponse)
+def get_all(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+    page: int = 0,
+    page_size: int = 10,
+    sort_by: str = "scrape_datetime",
+    sort_direction: Literal["asc", "desc"] = "desc",
+    show_past_deadline: bool = False,
+    since_last_login: bool = False,
+    search: str | None = None,
+    filters: str | None = None,
+    ids_only: bool = False,
+) -> dict:
+    """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped.
+    :param db: Database session
+    :param current_user: Current user
+    :param page: Page number
+    :param page_size: Page size
+    :param sort_by: sort key
+    :param sort_direction: sort direction
+    :param show_past_deadline: Show scraped jobs with past deadlines
+    :param since_last_login: Only show jobs created since last login
+    :param search: Search term
+    :param filters: JSON-encoded filter object
+    :param ids_only: Return only IDs instead of full objects"""
+
+    # Base query
+    # noinspection PyComparisonWithNone
+    query = db.query(models.ScrapedJob)
+    if not ids_only:
+        query = query.options(joinedload(models.ScrapedJob.job_rating))  # Eager load rating for full response
+    query = (
+        query.filter(models.ScrapedJob.owner_id == current_user.id)
+        .filter(models.ScrapedJob.is_imported.is_(False))
+        .filter(models.ScrapedJob.is_active.is_(True))
+        .filter(models.ScrapedJob.exclusion_filter_id == None)
+    )
+
+    # Total before deadline/login/search/column filters
+    total = query.count()
+
+    if not show_past_deadline:
+        query = query.filter(
+            or_(
+                models.ScrapedJob.deadline.is_(None),
+                models.ScrapedJob.deadline >= dt.datetime.now(dt.timezone.utc),
+            ),
+            models.ScrapedJob.is_closed.is_(False),
+        )
+
+    if since_last_login and current_user.previous_login:
+        query = query.filter(models.ScrapedJob.created_at >= current_user.previous_login)
+
+    # Apply search filter
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                models.ScrapedJob.title.ilike(search_term),
+                models.ScrapedJob.company.ilike(search_term),
+                models.ScrapedJob.location.ilike(search_term),
+                models.ScrapedJob.description.ilike(search_term),
+                models.ScrapedJob.platform.ilike(search_term),
+            )
+        )
+
+    # Determine if we need a JobRating join (for filters or sorting)
+    needs_rating_join = sort_by.startswith("job_rating.")
+    filter_conditions = []
+
+    # Parse JSON column filters
+    if filters:
+        filter_dict = json.loads(filters)
+        for key, fval in filter_dict.items():
+            ftype = fval.get("type")
+
+            # Resolve the SQLAlchemy column
+            if key.startswith("job_rating."):
+                attr_name = key.split(".", 1)[1]
+                if not hasattr(models.JobRating, attr_name):
+                    continue
+                col = getattr(models.JobRating, attr_name)
+                needs_rating_join = True
+            elif hasattr(models.ScrapedJob, key):
+                col = getattr(models.ScrapedJob, key)
+            else:
+                continue
+
+            if ftype == "text":
+                value = (fval.get("value") or "").strip()
+                if value:
+                    filter_conditions.append(col.ilike(f"%{value}%"))
+
+            elif ftype == "select":
+                selected = fval.get("selected", [])
+                if selected:
+                    filter_conditions.append(col.in_(selected))
+
+            elif ftype == "number":
+                min_val = fval.get("min")
+                max_val = fval.get("max")
+                null_filter = fval.get("nullFilter")
+
+                if null_filter == "null":
+                    filter_conditions.append(col.is_(None))
+                elif null_filter == "not_null":
+                    filter_conditions.append(col.isnot(None))
+                    if min_val is not None:
+                        filter_conditions.append(col >= min_val)
+                    if max_val is not None:
+                        filter_conditions.append(col <= max_val)
+                else:
+                    if min_val is not None:
+                        filter_conditions.append(col >= min_val)
+                    if max_val is not None:
+                        filter_conditions.append(col <= max_val)
+
+            elif ftype == "date":
+                from_val = fval.get("from")
+                to_val = fval.get("to")
+                if from_val:
+                    filter_conditions.append(col >= from_val)
+                if to_val:
+                    filter_conditions.append(col <= to_val + "T23:59:59")
+
+            elif ftype == "reference":
+                selected_ids = fval.get("selectedIds", [])
+                if selected_ids:
+                    filter_conditions.append(col.in_([int(sid) for sid in selected_ids]))
+
+    # Apply the join once if needed
+    if needs_rating_join:
+        query = query.outerjoin(models.JobRating)
+
+    # Apply all filter conditions
+    for cond in filter_conditions:
+        query = query.filter(cond)
+
+    # Apply sorting
+    if sort_by.startswith("job_rating."):
+        rating_attribute = sort_by.split(".", 1)[1]
+
+        if hasattr(models.JobRating, rating_attribute):
+            sort_column = getattr(models.JobRating, rating_attribute)
+
+            if sort_direction == "desc":
+                query = query.order_by(desc(sort_column).nulls_last())
+            else:
+                query = query.order_by(asc(sort_column).nulls_last())
+        else:
+            query = query.order_by(desc(models.ScrapedJob.scrape_datetime).nulls_last())
+    elif hasattr(models.ScrapedJob, sort_by):
+        sort_column = getattr(models.ScrapedJob, sort_by)
+        if sort_direction == "desc":
+            query = query.order_by(desc(sort_column).nulls_last())
+        else:
+            query = query.order_by(asc(sort_column).nulls_last())
+    else:
+        query = query.order_by(desc(models.ScrapedJob.scrape_datetime).nulls_last())
+
+    # Get total filtered count before pagination
+    total_filtered = query.count()
+
+    # Calculate pagination
+    offset = page * page_size
+    total_pages = (total_filtered + page_size - 1) // page_size if total_filtered > 0 else 1
+
+    if ids_only:
+        ids = query.with_entities(models.ScrapedJob.id).offset(offset).limit(page_size).all()
+        return {
+            "items": [row[0] for row in ids],
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+        }
+
+    # Apply pagination
+    results = query.offset(offset).limit(page_size).all()
+
+    return {
+        "items": results,
+        "total": total,
+        "total_filtered": total_filtered,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    }
+
+
+@scraped_job_router.get("/by-email/{email_id}", response_model=list[schemas.ScrapedJobOut])
+def get_scraped_jobs_by_email(
+    email_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get scraped jobs associated with a specific job email for the current user.
+    :param email_id: ID of the job email
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: List of scraped jobs linked to the email"""
+
+    email = (
+        db.query(models.JobEmail)
+        .filter(models.JobEmail.id == email_id)
+        .filter(models.JobEmail.owner_id == current_user.id)
+        .first()
+    )
+    if not email:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job email not found")
+    return email.jobs
+
+
+@scraped_job_router.get("/filtered-by-filter/{filter_id}", response_model=list[schemas.ScrapedJobOut])
+def get_scraped_jobs_filtered_by_filter(
+    filter_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get scraped jobs associated with a specific filter for the current user.
+    :param filter_id: ID of the filter
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: List of scraped jobs associated with the filter"""
+
+    scraped_jobs = (
+        db.query(models.ScrapedJob)
+        .filter(models.ScrapedJob.owner_id == current_user.id)
+        .filter(models.ScrapedJob.exclusion_filter_id == filter_id)
+        .all()
+    )
+    return scraped_jobs
+
+
+# PUT endpoint for regular users to update the entries
+generate_data_table_crud_router(
+    table_model=models.ScrapedJob,
+    update_schema=schemas.ScrapedJobUpdate,
+    out_schema=schemas.ScrapedJobOut,
+    endpoint="scraped-jobs",
+    not_found_msg="Scraped Job not found",
+    allowed_actions=["put"],
+    router=scraped_job_router,
+)

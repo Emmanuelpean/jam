@@ -82,16 +82,13 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 				</div>
 			</Card.Header>
 			<Card.Body className="p-0 flex-grow-1 d-flex flex-column overflow-auto" style={{ minHeight: 0 }}>
-				{isEmpty && emptyState ? (
-					renderEmptyState()
-				) : (
-					<div
-						className={bodyPadding ? "px-3" : ""}
-						style={{ flexGrow: 1, display: "flex", flexDirection: "column", minHeight: 0 }}
-					>
-						{children}
-					</div>
-				)}
+				{isEmpty && emptyState ? renderEmptyState() : null}
+				<div
+					className={bodyPadding ? "px-3" : ""}
+					style={{ flexGrow: 1, display: isEmpty && emptyState ? "none" : "block" }}
+				>
+					{children}
+				</div>
 			</Card.Body>
 		</Card>
 	);

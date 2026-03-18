@@ -9,7 +9,7 @@ from starlette import status
 
 from app.config import settings
 from app.models import User
-from app.routers import assert_admin
+from app.routers.utility import assert_admin
 from app.service_runner.service_runner import ServiceRunner
 
 

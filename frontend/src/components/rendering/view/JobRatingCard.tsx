@@ -45,9 +45,14 @@ const JobRatingCard = ({ jobRating }: JobRatingCardProps): JSX.Element => {
 
 				{jobRating.job_prompt && (
 					<>
-						<Button variant="outline-primary" size="sm" className="w-100 py-1" onClick={handleTogglePrompt}>
+						<Button
+							variant="link"
+							size="sm"
+							className="p-0 text-muted text-decoration-none"
+							onClick={handleTogglePrompt}
+						>
 							<i className={`bi ${showPrompt ? "bi-chevron-up" : "bi-chevron-down"} me-1`} />
-							{showPrompt ? "Hide" : "Show"} Full Prompt
+							{showPrompt ? "Hide" : "Show"} AI Prompt
 						</Button>
 						<Collapse in={showPrompt}>
 							<div>

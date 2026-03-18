@@ -16,7 +16,7 @@ import {
 } from "../services/api/DataTables";
 import { ApiResponse, ApiResponsePromise } from "../services/api/Base";
 import { userApi } from "../services/api/Users";
-import { aiSystemPromptsApi, scrapedJobApi } from "../services/api/Services";
+import { aiSystemPromptsApi, jobEmailApi, scrapedJobApi } from "../services/api/Services";
 import { useAuth } from "./AuthContext";
 import { useLoading } from "./LoadingContext";
 import { findItemById, sortByKey } from "../utils/Utils";
@@ -37,7 +37,7 @@ import {
 	SpeculativeApplicationData,
 } from "../services/schemas/DataTables";
 import { SettingData, UserData } from "../services/schemas/Core";
-import { AiSystemPromptData, ScrapedJobData, ScrapingFilterData } from "../services/schemas/Services";
+import { AiSystemPromptData, JobEmailData, ScrapedJobData, ScrapingFilterData } from "../services/schemas/Services";
 import { Country, Currency } from "../services/schemas/Others";
 import { ApiError } from "../services/api/ApiError";
 
@@ -54,7 +54,8 @@ export type EntityType =
 	| "user"
 	| "scrapedJob"
 	| "scrapingFilter"
-	| "speculativeApplication";
+	| "speculativeApplication"
+	| "jobEmail";
 
 export type JamData =
 	| KeywordData
@@ -69,7 +70,8 @@ export type JamData =
 	| SettingData
 	| ScrapedJobData
 	| ScrapingFilterData
-	| SpeculativeApplicationData;
+	| SpeculativeApplicationData
+	| JobEmailData;
 
 export const entityTypeToGenericName = (entityType: EntityType): string => {
 	const nameMap: Record<EntityType, string> = {
@@ -86,6 +88,7 @@ export const entityTypeToGenericName = (entityType: EntityType): string => {
 		scrapedJob: "Scraped Job",
 		scrapingFilter: "Scraping Filter",
 		speculativeApplication: "Speculative Application",
+		jobEmail: "Job Email",
 	};
 	return nameMap[entityType];
 };
@@ -121,6 +124,7 @@ export const entityTypeToName = (
 		user: (data: JamData): string => (data as UserData).email,
 		scrapedJob: (data: JamData): string => (data as ScrapedJobData)?.title || "Scraped Job",
 		scrapingFilter: (data: JamData): string => getScrapingFilterName(data as ScrapingFilterData),
+		jobEmail: (data: JamData): string => (data as JobEmailData)?.subject || "Job Email",
 	};
 	return nameMap[entityType];
 };
@@ -140,6 +144,7 @@ const entityTypeToApi = (entityType: EntityType) => {
 		scrapedJob: scrapedJobApi,
 		scrapingFilter: scrapingFilterApi,
 		speculativeApplication: speculativeApplicationsApi,
+		jobEmail: jobEmailApi,
 	};
 	return apiMap[entityType];
 };
@@ -440,6 +445,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			scrapedJob: setScrapedJobs,
 			scrapingFilter: setScrapingFilters,
 			speculativeApplication: setSpeculativeApplications,
+			jobEmail: () => {},
 		};
 		return setterMap[type];
 	};
@@ -515,6 +521,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				scrapedJob: _scrapedJobs,
 				scrapingFilter: scrapingFilters,
 				speculativeApplication: speculativeApplications,
+				jobEmail: [],
 			};
 			return dataMap[entityType];
 		},

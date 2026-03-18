@@ -5,8 +5,7 @@ import traceback
 
 from sqlalchemy.orm import Session
 
-from app import models as models
-from app import utils
+from app import models, utils
 from app.config import settings
 from app.database import get_db
 from app.job_rating.claude import MODEL as CLAUDE_MODEL, claude_query
@@ -217,11 +216,38 @@ class ScrapedJobRater:
             llm_model=CLAUDE_MODEL,
         )
 
+        # Check that the job is not closed
+        if scraped_job.is_closed or (scraped_job.deadline and scraped_job.deadline < dt.datetime.now(dt.timezone.utc)):
+            self.logger.info(f"Skipping job ID {scraped_job.id} as it is closed")
+            job_rating = models.JobRating(
+                is_skipped=True,
+                skip_reason="Job is closed",
+                **job_rating_kwargs,
+            )
+            db.add(job_rating)
+            service_log.job_skipped_ids = service_log.job_skipped_ids + [scraped_job.id]
+            db.commit()
+            return
+
+        # Check that the job description is not too short
         if scraped_job.description and len(scraped_job.description) < settings.min_scraping_description_length:
             self.logger.info(f"Skipping job ID {scraped_job.id} as its description is too short")
             job_rating = models.JobRating(
                 is_skipped=True,
                 skip_reason=f"Job description too short (minimum length is {settings.min_scraping_description_length} characters)",
+                **job_rating_kwargs,
+            )
+            db.add(job_rating)
+            service_log.job_skipped_ids = service_log.job_skipped_ids + [scraped_job.id]
+            db.commit()
+            return
+
+        # Ensure that the job has a description
+        if not scraped_job.description:
+            self.logger.info(f"Skipping job ID {scraped_job.id} as it has no description")
+            job_rating = models.JobRating(
+                is_skipped=True,
+                skip_reason="Job has no description",
                 **job_rating_kwargs,
             )
             db.add(job_rating)
@@ -265,7 +291,7 @@ class ScrapedJobRater:
                 educational_score=score["educational_match"],
                 interest_score=score["interest_match"],
                 feedback=score["explanation"],
-                job_prompt=job_prompt,
+                job_prompt=combined_system_prompt + "\n\n" + job_prompt,
                 is_success=True,
                 **job_rating_kwargs,
             )

@@ -272,13 +272,33 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	isImportedColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_imported",
+		label: "Imported",
+		sortable: true,
+		searchable: false,
+		type: "boolean",
+		render: renderFunctions.isImported,
+		...overrides,
+	}),
+
+	isActiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_active",
+		label: "Active",
+		sortable: true,
+		searchable: true,
+		type: "boolean",
+		render: renderFunctions.isActive,
+		...overrides,
+	}),
+
 	platformColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "platform",
 		label: "Platform",
 		sortable: true,
 		searchable: true,
 		type: "text",
-		render: (params: RenderParams) => renderFunctions.capitalise(params, "platform"),
+		render: renderFunctions.platform,
 		filterConfig: { type: "text" },
 		...overrides,
 	}),
@@ -613,7 +633,7 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	isActiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	isEnabledColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "is_enabled",
 		label: "Active",
 		sortable: true,
@@ -859,6 +879,15 @@ export const tableColumns = {
 			display: "slider",
 			max: (ctx: DataContextValue) => maxCount(ctx.jobs, (j: any) => j.updates?.length || 0),
 		},
+		...overrides,
+	}),
+
+	scrapingStatusColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_processed",
+		label: "Status",
+		sortable: true,
+		searchable: false,
+		render: renderFunctions.scrapingStatus,
 		...overrides,
 	}),
 };

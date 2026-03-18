@@ -1,6 +1,8 @@
 """Test module for email_scaper.py functions and JobScraper class"""
 
 import datetime as dt
+from functools import partial
+from unittest import mock
 from unittest.mock import patch
 
 import pytest
@@ -10,6 +12,7 @@ from app.config import settings
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
 from app.job_email_scraping.schemas import JobResult
 from tests.job_email_scraping import resources
+from tests.job_email_scraping.mock_job_scrapers import MockIndeedBrightdataJobScraper
 from tests.utils.test_data import TOAST_USER_1_INDEX
 
 
@@ -644,7 +647,7 @@ class TestScrapeJobs:
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
         for job in scraped_jobs:
             assert job.is_scraped
-            assert job.scrape_error is None
+            assert job.scrape_error == []
 
         # Verify the platform stats
         platform_stat = (
@@ -669,7 +672,7 @@ class TestScrapeJobs:
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
         for job in scraped_jobs:
             assert job.is_scraped
-            assert job.scrape_error is None
+            assert job.scrape_error == []
 
         # Verify the platform stats
         platform_stat = (
@@ -694,7 +697,7 @@ class TestScrapeJobs:
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
         for job in scraped_jobs:
             assert job.is_scraped
-            assert job.scrape_error is None
+            assert job.scrape_error == []
 
         # Verify the platform stats
         platform_stat = (
@@ -717,7 +720,7 @@ class TestScrapeJobs:
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
         for job in scraped_jobs:
             assert job.is_scraped
-            assert job.scrape_error is None
+            assert job.scrape_error == []
 
         # Verify the platform stats
         platform_stat = (
@@ -790,7 +793,7 @@ class TestScrapeJobs:
                 assert job.exclusion_filter_id == filter_entry.id
             else:
                 assert job.is_scraped
-                assert job.scrape_error is None
+                assert job.scrape_error == []
 
         # Verify the platform stats
         platform_stat = (
@@ -852,6 +855,141 @@ class TestScrapeJobs:
         assert len(platform_stat.job_scrape_skipped_ids) == len(linkedin_scraped_jobs)
         assert len(platform_stat.job_scrape_failed_ids) == 0
         assert len(platform_stat.job_scrape_copied_ids) == 0
+
+
+# ----------------------------------------------- SCRAPING RETRY LOGIC ------------------------------------------------
+
+
+class TestScrapeJobsRetry:
+    """Test cases for the retry mechanism in scrape_jobs"""
+
+    @pytest.fixture
+    def indeed_scraped_job(
+        self, test_users, session, email_record_factory, test_job_scraping_service_log
+    ) -> models.ScrapedJob:
+        """Create a single unprocessed Indeed scraped job"""
+
+        email_record, jobs = email_record_factory("indeed_3", user_index=0)
+        job = models.ScrapedJob(
+            external_job_id=jobs[0].job_id,
+            owner_id=email_record.owner_id,
+            platform=email_record.platform,
+            service_log_id=test_job_scraping_service_log.id,
+        )
+        job.emails.append(email_record)
+        session.add(job)
+        session.commit()
+        return job
+
+    @staticmethod
+    def _failing_scrapers() -> dict:
+        """SCRAPERS dict where the Indeed scraper always raises an exception"""
+
+        return {Platform.INDEED: partial(MockIndeedBrightdataJobScraper, simulate_exception=True)}
+
+    def test_first_failure_schedules_retry(
+        self, indeed_scraped_job, test_job_scraping_service_log, test_job_scraper, session
+    ) -> None:
+        """On first failure: retry_count=1, next_retry_at set, is_processed=False, is_failed=False"""
+
+        with mock.patch("app.job_email_scraping.email_scraper.SCRAPERS", self._failing_scrapers()):
+            test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+
+        session.refresh(indeed_scraped_job)
+        assert indeed_scraped_job.retry_count == 1
+        assert indeed_scraped_job.next_retry_at is not None
+        assert indeed_scraped_job.next_retry_at > dt.datetime.now(dt.timezone.utc)
+        assert indeed_scraped_job.is_processed is False
+        assert indeed_scraped_job.is_failed is False
+        assert len(indeed_scraped_job.scrape_error) == 1
+
+    def test_second_failure_increments_retry_count(
+        self, indeed_scraped_job, test_job_scraping_service_log, test_job_scraper, session
+    ) -> None:
+        """On second failure: retry_count=2, still not permanently failed"""
+
+        for _ in range(2):
+            indeed_scraped_job.next_retry_at = None  # make eligible for retry each run
+            session.commit()
+            with mock.patch("app.job_email_scraping.email_scraper.SCRAPERS", self._failing_scrapers()):
+                test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+
+        session.refresh(indeed_scraped_job)
+        assert indeed_scraped_job.retry_count == 2
+        assert indeed_scraped_job.is_processed is False
+        assert indeed_scraped_job.is_failed is False
+        assert len(indeed_scraped_job.scrape_error) == 2
+
+    def test_third_failure_marks_permanently_failed(
+        self, indeed_scraped_job, test_job_scraping_service_log, test_job_scraper, session
+    ) -> None:
+        """After 3 failures: is_failed=True, is_processed=True, retry_count=3"""
+
+        for _ in range(3):
+            indeed_scraped_job.next_retry_at = None
+            session.commit()
+            with mock.patch("app.job_email_scraping.email_scraper.SCRAPERS", self._failing_scrapers()):
+                test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+
+        session.refresh(indeed_scraped_job)
+        assert indeed_scraped_job.retry_count == 3
+        assert indeed_scraped_job.is_processed is True
+        assert indeed_scraped_job.is_failed is True
+        assert len(indeed_scraped_job.scrape_error) == 3
+
+    def test_future_retry_at_skips_job(
+        self, indeed_scraped_job, test_job_scraping_service_log, test_job_scraper, session
+    ) -> None:
+        """Job with next_retry_at in the future is not picked up for retry"""
+
+        indeed_scraped_job.next_retry_at = dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=24)
+        indeed_scraped_job.retry_count = 1
+        session.commit()
+
+        test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+
+        session.refresh(indeed_scraped_job)
+        assert indeed_scraped_job.retry_count == 1  # unchanged — was not attempted
+        assert indeed_scraped_job.is_processed is False
+
+    def test_past_retry_at_triggers_retry(
+        self, indeed_scraped_job, test_job_scraping_service_log, test_job_scraper, session
+    ) -> None:
+        """Job with next_retry_at in the past is picked up and retried successfully"""
+
+        indeed_scraped_job.next_retry_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=1)
+        indeed_scraped_job.retry_count = 1
+        indeed_scraped_job.scrape_error = [{"datetime": "2025-01-01T00:00:00+00:00", "error": "previous error"}]
+        session.commit()
+
+        test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+
+        session.refresh(indeed_scraped_job)
+        assert indeed_scraped_job.is_scraped is True
+        assert indeed_scraped_job.is_processed is True
+        assert indeed_scraped_job.is_failed is False
+
+    def test_successful_retry_after_two_failures(
+        self, indeed_scraped_job, test_job_scraping_service_log, test_job_scraper, session
+    ) -> None:
+        """A job with 2 prior failures that succeeds on retry is processed, not failed"""
+
+        indeed_scraped_job.retry_count = 2
+        indeed_scraped_job.scrape_error = [
+            {"datetime": "2025-01-01T00:00:00+00:00", "error": "err1"},
+            {"datetime": "2025-01-02T00:00:00+00:00", "error": "err2"},
+        ]
+        indeed_scraped_job.next_retry_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(seconds=1)
+        session.commit()
+
+        # Success run — uses default mock (no simulate_exception)
+        test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+
+        session.refresh(indeed_scraped_job)
+        assert indeed_scraped_job.is_scraped is True
+        assert indeed_scraped_job.is_processed is True
+        assert indeed_scraped_job.is_failed is False
+        assert indeed_scraped_job.retry_count == 2  # unchanged on success
 
 
 # ----------------------------------------- FORWARDING EMAIL CONFIRMATION ----------------------------------------------

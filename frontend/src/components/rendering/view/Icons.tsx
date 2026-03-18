@@ -42,6 +42,7 @@ export function getTableIcon(title: string): string {
 		Users: getEntityIcon("user"),
 		Settings: getEntityIcon("setting"),
 		"Job Alerts": getEntityIcon("scrapedJob"),
+		"Job Emails": getEntityIcon("jobEmail"),
 		"User Settings": "gear",
 		"Job Scraping Dashboard": "envelope-arrow-down",
 		About: "info-circle",
@@ -52,6 +53,8 @@ export function getTableIcon(title: string): string {
 		"Release Notes": "file-earmark-text",
 		"Browser Extension": "puzzle-fill",
 		"About JAM": "info-circle",
+		"Service Dashboards": "stack",
+		"App Management": "terminal",
 	};
 	return iconMap[title] || "bi-table";
 }
@@ -71,6 +74,7 @@ export function getEntityIcon(entityType: EntityType): string {
 		speculativeApplication: "envelope-paper",
 		scrapedJob: "inboxes",
 		scrapingFilter: "funnel",
+		jobEmail: "envelope-open",
 	};
 	return iconMap[entityType] || "";
 }

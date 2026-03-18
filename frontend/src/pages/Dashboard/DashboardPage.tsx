@@ -19,16 +19,14 @@ import {
 	renderUpcomingInterviewItem,
 } from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
-import { scrapedJobApi } from "../../services/api/Services";
 import { sortByKey } from "../../utils/Utils";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
 import ExtensionBanner from "./ExtensionBanner";
 
 const Dashboard: React.FC = () => {
 	const dataContext: DataContextValue = useDataContext();
-	const { token } = useAuth();
+	const [scrapedJobsCount, setScrapedJobsCount] = useState<number | null>(null);
 	const { currentUser } = useAuth();
-	const [scrapedJobCount, setScrapedJobCount] = useState<number>(0);
 	if (!currentUser) {
 		return null;
 	}
@@ -110,10 +108,6 @@ const Dashboard: React.FC = () => {
 
 	allUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 	const recentActivity = allUpdates.slice(0, currentUser.preferences.update_limit);
-
-	scrapedJobApi.getCount(token || "").then((count) => {
-		setScrapedJobCount(count.data.count);
-	});
 
 	return (
 		<>
@@ -225,9 +219,9 @@ const Dashboard: React.FC = () => {
 							icon={getEntityIcon("scrapedJob")}
 							title="Job Alerts"
 							subtitle="Jobs that you received from job boards"
-							badgeValue={scrapedJobCount}
+							badgeValue={scrapedJobsCount ?? 0}
 							path="/scraped-jobs"
-							isEmpty={scrapedJobCount === 0}
+							isEmpty={scrapedJobsCount === 0}
 							emptyState={{
 								icon: "bell-slash",
 								title: "No job alerts",
@@ -235,7 +229,7 @@ const Dashboard: React.FC = () => {
 							}}
 						>
 							<div style={{ paddingTop: "9px", paddingBottom: "18px", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-								<ScrapedJobsTable />
+								<ScrapedJobsTable onTotalCountChange={setScrapedJobsCount} />
 							</div>
 						</DashboardCard>
 					</Col>

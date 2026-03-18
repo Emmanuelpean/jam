@@ -262,10 +262,12 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     # Set environment variables for frontend
     env = os.environ.copy()
     env["REACT_APP_API_BASE_URL"] = test_backend_server  # Use worker-specific backend
+    env["REACT_APP_API_SERVICE_URL"] = test_backend_server  # Scheduler routes also served by test backend
     env["PORT"] = str(port)
     env["BROWSER"] = "none"
     print(f"Environment variables:")
     print(f"  REACT_APP_API_BASE_URL: {env['REACT_APP_API_BASE_URL']}")
+    print(f"  REACT_APP_API_SERVICE_URL: {env['REACT_APP_API_SERVICE_URL']}")
     print(f"  PORT: {env['PORT']}")
 
     # Find npm executable
@@ -1365,7 +1367,10 @@ class DataTableUtils(BaseUtilsClass):
         """Get all table rows on the page"""
 
         time.sleep(0.5)
-        self.get_element("table-row-clickable", By.CLASS_NAME)
+        try:
+            self.get_element(f"[id^='table-row-{self.entry_type}-']", By.CSS_SELECTOR, 1)
+        except AssertionError:
+            return []
         return self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-{self.entry_type}-']")
 
     def table_row(self, item_id: int, *args, **kwargs) -> WebElement:
@@ -1443,7 +1448,7 @@ class DataTableUtils(BaseUtilsClass):
         """Check if an ID is in the table"""
 
         try:
-            self.get_element("table-row-clickable", By.CLASS_NAME, **kwargs)
+            self.get_element(f"[id^='table-row-{self.entry_type}-']", By.CSS_SELECTOR, **kwargs)
         except AssertionError:
             return False
         rows = self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-{self.entry_type}-']")

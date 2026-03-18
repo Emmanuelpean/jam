@@ -7,9 +7,9 @@ from unittest import mock
 import pytest
 
 from app import models
+from app.job_email_scraping.email_parsers import Platform
 from app.job_email_scraping.email_parsers import indeed
 from app.job_email_scraping.email_scraper import JobEmailScraper
-from app.job_email_scraping.email_parsers import Platform
 from tests.job_email_scraping import resources
 from tests.job_email_scraping.mock_job_scrapers import (
     MockVeganJobsBrightdataJobScraper,

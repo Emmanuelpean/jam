@@ -12,7 +12,7 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 	if (!latestLog) return null;
 
 	return (
-		<div className="status-card">
+		<div id="latest-run-progress" className="status-card">
 			<h2 className="card-title">
 				<i className="bi bi-clock-history me-2"></i>
 				Latest Run Progress
@@ -40,6 +40,9 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 					<p className="metric-item">
 						<span className="status-label">Rating Failed:</span> {latestLog.job_failed_ids.length}
 					</p>
+					<p className="metric-item">
+						<span className="status-label">Rating Skipped:</span> {latestLog.job_skipped_ids.length}
+					</p>
 				</div>
 			</div>
 
@@ -56,7 +59,11 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 				/>
 				<ProgressBar
 					title="Jobs Processed"
-					current={latestLog.job_succeeded_ids.length + latestLog.job_failed_ids.length}
+					current={
+						latestLog.job_succeeded_ids.length +
+						latestLog.job_failed_ids.length +
+						latestLog.job_skipped_ids.length
+					}
 					total={latestLog.job_found_ids.length}
 				/>
 			</div>

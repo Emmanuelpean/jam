@@ -38,6 +38,8 @@ jobs:
       MAX_SCRAPING_DESCRIPTION_LENGTH: ${{ vars.MAX_SCRAPING_DESCRIPTION_LENGTH }}
       MAX_SCRAPING_TITLE_LENGTH: ${{ vars.MAX_SCRAPING_TITLE_LENGTH }}
       MAX_SCRAPING_COMPANY_LENGTH: ${{ vars.MAX_SCRAPING_COMPANY_LENGTH }}
+      SCRAPE_MAX_RETRY: ${{ vars.SCRAPE_MAX_RETRY }}
+      SCRAPE_RETRY_DELAY_HOURS: ${{ vars.SCRAPE_RETRY_DELAY_HOURS }}
 
       # Email Configuration
       MAIN_EMAIL_USERNAME: ${{ secrets.MAIN_EMAIL_USERNAME }}
@@ -96,13 +98,13 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.ref }}
 
       - name: Install Python
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -126,9 +128,8 @@ jobs:
       - name: Install Stripe CLI
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
-          STRIPE_DEB_URL=$(curl -s https://api.github.com/repos/stripe/stripe-cli/releases/latest | grep "browser_download_url.*linux_amd64.deb" | cut -d'"' -f4)
-          curl -sL "$STRIPE_DEB_URL" -o stripe.deb
-          sudo dpkg -i stripe.deb
+          STRIPE_TAR_URL=$(curl -s https://api.github.com/repos/stripe/stripe-cli/releases/latest | grep "browser_download_url.*linux_x86_64.tar.gz" | cut -d'"' -f4)
+          curl -sL "$STRIPE_TAR_URL" | sudo tar xz -C /usr/local/bin stripe
 
       - name: Run backend tests
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
@@ -165,7 +166,7 @@ jobs:
             reports/tests/tests.xml
 
       - name: Upload test logs and screenshots
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always() && !contains(github.event.head_commit.message, '[skip tests]')
         with:
           name: test-logs-${{ github.run_number }}

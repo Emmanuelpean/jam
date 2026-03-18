@@ -68,8 +68,10 @@ export interface ScrapedJobData extends OwnedOut {
 	is_processed: boolean;
 	is_skipped: boolean;
 	skip_reason: string | null;
-	scrape_error: string;
+	scrape_error: Array<{ datetime: string; error: string }>;
 	scrape_datetime: Date | string;
+	retry_count: number;
+	next_retry_at: string | null;
 	is_active: boolean;
 	is_imported: boolean;
 	title: string | null;
@@ -78,6 +80,7 @@ export interface ScrapedJobData extends OwnedOut {
 	salary_max: number | null;
 	salary_currency: string | null;
 	platform: string | null;
+	is_closed: boolean;
 	url: string | null;
 	deadline: Date | string | null;
 	company: string | null;
@@ -129,6 +132,21 @@ export interface ScrapingFilterData extends OwnedOut {
 	case_sensitive: boolean;
 	is_active: boolean;
 	filtered_jobs: number[];
+}
+
+// ----------------------------------------------------- JOB EMAIL -----------------------------------------------------
+
+export interface JobEmailData extends OwnedOut {
+	external_email_id: string | null;
+	subject: string | null;
+	sender: string | null;
+	date_received: Date | string | null;
+	platform: string | null;
+	body: string | null;
+	service_log_id: number | null;
+	job_found_n: number;
+	alert_name: string | null;
+	jobs: number[];
 }
 
 // ------------------------------------------- FORWARDING CONFIRMATION LINK -------------------------------------------

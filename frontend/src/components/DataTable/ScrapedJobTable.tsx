@@ -15,6 +15,8 @@ import { ProgressOverlay } from "../ProgressOverlay/ProgressOverlay";
 const ScrapedJobsTable: React.FC<DataTableProps> = ({
 	columns = [],
 	title = undefined,
+	onTotalCountChange,
+	reloadTrigger,
 }: DataTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 	const { currentUser } = useAuth();
@@ -24,7 +26,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 	const tableRef = useRef<DataTableHandle>(null);
 	const [showFilters, setShowFilters] = useState<boolean>(false);
 	const [showPastDeadline, setShowPastDeadline] = useState<boolean>(false);
-	const [reloadTrigger, setReloadTrigger] = useState<number>(0);
+	const [internalReloadTrigger, setInternalReloadTrigger] = useState<number>(0);
 	const [progress, setProgress] = useState<{ show: boolean; title: string; message: string }>({
 		show: false, title: "", message: "",
 	});
@@ -44,7 +46,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 			await Promise.all(ids.map((id) => updateEntity("scrapedJob", Number(id), { is_active: false })));
 			showToastSuccess(`${n(ids)} dismissed.`);
 			tableRef.current?.clearSelection();
-			setReloadTrigger((t) => t + 1);
+			setInternalReloadTrigger((t) => t + 1);
 		} catch {
 			showToastError("Failed to dismiss some alerts. Please try again.");
 		} finally {
@@ -69,6 +71,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 					tableColumns.overallScore(),
 					tableColumns.urlGenericColumn(),
 					tableColumns.platformColumn(),
+					tableColumns.scrapingStatusColumn(),
 					tableColumns.createdAtColumn({ label: "Date Received" }),
 				];
 
@@ -78,6 +81,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 				ref={tableRef}
 				title={title}
 				entityType="scrapedJob"
+				onTotalCountChange={onTotalCountChange}
 				mode="import"
 				columns={defaultColumns}
 				initialSortConfig={{ key: "created_at", direction: "desc" }}
@@ -88,7 +92,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 				showSearch={true}
 				queryParams={queryParams}
 				enableColumnConfig={true}
-				reloadTrigger={reloadTrigger}
+				reloadTrigger={(reloadTrigger ?? 0) + internalReloadTrigger}
 				rowIndicator={(item: any) =>
 					!!currentUser?.previous_login &&
 					new Date(item.created_at) > new Date(currentUser.previous_login as string)

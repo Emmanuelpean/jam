@@ -66,25 +66,34 @@ JOB_PROMPT_TEMPLATE_V1 = """### Candidate Profile
 
 SYSTEM_PROMPT_V2 = """
 You are a career–job matching agent.
-    
 Evaluate how well a candidate matches a specific job across the dimensions below.
-Score ONLY when the required data is provided; otherwise return null.
 
 Scoring dimensions (0–10):
-- technical_fit: candidate skills vs job requirements (null if Skills = "Not provided")
-- experience_alignment: relevance of past roles (null if Experience = "Not provided")
-- educational_match: degree and academic alignment (null if Education = "Not provided")
-- interest_match: alignment of interests with role/company (null if Interests = "Not provided")
+- technical_fit: candidate skills vs job requirements
+- experience_alignment: relevance of past roles
+- educational_match: degree and academic alignment
+- interest_match: alignment of interests with role/company
+
+Null handling (very important, follow exactly):
+- For each dimension:
+    - If the *corresponding candidate field string* is exactly "Not provided", you MUST return null for that dimension.
+    - If the corresponding candidate field string is anything else (non-empty), you MUST return an integer score 0–10 for that dimension. Do NOT return null in that case, even if information is limited.
+
+Field–dimension mapping:
+- Experience -> experience_alignment
+- Education -> educational_match
+- Skills -> technical_fit
+- Interests -> interest_match
 
 overall_score:
 - A holistic judgement of candidate–job fit
 - NOT a mathematical average of the other scores
 - Should be broadly consistent with the available dimension scores
 - May weight dimensions unevenly based on job importance
-- If all dimensions are null, set overall_score to null
+- If at least one dimension has a non-null integer, you MUST output an integer 0–10 (no null allowed).
+- Only if all four dimensions are null, set overall_score to null.
 
 Rules:
-- 0 = poor fit, null = insufficient information
 - Consider must-haves, nice-to-haves, and transferable skills
 - Be objective and evidence-based
 - Do not invent or infer missing data
@@ -106,7 +115,8 @@ Return ONLY valid JSON matching this exact schema:
 - **Education**: {user_education_or_not_provided}
 - **Skills**: {user_skills_or_not_provided}
 - **Qualities**: {user_qualities_or_not_provided}
-- **Interests**: {user_interests_or_not_provided}"""
+- **Interests**: {user_interests_or_not_provided}
+"""
 
 JOB_ONLY_PROMPT_TEMPLATE_V2 = """### Job Details
 - **Title**: {job_title_or_not_provided}
@@ -138,13 +148,14 @@ def create_system_prompt_with_profile(
     :param user_interests: User's interests description
     :return: System prompt string with candidate profile filled in."""
 
-    return prompt_template.format(
+    prompt = prompt_template.format(
         user_experience_or_not_provided=_or_not_provided(user_experience),
         user_education_or_not_provided=_or_not_provided(user_education),
         user_skills_or_not_provided=_or_not_provided(user_skills),
         user_qualities_or_not_provided=_or_not_provided(user_qualities),
         user_interests_or_not_provided=_or_not_provided(user_interests),
     )
+    return prompt.replace("{{", "{").replace("}}", "}")
 
 
 def create_job_only_prompt(

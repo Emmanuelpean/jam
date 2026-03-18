@@ -4,18 +4,17 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { SyntheticEvent } from "../../../components/rendering/widgets/WidgetRenders";
 import LogViewer from "../LogViewer/LogViewer";
 import { useGlobalToast } from "../../../hooks/useNotificationToast";
-import { ServiceStatusCard } from "./ServiceStatusCard";
+import { ServiceStatusCard } from "../ServiceStatusCard";
 import { LatestRunProgress } from "./LatestRunProgress";
 import { RunHistoryChart } from "./RunHistoryChart";
 import { ErrorSummaryCard } from "./ErrorSummaryCard";
 import { useServiceRunnerStatus } from "../../../hooks/useServiceRunnerStatus";
-import { getTableIcon } from "../../../components/rendering/view/Icons";
-import { DateRange } from "../../../utils/TimeUtils";
 import { useJobRatingServiceLogs } from "../../../hooks/useJobRatingServiceLog";
 import { useJobRatingErrors } from "../../../hooks/useJobRatingErrors";
+import { DateRange } from "../../../utils/TimeUtils";
 import TimeSelection from "../../../components/TimeSelection/TimeSelection";
+import { formatErrorMessage, RenderLabeledInput } from "../ServiceUtils";
 import "../Service.scss";
-import PageHeader from "../../PageHeader/PageHeader";
 
 export interface FormData {
 	period_hours: number;
@@ -23,17 +22,17 @@ export interface FormData {
 
 const JobRatingDashboard = (): JSX.Element => {
 	const { token } = useAuth();
-	const [dateRange, setDateRange] = useState<DateRange>({
-		start: new Date(),
-		end: new Date(),
-	});
+	const [dateRange, setDateRange] = useState<DateRange>({ start: new Date(), end: new Date() });
 	const { serviceStatus, remainingTime, fetchStatus, statusError } =
 		useServiceRunnerStatus(jobRatingServiceRunnerApi);
-	const [formData, setFormData] = useState<FormData>({
-		period_hours: serviceStatus?.period_hours || 0,
-	});
+	const [formData, setFormData] = useState<FormData>({ period_hours: serviceStatus?.period_hours || 0 });
 	const [loading, setLoading] = useState<boolean>(false);
 	const { showToastSuccess } = useGlobalToast();
+
+	useEffect((): void => {
+		setFormData({ period_hours: serviceStatus?.period_hours || 0 });
+	}, [serviceStatus?.period_hours]);
+
 	const {
 		previousServiceLogs,
 		latestServiceLog,
@@ -41,6 +40,7 @@ const JobRatingDashboard = (): JSX.Element => {
 		serviceLogError,
 		loading: logsLoading,
 	} = useJobRatingServiceLogs(serviceStatus?.service_running || false, dateRange);
+
 	const {
 		scraperErrors: previousRatingErrors,
 		error: previousRatingRequestError,
@@ -52,16 +52,9 @@ const JobRatingDashboard = (): JSX.Element => {
 		loading: lastRatingErrorsLoading,
 	} = useJobRatingErrors(latestServiceLog);
 
-	useEffect((): void => {
-		setFormData({
-			period_hours: serviceStatus?.period_hours || 0,
-		});
-	}, [serviceStatus?.period_hours]);
-
 	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
 		const target = event.target as HTMLInputElement;
 		const { name, value } = target;
-
 		setFormData((prevData) => ({
 			...prevData,
 			[name]: value === "" ? "" : Number(value) || 3,
@@ -98,31 +91,15 @@ const JobRatingDashboard = (): JSX.Element => {
 		}
 	};
 
-	const formatErrorMessage = (err: unknown): string => {
-		if (!err) return "";
-		if (typeof err === "string") return err;
-		if (err instanceof Error) return err.message;
-		try {
-			return JSON.stringify(err);
-		} catch {
-			return String(err);
-		}
-	};
-
 	const collectedErrors = [
 		{ key: "status", label: "Service status", value: statusError },
 		{ key: "serviceLogs", label: "Service logs", value: serviceLogError },
 		{ key: "lastRatingError", label: "Last rating error", value: latestRatingRequestError },
-		{
-			key: "latestRatingError",
-			label: "Latest rating error",
-			value: previousRatingRequestError,
-		},
+		{ key: "latestRatingError", label: "Latest rating error", value: previousRatingRequestError },
 	].filter((e) => e.value);
 
 	return (
 		<div>
-			<PageHeader title={"Job Rating Dashboard"} icon={getTableIcon("Job Rating Dashboard")} />
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
 					<div className="d-flex align-items-start">
@@ -144,11 +121,22 @@ const JobRatingDashboard = (): JSX.Element => {
 			<ServiceStatusCard
 				status={serviceStatus}
 				remainingTime={remainingTime}
-				formData={formData}
 				loading={loading}
-				onFormChange={onChangeFormField}
 				onStart={handleStart}
 				onStop={handleStop}
+				serviceLabel="Rating Service"
+				renderFields={(status) =>
+					RenderLabeledInput(
+						"period_hours",
+						"Scraping Period",
+						"Time between rating runs.",
+						formData.period_hours,
+						"Hour(s)",
+						status.service_runner_status === "stopped",
+						onChangeFormField,
+						status.service_runner_status !== "stopped"
+					)
+				}
 			/>
 
 			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.service_running || false} />
@@ -159,7 +147,7 @@ const JobRatingDashboard = (): JSX.Element => {
 				serviceStatus={serviceStatus}
 			/>
 
-			<div className="status-card mt-4">
+			<div id="history-filters" className="status-card mt-4">
 				<h2 className="card-title">
 					<i className="bi bi-funnel me-2"></i>
 					History Filters

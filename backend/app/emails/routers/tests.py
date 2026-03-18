@@ -7,10 +7,10 @@ from fastapi import APIRouter, HTTPException
 from app.config import settings
 from app.emails.email_service import email_service
 
-router = APIRouter(prefix="/test", tags=["testing"])
+email_test_router = APIRouter(prefix="/test", tags=["testing"])
 
 
-@router.get("/emails/{email_address}")
+@email_test_router.get("/emails/{email_address}")
 def get_test_emails(email_address: str) -> dict:
     """Get all test emails sent to a specific address."""
 
@@ -21,7 +21,7 @@ def get_test_emails(email_address: str) -> dict:
     return {"emails": emails}
 
 
-@router.get("/verification-link/{email_address}")
+@email_test_router.get("/verification-link/{email_address}")
 def get_verification_link(email_address: str) -> dict:
     """Extract verification link from the most recent email."""
 
@@ -45,7 +45,7 @@ def get_verification_link(email_address: str) -> dict:
     raise HTTPException(status_code=404, detail="No verification link found")
 
 
-@router.get("/reset-link/{email_address}")
+@email_test_router.get("/reset-link/{email_address}")
 def get_reset_link(email_address: str) -> dict:
     """Extract password reset link from the most recent email."""
 
@@ -68,7 +68,7 @@ def get_reset_link(email_address: str) -> dict:
     raise HTTPException(status_code=404, detail="No reset link found")
 
 
-@router.delete("/emails")
+@email_test_router.delete("/emails")
 def clear_test_emails() -> dict:
     """Clear all test emails."""
 

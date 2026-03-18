@@ -5,7 +5,6 @@ Requires: pip install cairosvg
 """
 
 import os
-import sys
 
 SVG_PATH = os.path.join(os.path.dirname(__file__), "../frontend/src/assets/Logo.svg")
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "../frontend/src/assets/Logo_color.svg")

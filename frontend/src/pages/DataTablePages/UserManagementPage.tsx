@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { JSX, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Dropdown } from "react-bootstrap";
 import DataTable from "../../components/DataTable/DataTable";
 import { UserModal } from "../../components/DataModal/UserModal";
+import { SettingModal } from "../../components/DataModal/SettingModal";
 import { TableColumn, tableColumns } from "../../components/rendering/view/TableColumns";
 import { GenericResponse, userApi } from "../../services/api/Users";
 import { useAuth } from "../../contexts/AuthContext";
@@ -11,22 +13,47 @@ import { useDataContext } from "../../contexts/DataContext";
 import { ApiResponse } from "../../services/api/Base";
 import { UserData } from "../../services/schemas/Core";
 import { LAST_VERSION } from "../../releaseNotes/versions";
+import { getTableIcon } from "../../components/rendering/view/Icons";
+import PageHeader from "../PageHeader/PageHeader";
+import { EmailTemplatesContent } from "../Admin/EmailTemplatesPage";
+
+type ActiveTab = "users" | "settings" | "email-templates";
 
 export const UserManagementPage: React.FC = () => {
 	const { token } = useAuth();
 	const { showToastSuccess, showToastError, showApiError } = useGlobalToast();
 	const { showAlert } = useAlert();
 	const { users } = useDataContext();
+	const location = useLocation();
+	const navigate = useNavigate();
 	const [sendingEmail, setSendingEmail] = useState<boolean>(false);
+	const activeTab: ActiveTab =
+		location.pathname === "/app/settings"
+			? "settings"
+			: location.pathname === "/app/email-templates"
+				? "email-templates"
+				: "users";
+	const [usersCount, setUsersCount] = useState<number>(0);
+	const [settingsCount, setSettingsCount] = useState<number>(0);
+	const [usersReload, setUsersReload] = useState<number>(0);
+	const [settingsReload, setSettingsReload] = useState<number>(0);
 
-	const columns: TableColumn[] = [
+	const userColumns: TableColumn[] = [
 		tableColumns.idColumn(),
 		tableColumns.nameColumn(),
 		tableColumns.emailColumn(),
 		tableColumns.lastLoginColumn(),
 		tableColumns.isAdminColumn(),
-		tableColumns.isActiveColumn(),
+		tableColumns.isEnabledColumn(),
 		tableColumns.toastActiveColumn(),
+		tableColumns.createdAtColumn(),
+	];
+
+	const settingColumns: TableColumn[] = [
+		tableColumns.nameColumn(),
+		tableColumns.valueColumn(),
+		tableColumns.descriptionColumn(),
+		tableColumns.isEnabledColumn(),
 		tableColumns.createdAtColumn(),
 	];
 
@@ -114,13 +141,61 @@ export const UserManagementPage: React.FC = () => {
 	);
 
 	return (
-		<DataTable
-			entityType="user"
-			initialSortConfig={{ key: "id", direction: "asc" }}
-			title="Users"
-			columns={columns}
-			Modal={UserModal}
-			toolbarAddon={toolbarAddon}
-		/>
+		<div>
+			<div className="d-flex gap-3">
+				<PageHeader
+					title="Users"
+					icon={getTableIcon("Users")}
+					count={usersCount}
+					onClick={(): void => {
+						navigate("/app/users");
+						setUsersReload((n) => n + 1);
+					}}
+					active={activeTab === "users"}
+				/>
+				<PageHeader
+					title="Settings"
+					icon={getTableIcon("Settings")}
+					count={settingsCount}
+					onClick={(): void => {
+						navigate("/app/settings");
+						setSettingsReload((n) => n + 1);
+					}}
+					active={activeTab === "settings"}
+				/>
+				<PageHeader
+					title="Email Templates"
+					icon={getTableIcon("Email Templates")}
+					onClick={(): void => {
+						navigate("/app/email-templates");
+					}}
+					active={activeTab === "email-templates"}
+				/>
+			</div>
+
+			<div style={{ display: activeTab === "users" ? "block" : "none" }}>
+				<DataTable
+					entityType="user"
+					initialSortConfig={{ key: "id", direction: "asc" }}
+					columns={userColumns}
+					Modal={UserModal}
+					toolbarAddon={toolbarAddon}
+					onTotalCountChange={setUsersCount}
+					reloadTrigger={usersReload}
+				/>
+			</div>
+			<div style={{ display: activeTab === "settings" ? "block" : "none" }}>
+				<DataTable
+					entityType="setting"
+					initialSortConfig={{ key: "name", direction: "asc" }}
+					columns={settingColumns}
+					Modal={SettingModal}
+					initialData={{ is_active: true }}
+					onTotalCountChange={setSettingsCount}
+					reloadTrigger={settingsReload}
+				/>
+			</div>
+			{activeTab === "email-templates" && <EmailTemplatesContent />}
+		</div>
 	);
 };
