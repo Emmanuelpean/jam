@@ -128,9 +128,8 @@ jobs:
       - name: Install Stripe CLI
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
-          STRIPE_DEB_URL=$(curl -s https://api.github.com/repos/stripe/stripe-cli/releases/latest | grep "browser_download_url.*linux_amd64.deb" | cut -d'"' -f4)
-          curl -sL "$STRIPE_DEB_URL" -o stripe.deb
-          sudo dpkg -i stripe.deb || sudo apt-get install -f -y
+          STRIPE_TAR_URL=$(curl -s https://api.github.com/repos/stripe/stripe-cli/releases/latest | grep "browser_download_url.*linux_x86_64.tar.gz" | cut -d'"' -f4)
+          curl -sL "$STRIPE_TAR_URL" | sudo tar xz -C /usr/local/bin stripe
 
       - name: Run backend tests
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
