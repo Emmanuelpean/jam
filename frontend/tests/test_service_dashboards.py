@@ -93,9 +93,9 @@ class TestJobRatingDashboard(ServiceDashboardBase):
 
         # Config field: only period_hours (no timedelta_days)
         assert self.get_element("period_hours", selector=By.NAME, enabled=False).is_displayed()
-        assert not self.check_element_exists("timedelta_days", selector=By.NAME), (
-            "timedelta_days should not appear on the rating dashboard"
-        )
+        assert not self.check_element_exists(
+            "timedelta_days", selector=By.NAME
+        ), "timedelta_days should not appear on the rating dashboard"
 
         # Service status card: wait for status to load, then check badges
         self.get_element("confirm-start-button")
@@ -165,7 +165,7 @@ class TestJobScrapingDashboardErrors(ServiceDashboardBase):
             is_processed=True,
             scrape_error=[{"datetime": "2026-03-16T10:00:00+00:00", "error": self.SCRAPING_ERROR}],
             service_log_id=service_log.id,
-            url="http://test.com",
+            url="https://test.com",
         )
         self.db.add(scraped_job)
         self.db.commit()
@@ -184,19 +184,9 @@ class TestJobScrapingDashboardErrors(ServiceDashboardBase):
     def test_errors_display(self) -> None:
         """Critical, service and scraping errors all appear in the Error Summary card."""
 
-        # Wait for errors to load (card shows a spinner while fetching)
-        self.wait.until(
-            lambda d: self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text
-        )
-        error_card = self.driver.find_element(By.ID, "error-summary-card")
-
-        # Critical Errors column: service logs with error_message within the date range
+        error_card = self.get_element("error-summary-card")
         assert self.CRITICAL_ERROR in error_card.text
-
-        # Service Errors column: service_errors linked to the latest log
         assert self.SERVICE_ERROR in error_card.text
-
-        # Scraping Errors column: scraped job errors fetched via platform_stats
         assert self.SCRAPING_ERROR in error_card.text
 
 
@@ -225,7 +215,7 @@ class TestJobRatingDashboardErrors(ServiceDashboardBase):
             owner_id=self.db_user.id,
             is_processed=True,
             service_log_id=scraping_log.id,
-            url="http://test.com",
+            url="https://test.com",
         )
         self.db.add(scraped_job)
         self.db.commit()
@@ -263,14 +253,6 @@ class TestJobRatingDashboardErrors(ServiceDashboardBase):
     def test_errors_display(self) -> None:
         """Critical and rating errors both appear in the Error Summary card."""
 
-        # Wait for errors to load
-        self.wait.until(
-            lambda d: self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text
-        )
-        error_card = self.driver.find_element(By.ID, "error-summary-card")
-
-        # Critical Errors column: rating service logs with error_message in the date range
+        error_card = self.get_element("error-summary-card")
         assert self.CRITICAL_ERROR in error_card.text
-
-        # Job Rating Errors column: failed job ratings fetched via job_failed_ids
         assert self.RATING_ERROR in error_card.text
