@@ -25,8 +25,8 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.wait import WebDriverWait
 
 from app import models
-from config import settings
-from core.oauth2 import create_access_token
+from app.config import settings
+from app.core.oauth2 import create_access_token
 from react_select import ReactSelect
 
 
