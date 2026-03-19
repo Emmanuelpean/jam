@@ -2,8 +2,7 @@
 :root[data-theme="mixed-berry"] {
     --theme-name: "Mixed Berry Jam";
     --primary-start: #a29bfe;
-    --primary-mid: #6c5ce7;
-    --primary-mid-rgb: 108, 92, 231;
+    --primary-mid: rgb(108, 92, 231);
     --primary-end: #fd79a8;
     --primary-gradient: linear-gradient(
             135deg,
@@ -35,8 +34,7 @@
 :root[data-theme="strawberry"] {
     --theme-name: "Strawberry Jam";
     --primary-start: #ff9a9e;
-    --primary-mid: #ff6b6b;
-    --primary-mid-rgb: 255, 107, 107;
+    --primary-mid: rgb(255, 107, 107);
     --primary-end: #c44569;
     --primary-gradient: linear-gradient(
             135deg,
@@ -68,8 +66,7 @@
 :root[data-theme="blueberry"] {
     --theme-name: "Blueberry Jam";
     --primary-start: #a8edea;
-    --primary-mid: #686de0;
-    --primary-mid-rgb: 104, 109, 224;
+    --primary-mid: rgb(104, 109, 224);
     --primary-end: #4834d4;
     --primary-gradient: linear-gradient(
             135deg,
@@ -101,8 +98,7 @@
 :root[data-theme="raspberry"] {
     --theme-name: "Raspberry Jam";
     --primary-start: #fde4a3;
-    --primary-mid: #fd79a8;
-    --primary-mid-rgb: 253, 121, 168;
+    --primary-mid: rgb(253, 121, 168);
     --primary-end: #e84393;
     --primary-gradient: linear-gradient(
             135deg,
@@ -134,8 +130,7 @@
 :root[data-theme="forest-berry"] {
     --theme-name: "Forest Berry";
     --primary-start: #d4e4d4;
-    --primary-mid: #a8b3a8;
-    --primary-mid-rgb: 168, 179, 168;
+    --primary-mid: rgb(168, 179, 168);
     --primary-end: #1a2e1a;
     --primary-gradient: linear-gradient(
             135deg,
@@ -167,8 +162,7 @@
 :root[data-theme="blackberry"] {
     --theme-name: "Wild Blackberry";
     --primary-start: #d8c8e8;
-    --primary-mid: #8a7a9a;
-    --primary-mid-rgb: 138, 122, 154;
+    --primary-mid: rgb(138, 122, 154);
     --primary-end: #0a0015;
     --primary-gradient: linear-gradient(
             135deg,

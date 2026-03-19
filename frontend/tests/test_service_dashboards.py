@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 
 from selenium.webdriver.common.by import By
 
-from conftest import BaseTest, models
+from base_test import BaseTest, models
 
 
 class ServiceDashboardBase(BaseTest):
@@ -93,9 +93,9 @@ class TestJobRatingDashboard(ServiceDashboardBase):
 
         # Config field: only period_hours (no timedelta_days)
         assert self.get_element("period_hours", selector=By.NAME, enabled=False).is_displayed()
-        assert not self.check_element_exists("timedelta_days", selector=By.NAME), (
-            "timedelta_days should not appear on the rating dashboard"
-        )
+        assert not self.check_element_exists(
+            "timedelta_days", selector=By.NAME
+        ), "timedelta_days should not appear on the rating dashboard"
 
         # Service status card: wait for status to load, then check badges
         self.get_element("confirm-start-button")
@@ -185,9 +185,7 @@ class TestJobScrapingDashboardErrors(ServiceDashboardBase):
         """Critical, service and scraping errors all appear in the Error Summary card."""
 
         # Wait for errors to load (card shows a spinner while fetching)
-        self.wait.until(
-            lambda d: self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text
-        )
+        self.wait.until(lambda d: self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text)
         error_card = self.driver.find_element(By.ID, "error-summary-card")
 
         # Critical Errors column: service logs with error_message within the date range
@@ -264,9 +262,7 @@ class TestJobRatingDashboardErrors(ServiceDashboardBase):
         """Critical and rating errors both appear in the Error Summary card."""
 
         # Wait for errors to load
-        self.wait.until(
-            lambda d: self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text
-        )
+        self.wait.until(lambda d: self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text)
         error_card = self.driver.find_element(By.ID, "error-summary-card")
 
         # Critical Errors column: rating service logs with error_message in the date range

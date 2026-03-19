@@ -6,7 +6,7 @@ import time
 import pytest
 from selenium.webdriver.common.by import By
 
-from conftest import contiguous_subdicts, models, BaseTest
+from base_test import models, BaseTest, contiguous_subdicts
 from tests.utils.test_data import ADMIN_USER_INDEX
 
 
@@ -183,7 +183,7 @@ class BaseTablePage(BaseTest):
         entry = [entry for entry in entries if entry.id == entry_id][0]
 
         # Reopen the modal in view mode and check contents
-        self.table_utils.table_row(entry_id).click()
+        self.table_utils.table_row_click(entry_id)
         self.modal_utils.wait_for_view_modal()
         self.modal_utils.test_view_modal(entry)
 

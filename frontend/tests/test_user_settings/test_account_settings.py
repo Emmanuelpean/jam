@@ -4,7 +4,7 @@ import datetime as dt
 import time
 
 from app.utils import verify_password
-from conftest import models, BaseTest
+from base_test import models, BaseTest
 
 
 class TestAccountSettingsPage(BaseTest):
@@ -77,8 +77,7 @@ class TestAccountSettingsPage(BaseTest):
         self.set_text(self.user_settings_utils.email, new_email)
         self.user_settings_utils.confirm()
         self.assert_toast_message("Email change verification email sent successfully.")
-        user = session.query(models.User).filter(models.User.email == self.user.email).first()
-        user.verification_token_created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=20)
+        self.db_user.verification_token_created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=20)
         invalid_verification_url = self.get_verification_link_from_email(new_email)[:-4]
         self.driver.get(invalid_verification_url)
         self.assert_toast_message(

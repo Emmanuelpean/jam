@@ -9,7 +9,7 @@ import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 
-from conftest import models, BaseTest
+from base_test import models, BaseTest
 from tests.utils.create_data.utils import create_db_entries
 from tests.utils.test_data import TOAST_USER_1_INDEX
 

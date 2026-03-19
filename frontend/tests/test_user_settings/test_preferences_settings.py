@@ -2,7 +2,7 @@
 
 import time
 
-from conftest import BaseTest
+from base_test import BaseTest
 
 
 class TestPreferenceSettingsPage(BaseTest):

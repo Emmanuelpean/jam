@@ -9,6 +9,7 @@ import { ModalFormField } from "../rendering/form/FormRenders";
 import { areDifferent } from "../../utils/Utils";
 import "./FollowUpModal.scss";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { ModalHeader } from "../ModalHeader/ModalHeader";
 import { CompanyData, JobData, PersonData } from "../../services/schemas/DataTables";
 
 export interface FollowUpModalHandle {
@@ -245,9 +246,9 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 			size={"lg"}
 			id={"follow-up-modal"}
 		>
-			<Modal.Header closeButton>
+			<ModalHeader onClose={handleCloseWithConfirmation}>
 				<Modal.Title>Follow Up Email Generator</Modal.Title>
-			</Modal.Header>
+			</ModalHeader>
 			<Modal.Body>
 				{renderFormField(selectField, formData, handleChange, errors, currentUser)}
 				{renderFormField(subjectField, formData, handleChange, errors, currentUser)}

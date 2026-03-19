@@ -1,6 +1,7 @@
 import React, { JSX, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { ActionButton, ButtonVariant } from "../rendering/form/ActionButton";
+import { ModalHeader } from "../ModalHeader/ModalHeader";
 
 export type AlertType = "success" | "warning" | "error" | "info" | "danger" | "primary";
 export type BootstrapModalSize = "sm" | "lg" | "xl" | undefined;
@@ -77,10 +78,10 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 
 	return (
 		<Modal show={alertState.show} onHide={hideAlert} centered size={getModalSize(alertState.size)} id={modalId}>
-			<Modal.Header closeButton>
+			<ModalHeader onClose={hideAlert}>
 				{iconClass && <i className={`bi ${iconClass} me-2`} />}
 				<Modal.Title>{alertState.title}</Modal.Title>
-			</Modal.Header>
+			</ModalHeader>
 			<Modal.Body>
 				{typeof alertState.message === "string" ? (
 					<p className="mb-0">{alertState.message}</p>

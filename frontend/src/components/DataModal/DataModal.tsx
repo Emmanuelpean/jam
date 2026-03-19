@@ -1,5 +1,6 @@
 import React, { forwardRef, JSX, ReactNode, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
+import { ModalHeader } from "../ModalHeader/ModalHeader";
 import LoadingSpinner from "../Spinner/Spinner";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -826,14 +827,14 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				text = `${entityName} Details`;
 			}
 			return (
-				<Modal.Header closeButton>
+				<ModalHeader onClose={handleCloseWithConfirmation}>
 					<Modal.Title>
 						<span style={{ display: "flex", alignItems: "center" }}>
 							{icon && <i className={`${icon} me-2`} style={{ fontSize: "1.05em" }} />}
 							<span>{text}</span>
 						</span>
 					</Modal.Title>
-				</Modal.Header>
+				</ModalHeader>
 			);
 		};
 

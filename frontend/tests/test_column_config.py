@@ -2,7 +2,7 @@
 
 import time
 
-from conftest import BaseTest
+from base_test import BaseTest
 
 # Columns visible by default (passed as `columns` prop in JobsPage.tsx)
 DEFAULT_VISIBLE_JOB_COLUMNS = [
@@ -52,6 +52,7 @@ class TestColumnConfig(BaseTest):
 
     def is_column_config_sidebar_open(self) -> bool:
         """Return True if the column config sidebar has the 'open' class"""
+
         sidebar = self.get_element("column-config-sidebar", enabled=False)
         return "open" in sidebar.get_attribute("class")
 

@@ -5,8 +5,7 @@ import uuid
 
 from selenium.webdriver.common.by import By
 
-from conftest import BaseTest, models
-from selenium.webdriver.common.by import By
+from base_test import BaseTest, models
 
 
 class TestJobScrapingTable(BaseTest):

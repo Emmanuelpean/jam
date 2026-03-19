@@ -1,6 +1,6 @@
 """Tests for the User Settings Page"""
 
-from conftest import models, BaseTest
+from base_test import models, BaseTest
 from tests.utils.test_data import TOAST_USER_1_INDEX
 
 

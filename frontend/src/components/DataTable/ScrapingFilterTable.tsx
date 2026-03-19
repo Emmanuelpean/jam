@@ -1,5 +1,6 @@
 import React, { JSX, useLayoutEffect, useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
+import { ModalHeader } from "../ModalHeader/ModalHeader";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapingFilterModal } from "../DataModal/ScrapingFilterModal";
@@ -149,9 +150,9 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 			keyboard={true}
 			id={"scraping-filters-modal"}
 		>
-			<Modal.Header closeButton>
+			<ModalHeader onClose={onHide}>
 				<Modal.Title>Scraped Job Filters</Modal.Title>
-			</Modal.Header>
+			</ModalHeader>
 
 			<Modal.Body>
 				<i style={{ margin: "0 9px 9px 9px", display: "block" }}>

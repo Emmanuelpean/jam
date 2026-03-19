@@ -8,7 +8,7 @@ with the supplied fields pre-filled, then clean the params from the URL.
 import time
 import urllib.parse
 
-from conftest import BaseTest
+from base_test import BaseTest
 
 
 class TestExtensionAutoOpen(BaseTest):

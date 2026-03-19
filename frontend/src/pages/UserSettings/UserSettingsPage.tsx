@@ -1,6 +1,5 @@
 import React, { JSX, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Col, Row } from "react-bootstrap";
 import { AccountTab } from "./AccountTab";
 import { PreferencesTab } from "./PreferencesTab";
 import { QualificationsTab } from "./QualificationsTab";
@@ -51,10 +50,10 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 	};
 
 	return (
-		<div className="container-fluid d-flex flex-column user-settings-page">
+		<div className="container-fluid d-flex flex-column settings-page-container">
 			<PageHeader title={"User Settings"} icon={getTableIcon("User Settings")} />
-			<Row className="flex-grow-1 g-0 settings-layout">
-				<Col md={3} lg={2} className="settings-sidebar-col">
+			<div className="settings-layout">
+				<div className="settings-sidebar-col">
 					<div className="settings-sidebar">
 						<nav className="settings-nav">
 							{menuItems.map((item: MenuItem): JSX.Element | null =>
@@ -75,17 +74,17 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 							)}
 						</nav>
 					</div>
-				</Col>
+				</div>
 
-				<Col className="settings-content-col">
+				<div className="settings-content-col">
 					<div className="settings-content">
 						{activeTab === "account" && <AccountTab />}
 						{activeTab === "preferences" && <PreferencesTab />}
 						{activeTab === "qualifications" && <QualificationsTab />}
 						{activeTab === "premium" && <PremiumTab />}
 					</div>
-				</Col>
-			</Row>
+				</div>
+			</div>
 		</div>
 	);
 };
