@@ -20,12 +20,12 @@ sys.path.insert(0, backend_path)
 import time
 
 pytest_plugins = [
-    "fixtures.database",
-    "fixtures.clients",
-    "fixtures.users",
-    "fixtures.test_data",
-    "fixtures.job_scraping",
-    "fixtures.job_rating",
+    "tests.fixtures.database",
+    "tests.fixtures.clients",
+    "tests.fixtures.users",
+    "tests.fixtures.test_data",
+    "tests.fixtures.job_scraping",
+    "tests.fixtures.job_rating",
 ]
 
 
