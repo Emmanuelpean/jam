@@ -144,6 +144,7 @@ export const UserManagementPage: React.FC = () => {
 		<div>
 			<div className="d-flex gap-3">
 				<PageHeader
+					className="flex-fill"
 					title="Users"
 					icon={getTableIcon("Users")}
 					count={usersCount}
@@ -154,6 +155,7 @@ export const UserManagementPage: React.FC = () => {
 					active={activeTab === "users"}
 				/>
 				<PageHeader
+					className="flex-fill"
 					title="Settings"
 					icon={getTableIcon("Settings")}
 					count={settingsCount}
@@ -164,6 +166,7 @@ export const UserManagementPage: React.FC = () => {
 					active={activeTab === "settings"}
 				/>
 				<PageHeader
+					className="flex-fill"
 					title="Email Templates"
 					icon={getTableIcon("Email Templates")}
 					onClick={(): void => {

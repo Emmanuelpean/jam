@@ -440,12 +440,6 @@ export const renderFunctions = {
 		}
 	},
 
-	jobRating: (param: RenderParams): ReactNode => {
-		const job_rating: JobRatingData | undefined | null = param.item?.job_rating;
-		if (!job_rating) return null;
-		return <JobRatingCard jobRating={job_rating} />;
-	},
-
 	jobRatingSection: (param: RenderParams): ReactNode => {
 		return <JobRatingSection scrapedJob={param.item} />;
 	},

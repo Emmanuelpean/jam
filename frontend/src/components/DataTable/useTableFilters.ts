@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useMemo, useRef, useState } from "react";
-import { FilterPill } from "../../pages/PageHeader/PageHeader";
+import { FilterPill } from "./FilterTypes";
 import { TableColumn } from "../rendering/view/TableColumns";
 import { DataContextValue } from "../../contexts/DataContext";
 import { ColumnConfig } from "../../hooks/useColumnConfig";

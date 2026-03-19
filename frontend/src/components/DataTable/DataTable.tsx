@@ -39,6 +39,7 @@ import "./DataTable.scss";
 import FollowUpModal, { FollowUpModalHandle } from "../FollowUpModal/FollowUpModal";
 import { useContextMenu } from "../../contexts/ContextMenuContext";
 import PageHeader from "../../pages/PageHeader/PageHeader";
+import FilterPillsRow from "./FilterPillsRow";
 import { ColumnConfig, useColumnConfig } from "../../hooks/useColumnConfig";
 import ColumnConfigSidebar from "./ColumnConfigSidebar";
 import FilterSidebar from "./FilterSidebar";
@@ -46,6 +47,7 @@ import { isFilterActive } from "./FilterTypes";
 import { applyFilters } from "./filterLogic";
 import BulkActionsDropdown from "./BulkActionsDropdown";
 import { useTableFilters } from "./useTableFilters";
+import { Direction, SortConfig } from "../../services/schemas/Core";
 
 export type BulkAction =
 	| {
@@ -53,17 +55,10 @@ export type BulkAction =
 			label: string;
 			icon?: string;
 			variant?: string;
-			onClick: (ids: string[]) => void | Promise<void>;
+			onClick: (ids: number[]) => void | Promise<void>;
 	  }
 	| { type: "divider" }
 	| { type: "header"; label: string };
-
-export type Direction = "asc" | "desc";
-
-export interface SortConfig {
-	key: string;
-	direction: Direction;
-}
 
 export interface DataTableProps {
 	data?: any | null;
@@ -123,7 +118,7 @@ export interface GenericTableProps {
 	// Multi-select
 	enableMultiSelect?: boolean;
 	bulkActions?: BulkAction[];
-	rowIndicator?: (item: JamData) => boolean;
+	rowIndicator?: (item: any) => boolean;
 
 	onTotalCountChange?: (count: number) => void;
 	onSuccess?: () => void;
@@ -172,12 +167,19 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const { token } = useAuth();
 		const columnConfig: ColumnConfig = useColumnConfig(entityType, enableColumnConfig ? columns : undefined);
 		const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
-		const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
+		const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 		const effectiveColumns: TableColumn[] = enableColumnConfig ? columnConfig.visibleColumns : columns;
 		const columnSidebarRef = useRef<HTMLDivElement>(null);
 		const dataContext: DataContextValue = useDataContext();
-		const { filters, setFilters, filterSidebarOpen, setFilterSidebarOpen, filterSidebarRef, filterPills, activeFilterCount } =
-			useTableFilters({ enableColumnConfig, columnConfig, effectiveColumns, dataContext });
+		const {
+			filters,
+			setFilters,
+			filterSidebarOpen,
+			setFilterSidebarOpen,
+			filterSidebarRef,
+			filterPills,
+			activeFilterCount,
+		} = useTableFilters({ enableColumnConfig, columnConfig, effectiveColumns, dataContext });
 		const modalRef = useRef<DataModalHandle>(null);
 		const openViewModal = (item: any): void | undefined => modalRef.current?.showView(item);
 		const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
@@ -674,7 +676,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			}
 		};
 
-		const handleSelectRow = (id: string | number, checked: boolean): void => {
+		const handleSelectRow = (id: number, checked: boolean): void => {
 			setSelectedIds((prev) => {
 				const next = new Set(prev);
 				if (checked) next.add(id);
@@ -685,16 +687,16 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 
 		const handleBulkAction = async (action: Extract<BulkAction, { type?: "action" }>): Promise<void> => {
 			try {
-				let ids: string[];
+				let ids: number[];
 				if (selectedIds.size > 0) {
-					ids = [...selectedIds].map(String);
+					ids = [...selectedIds];
 				} else if (isServerPagination && totalCount > 0) {
 					const params: URLSearchParams = buildPagedParams(0, totalCount);
 					params.set("ids_only", "true");
 					const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
 					ids = response.data.items.map(String);
 				} else {
-					ids = sortedData.map((item: any) => String(item.id));
+					ids = sortedData.map((item: any): number => item.id);
 				}
 				await action.onClick(ids);
 				setSelectedIds(new Set());
@@ -719,16 +721,11 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 
 		return (
 			<>
-				<div className={`table-container${!compact ? " table-container--full-height" : ""}`}>
-					{title && (
-						<PageHeader
-							title={title}
-							count={totalFilteredCount || data.length}
-							icon={getTableIcon(title)}
-							filterPills={filterPills}
-						/>
-					)}
+				{title && (
+					<PageHeader title={title} count={totalFilteredCount || data.length} icon={getTableIcon(title)} />
+				)}
 
+				<div className={`table-container${!compact ? " table-container--full-height" : ""}`}>
 					<div
 						className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
 						style={{ gap: compact ? "0.5rem" : "1rem" }}
@@ -926,6 +923,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 											</tr>
 										</thead>
 										<tbody>
+											<FilterPillsRow filterPills={filterPills} onClear={(): void => setFilters({})} />
 											{currentPageData.map(
 												(item: JamData, index: number): JSX.Element => (
 													<tr
@@ -956,39 +954,41 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 																/>
 															</td>
 														)}
-														{effectiveColumns.map((column, columnIndex) => (
-															<td
-																key={column.key}
-																className={`align-middle${columnIndex === 0 && rowIndicator && rowIndicator(item) ? " table-cell--new" : ""}`}
-																style={{
-																	...(columnIndex === 0
-																		? { fontWeight: "bold" }
-																		: {}),
-																	...(compact
-																		? {
-																				padding: "0.5rem",
-																				fontSize: "0.875rem",
-																			}
-																		: {}),
-																}}
-															>
-																{columnIndex === 0 &&
-																	rowIndicator &&
-																	rowIndicator(item) && (
-																		<span
-																			className="badge rounded-pill bg-primary me-2"
-																			style={{ fontSize: "0.6rem" }}
-																		>
-																			NEW
-																		</span>
-																	)}
-																<RenderViewFieldWithContext
-																	field={column}
-																	item={item}
-																	id={`table-row-${item.id}`}
-																/>
-															</td>
-														))}
+														{effectiveColumns.map(
+															(column: TableColumn, columnIndex: number): JSX.Element => (
+																<td
+																	key={column.key}
+																	className={`align-middle${columnIndex === 0 && rowIndicator && rowIndicator(item) ? " table-cell--new" : ""}`}
+																	style={{
+																		...(columnIndex === 0
+																			? { fontWeight: "bold" }
+																			: {}),
+																		...(compact
+																			? {
+																					padding: "0.5rem",
+																					fontSize: "0.875rem",
+																				}
+																			: {}),
+																	}}
+																>
+																	{columnIndex === 0 &&
+																		rowIndicator &&
+																		rowIndicator(item) && (
+																			<span
+																				className="badge rounded-pill bg-primary me-2"
+																				style={{ fontSize: "0.6rem" }}
+																			>
+																				NEW
+																			</span>
+																		)}
+																	<RenderViewFieldWithContext
+																		field={column}
+																		item={item}
+																		id={`table-row-${item.id}`}
+																	/>
+																</td>
+															)
+														)}
 													</tr>
 												)
 											)}
@@ -1042,7 +1042,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 
 							{/* Pagination */}
 							{!showAllEntries && displayTotal > 20 && (
-								<div className={`d-flex justify-content-between align-items-center mt-0`}>
+								<div className={`d-flex justify-content-between align-items-center mt-1`}>
 									<div className="d-flex align-items-center gap-0">
 										{[
 											{
@@ -1111,7 +1111,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 											}}
 										>
 											{[20, 30, 40, 50, 100].map(
-												(size): JSX.Element => (
+												(size: number): JSX.Element => (
 													<option key={size} value={size}>
 														Show {size} Entries
 													</option>

@@ -6,8 +6,8 @@ import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } 
 import { CSS } from "@dnd-kit/utilities";
 import { TableColumn } from "../rendering/view/TableColumns";
 import { SelectOption } from "../rendering/form/FormOptions";
-import { SortConfig, Direction } from "./DataTable";
 import "./ColumnConfigSidebar.scss";
+import { Direction, SortConfig } from "../../services/schemas/Core";
 
 interface SortableItemProps {
 	column: TableColumn;
@@ -91,7 +91,7 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 			setItems(ordered);
 			setSortKey(currentSort.key);
 			setSortDirection(currentSort.direction);
-			requestAnimationFrame(() => {
+			requestAnimationFrame((): void => {
 				initialised.current = true;
 			});
 		}
@@ -186,7 +186,13 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 						<i className="bi bi-layout-three-columns me-2"></i>
 						Column Configuration
 					</h6>
-					<button type="button" id="column-config-close-btn" className="btn-close" onClick={onClose} aria-label="Close"></button>
+					<button
+						type="button"
+						id="column-config-close-btn"
+						className="btn-close"
+						onClick={onClose}
+						aria-label="Close"
+					></button>
 				</div>
 				<div className="column-config-body">
 					<div className="column-config-section-label">
@@ -246,7 +252,12 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 					</div>
 				</div>
 				<div className="column-config-footer">
-					<Button id="column-config-reset-btn" style={{ width: "100%" }} onClick={handleReset} disabled={saving || isDefault}>
+					<Button
+						id="column-config-reset-btn"
+						style={{ width: "100%" }}
+						onClick={handleReset}
+						disabled={saving || isDefault}
+					>
 						<i className="bi bi-arrow-counterclockwise me-1"></i>
 						Reset to Defaults
 					</Button>

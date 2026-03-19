@@ -373,13 +373,6 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	jobRating: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "job_rating",
-		render: (params: RenderParams) => renderFunctions.jobRating({ ...params, view: true }),
-		displayCondition: (item: ScrapedJobData): boolean => item.job_rating?.is_success === true,
-		...overrides,
-	}),
-
 	jobRatingSection: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job_rating_section",
 		render: (params: RenderParams) => renderFunctions.jobRatingSection(params),

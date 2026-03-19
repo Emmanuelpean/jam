@@ -17,67 +17,6 @@
 }
 
 
-.header-filter-pills {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.35rem;
-    margin-left: 1rem;
-}
-
-.header-filter-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    background: rgba(var(--primary-mid-rgb), 0.1);
-    border: 1px solid rgba(var(--primary-mid-rgb), 0.25);
-    border-radius: 999px;
-    padding: 0.3rem 0.4rem 0.3rem 0.7rem;
-    font-size: 0.8rem;
-    line-height: 1.3;
-    transition: border-color 0.15s ease;
-
-    &:hover {
-        border-color: rgba(var(--primary-mid-rgb), 0.45);
-    }
-
-    &-label {
-        font-weight: 600;
-        color: var(--primary-mid);
-        white-space: nowrap;
-    }
-
-    &-value {
-        color: var(--bs-body-color);
-        max-width: 160px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    &-remove {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 1.15rem;
-        height: 1.15rem;
-        background: none;
-        border: none;
-        padding: 0;
-        cursor: pointer;
-        color: rgba(var(--primary-mid-rgb), 0.5);
-        font-size: 0.9rem;
-        line-height: 1;
-        border-radius: 50%;
-        transition: background-color 0.15s ease, color 0.15s ease;
-
-        &:hover {
-            background-color: rgba(var(--primary-mid-rgb), 0.15);
-            color: var(--primary-mid);
-        }
-    }
-}
-
 .page-header .card {
     border: 2px solid transparent !important;
 }

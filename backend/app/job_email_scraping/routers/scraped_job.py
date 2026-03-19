@@ -30,7 +30,9 @@ scraped_job_router = generate_data_table_crud_router(
 )
 
 
-@scraped_job_router.get("/paged", response_model=schemas.PaginatedScrapedJobResponse | schemas.PaginatedScrapedJobIdsResponse)
+@scraped_job_router.get(
+    "/paged", response_model=schemas.PaginatedScrapedJobResponse | schemas.PaginatedScrapedJobIdsResponse
+)
 def get_all(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
@@ -203,6 +205,7 @@ def get_all(
         return {
             "items": [row[0] for row in ids],
             "total": total,
+            "total_filtered": total_filtered,
             "page": page,
             "page_size": page_size,
             "total_pages": total_pages,

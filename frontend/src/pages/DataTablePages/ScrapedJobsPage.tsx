@@ -14,9 +14,10 @@ export const ScrapedJobsPage = (): JSX.Element => {
 	const [emailsReload, setEmailsReload] = useState<number>(0);
 
 	return (
-		<div className="scraped-jobs-page">
+		<>
 			<div className="d-flex gap-3">
 				<PageHeader
+					className="flex-fill"
 					title="Job Alerts"
 					icon={getEntityIcon("scrapedJob")}
 					count={alertsCount}
@@ -27,6 +28,7 @@ export const ScrapedJobsPage = (): JSX.Element => {
 					active={activeTab === "alerts"}
 				/>
 				<PageHeader
+					className="flex-fill"
 					title="Job Emails"
 					icon={getEntityIcon("jobEmail")}
 					count={emailsCount}
@@ -38,12 +40,13 @@ export const ScrapedJobsPage = (): JSX.Element => {
 				/>
 			</div>
 
-			<div style={{ display: activeTab === "alerts" ? "block" : "none" }}>
+
+			<div style={{ display: activeTab === "alerts" ? "contents" : "none" }}>
 				<ScrapedJobsTable onTotalCountChange={setAlertsCount} reloadTrigger={alertsReload} />
 			</div>
-			<div style={{ display: activeTab === "emails" ? "block" : "none" }}>
+			<div style={{ display: activeTab === "emails" ? "contents" : "none" }}>
 				<JobEmailTable onTotalCountChange={setEmailsCount} reloadTrigger={emailsReload} />
 			</div>
-		</div>
+		</>
 	);
 };

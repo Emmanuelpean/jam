@@ -3,14 +3,15 @@ import { Button } from "react-bootstrap";
 import { DataTable, DataTableHandle, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../DataModal/ScrapedJobModal";
-import { ScrapingFilterData } from "../../services/schemas/Services";
-import { DataContextValue, useDataContext } from "../../contexts/DataContext";
+import { ScrapedJobData, ScrapingFilterData } from "../../services/schemas/Services";
+import { DataContextValue, JamData, useDataContext } from "../../contexts/DataContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionToggle } from "../rendering/form/ActionToggle";
 import ScrapingFilterTable from "./ScrapingFilterTable";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAlert } from "../../contexts/AlertContext";
-import { ProgressOverlay } from "../ProgressOverlay/ProgressOverlay";
+import { useProgressOverlay } from "../../contexts/useProgressOverlayContext";
+import { ApiResponsePromise } from "../../services/api/Base";
 
 const ScrapedJobsTable: React.FC<DataTableProps> = ({
 	columns = [],
@@ -27,32 +28,38 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 	const [showFilters, setShowFilters] = useState<boolean>(false);
 	const [showPastDeadline, setShowPastDeadline] = useState<boolean>(false);
 	const [internalReloadTrigger, setInternalReloadTrigger] = useState<number>(0);
-	const [progress, setProgress] = useState<{ show: boolean; title: string; message: string }>({
-		show: false, title: "", message: "",
-	});
+	const { showProgress, hideProgress } = useProgressOverlay();
 
-	const n = (ids: string[]) => `${ids.length} alert${ids.length > 1 ? "s" : ""}`;
-
-	const handleBulkDismiss = useCallback(async (ids: string[]) => {
-		const confirmed = await showDelete({
-			title: "Dismiss Job Alerts",
-			message: `Dismiss ${n(ids)}? They will no longer appear in your alerts.`,
-			confirmText: "Dismiss",
-			cancelText: "Cancel",
-		});
-		if (!confirmed) return;
-		setProgress({ show: true, title: "Dismissing alerts…", message: `Dismissing ${n(ids)}, please wait.` });
-		try {
-			await Promise.all(ids.map((id) => updateEntity("scrapedJob", Number(id), { is_active: false })));
-			showToastSuccess(`${n(ids)} dismissed.`);
-			tableRef.current?.clearSelection();
-			setInternalReloadTrigger((t) => t + 1);
-		} catch {
-			showToastError("Failed to dismiss some alerts. Please try again.");
-		} finally {
-			setProgress((p) => ({ ...p, show: false }));
-		}
-	}, [updateEntity, showDelete, showToastSuccess, showToastError]);
+	const handleBulkDismiss = useCallback(
+		async (ids: number[]): Promise<void> => {
+			const n = `${ids.length} alert${ids.length > 1 ? "s" : ""}`;
+			const confirmed: boolean = await showDelete({
+				title: "Delete Job Alerts",
+				message: `Delete ${n} job alerts?`,
+				confirmText: "Delete",
+				cancelText: "Cancel",
+			});
+			if (confirmed) {
+				showProgress(`Dismissing ${n}, please wait.`, "Dismissing alerts…");
+				try {
+					await Promise.all(
+						ids.map(
+							(id: number): ApiResponsePromise<JamData> =>
+								updateEntity("scrapedJob", id, { is_active: false })
+						)
+					);
+					showToastSuccess(`${n} job alerts dismissed.`);
+					tableRef.current?.clearSelection();
+					setInternalReloadTrigger((t: number): number => t + 1);
+				} catch {
+					showToastError("Failed to delete some alerts. Please try again.");
+				} finally {
+					hideProgress();
+				}
+			}
+		},
+		[updateEntity, showDelete, showToastSuccess, showToastError]
+	);
 
 	const queryParams = useMemo(
 		() => ({
@@ -93,13 +100,18 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 				queryParams={queryParams}
 				enableColumnConfig={true}
 				reloadTrigger={(reloadTrigger ?? 0) + internalReloadTrigger}
-				rowIndicator={(item: any) =>
+				rowIndicator={(item: ScrapedJobData): boolean =>
 					!!currentUser?.previous_login &&
 					new Date(item.created_at) > new Date(currentUser.previous_login as string)
 				}
 				enableMultiSelect={true}
 				bulkActions={[
-					{ label: "Dismiss", icon: "x-circle", variant: "outline-danger", onClick: (ids) => handleBulkDismiss(ids) },
+					{
+						label: "Delete",
+						icon: "x-circle",
+						variant: "outline-danger",
+						onClick: (ids: number[]): Promise<void> => handleBulkDismiss(ids),
+					},
 				]}
 				toolbarAddon={
 					<div style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.75rem", height: "100%" }}>
@@ -132,7 +144,6 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 					setShowFilters(false);
 				}}
 			/>
-			<ProgressOverlay show={progress.show} title={progress.title} message={progress.message} />
 		</>
 	);
 };

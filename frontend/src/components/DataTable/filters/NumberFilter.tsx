@@ -97,6 +97,8 @@ const NumberSlider = ({ columnKey, config, value, onChange, dataContext, disable
 const NumberInputs = ({ columnKey, config, value, onChange, disabled }: Props): JSX.Element => {
 	const step = config.step ?? 1;
 
+	const hasValue = value.min !== null || value.max !== null;
+
 	return (
 		<div className="filter-number-range">
 			<Form.Control
@@ -124,6 +126,16 @@ const NumberInputs = ({ columnKey, config, value, onChange, disabled }: Props): 
 				className="form-control--sm"
 				disabled={disabled}
 			/>
+			{hasValue && !disabled && (
+				<button
+					type="button"
+					className="filter-input-clear-btn"
+					onClick={() => onChange({ type: "number", min: null, max: null })}
+					aria-label="Clear"
+				>
+					<i className="bi bi-x" />
+				</button>
+			)}
 		</div>
 	);
 };

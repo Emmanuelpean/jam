@@ -1,5 +1,12 @@
 import { SelectOption } from "../rendering/form/FormOptions";
 
+export interface FilterPill {
+	key: string;
+	label: string;
+	summary: string;
+	onRemove: () => void;
+}
+
 export interface TextFilterConfig {
 	type: "text";
 }

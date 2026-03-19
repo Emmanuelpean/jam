@@ -17,7 +17,7 @@ const BulkActionsDropdown = ({
 	onAction,
 	onClearSelection,
 }: BulkActionsDropdownProps): JSX.Element => {
-	const header =
+	const header: string =
 		selectedCount > 0
 			? `${selectedCount} ${selectedCount === 1 ? "row" : "rows"} selected`
 			: `Apply to all ${totalCount} ${totalCount === 1 ? "item" : "items"}`;
@@ -42,14 +42,14 @@ const BulkActionsDropdown = ({
 			</Dropdown.Toggle>
 			<Dropdown.Menu>
 				<Dropdown.Header>{header}</Dropdown.Header>
-				{actions.map((action, i) => {
+				{actions.map((action: BulkAction, i: number): JSX.Element => {
 					if (action.type === "divider") return <Dropdown.Divider key={i} />;
 					if (action.type === "header") return <Dropdown.Header key={i}>{action.label}</Dropdown.Header>;
 					return (
 						<Dropdown.Item
 							key={i}
 							className={action.variant?.includes("danger") ? "text-danger" : ""}
-							onClick={() => onAction(action)}
+							onClick={(): void => onAction(action)}
 						>
 							{action.icon && <i className={`bi bi-${action.icon} me-2`}></i>}
 							{action.label}
