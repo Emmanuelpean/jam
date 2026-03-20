@@ -243,14 +243,11 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
 
     # Set environment variables for frontend
     env = os.environ.copy()
-    env["REACT_APP_API_BASE_URL"] = test_backend_server  # Use worker-specific backend
-    env["REACT_APP_API_SERVICE_URL"] = test_backend_server  # Scheduler routes also served by test backend
-    env["PORT"] = str(port)
-    env["BROWSER"] = "none"
+    env["VITE_API_BASE_URL"] = test_backend_server  # Use worker-specific backend
+    env["VITE_API_SERVICE_URL"] = test_backend_server  # Scheduler routes also served by test backend
     print(f"Environment variables:")
-    print(f"  REACT_APP_API_BASE_URL: {env['REACT_APP_API_BASE_URL']}")
-    print(f"  REACT_APP_API_SERVICE_URL: {env['REACT_APP_API_SERVICE_URL']}")
-    print(f"  PORT: {env['PORT']}")
+    print(f"  VITE_API_BASE_URL: {env['VITE_API_BASE_URL']}")
+    print(f"  VITE_API_SERVICE_URL: {env['VITE_API_SERVICE_URL']}")
 
     # Find npm executable
     # noinspection PyDeprecation
@@ -276,7 +273,7 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     # Start the frontend server
     print("Starting frontend server subprocess...")
     process = subprocess.Popen(
-        f'"{npm_cmd}" start',
+        f'"{npm_cmd}" start -- --port {port}',
         cwd=frontend_path,
         env=env,
         stdout=subprocess.PIPE,
@@ -291,7 +288,7 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     # Wait for frontend server to start
     frontend_url = f"http://localhost:{port}"
     print(f"Waiting for frontend server at {frontend_url}...")
-    print("This will take 30-60 seconds for React to compile...")
+    print("This will take a few seconds for Vite to start...")
 
     def read_output(this_process, this_output_queue, log_file) -> None:
         """Read output from the frontend server subprocess and put it in a queue"""
@@ -324,10 +321,10 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
             line = output_queue.get()
             recent_lines.append(line)
 
-            if "compiled successfully" in line.lower() or "webpack compiled" in line.lower():
+            if "ready in" in line.lower() or ("local:" in line.lower() and "localhost" in line.lower()):
                 compiled = True
-                print(f"✅ Frontend compiled: {line}")
-            elif "failed to compile" in line.lower() or "compilation failed" in line.lower():
+                print(f"\u2705 Frontend ready: {line}")
+            elif "error" in line.lower() and ("failed" in line.lower() or "cannot" in line.lower()):
                 print(f"❌ Frontend compilation failed!")
                 print("Recent output before failure:")
                 for prev_line in recent_lines[-20:]:

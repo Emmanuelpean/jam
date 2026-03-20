@@ -3,7 +3,6 @@ import { useMemo } from "react";
 import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 import { modalViewFields } from "../view/ModalFields";
-import stringSimilarity from "string-similarity";
 import { InterviewData, JobData, PersonData } from "../../../services/schemas/DataTables";
 
 export type SelectOption = {
@@ -17,18 +16,32 @@ export interface GroupedSelectOption {
 	options: SelectOption[];
 }
 
+function diceCoefficient(a: string, b: string): number {
+	if (a.length < 2 || b.length < 2) return 0;
+	const bigrams = (s: string): Map<string, number> => {
+		const map = new Map<string, number>();
+		for (let i = 0; i < s.length - 1; i++) {
+			const bg = s.slice(i, i + 2).toLowerCase();
+			map.set(bg, (map.get(bg) ?? 0) + 1);
+		}
+		return map;
+	};
+	const ab = bigrams(a), bb = bigrams(b);
+	let intersection = 0;
+	for (const [bg, count] of ab) intersection += Math.min(count, bb.get(bg) ?? 0);
+	return (2 * intersection) / (a.length - 1 + b.length - 1);
+}
+
 export function findClosestOption(options: SelectOption[], name: string): string | null {
 	if (!name || options.length === 0) return null;
-	const names: string[] = options.map((c: SelectOption): string => c.label);
-	const result = stringSimilarity.findBestMatch(name, names);
-
 	const MIN_SIMILARITY_THRESHOLD = 0.4;
-
-	if (result.bestMatch.rating < MIN_SIMILARITY_THRESHOLD) {
-		return null;
-	}
-
-	return options[result.bestMatchIndex]?.value || null;
+	let bestRating = -1, bestIndex = 0;
+	options.forEach((opt, i) => {
+		const rating = diceCoefficient(name, opt.label);
+		if (rating > bestRating) { bestRating = rating; bestIndex = i; }
+	});
+	if (bestRating < MIN_SIMILARITY_THRESHOLD) return null;
+	return options[bestIndex]?.value || null;
 }
 
 export function findExactOption(options: SelectOption[], name: string): string | null | undefined {
