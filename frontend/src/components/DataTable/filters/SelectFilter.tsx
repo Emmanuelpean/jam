@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import Select from "react-select";
+import { CustomSelect } from "../../rendering/widgets/CustomSelect";
 import { SelectFilterConfig, SelectFilterValue } from "../FilterTypes";
 
 interface Props {
@@ -14,27 +14,20 @@ const SelectFilter = ({ columnKey, config, value, onChange }: Props): JSX.Elemen
 	const selected = options.filter((o) => value.selected.includes(o.value));
 
 	return (
-		<Select
+		<CustomSelect
+			id={columnKey ? `select-filter-${columnKey}` : "select-filter"}
 			inputId={columnKey ? `filter-select-${columnKey}` : undefined}
 			isMulti
 			closeMenuOnSelect={false}
 			options={options}
 			value={selected}
 			onChange={(picked) =>
-				onChange({ type: "select", selected: (picked ?? []).map((p) => p.value) })
+				onChange({ type: "select", selected: ((picked as typeof selected) ?? []).map((p) => p.value) })
 			}
-			className="react-select-container react-select-container--sm"
-			classNamePrefix="react-select"
+			className="jam-select jam-select--sm"
+			menuPortalClassName="jam-select--sm-menu"
 			placeholder="Select..."
-			menuPortalTarget={document.body}
-			menuPlacement="auto"
 			isClearable={false}
-			styles={{
-				menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-			}}
-			classNames={{
-				menuPortal: () => "react-select--sm-menu",
-			}}
 		/>
 	);
 };

@@ -1,6 +1,6 @@
 import React, { JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Form } from "react-bootstrap";
-import Select, { SingleValue } from "react-select";
+import { CustomSelect } from "../rendering/widgets/CustomSelect";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -141,7 +141,7 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 		});
 	};
 
-	const handleSortKeyChange = (selected: SingleValue<SelectOption>): void => {
+	const handleSortKeyChange = (selected: SelectOption | null): void => {
 		if (!selected) return;
 		setSortKey(selected.value);
 		void onSortChange({ key: selected.value, direction: sortDirection });
@@ -225,19 +225,15 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 
 					<div className="column-config-section-label mt-3">Default Sort</div>
 					<div className="column-config-sort">
-						<Select<SelectOption>
+						<CustomSelect
+							id="column-config-sort"
 							value={selectedSortOption}
-							onChange={handleSortKeyChange}
+							onChange={(selected) => handleSortKeyChange(selected as SelectOption | null)}
 							options={sortOptions}
 							isSearchable={false}
 							isClearable={false}
-							menuPortalTarget={document.body}
-							menuPlacement="auto"
-							className="react-select-container react-select-container--sm column-config-sort-select"
-							classNamePrefix="react-select"
-							classNames={{
-								menuPortal: () => "react-select--sm-menu",
-							}}
+							className="jam-select jam-select--sm column-config-sort-select"
+							menuPortalClassName="jam-select--sm-menu"
 						/>
 						<Button
 							id="column-config-sort-direction-btn"

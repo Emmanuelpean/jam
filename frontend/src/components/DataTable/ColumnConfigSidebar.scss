@@ -150,21 +150,21 @@
 	font-size: 0.85rem;
 	padding-bottom: 0.5rem;
 
-	.react-select__control {
+	.jam-select__control {
 		min-height: 42px !important;
 		font-size: 1rem;
 	}
 
-	.react-select__value-container {
+	.jam-select__values {
 		min-height: unset !important;
 		padding: 0 0.5rem;
 	}
 
-	.react-select__single-value {
+	.jam-select__single-value {
 		font-size: 0.8rem;
 	}
 
-	.react-select__indicator {
+	.jam-select__indicators > * {
 		padding: 0.25rem;
 	}
 }

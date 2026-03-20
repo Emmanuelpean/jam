@@ -193,8 +193,8 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			if (!columnSidebarOpen && !filterSidebarOpen) return;
 			const handleClickOutside = (e: Event) => {
 				const target = e.target as Element;
-				// Ignore clicks on portalled menus (react-select dropdowns)
-				if (target?.closest?.(".react-select__menu-portal")) return;
+				// Ignore clicks on portalled menus (custom select dropdowns)
+				if (target?.closest?.(".jam-select__portal")) return;
 				// Ignore clicks on sidebar toggle buttons
 				if (target?.closest?.("[data-sidebar-toggle]")) return;
 				const isInsideAnySidebar =

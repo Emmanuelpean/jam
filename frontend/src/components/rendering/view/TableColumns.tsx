@@ -409,6 +409,7 @@ export const tableColumns = {
 		searchable: true,
 		type: "text",
 		render: renderFunctions.urlGeneric,
+		filterConfig: { type: "text" },
 		...overrides,
 	}),
 

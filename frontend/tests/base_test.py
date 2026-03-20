@@ -1092,6 +1092,56 @@ class DataTableUtils(BaseUtilsClass):
         element = self.table_row(row_index)
         self.driver.execute_script("arguments[0].click();", element)
 
+    # --------------------------------------------------- FILTERS -----------------------------------------------------
+
+    def get_row_count(self) -> int:
+        """Return the number of currently visible table rows"""
+
+        return len(self.table_rows)
+
+    def is_filter_sidebar_open(self) -> bool:
+        """Return True if the filter sidebar has the 'open' CSS class"""
+
+        sidebar = self.get_element("filter-sidebar", enabled=False)
+        return "open" in sidebar.get_attribute("class")
+
+    def open_filter_sidebar(self) -> None:
+        """Click the filter toggle button and wait for the sidebar to render"""
+
+        self.get_element("filter-toggle-btn").click()
+        self.get_element("filter-clear-btn", enabled=False)
+
+    def is_section_active(self, column_key: str) -> bool:
+        """Return True if the filter section for the given column key is highlighted as active"""
+
+        section = self.get_element(f"filter-section-{column_key}", enabled=False)
+        return "filter-section--active" in section.get_attribute("class")
+
+    def get_filter_pills(self) -> list:
+        """Return all visible filter pill span elements"""
+
+        return self.driver.find_elements(By.CLASS_NAME, "header-filter-pill")
+
+    def get_active_count_from_sidebar(self) -> int:
+        """Return the count shown in the sidebar header badge (0 if the badge is absent)"""
+
+        badges = self.driver.find_elements(By.CLASS_NAME, "filter-sidebar-count")
+        if not badges:
+            return 0
+        try:
+            return int(badges[0].text)
+        except (ValueError, IndexError):
+            return 0
+
+    def select_from_react_select_filter(self, column_key: str, visible_text: str) -> None:
+        """Select an option from a react-select filter by its visible label"""
+
+        section = self.get_element(f"filter-section-{column_key}", enabled=False)
+        select_container = section.find_element(By.CLASS_NAME, "jam-select")
+        rs = ReactSelect(select_container)
+        rs.select_by_visible_text(visible_text)
+        time.sleep(0.5)
+
 
 class AuthentificationUtils(BaseUtilsClass):
     """Test class for Authentication functionality including:
