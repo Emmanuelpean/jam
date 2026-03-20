@@ -1,7 +1,7 @@
 import { ApiError } from "./ApiError";
 
-export const API_BASE_URL: string = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
-export const API_SERVICE_URL: string = process.env.REACT_APP_API_SERVICE_URL || "http://localhost:8001";
+export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+export const API_SERVICE_URL: string = import.meta.env.VITE_API_SERVICE_URL || "http://localhost:8001";
 
 const parseResponseBody = async (response: Response): Promise<any> => {
 	if (response.status === 204) {

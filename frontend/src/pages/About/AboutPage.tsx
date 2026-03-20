@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
+import JamLogo from "../../assets/Logo.svg?react";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";

@@ -1,6 +1,6 @@
 import React, { JSX, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { GroupedSelectOption, SelectOption } from "../../form/FormOptions";
+import { GroupedSelectOption, SelectOption } from "../form/FormOptions";
 
 export interface CustomSelectProps {
 	id: string;
