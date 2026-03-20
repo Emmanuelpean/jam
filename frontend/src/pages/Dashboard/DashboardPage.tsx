@@ -228,7 +228,15 @@ const Dashboard: React.FC = () => {
 								description: "Job alerts from your scrapers will appear here",
 							}}
 						>
-							<div style={{ paddingTop: "9px", paddingBottom: "18px", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+							<div
+								style={{
+									paddingTop: "9px",
+									paddingBottom: "18px",
+									display: "flex",
+									flex: 1,
+									minHeight: 0,
+								}}
+							>
 								<ScrapedJobsTable onTotalCountChange={setScrapedJobsCount} />
 							</div>
 						</DashboardCard>
