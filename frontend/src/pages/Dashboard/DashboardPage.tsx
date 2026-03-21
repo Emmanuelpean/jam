@@ -22,11 +22,14 @@ import {
 import GraphWidget from "./GraphWidget";
 import FavouriteJobWidget from "./FavouriteJobWidget";
 import { useDashboardData } from "./useDashboardData";
+import { useAlert } from "../../contexts/AlertContext";
 import WidgetPickerModal from "./WidgetPickerModal";
 import ExtensionBanner from "./ExtensionBanner";
+import { DashboardToolbar } from "./DashboardToolbar";
 
 const Dashboard: React.FC = () => {
 	const { currentUser, updateCurrentUser } = useAuth();
+	const { showConfirm, showDelete } = useAlert();
 	const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
 	const [isEditMode, setIsEditMode] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
@@ -82,7 +85,12 @@ const Dashboard: React.FC = () => {
 	};
 
 	const handleResetLayout = () => {
-		setLayoutData(getDefaultLayout(isPremium));
+		void showConfirm({
+			title: "Reset layout",
+			message: "This will restore the default dashboard layout. Any custom arrangement will be lost.",
+			confirmText: "Reset",
+			onSuccess: async () => setLayoutData(getDefaultLayout(isPremium)),
+		});
 	};
 
 	const handleAddWidget = (config: WidgetConfig) => {
@@ -100,15 +108,20 @@ const Dashboard: React.FC = () => {
 	};
 
 	const handleRemoveWidget = (widgetId: string) => {
-		setLayoutData((prev) => ({
-			...prev,
-			widgets: prev.widgets.filter((w) => w.id !== widgetId),
-			layouts: {
-				lg: prev.layouts.lg.filter((l) => l.i !== widgetId),
-				md: prev.layouts.md.filter((l) => l.i !== widgetId),
-				sm: prev.layouts.sm.filter((l) => l.i !== widgetId),
-			},
-		}));
+		void showDelete({
+			title: "Remove widget",
+			message: "Are you sure you want to remove this widget?",
+			onSuccess: async () =>
+				setLayoutData((prev) => ({
+					...prev,
+					widgets: prev.widgets.filter((w) => w.id !== widgetId),
+					layouts: {
+						lg: prev.layouts.lg.filter((l) => l.i !== widgetId),
+						md: prev.layouts.md.filter((l) => l.i !== widgetId),
+						sm: prev.layouts.sm.filter((l) => l.i !== widgetId),
+					},
+				})),
+		});
 	};
 
 	const handleUpdateWidgetConfig = (widgetId: string, newConfig: WidgetConfig) => {
@@ -289,30 +302,15 @@ const Dashboard: React.FC = () => {
 					)}
 				</div>
 			</div>
-			<div className="dashboard-edit-toolbar">
-				<div className="dashboard-edit-toolbar-inner">
-					{isEditMode ? (
-						<>
-							<button className="sidebar-icon-btn btn btn-success" onClick={handleSave} disabled={isSaving} title="Save layout">
-								<i className="bi bi-check-lg"></i>
-							</button>
-							<button className="sidebar-icon-btn btn btn-outline-secondary" onClick={handleCancel} title="Cancel">
-								<i className="bi bi-x-lg"></i>
-							</button>
-							<button className="sidebar-icon-btn btn btn-outline-secondary" onClick={() => setShowWidgetPicker(true)} title="Add widget">
-								<i className="bi bi-plus-lg"></i>
-							</button>
-							<button className="sidebar-icon-btn btn btn-outline-secondary" onClick={handleResetLayout} title="Reset to default">
-								<i className="bi bi-arrow-counterclockwise"></i>
-							</button>
-						</>
-					) : (
-						<button className="sidebar-icon-btn btn btn-outline-secondary" onClick={() => setIsEditMode(true)} title="Edit layout">
-							<i className="bi bi-pencil"></i>
-						</button>
-					)}
-				</div>
-			</div>
+			<DashboardToolbar
+				isEditMode={isEditMode}
+				isSaving={isSaving}
+				onEdit={() => setIsEditMode(true)}
+				onCancel={handleCancel}
+				onSave={handleSave}
+				onAddWidget={() => setShowWidgetPicker(true)}
+				onReset={handleResetLayout}
+			/>
 			<WidgetPickerModal
 				show={showWidgetPicker}
 				onHide={() => setShowWidgetPicker(false)}

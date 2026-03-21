@@ -1,5 +1,6 @@
 import React, { JSX } from "react";
-import { Button, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
+import { Button, Spinner } from "react-bootstrap";
+import "./ActionButton.scss";
 
 export type ButtonVariant =
 	| "primary"
@@ -140,9 +141,9 @@ export const ActionButton = ({
 	// Wrap with tooltip if provided
 	if (tooltip) {
 		return (
-			<OverlayTrigger placement={tooltipPlacement} overlay={<Tooltip id={`${id}-tooltip`}>{tooltip}</Tooltip>}>
+			<div className="ab-tooltip-wrap" data-tooltip={tooltip} data-placement={tooltipPlacement}>
 				{button}
-			</OverlayTrigger>
+			</div>
 		);
 	}
 

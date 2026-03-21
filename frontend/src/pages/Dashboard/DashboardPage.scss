@@ -166,13 +166,6 @@
 
 /* Edit mode styles */
 .dashboard-edit-mode {
-    .dashboard-grid {
-        background-image:
-            linear-gradient(to right, var(--bs-border-color) 1px, transparent 1px),
-            linear-gradient(to bottom, var(--bs-border-color) 1px, transparent 1px);
-        background-size: calc(100% / 12) 30px;
-        opacity: 1;
-    }
 
     .dashboard-grid-item {
         border: 2px dashed var(--bs-border-color);

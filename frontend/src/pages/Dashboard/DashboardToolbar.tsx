@@ -38,6 +38,7 @@ export const DashboardToolbar: React.FC<DashboardToolbarProps> = ({
 						className="sidebar-icon-btn"
 						loading={isSaving}
 						defaultIcon="bi bi-check-lg"
+						loadingText=""
 						style={{ width: 40 }}
 						onClick={onSave}
 						tooltip="Save layout"

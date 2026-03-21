@@ -1,0 +1,92 @@
+.ab-tooltip-wrap {
+    position: relative;
+
+    &::after,
+    &::before {
+        position: absolute;
+        z-index: 9999;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s;
+    }
+
+    &::after {
+        content: attr(data-tooltip);
+        padding: 0.4rem 0.7rem;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        color: var(--bs-body-color);
+        background: var(--bs-tertiary-bg);
+        border-radius: 0.3rem;
+    }
+
+    &::before {
+        content: "";
+        border: 5px solid transparent;
+    }
+
+    &:hover::after,
+    &:hover::before {
+        opacity: 1;
+    }
+
+    // Left
+    &[data-placement="left"]::after {
+        top: 50%;
+        right: calc(100% + 8px);
+        transform: translateY(-50%);
+    }
+
+    &[data-placement="left"]::before {
+        top: 50%;
+        right: calc(100% + 0px);
+        transform: translateY(-50%);
+        border-right-width: 0;
+        border-left-color: var(--bs-tertiary-bg);
+    }
+
+    // Right
+    &[data-placement="right"]::after {
+        top: 50%;
+        left: calc(100% + 8px);
+        transform: translateY(-50%);
+    }
+
+    &[data-placement="right"]::before {
+        top: 50%;
+        left: calc(100% + 0px);
+        transform: translateY(-50%);
+        border-left-width: 0;
+        border-right-color: var(--bs-tertiary-bg);
+    }
+
+    // Top
+    &[data-placement="top"]::after {
+        bottom: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    &[data-placement="top"]::before {
+        bottom: calc(100% + 0px);
+        left: 50%;
+        transform: translateX(-50%);
+        border-bottom-width: 0;
+        border-top-color: var(--bs-tertiary-bg);
+    }
+
+    // Bottom
+    &[data-placement="bottom"]::after {
+        top: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    &[data-placement="bottom"]::before {
+        top: calc(100% + 0px);
+        left: 50%;
+        transform: translateX(-50%);
+        border-top-width: 0;
+        border-bottom-color: var(--bs-tertiary-bg);
+    }
+}
