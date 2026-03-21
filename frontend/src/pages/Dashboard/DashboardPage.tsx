@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Layout, LayoutItem, ResponsiveGridLayout, ResponsiveLayouts, useContainerWidth } from "react-grid-layout";
 import { useAuth } from "../../contexts/AuthContext";
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
 import "./DashboardPage.scss";
 import JobsToChase from "../../components/DataTable/JobsToChase";
 import UpcomingDeadlinesTable from "../../components/DataTable/UpcomingDeadlines";
@@ -9,57 +11,65 @@ import { DashboardCard } from "./DashboardCard";
 import { ActivityFeedCard, renderRecentActivityItem, renderUpcomingInterviewItem } from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
-import {
-	DashboardLayoutDataV2,
-	generateWidgetId,
-	getDefaultLayout,
-	getDefaultLayoutsForConfig,
-	parseLayoutData,
-	WidgetConfig,
-	WidgetInstance,
-} from "./widgetRegistry";
-import WidgetPickerModal from "./WidgetPickerModal";
+import { DashboardLayoutDataV2, parseLayoutData, WidgetConfig } from "./widgetRegistry";
 import GraphWidget from "./GraphWidget";
 import FavouriteJobWidget from "./FavouriteJobWidget";
-import { useAlert } from "../../contexts/AlertContext";
-import ExtensionBanner from "./ExtensionBanner";
-import { DashboardToolbar } from "./DashboardToolbar";
 import { useDashboardData } from "./useDashboardData";
 
 const Dashboard: React.FC = () => {
 	const { currentUser, updateCurrentUser } = useAuth();
-	const [scrapedJobCount, setScrapedJobCount] = useState<number>(0);
+	const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
 	const [isEditMode, setIsEditMode] = useState(false);
-	const [showWidgetPicker, setShowWidgetPicker] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
-	const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
-	const { showDelete, showConfirm } = useAlert();
+	const [scrapedJobCount, setScrapedJobCount] = useState<number>(0);
 
 	const isPremium = currentUser?.premium.is_active ?? false;
-
-	const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
 
 	const [layoutData, setLayoutData] = useState<DashboardLayoutDataV2>(() =>
 		parseLayoutData(currentUser?.preferences.dashboard_layout ?? null, isPremium)
 	);
 	const savedLayoutRef = useRef<DashboardLayoutDataV2>(layoutData);
+	const layoutInitializedRef = useRef(false);
+
+	useEffect(() => {
+		if (currentUser && !layoutInitializedRef.current) {
+			layoutInitializedRef.current = true;
+			const loaded = parseLayoutData(currentUser.preferences.dashboard_layout ?? null, isPremium);
+			setLayoutData(loaded);
+			savedLayoutRef.current = loaded;
+		}
+	}, [currentUser]);
 
 	const { totalJobs, jobApplications, jobApplicationPending, needsChase, upcomingDeadlines, upcomingInterviews, recentActivity } =
 		useDashboardData();
 
-	useEffect(() => {
-		const handleResize = () => setIsSmallScreen(window.innerWidth < 768);
-		window.addEventListener("resize", handleResize);
-		return () => window.removeEventListener("resize", handleResize);
-	}, []);
+	const handleLayoutChange = (_currentLayout: Layout, allLayouts: ResponsiveLayouts) => {
+		if (!isEditMode) return;
+		setLayoutData((prev) => ({
+			...prev,
+			layouts: {
+				lg: (allLayouts.lg as LayoutItem[] | undefined) || prev.layouts.lg,
+				md: (allLayouts.md as LayoutItem[] | undefined) || prev.layouts.md,
+				sm: (allLayouts.sm as LayoutItem[] | undefined) || prev.layouts.sm,
+			},
+		}));
+	};
 
-	if (!currentUser) {
-		return (
-			<div className="dashboard-wrapper">
-				<div className="dashboard-main" ref={containerRef as React.RefObject<HTMLDivElement>} />
-			</div>
-		);
-	}
+	const handleSave = async () => {
+		setIsSaving(true);
+		try {
+			await updateCurrentUser({ preferences: { dashboard_layout: JSON.stringify(layoutData) } });
+			savedLayoutRef.current = layoutData;
+			setIsEditMode(false);
+		} finally {
+			setIsSaving(false);
+		}
+	};
+
+	const handleCancel = () => {
+		setLayoutData(savedLayoutRef.current);
+		setIsEditMode(false);
+	};
 
 	const handleUpdateWidgetConfig = (widgetId: string, newConfig: WidgetConfig) => {
 		setLayoutData((prev) => ({
@@ -184,93 +194,13 @@ const Dashboard: React.FC = () => {
 		}
 	};
 
-	const handleLayoutChange = (_currentLayout: Layout, allLayouts: ResponsiveLayouts) => {
-		if (!isEditMode) return;
-		setLayoutData((prev) => ({
-			...prev,
-			layouts: {
-				lg: (allLayouts.lg as LayoutItem[] | undefined) || prev.layouts.lg,
-				md: (allLayouts.md as LayoutItem[] | undefined) || prev.layouts.md,
-				sm: (allLayouts.sm as LayoutItem[] | undefined) || prev.layouts.sm,
-			},
-		}));
-	};
-
-	const handleSave = async () => {
-		setIsSaving(true);
-		try {
-			await updateCurrentUser({ preferences: { dashboard_layout: JSON.stringify(layoutData) } });
-			savedLayoutRef.current = layoutData;
-			setIsEditMode(false);
-		} finally {
-			setIsSaving(false);
-		}
-	};
-
-	const hasChanges = JSON.stringify(layoutData) !== JSON.stringify(savedLayoutRef.current);
-
-	const confirmCancel = async () => {
-		if (!hasChanges) {
-			setIsEditMode(false);
-			return;
-		}
-		const confirmed = await showConfirm({
-			title: "Discard Changes",
-			message: "Are you sure you want to discard your unsaved changes?",
-			confirmText: "Discard",
-			cancelText: "Keep Editing",
-		});
-		if (confirmed) {
-			setLayoutData(savedLayoutRef.current);
-			setIsEditMode(false);
-		}
-	};
-
-	const confirmReset = async () => {
-		const confirmed = await showConfirm({
-			title: "Reset to Default",
-			message: "Are you sure you want to reset the dashboard to its default layout? You can still cancel before saving.",
-			confirmText: "Reset",
-			cancelText: "Keep Current",
-		});
-		if (confirmed) {
-			setLayoutData(getDefaultLayout(isPremium));
-		}
-	};
-
-	const handleAddWidget = (config: WidgetConfig) => {
-		setLayoutData((prev) => {
-			const id = generateWidgetId();
-			const newWidget: WidgetInstance = { id, config };
-			const defaults = getDefaultLayoutsForConfig(config);
-			const newLayouts = { ...prev.layouts };
-			for (const bp of ["lg", "md", "sm"] as const) {
-				const items = newLayouts[bp];
-				const maxY = items.length === 0 ? 0 : Math.max(...items.map((l) => l.y + l.h));
-				newLayouts[bp] = [...items, { ...defaults[bp], i: id, y: maxY }];
-			}
-			return { ...prev, widgets: [...prev.widgets, newWidget], layouts: newLayouts };
-		});
-	};
-
-	const confirmRemoveWidget = async (widgetId: string) => {
-		const confirmed = await showDelete({
-			title: "Remove Widget",
-			message: "Are you sure you want to remove this widget?",
-			confirmText: "Remove",
-		});
-		if (confirmed) {
-			setLayoutData((prev) => ({
-				...prev,
-				widgets: prev.widgets.filter((w) => w.id !== widgetId),
-				layouts: {
-					lg: prev.layouts.lg.filter((l) => l.i !== widgetId),
-					md: prev.layouts.md.filter((l) => l.i !== widgetId),
-					sm: prev.layouts.sm.filter((l) => l.i !== widgetId),
-				},
-			}));
-		}
-	};
+	if (!currentUser) {
+		return (
+			<div className="dashboard-wrapper">
+				<div className="dashboard-main" ref={containerRef as React.RefObject<HTMLDivElement>} />
+			</div>
+		);
+	}
 
 	const widgetIds = new Set(layoutData.widgets.map((w) => w.id));
 	const currentLayouts: ResponsiveLayouts = {
@@ -278,11 +208,9 @@ const Dashboard: React.FC = () => {
 		md: layoutData.layouts.md.filter((l) => widgetIds.has(l.i)),
 		sm: layoutData.layouts.sm.filter((l) => widgetIds.has(l.i)),
 	};
-	const dragEnabled = isEditMode && !isSmallScreen;
 
 	return (
 		<div className="dashboard-wrapper">
-			<ExtensionBanner />
 			<div className="dashboard-main" ref={containerRef as React.RefObject<HTMLDivElement>}>
 				<div className={isEditMode ? "dashboard-edit-mode" : ""}>
 					{mounted && (
@@ -293,25 +221,16 @@ const Dashboard: React.FC = () => {
 							breakpoints={{ lg: 992, md: 768, sm: 0 }}
 							cols={{ lg: 12, md: 12, sm: 12 }}
 							rowHeight={30}
-							dragConfig={{ enabled: dragEnabled, handle: ".drag-handle" }}
-							resizeConfig={{ enabled: dragEnabled }}
+							dragConfig={{ enabled: isEditMode, handle: ".drag-handle" }}
+							resizeConfig={{ enabled: isEditMode, handles: ["sw", "nw", "se", "ne"] }}
 							onLayoutChange={handleLayoutChange}
 						>
 							{layoutData.widgets.map((widget) => (
 								<div key={widget.id} className="dashboard-grid-item">
 									{isEditMode && (
-										<>
-											<div className="drag-handle">
-												<i className="bi bi-grip-horizontal"></i>
-											</div>
-											<button
-												className="widget-remove-btn"
-												onClick={() => confirmRemoveWidget(widget.id)}
-												title="Remove widget"
-											>
-												<i className="bi bi-trash3"></i>
-											</button>
-										</>
+										<div className="drag-handle">
+											<i className="bi bi-grip-horizontal"></i>
+										</div>
 									)}
 									<div className="grid-item-content">{renderWidget(widget.config, widget.id)}</div>
 								</div>
@@ -320,21 +239,24 @@ const Dashboard: React.FC = () => {
 					)}
 				</div>
 			</div>
-			<DashboardToolbar
-				isEditMode={isEditMode}
-				isSaving={isSaving}
-				onEdit={() => setIsEditMode(true)}
-				onCancel={confirmCancel}
-				onSave={handleSave}
-				onAddWidget={() => setShowWidgetPicker(true)}
-				onReset={confirmReset}
-			/>
-			<WidgetPickerModal
-				show={showWidgetPicker}
-				onHide={() => setShowWidgetPicker(false)}
-				onAddWidget={handleAddWidget}
-				isPremium={isPremium}
-			/>
+			<div className="dashboard-edit-toolbar">
+				<div className="dashboard-edit-toolbar-inner">
+					{isEditMode ? (
+						<>
+							<button className="sidebar-icon-btn btn btn-success" onClick={handleSave} disabled={isSaving} title="Save layout">
+								<i className="bi bi-check-lg"></i>
+							</button>
+							<button className="sidebar-icon-btn btn btn-outline-secondary" onClick={handleCancel} title="Cancel">
+								<i className="bi bi-x-lg"></i>
+							</button>
+						</>
+					) : (
+						<button className="sidebar-icon-btn btn btn-outline-secondary" onClick={() => setIsEditMode(true)} title="Edit layout">
+							<i className="bi bi-pencil"></i>
+						</button>
+					)}
+				</div>
+			</div>
 		</div>
 	);
 };

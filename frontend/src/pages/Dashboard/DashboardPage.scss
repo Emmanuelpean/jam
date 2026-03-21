@@ -1,6 +1,3 @@
-@import "react-grid-layout/css/styles.css";
-@import "react-resizable/css/styles.css";
-
 .widget-picker-card:not(:disabled):hover {
     border-color: var(--primary-mid) !important;
     background: color-mix(in srgb, var(--primary-mid) 8%, transparent) !important;
@@ -88,6 +85,10 @@
     background-color: #e5e7eb;
 }
 
+/* Grid layout */
+.dashboard-grid {
+    margin: -8px;
+}
 
 .dashboard-grid-item {
     position: relative;
@@ -194,6 +195,7 @@
 
 .dashboard-main {
     width: 100%;
+    overflow-x: clip;
 }
 
 /* Floating edit toolbar */

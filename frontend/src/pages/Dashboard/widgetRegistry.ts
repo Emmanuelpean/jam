@@ -412,6 +412,7 @@ export function getDefaultLayout(isPremium: boolean): DashboardLayoutDataV2 {
 // --- Parse layout data ---
 
 export function parseLayoutData(data: string | null, isPremium: boolean): DashboardLayoutDataV2 {
+	console.log(getDefaultLayout(isPremium));
 	if (!data) return getDefaultLayout(isPremium);
 	try {
 		const parsed = JSON.parse(data) as Record<string, unknown>;

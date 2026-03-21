@@ -93,7 +93,17 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 			<DemoBanner />
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
 				{currentUser && <Sidebar />}
-				<div style={{ flex: 1, minWidth: 0, overflowY: "auto", display: "flex", flexDirection: "column", position: "relative", zIndex: 1 }}>
+				<div
+					style={{
+						flex: 1,
+						minWidth: 0,
+						overflowY: "auto",
+						display: "flex",
+						flexDirection: "column",
+						position: "relative",
+						zIndex: 1,
+					}}
+				>
 					<div
 						className={!isAuthPage ? `main-content` : ""}
 						style={isAuthPage ? { height: "100%" } : undefined}
