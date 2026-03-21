@@ -1,12 +1,12 @@
 import React, { JSX, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { DataTable } from "../../components/DataTable/DataTable";
+import { DataTable, DataTableHandle } from "../../components/DataTable/DataTable";
 import { JobModal } from "../../components/DataModal/JobModal";
 import { ExtensionJobData, ExtensionJobModal } from "../../components/DataModal/ExtensionJobModal";
 import { DataModalHandle } from "../../components/DataModal/DataModal";
 import { TableColumn, tableColumns } from "../../components/rendering/view/TableColumns";
 
-const EXT_PARAMS = [
+const EXT_PARAMS: string[] = [
 	"ext_title",
 	"ext_url",
 	"ext_description",
@@ -25,6 +25,7 @@ const JobsPage = (): JSX.Element => {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const extensionModalRef = useRef<DataModalHandle>(null);
+	const tableRef = useRef<DataTableHandle>(null);
 
 	const autoOpenWith: ExtensionJobData | null = useMemo((): ExtensionJobData | null => {
 		const title: string | null = searchParams.get("ext_title");
@@ -77,6 +78,7 @@ const JobsPage = (): JSX.Element => {
 	return (
 		<>
 			<DataTable
+				ref={tableRef}
 				entityType="job"
 				initialSortConfig={{ key: "created_at", direction: "desc" }}
 				title="Jobs"

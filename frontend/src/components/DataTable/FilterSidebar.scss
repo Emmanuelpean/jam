@@ -10,12 +10,17 @@
 	border-radius: 0.5rem;
 	transform: translateX(100%);
 	margin-right: -356px;
+	visibility: hidden;
 	transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
 		margin-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
 	&.open {
 		transform: translateX(0);
 		margin-right: 0;
+		visibility: visible;
+		transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+			margin-right 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+			visibility 0s;
 	}
 }
 
@@ -90,7 +95,6 @@
 .filter-sidebar-footer {
 	padding: 0.75rem 1rem;
 	border-top: 1px solid var(--bs-border-color, #dee2e6);
-	background: var(--bs-secondary-bg, #f5f5f5);
 
 	.btn {
 		font-size: 0.8rem;
@@ -137,7 +141,7 @@
 	background: none;
 	border-radius: 999px;
 	padding: 0.15rem 0.55rem;
-	font-size: 0.72rem;
+	font-size: 0.85rem;
 	cursor: pointer;
 	color: var(--bs-body-color);
 	transition: background 0.15s, color 0.15s, border-color 0.15s;
@@ -170,6 +174,45 @@
 	font-size: 0.75rem;
 	color: var(--bs-secondary-color, #6c757d);
 	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.filter-clearable-input {
+	position: relative;
+
+	.form-control {
+		padding-right: 1.75rem;
+	}
+}
+
+.filter-input-clear-btn {
+	position: absolute;
+	right: 0.35rem;
+	top: 50%;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.1rem;
+	height: 1.1rem;
+	padding: 0;
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: var(--bs-secondary-color, #6c757d);
+	font-size: 0.9rem;
+	line-height: 1;
+	border-radius: 50%;
+	transition: color 0.15s ease;
+
+	&:hover {
+		color: var(--bs-body-color);
+	}
+}
+
+.filter-number-range .filter-input-clear-btn {
+	position: static;
+	transform: none;
 	flex-shrink: 0;
 }
 

@@ -8,6 +8,8 @@ content), and records run statistics in an JobScrapingServiceLog."""
 import datetime as dt
 import traceback
 
+from sqlalchemy import or_
+
 from app import models
 from app.config import settings
 from app.database import get_db
@@ -260,7 +262,7 @@ class JobEmailScraper(EmailService):
         :param job_result: JobResult instance
         :return dictionary of extracted job data"""
 
-        result = {}
+        result = {}  # noqa
 
         # Location & attendance type
         result["location"] = job_result.location
@@ -293,6 +295,7 @@ class JobEmailScraper(EmailService):
         result["deadline"] = job_result.job.deadline
         result["external_job_id"] = job_result.job_id
         result["platform"] = job_result.platform
+        result["is_closed"] = job_result.job.is_closed
 
         return result
 
@@ -393,6 +396,7 @@ class JobEmailScraper(EmailService):
             "url",
             "deadline",
             "company",
+            "is_closed",
             "location",
             "location_city",
             "location_country",
@@ -545,11 +549,22 @@ class JobEmailScraper(EmailService):
             self.logger.exception(error)
 
     def scrape_jobs(self, service_log: JobEmailScrapingServiceLog) -> None:
-        """Process all unscraped jobs
+        """Process all unscraped jobs, including those scheduled for retry.
         :param service_log: Service log entry"""
 
-        # List all unprocessed job records
-        job_records = self.db.query(ScrapedJob).filter(ScrapedJob.is_processed.is_(False)).all()
+        # List all unprocessed job records, including those whose retry window has passed
+        now = dt.datetime.now(dt.timezone.utc)
+        job_records = (
+            self.db.query(ScrapedJob)
+            .filter(ScrapedJob.is_processed.is_(False))
+            .filter(
+                or_(
+                    ScrapedJob.next_retry_at.is_(None),
+                    ScrapedJob.next_retry_at <= now,
+                )
+            )
+            .all()
+        )
         platforms = set([job.platform for job in job_records])
         for platform in platforms:
             job_ids = [job.id for job in job_records if job.platform == platform]
@@ -646,9 +661,22 @@ class JobEmailScraper(EmailService):
                         f"{traceback.format_exc()}. Skipping job."
                     )
                     self.logger.exception(message)
-                    job_record.is_processed = True
-                    job_record.is_failed = True
-                    job_record.scrape_error = f"{traceback.format_exc()}"
+                    job_record.scrape_error = job_record.scrape_error + [
+                        {"datetime": dt.datetime.now(dt.timezone.utc).isoformat(), "error": traceback.format_exc()}
+                    ]
+                    job_record.retry_count += 1
+                    if job_record.retry_count < 3:
+                        job_record.next_retry_at = dt.datetime.now(dt.timezone.utc) + dt.timedelta(
+                            hours=settings.scrape_retry_delay_hours
+                        )
+                        self.logger.info(
+                            f"Scheduled retry {job_record.retry_count}/3 for job ID "
+                            f"{job_record.external_job_id} in {settings.scrape_retry_delay_hours}h"
+                        )
+                    else:
+                        job_record.is_processed = True
+                        job_record.is_failed = True
+                        self.logger.info(f"Job ID {job_record.external_job_id} permanently failed after 3 attempts")
                     self.db.commit()
                     self.upsert_platform_stat(service_log, job_record.platform, job_scrape_failed_ids=job_record.id)
             else:

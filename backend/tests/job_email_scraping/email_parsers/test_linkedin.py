@@ -8,13 +8,16 @@ from tests.job_email_scraping.resources import (
     LINKEDIN_EMAIL_4,
     LINKEDIN_EMAIL_5,
     LINKEDIN_EMAIL_6,
+    LINKEDIN_EMAIL_7,
     LINKEDIN_EMAIL_MALFORMED_BODY,
 )
 
 
 class TestParseIndeedJobEmail:
 
-    @pytest.mark.parametrize("email", [LINKEDIN_EMAIL_3, LINKEDIN_EMAIL_4, LINKEDIN_EMAIL_5, LINKEDIN_EMAIL_6])
+    @pytest.mark.parametrize(
+        "email", [LINKEDIN_EMAIL_3, LINKEDIN_EMAIL_4, LINKEDIN_EMAIL_5, LINKEDIN_EMAIL_6, LINKEDIN_EMAIL_7]
+    )
     def test_email(self, email: dict) -> None:
 
         output = parse_linkedin_job_email(email["body"])

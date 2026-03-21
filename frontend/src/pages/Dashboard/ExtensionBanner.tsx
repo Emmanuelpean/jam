@@ -10,7 +10,7 @@ const ExtensionBanner: React.FC = () => {
 
 	const handleDismiss = () => {
 		setDismissed(true);
-		updateCurrentUser({ preferences: { extension_banner_dismissed: true } });
+		void updateCurrentUser({ preferences: { extension_banner_dismissed: true } });
 	};
 
 	return (
@@ -21,7 +21,16 @@ const ExtensionBanner: React.FC = () => {
 			<div className="extension-banner-content">
 				<div className="extension-banner-title">
 					SPREAD Chrome Extension
-					<span className="extension-banner-badge">Coming Soon</span>
+					<a
+						href="https://chromewebstore.google.com/detail/spread/dnkmbfflallehleblligcokipgijnbhe"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="extension-banner-badge"
+						style={{ textDecoration: "none" }}
+					>
+						<i className="bi bi-download me-1" />
+						Install
+					</a>
 				</div>
 				<div className="extension-banner-subtitle">
 					Import jobs from LinkedIn, Indeed, NHS Jobs & VeganJobs directly into JAM — no copy-pasting needed.

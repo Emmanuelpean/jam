@@ -20,6 +20,15 @@ export interface SettingData extends BaseOut {
 
 export type ThemeMode = "dark" | "light" | "system";
 
+export type Direction = "asc" | "desc";
+
+export interface SortConfig {
+	key: string;
+	direction: Direction;
+}
+
+export type TableSortConfigs = Record<string, SortConfig>;
+
 export interface UserPreferences {
 	theme: string;
 	dark_mode: ThemeMode;
@@ -30,7 +39,7 @@ export interface UserPreferences {
 	extension_banner_dismissed: boolean;
 	dashboard_layout: string | null;
 	table_columns: Record<string, string[]> | null;
-	table_sort: Record<string, { key: string; direction: string }> | null;
+	table_sort: TableSortConfigs | null;
 }
 
 export type UserPreferencesUpdate = Partial<UserPreferences>;

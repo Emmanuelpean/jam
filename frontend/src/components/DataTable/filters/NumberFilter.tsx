@@ -4,10 +4,12 @@ import { NullFilter, NumberFilterConfig, NumberFilterValue } from "../FilterType
 import "./NumberFilter.scss";
 
 interface Props {
+	columnKey?: string;
 	config: NumberFilterConfig;
 	value: NumberFilterValue;
 	onChange: (v: NumberFilterValue) => void;
 	dataContext?: any;
+	disabled?: boolean;
 }
 
 function resolveMax(config: NumberFilterConfig, dataContext?: any): number {
@@ -17,7 +19,7 @@ function resolveMax(config: NumberFilterConfig, dataContext?: any): number {
 	return config.max;
 }
 
-const NumberSlider = ({ config, value, onChange, dataContext }: Props): JSX.Element => {
+const NumberSlider = ({ columnKey, config, value, onChange, dataContext, disabled }: Props): JSX.Element => {
 	const rangeMin = config.min;
 	const rangeMax = useMemo(() => resolveMax(config, dataContext), [config, dataContext]);
 	const step = config.step ?? 1;
@@ -53,7 +55,7 @@ const NumberSlider = ({ config, value, onChange, dataContext }: Props): JSX.Elem
 	);
 
 	return (
-		<div className="filter-range-slider">
+		<div className={`filter-range-slider${disabled ? " filter-range-slider--disabled" : ""}`}>
 			<div className="filter-range-slider-track">
 				<div
 					className="filter-range-slider-fill"
@@ -69,7 +71,9 @@ const NumberSlider = ({ config, value, onChange, dataContext }: Props): JSX.Elem
 					step={step}
 					value={currentMin}
 					onChange={handleMinChange}
+					disabled={disabled}
 					className="filter-range-slider-input"
+					style={{ zIndex: currentMax >= rangeMax ? 1 : undefined }}
 				/>
 				<input
 					type="range"
@@ -78,6 +82,7 @@ const NumberSlider = ({ config, value, onChange, dataContext }: Props): JSX.Elem
 					step={step}
 					value={currentMax}
 					onChange={handleMaxChange}
+					disabled={disabled}
 					className="filter-range-slider-input"
 				/>
 			</div>
@@ -89,12 +94,15 @@ const NumberSlider = ({ config, value, onChange, dataContext }: Props): JSX.Elem
 	);
 };
 
-const NumberInputs = ({ config, value, onChange }: Props): JSX.Element => {
+const NumberInputs = ({ columnKey, config, value, onChange, disabled }: Props): JSX.Element => {
 	const step = config.step ?? 1;
+
+	const hasValue = value.min !== null || value.max !== null;
 
 	return (
 		<div className="filter-number-range">
 			<Form.Control
+				id={columnKey ? `filter-num-min-${columnKey}` : undefined}
 				type="number"
 				placeholder="Min"
 				step={step}
@@ -103,9 +111,11 @@ const NumberInputs = ({ config, value, onChange }: Props): JSX.Element => {
 					onChange({ type: "number", min: e.target.value === "" ? null : Number(e.target.value), max: value.max })
 				}
 				className="form-control--sm"
+				disabled={disabled}
 			/>
 			<span className="filter-range-sep">–</span>
 			<Form.Control
+				id={columnKey ? `filter-num-max-${columnKey}` : undefined}
 				type="number"
 				placeholder="Max"
 				step={step}
@@ -114,7 +124,18 @@ const NumberInputs = ({ config, value, onChange }: Props): JSX.Element => {
 					onChange({ type: "number", min: value.min, max: e.target.value === "" ? null : Number(e.target.value) })
 				}
 				className="form-control--sm"
+				disabled={disabled}
 			/>
+			{hasValue && !disabled && (
+				<button
+					type="button"
+					className="filter-input-clear-btn"
+					onClick={() => onChange({ type: "number", min: null, max: null })}
+					aria-label="Clear"
+				>
+					<i className="bi bi-x" />
+				</button>
+			)}
 		</div>
 	);
 };
@@ -125,7 +146,7 @@ const nullFilterOptions: { value: NullFilter; label: string }[] = [
 	{ value: "null", label: "Null" },
 ];
 
-const NumberFilter = ({ config, value, onChange, dataContext }: Props): JSX.Element => {
+const NumberFilter = ({ columnKey, config, value, onChange, dataContext }: Props): JSX.Element => {
 	const display = config.display ?? "input";
 	const currentNullFilter = value.nullFilter ?? "all";
 
@@ -133,16 +154,20 @@ const NumberFilter = ({ config, value, onChange, dataContext }: Props): JSX.Elem
 		onChange({ ...v, nullFilter: value.nullFilter });
 	};
 
-	const sliderProps = { config, value, onChange: handleRangeChange, dataContext };
+	const isNullOnly = currentNullFilter === "null";
+	const sliderProps = { columnKey, config, value, onChange: handleRangeChange, dataContext, disabled: isNullOnly };
 
 	return (
-		<>
-			{display === "slider" ? <NumberSlider {...sliderProps} /> : <NumberInputs {...sliderProps} />}
+		<div className={`filter-number-wrapper${config.nullable ? " filter-number-wrapper--with-null" : ""}`}>
+			<div className="filter-number-range-col">
+				{display === "slider" ? <NumberSlider {...sliderProps} /> : <NumberInputs {...sliderProps} />}
+			</div>
 			{config.nullable && (
 				<div className="filter-null-buttons">
 					{nullFilterOptions.map((opt) => (
 						<button
 							key={opt.value}
+							id={columnKey ? `filter-null-${opt.value}-${columnKey}` : undefined}
 							type="button"
 							className={`filter-null-btn${currentNullFilter === opt.value ? " active" : ""}`}
 							onClick={() => onChange({ ...value, nullFilter: opt.value === "all" ? undefined : opt.value })}
@@ -152,7 +177,7 @@ const NumberFilter = ({ config, value, onChange, dataContext }: Props): JSX.Elem
 					))}
 				</div>
 			)}
-		</>
+		</div>
 	);
 };
 

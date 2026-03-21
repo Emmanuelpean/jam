@@ -90,29 +90,30 @@ class ReactSelect(object):
         self.select_menu = web_element
         self.wait = WebDriverWait(self.driver, 1)
 
-        self.select_menu_locator = "react-select__menu"
-        self.select_value = "react-select__multi-value"
-        self.select_single_value = "react-select__single-value"
-        self.select_control = "react-select__control"
-        self.select_value_container = "react-select__value-container"
+        self.select_menu_locator = "jam-select__menu"
+        self.select_value = "jam-select__tag"
+        self.select_single_value = "jam-select__single-value"
+        self.select_control = "jam-select__control"
+        self.select_value_container = "jam-select__values"
         self.options_locator = "//div[@role='option']"
-        self.select_clear = "react-select__clear-indicator"
-        self.select_value_icon = "react-select__multi-value__remove"
-        self.select_value_label = "react-select__multi-value__label"
+        self.select_clear = "jam-select__clear"
+        self.select_value_icon = "jam-select__tag-remove"
+        self.select_value_label = "jam-select__tag-label"
 
         self.value_container_element = get_element(
             self.driver, self.select_value_container, By.CLASS_NAME, parent=self.select_menu
         )
-        self.is_multiple = "select__value-container--is-multi" in self.value_container_element.get_attribute("class")
+        self.is_multiple = "jam-select--multi" in self.value_container_element.get_attribute("class")
 
     @property
     def menu(self) -> WebElement:
         """Returns the menu WebElement"""
 
-        input_el = get_element(self.driver, "input", By.CSS_SELECTOR, parent=self.select_menu)
-        input_id = input_el.get_attribute("id")  # e.g. 'react-select-3-input'
-        menu_id = input_id.replace("input", "listbox")
-        return self.driver.find_element(By.ID, menu_id)
+        container_id = self.select_menu.get_attribute("id")
+        menu_id = container_id + "-listbox"
+        return WebDriverWait(self.driver, 5).until(
+            ec.presence_of_element_located((By.ID, menu_id))
+        )
 
     @property
     def selected_options_on_line(self) -> list[WebElement]:
@@ -239,14 +240,8 @@ class ReactSelect(object):
         max_attempts = 3
         for attempt in range(max_attempts):
             try:
-                children = get_element(self.driver, "*", By.CSS_SELECTOR, parent=self.select_menu, multiple=True)
-                for child in children:
-                    child_classy = child.get_attribute("class")
-                    child_classy = "" if child_classy is None else child_classy
-                    if self.select_menu_locator in child_classy:
-                        return True
-                return False
-
+                input_el = self.select_menu.find_element(By.CSS_SELECTOR, "input[role='combobox']")
+                return input_el.get_attribute("aria-expanded") == "true"
             except StaleElementReferenceException:
                 if attempt == max_attempts - 1:
                     raise

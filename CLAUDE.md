@@ -69,17 +69,17 @@ cd frontend && npm run build
 
 FastAPI app with modules organized by domain:
 
-| Module | Purpose |
-|--------|---------|
-| `core/` | Auth (JWT), user management, settings |
+| Module | Purpose                                                           |
+|--------|-------------------------------------------------------------------|
+| `core/` | Auth (JWT), user management, settings                             |
 | `data_tables/` | Core entities: Company, Job, Person, Interview, Location, Keyword |
-| `job_email_scraping/` | Email/web scraping from Indeed, LinkedIn, NHS, VeganJobs |
-| `job_rating/` | AI-powered job rating via OpenAI |
-| `demo/` | Demo schema isolation — setup, seeding, cleanup |
-| `payments/` | Stripe integration — checkout, webhooks, customer management |
-| `emails/` | SMTP email service, release notes, templates |
-| `service_runner/` | Background job scheduler |
-| `routers/` | Export endpoints, misc config |
+| `job_email_scraping/` | Email/web scraping from Indeed, LinkedIn, NHS, VeganJobs          |
+| `job_rating/` | AI-powered job rating via Anthropic                               |
+| `demo/` | Demo schema isolation — setup, seeding, cleanup                   |
+| `payments/` | Stripe integration — checkout, webhooks, customer management      |
+| `emails/` | SMTP email service, release notes, templates                      |
+| `service_runner/` | Background job scheduler                                          |
+| `routers/` | Export endpoints, misc config                                     |
 
 Key files:
 - `main.py` — FastAPI app setup, CORS, middleware, all router registrations, lifespan hooks
@@ -136,7 +136,7 @@ Backend reads from `backend/.env`. Key variable groups:
 - `DB_*` — PostgreSQL connection
 - `SECRET_KEY`, `ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES` — JWT
 - `SMTP_*`, `IMAP_*` — email (Hostinger)
-- `OPENAI_API_KEY` — job rating
+- `ANTHROPIC_API_KEY` — job rating
 - `STRIPE_*` — payments
 - `APIFY_*`, `BRIGHTDATA_*` — web scraping
 
@@ -147,3 +147,29 @@ Frontend reads from `frontend/.env` (typically just the API base URL).
 - Python: Black formatter, 120-char line length
 - TypeScript: Prettier (see `.prettierrc`), Stylelint for SCSS
 - SCSS variables in `frontend/src/_variables.scss`, themes in `Themes.scss`
+
+## Editing Files on Windows
+
+Frontend files (`.tsx`, `.ts`, `.scss`) use **CRLF line endings** (`\r\n`) but linters (Prettier, Stylelint) may reformat them to **LF** (`\n`) during a session. The Edit tool fails silently when the line endings in the file don't match the string being searched.
+
+**Always use Python binary patches for frontend file edits:**
+
+```python
+with open('path/to/file', 'rb') as f:
+    content = f.read()
+# Try CRLF first, fall back to LF
+old_crlf = b'...search string with \r\n...'
+old_lf   = b'...search string with \n...'
+if old_crlf in content:
+    content = content.replace(old_crlf, new_crlf, 1)
+elif old_lf in content:
+    content = content.replace(old_lf, new_lf, 1)
+else:
+    print('NOT FOUND')
+with open('path/to/file', 'wb') as f:
+    f.write(content)
+```
+
+- Use `replace(old, new, 1)` (not `replace_all`) unless intentionally replacing all occurrences.
+- If a pattern is not found, print the surrounding bytes with `repr()` to inspect the actual line endings before retrying.
+- The Edit tool can still be used for simple, single-line changes where line ending ambiguity is unlikely.

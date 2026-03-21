@@ -1,5 +1,11 @@
 .filter-range-slider {
-	padding: 0.25rem 0;
+	padding: 0 0.25rem;
+	transition: opacity 0.15s ease;
+
+	&--disabled {
+		opacity: 0.35;
+		pointer-events: none;
+	}
 }
 
 .filter-range-slider-track {
@@ -60,12 +66,24 @@
 	justify-content: space-between;
 	font-size: 0.72rem;
 	color: var(--bs-secondary-color, #6c757d);
+	padding: 3px 4px 0 4px;
+}
+
+.filter-number-wrapper--with-null {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.5rem;
+}
+
+.filter-number-range-col {
+	flex: 1;
+	min-width: 0;
 }
 
 .filter-null-buttons {
 	display: flex;
 	gap: 0.3rem;
-	margin-top: 0.4rem;
+	flex-shrink: 0;
 }
 
 .filter-null-btn {

@@ -3,6 +3,7 @@ import { Form } from "react-bootstrap";
 import { DateFilterConfig, DateFilterValue, DatePreset, DatePresetOption } from "../FilterTypes";
 
 interface Props {
+	columnKey: string;
 	config: DateFilterConfig;
 	value: DateFilterValue;
 	onChange: (v: DateFilterValue) => void;
@@ -44,13 +45,29 @@ function applyPreset(preset: DatePreset): DateFilterValue {
 		const to = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0] ?? null;
 		return { type: "date", preset, from, to };
 	}
+	if (preset === "pastDeadline") {
+		const yesterday = new Date(now);
+		yesterday.setDate(yesterday.getDate() - 1);
+		return { type: "date", preset, from: null, to: yesterday.toISOString().split("T")[0] ?? null };
+	}
 	// custom — keep existing range, just switch preset
 	return { type: "date", preset: "custom", from: null, to: null };
 }
 
 const DateFilter = ({ config, value, onChange }: Props): JSX.Element => {
 	const presets = config.presets ?? DEFAULT_PRESETS;
-	const showCustomRange = value.preset === "custom" || value.preset === null;
+	const showCustomRange: boolean = value.preset === "custom";
+
+	const handleDateChange = (field: "from" | "to", raw: string) => {
+		const val = raw || null;
+		const updated: DateFilterValue = { ...value, preset: "custom", [field]: val };
+		if (updated.from && updated.to && updated.from > updated.to) {
+			const tmp = updated.from;
+			updated.from = updated.to;
+			updated.to = tmp;
+		}
+		onChange(updated);
+	};
 
 	return (
 		<div className="filter-date">
@@ -60,7 +77,11 @@ const DateFilter = ({ config, value, onChange }: Props): JSX.Element => {
 						key={p.key}
 						type="button"
 						className={`filter-date-preset-btn${value.preset === p.key ? " active" : ""}`}
-						onClick={() => onChange(applyPreset(p.key))}
+						onClick={() =>
+						value.preset === p.key
+							? onChange({ type: "date", preset: null, from: null, to: null })
+							: onChange(applyPreset(p.key))
+					}
 					>
 						{p.label}
 					</button>
@@ -68,22 +89,18 @@ const DateFilter = ({ config, value, onChange }: Props): JSX.Element => {
 			</div>
 
 			{showCustomRange && (
-				<div className="filter-date-range">
+				<div className="filter-date-range" key={`${value.from}-${value.to}`}>
 					<Form.Control
 						type="date"
-						value={value.from ?? ""}
-						onChange={(e) =>
-							onChange({ ...value, preset: "custom", from: e.target.value || null })
-						}
+						defaultValue={value.from ?? ""}
+						onChange={(e) => handleDateChange("from", e.target.value)}
 						className="form-control--sm"
 					/>
 					<span className="filter-range-sep">to</span>
 					<Form.Control
 						type="date"
-						value={value.to ?? ""}
-						onChange={(e) =>
-							onChange({ ...value, preset: "custom", to: e.target.value || null })
-						}
+						defaultValue={value.to ?? ""}
+						onChange={(e) => handleDateChange("to", e.target.value)}
 						className="form-control--sm"
 					/>
 				</div>

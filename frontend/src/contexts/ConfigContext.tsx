@@ -13,6 +13,7 @@ export interface Config {
 	platform_sender_emails: Record<string, string>;
 	min_password_length: number;
 	app_demo_username: string;
+	scrape_max_retry: number;
 }
 
 const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);

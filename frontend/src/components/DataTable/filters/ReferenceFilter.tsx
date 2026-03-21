@@ -1,9 +1,10 @@
 import React, { JSX, useMemo } from "react";
-import Select from "react-select";
+import { CustomSelect } from "../../rendering/widgets/CustomSelect";
 import { ReferenceFilterConfig, ReferenceFilterValue } from "../FilterTypes";
 import { DataContextValue } from "../../../contexts/DataContext";
 
 interface Props {
+	columnKey: string;
 	config: ReferenceFilterConfig;
 	value: ReferenceFilterValue;
 	onChange: (v: ReferenceFilterValue) => void;
@@ -30,26 +31,18 @@ const ReferenceFilter = ({ config, value, onChange, dataContext }: Props): JSX.E
 	const selected = options.filter((o) => value.selectedIds.includes(o.value));
 
 	return (
-		<Select
+		<CustomSelect
+			id="reference-filter"
 			isMulti
 			closeMenuOnSelect={false}
 			options={options}
 			value={selected}
 			onChange={(picked) =>
-				onChange({ type: "reference", selectedIds: (picked ?? []).map((p) => p.value) })
+				onChange({ type: "reference", selectedIds: ((picked as typeof selected) ?? []).map((p) => p.value) })
 			}
-			className="react-select-container react-select-container--sm"
-			classNamePrefix="react-select"
+			size="sm"
 			placeholder="Select..."
-			menuPortalTarget={document.body}
-			menuPlacement="auto"
 			isClearable={false}
-			styles={{
-				menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-			}}
-			classNames={{
-				menuPortal: () => "react-select--sm-menu",
-			}}
 		/>
 	);
 };

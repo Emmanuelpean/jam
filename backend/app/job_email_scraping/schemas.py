@@ -61,11 +61,13 @@ class ScrapedJob(BaseModel):
     is_scraped: bool = False
     is_failed: bool = False
     scrape_datetime: datetime | None = None
-    scrape_error: str | None = None
+    scrape_error: list[dict] = []
     is_active: bool = True
     is_imported: bool = False
     is_skipped: bool = False
     skip_reason: str | None = None
+    retry_count: int = 0
+    next_retry_at: datetime | None = None
 
     # Job data
     title: str | None = None
@@ -77,6 +79,7 @@ class ScrapedJob(BaseModel):
     deadline: datetime | None = None
     parsed_location: str | None = None
     attendance_type: str | None = None
+    is_closed: bool = False
     location: str | None = None
     location_city: str | None = None
     location_postcode: str | None = None
@@ -110,6 +113,28 @@ class PaginatedScrapedJobResponse(BaseModel):
     """Paginated Scraped Job response schema"""
 
     items: list[ScrapedJobOut]
+    total: int
+    total_filtered: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class PaginatedJobEmailResponse(BaseModel):
+    """Paginated Job Email response schema"""
+
+    items: list[JobEmailOut]
+    total: int
+    total_filtered: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class PaginatedScrapedJobIdsResponse(BaseModel):
+    """Paginated Scraped Job IDs-only response schema"""
+
+    items: list[int]
     total: int
     page: int
     page_size: int
@@ -263,6 +288,7 @@ class JobInfo(BaseModel):
     raw_url: str | None = None
     deadline: dt.datetime | None = None
     salary: Salary = Field(default_factory=Salary)
+    is_closed: bool = False
 
 
 class JobResult(BaseModel):

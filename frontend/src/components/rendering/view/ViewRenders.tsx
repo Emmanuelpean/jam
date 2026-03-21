@@ -26,7 +26,7 @@ import {
 	getTrueFalseBadge,
 	getUpdateTypeIcon,
 } from "./Icons";
-import { capitalise, ensureHttpPrefix } from "../../../utils/StringUtils";
+import { ensureHttpPrefix } from "../../../utils/StringUtils";
 import {
 	applicationStatusOptions,
 	appliedViaOptions,
@@ -38,9 +38,10 @@ import {
 	sourceTypeOptions,
 	updateTypeOptions,
 } from "../form/FormOptions";
-import { scrapedJobApi } from "../../../services/api/Services";
+import { jobEmailApi, scrapedJobApi } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import ScrapedJobsTableReadOnly from "../../DataTable/ScrapedJobTableReadOnly";
+import JobEmailTableReadOnly from "../../DataTable/JobEmailTableReadOnly";
 import LoadingSpinner from "../../Spinner/Spinner";
 import {
 	AggregatorBadge,
@@ -52,7 +53,9 @@ import {
 	LocationBadge,
 	PersonBadge,
 } from "./DataBadge";
-import { JobRatingData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
+import { JobEmailData, JobRatingData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
+import JobRatingSection from "./JobRatingSection";
+import EmailBody from "./EmailBody";
 import { Currency } from "../../../services/schemas/Others";
 import { Accordion } from "../../Accordion/Accordion";
 import { HelpBubble } from "../../HelpBubble/HelpBubble";
@@ -151,6 +154,13 @@ export const renderFunctions = {
 
 	description: (param: RenderParams): ReactNode => {
 		return renderFunctions._longText(param, "description");
+	},
+
+	htmlBody: (param: RenderParams, key: string): ReactNode => {
+		const body: string | undefined | null = (param.item as JobEmailData)?.[key as keyof JobEmailData] as string;
+		if (!body) return null;
+		const isHtml = /<[a-z][\s\S]*>/i.test(body);
+		return isHtml ? <EmailBody html={body} /> : <p style={{ whiteSpace: "pre-line" }}>{body}</p>;
 	},
 
 	value: (param: RenderParams): ReactNode => {
@@ -332,6 +342,10 @@ export const renderFunctions = {
 		return getTrueFalseBadge(param.item?.is_active);
 	},
 
+	isImported: (param: RenderParams): ReactNode => {
+		return getTrueFalseBadge(param.item?.is_imported);
+	},
+
 	isRecruiter: (param: RenderParams): ReactNode => {
 		return getTrueFalseBadge(param.item?.is_recruiter);
 	},
@@ -439,20 +453,28 @@ export const renderFunctions = {
 		}
 	},
 
-	capitalise: (param: RenderParams, key: string): ReactNode => {
-		const text: string | undefined | null = param.item?.[key];
-		if (text) {
-			return capitalise(text);
-		}
-		return null;
+	jobRatingSection: (param: RenderParams): ReactNode => {
+		return <JobRatingSection scrapedJob={param.item} />;
 	},
 
-	jobRating: (param: RenderParams): ReactNode => {
-		const job_rating: JobRatingData | undefined | null = param.item?.job_rating;
-		if (!job_rating) return null;
+	platform: (param: RenderParams): ReactNode => {
+		const names: Record<string, string> = {
+			linkedin: "LinkedIn",
+			nhs: "NHS Jobs",
+			indeed: "Indeed",
+			veganjobs: "VeganJobs",
+		};
+		return names[param.item?.platform] || param.item?.platform;
+	},
 
-		// @ts-ignore
-		return <JobRatingCard jobRating={job_rating} />;
+	scrapingStatus: (param: RenderParams): ReactNode => {
+		if (!param.item) return null;
+		if (param.item.is_failed) return <span className="badge bg-danger">Failed</span>;
+		if (!param.item.is_processed && param.item.scrape_error?.length) {
+			return <span className="badge bg-warning text-dark">Retrying ({param.item.retry_count}/3)</span>;
+		}
+		if (!param.item.is_processed) return <span className="badge bg-secondary">Pending</span>;
+		return <span className="badge bg-success">Scraped</span>;
 	},
 
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
@@ -780,6 +802,12 @@ export const renderFunctions = {
 	},
 
 	accordionScrapedJobTable: (param: RenderParams) => <AccordionScrapedJobTable param={param} />,
+
+	emailScrapedJobTable: (param: RenderParams) => <EmailScrapedJobTable param={param} />,
+
+	emailScrapedJobTableReadOnly: (param: RenderParams) => <EmailScrapedJobTable param={param} viewOnly={true} />,
+
+	scrapedJobEmailTable: (param: RenderParams) => <ScrapedJobEmailTable param={param} />,
 };
 
 export const RenderViewFieldWithContext: React.FC<{
@@ -913,4 +941,67 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 			{(rows: ScrapedJobData[]) => <ScrapedJobsTableReadOnly data={rows} columns={param.columns} />}
 		</AccordionTable>
 	);
+};
+
+const EmailScrapedJobTable: React.FC<{ param: RenderParams; viewOnly?: boolean }> = ({ param, viewOnly = false }) => {
+	const [data, setData] = useState<ScrapedJobData[] | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
+	const [reloadTick, setReloadTick] = useState<number>(0);
+
+	useEffect(() => {
+		const fetchData = async (): Promise<void> => {
+			if (!param.token || !param.item.id) return;
+			if (data === null) setLoading(true);
+			try {
+				const response = await scrapedJobApi.getByEmailId(param.item.id, param.token);
+				setData(response.data);
+			} catch (error) {
+				console.error("Error fetching scraped jobs for email:", error);
+				setData([]);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchData().then();
+	}, [param.item.id, param.token, reloadTick]);
+
+	if (loading) return <LoadingSpinner size={"sm"} />;
+	if (!data?.length) return null;
+
+	return (
+		<ScrapedJobsTableReadOnly
+			data={data}
+			columns={param.columns}
+			onSuccess={() => setReloadTick((t) => t + 1)}
+			viewOnly={viewOnly}
+		/>
+	);
+};
+
+const ScrapedJobEmailTable: React.FC<{ param: RenderParams }> = ({ param }) => {
+	const [data, setData] = useState<JobEmailData[] | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
+
+	useEffect(() => {
+		const fetchData = async (): Promise<void> => {
+			if (!param.token || !param.item.id) return;
+			setLoading(true);
+			try {
+				const response = await jobEmailApi.getByScrapedJobId(param.item.id, param.token);
+				setData(response.data);
+			} catch (error) {
+				console.error("Error fetching emails for scraped job:", error);
+				setData([]);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchData().then();
+	}, [param.item.id, param.token]);
+
+	if (loading) return <LoadingSpinner size={"sm"} />;
+	if (!data?.length) return null;
+	return <JobEmailTableReadOnly data={data} modalProps={{ scrapedJobsReadOnly: true }} />;
 };

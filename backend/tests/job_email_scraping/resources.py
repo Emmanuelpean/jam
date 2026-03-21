@@ -347,6 +347,125 @@ LINKEDIN_EMAIL_6 = {
 }
 
 
+# Email 7 (TOP_APPLICANT)
+LINKEDIN_EMAIL_7_BODY = open_file("linkedin_email_7_FW.html", encoding="utf8")
+LINKEDIN_EMAIL_7_EXTRACTED = [
+    JobResult(
+        platform="linkedin",
+        job_id="4385699305",
+        company="Teya",
+        company_id=None,
+        location="Exeter (Remote)",
+        raw=None,
+        job=JobInfo(
+            title="Business Development Manager (Exeter)",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4385699305",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4385699305/?trackingId=sk%2FtzszxztootFy%2FI6Faog%3D%3D&refId=eYguv2VJCRkYQyam18b9uQ%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BfCjD0iaoT%2FuS2V%2F0xxWdcQ%3D%3D&midToken=AQEfx9iW2R4awg&midSig=3GsOE3GKbd7cc1&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_0_jobid_4385699305_ssid_7860874338_fmid_e0ok41~mmw69x8b~ok&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_0_jobid_4385699305_ssid_7860874338_fmid_e0ok41~mmw69x8b~ok-null-e0ok41~mmw69x8b~ok-null-null&eid=e0ok41-mmw69x8b-ok&otpToken=MWEwMTE5ZTYxNTJjY2JjM2I3MjQwNGVkNDExZGVmYjA4OWNiZDY0NjkwYWM4YjYxNzljNjAwNmQ0ZDUzNWFmNGZlZGRkZmIxNjBjNmRhYzg1ODhmZDNhNTMyMzNmZDAzZTVkMDliODZhYTliMjg4NWZiYjU0NywxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+            is_closed=False,
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4385935591",
+        company="Focus Group",
+        company_id=None,
+        location="Exeter (On-site)",
+        raw=None,
+        job=JobInfo(
+            title="Business Development Executive",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4385935591",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4385935591/?trackingId=ZKWRu9dlbp65hTxoYV62mQ%3D%3D&refId=eYguv2VJCRkYQyam18b9uQ%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BfCjD0iaoT%2FuS2V%2F0xxWdcQ%3D%3D&midToken=AQEfx9iW2R4awg&midSig=3GsOE3GKbd7cc1&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_1_jobid_4385935591_ssid_7860874338_fmid_e0ok41~mmw69x8b~ok&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_1_jobid_4385935591_ssid_7860874338_fmid_e0ok41~mmw69x8b~ok-null-e0ok41~mmw69x8b~ok-null-null&eid=e0ok41-mmw69x8b-ok&otpToken=MWEwMTE5ZTYxNTJjY2JjM2I3MjQwNGVkNDExZGVmYjA4OWNiZDY0NjkwYWM4YjYxNzljNjAwNmQ0ZDUzNWFmNGZlZGRkZmIxNjBjNmRhYzg1ODhmZDNhNTMyMzNmZDAzZTVkMDliODZhYTliMjg4NWZiYjU0NywxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=25000.0, max_amount=25000.0, currency="£"),
+            is_closed=False,
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4386783928",
+        company="International Workplace Group plc",
+        company_id=None,
+        location="Exeter (On-site)",
+        raw=None,
+        job=JobInfo(
+            title="Business Development Manager",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4386783928",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4386783928/?trackingId=qnoFjBw1KgeflxX6KNaluQ%3D%3D&refId=eYguv2VJCRkYQyam18b9uQ%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BfCjD0iaoT%2FuS2V%2F0xxWdcQ%3D%3D&midToken=AQEfx9iW2R4awg&midSig=3GsOE3GKbd7cc1&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_2_jobid_4386783928_ssid_7860874338_fmid_e0ok41~mmw69x8b~ok&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_2_jobid_4386783928_ssid_7860874338_fmid_e0ok41~mmw69x8b~ok-null-e0ok41~mmw69x8b~ok-null-null&eid=e0ok41-mmw69x8b-ok&otpToken=MWEwMTE5ZTYxNTJjY2JjM2I3MjQwNGVkNDExZGVmYjA4OWNiZDY0NjkwYWM4YjYxNzljNjAwNmQ0ZDUzNWFmNGZlZGRkZmIxNjBjNmRhYzg1ODhmZDNhNTMyMzNmZDAzZTVkMDliODZhYTliMjg4NWZiYjU0NywxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+            is_closed=False,
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4385957943",
+        company="Howdens",
+        company_id=None,
+        location="Newton Abbot (On-site)",
+        raw=None,
+        job=JobInfo(
+            title="Business Developer",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4385957943",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4385957943/?trackingId=GDd0geJQ%2BuEEA8pdiVsJMA%3D%3D&refId=eYguv2VJCRkYQyam18b9uQ%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BfCjD0iaoT%2FuS2V%2F0xxWdcQ%3D%3D&midToken=AQEfx9iW2R4awg&midSig=3GsOE3GKbd7cc1&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_3_jobid_4385957943_ssid_7860874338_fmid_e0ok41~mmw69x8b~ok&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_3_jobid_4385957943_ssid_7860874338_fmid_e0ok41~mmw69x8b~ok-null-e0ok41~mmw69x8b~ok-null-null&eid=e0ok41-mmw69x8b-ok&otpToken=MWEwMTE5ZTYxNTJjY2JjM2I3MjQwNGVkNDExZGVmYjA4OWNiZDY0NjkwYWM4YjYxNzljNjAwNmQ0ZDUzNWFmNGZlZGRkZmIxNjBjNmRhYzg1ODhmZDNhNTMyMzNmZDAzZTVkMDliODZhYTliMjg4NWZiYjU0NywxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+            is_closed=False,
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4383024943",
+        company="Brook",
+        company_id=None,
+        location="Cardiff (On-site)",
+        raw=None,
+        job=JobInfo(
+            title="2x Education and Wellbeing Specialist",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4383024943",
+            raw_url="https://www.linkedin.com/comm/jobs/collections/top-applicant?origin=TOP_APPLICANT_JOBS_EMAIL&currentJobId=4383024943&originToLandingJobPostings=4383024943%2C4382855685&trackingId=ExccQSwaR2qgzdOU0MMuTg%3D%3D&refId=eYguv2VJCRkYQyam18b9uQ%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BfCjD0iaoT%2FuS2V%2F0xxWdcQ%3D%3D&midToken=AQEfx9iW2R4awg&midSig=3GsOE3GKbd7cc1&trk=eml-email_job_alert_digest_01-job_card-0-jobcard_body_4383024943&trkEmail=eml-email_job_alert_digest_01-job_card-0-jobcard_body_4383024943-null-e0ok41~mmw69x8b~ok-null-null&eid=e0ok41-mmw69x8b-ok&otpToken=MWEwMTE5ZTYxNTJjY2JjM2I3MjQwNGVkNDExZGVmYjA4OWNiZDY0NjkwYWM4YjYxNzljNjAwNmQ0ZDUzNWFmNGZlZGRkZmIxNjBjNmRhYzg1ODhmZDNhNTMyMzNmZDAzZTVkMDliODZhYTliMjg4NWZiYjU0NywxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+            is_closed=False,
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4382855685",
+        company="WMJobs",
+        company_id=None,
+        location="Warwick (On-site)",
+        raw=None,
+        job=JobInfo(
+            title="Consultant in Public Health",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4382855685",
+            raw_url="https://www.linkedin.com/comm/jobs/collections/top-applicant?origin=TOP_APPLICANT_JOBS_EMAIL&currentJobId=4382855685&originToLandingJobPostings=4383024943%2C4382855685&trackingId=uT4BXvDfTbuGwiM1lCesSQ%3D%3D&refId=eYguv2VJCRkYQyam18b9uQ%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BfCjD0iaoT%2FuS2V%2F0xxWdcQ%3D%3D&midToken=AQEfx9iW2R4awg&midSig=3GsOE3GKbd7cc1&trk=eml-email_job_alert_digest_01-job_card-0-jobcard_body_4382855685&trkEmail=eml-email_job_alert_digest_01-job_card-0-jobcard_body_4382855685-null-e0ok41~mmw69x8b~ok-null-null&eid=e0ok41-mmw69x8b-ok&otpToken=MWEwMTE5ZTYxNTJjY2JjM2I3MjQwNGVkNDExZGVmYjA4OWNiZDY0NjkwYWM4YjYxNzljNjAwNmQ0ZDUzNWFmNGZlZGRkZmIxNjBjNmRhYzg1ODhmZDNhNTMyMzNmZDAzZTVkMDliODZhYTliMjg4NWZiYjU0NywxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+            is_closed=False,
+        ),
+    ),
+]
+LINKEDIN_EMAIL_7 = {
+    "id": "linkedin_7",
+    "subject": "FW: “health policy”: Threadneedle Partners - Policy Expert",
+    "from": "emmanuelpean@gmail.com",
+    "to": "",
+    "date": datetime.datetime.now(),
+    "body": LINKEDIN_EMAIL_7_BODY,
+    "platform": "linkedin",
+    "parsed_output": LINKEDIN_EMAIL_7_EXTRACTED,
+    "alert_name": "health policy",
+}
+
+
 # ------------------------------------------------------- INDEED -------------------------------------------------------
 
 
@@ -1507,6 +1626,7 @@ TEST_EMAILS = [
     LINKEDIN_EMAIL_4,
     LINKEDIN_EMAIL_5,
     LINKEDIN_EMAIL_6,
+    LINKEDIN_EMAIL_7,
     INDEED_EMAIL_3,
     INDEED_EMAIL_4,
     VEGANJOBS_EMAIL_2,

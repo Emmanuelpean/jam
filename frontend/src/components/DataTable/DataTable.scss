@@ -6,12 +6,33 @@ thead.custom-header {
 
 thead.custom-header th {
     color: white;
+
+    .form-check-input:indeterminate {
+        border-color: rgba(255, 255, 255, 0.8);
+        background-color: transparent;
+        background-image: repeating-linear-gradient(
+                        45deg,
+                        rgba(255, 255, 255, 0.75) 0px,
+                        rgba(255, 255, 255, 0.75) 2px,
+                        transparent 2px,
+                        transparent 6px
+        );
+    }
 }
 
 .text-gradient-primary {
     background: var(--primary-gradient);
     background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+.table-row--new {
+    --bs-table-bg: rgba(var(--bs-primary-rgb), 0.06) !important;
+    background-color: rgba(var(--bs-primary-rgb), 0.06) !important;
+}
+
+.table-cell--new {
+    box-shadow: inset 3px 0 0 var(--bs-primary);
 }
 
 .config-btn {
@@ -30,7 +51,8 @@ thead.custom-header th {
     }
 
     &.table-container--full-height {
-        overflow: hidden;
+        overflow: clip;
+        overflow-clip-margin: 8px;
         flex: 1 1 0;
         min-height: 0;
 
@@ -87,3 +109,52 @@ thead.custom-header th {
         }
     }
 }
+
+@keyframes bulkMenuFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.bulk-actions-dropdown .dropdown-menu {
+    min-width: 210px;
+    margin-top: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--bs-border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.13), 0 1px 6px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+    padding: 6px;
+    animation: bulkMenuFadeIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: top right;
+}
+
+.bulk-actions-dropdown .dropdown-header {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 4px 10px 6px;
+    color: var(--bs-secondary-color);
+}
+
+.bulk-actions-dropdown .dropdown-item {
+    border-radius: 6px;
+    font-size: 0.85rem;
+    padding: 6px 10px;
+    transition: background-color 0.1s;
+}
+
+.bulk-actions-dropdown .dropdown-item:hover,
+.bulk-actions-dropdown .dropdown-item:focus {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
+}
+
+.bulk-actions-dropdown .dropdown-item.text-danger:hover,
+.bulk-actions-dropdown .dropdown-item.text-danger:focus {
+    background-color: rgba(var(--bs-danger-rgb), 0.1);
+}
+
+.bulk-actions-dropdown .dropdown-divider {
+    margin: 4px 0;
+}
+

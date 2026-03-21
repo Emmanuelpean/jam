@@ -1,6 +1,11 @@
 import { SelectOption } from "../rendering/form/FormOptions";
 
-// ---- Filter configuration (defined on each column) ----
+export interface FilterPill {
+	key: string;
+	label: string;
+	summary: string;
+	onRemove: () => void;
+}
 
 export interface TextFilterConfig {
 	type: "text";
@@ -32,12 +37,9 @@ export interface NumberFilterConfig {
 
 export interface ReferenceFilterConfig {
 	type: "reference";
-	// Key in DataContext (e.g. "companies", "locations")
-	entityKey: string;
-	// Field on the row item holding the FK (e.g. "company_id"). Supports array FKs too.
-	valueField: string;
-	// Field on the referenced entity to show as label (default: "name")
-	labelKey?: string;
+	entityKey: string; // Key in DataContext (e.g. "companies", "locations")
+	valueField: string; // Field on the row item holding the FK (e.g. "company_id"). Supports array FKs too.
+	labelKey?: string; // Field on the referenced entity to show as label (default: "name")
 }
 
 export type FilterConfig =
@@ -46,8 +48,6 @@ export type FilterConfig =
 	| DateFilterConfig
 	| NumberFilterConfig
 	| ReferenceFilterConfig;
-
-// ---- Filter values (one per active column filter) ----
 
 export interface TextFilterValue {
 	type: "text";
@@ -59,13 +59,13 @@ export interface SelectFilterValue {
 	selected: string[];
 }
 
-export type DatePreset = "last7" | "last30" | "next7" | "next30" | "thisMonth" | "custom";
+export type DatePreset = "last7" | "last30" | "next7" | "next30" | "thisMonth" | "pastDeadline" | "custom";
 
 export interface DateFilterValue {
 	type: "date";
 	preset: DatePreset | null;
 	from: string | null; // YYYY-MM-DD
-	to: string | null;   // YYYY-MM-DD
+	to: string | null; // YYYY-MM-DD
 }
 
 export type NullFilter = "all" | "null" | "not_null";
@@ -91,8 +91,6 @@ export type FilterValue =
 
 export type ActiveFilters = Record<string, FilterValue>;
 
-// ---- Utility functions ----
-
 export function isFilterActive(filter: FilterValue): boolean {
 	switch (filter.type) {
 		case "text":
@@ -100,7 +98,7 @@ export function isFilterActive(filter: FilterValue): boolean {
 		case "select":
 			return filter.selected.length > 0;
 		case "date":
-			return filter.from !== null || filter.to !== null;
+			return filter.preset !== null || filter.from !== null || filter.to !== null;
 		case "number":
 			return filter.min !== null || filter.max !== null || (!!filter.nullFilter && filter.nullFilter !== "all");
 		case "reference":

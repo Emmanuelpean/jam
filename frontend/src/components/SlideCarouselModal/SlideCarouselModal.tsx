@@ -1,5 +1,6 @@
 import React, { forwardRef, JSX, useCallback, useImperativeHandle, useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
+import { ModalHeader } from "../ModalHeader/ModalHeader";
 import { ActionButton } from "../rendering/form/ActionButton";
 import { useAuth } from "../../contexts/AuthContext";
 import packageJson from "../../../package.json";
@@ -84,12 +85,12 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 		return (
 			<Modal show={show} onHide={markAsSeen} centered size="lg" className="slide-carousel-modal" id={id}
 				onEntered={measureSlides}>
-				<Modal.Header closeButton>
+				<ModalHeader onClose={markAsSeen}>
 					<Modal.Title>
 						<i className={`bi bi-${titleIcon} me-2`} />
 						{title}
 					</Modal.Title>
-				</Modal.Header>
+				</ModalHeader>
 				<Modal.Body>
 					{/* Hidden container to measure all slides */}
 					<div ref={measureRef} className="carousel-measure-container">

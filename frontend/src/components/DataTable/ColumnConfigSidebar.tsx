@@ -1,13 +1,13 @@
 import React, { JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Form } from "react-bootstrap";
-import Select, { SingleValue } from "react-select";
+import { CustomSelect } from "../rendering/widgets/CustomSelect";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { TableColumn } from "../rendering/view/TableColumns";
 import { SelectOption } from "../rendering/form/FormOptions";
-import { SortConfig, Direction } from "./DataTable";
 import "./ColumnConfigSidebar.scss";
+import { Direction, SortConfig } from "../../services/schemas/Core";
 
 interface SortableItemProps {
 	column: TableColumn;
@@ -91,7 +91,7 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 			setItems(ordered);
 			setSortKey(currentSort.key);
 			setSortDirection(currentSort.direction);
-			requestAnimationFrame(() => {
+			requestAnimationFrame((): void => {
 				initialised.current = true;
 			});
 		}
@@ -141,7 +141,7 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 		});
 	};
 
-	const handleSortKeyChange = (selected: SingleValue<SelectOption>): void => {
+	const handleSortKeyChange = (selected: SelectOption | null): void => {
 		if (!selected) return;
 		setSortKey(selected.value);
 		void onSortChange({ key: selected.value, direction: sortDirection });
@@ -180,13 +180,19 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 
 	return (
 		<>
-			<div className={`column-config-sidebar${isOpen ? " open" : ""}`}>
+			<div id="column-config-sidebar" className={`column-config-sidebar${isOpen ? " open" : ""}`}>
 				<div className="column-config-header">
 					<h6 className="mb-0">
 						<i className="bi bi-layout-three-columns me-2"></i>
 						Column Configuration
 					</h6>
-					<button type="button" className="btn-close" onClick={onClose} aria-label="Close"></button>
+					<button
+						type="button"
+						id="column-config-close-btn"
+						className="btn-close"
+						onClick={onClose}
+						aria-label="Close"
+					></button>
 				</div>
 				<div className="column-config-body">
 					<div className="column-config-section-label">
@@ -219,21 +225,18 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 
 					<div className="column-config-section-label mt-3">Default Sort</div>
 					<div className="column-config-sort">
-						<Select<SelectOption>
+						<CustomSelect
+							id="column-config-sort"
 							value={selectedSortOption}
-							onChange={handleSortKeyChange}
+							onChange={(selected) => handleSortKeyChange(selected as SelectOption | null)}
 							options={sortOptions}
 							isSearchable={false}
 							isClearable={false}
-							menuPortalTarget={document.body}
-							menuPlacement="auto"
-							className="react-select-container react-select-container--sm column-config-sort-select"
-							classNamePrefix="react-select"
-							classNames={{
-								menuPortal: () => "react-select--sm-menu",
-							}}
+							size="sm"
+							className="mb-2"
 						/>
 						<Button
+							id="column-config-sort-direction-btn"
 							variant="outline-primary"
 							className="column-config-sort-btn"
 							onClick={() => handleSortDirectionChange(sortDirection === "asc" ? "desc" : "asc")}
@@ -245,7 +248,12 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 					</div>
 				</div>
 				<div className="column-config-footer">
-					<Button style={{ width: "100%" }} onClick={handleReset} disabled={saving || isDefault}>
+					<Button
+						id="column-config-reset-btn"
+						style={{ width: "100%" }}
+						onClick={handleReset}
+						disabled={saving || isDefault}
+					>
 						<i className="bi bi-arrow-counterclockwise me-1"></i>
 						Reset to Defaults
 					</Button>

@@ -46,8 +46,8 @@ def parse_nhs_job_email(body: str) -> list[JobResult]:
 
         # Extract job ID from URL
         if url:
-            # NHS Jobs URLs are in format: /candidate/jobadvert/CODE-YY-NNNN
-            job_id_pattern = r"/candidate/jobadvert/([A-Z0-9\-]+)"
+            # NHS Jobs URLs are in format: /candidate/jobadvert/ALPHANUMERIC-ID
+            job_id_pattern = r"/candidate/jobadvert/([A-Za-z0-9\-]+)"
             match = re.search(job_id_pattern, url)
             if match:
                 job_id = match.group(1)

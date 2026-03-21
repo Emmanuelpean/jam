@@ -13,7 +13,7 @@ In test mode the frontend polls every 2s instead of 30s.
 import time
 from datetime import datetime, timedelta, timezone
 
-from conftest import BaseTest
+from base_test import BaseTest
 
 # Timeout that comfortably exceeds the 2s test-mode poll interval
 POLL_TIMEOUT = 5

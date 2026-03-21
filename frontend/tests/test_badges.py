@@ -1,6 +1,6 @@
 """Tests for the scraped jobs."""
 
-from conftest import BaseTest
+from base_test import BaseTest
 
 
 class TestBadge(BaseTest):

@@ -10,12 +10,17 @@
 	border-radius: 0.5rem;
 	transform: translateX(100%);
 	margin-right: -320px;
+	visibility: hidden;
 	transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
 		margin-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
 	&.open {
 		transform: translateX(0);
 		margin-right: 0;
+		visibility: visible;
+		transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+			margin-right 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+			visibility 0s;
 	}
 }
 
@@ -137,31 +142,6 @@
 .column-config-sort {
 	padding: 0.25rem 0.5rem;
 	align-items: center;
-}
-
-.column-config-sort-select {
-	flex: 1;
-	min-width: 0;
-	font-size: 0.85rem;
-	padding-bottom: 0.5rem;
-
-	.react-select__control {
-		min-height: 42px !important;
-		font-size: 1rem;
-	}
-
-	.react-select__value-container {
-		min-height: unset !important;
-		padding: 0 0.5rem;
-	}
-
-	.react-select__single-value {
-		font-size: 0.8rem;
-	}
-
-	.react-select__indicator {
-		padding: 0.25rem;
-	}
 }
 
 .column-config-sort-btn {

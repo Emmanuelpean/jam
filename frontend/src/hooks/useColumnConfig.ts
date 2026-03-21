@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { TableColumn } from "../components/rendering/view/TableColumns";
-import { getDefaultColumns, getDefaultColumnKeys, resolveColumns } from "../components/DataTable/columnRegistry";
-import { SortConfig } from "../components/DataTable/DataTable";
+import { getDefaultColumnKeys, getDefaultColumns, resolveColumns } from "../components/DataTable/columnRegistry";
+import { SortConfig, TableSortConfigs } from "../services/schemas/Core";
 
 export interface ColumnConfig {
 	visibleColumns: TableColumn[];
@@ -22,8 +22,8 @@ export function useColumnConfig(entityType: string, defaultColumns?: TableColumn
 		return currentUser?.preferences?.table_columns?.[entityType] ?? null;
 	}, [currentUser, entityType]);
 
-	const savedSort: SortConfig | null = useMemo(() => {
-		const s = currentUser?.preferences?.table_sort?.[entityType];
+	const savedSort: SortConfig | null = useMemo((): SortConfig | null => {
+		const s: SortConfig | undefined = currentUser?.preferences?.table_sort?.[entityType];
 		if (!s) return null;
 		return { key: s.key, direction: s.direction as SortConfig["direction"] };
 	}, [currentUser, entityType]);
@@ -31,7 +31,8 @@ export function useColumnConfig(entityType: string, defaultColumns?: TableColumn
 	const allColumns: TableColumn[] = useMemo((): TableColumn[] => getDefaultColumns(entityType), [entityType]);
 
 	const defaultKeys: string[] = useMemo((): string[] => {
-		if (defaultColumns && defaultColumns.length > 0) return defaultColumns.map((col) => col.key);
+		if (defaultColumns && defaultColumns.length > 0)
+			return defaultColumns.map((col: TableColumn): string => col.key);
 		return getDefaultColumnKeys(entityType);
 	}, [entityType, defaultColumns]);
 
@@ -57,8 +58,8 @@ export function useColumnConfig(entityType: string, defaultColumns?: TableColumn
 	);
 
 	const setSortConfig = useCallback(
-		async (sort: SortConfig) => {
-			const existing = currentUser?.preferences?.table_sort ?? {};
+		async (sort: SortConfig): Promise<void> => {
+			const existing: TableSortConfigs = currentUser?.preferences?.table_sort ?? {};
 			await updateCurrentUser({
 				preferences: {
 					table_sort: { ...existing, [entityType]: { key: sort.key, direction: sort.direction } },
@@ -70,7 +71,7 @@ export function useColumnConfig(entityType: string, defaultColumns?: TableColumn
 
 	const resetToDefaults = useCallback(async (): Promise<void> => {
 		const existingCols = currentUser?.preferences?.table_columns ?? {};
-		const existingSort = currentUser?.preferences?.table_sort ?? {};
+		const existingSort: TableSortConfigs = currentUser?.preferences?.table_sort ?? {};
 		const updatedCols = { ...existingCols };
 		const updatedSort = { ...existingSort };
 		delete updatedCols[entityType];

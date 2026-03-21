@@ -9,7 +9,6 @@ import JobsPage from "./pages/DataTablePages/JobsPage";
 import PersonPage from "./pages/DataTablePages/PersonPage";
 import KeywordsPage from "./pages/DataTablePages/KeywordsPage";
 import InterviewsPage from "./pages/DataTablePages/InterviewsPage";
-import JobScraperDashboard from "./pages/Services/JobScrapingDashboard/JobScraperDashboardPage";
 import AggregatorsPage from "./pages/DataTablePages/AggregatorsPage";
 import { NotAuthorisedPage, NotFoundPage } from "./pages/NotFoundPage";
 import { Sidebar } from "./components/Sidebar/Sidebar";
@@ -20,7 +19,6 @@ import { UserManagementPage } from "./pages/DataTablePages/UserManagementPage";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 import { useToast, UseToastReturn } from "./hooks/useNotificationToast";
 import { ToastStack } from "./components/Toasts/Toast";
-import SettingsPage from "./pages/DataTablePages/SettingsPage";
 import TermsPage from "./pages/Auth/TermsPage";
 import PrivacyPolicyPage from "./pages/Auth/PrivacyPolicyPage";
 import AboutPage from "./pages/About/AboutPage";
@@ -30,19 +28,18 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.scss";
 import "./Themes.scss";
 import { AlertProvider } from "./contexts/AlertContext";
-import JobRatingDashboard from "./pages/Services/JobRatingDashboard/JobRatingDashboardPage";
 import SpeculativeApplicationsPage from "./pages/DataTablePages/SpeculativeApplicationsPage";
 import { ContextMenuProvider } from "./contexts/ContextMenuContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProgressOverlayProvider } from "./contexts/useProgressOverlayContext";
 import { ScrapedJobsPage } from "./pages/DataTablePages/ScrapedJobsPage";
 import { StyleGuidePage } from "./pages/StylePage";
-import { EmailTemplatesPage } from "./pages/Admin/EmailTemplatesPage";
 import { ConfigProvider } from "./contexts/ConfigContext";
 import { StatusProvider } from "./contexts/StatusContext";
 import { MaintenanceBanner } from "./components/AppBanner/MaintenanceBanner";
 import { DemoBanner } from "./components/AppBanner/DemoBanner";
 import { WhatsNewProvider } from "./contexts/WhatsNewContext";
+import ServiceDashboards from "./pages/Services/ServiceDashboards";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -190,21 +187,11 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/dashboard", element: <Dashboard />, protected: true },
 	{ path: "/settings/:tab", element: <UserSettingsPage />, protected: true },
 	{ path: "/settings", element: <Navigate to="/settings/account" replace />, protected: true },
-	{ path: "/users", element: <UserManagementPage />, protected: true, adminOnly: true },
-	{
-		path: "/job-scraping-dashboard",
-		element: <JobScraperDashboard />,
-		protected: true,
-		adminOnly: true,
-	},
-	{
-		path: "/job-rating-dashboard",
-		element: <JobRatingDashboard />,
-		protected: true,
-		adminOnly: true,
-	},
-	{ path: "/app-settings", element: <SettingsPage />, protected: true, adminOnly: true },
-	{ path: "/email-templates", element: <EmailTemplatesPage />, protected: true, adminOnly: true },
+	{ path: "/app/users", element: <UserManagementPage />, protected: true, adminOnly: true },
+	{ path: "/app/settings", element: <UserManagementPage />, protected: true, adminOnly: true },
+	{ path: "/app/email-templates", element: <UserManagementPage />, protected: true, adminOnly: true },
+	{ path: "/services/job-scraping", element: <ServiceDashboards />, protected: true, adminOnly: true },
+	{ path: "/services/job-rating", element: <ServiceDashboards />, protected: true, adminOnly: true },
 	{ path: "*", element: <NotFoundPage /> },
 ];
 

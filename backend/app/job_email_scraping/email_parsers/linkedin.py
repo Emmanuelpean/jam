@@ -88,6 +88,11 @@ def parse_linkedin_job_email(body: str) -> list[JobResult]:
                         job_id = str(int(float(matches[0])))
                     except (ValueError, OverflowError):
                         job_id = matches[0]
+                else:
+                    # Handle collection URLs (e.g. top-applicant) with currentJobId query param
+                    current_job_match = re.search(r"[?&]currentJobId=(\d+)", url, re.IGNORECASE)
+                    if current_job_match:
+                        job_id = current_job_match.group(1)
 
         # Extract company name and location
         company_location_tag = card.find(

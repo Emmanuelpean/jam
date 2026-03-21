@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     max_file_size_mb: int
     min_password_length: int
     monthly_scrape_quota: int
+    scrape_retry_delay_hours: float
+    scrape_max_retry: int
     min_scraping_description_length: int
     max_scraping_description_length: int
     max_scraping_title_length: int
@@ -83,9 +85,7 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str
     stripe_toast_price_id: str
 
-    model_config = SettingsConfigDict(
-        env_file=Path(__file__).parent.parent / ".env",
-    )
+    model_config = SettingsConfigDict(env_file=Path(__file__).parent.parent / ".env", extra="allow")
 
 
 settings = Settings()  # type: ignore[call-arg]

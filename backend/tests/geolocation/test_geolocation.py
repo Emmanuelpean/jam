@@ -2,10 +2,10 @@
 
 import threading
 import time
+from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
-from unittest.mock import MagicMock, patch
 
 import app.geolocation.geolocation as geolocation_module
 from app.geolocation.geolocation import call_geocoding_api, geocode_location

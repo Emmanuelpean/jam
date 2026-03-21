@@ -1,6 +1,6 @@
 """Tests for the scraped jobs."""
 
-from conftest import BaseTest, models
+from base_test import BaseTest, models
 
 
 class TestFollowUpEmail(BaseTest):

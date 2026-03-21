@@ -8,7 +8,6 @@ import {
 	applicationStatusOptions,
 	attendanceTypeOptions,
 	interviewTypeOptions,
-	sourceTypeOptions,
 	updateTypeOptions,
 } from "../form/FormOptions";
 
@@ -273,14 +272,34 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	isImportedColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_imported",
+		label: "Imported",
+		sortable: true,
+		searchable: false,
+		type: "boolean",
+		render: renderFunctions.isImported,
+		...overrides,
+	}),
+
+	isActiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_active",
+		label: "Active",
+		sortable: true,
+		searchable: true,
+		type: "boolean",
+		render: renderFunctions.isActive,
+		...overrides,
+	}),
+
 	platformColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "platform",
 		label: "Platform",
 		sortable: true,
 		searchable: true,
 		type: "text",
-		render: (params: RenderParams) => renderFunctions.capitalise(params, "platform"),
-		filterConfig: { type: "select", options: sourceTypeOptions },
+		render: renderFunctions.platform,
+		filterConfig: { type: "text" },
 		...overrides,
 	}),
 
@@ -390,6 +409,7 @@ export const tableColumns = {
 		searchable: true,
 		type: "text",
 		render: renderFunctions.urlGeneric,
+		filterConfig: { type: "text" },
 		...overrides,
 	}),
 
@@ -473,6 +493,7 @@ export const tableColumns = {
 		filterConfig: {
 			type: "date",
 			presets: [
+				{ key: "pastDeadline", label: "Past deadline" },
 				{ key: "next7", label: "Next 7 days" },
 				{ key: "next30", label: "Next 30 days" },
 				{ key: "thisMonth", label: "This month" },
@@ -613,7 +634,7 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	isActiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	isEnabledColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "is_enabled",
 		label: "Active",
 		sortable: true,
@@ -662,7 +683,7 @@ export const tableColumns = {
 		sortable: true,
 		type: "number",
 		render: renderFunctions.personalRating,
-		filterConfig: { type: "number", min: 0, max: 5, step: 1, display: "slider" },
+		filterConfig: { type: "number", min: 0, max: 5, step: 1, display: "slider", nullable: true },
 		...overrides,
 	}),
 
@@ -850,7 +871,13 @@ export const tableColumns = {
 		searchable: false,
 		sortField: (item: JamData) => (item as any).interviews?.length || 0,
 		render: renderFunctions.interviewCount,
-		filterConfig: { type: "number", min: 0, max: 20, step: 1, display: "slider" },
+		filterConfig: {
+			type: "number",
+			min: 0,
+			step: 1,
+			display: "slider",
+			max: (ctx: DataContextValue) => maxCount(ctx.jobs, (j: any) => j.interviews?.length || 0),
+		},
 		...overrides,
 	}),
 
@@ -861,7 +888,64 @@ export const tableColumns = {
 		searchable: false,
 		sortField: (item: JamData) => (item as any).updates?.length || 0,
 		render: renderFunctions.jobApplicationUpdateCount,
-		filterConfig: { type: "number", min: 0, max: 20, step: 1, display: "slider" },
+		filterConfig: {
+			type: "number",
+			min: 0,
+			step: 1,
+			display: "slider",
+			max: (ctx: DataContextValue) => maxCount(ctx.jobs, (j: any) => j.updates?.length || 0),
+		},
+		...overrides,
+	}),
+
+	scrapingStatusColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_processed",
+		label: "Status",
+		sortable: true,
+		searchable: false,
+		render: renderFunctions.scrapingStatus,
+		...overrides,
+	}),
+
+	// -------------------------------------------------- JOB EMAIL --------------------------------------------------
+
+	senderColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "sender",
+		label: "Sender",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		filterConfig: { type: "text" },
+		...overrides,
+	}),
+
+	alertNameColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "alert_name",
+		label: "Alert Name",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		filterConfig: { type: "text" },
+		...overrides,
+	}),
+
+	jobsFoundColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "job_found_n",
+		label: "Jobs Found",
+		sortable: true,
+		type: "number",
+		filterConfig: { type: "number", min: 0, max: 100, step: 1, display: "slider" },
+		...overrides,
+	}),
+
+	dateReceivedColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "date_received",
+		label: "Date Received",
+		sortable: true,
+		type: "date",
+		searchFields: (item: JamData) => ("date_received" in item && item.date_received ? toDdMmYyyy(item.date_received) : ""),
+		render: (params: RenderParams) => renderFunctions._date(params, "date_received"),
+		filterConfig: { type: "date" },
 		...overrides,
 	}),
 };

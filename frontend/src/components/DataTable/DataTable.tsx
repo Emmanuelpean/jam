@@ -6,7 +6,6 @@ import React, {
 	useCallback,
 	useEffect,
 	useImperativeHandle,
-	useMemo,
 	useRef,
 	useState,
 } from "react";
@@ -39,26 +38,27 @@ import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
 import "./DataTable.scss";
 import FollowUpModal, { FollowUpModalHandle } from "../FollowUpModal/FollowUpModal";
 import { useContextMenu } from "../../contexts/ContextMenuContext";
-import PageHeader, { FilterPill } from "../../pages/PageHeader/PageHeader";
+import PageHeader from "../../pages/PageHeader/PageHeader";
+import FilterPillsRow from "./FilterPillsRow";
 import { ColumnConfig, useColumnConfig } from "../../hooks/useColumnConfig";
 import ColumnConfigSidebar from "./ColumnConfigSidebar";
 import FilterSidebar from "./FilterSidebar";
-import {
-	ActiveFilters,
-	countActiveFilters,
-	DatePreset,
-	isFilterActive,
-	ReferenceFilterConfig,
-	SelectFilterConfig,
-} from "./FilterTypes";
+import { isFilterActive } from "./FilterTypes";
 import { applyFilters } from "./filterLogic";
+import BulkActionsDropdown from "./BulkActionsDropdown";
+import { useTableFilters } from "./useTableFilters";
+import { Direction, SortConfig } from "../../services/schemas/Core";
 
-export type Direction = "asc" | "desc";
-
-export interface SortConfig {
-	key: string;
-	direction: Direction;
-}
+export type BulkAction =
+	| {
+			type?: "action";
+			label: string;
+			icon?: string;
+			variant?: string;
+			onClick: (ids: number[]) => void | Promise<void>;
+	  }
+	| { type: "divider" }
+	| { type: "header"; label: string };
 
 export interface DataTableProps {
 	data?: any | null;
@@ -66,6 +66,10 @@ export interface DataTableProps {
 	showAdd?: boolean;
 	menuItems?: string[] | ((item: any) => string[]);
 	title?: string;
+	onTotalCountChange?: (count: number) => void;
+	onSuccess?: () => void;
+	reloadTrigger?: number;
+	modalProps?: any;
 }
 
 export interface GenericTableProps {
@@ -83,6 +87,7 @@ export interface GenericTableProps {
 	columns?: TableColumn[];
 	initialSortConfig?: Partial<SortConfig>;
 	menuItems?: string[] | ((item: any) => string[]);
+	rowMode?: (item: any) => "default" | "import";
 
 	// Modal configuration
 	Modal: React.ComponentType<any>;
@@ -109,10 +114,19 @@ export interface GenericTableProps {
 
 	// Column configuration
 	enableColumnConfig?: boolean;
+
+	// Multi-select
+	enableMultiSelect?: boolean;
+	bulkActions?: BulkAction[];
+	rowIndicator?: (item: any) => boolean;
+
+	onTotalCountChange?: (count: number) => void;
+	onSuccess?: () => void;
 }
 
 export interface DataTableHandle {
 	openAddModal: (data?: any) => void;
+	clearSelection: () => void;
 }
 
 export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
@@ -136,37 +150,51 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			initialData = {},
 			children,
 			menuItems,
+			rowMode,
 			toolbarAddon,
 			reloadTrigger,
 			queryParams,
 			defaultModalMode = "view",
 			enableColumnConfig = false,
+			enableMultiSelect = false,
+			bulkActions = [],
+			rowIndicator,
+			onTotalCountChange,
+			onSuccess,
 		}: GenericTableProps,
 		ref
 	): JSX.Element => {
 		const { token } = useAuth();
 		const columnConfig: ColumnConfig = useColumnConfig(entityType, enableColumnConfig ? columns : undefined);
 		const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
-		const [filterSidebarOpen, setFilterSidebarOpen] = useState<boolean>(false);
-		const [filters, setFilters] = useState<ActiveFilters>({});
+		const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 		const effectiveColumns: TableColumn[] = enableColumnConfig ? columnConfig.visibleColumns : columns;
 		const columnSidebarRef = useRef<HTMLDivElement>(null);
-		const filterSidebarRef = useRef<HTMLDivElement>(null);
+		const dataContext: DataContextValue = useDataContext();
+		const {
+			filters,
+			setFilters,
+			filterSidebarOpen,
+			setFilterSidebarOpen,
+			filterSidebarRef,
+			filterPills,
+			activeFilterCount,
+		} = useTableFilters({ enableColumnConfig, columnConfig, effectiveColumns, dataContext });
 		const modalRef = useRef<DataModalHandle>(null);
 		const openViewModal = (item: any): void | undefined => modalRef.current?.showView(item);
 		const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
 		const openAddModal = (data?: any) => modalRef.current?.showAdd(data ?? initialData);
 		const openImportModal = (item: any): void | undefined => modalRef.current?.showImport(item);
 
-		useImperativeHandle(ref, () => ({ openAddModal }));
+		useImperativeHandle(ref, () => ({ openAddModal, clearSelection: () => setSelectedIds(new Set()) }));
 
 		// Close sidebars on outside click
 		useEffect(() => {
 			if (!columnSidebarOpen && !filterSidebarOpen) return;
 			const handleClickOutside = (e: Event) => {
 				const target = e.target as Element;
-				// Ignore clicks on portalled menus (react-select dropdowns)
-				if (target?.closest?.(".react-select__menu-portal")) return;
+				// Ignore clicks on portalled menus (custom select dropdowns)
+				if (target?.closest?.(".jam-select__portal")) return;
 				// Ignore clicks on sidebar toggle buttons
 				if (target?.closest?.("[data-sidebar-toggle]")) return;
 				const isInsideAnySidebar =
@@ -183,85 +211,6 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		// Add context menu hook
 		const { openContextMenu } = useContextMenu();
 
-		// Data management
-		const dataContext: DataContextValue = useDataContext();
-		const filterPills: FilterPill[] = useMemo(() => {
-			return Object.entries(filters)
-				.filter(([, val]) => isFilterActive(val))
-				.flatMap(([key, val]) => {
-					const allCols = enableColumnConfig ? columnConfig.allColumns : effectiveColumns;
-					const col = allCols.find((c) => c.key === key);
-					if (!col) return [];
-					let summary = "";
-					switch (val.type) {
-						case "text":
-							summary = `"${val.value}"`;
-							break;
-						case "select": {
-							const cfg = col.filterConfig as SelectFilterConfig;
-							const names = val.selected.map((v) => cfg.options.find((o) => o.value === v)?.label ?? v);
-							summary = names.slice(0, 2).join(", ");
-							if (names.length > 2) summary += ` +${names.length - 2}`;
-							break;
-						}
-						case "date": {
-							const presetLabels: Record<DatePreset, string> = {
-								last7: "Last 7 days",
-								last30: "Last 30 days",
-								next7: "Next 7 days",
-								next30: "Next 30 days",
-								thisMonth: "This month",
-								custom: "",
-							};
-							if (val.preset && val.preset !== "custom") {
-								summary = presetLabels[val.preset];
-							} else if (val.from && val.to) {
-								summary = `${val.from} \u2013 ${val.to}`;
-							} else if (val.from) {
-								summary = `From ${val.from}`;
-							} else {
-								summary = `Until ${val.to}`;
-							}
-							break;
-						}
-						case "number": {
-							const parts: string[] = [];
-							if (val.min !== null && val.max !== null) parts.push(`${val.min} \u2013 ${val.max}`);
-							else if (val.min !== null) parts.push(`\u2265 ${val.min}`);
-							else if (val.max !== null) parts.push(`\u2264 ${val.max}`);
-							if (val.nullFilter === "not_null") parts.push("Not null");
-							else if (val.nullFilter === "null") parts.push("Null only");
-							summary = parts.join(", ");
-							break;
-						}
-						case "reference": {
-							const cfg = col.filterConfig as ReferenceFilterConfig;
-							const entities: any[] = (dataContext as any)[cfg.entityKey] ?? [];
-							const lk = cfg.labelKey ?? "name";
-							const names = val.selectedIds.map((id) => {
-								const e = entities.find((en) => String(en.id) === id);
-								return e ? String(e[lk] ?? e.id) : id;
-							});
-							summary = names.slice(0, 2).join(", ");
-							if (names.length > 2) summary += ` +${names.length - 2}`;
-							break;
-						}
-					}
-					return [
-						{
-							key,
-							label: col.label,
-							summary,
-							onRemove: () =>
-								setFilters((prev) => {
-									const u = { ...prev };
-									delete u[key];
-									return u;
-								}),
-						},
-					];
-				});
-		}, [filters, effectiveColumns, dataContext, enableColumnConfig, columnConfig.allColumns]);
 		const [isLoading, setIsLoading] = useState<boolean>(false);
 		const [loadError, setLoadError] = useState<string | null>(null);
 		const [fetchedData, setFetchedData] = useState<any[]>([]);
@@ -290,7 +239,12 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		const [currentPage, setCurrentPage] = useState<number>(0);
 		const [pageSize, setPageSize] = useState<number>(20);
 		const [totalCount, setTotalCount] = useState<number>(0);
+		const [totalFilteredCount, setTotalFilteredCount] = useState<number>(0);
 		const [showSpinner, setShowSpinner] = useState<boolean>(false);
+
+		useEffect(() => {
+			onTotalCountChange?.(totalCount);
+		}, [totalCount, onTotalCountChange]);
 		const followUpModalRef = useRef<FollowUpModalHandle>(null);
 
 		useEffect(() => {
@@ -316,36 +270,36 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 		// Reset page when debounced search or filters change
 		useEffect(() => {
 			setCurrentPage(0);
+			setSelectedIds(new Set());
 		}, [debouncedSearchTerm, sortConfig, pageSize, filters]);
+
+		const buildPagedParams = (page: number, size: number): URLSearchParams => {
+			const params = new URLSearchParams({
+				page: page.toString(),
+				page_size: size.toString(),
+				sort_by: sortConfig.key,
+				sort_direction: sortConfig.direction,
+				search: debouncedSearchTerm,
+			});
+			if (queryParams) {
+				Object.entries(queryParams).forEach(([key, value]) => params.set(key, value));
+			}
+			const activeFilterEntries = Object.entries(filters).filter(([, v]) => isFilterActive(v));
+			if (activeFilterEntries.length > 0) {
+				params.set("filters", JSON.stringify(Object.fromEntries(activeFilterEntries)));
+			}
+			return params;
+		};
 
 		const fetchData = async (): Promise<void> => {
 			setIsLoading(true);
 			setLoadError(null);
-
 			try {
-				const params = new URLSearchParams({
-					page: currentPage.toString(),
-					page_size: pageSize.toString(),
-					sort_by: sortConfig.key,
-					sort_direction: sortConfig.direction,
-					search: debouncedSearchTerm,
-				});
-
-				if (queryParams) {
-					Object.entries(queryParams).forEach(([key, value]) => {
-						params.set(key, value);
-					});
-				}
-
-				// Send active column filters to the backend
-				const activeFilterEntries = Object.entries(filters).filter(([, v]) => isFilterActive(v));
-				if (activeFilterEntries.length > 0) {
-					params.set("filters", JSON.stringify(Object.fromEntries(activeFilterEntries)));
-				}
-
+				const params: URLSearchParams = buildPagedParams(currentPage, pageSize);
 				const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
 				setFetchedData(response.data.items);
 				setTotalCount(response.data.total);
+				setTotalFilteredCount(response.data.total_filtered);
 			} catch (error: any) {
 				setLoadError(error.message || "Failed to load data");
 			} finally {
@@ -493,7 +447,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 				currentElement = currentElement.parentElement;
 			}
 
-			if (mode === "import") {
+			if ((rowMode ? rowMode(item) : mode) === "import") {
 				openImportModal(item);
 			} else {
 				if (defaultModalMode === "edit") {
@@ -527,29 +481,29 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 				fetchData().then((): null => null);
 			}
 			showToastSuccess("Job imported successfully.");
+			onSuccess?.();
 		};
 
 		const handleDeleteSuccess = (): void => {
 			if (isServerPagination) {
 				fetchData().then((): null => null);
 			}
+			onSuccess?.();
 		};
 
 		// Pagination calculations
 		const sortedData: JamData[] = isServerPagination ? data : getSortedData();
 		let currentPageData: any[];
 		let totalPages: number;
-		let displayTotal: number;
+		const displayTotal: number = isServerPagination ? totalFilteredCount : sortedData.length;
 
 		if (isServerPagination) {
 			// Server-side: data already paginated
 			currentPageData = sortedData;
-			displayTotal = totalCount;
-			totalPages = Math.ceil(totalCount / pageSize);
+			totalPages = Math.ceil(totalFilteredCount / pageSize);
 		} else {
 			// Client-side: do pagination ourselves
-			displayTotal = sortedData.length;
-			totalPages = Math.ceil(displayTotal / pageSize);
+			totalPages = Math.ceil(sortedData.length / pageSize);
 
 			if (showAllEntries) {
 				currentPageData = sortedData;
@@ -559,6 +513,18 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 				currentPageData = sortedData.slice(startIndex, endIndex);
 			}
 		}
+
+		useEffect(() => {
+			if (!isServerPagination) {
+				setTotalFilteredCount(sortedData.length);
+			}
+		}, [sortedData, isServerPagination]);
+
+		useEffect(() => {
+			if (!isServerPagination) {
+				setTotalCount(data.length);
+			}
+		}, [data, isServerPagination]);
 
 		const handleSnoozeItem = (weeks: number): ((item: JamData) => Promise<void>) => {
 			return async (item: JamData): Promise<void> => {
@@ -701,6 +667,44 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			);
 		};
 
+		// Bulk selection handlers
+		const handleSelectAll = (checked: boolean): void => {
+			if (checked) {
+				setSelectedIds(new Set(currentPageData.map((item: any) => item.id)));
+			} else {
+				setSelectedIds(new Set());
+			}
+		};
+
+		const handleSelectRow = (id: number, checked: boolean): void => {
+			setSelectedIds((prev) => {
+				const next = new Set(prev);
+				if (checked) next.add(id);
+				else next.delete(id);
+				return next;
+			});
+		};
+
+		const handleBulkAction = async (action: Extract<BulkAction, { type?: "action" }>): Promise<void> => {
+			try {
+				let ids: number[];
+				if (selectedIds.size > 0) {
+					ids = [...selectedIds];
+				} else if (isServerPagination && totalCount > 0) {
+					const params: URLSearchParams = buildPagedParams(0, totalCount);
+					params.set("ids_only", "true");
+					const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
+					ids = response.data.items.map(String);
+				} else {
+					ids = sortedData.map((item: any): number => item.id);
+				}
+				await action.onClick(ids);
+				setSelectedIds(new Set());
+			} catch (error: any) {
+				showToastError(error?.message || "Bulk action failed. Please try again.");
+			}
+		};
+
 		// Render
 		if (contextError) {
 			return <div className="alert alert-danger mt-3">{contextError.message}</div>;
@@ -717,16 +721,11 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 
 		return (
 			<>
-				<div className={`table-container${!compact ? " table-container--full-height" : ""}`}>
-					{title && (
-						<PageHeader
-							title={title}
-							count={totalCount || data.length}
-							icon={getTableIcon(title)}
-							filterPills={filterPills}
-						/>
-					)}
+				{title && (
+					<PageHeader title={title} count={totalFilteredCount || data.length} icon={getTableIcon(title)} />
+				)}
 
+				<div className={`table-container${!compact ? " table-container--full-height" : ""}`}>
 					<div
 						className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
 						style={{ gap: compact ? "0.5rem" : "1rem" }}
@@ -742,7 +741,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 									id="search-input"
 								/>
 								<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
-									Showing {displayTotal} Entries
+									Showing {totalFilteredCount} of {totalCount} Entries
 								</span>
 							</div>
 						)}
@@ -765,10 +764,23 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								{`Add ${entityName}`}
 							</Button>
 						)}
+						{enableMultiSelect && (
+							<BulkActionsDropdown
+								selectedCount={selectedIds.size}
+								totalCount={displayTotal}
+								actions={bulkActions}
+								onAction={handleBulkAction}
+								onClearSelection={() => setSelectedIds(new Set())}
+							/>
+						)}
 						{enableColumnConfig && !compact && (
 							<Button
+								id="column-config-toggle-btn"
 								variant={columnSidebarOpen ? "primary" : "outline-primary"}
-								onClick={() => setColumnSidebarOpen(!columnSidebarOpen)}
+								onClick={() => {
+									setColumnSidebarOpen(!columnSidebarOpen);
+									setFilterSidebarOpen(false);
+								}}
 								className={"config-btn"}
 								data-sidebar-toggle="column"
 							>
@@ -777,13 +789,17 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 						)}
 						{enableColumnConfig && !compact && (
 							<Button
+								id="filter-toggle-btn"
 								variant={filterSidebarOpen ? "primary" : "outline-primary"}
 								className={"config-btn"}
-								onClick={() => setFilterSidebarOpen(!filterSidebarOpen)}
+								onClick={() => {
+									setFilterSidebarOpen(!filterSidebarOpen);
+									setColumnSidebarOpen(false);
+								}}
 								data-sidebar-toggle="filter"
 							>
 								<i className="bi bi-funnel"></i>
-								{countActiveFilters(filters) > 0 && (
+								{activeFilterCount > 0 && (
 									<span
 										className="filter-button-count"
 										style={{
@@ -793,7 +809,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 											fontSize: "0.65rem",
 										}}
 									>
-										{countActiveFilters(filters)}
+										{activeFilterCount}
 									</span>
 								)}
 							</Button>
@@ -813,20 +829,49 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 											...(compact ? { fontSize: "0.875rem" } : {}),
 											...(!compact
 												? {
-														gridTemplateColumns: effectiveColumns
-															.map((col, i) => {
+														gridTemplateColumns: [
+															...(enableMultiSelect ? ["2rem"] : []),
+															...effectiveColumns.map((col, i) => {
 																const min = col.minWidth ?? "auto";
 																return i === 0
 																	? `minmax(${min}, 1fr)`
 																	: `minmax(${min}, auto)`;
-															})
-															.join(" "),
+															}),
+														].join(" "),
 													}
 												: {}),
 										}}
 									>
 										<thead className="custom-header">
 											<tr>
+												{enableMultiSelect && (
+													<th
+														style={{
+															width: "2rem",
+															...(compact ? { padding: "0.5rem" } : {}),
+														}}
+													>
+														<input
+															type="checkbox"
+															className="form-check-input"
+															ref={(el) => {
+																if (el) {
+																	const allSel =
+																		currentPageData.length > 0 &&
+																		currentPageData.every((i: any) =>
+																			selectedIds.has(i.id)
+																		);
+																	const someSel = currentPageData.some((i: any) =>
+																		selectedIds.has(i.id)
+																	);
+																	el.indeterminate = someSel && !allSel;
+																	el.checked = allSel;
+																}
+															}}
+															onChange={(e) => handleSelectAll(e.target.checked)}
+														/>
+													</th>
+												)}
 												{effectiveColumns.map(
 													(column: TableColumn): JSX.Element => (
 														<th
@@ -878,46 +923,79 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 											</tr>
 										</thead>
 										<tbody>
+											<FilterPillsRow filterPills={filterPills} onClear={(): void => setFilters({})} />
 											{currentPageData.map(
 												(item: JamData, index: number): JSX.Element => (
 													<tr
 														key={item.id || index}
 														id={`table-row-${entityType}-${item.id}`}
-														className={`table-row-clickable`}
+														className={`table-row-clickable${rowIndicator && rowIndicator(item) ? " table-row--new" : ""}`}
 														onClick={(e) => handleRowClick(e, item)}
 														onContextMenu={(e) => handleRowRightClick(item, e)}
 														style={{ cursor: "pointer" }}
 													>
-														{effectiveColumns.map((column, columnIndex) => (
+														{enableMultiSelect && (
 															<td
-																key={column.key}
-																className="align-middle"
 																style={{
-																	...(columnIndex === 0
-																		? { fontWeight: "bold" }
-																		: {}),
+																	width: "2rem",
 																	...(compact
-																		? {
-																				padding: "0.5rem",
-																				fontSize: "0.875rem",
-																			}
+																		? { padding: "0.5rem", fontSize: "0.875rem" }
 																		: {}),
 																}}
+																onClick={(e) => e.stopPropagation()}
 															>
-																<RenderViewFieldWithContext
-																	field={column}
-																	item={item}
-																	id={`table-row-${item.id}`}
+																<input
+																	type="checkbox"
+																	className="form-check-input"
+																	checked={selectedIds.has(item.id)}
+																	onChange={(e) =>
+																		handleSelectRow(item.id, e.target.checked)
+																	}
 																/>
 															</td>
-														))}
+														)}
+														{effectiveColumns.map(
+															(column: TableColumn, columnIndex: number): JSX.Element => (
+																<td
+																	key={column.key}
+																	className={`align-middle${columnIndex === 0 && rowIndicator && rowIndicator(item) ? " table-cell--new" : ""}`}
+																	style={{
+																		...(columnIndex === 0
+																			? { fontWeight: "bold" }
+																			: {}),
+																		...(compact
+																			? {
+																					padding: "0.5rem",
+																					fontSize: "0.875rem",
+																				}
+																			: {}),
+																	}}
+																>
+																	{columnIndex === 0 &&
+																		rowIndicator &&
+																		rowIndicator(item) && (
+																			<span
+																				className="badge rounded-pill bg-primary me-2"
+																				style={{ fontSize: "0.6rem" }}
+																			>
+																				NEW
+																			</span>
+																		)}
+																	<RenderViewFieldWithContext
+																		field={column}
+																		item={item}
+																		id={`table-row-${item.id}`}
+																	/>
+																</td>
+															)
+														)}
 													</tr>
 												)
 											)}
 											{currentPageData.length === 0 && (
 												<tr>
 													<td
-														colSpan={effectiveColumns.length}
+														colSpan={effectiveColumns.length + (enableMultiSelect ? 1 : 0)}
 														className="text-center py-4 text-muted"
 														style={{
 															gridColumn: "1 / -1",
@@ -1009,15 +1087,15 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 										)}
 									</div>
 									<div className="d-flex align-items-center gap-2">
-										{isServerPagination && (
-											<span
-												className={`small text-muted text-nowrap`}
-												style={compact ? { fontSize: "0.75rem" } : {}}
-											>
-												{currentPage * pageSize + 1} to{" "}
-												{Math.min((currentPage + 1) * pageSize, totalCount)} of {totalCount}
-											</span>
-										)}
+										<span
+											className={`small text-muted text-nowrap`}
+											style={compact ? { fontSize: "0.75rem" } : {}}
+										>
+											{currentPage * pageSize + 1} to{" "}
+											{Math.min((currentPage + 1) * pageSize, totalFilteredCount)} of{" "}
+											{totalFilteredCount}
+										</span>
+
 										<span
 											className={`small text-muted text-nowrap`}
 											style={compact ? { fontSize: "0.75rem" } : {}}
@@ -1033,7 +1111,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 											}}
 										>
 											{[20, 30, 40, 50, 100].map(
-												(size): JSX.Element => (
+												(size: number): JSX.Element => (
 													<option key={size} value={size}>
 														Show {size} Entries
 													</option>

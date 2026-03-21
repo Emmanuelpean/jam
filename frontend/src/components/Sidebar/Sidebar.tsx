@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
+import JamLogo from "../../assets/Logo.svg?react";
 import { getTableIcon } from "../rendering/view/Icons";
 import { ThemeSelector } from "./ThemeSelector";
 import "./Sidebar.scss";
@@ -25,6 +25,7 @@ interface NavigationSubItem {
 	path: string;
 	icon?: string;
 	text: string;
+	alsoActiveFor?: string[];
 }
 
 export const Sidebar = (): JSX.Element => {
@@ -50,6 +51,7 @@ export const Sidebar = (): JSX.Element => {
 		}
 	};
 
+	const expandTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const dropdownRef = useRef<HTMLDivElement | null>(null);
 	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 990);
@@ -117,11 +119,12 @@ export const Sidebar = (): JSX.Element => {
 			condition: (user: UserData): boolean => user.is_admin,
 			position: "bottom",
 			submenu: [
-				{ path: "/job-scraping-dashboard", text: "Job Scraping Dashboard" },
-				{ path: "/job-rating-dashboard", text: "Job Rating Dashboard" },
-				{ path: "/users", text: "Users" },
-				{ path: "/app-settings", text: "Settings" },
-				{ path: "/email-templates", text: "Email Templates" },
+				{ path: "/services/job-scraping", text: "Service Dashboards", alsoActiveFor: ["/services/job-rating"] },
+				{
+					path: "/app/users",
+					text: "App Management",
+					alsoActiveFor: ["/app/settings", "/app/email-templates"],
+				},
 			],
 		},
 		{
@@ -160,10 +163,16 @@ export const Sidebar = (): JSX.Element => {
 			clearTimeout(collapseTimeoutRef.current);
 			collapseTimeoutRef.current = null;
 		}
-		setIsExpanded(true);
+		expandTimeoutRef.current = setTimeout(() => {
+			setIsExpanded(true);
+		}, 200);
 	};
 
 	const handleMouseLeave = () => {
+		if (expandTimeoutRef.current) {
+			clearTimeout(expandTimeoutRef.current);
+			expandTimeoutRef.current = null;
+		}
 		collapseTimeoutRef.current = setTimeout(() => {
 			setIsExpanded(false);
 			setShowDropdown(false);
@@ -176,14 +185,17 @@ export const Sidebar = (): JSX.Element => {
 		}, 300);
 	};
 
+	const isSubMenuItemActive = (item: NavigationSubItem): boolean => {
+		if (location.pathname.startsWith(item.path)) return true;
+		return item.alsoActiveFor?.some((p: string): boolean => location.pathname.startsWith(p)) ?? false;
+	};
+
 	const isMenuActive = (path: string): boolean => {
-		// Check if the current path starts with the menu item's path
 		return location.pathname.startsWith(path);
 	};
 
 	const isGroupMenuActive = (submenu: NavigationSubItem[]): boolean => {
-		// Check if any item in the group menu matches the current path
-		return submenu.some((item: NavigationSubItem): boolean => location.pathname === item.path);
+		return submenu.some(isSubMenuItemActive);
 	};
 
 	const handleGroupMenuToggle = (submenuText: string): void => {
@@ -232,7 +244,7 @@ export const Sidebar = (): JSX.Element => {
 								<Link
 									key={subItem.text}
 									to={subItem.path}
-									className={`nav-item submenu-item ${isMenuActive(subItem.path) ? "active" : ""}`}
+									className={`nav-item submenu-item ${isSubMenuItemActive(subItem) ? "active" : ""}`}
 									style={{
 										transitionDelay: showSubmenu
 											? `${subIndex * 0.05 + 0.1}s`

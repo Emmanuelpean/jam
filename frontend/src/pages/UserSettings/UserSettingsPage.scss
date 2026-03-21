@@ -1,8 +1,17 @@
-.user-settings-page {
-    min-height: calc(100% - 72px);
+.main-content:has(.settings-page-container) {
+    overflow: hidden;
+}
+
+.settings-page-container {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .settings-layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
     background-color: var(--bs-body-bg);
     border-radius: 9px;
     overflow: hidden;
@@ -10,7 +19,8 @@
 
 /* Sidebar Column */
 .settings-sidebar-col {
-    max-width: 270px !important;
+    width: 270px;
+    flex-shrink: 0;
     border-right: 1px solid var(--bs-border-color);
 }
 
@@ -87,6 +97,9 @@
 
 /* Content Column */
 .settings-content-col {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
     background-color: var(--bs-body-bg);
 }
 

@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
+import JamLogo from "../../assets/Logo.svg?react";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -7,7 +7,7 @@ import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.scss";
-import { LAST_VERSION } from "../../releaseNotes/versions";
+import packageJson from "../../../package.json";
 import { useWhatsNew } from "../../contexts/WhatsNewContext";
 
 interface Feature {
@@ -84,7 +84,7 @@ const AboutPage = (): JSX.Element => {
 											rel="noopener noreferrer"
 											className="link-gradient ms-2 align-items-center"
 										>
-											{LAST_VERSION}
+											{packageJson.version}
 											<i className="bi bi-github ms-2"></i>
 										</a>
 									</div>
@@ -155,8 +155,7 @@ const AboutPage = (): JSX.Element => {
 							)
 						)}
 					</div>
-
-					</Container>
+				</Container>
 			</div>
 		</>
 	);
