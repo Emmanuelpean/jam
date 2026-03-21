@@ -11,16 +11,26 @@ import { DashboardCard } from "./DashboardCard";
 import { ActivityFeedCard, renderRecentActivityItem, renderUpcomingInterviewItem } from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
-import { DashboardLayoutDataV2, parseLayoutData, WidgetConfig } from "./widgetRegistry";
+import {
+	DashboardLayoutDataV2,
+	generateWidgetId,
+	getDefaultLayout,
+	getDefaultLayoutsForConfig,
+	parseLayoutData,
+	WidgetConfig,
+} from "./widgetRegistry";
 import GraphWidget from "./GraphWidget";
 import FavouriteJobWidget from "./FavouriteJobWidget";
 import { useDashboardData } from "./useDashboardData";
+import WidgetPickerModal from "./WidgetPickerModal";
+import ExtensionBanner from "./ExtensionBanner";
 
 const Dashboard: React.FC = () => {
 	const { currentUser, updateCurrentUser } = useAuth();
 	const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
 	const [isEditMode, setIsEditMode] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
+	const [showWidgetPicker, setShowWidgetPicker] = useState(false);
 	const [scrapedJobCount, setScrapedJobCount] = useState<number>(0);
 
 	const isPremium = currentUser?.premium.is_active ?? false;
@@ -69,6 +79,36 @@ const Dashboard: React.FC = () => {
 	const handleCancel = () => {
 		setLayoutData(savedLayoutRef.current);
 		setIsEditMode(false);
+	};
+
+	const handleResetLayout = () => {
+		setLayoutData(getDefaultLayout(isPremium));
+	};
+
+	const handleAddWidget = (config: WidgetConfig) => {
+		const id = generateWidgetId();
+		const defaultLayouts = getDefaultLayoutsForConfig(config);
+		setLayoutData((prev) => ({
+			...prev,
+			widgets: [...prev.widgets, { id, config }],
+			layouts: {
+				lg: [...prev.layouts.lg, { ...defaultLayouts.lg, i: id }],
+				md: [...prev.layouts.md, { ...defaultLayouts.md, i: id }],
+				sm: [...prev.layouts.sm, { ...defaultLayouts.sm, i: id }],
+			},
+		}));
+	};
+
+	const handleRemoveWidget = (widgetId: string) => {
+		setLayoutData((prev) => ({
+			...prev,
+			widgets: prev.widgets.filter((w) => w.id !== widgetId),
+			layouts: {
+				lg: prev.layouts.lg.filter((l) => l.i !== widgetId),
+				md: prev.layouts.md.filter((l) => l.i !== widgetId),
+				sm: prev.layouts.sm.filter((l) => l.i !== widgetId),
+			},
+		}));
 	};
 
 	const handleUpdateWidgetConfig = (widgetId: string, newConfig: WidgetConfig) => {
@@ -212,6 +252,7 @@ const Dashboard: React.FC = () => {
 	return (
 		<div className="dashboard-wrapper">
 			<div className="dashboard-main" ref={containerRef as React.RefObject<HTMLDivElement>}>
+				<ExtensionBanner />
 				<div className={isEditMode ? "dashboard-edit-mode" : ""}>
 					{mounted && (
 						<ResponsiveGridLayout
@@ -228,9 +269,18 @@ const Dashboard: React.FC = () => {
 							{layoutData.widgets.map((widget) => (
 								<div key={widget.id} className="dashboard-grid-item">
 									{isEditMode && (
-										<div className="drag-handle">
-											<i className="bi bi-grip-horizontal"></i>
-										</div>
+										<>
+											<div className="drag-handle">
+												<i className="bi bi-grip-horizontal"></i>
+											</div>
+											<button
+												className="widget-remove-btn"
+												onClick={() => handleRemoveWidget(widget.id)}
+												title="Remove widget"
+											>
+												<i className="bi bi-x"></i>
+											</button>
+										</>
 									)}
 									<div className="grid-item-content">{renderWidget(widget.config, widget.id)}</div>
 								</div>
@@ -249,6 +299,12 @@ const Dashboard: React.FC = () => {
 							<button className="sidebar-icon-btn btn btn-outline-secondary" onClick={handleCancel} title="Cancel">
 								<i className="bi bi-x-lg"></i>
 							</button>
+							<button className="sidebar-icon-btn btn btn-outline-secondary" onClick={() => setShowWidgetPicker(true)} title="Add widget">
+								<i className="bi bi-plus-lg"></i>
+							</button>
+							<button className="sidebar-icon-btn btn btn-outline-secondary" onClick={handleResetLayout} title="Reset to default">
+								<i className="bi bi-arrow-counterclockwise"></i>
+							</button>
 						</>
 					) : (
 						<button className="sidebar-icon-btn btn btn-outline-secondary" onClick={() => setIsEditMode(true)} title="Edit layout">
@@ -257,6 +313,12 @@ const Dashboard: React.FC = () => {
 					)}
 				</div>
 			</div>
+			<WidgetPickerModal
+				show={showWidgetPicker}
+				onHide={() => setShowWidgetPicker(false)}
+				onAddWidget={handleAddWidget}
+				isPremium={isPremium}
+			/>
 		</div>
 	);
 };
