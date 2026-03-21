@@ -315,10 +315,10 @@ export function getDefaultLayout(isPremium: boolean): DashboardLayoutDataV2 {
 
 // --- Parse layout data ---
 
-export function parseLayoutData(json: string | null, isPremium: boolean): DashboardLayoutDataV2 {
-	if (!json) return getDefaultLayout(isPremium);
+export function parseLayoutData(data: object | null, isPremium: boolean): DashboardLayoutDataV2 {
+	if (!data) return getDefaultLayout(isPremium);
 	try {
-		const parsed = JSON.parse(json);
+		const parsed = data as Record<string, unknown>;
 		if (parsed.version === 1 && parsed.visibleCards && parsed.layouts) {
 			return filterPremium(migrateV1toV2(parsed as DashboardLayoutData), isPremium);
 		}

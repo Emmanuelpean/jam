@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import Select, { SingleValue } from "react-select";
+import { CustomSelect } from "../../components/rendering/widgets/CustomSelect";
 import { Button } from "react-bootstrap";
 import {
 	ResponsiveContainer,
@@ -197,59 +197,44 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 				<div className={`graph-sidebar ${sidebarOpen ? "open" : ""}`}>
 					<div className="graph-sidebar-content">
 						<label className="graph-sidebar-label">Source</label>
-						<Select<SelectOption>
-							value={sourceOptions.find((o) => o.value === config.source)}
-							onChange={(opt: SingleValue<SelectOption>) =>
-								opt && handleSourceChange(opt.value as GraphSource)
-							}
+						<CustomSelect
+							id="graph-source"
+							value={sourceOptions.find((o) => o.value === config.source) ?? null}
+							onChange={(opt) => opt && !Array.isArray(opt) && handleSourceChange(opt.value as GraphSource)}
 							options={sourceOptions}
 							isSearchable={false}
 							isClearable={false}
-							menuPortalTarget={document.body}
-							menuPlacement="auto"
-							className="react-select-container react-select-container--sm"
-							classNamePrefix="react-select"
-							classNames={{ menuPortal: () => "react-select--sm-menu" }}
+							size="sm"
 						/>
 
 						<label className="graph-sidebar-label">Display</label>
-						<Select<SelectOption>
-							value={fieldOptions.find((o) => o.value === config.field)}
-							onChange={(opt: SingleValue<SelectOption>) =>
-								opt &&
-								onConfigChange({
-									type: "graph",
-									source: config.source,
-									field: opt.value as GraphConfig["field"],
-								})
+						<CustomSelect
+							id="graph-field"
+							value={fieldOptions.find((o) => o.value === config.field) ?? null}
+							onChange={(opt) =>
+								opt && !Array.isArray(opt) &&
+								onConfigChange({ type: "graph", source: config.source, field: opt.value as GraphConfig["field"] })
 							}
 							options={fieldOptions}
 							isSearchable={false}
 							isClearable={false}
-							menuPortalTarget={document.body}
-							menuPlacement="auto"
-							className="react-select-container react-select-container--sm"
-							classNamePrefix="react-select"
-							classNames={{ menuPortal: () => "react-select--sm-menu" }}
+							size="sm"
 						/>
 
 						{fieldMeta && fieldMeta.supportedChartTypes.length > 1 && (
 							<>
 								<label className="graph-sidebar-label">Chart</label>
-								<Select<SelectOption>
-									value={chartTypeOptions.find((o) => o.value === effectiveChartType)}
-									onChange={(opt: SingleValue<SelectOption>) =>
-										opt &&
+								<CustomSelect
+									id="graph-chart-type"
+									value={chartTypeOptions.find((o) => o.value === effectiveChartType) ?? null}
+									onChange={(opt) =>
+										opt && !Array.isArray(opt) &&
 										onConfigChange({ ...config, chartType: opt.value as GraphConfig["chartType"] })
 									}
 									options={chartTypeOptions}
 									isSearchable={false}
 									isClearable={false}
-									menuPortalTarget={document.body}
-									menuPlacement="auto"
-									className="react-select-container react-select-container--sm"
-									classNamePrefix="react-select"
-									classNames={{ menuPortal: () => "react-select--sm-menu" }}
+									size="sm"
 								/>
 							</>
 						)}
@@ -257,23 +242,17 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 						{fieldMeta?.supportsGranularity && (
 							<>
 								<label className="graph-sidebar-label">Period</label>
-								<Select<SelectOption>
-									value={granularityOptions.find((o) => o.value === effectiveGranularity)}
-									onChange={(opt: SingleValue<SelectOption>) =>
-										opt &&
-										onConfigChange({
-											...config,
-											granularity: opt.value as GraphConfig["granularity"],
-										})
+								<CustomSelect
+									id="graph-granularity"
+									value={granularityOptions.find((o) => o.value === effectiveGranularity) ?? null}
+									onChange={(opt) =>
+										opt && !Array.isArray(opt) &&
+										onConfigChange({ ...config, granularity: opt.value as GraphConfig["granularity"] })
 									}
 									options={granularityOptions}
 									isSearchable={false}
 									isClearable={false}
-									menuPortalTarget={document.body}
-									menuPlacement="auto"
-									className="react-select-container react-select-container--sm"
-									classNamePrefix="react-select"
-									classNames={{ menuPortal: () => "react-select--sm-menu" }}
+									size="sm"
 								/>
 							</>
 						)}
