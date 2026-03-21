@@ -1,26 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { Layout, LayoutItem, ResponsiveGridLayout, ResponsiveLayouts, useContainerWidth } from "react-grid-layout";
 import { useAuth } from "../../contexts/AuthContext";
 import "./DashboardPage.scss";
-import {
-	EnrichedInterviewData,
-	EnrichedJobApplicationUpdateData,
-	EnrichedJobData,
-} from "../../services/schemas/DataTables";
 import JobsToChase from "../../components/DataTable/JobsToChase";
 import UpcomingDeadlinesTable from "../../components/DataTable/UpcomingDeadlines";
-import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { StatCard } from "./StatCard";
 import { DashboardCard } from "./DashboardCard";
-import {
-	ActivityFeedCard,
-	RecentActivity,
-	renderRecentActivityItem,
-	renderUpcomingInterviewItem,
-} from "./ActivityFeed";
+import { ActivityFeedCard, renderRecentActivityItem, renderUpcomingInterviewItem } from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
-import { sortByKey } from "../../utils/Utils";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
 import {
 	DashboardLayoutDataV2,
@@ -36,9 +23,10 @@ import GraphWidget from "./GraphWidget";
 import FavouriteJobWidget from "./FavouriteJobWidget";
 import { useAlert } from "../../contexts/AlertContext";
 import ExtensionBanner from "./ExtensionBanner";
+import { DashboardToolbar } from "./DashboardToolbar";
+import { useDashboardData } from "./useDashboardData";
 
 const Dashboard: React.FC = () => {
-	const dataContext: DataContextValue = useDataContext();
 	const { currentUser, updateCurrentUser } = useAuth();
 	const [scrapedJobCount, setScrapedJobCount] = useState<number>(0);
 	const [isEditMode, setIsEditMode] = useState(false);
@@ -56,6 +44,9 @@ const Dashboard: React.FC = () => {
 	);
 	const savedLayoutRef = useRef<DashboardLayoutDataV2>(layoutData);
 
+	const { totalJobs, jobApplications, jobApplicationPending, needsChase, upcomingDeadlines, upcomingInterviews, recentActivity } =
+		useDashboardData();
+
 	useEffect(() => {
 		const handleResize = () => setIsSmallScreen(window.innerWidth < 768);
 		window.addEventListener("resize", handleResize);
@@ -70,85 +61,6 @@ const Dashboard: React.FC = () => {
 		);
 	}
 
-	const now = new Date();
-
-	const jobApplications: EnrichedJobData[] = dataContext.jobs.filter(
-		(job: EnrichedJobData): Date | string | null | undefined => job.application_date || job.application_status
-	);
-
-	const jobApplicationPending: EnrichedJobData[] = jobApplications.filter(
-		(job: EnrichedJobData): boolean | string | null | undefined =>
-			job.application_status && !["rejected", "withdrawn"].includes(job.application_status)
-	);
-
-	const needsChase: EnrichedJobData[] = jobApplicationPending.filter(
-		(job: EnrichedJobData) =>
-			job.days_since_last_update &&
-			job.days_since_last_update > currentUser.preferences.chase_threshold &&
-			(!job.followup_snooze_datetime || job.followup_snooze_datetime <= now) &&
-			job.application_status &&
-			!["rejected", "offer", "withdrawn"].includes(job.application_status)
-	);
-
-	const thresholdDate = new Date(now.getTime() + currentUser.preferences.deadline_threshold * 24 * 60 * 60 * 1000);
-
-	const upcomingDeadlines: EnrichedJobData[] = dataContext.jobs.filter(
-		(job: EnrichedJobData) =>
-			!job.application_date &&
-			!job.application_status &&
-			job.deadline &&
-			new Date(job.deadline) > now &&
-			new Date(job.deadline) <= thresholdDate
-	);
-
-	const upcomingInterviews: EnrichedInterviewData[] = sortByKey(
-		dataContext.interviews.filter(
-			(interview: EnrichedInterviewData): boolean | null | undefined => new Date(interview.date!) >= now
-		),
-		"date"
-	);
-
-	const allUpdates: RecentActivity[] = [];
-
-	// Add job applications as "Application" updates
-	jobApplications.forEach((job: EnrichedJobData): void => {
-		if (job.application_date) {
-			allUpdates.push({
-				data: job,
-				date: job.application_date,
-				type: "Application",
-				job_id: job.id,
-			});
-		}
-	});
-
-	// Add interviews as "Interview" updates
-	dataContext.interviews.forEach((interview: EnrichedInterviewData): void => {
-		if (new Date(interview.date) < now) {
-			allUpdates.push({
-				data: interview,
-				date: interview.date,
-				type: "Interview",
-				job_id: interview.job_id,
-			});
-		}
-	});
-
-	// Add job application updates
-	dataContext.jobApplicationUpdates.forEach((update: EnrichedJobApplicationUpdateData): void => {
-		if (new Date(update.date) < now) {
-			allUpdates.push({
-				data: update,
-				date: update.date,
-				type: "Job Application Update",
-				job_id: update.job_id,
-			});
-		}
-	});
-
-	allUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-	const recentActivity = allUpdates.slice(0, currentUser.preferences.update_limit);
-
 	const handleUpdateWidgetConfig = (widgetId: string, newConfig: WidgetConfig) => {
 		setLayoutData((prev) => ({
 			...prev,
@@ -156,70 +68,16 @@ const Dashboard: React.FC = () => {
 		}));
 	};
 
-	// Widget renderers by type
-	const renderWidget = (config: WidgetConfig, widgetId: string): React.ReactNode => {
-		switch (config.type) {
-			case "metric":
-				return renderMetricWidget(config.metric);
-			case "table":
-				return renderTableWidget(config.source);
-			case "timeline":
-				return renderTimelineWidget(config.feed);
-			case "card":
-				return <FavouriteJobWidget />;
-			case "graph":
-				return (
-					<GraphWidget
-						config={config}
-						onConfigChange={(updated) => handleUpdateWidgetConfig(widgetId, updated)}
-						isEditMode={isEditMode}
-					/>
-				);
-		}
-	};
-
 	const renderMetricWidget = (metric: string): React.ReactNode => {
 		switch (metric) {
 			case "total_jobs":
-				return (
-					<StatCard
-						name="Total Jobs"
-						value={dataContext.jobs.length}
-						icon="briefcase"
-						variant="primary"
-						description="Jobs in your database"
-					/>
-				);
+				return <StatCard name="Total Jobs" value={totalJobs} icon="briefcase" variant="primary" description="Jobs in your database" />;
 			case "applications":
-				return (
-					<StatCard
-						name="Applications"
-						value={jobApplications.length}
-						icon="send"
-						variant="success"
-						description="Total applications sent"
-					/>
-				);
+				return <StatCard name="Applications" value={jobApplications.length} icon="send" variant="success" description="Total applications sent" />;
 			case "pending":
-				return (
-					<StatCard
-						name="Pending"
-						value={jobApplicationPending.length}
-						icon="clock"
-						variant="warning"
-						description="Applications awaiting response"
-					/>
-				);
+				return <StatCard name="Pending" value={jobApplicationPending.length} icon="clock" variant="warning" description="Applications awaiting response" />;
 			case "follow_up":
-				return (
-					<StatCard
-						name="Need Follow-up"
-						value={needsChase.length}
-						icon="telephone"
-						variant="danger"
-						description="Applications requiring action"
-					/>
-				);
+				return <StatCard name="Need Follow-up" value={needsChase.length} icon="telephone" variant="danger" description="Applications requiring action" />;
 			default:
 				return null;
 		}
@@ -234,11 +92,7 @@ const Dashboard: React.FC = () => {
 						title="Applications Requiring Follow-up"
 						badgeValue={needsChase.length}
 						isEmpty={needsChase.length === 0}
-						emptyState={{
-							icon: "telephone-x",
-							title: "No follow-ups needed",
-							description: "All your applications are up to date",
-						}}
+						emptyState={{ icon: "telephone-x", title: "No follow-ups needed", description: "All your applications are up to date" }}
 					>
 						<JobsToChase data={needsChase} />
 					</DashboardCard>
@@ -250,11 +104,7 @@ const Dashboard: React.FC = () => {
 						title="Upcoming Deadlines"
 						badgeValue={upcomingDeadlines.length}
 						isEmpty={upcomingDeadlines.length === 0}
-						emptyState={{
-							icon: "calendar-check",
-							title: "No upcoming deadlines",
-							description: "You have no application deadlines approaching",
-						}}
+						emptyState={{ icon: "calendar-check", title: "No upcoming deadlines", description: "You have no application deadlines approaching" }}
 					>
 						<UpcomingDeadlinesTable data={upcomingDeadlines} />
 					</DashboardCard>
@@ -268,15 +118,9 @@ const Dashboard: React.FC = () => {
 						badgeValue={scrapedJobCount}
 						path="/scraped-jobs"
 						isEmpty={scrapedJobCount === 0}
-						emptyState={{
-							icon: "bell-slash",
-							title: "No job alerts",
-							description: "Job alerts from your scrapers will appear here",
-						}}
+						emptyState={{ icon: "bell-slash", title: "No job alerts", description: "Job alerts from your scrapers will appear here" }}
 					>
-						<div
-							style={{ paddingTop: "9px", paddingBottom: "18px", display: "flex", flex: 1, minHeight: 0 }}
-						>
+						<div style={{ paddingTop: "9px", paddingBottom: "18px", display: "flex", flex: 1, minHeight: 0 }}>
 							<ScrapedJobsTable onTotalCountChange={setScrapedJobCount} />
 						</div>
 					</DashboardCard>
@@ -319,6 +163,27 @@ const Dashboard: React.FC = () => {
 		}
 	};
 
+	const renderWidget = (config: WidgetConfig, widgetId: string): React.ReactNode => {
+		switch (config.type) {
+			case "metric":
+				return renderMetricWidget(config.metric);
+			case "table":
+				return renderTableWidget(config.source);
+			case "timeline":
+				return renderTimelineWidget(config.feed);
+			case "card":
+				return <FavouriteJobWidget />;
+			case "graph":
+				return (
+					<GraphWidget
+						config={config}
+						onConfigChange={(updated) => handleUpdateWidgetConfig(widgetId, updated)}
+						isEditMode={isEditMode}
+					/>
+				);
+		}
+	};
+
 	const handleLayoutChange = (_currentLayout: Layout, allLayouts: ResponsiveLayouts) => {
 		if (!isEditMode) return;
 		setLayoutData((prev) => ({
@@ -334,7 +199,7 @@ const Dashboard: React.FC = () => {
 	const handleSave = async () => {
 		setIsSaving(true);
 		try {
-			await updateCurrentUser({ preferences: { dashboard_layout: layoutData as object } });
+			await updateCurrentUser({ preferences: { dashboard_layout: JSON.stringify(layoutData) } });
 			savedLayoutRef.current = layoutData;
 			setIsEditMode(false);
 		} finally {
@@ -364,8 +229,7 @@ const Dashboard: React.FC = () => {
 	const confirmReset = async () => {
 		const confirmed = await showConfirm({
 			title: "Reset to Default",
-			message:
-				"Are you sure you want to reset the dashboard to its default layout? You can still cancel before saving.",
+			message: "Are you sure you want to reset the dashboard to its default layout? You can still cancel before saving.",
 			confirmText: "Reset",
 			cancelText: "Keep Current",
 		});
@@ -385,12 +249,7 @@ const Dashboard: React.FC = () => {
 				const maxY = items.length === 0 ? 0 : Math.max(...items.map((l) => l.y + l.h));
 				newLayouts[bp] = [...items, { ...defaults[bp], i: id, y: maxY }];
 			}
-
-			return {
-				...prev,
-				widgets: [...prev.widgets, newWidget],
-				layouts: newLayouts,
-			};
+			return { ...prev, widgets: [...prev.widgets, newWidget], layouts: newLayouts };
 		});
 	};
 
@@ -461,57 +320,15 @@ const Dashboard: React.FC = () => {
 					)}
 				</div>
 			</div>
-
-			<div className="dashboard-edit-toolbar">
-				<div className="dashboard-edit-toolbar-inner">
-					<button
-						className={`sidebar-icon-btn ${isEditMode ? "btn btn-outline-secondary active-edit" : "dashboard-edit-trigger-inline"}`}
-						onClick={() => (isEditMode ? confirmCancel() : setIsEditMode(true))}
-						title={isEditMode ? "Cancel" : "Customise dashboard"}
-					>
-						<i className={`bi bi-${isEditMode ? "x-lg" : "pencil-square"}`}></i>
-					</button>
-					{isEditMode && (
-						<>
-							<ActionButton
-								variant="primary"
-								size="sm"
-								fullWidth={false}
-								className="sidebar-icon-btn"
-								loading={isSaving}
-								defaultIcon="bi bi-check-lg"
-								style={{ width: 40 }}
-								onClick={handleSave}
-								tooltip="Save layout"
-								tooltipPlacement="left"
-							/>
-							<ActionButton
-								variant="outline-primary"
-								size="sm"
-								fullWidth={false}
-								className="sidebar-icon-btn"
-								defaultIcon="bi bi-plus-lg"
-								style={{ width: 36 }}
-								onClick={() => setShowWidgetPicker(true)}
-								tooltip="Add widget"
-								tooltipPlacement="left"
-							/>
-							<ActionButton
-								variant="outline-danger"
-								size="sm"
-								fullWidth={false}
-								className="sidebar-icon-btn"
-								defaultIcon="bi bi-arrow-counterclockwise"
-								style={{ width: 36 }}
-								onClick={confirmReset}
-								tooltip="Reset to default"
-								tooltipPlacement="left"
-							/>
-						</>
-					)}
-				</div>
-			</div>
-
+			<DashboardToolbar
+				isEditMode={isEditMode}
+				isSaving={isSaving}
+				onEdit={() => setIsEditMode(true)}
+				onCancel={confirmCancel}
+				onSave={handleSave}
+				onAddWidget={() => setShowWidgetPicker(true)}
+				onReset={confirmReset}
+			/>
 			<WidgetPickerModal
 				show={showWidgetPicker}
 				onHide={() => setShowWidgetPicker(false)}

@@ -1,7 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Modal } from "react-bootstrap";
-import { Button } from "react-bootstrap";
-import { WIDGET_TYPE_DEFS, WidgetConfig, WidgetType, WidgetTypeDef, GraphField, CardVariant } from "./widgetRegistry";
+import { Modal, Button } from "react-bootstrap";
+import {
+	WIDGET_TYPE_DEFS,
+	WidgetConfig,
+	WidgetType,
+	WidgetTypeDef,
+	GraphField,
+	CardVariant,
+	MetricVariant,
+	TableVariant,
+	TimelineVariant,
+} from "./widgetRegistry";
 import { getSourceForField } from "./graphAggregations";
 
 interface WidgetPickerModalProps {
@@ -31,28 +40,17 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 		onHide();
 	};
 
-	const handleBack = () => setSelectedType(null);
-
 	const handleAddVariant = (typeDef: WidgetTypeDef, variantKey: string) => {
 		let config: WidgetConfig;
 		switch (typeDef.type) {
 			case "metric":
-				config = {
-					type: "metric",
-					metric: variantKey as WidgetConfig & { type: "metric" } extends { metric: infer M } ? M : never,
-				};
+				config = { type: "metric", metric: variantKey as MetricVariant };
 				break;
 			case "table":
-				config = {
-					type: "table",
-					source: variantKey as WidgetConfig & { type: "table" } extends { source: infer S } ? S : never,
-				};
+				config = { type: "table", source: variantKey as TableVariant };
 				break;
 			case "timeline":
-				config = {
-					type: "timeline",
-					feed: variantKey as WidgetConfig & { type: "timeline" } extends { feed: infer F } ? F : never,
-				};
+				config = { type: "timeline", feed: variantKey as TimelineVariant };
 				break;
 			case "card":
 				config = { type: "card", variant: variantKey as CardVariant };
@@ -108,7 +106,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 								variant="link"
 								size="sm"
 								className="p-0 me-2"
-								onClick={handleBack}
+								onClick={() => setSelectedType(null)}
 								style={{
 									color: "var(--bs-heading-color, var(--bs-body-color)) !important",
 									fontSize: "1.2rem",

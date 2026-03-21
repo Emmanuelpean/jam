@@ -19,7 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column("user_preferences", sa.Column("dashboard_layout", sa.JSON(), nullable=True))
+    op.add_column("user_preferences", sa.Column("dashboard_layout", sa.String(), nullable=True))
 
 
 def downgrade() -> None:

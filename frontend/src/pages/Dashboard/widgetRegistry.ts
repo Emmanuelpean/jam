@@ -90,10 +90,34 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 		icon: "speedometer2",
 		description: "Key numbers at a glance",
 		variants: [
-			{ key: "total_jobs", label: "Total Jobs", icon: "briefcase", description: "Total jobs in your database", premiumOnly: false },
-			{ key: "applications", label: "Applications", icon: "send", description: "Total applications submitted", premiumOnly: false },
-			{ key: "pending", label: "Pending", icon: "clock", description: "Applications awaiting a response", premiumOnly: false },
-			{ key: "follow_up", label: "Need Follow-up", icon: "telephone", description: "Applications overdue for a chase", premiumOnly: false },
+			{
+				key: "total_jobs",
+				label: "Total Jobs",
+				icon: "briefcase",
+				description: "Total jobs in your database",
+				premiumOnly: false,
+			},
+			{
+				key: "applications",
+				label: "Applications",
+				icon: "send",
+				description: "Total applications submitted",
+				premiumOnly: false,
+			},
+			{
+				key: "pending",
+				label: "Pending",
+				icon: "clock",
+				description: "Applications awaiting a response",
+				premiumOnly: false,
+			},
+			{
+				key: "follow_up",
+				label: "Need Follow-up",
+				icon: "telephone",
+				description: "Applications overdue for a chase",
+				premiumOnly: false,
+			},
 		],
 		defaultLayouts: {
 			lg: { x: 0, y: 0, w: 3, h: 4, minW: 1, minH: 4 },
@@ -107,9 +131,27 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 		icon: "table",
 		description: "Data tables and lists",
 		variants: [
-			{ key: "follow_up", label: "Follow-up Required", icon: "telephone", description: "Applications that need chasing", premiumOnly: false },
-			{ key: "upcoming_deadlines", label: "Upcoming Deadlines", icon: "clock", description: "Jobs with approaching deadlines", premiumOnly: false },
-			{ key: "job_alerts", label: "Job Alerts", icon: "bell", description: "Jobs received from your scrapers", premiumOnly: true },
+			{
+				key: "follow_up",
+				label: "Follow-up Required",
+				icon: "telephone",
+				description: "Applications that need chasing",
+				premiumOnly: false,
+			},
+			{
+				key: "upcoming_deadlines",
+				label: "Upcoming Deadlines",
+				icon: "clock",
+				description: "Jobs with approaching deadlines",
+				premiumOnly: false,
+			},
+			{
+				key: "job_alerts",
+				label: "Job Alerts",
+				icon: "bell",
+				description: "Jobs received from your scrapers",
+				premiumOnly: true,
+			},
 		],
 		defaultLayouts: {
 			lg: { x: 0, y: 0, w: 8, h: 12, minW: 4, minH: 8 },
@@ -123,8 +165,20 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 		icon: "clock-history",
 		description: "Activity feeds and schedules",
 		variants: [
-			{ key: "recent_activity", label: "Recent Activity", icon: "clock-history", description: "Your latest applications and interviews", premiumOnly: false },
-			{ key: "upcoming_interviews", label: "Upcoming Interviews", icon: "calendar-event", description: "Scheduled interviews coming up", premiumOnly: false },
+			{
+				key: "recent_activity",
+				label: "Recent Activity",
+				icon: "clock-history",
+				description: "Your latest applications and interviews",
+				premiumOnly: false,
+			},
+			{
+				key: "upcoming_interviews",
+				label: "Upcoming Interviews",
+				icon: "calendar-event",
+				description: "Scheduled interviews coming up",
+				premiumOnly: false,
+			},
 		],
 		defaultLayouts: {
 			lg: { x: 0, y: 0, w: 4, h: 12, minW: 3, minH: 8 },
@@ -174,12 +228,54 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				premiumOnly: false,
 				group: "Jobs",
 			},
-			{ key: "source_aggregator", label: "By Source", icon: "signpost-split", description: "Jobs grouped by job board", premiumOnly: false, group: "Jobs" },
-			{ key: "salary", label: "Salary Distribution", icon: "cash-stack", description: "Salary ranges across your jobs", premiumOnly: false, group: "Jobs" },
-			{ key: "attendance_type", label: "By Attendance", icon: "building", description: "Remote vs on-site breakdown", premiumOnly: false, group: "Jobs" },
-			{ key: "personal_rating", label: "By Rating", icon: "star", description: "Jobs grouped by your rating", premiumOnly: false, group: "Jobs" },
-			{ key: "city", label: "By City", icon: "geo-alt", description: "Jobs grouped by city", premiumOnly: false, group: "Jobs" },
-			{ key: "country", label: "By Country", icon: "globe2", description: "Jobs grouped by country", premiumOnly: false, group: "Jobs" },
+			{
+				key: "source_aggregator",
+				label: "By Source",
+				icon: "signpost-split",
+				description: "Jobs grouped by job board",
+				premiumOnly: false,
+				group: "Jobs",
+			},
+			{
+				key: "salary",
+				label: "Salary Distribution",
+				icon: "cash-stack",
+				description: "Salary ranges across your jobs",
+				premiumOnly: false,
+				group: "Jobs",
+			},
+			{
+				key: "attendance_type",
+				label: "By Attendance",
+				icon: "building",
+				description: "Remote vs on-site breakdown",
+				premiumOnly: false,
+				group: "Jobs",
+			},
+			{
+				key: "personal_rating",
+				label: "By Rating",
+				icon: "star",
+				description: "Jobs grouped by your rating",
+				premiumOnly: false,
+				group: "Jobs",
+			},
+			{
+				key: "city",
+				label: "By City",
+				icon: "geo-alt",
+				description: "Jobs grouped by city",
+				premiumOnly: false,
+				group: "Jobs",
+			},
+			{
+				key: "country",
+				label: "By Country",
+				icon: "globe2",
+				description: "Jobs grouped by country",
+				premiumOnly: false,
+				group: "Jobs",
+			},
 			{
 				key: "interview_date",
 				label: "Interviews Over Time",
@@ -315,10 +411,10 @@ export function getDefaultLayout(isPremium: boolean): DashboardLayoutDataV2 {
 
 // --- Parse layout data ---
 
-export function parseLayoutData(data: object | null, isPremium: boolean): DashboardLayoutDataV2 {
+export function parseLayoutData(data: string | null, isPremium: boolean): DashboardLayoutDataV2 {
 	if (!data) return getDefaultLayout(isPremium);
 	try {
-		const parsed = data as Record<string, unknown>;
+		const parsed = JSON.parse(data) as Record<string, unknown>;
 		if (parsed.version === 1 && parsed.visibleCards && parsed.layouts) {
 			return filterPremium(migrateV1toV2(parsed as DashboardLayoutData), isPremium);
 		}

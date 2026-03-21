@@ -12,7 +12,7 @@ import { formatActivityDate } from "../../utils/TimeUtils";
 import { DashboardCard } from "./DashboardCard";
 
 const getActivityColor = (type: string): string => {
-	const colorMap: { [key: string]: string } = {
+	const colorMap: Record<string, string> = {
 		Application: "bg-primary",
 		Interview: "bg-success",
 		"Job Application Update": "bg-info",
@@ -30,13 +30,45 @@ const getActivityBadge = (type: string): ((param: RenderParams) => ReactNode) =>
 };
 
 const getActivityIcon = (type: string): string => {
-	const iconMap: { [key: string]: string } = {
+	const iconMap: Record<string, string> = {
 		Application: getTableIcon("Job Applications"),
 		Interview: getTableIcon("Interviews"),
 		"Job Application Update": getTableIcon("Job Application Updates"),
 	};
 	return iconMap[type] || "bi-plus-circle-fill";
 };
+
+interface TimelineItemProps {
+	colorClass: string;
+	icon: string;
+	isLast: boolean;
+	title: ReactNode;
+	date: string | Date;
+	children: ReactNode;
+}
+
+const TimelineItem: React.FC<TimelineItemProps> = ({ colorClass, icon, isLast, title, date, children }) => (
+	<div className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
+		<div className="d-flex position-relative">
+			{!isLast && <div className="position-absolute activity-line" />}
+			<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
+				<div
+					className={`rounded-circle d-flex align-items-center justify-content-center badge ${colorClass}`}
+					style={{ width: "31.5px", height: "31.5px" }}
+				>
+					<i className={`bi-${icon} text-white`} style={{ fontSize: "1rem" }} />
+				</div>
+			</div>
+			<div className="flex-grow-1 min-width-0">
+				<div className="activity-header d-flex align-items-start justify-content-between mb-1">
+					<div className="fw-semibold activity-title" style={{ fontSize: "1rem" }}>{title}</div>
+					<small className="text-muted activity-date">{formatActivityDate(date)}</small>
+				</div>
+				{children}
+			</div>
+		</div>
+	</div>
+);
 
 interface ActivityFeedCardProps<T> {
 	icon: string;
@@ -88,55 +120,30 @@ export interface RecentActivity {
 }
 
 export const renderRecentActivityItem = (activity: RecentActivity, index: number, isLast: boolean): JSX.Element => {
-	const getActivityNumber = (activity: RecentActivity): string => {
-		if (activity.type === "Interview" || activity.type === "Job Application Update") {
-			return `#${"number" in activity.data ? activity.data.number : ""}`;
-		} else {
-			return "";
-		}
-	};
+	const number =
+		activity.type === "Interview" || activity.type === "Job Application Update"
+			? ` #${"number" in activity.data ? activity.data.number : ""}`
+			: "";
 
-	const activityColor: string = getActivityColor(activity.type);
-	const activityIcon: string = getActivityIcon(activity.type);
-	const activityBadge = getActivityBadge(activity.type);
+	const badgeRenderer = getActivityBadge(activity.type);
 	const activityData = activity.type === "Application" ? activity : activity.data;
 
 	const jobField: ViewField = {
 		key: "activity-item-" + index,
-		render: (params: RenderParams): ReactNode => activityBadge(params),
+		render: (params: RenderParams): ReactNode => badgeRenderer(params),
 	};
 
 	return (
-		<div key={`activity-${index}`} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
-			<div className="d-flex position-relative">
-				{/* Timeline line */}
-				{!isLast && <div className="position-absolute activity-line"></div>}
-
-				{/* Activity icon */}
-				<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
-					<div
-						className={`rounded-circle d-flex align-items-center justify-content-center badge ${activityColor}`}
-						style={{
-							width: "31.5px",
-							height: "31.5px",
-						}}
-					>
-						<i className={`bi-${activityIcon} text-white`} style={{ fontSize: "1rem" }}></i>
-					</div>
-				</div>
-
-				{/* Activity content */}
-				<div className="flex-grow-1 min-width-0">
-					<div className="activity-header d-flex align-items-start justify-content-between mb-1">
-						<div className="fw-semibold activity-title" style={{ fontSize: "1rem" }}>
-							{activity.type} {getActivityNumber(activity)}
-						</div>
-						<small className="text-muted activity-date">{formatActivityDate(activity.date)}</small>
-					</div>
-					<RenderViewFieldWithContext field={jobField} item={activityData} id={index.toString()} />
-				</div>
-			</div>
-		</div>
+		<TimelineItem
+			key={`activity-${index}`}
+			colorClass={getActivityColor(activity.type)}
+			icon={getActivityIcon(activity.type)}
+			isLast={isLast}
+			title={`${activity.type}${number}`}
+			date={activity.date}
+		>
+			<RenderViewFieldWithContext field={jobField} item={activityData} id={index.toString()} />
+		</TimelineItem>
 	);
 };
 
@@ -149,37 +156,17 @@ export const renderUpcomingInterviewItem = (
 		key: "activity-item-" + index,
 		render: (params: RenderParams) => renderFunctions.interviewBadge(params),
 	};
-	const activityColor: string = getActivityColor("Interview");
-	const activityIcon: string = getActivityIcon("Interview");
 
 	return (
-		<div key={`interview-${index}`} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
-			<div className="d-flex position-relative">
-				{/* Timeline line */}
-				{!isLast && <div className="position-absolute activity-line"></div>}
-				{/* Interview icon */}
-				<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
-					<div
-						className={`rounded-circle d-flex align-items-center justify-content-center badge ${activityColor}`}
-						style={{
-							width: "31.5px",
-							height: "31.5px",
-						}}
-					>
-						<i className={`bi-${activityIcon} text-white`} style={{ fontSize: "1rem" }}></i>
-					</div>
-				</div>
-				{/* Interview content */}
-				<div className="flex-grow-1 min-width-0">
-					<div className="activity-header d-flex align-items-start justify-content-between mb-1">
-						<div className="fw-semibold activity-title" style={{ fontSize: "1rem" }}>
-							{interview.type} (interview #{interview.number})
-						</div>
-						<small className="text-muted activity-date">{formatActivityDate(interview.date)}</small>
-					</div>
-					<RenderViewFieldWithContext field={jobField} item={interview} id={index.toString()} />
-				</div>
-			</div>
-		</div>
+		<TimelineItem
+			key={`interview-${index}`}
+			colorClass={getActivityColor("Interview")}
+			icon={getActivityIcon("Interview")}
+			isLast={isLast}
+			title={`${interview.type} (interview #${interview.number})`}
+			date={interview.date}
+		>
+			<RenderViewFieldWithContext field={jobField} item={interview} id={index.toString()} />
+		</TimelineItem>
 	);
 };
