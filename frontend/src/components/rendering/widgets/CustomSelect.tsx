@@ -15,6 +15,7 @@ export interface CustomSelectProps {
 	isDisabled?: boolean;
 	closeMenuOnSelect?: boolean;
 	placeholder?: string;
+	size?: "sm";
 	className?: string;
 	menuPortalClassName?: string;
 	onMenuClose?: () => void;
@@ -87,6 +88,7 @@ export const CustomSelect = ({
 	placeholder,
 	className = "",
 	menuPortalClassName = "",
+	size,
 	onMenuClose,
 	addButton,
 	parentData,
@@ -99,6 +101,7 @@ export const CustomSelect = ({
 	const [isFocused, setIsFocused] = useState(false);
 	const [menuStyles, setMenuStyles] = useState<React.CSSProperties>({});
 	const [removingValues, setRemovingValues] = useState<Set<string>>(new Set());
+	const [menuPlacedAbove, setMenuPlacedAbove] = useState(false);
 
 	const containerRef = useRef<HTMLDivElement>(null);
 	const controlRef = useRef<HTMLDivElement>(null);
@@ -131,6 +134,7 @@ export const CustomSelect = ({
 		const spaceBelow = window.innerHeight - rect.bottom - MARGIN;
 		const spaceAbove = rect.top - MARGIN;
 		const placeAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
+		setMenuPlacedAbove(placeAbove);
 		const maxHeight = Math.max(placeAbove ? spaceAbove : spaceBelow, 80);
 		setMenuStyles({
 			position: "fixed",
@@ -159,6 +163,13 @@ export const CustomSelect = ({
 		if (closeTimerRef.current) {
 			clearTimeout(closeTimerRef.current);
 			setIsClosing(false);
+		}
+		if (controlRef.current) {
+			const rect = controlRef.current.getBoundingClientRect();
+			const MARGIN = 6;
+			const spaceBelow = window.innerHeight - rect.bottom - MARGIN;
+			const spaceAbove = rect.top - MARGIN;
+			setMenuPlacedAbove(spaceBelow < 200 && spaceAbove > spaceBelow);
 		}
 		setIsOpen(true);
 		setFocusedIndex(-1);
@@ -411,28 +422,30 @@ export const CustomSelect = ({
 		return <>{groupElements}</>;
 	};
 
-	const effectiveInputId = inputId ?? `${id}-input`;
+	const effectiveInputId: string = inputId ?? `${id}-input`;
 	const listboxId = `${id}-listbox`;
 
-	const controlClasses = ["jam-select__control"];
+	const controlClasses: string[] = ["jam-select__control"];
 	if (isOpen) controlClasses.push("jam-select--open");
 	if (isFocused) controlClasses.push("jam-select--focused");
 
-	const containerClasses = ["jam-select"];
+	const containerClasses: string[] = ["jam-select"];
+	if (size === "sm") containerClasses.push("jam-select--sm");
 	if (isDisabled) containerClasses.push("jam-select--disabled");
 	if (className) containerClasses.push(className);
 
-	const valuesClasses = ["jam-select__values"];
+	const valuesClasses: string[] = ["jam-select__values"];
 	if (isMulti) valuesClasses.push("jam-select--multi");
 
-	const portalClasses = ["jam-select__portal"];
+	const portalClasses: string[] = ["jam-select__portal"];
 	if (isClosing) portalClasses.push("jam-select__portal--closing");
+	if (size === "sm") portalClasses.push("jam-select--sm-menu");
 	if (menuPortalClassName) portalClasses.push(menuPortalClassName);
 
-	const selectedValues = Array.isArray(value) ? (value as SelectOption[]) : [];
-	const singleValue = !isMulti ? (value as SelectOption | null) : null;
-	const showPlaceholder = !hasValue && !inputValue;
-	const showSingleValue = !isMulti && singleValue !== null && !inputValue;
+	const selectedValues: SelectOption[] = Array.isArray(value) ? (value as SelectOption[]) : [];
+	const singleValue: SelectOption | null = !isMulti ? (value as SelectOption | null) : null;
+	const showPlaceholder: boolean = !hasValue && !inputValue;
+	const showSingleValue: boolean = !isMulti && singleValue !== null && !inputValue;
 
 	// Collapse input to cursor-width when a value is shown so it stays inline with the value/tags
 	const inputShrunk = (showSingleValue || (isMulti && hasValue)) && !inputValue;
@@ -451,8 +464,20 @@ export const CustomSelect = ({
 			role="listbox"
 			aria-multiselectable={isMulti}
 		>
-			<div className="jam-select__menu">
-				<div className="jam-select__menu-list" style={menuStyles.maxHeight ? { maxHeight: Math.min(300, (menuStyles.maxHeight as number) - 12) } : undefined}>{renderMenu()}</div>
+			<div
+				className="jam-select__menu"
+				style={{ transformOrigin: menuPlacedAbove ? "bottom center" : "top center" }}
+			>
+				<div
+					className="jam-select__menu-list"
+					style={
+						menuStyles.maxHeight
+							? { maxHeight: Math.min(300, (menuStyles.maxHeight as number) - 12) }
+							: undefined
+					}
+				>
+					{renderMenu()}
+				</div>
 			</div>
 		</div>
 	);
@@ -492,10 +517,10 @@ export const CustomSelect = ({
 						ref={inputRef}
 						value={inputValue}
 						onChange={(e) => {
-					if (!isSearchable) return;
-					setInputValue(e.target.value);
-					if (e.target.value && !isOpen) openMenu();
-				}}
+							if (!isSearchable) return;
+							setInputValue(e.target.value);
+							if (e.target.value && !isOpen) openMenu();
+						}}
 						onKeyDown={handleKeyDown}
 						onFocus={() => setIsFocused(true)}
 						onBlur={() => setIsFocused(false)}

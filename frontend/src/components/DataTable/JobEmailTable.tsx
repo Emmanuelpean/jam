@@ -2,7 +2,6 @@ import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobEmailModal } from "../DataModal/JobEmailModal";
-import { renderFunctions, RenderParams } from "../rendering/view/ViewRenders";
 
 const JobEmailTable: React.FC<DataTableProps> = ({
 	columns = [],
@@ -15,23 +14,11 @@ const JobEmailTable: React.FC<DataTableProps> = ({
 			? columns
 			: [
 					tableColumns.titleColumn({ key: "subject", label: "Subject" }),
-					{ key: "sender", label: "Sender", sortable: true, searchable: true, type: "text" } as TableColumn,
+					tableColumns.senderColumn(),
 					tableColumns.platformColumn(),
-					{
-						key: "alert_name",
-						label: "Alert Name",
-						sortable: true,
-						searchable: true,
-						type: "text",
-					} as TableColumn,
-					{ key: "job_found_n", label: "Jobs Found", sortable: true, type: "number" } as TableColumn,
-					{
-						key: "date_received",
-						label: "Date Received",
-						sortable: true,
-						type: "date",
-						render: (params: RenderParams) => renderFunctions._date(params, "date_received"),
-					} as TableColumn,
+					tableColumns.alertNameColumn(),
+					tableColumns.jobsFoundColumn(),
+					tableColumns.dateReceivedColumn(),
 				];
 
 	return (
@@ -47,6 +34,7 @@ const JobEmailTable: React.FC<DataTableProps> = ({
 			modalSize="xl"
 			showAdd={false}
 			showSearch={true}
+			enableColumnConfig={true}
 			menuItems={["view"]}
 			reloadTrigger={reloadTrigger}
 		/>

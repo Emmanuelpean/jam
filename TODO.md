@@ -14,7 +14,7 @@
 * [ ] Add a "favourite" column to the job table
 
 ### Tables
-* [ ] Move the scrollbar inside the tables so that the header is always visible
+* [X] Move the scrollbar inside the tables so that the header is always visible
 * [ ] Add the ability to filter by columns and hide rejected jobs
 
 * [ ] Add favourite filters for scraping

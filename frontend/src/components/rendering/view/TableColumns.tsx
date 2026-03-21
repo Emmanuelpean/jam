@@ -891,4 +891,46 @@ export const tableColumns = {
 		render: renderFunctions.scrapingStatus,
 		...overrides,
 	}),
+
+	// -------------------------------------------------- JOB EMAIL --------------------------------------------------
+
+	senderColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "sender",
+		label: "Sender",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		filterConfig: { type: "text" },
+		...overrides,
+	}),
+
+	alertNameColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "alert_name",
+		label: "Alert Name",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		filterConfig: { type: "text" },
+		...overrides,
+	}),
+
+	jobsFoundColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "job_found_n",
+		label: "Jobs Found",
+		sortable: true,
+		type: "number",
+		filterConfig: { type: "number", min: 0, max: 100, step: 1, display: "slider" },
+		...overrides,
+	}),
+
+	dateReceivedColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "date_received",
+		label: "Date Received",
+		sortable: true,
+		type: "date",
+		searchFields: (item: JamData) => ("date_received" in item && item.date_received ? toDdMmYyyy(item.date_received) : ""),
+		render: (params: RenderParams) => renderFunctions._date(params, "date_received"),
+		filterConfig: { type: "date" },
+		...overrides,
+	}),
 };

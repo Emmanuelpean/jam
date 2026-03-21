@@ -144,31 +144,6 @@
 	align-items: center;
 }
 
-.column-config-sort-select {
-	flex: 1;
-	min-width: 0;
-	font-size: 0.85rem;
-	padding-bottom: 0.5rem;
-
-	.jam-select__control {
-		min-height: 42px !important;
-		font-size: 1rem;
-	}
-
-	.jam-select__values {
-		min-height: unset !important;
-		padding: 0 0.5rem;
-	}
-
-	.jam-select__single-value {
-		font-size: 0.8rem;
-	}
-
-	.jam-select__indicators > * {
-		padding: 0.25rem;
-	}
-}
-
 .column-config-sort-btn {
 	white-space: nowrap;
 	flex-shrink: 0;

@@ -232,8 +232,8 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 							options={sortOptions}
 							isSearchable={false}
 							isClearable={false}
-							className="jam-select jam-select--sm column-config-sort-select"
-							menuPortalClassName="jam-select--sm-menu"
+							size="sm"
+							className="mb-2"
 						/>
 						<Button
 							id="column-config-sort-direction-btn"

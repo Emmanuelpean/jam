@@ -40,8 +40,7 @@ const ReferenceFilter = ({ config, value, onChange, dataContext }: Props): JSX.E
 			onChange={(picked) =>
 				onChange({ type: "reference", selectedIds: ((picked as typeof selected) ?? []).map((p) => p.value) })
 			}
-			className="jam-select jam-select--sm"
-			menuPortalClassName="jam-select--sm-menu"
+			size="sm"
 			placeholder="Select..."
 			isClearable={false}
 		/>

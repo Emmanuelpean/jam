@@ -24,8 +24,7 @@ const SelectFilter = ({ columnKey, config, value, onChange }: Props): JSX.Elemen
 			onChange={(picked) =>
 				onChange({ type: "select", selected: ((picked as typeof selected) ?? []).map((p) => p.value) })
 			}
-			className="jam-select jam-select--sm"
-			menuPortalClassName="jam-select--sm-menu"
+			size="sm"
 			placeholder="Select..."
 			isClearable={false}
 		/>

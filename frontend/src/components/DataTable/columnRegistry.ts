@@ -103,6 +103,14 @@ function getDefaultColumnsMap(): Record<EntityType, TableColumn[]> {
 			tableColumns.noteColumn(),
 			tableColumns.createdAtColumn(),
 		],
+		jobEmail: [
+			tableColumns.titleColumn({ key: "subject", label: "Subject" }),
+			tableColumns.senderColumn(),
+			tableColumns.platformColumn(),
+			tableColumns.alertNameColumn(),
+			tableColumns.jobsFoundColumn(),
+			tableColumns.dateReceivedColumn(),
+		],
 	};
 	return _cache;
 }
@@ -112,16 +120,12 @@ export function getDefaultColumns(entityType: EntityType): TableColumn[] {
 }
 
 export function getDefaultColumnKeys(entityType: EntityType): string[] {
-	return getDefaultColumns(entityType).map((col) => col.key);
-}
-
-export function getColumnByKey(entityType: EntityType, key: string): TableColumn | undefined {
-	return getDefaultColumns(entityType).find((col) => col.key === key);
+	return getDefaultColumns(entityType).map((col: TableColumn): string => col.key);
 }
 
 export function resolveColumns(entityType: EntityType, keys: string[]): TableColumn[] {
-	const defaults = getDefaultColumns(entityType);
+	const defaults: TableColumn[] = getDefaultColumns(entityType);
 	return keys
-		.map((key) => defaults.find((col) => col.key === key))
-		.filter((col): col is TableColumn => col !== undefined);
+		.map((key: string): TableColumn | undefined => defaults.find((col: TableColumn): boolean => col.key === key))
+		.filter((col: TableColumn | undefined): col is TableColumn => col !== undefined);
 }
