@@ -20,8 +20,8 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 	reloadTrigger,
 }: DataTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
-	const { currentUser } = useAuth();
 	const { updateEntity } = dataContext;
+	const { currentUser } = useAuth();
 	const { showDelete } = useAlert();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const tableRef = useRef<DataTableHandle>(null);
@@ -104,6 +104,14 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 					!!currentUser?.previous_login &&
 					new Date(item.created_at) > new Date(currentUser.previous_login as string)
 				}
+				rowReadIndicator={(item: ScrapedJobData): boolean =>
+					!item.read_at || new Date(item.read_at) < new Date(item.modified_at as string)
+				}
+				onItemOpen={(item: ScrapedJobData): void => {
+					if (!item.read_at) {
+						updateEntity("scrapedJob", item.id, { read_at: new Date().toISOString() });
+					}
+				}}
 				enableMultiSelect={true}
 				bulkActions={[
 					{

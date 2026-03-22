@@ -119,9 +119,11 @@ export interface GenericTableProps {
 	enableMultiSelect?: boolean;
 	bulkActions?: BulkAction[];
 	rowIndicator?: (item: any) => boolean;
+	rowReadIndicator?: (item: any) => boolean;
 
 	onTotalCountChange?: (count: number) => void;
 	onSuccess?: () => void;
+	onItemOpen?: (item: any) => void;
 }
 
 export interface DataTableHandle {
@@ -159,8 +161,10 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			enableMultiSelect = false,
 			bulkActions = [],
 			rowIndicator,
+			rowReadIndicator,
 			onTotalCountChange,
 			onSuccess,
+			onItemOpen,
 		}: GenericTableProps,
 		ref
 	): JSX.Element => {
@@ -447,6 +451,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 				currentElement = currentElement.parentElement;
 			}
 
+			onItemOpen?.(item);
 			if ((rowMode ? rowMode(item) : mode) === "import") {
 				openImportModal(item);
 			} else {
@@ -923,7 +928,10 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 											</tr>
 										</thead>
 										<tbody>
-											<FilterPillsRow filterPills={filterPills} onClear={(): void => setFilters({})} />
+											<FilterPillsRow
+												filterPills={filterPills}
+												onClear={(): void => setFilters({})}
+											/>
 											{currentPageData.map(
 												(item: JamData, index: number): JSX.Element => (
 													<tr
@@ -980,6 +988,11 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 																			>
 																				NEW
 																			</span>
+																		)}
+																	{columnIndex === 0 &&
+																		rowReadIndicator &&
+																		rowReadIndicator(item) && (
+																			<span className="read-dot me-2" />
 																		)}
 																	<RenderViewFieldWithContext
 																		field={column}

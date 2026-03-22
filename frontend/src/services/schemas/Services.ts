@@ -93,10 +93,12 @@ export interface ScrapedJobData extends OwnedOut {
 	emails: number[];
 	job_rating: JobRatingData | null;
 	geolocation: GeoLocationData | null;
+	read_at: string | null;
 }
 
 export interface ScrapedJobUpdate {
-	is_imported: boolean;
+	is_imported?: boolean;
+	read_at?: string | null;
 }
 
 export interface JobRatingData extends BaseOut {

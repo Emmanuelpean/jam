@@ -19,8 +19,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    op.add_column("scraped_job", sa.Column("read_at", sa.TIMESTAMP(timezone=True), nullable=True))
     op.add_column("user_preferences", sa.Column("dashboard_layout", sa.String(), nullable=True))
 
 
 def downgrade() -> None:
     op.drop_column("user_preferences", "dashboard_layout")
+    op.drop_column("scraped_job", "read_at")

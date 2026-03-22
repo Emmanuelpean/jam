@@ -144,6 +144,7 @@ class ScrapedJob(Owned, Base):
     is_imported = Column(Boolean, nullable=False, server_default=expression.false())
     retry_count = Column(Integer, nullable=False, server_default="0")
     next_retry_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    read_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     # Job data
     title = Column(String, nullable=True)

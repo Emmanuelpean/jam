@@ -35,6 +35,16 @@ thead.custom-header th {
     box-shadow: inset 3px 0 0 var(--bs-primary);
 }
 
+.read-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--bs-primary);
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
 .config-btn {
     position: relative;
     height: 100% !important;

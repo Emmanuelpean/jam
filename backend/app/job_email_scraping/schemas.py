@@ -68,6 +68,7 @@ class ScrapedJob(BaseModel):
     skip_reason: str | None = None
     retry_count: int = 0
     next_retry_at: datetime | None = None
+    read_at: datetime | None = None
 
     # Job data
     title: str | None = None
@@ -92,6 +93,7 @@ class ScrapedJobUpdate(BaseModel):
 
     is_active: bool | None = None
     is_imported: bool | None = None
+    read_at: datetime | None = None
 
 
 class ScrapedJobOut(ScrapedJob, OwnedOut):
