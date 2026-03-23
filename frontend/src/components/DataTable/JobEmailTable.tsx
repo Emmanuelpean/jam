@@ -14,7 +14,6 @@ const JobEmailTable: React.FC<DataTableProps> = ({
 			? columns
 			: [
 					tableColumns.titleColumn({ key: "subject", label: "Subject" }),
-					tableColumns.senderColumn(),
 					tableColumns.platformColumn(),
 					tableColumns.alertNameColumn(),
 					tableColumns.jobsFoundColumn(),

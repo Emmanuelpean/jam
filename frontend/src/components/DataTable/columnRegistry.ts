@@ -106,7 +106,6 @@ function getDefaultColumnsMap(): Record<EntityType, TableColumn[]> {
 		],
 		jobEmail: [
 			tableColumns.titleColumn({ key: "subject", label: "Subject" }),
-			tableColumns.senderColumn(),
 			tableColumns.platformColumn(),
 			tableColumns.alertNameColumn(),
 			tableColumns.jobsFoundColumn(),

@@ -1,5 +1,27 @@
 import { LayoutItem } from "react-grid-layout";
-import { CARD_REGISTRY, DashboardLayoutData } from "./cardRegistry";
+// V1 layout data type (kept for migration only)
+interface DashboardLayoutData {
+	version: number;
+	visibleCards: string[];
+	layouts: {
+		lg: LayoutItem[];
+		md: LayoutItem[];
+		sm: LayoutItem[];
+	};
+}
+
+// Default positions for the built-in layout (replaces legacy cardRegistry)
+const DEFAULT_POSITIONS: Record<string, Omit<LayoutItem, "i">> = {
+	"stat-total-jobs": { x: 0, y: 0, w: 3, h: 4, minW: 2, minH: 4 },
+	"stat-applications": { x: 3, y: 0, w: 3, h: 4, minW: 2, minH: 4 },
+	"stat-pending": { x: 6, y: 0, w: 3, h: 4, minW: 2, minH: 4 },
+	"stat-follow-up": { x: 9, y: 0, w: 3, h: 4, minW: 2, minH: 4 },
+	"recent-activity": { x: 0, y: 8, w: 4, h: 12, minW: 3, minH: 8 },
+	"follow-up-table": { x: 4, y: 8, w: 8, h: 12, minW: 4, minH: 8 },
+	"upcoming-deadlines": { x: 0, y: 20, w: 8, h: 12, minW: 4, minH: 8 },
+	"upcoming-interviews": { x: 8, y: 20, w: 4, h: 12, minW: 3, minH: 8 },
+	"job-alerts": { x: 0, y: 32, w: 12, h: 12, minW: 6, minH: 8 },
+};
 
 export type MetricVariant =
 	| "total_jobs"
@@ -62,7 +84,7 @@ export interface WidgetInstance {
 	config: WidgetConfig;
 }
 
-export interface DashboardLayoutDataV2 {
+interface DashboardLayoutDataV2 {
 	version: 2;
 	widgets: WidgetInstance[];
 	layouts: {
@@ -70,6 +92,12 @@ export interface DashboardLayoutDataV2 {
 		md: LayoutItem[];
 		sm: LayoutItem[];
 	};
+}
+
+export interface DashboardLayoutDataV3 {
+	version: 3;
+	widgets: WidgetInstance[];
+	layout: LayoutItem[];
 }
 
 // --- Widget type definitions ---
@@ -89,11 +117,7 @@ export interface WidgetTypeDef {
 	icon: string;
 	description: string;
 	variants: VariantDef[];
-	defaultLayouts: {
-		lg: Omit<LayoutItem, "i">;
-		md: Omit<LayoutItem, "i">;
-		sm: Omit<LayoutItem, "i">;
-	};
+	defaultLayout: Omit<LayoutItem, "i">;
 }
 
 export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
@@ -153,11 +177,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				premiumOnly: false,
 			},
 		],
-		defaultLayouts: {
-			lg: { x: 0, y: 0, w: 2, h: 4, minW: 1, minH: 4 },
-			md: { x: 0, y: 0, w: 2, h: 4, minW: 1, minH: 4 },
-			sm: { x: 0, y: 0, w: 2, h: 4, minW: 1, minH: 4 },
-		},
+		defaultLayout: { x: 0, y: 0, w: 2, h: 4, minW: 2, minH: 4 },
 	},
 	{
 		type: "table",
@@ -194,11 +214,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				premiumOnly: false,
 			},
 		],
-		defaultLayouts: {
-			lg: { x: 0, y: 0, w: 8, h: 12, minW: 4, minH: 8 },
-			md: { x: 0, y: 0, w: 8, h: 12, minW: 4, minH: 8 },
-			sm: { x: 0, y: 0, w: 12, h: 12, minW: 6, minH: 8 },
-		},
+		defaultLayout: { x: 0, y: 0, w: 8, h: 12, minW: 4, minH: 8 },
 	},
 	{
 		type: "timeline",
@@ -242,11 +258,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				premiumOnly: false,
 			},
 		],
-		defaultLayouts: {
-			lg: { x: 0, y: 0, w: 4, h: 12, minW: 3, minH: 8 },
-			md: { x: 0, y: 0, w: 4, h: 12, minW: 3, minH: 8 },
-			sm: { x: 0, y: 0, w: 12, h: 12, minW: 6, minH: 8 },
-		},
+		defaultLayout: { x: 0, y: 0, w: 4, h: 12, minW: 3, minH: 8 },
 	},
 	{
 		type: "graph",
@@ -375,11 +387,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				group: "Updates",
 			},
 		],
-		defaultLayouts: {
-			lg: { x: 0, y: 0, w: 6, h: 12, minW: 3, minH: 8 },
-			md: { x: 0, y: 0, w: 6, h: 12, minW: 3, minH: 8 },
-			sm: { x: 0, y: 0, w: 12, h: 12, minW: 3, minH: 8 },
-		},
+		defaultLayout: { x: 0, y: 0, w: 6, h: 12, minW: 3, minH: 8 },
 	},
 ];
 
@@ -409,18 +417,14 @@ export function isWidgetPremium(config: WidgetConfig): boolean {
 	return variant?.premiumOnly ?? false;
 }
 
-function filterPremium(data: DashboardLayoutDataV2, isPremium: boolean): DashboardLayoutDataV2 {
+function filterPremium(data: DashboardLayoutDataV3, isPremium: boolean): DashboardLayoutDataV3 {
 	if (isPremium) return data;
 	const filteredWidgets = data.widgets.filter((w) => !isWidgetPremium(w.config));
 	const widgetIds = new Set(filteredWidgets.map((w) => w.id));
 	return {
 		...data,
 		widgets: filteredWidgets,
-		layouts: {
-			lg: data.layouts.lg.filter((l) => widgetIds.has(l.i)),
-			md: data.layouts.md.filter((l) => widgetIds.has(l.i)),
-			sm: data.layouts.sm.filter((l) => widgetIds.has(l.i)),
-		},
+		layout: data.layout.filter((l) => widgetIds.has(l.i)),
 	};
 }
 
@@ -438,7 +442,7 @@ const OLD_ID_TO_CONFIG: Record<string, WidgetConfig> = {
 	"upcoming-interviews": { type: "timeline", feed: "upcoming_interviews" },
 };
 
-function migrateV1toV2(v1: DashboardLayoutData): DashboardLayoutDataV2 {
+function migrateV1toV3(v1: DashboardLayoutData): DashboardLayoutDataV3 {
 	const widgets: WidgetInstance[] = [];
 	const oldToNewId: Record<string, string> = {};
 
@@ -450,23 +454,18 @@ function migrateV1toV2(v1: DashboardLayoutData): DashboardLayoutDataV2 {
 		widgets.push({ id: newId, config });
 	}
 
-	const remapLayout = (items: LayoutItem[]): LayoutItem[] =>
-		items.filter((l) => l.i in oldToNewId).map((l) => ({ ...l, i: oldToNewId[l.i]! }));
+	const layout = v1.layouts.lg.filter((l) => l.i in oldToNewId).map((l) => ({ ...l, i: oldToNewId[l.i]! }));
 
-	return {
-		version: 2,
-		widgets,
-		layouts: {
-			lg: remapLayout(v1.layouts.lg),
-			md: remapLayout(v1.layouts.md),
-			sm: remapLayout(v1.layouts.sm),
-		},
-	};
+	return { version: 3, widgets, layout };
+}
+
+function migrateV2toV3(v2: DashboardLayoutDataV2): DashboardLayoutDataV3 {
+	return { version: 3, widgets: v2.widgets, layout: v2.layouts.lg };
 }
 
 // --- Default layout ---
 
-export function getDefaultLayout(isPremium: boolean): DashboardLayoutDataV2 {
+export function getDefaultLayout(isPremium: boolean): DashboardLayoutDataV3 {
 	const defaultWidgets: { config: WidgetConfig; oldId: string }[] = [
 		{ config: { type: "metric", metric: "total_jobs" }, oldId: "stat-total-jobs" },
 		{ config: { type: "metric", metric: "applications" }, oldId: "stat-applications" },
@@ -480,35 +479,35 @@ export function getDefaultLayout(isPremium: boolean): DashboardLayoutDataV2 {
 	];
 
 	const widgets: WidgetInstance[] = [];
-	const layouts: DashboardLayoutDataV2["layouts"] = { lg: [], md: [], sm: [] };
+	const layout: LayoutItem[] = [];
 
 	for (const { config, oldId } of defaultWidgets) {
 		if (isWidgetPremium(config) && !isPremium) continue;
 		const id = `w-default-${oldId}`;
 		widgets.push({ id, config });
-		const cardDef = CARD_REGISTRY.find((c) => c.id === oldId);
-		if (cardDef) {
-			for (const bp of ["lg", "md", "sm"] as const) {
-				layouts[bp].push({ ...cardDef.layouts[bp], i: id });
-			}
+		const pos = DEFAULT_POSITIONS[oldId];
+		if (pos) {
+			layout.push({ ...pos, i: id });
 		}
 	}
 
-	return { version: 2, widgets, layouts };
+	return { version: 3, widgets, layout };
 }
 
 // --- Parse layout data ---
 
-export function parseLayoutData(data: string | null, isPremium: boolean): DashboardLayoutDataV2 {
-	console.log(getDefaultLayout(isPremium));
+export function parseLayoutData(data: string | null, isPremium: boolean): DashboardLayoutDataV3 {
 	if (!data) return getDefaultLayout(isPremium);
 	try {
 		const parsed = JSON.parse(data) as Record<string, unknown>;
 		if (parsed.version === 1 && parsed.visibleCards && parsed.layouts) {
-			return filterPremium(migrateV1toV2(parsed as unknown as DashboardLayoutData), isPremium);
+			return filterPremium(migrateV1toV3(parsed as unknown as DashboardLayoutData), isPremium);
 		}
 		if (parsed.version === 2 && parsed.widgets && parsed.layouts) {
-			return filterPremium(parsed as unknown as DashboardLayoutDataV2, isPremium);
+			return filterPremium(migrateV2toV3(parsed as unknown as DashboardLayoutDataV2), isPremium);
+		}
+		if (parsed.version === 3 && parsed.widgets && parsed.layout) {
+			return filterPremium(parsed as unknown as DashboardLayoutDataV3, isPremium);
 		}
 		return getDefaultLayout(isPremium);
 	} catch {
@@ -516,7 +515,7 @@ export function parseLayoutData(data: string | null, isPremium: boolean): Dashbo
 	}
 }
 
-export function getDefaultLayoutsForConfig(config: WidgetConfig): WidgetTypeDef["defaultLayouts"] {
+export function getDefaultLayoutForConfig(config: WidgetConfig): Omit<LayoutItem, "i"> {
 	const typeDef = WIDGET_TYPE_DEFS.find((t) => t.type === config.type)!;
-	return typeDef.defaultLayouts;
+	return typeDef.defaultLayout;
 }

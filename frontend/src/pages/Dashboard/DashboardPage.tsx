@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Layout, LayoutItem, ResponsiveGridLayout, ResponsiveLayouts, useContainerWidth } from "react-grid-layout";
+import { GridLayout, Layout, LayoutItem, useContainerWidth } from "react-grid-layout";
 import { useAuth } from "../../contexts/AuthContext";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
@@ -12,10 +12,10 @@ import { ActivityFeedCard, renderRecentActivityItem, renderUpcomingInterviewItem
 import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
 import {
-	DashboardLayoutDataV2,
+	DashboardLayoutDataV3,
 	generateWidgetId,
 	getDefaultLayout,
-	getDefaultLayoutsForConfig,
+	getDefaultLayoutForConfig,
 	parseLayoutData,
 	WidgetConfig,
 } from "./widgetRegistry";
@@ -51,10 +51,10 @@ const Dashboard: React.FC = () => {
 
 	const isPremium = currentUser?.premium.is_active ?? false;
 
-	const [layoutData, setLayoutData] = useState<DashboardLayoutDataV2>(() =>
+	const [layoutData, setLayoutData] = useState<DashboardLayoutDataV3>(() =>
 		parseLayoutData(currentUser?.preferences.dashboard_layout ?? null, isPremium)
 	);
-	const savedLayoutRef = useRef<DashboardLayoutDataV2>(layoutData);
+	const savedLayoutRef = useRef<DashboardLayoutDataV3>(layoutData);
 	const layoutInitializedRef = useRef(false);
 
 	useEffect(() => {
@@ -69,16 +69,9 @@ const Dashboard: React.FC = () => {
 	const { totalJobs, jobApplications, jobApplicationPending, activeApplications, needsChase, upcomingDeadlines, upcomingInterviews, pastInterviews, statusUpdates, upcomingDeadlinesTimeline, recentActivity, interviewRate, avgResponseTime } =
 		useDashboardData();
 
-	const handleLayoutChange = (_currentLayout: Layout, allLayouts: ResponsiveLayouts) => {
+	const handleLayoutChange = (newLayout: Layout) => {
 		if (!isEditMode) return;
-		setLayoutData((prev) => ({
-			...prev,
-			layouts: {
-				lg: (allLayouts.lg as LayoutItem[] | undefined) || prev.layouts.lg,
-				md: (allLayouts.md as LayoutItem[] | undefined) || prev.layouts.md,
-				sm: (allLayouts.sm as LayoutItem[] | undefined) || prev.layouts.sm,
-			},
-		}));
+		setLayoutData((prev) => ({ ...prev, layout: newLayout as LayoutItem[] }));
 	};
 
 	const handleSave = async () => {
@@ -108,22 +101,13 @@ const Dashboard: React.FC = () => {
 
 	const handleAddWidget = (config: WidgetConfig) => {
 		const id = generateWidgetId();
-		const defaultLayouts = getDefaultLayoutsForConfig(config);
-		const cols = { lg: 12, md: 12, sm: 12 };
+		const def = getDefaultLayoutForConfig(config);
 		setLayoutData((prev) => {
-			const place = (bp: "lg" | "md" | "sm") => {
-				const def = defaultLayouts[bp];
-				const { x, y } = findFirstFit(prev.layouts[bp], def.w, def.h, cols[bp]);
-				return { ...def, i: id, x, y };
-			};
+			const { x, y } = findFirstFit(prev.layout, def.w, def.h, 12);
 			return {
 				...prev,
 				widgets: [...prev.widgets, { id, config }],
-				layouts: {
-					lg: [...prev.layouts.lg, place("lg")],
-					md: [...prev.layouts.md, place("md")],
-					sm: [...prev.layouts.sm, place("sm")],
-				},
+				layout: [...prev.layout, { ...def, i: id, x, y }],
 			};
 		});
 	};
@@ -136,11 +120,7 @@ const Dashboard: React.FC = () => {
 				setLayoutData((prev) => ({
 					...prev,
 					widgets: prev.widgets.filter((w) => w.id !== widgetId),
-					layouts: {
-						lg: prev.layouts.lg.filter((l) => l.i !== widgetId),
-						md: prev.layouts.md.filter((l) => l.i !== widgetId),
-						sm: prev.layouts.sm.filter((l) => l.i !== widgetId),
-					},
+					layout: prev.layout.filter((l) => l.i !== widgetId),
 				})),
 		});
 	};
@@ -335,11 +315,7 @@ const Dashboard: React.FC = () => {
 	}
 
 	const widgetIds = new Set(layoutData.widgets.map((w) => w.id));
-	const currentLayouts: ResponsiveLayouts = {
-		lg: layoutData.layouts.lg.filter((l) => widgetIds.has(l.i)),
-		md: layoutData.layouts.md.filter((l) => widgetIds.has(l.i)),
-		sm: layoutData.layouts.sm.filter((l) => widgetIds.has(l.i)),
-	};
+	const currentLayout: LayoutItem[] = layoutData.layout.filter((l) => widgetIds.has(l.i));
 
 	return (
 		<div className="dashboard-wrapper">
@@ -347,13 +323,11 @@ const Dashboard: React.FC = () => {
 				<ExtensionBanner />
 				<div className={isEditMode ? "dashboard-edit-mode" : ""}>
 					{mounted && (
-						<ResponsiveGridLayout
+						<GridLayout
 							className="dashboard-grid"
 							width={width}
-							layouts={currentLayouts}
-							breakpoints={{ lg: 992, md: 768, sm: 0 }}
-							cols={{ lg: 12, md: 12, sm: 12 }}
-							rowHeight={30}
+							layout={currentLayout}
+							gridConfig={{ cols: 12, rowHeight: 30 }}
 							dragConfig={{ enabled: isEditMode, handle: ".drag-handle" }}
 							resizeConfig={{ enabled: isEditMode, handles: ["sw", "nw", "se", "ne"] }}
 							onLayoutChange={handleLayoutChange}
@@ -377,7 +351,7 @@ const Dashboard: React.FC = () => {
 									<div className="grid-item-content">{renderWidget(widget.config, widget.id)}</div>
 								</div>
 							))}
-						</ResponsiveGridLayout>
+						</GridLayout>
 					)}
 				</div>
 			</div>

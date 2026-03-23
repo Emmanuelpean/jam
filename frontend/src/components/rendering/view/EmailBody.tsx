@@ -22,7 +22,7 @@ const EmailBody = ({ html }: EmailBodyProps): JSX.Element => {
 			referrerPolicy="no-referrer"
 			onLoad={handleLoad}
 			title="Email content"
-			style={{ width: "100%", border: "none", minHeight: "200px", display: "block" }}
+			style={{ width: "100%", border: "none", minHeight: "700px", display: "block" }}
 		/>
 	);
 };

@@ -3,7 +3,6 @@ import { DataContextValue, JamData, useDataContext } from "../../../contexts/Dat
 import InterviewsTable from "../../DataTable/InterviewTable";
 import JobApplicationUpdateTable from "../../DataTable/JobApplicationUpdateTable";
 import LocationMap from "../../Maps/LocationMap";
-import JobRatingCard from "./JobRatingCard";
 import {
 	AggregatorData,
 	CompanyData,
@@ -53,7 +52,7 @@ import {
 	LocationBadge,
 	PersonBadge,
 } from "./DataBadge";
-import { JobEmailData, JobRatingData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
+import { JobEmailData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
 import JobRatingSection from "./JobRatingSection";
 import EmailBody from "./EmailBody";
 import { Currency } from "../../../services/schemas/Others";
@@ -159,7 +158,7 @@ export const renderFunctions = {
 	htmlBody: (param: RenderParams, key: string): ReactNode => {
 		const body: string | undefined | null = (param.item as JobEmailData)?.[key as keyof JobEmailData] as string;
 		if (!body) return null;
-		const isHtml = /<[a-z][\s\S]*>/i.test(body);
+		const isHtml: boolean = /<[a-z][\s\S]*>/i.test(body);
 		return isHtml ? <EmailBody html={body} /> : <p style={{ whiteSpace: "pre-line" }}>{body}</p>;
 	},
 

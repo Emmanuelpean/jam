@@ -2,6 +2,7 @@
 
 import datetime as dt
 
+from tests.utils.job_email_resources import LINKEDIN_EMAIL_3_BODY
 from tests.utils.test_data.utils import CURRENT_DATE, DATETIME_FORMAT
 
 # ----------------------------------------------------- JOB EMAILS -----------------------------------------------------
@@ -17,23 +18,7 @@ JOB_EMAIL_DATA = [
         "date_received": "2024-01-15 09:30:00",
         "platform": "linkedin",
         "service_log_id": 1,
-        "body": """
-        Hi there,
-
-        We found 10 new jobs that match your preferences:
-
-        1. Senior Python Developer at TechCorp
-        https://www.linkedin.com/jobs/view/3789012345
-
-        2. Python Backend Engineer at StartupInc
-        https://www.linkedin.com/jobs/view/3789012346
-
-        3. Full Stack Python Developer at DataSoft
-        https://linkedin.com/comm/jobs/view/3789012347
-
-        Best regards,
-        LinkedIn Jobs Team
-        """,
+        "body": LINKEDIN_EMAIL_3_BODY,
     },
     {
         "owner_id": 1,
