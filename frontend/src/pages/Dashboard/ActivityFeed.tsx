@@ -7,7 +7,7 @@ import {
 	ViewField,
 } from "../../components/rendering/view/ViewRenders";
 import { getTableIcon } from "../../components/rendering/view/Icons";
-import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, JobData } from "../../services/schemas/DataTables";
+import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, EnrichedJobData, JobData } from "../../services/schemas/DataTables";
 import { formatActivityDate } from "../../utils/TimeUtils";
 import { DashboardCard } from "./DashboardCard";
 
@@ -167,6 +167,78 @@ export const renderUpcomingInterviewItem = (
 			date={interview.date}
 		>
 			<RenderViewFieldWithContext field={jobField} item={interview} id={index.toString()} />
+		</TimelineItem>
+	);
+};
+
+export const renderPastInterviewItem = (
+	interview: EnrichedInterviewData,
+	index: number,
+	isLast: boolean
+): JSX.Element => {
+	const jobField: ViewField = {
+		key: "activity-item-" + index,
+		render: (params: RenderParams) => renderFunctions.interviewBadge(params),
+	};
+
+	return (
+		<TimelineItem
+			key={`past-interview-${index}`}
+			colorClass="bg-secondary"
+			icon={getActivityIcon("Interview")}
+			isLast={isLast}
+			title={`${interview.type} (interview #${interview.number})`}
+			date={interview.date}
+		>
+			<RenderViewFieldWithContext field={jobField} item={interview} id={index.toString()} />
+		</TimelineItem>
+	);
+};
+
+export const renderStatusUpdateItem = (
+	update: EnrichedJobApplicationUpdateData,
+	index: number,
+	isLast: boolean
+): JSX.Element => {
+	const jobField: ViewField = {
+		key: "activity-item-" + index,
+		render: (params: RenderParams) => renderFunctions.jobApplicationUpdateBadge(params),
+	};
+
+	return (
+		<TimelineItem
+			key={`status-update-${index}`}
+			colorClass={getActivityColor("Job Application Update")}
+			icon={getActivityIcon("Job Application Update")}
+			isLast={isLast}
+			title={`Update #${update.number}`}
+			date={update.date}
+		>
+			<RenderViewFieldWithContext field={jobField} item={update} id={index.toString()} />
+		</TimelineItem>
+	);
+};
+
+export const renderUpcomingDeadlineItem = (
+	job: EnrichedJobData,
+	index: number,
+	isLast: boolean
+): JSX.Element => {
+	const jobField: ViewField = {
+		key: "activity-item-" + index,
+		render: (params: RenderParams) => renderFunctions.jobBadge(params),
+	};
+
+	return (
+		<TimelineItem
+			key={`deadline-${index}`}
+			colorClass="bg-warning"
+			icon="alarm"
+			isLast={isLast}
+			title={job.name || job.title}
+			date={job.deadline as string | Date}
+		>
+			<RenderViewFieldWithContext field={jobField} item={job} id={index.toString()} />
 		</TimelineItem>
 	);
 };

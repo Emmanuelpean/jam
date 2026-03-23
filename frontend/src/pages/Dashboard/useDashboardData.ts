@@ -1,21 +1,22 @@
 import { useDataContext } from "../../contexts/DataContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { sortByKey } from "../../utils/Utils";
-import { EnrichedInterviewData, EnrichedJobData } from "../../services/schemas/DataTables";
+import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, EnrichedJobData } from "../../services/schemas/DataTables";
 import { RecentActivity } from "./ActivityFeed";
 
 export interface DashboardData {
 	totalJobs: number;
 	jobApplications: EnrichedJobData[];
 	jobApplicationPending: EnrichedJobData[];
-	offersReceived: EnrichedJobData[];
 	activeApplications: EnrichedJobData[];
 	needsChase: EnrichedJobData[];
 	upcomingDeadlines: EnrichedJobData[];
 	upcomingInterviews: EnrichedInterviewData[];
+	pastInterviews: EnrichedInterviewData[];
+	statusUpdates: EnrichedJobApplicationUpdateData[];
+	upcomingDeadlinesTimeline: EnrichedJobData[];
 	recentActivity: RecentActivity[];
 	interviewRate: number;
-	offerRate: number;
 	avgResponseTime: number;
 }
 
@@ -23,14 +24,15 @@ const EMPTY_DATA: DashboardData = {
 	totalJobs: 0,
 	jobApplications: [],
 	jobApplicationPending: [],
-	offersReceived: [],
 	activeApplications: [],
 	needsChase: [],
 	upcomingDeadlines: [],
 	upcomingInterviews: [],
+	pastInterviews: [],
+	statusUpdates: [],
+	upcomingDeadlinesTimeline: [],
 	recentActivity: [],
 	interviewRate: 0,
-	offerRate: 0,
 	avgResponseTime: 0,
 };
 
@@ -96,10 +98,6 @@ export function useDashboardData(): DashboardData {
 
 	allUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-	const offersReceived: EnrichedJobData[] = jobApplications.filter(
-		(job) => job.application_status === "offer"
-	);
-
 	const activeApplications: EnrichedJobData[] = jobApplications.filter(
 		(job) => job.application_status && !["rejected", "withdrawn"].includes(job.application_status)
 	);
@@ -109,9 +107,6 @@ export function useDashboardData(): DashboardData {
 		jobApplications.length > 0
 			? Math.round((applicationsWithInterviews.size / jobApplications.length) * 100)
 			: 0;
-
-	const offerRate =
-		jobApplications.length > 0 ? Math.round((offersReceived.length / jobApplications.length) * 100) : 0;
 
 	const appsWithResponse = jobApplications.filter((job) => job.application_date && job.last_update_date);
 	const avgResponseTime =
@@ -125,18 +120,32 @@ export function useDashboardData(): DashboardData {
 			  )
 			: 0;
 
+	const pastInterviews: EnrichedInterviewData[] = sortByKey(
+		interviews.filter((interview) => new Date(interview.date) < now),
+		"date",
+		false
+	);
+
+	const statusUpdates: EnrichedJobApplicationUpdateData[] = [...jobApplicationUpdates]
+		.filter((u) => new Date(u.date) <= now)
+		.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+		.slice(0, currentUser.preferences.update_limit);
+
+	const upcomingDeadlinesTimeline: EnrichedJobData[] = sortByKey(upcomingDeadlines, "deadline");
+
 	return {
 		totalJobs: jobs.length,
 		jobApplications,
 		jobApplicationPending,
-		offersReceived,
 		activeApplications,
 		needsChase,
 		upcomingDeadlines,
 		upcomingInterviews,
+		pastInterviews,
+		statusUpdates,
+		upcomingDeadlinesTimeline,
 		recentActivity: allUpdates.slice(0, currentUser.preferences.update_limit),
 		interviewRate,
-		offerRate,
 		avgResponseTime,
 	};
 }

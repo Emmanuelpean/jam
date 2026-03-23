@@ -10,6 +10,8 @@ import {
 	MetricVariant,
 	TableVariant,
 	TimelineVariant,
+	WidgetInstance,
+	configToVariantKey,
 } from "./widgetRegistry";
 import { getSourceForField } from "./graphAggregations";
 
@@ -18,12 +20,14 @@ interface WidgetPickerModalProps {
 	onHide: () => void;
 	onAddWidget: (config: WidgetConfig) => void;
 	isPremium: boolean;
+	currentWidgets: WidgetInstance[];
 }
 
-const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onAddWidget, isPremium }) => {
+const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onAddWidget, isPremium, currentWidgets }) => {
 	const [selectedType, setSelectedType] = useState<WidgetType | null>(null);
 	const contentRef = useRef<HTMLDivElement>(null);
 	const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
+	const usedKeys = new Set(currentWidgets.map((w) => configToVariantKey(w.config)));
 
 	useEffect(() => {
 		if (!show) return;
@@ -104,11 +108,13 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 							<Button
 								variant="link"
 								size="sm"
-								className="p-0 me-2"
+								className="me-2"
 								onClick={() => setSelectedType(null)}
 								style={{
 									color: "var(--bs-heading-color, var(--bs-body-color)) !important",
 									fontSize: "1.2rem",
+									padding: "2px 4px",
+									margin: "-2px 0",
 								}}
 							>
 								<i className="bi bi-arrow-left"></i>
@@ -213,6 +219,11 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 													<i className="bi bi-star-fill me-1"></i>Premium
 												</span>
 											)}
+										{usedKeys.has(variant.key) && (
+											<span className="badge bg-success" style={{ fontSize: "0.65rem" }}>
+												<i className="bi bi-check2 me-1"></i>Added
+											</span>
+										)}
 										</button>
 									);
 								})}

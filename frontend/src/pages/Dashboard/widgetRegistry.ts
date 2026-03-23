@@ -6,13 +6,11 @@ export type MetricVariant =
 	| "applications"
 	| "pending"
 	| "follow_up"
-	| "offers_received"
 	| "active_applications"
 	| "interview_rate"
-	| "offer_rate"
 	| "avg_response_time";
 export type TableVariant = "follow_up" | "upcoming_deadlines" | "job_alerts";
-export type TimelineVariant = "recent_activity" | "upcoming_interviews";
+export type TimelineVariant = "recent_activity" | "upcoming_interviews" | "status_updates" | "upcoming_deadlines_timeline" | "past_interviews";
 export type CardVariant = "favourite_job";
 export type GraphSource = "jobs" | "interviews";
 export type GraphField =
@@ -128,13 +126,6 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				premiumOnly: false,
 			},
 			{
-				key: "offers_received",
-				label: "Offers Received",
-				icon: "trophy",
-				description: "Applications that resulted in an offer",
-				premiumOnly: false,
-			},
-			{
 				key: "active_applications",
 				label: "Active Applications",
 				icon: "send-check",
@@ -146,13 +137,6 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				label: "Interview Rate",
 				icon: "person-check",
 				description: "% of applications that led to an interview",
-				premiumOnly: false,
-			},
-			{
-				key: "offer_rate",
-				label: "Offer Rate",
-				icon: "patch-check",
-				description: "% of applications that resulted in an offer",
 				premiumOnly: false,
 			},
 			{
@@ -221,6 +205,27 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				label: "Upcoming Interviews",
 				icon: "calendar-event",
 				description: "Scheduled interviews coming up",
+				premiumOnly: false,
+			},
+			{
+				key: "past_interviews",
+				label: "Past Interviews",
+				icon: "calendar-check",
+				description: "Interviews you have already attended",
+				premiumOnly: false,
+			},
+			{
+				key: "status_updates",
+				label: "Status Updates",
+				icon: "envelope-open",
+				description: "Replies and notes on your applications",
+				premiumOnly: false,
+			},
+			{
+				key: "upcoming_deadlines_timeline",
+				label: "Upcoming Deadlines",
+				icon: "alarm",
+				description: "Approaching application deadlines",
 				premiumOnly: false,
 			},
 		],

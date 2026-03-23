@@ -8,7 +8,7 @@ import JobsToChase from "../../components/DataTable/JobsToChase";
 import UpcomingDeadlinesTable from "../../components/DataTable/UpcomingDeadlines";
 import { StatCard } from "./StatCard";
 import { DashboardCard } from "./DashboardCard";
-import { ActivityFeedCard, renderRecentActivityItem, renderUpcomingInterviewItem } from "./ActivityFeed";
+import { ActivityFeedCard, renderRecentActivityItem, renderUpcomingInterviewItem, renderPastInterviewItem, renderStatusUpdateItem, renderUpcomingDeadlineItem } from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
 import {
@@ -26,6 +26,19 @@ import { useAlert } from "../../contexts/AlertContext";
 import WidgetPickerModal from "./WidgetPickerModal";
 import ExtensionBanner from "./ExtensionBanner";
 import { DashboardToolbar } from "./DashboardToolbar";
+
+function findFirstFit(existing: LayoutItem[], w: number, h: number, cols: number): { x: number; y: number } {
+	const maxY = existing.reduce((max, item) => Math.max(max, item.y + item.h), 0);
+	for (let y = 0; y <= maxY; y++) {
+		for (let x = 0; x <= cols - w; x++) {
+			const overlaps = existing.some(
+				(item) => x < item.x + item.w && x + w > item.x && y < item.y + item.h && y + h > item.y
+			);
+			if (!overlaps) return { x, y };
+		}
+	}
+	return { x: 0, y: maxY };
+}
 
 const Dashboard: React.FC = () => {
 	const { currentUser, updateCurrentUser } = useAuth();
@@ -53,7 +66,7 @@ const Dashboard: React.FC = () => {
 		}
 	}, [currentUser]);
 
-	const { totalJobs, jobApplications, jobApplicationPending, offersReceived, activeApplications, needsChase, upcomingDeadlines, upcomingInterviews, recentActivity, interviewRate, offerRate, avgResponseTime } =
+	const { totalJobs, jobApplications, jobApplicationPending, activeApplications, needsChase, upcomingDeadlines, upcomingInterviews, pastInterviews, statusUpdates, upcomingDeadlinesTimeline, recentActivity, interviewRate, avgResponseTime } =
 		useDashboardData();
 
 	const handleLayoutChange = (_currentLayout: Layout, allLayouts: ResponsiveLayouts) => {
@@ -96,15 +109,23 @@ const Dashboard: React.FC = () => {
 	const handleAddWidget = (config: WidgetConfig) => {
 		const id = generateWidgetId();
 		const defaultLayouts = getDefaultLayoutsForConfig(config);
-		setLayoutData((prev) => ({
-			...prev,
-			widgets: [...prev.widgets, { id, config }],
-			layouts: {
-				lg: [...prev.layouts.lg, { ...defaultLayouts.lg, i: id }],
-				md: [...prev.layouts.md, { ...defaultLayouts.md, i: id }],
-				sm: [...prev.layouts.sm, { ...defaultLayouts.sm, i: id }],
-			},
-		}));
+		const cols = { lg: 12, md: 12, sm: 12 };
+		setLayoutData((prev) => {
+			const place = (bp: "lg" | "md" | "sm") => {
+				const def = defaultLayouts[bp];
+				const { x, y } = findFirstFit(prev.layouts[bp], def.w, def.h, cols[bp]);
+				return { ...def, i: id, x, y };
+			};
+			return {
+				...prev,
+				widgets: [...prev.widgets, { id, config }],
+				layouts: {
+					lg: [...prev.layouts.lg, place("lg")],
+					md: [...prev.layouts.md, place("md")],
+					sm: [...prev.layouts.sm, place("sm")],
+				},
+			};
+		});
 	};
 
 	const handleRemoveWidget = (widgetId: string) => {
@@ -141,14 +162,10 @@ const Dashboard: React.FC = () => {
 				return <StatCard name="Pending" value={jobApplicationPending.length} icon="clock" variant="warning" description="Applications awaiting response" />;
 			case "follow_up":
 				return <StatCard name="Need Follow-up" value={needsChase.length} icon="telephone" variant="danger" description="Applications requiring action" />;
-			case "offers_received":
-				return <StatCard name="Offers Received" value={offersReceived.length} icon="trophy" variant="success" description="Applications that resulted in an offer" />;
 			case "active_applications":
 				return <StatCard name="Active Applications" value={activeApplications.length} icon="send-check" variant="info" description="Not yet rejected or withdrawn" />;
 			case "interview_rate":
 				return <StatCard name="Interview Rate" value={`${interviewRate}%`} icon="person-check" variant="primary" description="Applications that led to an interview" />;
-			case "offer_rate":
-				return <StatCard name="Offer Rate" value={`${offerRate}%`} icon="patch-check" variant="success" description="Applications that resulted in an offer" />;
 			case "avg_response_time":
 				return <StatCard name="Avg. Response Time" value={`${avgResponseTime}d`} icon="hourglass-split" variant="secondary" description="Average days from application to first update" />;
 			default:
@@ -229,6 +246,45 @@ const Dashboard: React.FC = () => {
 						emptyDescription="Your scheduled interviews will appear here"
 						items={upcomingInterviews}
 						renderItem={renderUpcomingInterviewItem}
+					/>
+				);
+			case "past_interviews":
+				return (
+					<ActivityFeedCard
+						icon="calendar-check"
+						title="Past Interviews"
+						badgeValue={pastInterviews.length}
+						emptyIcon="calendar-x"
+						emptyTitle="No past interviews"
+						emptyDescription="Your completed interviews will appear here"
+						items={pastInterviews}
+						renderItem={renderPastInterviewItem}
+					/>
+				);
+			case "status_updates":
+				return (
+					<ActivityFeedCard
+						icon="envelope-open"
+						title="Status Updates"
+						badgeValue={statusUpdates.length}
+						emptyIcon="inbox"
+						emptyTitle="No status updates"
+						emptyDescription="Replies and notes on your applications will appear here"
+						items={statusUpdates}
+						renderItem={renderStatusUpdateItem}
+					/>
+				);
+			case "upcoming_deadlines_timeline":
+				return (
+					<ActivityFeedCard
+						icon="alarm"
+						title="Upcoming Deadlines"
+						badgeValue={upcomingDeadlinesTimeline.length}
+						emptyIcon="calendar-check"
+						emptyTitle="No upcoming deadlines"
+						emptyDescription="Approaching application deadlines will appear here"
+						items={upcomingDeadlinesTimeline}
+						renderItem={renderUpcomingDeadlineItem}
 					/>
 				);
 			default:
@@ -326,6 +382,7 @@ const Dashboard: React.FC = () => {
 				onHide={() => setShowWidgetPicker(false)}
 				onAddWidget={handleAddWidget}
 				isPremium={isPremium}
+				currentWidgets={layoutData.widgets}
 			/>
 		</div>
 	);
