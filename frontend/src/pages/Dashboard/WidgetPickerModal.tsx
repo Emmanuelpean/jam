@@ -102,7 +102,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 	return (
 		<Modal show={show} onHide={handleClose} centered>
 			<Modal.Header closeButton>
-				<Modal.Title>
+				<Modal.Title style={{ overflow: "visible" }}>
 					{selectedType ? (
 						<>
 							<Button

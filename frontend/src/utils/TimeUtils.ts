@@ -1,4 +1,4 @@
-export function formatActivityDate(dateString: string | Date): string {
+export function formatActivityDate(dateString: string | Date, dateOnly = false): string {
 	const date = new Date(dateString);
 	const now = new Date();
 
@@ -6,9 +6,7 @@ export function formatActivityDate(dateString: string | Date): string {
 		weekday: "long",
 		month: "short",
 		day: "numeric",
-		hour: "2-digit",
-		minute: "2-digit",
-		hour12: false,
+		...(!dateOnly && { hour: "2-digit", minute: "2-digit", hour12: false }),
 		...(now.getFullYear() !== date.getFullYear() && { year: "numeric" }),
 	};
 

@@ -10,6 +10,7 @@ import { StatCard } from "./StatCard";
 import { DashboardCard } from "./DashboardCard";
 import { ActivityFeedCard, renderRecentActivityItem, renderUpcomingInterviewItem, renderPastInterviewItem, renderStatusUpdateItem, renderUpcomingDeadlineItem } from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
+import FavouritesTable from "../../components/DataTable/FavouritesTable";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
 import {
 	DashboardLayoutDataV2,
@@ -20,7 +21,6 @@ import {
 	WidgetConfig,
 } from "./widgetRegistry";
 import GraphWidget from "./GraphWidget";
-import FavouriteJobWidget from "./FavouriteJobWidget";
 import { useDashboardData } from "./useDashboardData";
 import { useAlert } from "../../contexts/AlertContext";
 import WidgetPickerModal from "./WidgetPickerModal";
@@ -66,7 +66,7 @@ const Dashboard: React.FC = () => {
 		}
 	}, [currentUser]);
 
-	const { totalJobs, jobApplications, jobApplicationPending, activeApplications, needsChase, upcomingDeadlines, upcomingInterviews, pastInterviews, statusUpdates, upcomingDeadlinesTimeline, recentActivity, interviewRate, avgResponseTime } =
+	const { totalJobs, jobApplications, jobApplicationPending, activeApplications, favouriteJobs, needsChase, upcomingDeadlines, upcomingInterviews, pastInterviews, statusUpdates, upcomingDeadlinesTimeline, recentActivity, interviewRate, avgResponseTime } =
 		useDashboardData();
 
 	const handleLayoutChange = (_currentLayout: Layout, allLayouts: ResponsiveLayouts) => {
@@ -215,6 +215,19 @@ const Dashboard: React.FC = () => {
 						</div>
 					</DashboardCard>
 				);
+
+			case "favourites":
+				return (
+					<DashboardCard
+						icon="star-fill"
+						title="Favourite Jobs"
+						badgeValue={favouriteJobs.length}
+						isEmpty={favouriteJobs.length === 0}
+						emptyState={{ icon: "star", title: "No favourite jobs", description: "Star a job to pin it here" }}
+					>
+						<FavouritesTable data={favouriteJobs} />
+					</DashboardCard>
+				);
 			default:
 				return null;
 		}
@@ -300,8 +313,6 @@ const Dashboard: React.FC = () => {
 				return renderTableWidget(config.source);
 			case "timeline":
 				return renderTimelineWidget(config.feed);
-			case "card":
-				return <FavouriteJobWidget />;
 			case "graph":
 				return (
 					<GraphWidget

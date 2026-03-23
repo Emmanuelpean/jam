@@ -9,6 +9,7 @@ export interface DashboardData {
 	jobApplications: EnrichedJobData[];
 	jobApplicationPending: EnrichedJobData[];
 	activeApplications: EnrichedJobData[];
+	favouriteJobs: EnrichedJobData[];
 	needsChase: EnrichedJobData[];
 	upcomingDeadlines: EnrichedJobData[];
 	upcomingInterviews: EnrichedInterviewData[];
@@ -25,6 +26,7 @@ const EMPTY_DATA: DashboardData = {
 	jobApplications: [],
 	jobApplicationPending: [],
 	activeApplications: [],
+	favouriteJobs: [],
 	needsChase: [],
 	upcomingDeadlines: [],
 	upcomingInterviews: [],
@@ -102,6 +104,8 @@ export function useDashboardData(): DashboardData {
 		(job) => job.application_status && !["rejected", "withdrawn"].includes(job.application_status)
 	);
 
+	const favouriteJobs: EnrichedJobData[] = jobs.filter((job) => job.is_favourite);
+
 	const applicationsWithInterviews = new Set(interviews.map((i) => i.job_id));
 	const interviewRate =
 		jobApplications.length > 0
@@ -138,6 +142,7 @@ export function useDashboardData(): DashboardData {
 		jobApplications,
 		jobApplicationPending,
 		activeApplications,
+		favouriteJobs,
 		needsChase,
 		upcomingDeadlines,
 		upcomingInterviews,

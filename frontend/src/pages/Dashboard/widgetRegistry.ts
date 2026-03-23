@@ -9,9 +9,8 @@ export type MetricVariant =
 	| "active_applications"
 	| "interview_rate"
 	| "avg_response_time";
-export type TableVariant = "follow_up" | "upcoming_deadlines" | "job_alerts";
+export type TableVariant = "follow_up" | "upcoming_deadlines" | "job_alerts" | "favourites";
 export type TimelineVariant = "recent_activity" | "upcoming_interviews" | "status_updates" | "upcoming_deadlines_timeline" | "past_interviews";
-export type CardVariant = "favourite_job";
 export type GraphSource = "jobs" | "interviews";
 export type GraphField =
 	| "application_date"
@@ -24,7 +23,7 @@ export type GraphField =
 	| "country"
 	| "interview_date";
 
-export type WidgetType = "metric" | "table" | "timeline" | "graph" | "card";
+export type WidgetType = "metric" | "table" | "timeline" | "graph";
 
 export interface MetricConfig {
 	type: "metric";
@@ -38,10 +37,6 @@ export interface TimelineConfig {
 	type: "timeline";
 	feed: TimelineVariant;
 }
-export interface CardConfig {
-	type: "card";
-	variant: CardVariant;
-}
 export interface GraphConfig {
 	type: "graph";
 	source: GraphSource;
@@ -49,7 +44,7 @@ export interface GraphConfig {
 	chartType?: "line" | "bar" | "pie";
 	granularity?: "week" | "month";
 }
-export type WidgetConfig = MetricConfig | TableConfig | TimelineConfig | CardConfig | GraphConfig;
+export type WidgetConfig = MetricConfig | TableConfig | TimelineConfig | GraphConfig;
 
 export interface WidgetInstance {
 	id: string;
@@ -180,6 +175,13 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Jobs received from your scrapers",
 				premiumOnly: true,
 			},
+			{
+				key: "favourites",
+				label: "Favourite Jobs",
+				icon: "star-fill",
+				description: "All jobs you have starred",
+				premiumOnly: false,
+			},
 		],
 		defaultLayouts: {
 			lg: { x: 0, y: 0, w: 8, h: 12, minW: 4, minH: 8 },
@@ -226,26 +228,6 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				label: "Upcoming Deadlines",
 				icon: "alarm",
 				description: "Approaching application deadlines",
-				premiumOnly: false,
-			},
-		],
-		defaultLayouts: {
-			lg: { x: 0, y: 0, w: 4, h: 12, minW: 3, minH: 8 },
-			md: { x: 0, y: 0, w: 4, h: 12, minW: 3, minH: 8 },
-			sm: { x: 0, y: 0, w: 12, h: 12, minW: 6, minH: 8 },
-		},
-	},
-	{
-		type: "card",
-		label: "Card",
-		icon: "star",
-		description: "Pinned job spotlight",
-		variants: [
-			{
-				key: "favourite_job",
-				label: "Favourite Job",
-				icon: "star-fill",
-				description: "Pin your favourite job at a glance",
 				premiumOnly: false,
 			},
 		],
@@ -356,8 +338,6 @@ export function configToVariantKey(config: WidgetConfig): string {
 			return config.source;
 		case "timeline":
 			return config.feed;
-		case "card":
-			return config.variant;
 		case "graph":
 			return config.field;
 	}

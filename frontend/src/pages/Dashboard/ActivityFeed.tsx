@@ -44,10 +44,11 @@ interface TimelineItemProps {
 	isLast: boolean;
 	title: ReactNode;
 	date: string | Date;
+	dateOnly?: boolean;
 	children: ReactNode;
 }
 
-const TimelineItem: React.FC<TimelineItemProps> = ({ colorClass, icon, isLast, title, date, children }) => (
+const TimelineItem: React.FC<TimelineItemProps> = ({ colorClass, icon, isLast, title, date, dateOnly, children }) => (
 	<div className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
 		<div className="d-flex position-relative">
 			{!isLast && <div className="position-absolute activity-line" />}
@@ -62,7 +63,7 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ colorClass, icon, isLast, t
 			<div className="flex-grow-1 min-width-0">
 				<div className="activity-header d-flex align-items-start justify-content-between mb-1">
 					<div className="fw-semibold activity-title" style={{ fontSize: "1rem" }}>{title}</div>
-					<small className="text-muted activity-date">{formatActivityDate(date)}</small>
+					<small className="text-muted activity-date">{formatActivityDate(date, dateOnly)}</small>
 				</div>
 				{children}
 			</div>
@@ -234,11 +235,12 @@ export const renderUpcomingDeadlineItem = (
 			key={`deadline-${index}`}
 			colorClass="bg-warning"
 			icon="alarm"
+			dateOnly
 			isLast={isLast}
 			title={job.name || job.title}
 			date={job.deadline as string | Date}
 		>
-			<RenderViewFieldWithContext field={jobField} item={job} id={index.toString()} />
+			<RenderViewFieldWithContext field={jobField} item={{ job_id: job.id }} id={index.toString()} />
 		</TimelineItem>
 	);
 };
