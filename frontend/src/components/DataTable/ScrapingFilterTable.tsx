@@ -10,6 +10,7 @@ import { ScrapingFilterData } from "../../services/schemas/Services";
 interface ScrapingFilterTableProps extends DataTableProps {
 	show: boolean;
 	onHide: () => void;
+	variant?: "scraping" | "favourite";
 }
 
 type tabKeys = "active" | "inactive";
@@ -18,11 +19,13 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	columns = [],
 	show,
 	onHide,
+	variant = "scraping",
 }: ScrapingFilterTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 	const [activeTab, setActiveTab] = useState<tabKeys>("active");
 	const [containerHeight, setContainerHeight] = useState("auto");
 	const contentRef = useRef<HTMLDivElement>(null);
+	const isScraping = variant === "scraping";
 
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
@@ -32,16 +35,12 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 					tableColumns.filterOperatorColumn(),
 					tableColumns.valueColumn({ type: "text" }),
 					tableColumns.caseSensitiveColumn(),
-					tableColumns.filteredJobCountColumn(),
+					...(isScraping ? [tableColumns.filteredJobCountColumn()] : []),
 				];
 
-	const activeFilters: ScrapingFilterData[] = dataContext.scrapingFilters.filter(
-		(filter: ScrapingFilterData): boolean => filter.is_active
-	);
-
-	const deactivatedFilters: ScrapingFilterData[] = dataContext.scrapingFilters.filter(
-		(filter: ScrapingFilterData): boolean => !filter.is_active
-	);
+	const filters = isScraping ? dataContext.scrapingFilters : dataContext.scrapingFavouriteFilters;
+	const activeFilters: ScrapingFilterData[] = filters.filter((f: ScrapingFilterData) => f.is_active);
+	const deactivatedFilters: ScrapingFilterData[] = filters.filter((f: ScrapingFilterData) => !f.is_active);
 
 	const tabs: { key: tabKeys; title: string }[] = [
 		{ key: "active" as const, title: `Active (${activeFilters.length})` },
@@ -49,19 +48,12 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	];
 
 	const menuItems = (item: ScrapingFilterData): string[] => {
-		if (item.filtered_jobs.length > 0) {
-			if (item.is_active) {
-				return ["view", "deactivate"];
-			} else {
-				return ["view", "activate"];
-			}
-		} else {
-			if (item.is_active) {
-				return ["view", "edit", "deactivate", "delete"];
-			} else {
-				return ["view", "edit", "activate", "delete"];
-			}
+		if (isScraping && item.filtered_jobs.length > 0) {
+			return item.is_active ? ["view", "deactivate"] : ["view", "activate"];
 		}
+		return item.is_active
+			? ["view", "edit", "deactivate", "delete"]
+			: ["view", "edit", "activate", "delete"];
 	};
 
 	const renderBodyContent = (): JSX.Element => {
@@ -73,11 +65,12 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 				<div className="modal-content-animated-inner">
 					<div ref={contentRef} style={{ paddingTop: "4px" }}>
 						<DataTable
-							entityType="scrapingFilter"
+							entityType={isScraping ? "scrapingFilter" : "scrapingFavouriteFilter"}
 							data={data}
 							columns={defaultColumns}
 							initialSortConfig={{ key: "type", direction: "asc" }}
 							Modal={ScrapingFilterModal}
+							modalProps={{ variant }}
 							modalSize="lg"
 							showAllEntries={true}
 							compact={true}
@@ -148,17 +141,17 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 			centered={true}
 			backdrop={true}
 			keyboard={true}
-			id={"scraping-filters-modal"}
+			id={isScraping ? "scraping-filters-modal" : "favourite-filters-modal"}
 		>
 			<ModalHeader onClose={onHide}>
-				<Modal.Title>Scraped Job Filters</Modal.Title>
+				<Modal.Title>{isScraping ? "Scraped Job Filters" : "Favourite Filters"}</Modal.Title>
 			</ModalHeader>
 
 			<Modal.Body>
 				<i style={{ margin: "0 9px 9px 9px", display: "block" }}>
-					Filters allow you to filter out specific jobs from your job alerts. For example, if you do not want
-					to view jobs from company "ABC Corp", you can create a filter with Type "Company", Operator
-					"Equals", and Value "ABC Corp".
+					{isScraping
+						? 'Filters allow you to filter out specific jobs from your job alerts. For example, if you do not want to view jobs from company "ABC Corp", you can create a filter with Type "Company", Operator "Equals", and Value "ABC Corp".'
+						: "Favourite filters pin matching scraped job alerts to this widget. Jobs matching any active filter will appear here."}
 				</i>
 				{renderTabs()}
 			</Modal.Body>

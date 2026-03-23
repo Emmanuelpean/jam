@@ -5,9 +5,14 @@ import { modalViewFields } from "../rendering/view/ModalFields";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { ScrapingFilterData, ScrapingFilterTransform } from "../../services/schemas/Services";
 
-export const ScrapingFilterModal = forwardRef<DataModalHandle, JamDataModalProps>(
-	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
+interface ScrapingFilterModalProps extends JamDataModalProps {
+	variant?: "scraping" | "favourite";
+}
+
+export const ScrapingFilterModal = forwardRef<DataModalHandle, ScrapingFilterModalProps>(
+	({ size = "lg", variant = "scraping" }: ScrapingFilterModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
+		const isScraping = variant === "scraping";
 
 		const formFieldsArray: Fields = [
 			formFields.scrapingFilterType(),
@@ -29,7 +34,8 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle, JamDataModalProps
 		const customValidation = async (formData: ScrapingFilterData): Promise<ValidationErrors> => {
 			const errors: ValidationErrors = {};
 
-			const duplicates: ScrapingFilterData[] = dataContext.scrapingFilters.filter(
+			const filters = isScraping ? dataContext.scrapingFilters : dataContext.scrapingFavouriteFilters;
+			const duplicates: ScrapingFilterData[] = filters.filter(
 				(filter: ScrapingFilterData): boolean =>
 					filter.type === formData.type &&
 					filter.operator === formData.operator &&
@@ -44,21 +50,23 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle, JamDataModalProps
 			return errors;
 		};
 
-		const canEdit = (formData: ScrapingFilterData): string => {
-			if (formData?.filtered_jobs?.length > 0) {
-				return "Filters that have been applied to scraped jobs cannot be edited.";
-			} else {
-				return "";
-			}
-		};
+		const canEdit = isScraping
+			? (formData: ScrapingFilterData): string => {
+					if (formData?.filtered_jobs?.length > 0) {
+						return "Filters that have been applied to scraped jobs cannot be edited.";
+					}
+					return "";
+			  }
+			: undefined;
 
-		const canDelete = (formData: ScrapingFilterData): string => {
-			if (formData?.filtered_jobs?.length > 0) {
-				return "Filters that have been applied to scraped jobs cannot be deleted.";
-			} else {
-				return "";
-			}
-		};
+		const canDelete = isScraping
+			? (formData: ScrapingFilterData): string => {
+					if (formData?.filtered_jobs?.length > 0) {
+						return "Filters that have been applied to scraped jobs cannot be deleted.";
+					}
+					return "";
+			  }
+			: undefined;
 
 		const transformFormData = (formData: ScrapingFilterData): ScrapingFilterTransform => {
 			return {
@@ -70,20 +78,20 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle, JamDataModalProps
 		};
 
 		return (
-			<>
-				<DataModal
-					ref={ref}
-					size={size}
-					fields={fields}
-					entityType="scrapingFilter"
-					validation={customValidation}
-					transformFormData={transformFormData}
-					additionalFields={[modalViewFields.accordionScrapedJobTable()]}
-					canEdit={canEdit}
-					canDelete={canDelete}
-					showDeactivate={true}
-				/>
-			</>
+			<DataModal
+				ref={ref}
+				size={size}
+				fields={fields}
+				entityType={isScraping ? "scrapingFilter" : "scrapingFavouriteFilter"}
+				validation={customValidation}
+				transformFormData={transformFormData}
+				{...(isScraping && {
+					additionalFields: [modalViewFields.accordionScrapedJobTable()],
+					canEdit,
+					canDelete,
+				})}
+				showDeactivate={true}
+			/>
 		);
 	}
 );

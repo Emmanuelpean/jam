@@ -8,7 +8,6 @@ import { DataContextValue, JamData, useDataContext } from "../../contexts/DataCo
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionToggle } from "../rendering/form/ActionToggle";
 import ScrapingFilterTable from "./ScrapingFilterTable";
-import FavouriteFilterTable from "./FavouriteFilterTable";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAlert } from "../../contexts/AlertContext";
 import { useProgressOverlay } from "../../contexts/useProgressOverlayContext";
@@ -195,7 +194,8 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 					setShowFilters(false);
 				}}
 			/>
-			<FavouriteFilterTable
+			<ScrapingFilterTable
+				variant="favourite"
 				show={showFavouriteFilters}
 				onHide={(): void => {
 					setShowFavouriteFilters(false);
