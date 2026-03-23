@@ -8,7 +8,7 @@ import json
 from typing import Literal
 
 from fastapi import Depends, HTTPException
-from sqlalchemy import asc, desc, or_, and_
+from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session, joinedload
 from starlette import status
 
@@ -16,8 +16,8 @@ from app import models
 from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.job_email_scraping import schemas
-from app.routers.utility import generate_data_table_crud_router, NOT_ALLOWED_EXCEPTION
-
+from app.job_email_scraping.filtering import rule_to_sql_predicate
+from app.routers.utility import generate_data_table_crud_router
 
 # GET endpoint for admin user to get all scraped jobs
 scraped_job_router = generate_data_table_crud_router(
@@ -42,6 +42,7 @@ def get_all(
     sort_direction: Literal["asc", "desc"] = "desc",
     show_past_deadline: bool = False,
     since_last_login: bool = False,
+    favourites_only: bool = False,
     search: str | None = None,
     filters: str | None = None,
     ids_only: bool = False,
@@ -55,21 +56,35 @@ def get_all(
     :param sort_direction: sort direction
     :param show_past_deadline: Show scraped jobs with past deadlines
     :param since_last_login: Only show jobs created since last login
+    :param favourites_only: Only show jobs that are in the user's favourites
     :param search: Search term
     :param filters: JSON-encoded filter object
     :param ids_only: Return only IDs instead of full objects"""
 
     # Base query
-    # noinspection PyComparisonWithNone
     query = db.query(models.ScrapedJob)
     if not ids_only:
         query = query.options(joinedload(models.ScrapedJob.job_rating))  # Eager load rating for full response
+    # noinspection PyComparisonWithNone
     query = (
         query.filter(models.ScrapedJob.owner_id == current_user.id)
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.is_active.is_(True))
         .filter(models.ScrapedJob.exclusion_filter_id == None)
     )
+
+    if favourites_only:
+        fav_filters = (
+            db.query(models.ScrapingFavouriteFilter)
+            .filter(models.ScrapingFavouriteFilter.owner_id == current_user.id)
+            .filter(models.ScrapingFavouriteFilter.is_active.is_(True))
+            .all()
+        )
+        if fav_filters:
+            fav_predicates = [rule_to_sql_predicate(f) for f in fav_filters]
+            query = query.filter(or_(*fav_predicates))
+        else:
+            query = query.filter(False)
 
     # Total before deadline/login/search/column filters
     total = query.count()

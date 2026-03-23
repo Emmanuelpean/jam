@@ -1,4 +1,4 @@
-import React, { JSX, useCallback, useMemo, useRef, useState } from "react";
+import React, { JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "react-bootstrap";
 import { DataTable, DataTableHandle, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
@@ -8,17 +8,25 @@ import { DataContextValue, JamData, useDataContext } from "../../contexts/DataCo
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionToggle } from "../rendering/form/ActionToggle";
 import ScrapingFilterTable from "./ScrapingFilterTable";
+import FavouriteFilterTable from "./FavouriteFilterTable";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAlert } from "../../contexts/AlertContext";
 import { useProgressOverlay } from "../../contexts/useProgressOverlayContext";
 import { ApiResponsePromise } from "../../services/api/Base";
 
-const ScrapedJobsTable: React.FC<DataTableProps> = ({
+interface ScrapedJobTableProps extends DataTableProps {
+	favouritesOnly?: boolean;
+	dashboardMode?: boolean;
+}
+
+const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 	columns = [],
 	title = undefined,
 	onTotalCountChange,
 	reloadTrigger,
-}: DataTableProps): JSX.Element => {
+	favouritesOnly = false,
+	dashboardMode = false,
+}: ScrapedJobTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 	const { updateEntity } = dataContext;
 	const { currentUser } = useAuth();
@@ -26,8 +34,10 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const tableRef = useRef<DataTableHandle>(null);
 	const [showFilters, setShowFilters] = useState<boolean>(false);
+	const [showFavouriteFilters, setShowFavouriteFilters] = useState<boolean>(false);
 	const [showPastDeadline, setShowPastDeadline] = useState<boolean>(false);
 	const [internalReloadTrigger, setInternalReloadTrigger] = useState<number>(0);
+	const filtersInitializedRef = useRef(false);
 	const { showProgress, hideProgress } = useProgressOverlay();
 
 	const handleBulkDismiss = useCallback(
@@ -61,11 +71,21 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 		[updateEntity, showDelete, showToastSuccess, showToastError]
 	);
 
+	useEffect(() => {
+		if (!favouritesOnly) return;
+		if (!filtersInitializedRef.current) {
+			filtersInitializedRef.current = true;
+			return;
+		}
+		setInternalReloadTrigger((t) => t + 1);
+	}, [dataContext.scrapingFavouriteFilters]);
+
 	const queryParams = useMemo(
 		() => ({
 			show_past_deadline: showPastDeadline.toString(),
+			...(favouritesOnly ? { favourites_only: "true" } : {}),
 		}),
-		[showPastDeadline]
+		[showPastDeadline, favouritesOnly]
 	);
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
@@ -97,8 +117,9 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 				modalSize="xl"
 				showAdd={false}
 				showSearch={true}
+				smallSearch={dashboardMode}
 				queryParams={queryParams}
-				enableColumnConfig={true}
+				enableColumnConfig={!dashboardMode}
 				reloadTrigger={(reloadTrigger ?? 0) + internalReloadTrigger}
 				rowIndicator={(item: ScrapedJobData): boolean =>
 					!!currentUser?.previous_login &&
@@ -112,31 +133,53 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 						updateEntity("scrapedJob", item.id, { read_at: new Date().toISOString() });
 					}
 				}}
-				enableMultiSelect={true}
-				bulkActions={[
-					{
-						label: "Delete",
-						icon: "x-circle",
-						variant: "outline-danger",
-						onClick: (ids: number[]): Promise<void> => handleBulkDismiss(ids),
-					},
-				]}
+				enableMultiSelect={!dashboardMode}
+				bulkActions={
+					dashboardMode
+						? []
+						: [
+								{
+									label: "Delete",
+									icon: "x-circle",
+									variant: "outline-danger",
+									onClick: (ids: number[]): Promise<void> => handleBulkDismiss(ids),
+								},
+							]
+				}
 				toolbarAddon={
 					<div style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.75rem", height: "100%" }}>
-						<Button
-							style={{ height: "100%" }}
-							variant="outline-primary"
-							onClick={(): void => setShowFilters(true)}
-							id={"scraping-filters-button"}
-						>
-							Scraping Filters (
-							{
-								dataContext.scrapingFilters.filter(
-									(filter: ScrapingFilterData): boolean => filter.is_active
-								).length
-							}
-							)
-						</Button>
+						{!favouritesOnly && !dashboardMode && (
+							<Button
+								style={{ height: "100%" }}
+								variant="outline-primary"
+								onClick={(): void => setShowFilters(true)}
+								id={"scraping-filters-button"}
+							>
+								Scraping Filters (
+								{
+									dataContext.scrapingFilters.filter(
+										(filter: ScrapingFilterData): boolean => filter.is_active
+									).length
+								}
+								)
+							</Button>
+						)}
+						{favouritesOnly && (
+							<Button
+								style={{ height: "100%", padding: "0.3rem" }}
+								variant="outline-primary"
+								onClick={(): void => setShowFavouriteFilters(true)}
+								id={"favourite-filters-button"}
+							>
+								Favourite Filters (
+								{
+									dataContext.scrapingFavouriteFilters.filter(
+										(filter: ScrapingFilterData): boolean => filter.is_active
+									).length
+								}
+								)
+							</Button>
+						)}
 						<ActionToggle
 							id="show-past-deadline-toggle"
 							label="Show past deadline jobs"
@@ -150,6 +193,12 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({
 				show={showFilters}
 				onHide={(): void => {
 					setShowFilters(false);
+				}}
+			/>
+			<FavouriteFilterTable
+				show={showFavouriteFilters}
+				onHide={(): void => {
+					setShowFavouriteFilters(false);
 				}}
 			/>
 		</>

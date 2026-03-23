@@ -7,7 +7,7 @@ import {
 	Line,
 	BarChart,
 	Bar,
-	Cell,
+	Rectangle,
 	XAxis,
 	YAxis,
 	CartesianGrid,
@@ -21,22 +21,22 @@ import { PieChart } from "../../components/Chart/PieChart";
 import { DashboardCard } from "./DashboardCard";
 import "./GraphWidget.scss";
 
-const CHART_COLORS = [
-	"#6366f1",
-	"#8b5cf6",
-	"#a855f7",
-	"#ec4899",
-	"#f43f5e",
-	"#f97316",
-	"#eab308",
-	"#22c55e",
-	"#14b8a6",
-	"#06b6d4",
-	"#3b82f6",
-	"#6d28d9",
-	"#059669",
-	"#dc2626",
-	"#0891b2",
+const CHART_COLORS: string[] = [
+	"#6366f1", // indigo
+	"#f97316", // orange
+	"#22c55e", // green
+	"#ec4899", // pink
+	"#06b6d4", // cyan
+	"#dc2626", // red
+	"#14b8a6", // teal
+	"#eab308", // yellow
+	"#3b82f6", // blue
+	"#a855f7", // purple
+	"#059669", // emerald
+	"#f43f5e", // rose
+	"#0891b2", // sky
+	"#8b5cf6", // violet
+	"#6d28d9", // dark purple
 ];
 
 interface GraphWidgetProps {
@@ -104,11 +104,16 @@ const renderBarChart = (data: ChartDataPoint[]) => (
 				allowDecimals={false}
 			/>
 			<Tooltip content={<CustomTooltip />} />
-			<Bar dataKey="value" radius={[4, 4, 0, 0]}>
-				{data.map((_, index) => (
-					<Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-				))}
-			</Bar>
+			<Bar
+				dataKey="value"
+				shape={(props: any) => (
+					<Rectangle
+						{...props}
+						fill={CHART_COLORS[props.index % CHART_COLORS.length]}
+						radius={[4, 4, 0, 0]}
+					/>
+				)}
+			/>
 		</BarChart>
 	</ResponsiveContainer>
 );
@@ -199,8 +204,10 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 						<label className="graph-sidebar-label">Source</label>
 						<CustomSelect
 							id="graph-source"
-							value={sourceOptions.find((o) => o.value === config.source) ?? null}
-							onChange={(opt) => opt && !Array.isArray(opt) && handleSourceChange(opt.value as GraphSource)}
+							value={sourceOptions.find((o: SelectOption): boolean => o.value === config.source) ?? null}
+							onChange={(opt) =>
+								opt && !Array.isArray(opt) && handleSourceChange(opt.value as GraphSource)
+							}
 							options={sourceOptions}
 							isSearchable={false}
 							isClearable={false}
@@ -210,10 +217,15 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 						<label className="graph-sidebar-label">Display</label>
 						<CustomSelect
 							id="graph-field"
-							value={fieldOptions.find((o) => o.value === config.field) ?? null}
+							value={fieldOptions.find((o: SelectOption): boolean => o.value === config.field) ?? null}
 							onChange={(opt) =>
-								opt && !Array.isArray(opt) &&
-								onConfigChange({ type: "graph", source: config.source, field: opt.value as GraphConfig["field"] })
+								opt &&
+								!Array.isArray(opt) &&
+								onConfigChange({
+									type: "graph",
+									source: config.source,
+									field: opt.value as GraphConfig["field"],
+								})
 							}
 							options={fieldOptions}
 							isSearchable={false}
@@ -226,9 +238,14 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 								<label className="graph-sidebar-label">Chart</label>
 								<CustomSelect
 									id="graph-chart-type"
-									value={chartTypeOptions.find((o) => o.value === effectiveChartType) ?? null}
+									value={
+										chartTypeOptions.find(
+											(o: SelectOption): boolean => o.value === effectiveChartType
+										) ?? null
+									}
 									onChange={(opt) =>
-										opt && !Array.isArray(opt) &&
+										opt &&
+										!Array.isArray(opt) &&
 										onConfigChange({ ...config, chartType: opt.value as GraphConfig["chartType"] })
 									}
 									options={chartTypeOptions}
@@ -246,8 +263,12 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 									id="graph-granularity"
 									value={granularityOptions.find((o) => o.value === effectiveGranularity) ?? null}
 									onChange={(opt) =>
-										opt && !Array.isArray(opt) &&
-										onConfigChange({ ...config, granularity: opt.value as GraphConfig["granularity"] })
+										opt &&
+										!Array.isArray(opt) &&
+										onConfigChange({
+											...config,
+											granularity: opt.value as GraphConfig["granularity"],
+										})
 									}
 									options={granularityOptions}
 									isSearchable={false}

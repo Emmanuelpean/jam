@@ -518,6 +518,197 @@ class TestPagedFilters:
         assert response.json()["total_filtered"] >= 1
 
 
+class TestFavouritesOnly:
+    """Tests for the favourites_only query parameter on /scraped-jobs/paged."""
+
+    endpoint = "/scraped-jobs/paged"
+
+    @staticmethod
+    def _create_job(session, owner_id: int, service_log_id: int, **kwargs) -> models.ScrapedJob:
+        return create_db_entries(
+            session,
+            models.ScrapedJob,
+            {
+                "external_job_id": f"fav_test_{id(kwargs)}_{kwargs.get('title', '')}",
+                "platform": kwargs.pop("platform", "linkedin"),
+                "owner_id": owner_id,
+                "is_processed": True,
+                "is_scraped": True,
+                "is_active": True,
+                "is_imported": False,
+                "service_log_id": service_log_id,
+                **kwargs,
+            },
+        )[0]
+
+    @staticmethod
+    def _create_fav_filter(session, owner_id: int, **kwargs) -> models.ScrapingFavouriteFilter:
+        return create_db_entries(
+            session,
+            models.ScrapingFavouriteFilter,
+            {
+                "owner_id": owner_id,
+                "is_active": True,
+                **kwargs,
+            },
+        )[0]
+
+    @pytest.fixture()
+    def setup(self, session, test_regular_user, test_job_scraping_service_logs):
+        class Ctx:
+            user = test_regular_user
+            service_log_id = test_job_scraping_service_logs[0].id
+
+        return Ctx()
+
+    def test_no_active_filters_returns_empty(self, session, regular_user_client, setup):
+        """favourites_only=True with no active favourite filters should return an empty result set."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Any Job")
+
+        response = regular_user_client.get(
+            self.endpoint, params={"favourites_only": "true", "show_past_deadline": "true"}
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 0
+        assert data["items"] == []
+
+    def test_matching_filter_returns_only_matched_jobs(self, session, regular_user_client, setup):
+        """favourites_only=True should return only jobs matching an active favourite filter."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Python Engineer")
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Java Developer")
+        self._create_fav_filter(session, setup.user.id, type="title", operator="contains", value="Python")
+
+        response = regular_user_client.get(
+            self.endpoint, params={"favourites_only": "true", "show_past_deadline": "true"}
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 1
+        assert data["items"][0]["title"] == "Python Engineer"
+
+    def test_multiple_filters_use_or_logic(self, session, regular_user_client, setup):
+        """Multiple active favourite filters should be combined with OR — a job matching any one is included."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Python Engineer")
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Data Scientist")
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Java Developer")
+        self._create_fav_filter(session, setup.user.id, type="title", operator="contains", value="Python")
+        self._create_fav_filter(session, setup.user.id, type="title", operator="contains", value="Data")
+
+        response = regular_user_client.get(
+            self.endpoint, params={"favourites_only": "true", "show_past_deadline": "true"}
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 2
+        titles = {item["title"] for item in data["items"]}
+        assert titles == {"Python Engineer", "Data Scientist"}
+
+    def test_inactive_filters_are_ignored(self, session, regular_user_client, setup):
+        """Inactive favourite filters should not be applied, resulting in an empty set."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Python Engineer")
+        self._create_fav_filter(
+            session, setup.user.id, type="title", operator="contains", value="Python", is_active=False
+        )
+
+        response = regular_user_client.get(
+            self.endpoint, params={"favourites_only": "true", "show_past_deadline": "true"}
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 0
+
+    def test_false_does_not_apply_favourite_filtering(self, session, regular_user_client, setup):
+        """favourites_only=False should return all eligible jobs, ignoring favourite filters."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Python Engineer")
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Java Developer")
+        self._create_fav_filter(session, setup.user.id, type="title", operator="contains", value="Python")
+
+        response = regular_user_client.get(
+            self.endpoint, params={"favourites_only": "false", "show_past_deadline": "true"}
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 2
+
+    def test_does_not_return_other_users_jobs(self, session, regular_user_client, test_admin_user, setup):
+        """Jobs belonging to another user are never returned, even if a filter would match."""
+
+        self._create_job(session, test_admin_user.id, setup.service_log_id, title="Python Engineer")
+        self._create_fav_filter(session, setup.user.id, type="title", operator="contains", value="Python")
+
+        response = regular_user_client.get(
+            self.endpoint, params={"favourites_only": "true", "show_past_deadline": "true"}
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 0
+
+    def test_other_users_filters_do_not_apply(self, session, regular_user_client, test_admin_user, setup):
+        """Favourite filters belonging to another user should not be applied."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Python Engineer")
+        self._create_fav_filter(session, test_admin_user.id, type="title", operator="contains", value="Python")
+
+        response = regular_user_client.get(
+            self.endpoint, params={"favourites_only": "true", "show_past_deadline": "true"}
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 0
+
+    def test_base_filters_still_applied(self, session, regular_user_client, setup):
+        """Imported and inactive jobs should be excluded even when they match a favourite filter."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Python Imported", is_imported=True)
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Python Inactive", is_active=False)
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Python Active")
+        self._create_fav_filter(session, setup.user.id, type="title", operator="contains", value="Python")
+
+        response = regular_user_client.get(
+            self.endpoint, params={"favourites_only": "true", "show_past_deadline": "true"}
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 1
+        assert data["items"][0]["title"] == "Python Active"
+
+    def test_company_filter(self, session, regular_user_client, setup):
+        """Favourite filter on the company field should match correctly."""
+
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Engineer", company="Acme Corp")
+        self._create_job(session, setup.user.id, setup.service_log_id, title="Engineer", company="Beta Ltd")
+        self._create_fav_filter(session, setup.user.id, type="company", operator="contains", value="Acme")
+
+        response = regular_user_client.get(
+            self.endpoint, params={"favourites_only": "true", "show_past_deadline": "true"}
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 1
+        assert data["items"][0]["company"] == "Acme Corp"
+
+    def test_unauthenticated_returns_401(self, client, setup):
+        """Unauthenticated request should return 401."""
+
+        response = client.get(self.endpoint, params={"favourites_only": "true"})
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
 class TestScrapedJobCRUDAdminUser(CRUDTestBase):
     endpoint = "/scraped-jobs"
     out_schema = schemas.ScrapedJobOut

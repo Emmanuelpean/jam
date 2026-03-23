@@ -87,6 +87,7 @@ app.include_router(job_email_scraping_routers.job_alert_email_router)
 app.include_router(job_email_scraping_routers.job_scraping_service_log_router)
 app.include_router(job_email_scraping_routers.email_scraper_service_router)
 app.include_router(job_email_scraping_routers.scraping_filter_router)
+app.include_router(job_email_scraping_routers.scraping_favourite_filter_router)
 app.include_router(job_email_scraping_routers.forwarding_confirmation_router)
 
 # Job Rating routers

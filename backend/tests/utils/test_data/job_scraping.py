@@ -798,6 +798,59 @@ SCRAPING_FILTER_DATA = [
     },
 ]
 
+# -------------------------------------------- SCRAPING FAVOURITE FILTERS ---------------------------------------------
+
+SCRAPING_FAVOURITE_FILTER_DATA = [
+    {
+        "owner_id": 1,
+        "type": "title",
+        "operator": "contains",
+        "value": "Python",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    {
+        "owner_id": 1,
+        "type": "attendance_type",
+        "operator": "equals",
+        "value": "remote",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    {
+        "owner_id": 1,
+        "type": "salary_min",
+        "operator": "greater_than",
+        "value": "100000",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    {
+        "owner_id": 1,
+        "type": "title",
+        "operator": "contains",
+        "value": "Data",
+        "is_active": False,
+        "case_sensitive": False,
+    },
+    {
+        "owner_id": 2,
+        "type": "title",
+        "operator": "contains",
+        "value": "Engineer",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    {
+        "owner_id": 2,
+        "type": "location_country",
+        "operator": "equals",
+        "value": "United Kingdom",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+]
+
 # ---------------------------------------------------- SCRAPED JOBS ----------------------------------------------------
 
 SCRAPED_JOB_DATA = [

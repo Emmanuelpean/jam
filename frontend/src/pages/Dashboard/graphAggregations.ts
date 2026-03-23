@@ -37,6 +37,8 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 			{ key: "personal_rating", label: "By Rating", icon: "star", supportedChartTypes: ["bar"], defaultChartType: "bar", supportsGranularity: false },
 			{ key: "city", label: "By City", icon: "geo-alt", supportedChartTypes: ["bar"], defaultChartType: "bar", supportsGranularity: false },
 			{ key: "country", label: "By Country", icon: "globe2", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
+			{ key: "applied_via", label: "Applied Via", icon: "cursor-fill", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
+			{ key: "application_funnel", label: "Application Funnel", icon: "funnel", supportedChartTypes: ["bar"], defaultChartType: "bar", supportsGranularity: false },
 		],
 	},
 	interviews: {
@@ -44,6 +46,16 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 		icon: "calendar-event",
 		fields: [
 			{ key: "interview_date", label: "Interviews Over Time", icon: "graph-up-arrow", supportedChartTypes: ["line", "bar"], defaultChartType: "line", supportsGranularity: true },
+			{ key: "interview_type", label: "Interview Types", icon: "person-badge", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
+			{ key: "interview_attendance", label: "Interview Attendance", icon: "building", supportedChartTypes: ["pie", "bar"], defaultChartType: "pie", supportsGranularity: false },
+		],
+	},
+	updates: {
+		label: "Updates",
+		icon: "chat-left-text",
+		fields: [
+			{ key: "update_date", label: "Updates Over Time", icon: "chat-left-text", supportedChartTypes: ["line", "bar"], defaultChartType: "line", supportsGranularity: true },
+			{ key: "update_type", label: "Update Types", icon: "arrow-left-right", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
 		],
 	},
 };
@@ -168,6 +180,18 @@ function aggregateJobsByRating(ctx: DataContextValue): ChartDataPoint[] {
 		.map(([name, value]) => ({ name: `${name} star${name === "1" ? "" : "s"}`, value }));
 }
 
+function aggregateApplicationFunnel(ctx: DataContextValue): ChartDataPoint[] {
+	const jobsWithInterviews = new Set(ctx.interviews.map((i) => i.job_id));
+	const apps = ctx.jobs.filter((j) => j.application_date || j.application_status);
+	return [
+		{ name: "Applied", value: apps.length },
+		{ name: "Interviewed", value: apps.filter((j) => jobsWithInterviews.has(j.id)).length },
+		{ name: "Offered", value: apps.filter((j) => j.application_status === "offer").length },
+		{ name: "Rejected", value: apps.filter((j) => j.application_status === "rejected").length },
+		{ name: "Withdrawn", value: apps.filter((j) => j.application_status === "withdrawn").length },
+	];
+}
+
 // --- Main dispatcher ---
 
 export function aggregateGraphData(
@@ -206,5 +230,23 @@ export function aggregateGraphData(
 			return aggregateJobsByLocationField(ctx, "city");
 		case "country":
 			return aggregateJobsByLocationField(ctx, "country");
+		case "applied_via":
+			return groupAndCount(
+				ctx.jobs.filter((j) => j.applied_via).map((j) => j.applied_via),
+				"Not Specified"
+			);
+		case "application_funnel":
+			return aggregateApplicationFunnel(ctx);
+		case "interview_type":
+			return groupAndCount(ctx.interviews.map((i) => i.type), "Unknown");
+		case "interview_attendance":
+			return groupAndCount(
+				ctx.interviews.filter((i) => i.attendance_type).map((i) => i.attendance_type),
+				"Not Specified"
+			);
+		case "update_date":
+			return bucketByTime(ctx.jobApplicationUpdates.map((u) => u.date), granularity);
+		case "update_type":
+			return groupAndCount(ctx.jobApplicationUpdates.map((u) => u.type), "Unknown");
 	}
 }

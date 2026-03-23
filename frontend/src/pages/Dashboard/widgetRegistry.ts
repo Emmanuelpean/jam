@@ -10,8 +10,13 @@ export type MetricVariant =
 	| "interview_rate"
 	| "avg_response_time";
 export type TableVariant = "follow_up" | "upcoming_deadlines" | "job_alerts" | "favourites";
-export type TimelineVariant = "recent_activity" | "upcoming_interviews" | "status_updates" | "upcoming_deadlines_timeline" | "past_interviews";
-export type GraphSource = "jobs" | "interviews";
+export type TimelineVariant =
+	| "recent_activity"
+	| "upcoming_interviews"
+	| "status_updates"
+	| "upcoming_deadlines_timeline"
+	| "past_interviews";
+export type GraphSource = "jobs" | "interviews" | "updates";
 export type GraphField =
 	| "application_date"
 	| "application_status"
@@ -21,7 +26,13 @@ export type GraphField =
 	| "personal_rating"
 	| "city"
 	| "country"
-	| "interview_date";
+	| "interview_date"
+	| "applied_via"
+	| "application_funnel"
+	| "interview_type"
+	| "interview_attendance"
+	| "update_date"
+	| "update_type";
 
 export type WidgetType = "metric" | "table" | "timeline" | "graph";
 
@@ -177,9 +188,9 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 			},
 			{
 				key: "favourites",
-				label: "Favourite Jobs",
+				label: "Favourite Job Alerts",
 				icon: "star-fill",
-				description: "All jobs you have starred",
+				description: "Scraped job alerts matching your favourite filters",
 				premiumOnly: false,
 			},
 		],
@@ -315,11 +326,59 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				premiumOnly: false,
 				group: "Interviews",
 			},
+			{
+				key: "interview_type",
+				label: "Interview Types",
+				icon: "person-badge",
+				description: "Interviews split by type",
+				premiumOnly: false,
+				group: "Interviews",
+			},
+			{
+				key: "interview_attendance",
+				label: "Interview Attendance",
+				icon: "building",
+				description: "Remote vs on-site for interviews",
+				premiumOnly: false,
+				group: "Interviews",
+			},
+			{
+				key: "applied_via",
+				label: "Applied Via",
+				icon: "cursor-fill",
+				description: "How you submitted each application",
+				premiumOnly: false,
+				group: "Jobs",
+			},
+			{
+				key: "application_funnel",
+				label: "Application Funnel",
+				icon: "funnel",
+				description: "Pipeline from applied to offer",
+				premiumOnly: false,
+				group: "Jobs",
+			},
+			{
+				key: "update_date",
+				label: "Updates Over Time",
+				icon: "chat-left-text",
+				description: "Application update frequency over time",
+				premiumOnly: false,
+				group: "Updates",
+			},
+			{
+				key: "update_type",
+				label: "Update Types",
+				icon: "arrow-left-right",
+				description: "Received vs sent updates",
+				premiumOnly: false,
+				group: "Updates",
+			},
 		],
 		defaultLayouts: {
-			lg: { x: 0, y: 0, w: 6, h: 12, minW: 4, minH: 8 },
-			md: { x: 0, y: 0, w: 6, h: 12, minW: 4, minH: 8 },
-			sm: { x: 0, y: 0, w: 12, h: 12, minW: 6, minH: 8 },
+			lg: { x: 0, y: 0, w: 6, h: 12, minW: 3, minH: 8 },
+			md: { x: 0, y: 0, w: 6, h: 12, minW: 3, minH: 8 },
+			sm: { x: 0, y: 0, w: 12, h: 12, minW: 3, minH: 8 },
 		},
 	},
 ];
@@ -446,10 +505,10 @@ export function parseLayoutData(data: string | null, isPremium: boolean): Dashbo
 	try {
 		const parsed = JSON.parse(data) as Record<string, unknown>;
 		if (parsed.version === 1 && parsed.visibleCards && parsed.layouts) {
-			return filterPremium(migrateV1toV2(parsed as DashboardLayoutData), isPremium);
+			return filterPremium(migrateV1toV2(parsed as unknown as DashboardLayoutData), isPremium);
 		}
 		if (parsed.version === 2 && parsed.widgets && parsed.layouts) {
-			return filterPremium(parsed as DashboardLayoutDataV2, isPremium);
+			return filterPremium(parsed as unknown as DashboardLayoutDataV2, isPremium);
 		}
 		return getDefaultLayout(isPremium);
 	} catch {

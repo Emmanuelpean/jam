@@ -25,6 +25,7 @@ export const jobApplicationUpdatesApi: CrudApi<JobApplicationUpdateData> = creat
 export const settingsApi: CrudApi<SettingData> = createCrudApi("settings");
 export const countriesApi: CrudApi<Country> = createCrudApi("others/countries");
 export const currenciesApi: CrudApi<Currency> = createCrudApi("others/currencies");
-export const scrapingFilterApi: CrudApi<ScrapingFilterData> = createCrudApi("scraping-filters");
+export const scrapingExclusionFilterApi: CrudApi<ScrapingFilterData> = createCrudApi("scraping-exclusion-filters");
+export const scrapingFavouriteFilterApi: CrudApi<ScrapingFilterData> = createCrudApi("scraping-favourite-filters");
 export const speculativeApplicationsApi: CrudApi<SpeculativeApplicationData> =
 	createCrudApi("speculative-applications");

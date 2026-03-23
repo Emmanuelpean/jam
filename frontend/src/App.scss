@@ -218,6 +218,10 @@ textarea.form-control {
     overflow: hidden;
 }
 
+.jam-select .jam-select__values:not(.jam-select--multi) {
+    flex-wrap: nowrap;
+}
+
 /* Indicators position */
 .jam-select .jam-select__indicators {
     display: flex;
@@ -282,6 +286,8 @@ textarea.form-control {
 
 /* Text colour */
 .jam-select__single-value {
+    flex: 1 1 auto;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

@@ -171,9 +171,6 @@ class ScrapedJob(Owned, Base):
     exclusion_filter_id = Column(
         Integer, ForeignKey("scraping_exclusion_filter.id", ondelete="SET NULL"), nullable=True
     )
-    favourite_filter_id = Column(
-        Integer, ForeignKey("scraping_favourite_filter.id", ondelete="SET NULL"), nullable=True
-    )
     geolocation_id = Column(Integer, ForeignKey("geolocation.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
@@ -181,7 +178,6 @@ class ScrapedJob(Owned, Base):
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="scraped_jobs")
     job_rating = relationship("JobRating", back_populates="scraped_job", uselist=False)
     exclusion_filter = relationship("ScrapingExclusionFilter", back_populates="filtered_jobs")
-    favourite_filter = relationship("ScrapingFavouriteFilter", back_populates="filtered_jobs")
     geolocation = relationship("Geolocation")
 
     # Constraints
@@ -433,7 +429,7 @@ class ScrapingExclusionFilter(Filter, Owned, Base):
 class ScrapingFavouriteFilter(Filter, Owned, Base):
     """Represents user-defined rules to filter favourite scraped jobs."""
 
-    filtered_jobs = relationship("ScrapedJob", back_populates="favourite_filter")
+    pass
 
 
 class ForwardingConfirmationLink(Owned, Base):

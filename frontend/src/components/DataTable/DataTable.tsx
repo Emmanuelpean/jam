@@ -121,6 +121,7 @@ export interface GenericTableProps {
 	rowIndicator?: (item: any) => boolean;
 	rowReadIndicator?: (item: any) => boolean;
 
+	smallSearch?: boolean;
 	onTotalCountChange?: (count: number) => void;
 	onSuccess?: () => void;
 	onItemOpen?: (item: any) => void;
@@ -162,6 +163,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 			bulkActions = [],
 			rowIndicator,
 			rowReadIndicator,
+			smallSearch = false,
 			onTotalCountChange,
 			onSuccess,
 			onItemOpen,
@@ -740,6 +742,7 @@ export const DataTable = forwardRef<DataTableHandle, GenericTableProps>(
 								<input
 									type="text"
 									className="form-control"
+									style={smallSearch ? { height: "35px", minHeight: "unset" } : {}}
 									placeholder="Search..."
 									value={searchTerm}
 									onChange={(e): void => setSearchTerm(e.target.value)}

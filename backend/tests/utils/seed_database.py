@@ -36,6 +36,7 @@ from tests.utils.create_data.job_scraping import (
     create_job_scraping_service_errors,
     create_job_alert_emails,
     create_scraping_filters,
+    create_scraping_favourite_filters,
     create_scraped_jobs,
 )
 
@@ -203,6 +204,11 @@ def create_database_data(db, includes=None, excludes=None, **kwargs) -> None:
         scraping_filters = create_scraping_filters(db, users)
     else:
         scraping_filters = None
+
+    if "scraping_favourite_filters" in kwargs:
+        pass
+    elif should_create("scraping_favourite_filters") and users:
+        create_scraping_favourite_filters(db, users)
 
     if "scraped_jobs" in kwargs:
         scraped_jobs = kwargs["scraped_jobs"]

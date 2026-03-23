@@ -10,7 +10,7 @@ from tests.utils.test_data.job_scraping import SCRAPING_FILTER_DATA
 
 
 class TestScrapingFilters(CRUDTestBase):
-    endpoint = "/scraping-filters"
+    endpoint = "/scraping-exclusion-filters"
     out_schema = schemas.ScrapingFilterOut
     test_data_ref = "test_scraping_filters"
     create_data = SCRAPING_FILTER_DATA

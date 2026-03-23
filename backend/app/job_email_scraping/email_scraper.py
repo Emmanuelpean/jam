@@ -17,7 +17,7 @@ from app.emails.email_service import EmailService
 from app.geolocation.geolocation import geocode_location
 from app.job_email_scraping.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
-from app.job_email_scraping.filtering import is_job_filtered_out, is_job_favoured
+from app.job_email_scraping.filtering import is_job_filtered_out
 from app.job_email_scraping.gmail import extract_forwarding_confirmation_link, extract_gmail_originator
 from app.job_email_scraping.job_scrapers import SCRAPERS
 from app.job_email_scraping.location_parser import LocationParser
@@ -588,23 +588,6 @@ class JobEmailScraper(EmailService):
             except Exception as exception:
                 error = (
                     f"Failed to check filtering for job ID {job_record.external_job_id} due to error: {exception}. "
-                    f"Proceeding with scraping."
-                )
-                self.log_service_error(service_log, error)
-                self.logger.exception(error)
-
-            # Check if favoured
-            try:
-                if favoured_rule := is_job_favoured(self.db, job_record):
-                    self.logger.info(
-                        f"Job ID {job_record.external_job_id} favoured for user ID {job_record.owner_id} "
-                        f"due to rule {favoured_rule.name}"
-                    )
-                    job_record.favourite_filter_id = favoured_rule.id
-                    self.db.commit()
-            except Exception as exception:
-                error = (
-                    f"Failed to check favouring for job ID {job_record.external_job_id} due to error: {exception}. "
                     f"Proceeding with scraping."
                 )
                 self.log_service_error(service_log, error)

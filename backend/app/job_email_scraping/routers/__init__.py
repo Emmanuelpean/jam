@@ -2,5 +2,6 @@ from app.job_email_scraping.routers.forwarding_confirmation import forwarding_co
 from app.job_email_scraping.routers.job_email import job_alert_email_router
 from app.job_email_scraping.routers.scraped_job import scraped_job_router
 from app.job_email_scraping.routers.scraper_service import email_scraper_service_router
+from app.job_email_scraping.routers.scraping_favourite_filter import scraping_favourite_filter_router
 from app.job_email_scraping.routers.scraping_filter import scraping_filter_router
 from app.job_email_scraping.routers.service_log import job_scraping_service_log_router

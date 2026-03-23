@@ -21,8 +21,14 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.add_column("scraped_job", sa.Column("read_at", sa.TIMESTAMP(timezone=True), nullable=True))
     op.add_column("user_preferences", sa.Column("dashboard_layout", sa.String(), nullable=True))
+    op.drop_constraint("scraped_job_favourite_filter_id_fkey", "scraped_job", type_="foreignkey")
+    op.drop_column("scraped_job", "favourite_filter_id")
 
 
 def downgrade() -> None:
+    op.add_column("scraped_job", sa.Column("favourite_filter_id", sa.Integer(), nullable=True))
+    op.create_foreign_key(
+        None, "scraped_job", "scraping_favourite_filter", ["favourite_filter_id"], ["id"], ondelete="SET NULL"
+    )
     op.drop_column("user_preferences", "dashboard_layout")
     op.drop_column("scraped_job", "read_at")

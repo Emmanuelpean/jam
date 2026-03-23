@@ -10,7 +10,8 @@ import {
 	keywordsApi,
 	locationsApi,
 	personsApi,
-	scrapingFilterApi,
+	scrapingExclusionFilterApi,
+	scrapingFavouriteFilterApi,
 	settingsApi,
 	speculativeApplicationsApi,
 } from "../services/api/DataTables";
@@ -54,6 +55,7 @@ export type EntityType =
 	| "user"
 	| "scrapedJob"
 	| "scrapingFilter"
+	| "scrapingFavouriteFilter"
 	| "speculativeApplication"
 	| "jobEmail";
 
@@ -87,6 +89,7 @@ export const entityTypeToGenericName = (entityType: EntityType): string => {
 		user: "User",
 		scrapedJob: "Scraped Job",
 		scrapingFilter: "Scraping Filter",
+		scrapingFavouriteFilter: "Favourite Filter",
 		speculativeApplication: "Speculative Application",
 		jobEmail: "Job Email",
 	};
@@ -124,6 +127,7 @@ export const entityTypeToName = (
 		user: (data: JamData): string => (data as UserData).email,
 		scrapedJob: (data: JamData): string => (data as ScrapedJobData)?.title || "Scraped Job",
 		scrapingFilter: (data: JamData): string => getScrapingFilterName(data as ScrapingFilterData),
+		scrapingFavouriteFilter: (data: JamData): string => getScrapingFilterName(data as ScrapingFilterData),
 		jobEmail: (data: JamData): string => (data as JobEmailData)?.subject || "Job Email",
 	};
 	return nameMap[entityType];
@@ -142,7 +146,8 @@ const entityTypeToApi = (entityType: EntityType) => {
 		setting: settingsApi,
 		user: userApi,
 		scrapedJob: scrapedJobApi,
-		scrapingFilter: scrapingFilterApi,
+		scrapingFilter: scrapingExclusionFilterApi,
+		scrapingFavouriteFilter: scrapingFavouriteFilterApi,
 		speculativeApplication: speculativeApplicationsApi,
 		jobEmail: jobEmailApi,
 	};
@@ -167,6 +172,7 @@ export interface DataContextValue {
 	speculativeApplications: SpeculativeApplicationData[];
 	settings: SettingData[];
 	scrapingFilters: ScrapingFilterData[];
+	scrapingFavouriteFilters: ScrapingFilterData[];
 	users: UserData[];
 	countries: Country[];
 	currencies: Currency[];
@@ -196,8 +202,9 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [speculativeApplications, setSpeculativeApplications] = useState<SpeculativeApplicationData[]>([]);
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [scrapingFilters, setScrapingFilters] = useState<ScrapingFilterData[]>([]);
+	const [scrapingFavouriteFilters, setScrapingFavouriteFilters] = useState<ScrapingFilterData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
-	const [_scrapedJobs, setScrapedJobs] = useState<any[]>([]);
+	const [_scrapedJobs, setScrapedJobs] = useState<ScrapedJobData[]>([]);
 	const [currencies, setCurrencies] = useState<Currency[]>([]);
 	const [countries, setCountries] = useState<Country[]>([]);
 	const [aiSystemPrompts, setAiSystemPrompts] = useState<AiSystemPromptData[]>([]);
@@ -348,7 +355,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			{ promise: keywordsApi.getAll(token), label: "Keywords" } as TypedFetchOperation<KeywordData[]>,
 			{ promise: locationsApi.getAll(token), label: "Locations" } as TypedFetchOperation<LocationData[]>,
 			{
-				promise: scrapingFilterApi.getAll(token),
+				promise: scrapingExclusionFilterApi.getAll(token),
+				label: "Scraping Filters",
+			} as TypedFetchOperation<ScrapingFilterData[]>,
+			{
+				promise: scrapingFavouriteFilterApi.getAll(token),
 				label: "Scraping Filters",
 			} as TypedFetchOperation<ScrapingFilterData[]>,
 			{ promise: currenciesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<Currency[]>,
@@ -399,6 +410,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				keywordsData,
 				locationsData,
 				scrapingFiltersData,
+				scrapingFavouriteFiltersData,
 				currenciesData,
 				countriesData,
 				aiSystemPromptsData,
@@ -415,6 +427,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			setKeywords(keywordsData.data || []);
 			setLocations(locationsData.data || []);
 			setScrapingFilters(scrapingFiltersData.data || []);
+			setScrapingFavouriteFilters(scrapingFavouriteFiltersData.data || []);
 			setCurrencies(currenciesData.data || []);
 			setCountries(countriesData.data || []);
 			setAiSystemPrompts(aiSystemPromptsData.data || []);
@@ -444,6 +457,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			user: setUsers,
 			scrapedJob: setScrapedJobs,
 			scrapingFilter: setScrapingFilters,
+			scrapingFavouriteFilter: setScrapingFavouriteFilters,
 			speculativeApplication: setSpeculativeApplications,
 			jobEmail: () => {},
 		};
@@ -520,6 +534,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				user: users,
 				scrapedJob: _scrapedJobs,
 				scrapingFilter: scrapingFilters,
+				scrapingFavouriteFilter: scrapingFavouriteFilters,
 				speculativeApplication: speculativeApplications,
 				jobEmail: [],
 			};
@@ -538,6 +553,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			users,
 			_scrapedJobs,
 			scrapingFilters,
+			scrapingFavouriteFilters,
 			speculativeApplications,
 		]
 	);
@@ -565,6 +581,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				keywords,
 				locations,
 				scrapingFilters,
+				scrapingFavouriteFilters,
 				countries,
 				currencies,
 				aiSystemPrompts,

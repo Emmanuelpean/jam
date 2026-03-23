@@ -261,6 +261,10 @@ class ScrapingFilterOut(OwnedOut, ScrapingFilterCreate):
         return serialise_relationships(value)
 
 
+class ScrapingFavouriteFilterOut(OwnedOut, ScrapingFilterCreate):
+    """Scraped Job Favourite Filter output schema"""
+
+
 # ------------------------------------------- FORWARDING CONFIRMATION LINK ---------------------------------------------
 
 

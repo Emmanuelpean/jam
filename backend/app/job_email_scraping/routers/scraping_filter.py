@@ -18,7 +18,7 @@ scraping_filter_router = generate_data_table_crud_router(
     create_schema=schemas.ScrapingFilterCreate,
     update_schema=schemas.ScrapingFilterUpdate,
     out_schema=schemas.ScrapingFilterOut,
-    endpoint="scraping-filters",
+    endpoint="scraping-exclusion-filters",
     not_found_msg="Scraped Job Filter not found",
     allowed_actions=["get_all", "get_one", "post"],
 )

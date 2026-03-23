@@ -10,7 +10,6 @@ import { StatCard } from "./StatCard";
 import { DashboardCard } from "./DashboardCard";
 import { ActivityFeedCard, renderRecentActivityItem, renderUpcomingInterviewItem, renderPastInterviewItem, renderStatusUpdateItem, renderUpcomingDeadlineItem } from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
-import FavouritesTable from "../../components/DataTable/FavouritesTable";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
 import {
 	DashboardLayoutDataV2,
@@ -48,6 +47,7 @@ const Dashboard: React.FC = () => {
 	const [isSaving, setIsSaving] = useState(false);
 	const [showWidgetPicker, setShowWidgetPicker] = useState(false);
 	const [scrapedJobCount, setScrapedJobCount] = useState<number>(0);
+	const [favouriteAlertCount, setFavouriteAlertCount] = useState<number>(0);
 
 	const isPremium = currentUser?.premium.is_active ?? false;
 
@@ -66,7 +66,7 @@ const Dashboard: React.FC = () => {
 		}
 	}, [currentUser]);
 
-	const { totalJobs, jobApplications, jobApplicationPending, activeApplications, favouriteJobs, needsChase, upcomingDeadlines, upcomingInterviews, pastInterviews, statusUpdates, upcomingDeadlinesTimeline, recentActivity, interviewRate, avgResponseTime } =
+	const { totalJobs, jobApplications, jobApplicationPending, activeApplications, needsChase, upcomingDeadlines, upcomingInterviews, pastInterviews, statusUpdates, upcomingDeadlinesTimeline, recentActivity, interviewRate, avgResponseTime } =
 		useDashboardData();
 
 	const handleLayoutChange = (_currentLayout: Layout, allLayouts: ResponsiveLayouts) => {
@@ -211,7 +211,7 @@ const Dashboard: React.FC = () => {
 						emptyState={{ icon: "bell-slash", title: "No job alerts", description: "Job alerts from your scrapers will appear here" }}
 					>
 						<div style={{ paddingTop: "9px", paddingBottom: "18px", display: "flex", flex: 1, minHeight: 0 }}>
-							<ScrapedJobsTable onTotalCountChange={setScrapedJobCount} />
+							<ScrapedJobsTable dashboardMode={true} onTotalCountChange={setScrapedJobCount} />
 						</div>
 					</DashboardCard>
 				);
@@ -220,12 +220,14 @@ const Dashboard: React.FC = () => {
 				return (
 					<DashboardCard
 						icon="star-fill"
-						title="Favourite Jobs"
-						badgeValue={favouriteJobs.length}
-						isEmpty={favouriteJobs.length === 0}
-						emptyState={{ icon: "star", title: "No favourite jobs", description: "Star a job to pin it here" }}
+						title="Favourite Job Alerts"
+						badgeValue={favouriteAlertCount}
+						isEmpty={favouriteAlertCount === 0}
+						emptyState={{ icon: "star", title: "No favourite job alerts", description: "Create favourite filters to pin matching job alerts here" }}
 					>
-						<FavouritesTable data={favouriteJobs} />
+						<div style={{ paddingTop: "9px", paddingBottom: "18px", display: "flex", flex: 1, minHeight: 0 }}>
+							<ScrapedJobsTable dashboardMode={true} favouritesOnly={true} onTotalCountChange={setFavouriteAlertCount} />
+						</div>
 					</DashboardCard>
 				);
 			default:
