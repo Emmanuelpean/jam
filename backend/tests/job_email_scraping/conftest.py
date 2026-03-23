@@ -10,7 +10,7 @@ from app import models
 from app.job_email_scraping.email_parsers import Platform
 from app.job_email_scraping.email_parsers import indeed
 from app.job_email_scraping.email_scraper import JobEmailScraper
-from utils import job_email_resources
+from tests.utils import job_email_resources as resources
 from tests.job_email_scraping.mock_job_scrapers import (
     MockVeganJobsBrightdataJobScraper,
     MockIndeedBrightdataJobScraper,

@@ -8,7 +8,7 @@ import json
 from typing import Literal
 
 from fastapi import Depends, HTTPException
-from sqlalchemy import asc, desc, or_
+from sqlalchemy import and_, asc, case, desc, distinct, func, or_
 from sqlalchemy.orm import Session, joinedload
 from starlette import status
 
@@ -281,6 +281,53 @@ def get_scraped_jobs_filtered_by_filter(
         .all()
     )
     return scraped_jobs
+
+
+@scraped_job_router.get("/platform-stats", response_model=list[schemas.PlatformAlertStats])
+def get_platform_stats(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get count of scraped jobs, imported scraped jobs, and applied scraped jobs, grouped by platform and alert name
+    for the current user.
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: List of platform alert stats grouped by platform and alert name"""
+
+    query = (
+        db.query(
+            models.JobEmail.platform,
+            models.JobEmail.alert_name,
+            # 1. Scraped jobs
+            func.count(distinct(models.ScrapedJob.id)).label("scraped_count"),
+            # 2. Scraped jobs that have a linked Job entry
+            func.count(distinct(case((models.Job.id.isnot(None), models.ScrapedJob.id)))).label("imported_count"),
+            # 3. Scraped jobs whose linked Job has been applied to
+            func.count(distinct(case((
+                or_(models.Job.application_status.isnot(None), models.Job.application_date.isnot(None)),
+                models.ScrapedJob.id,
+            )))).label("applied_count"),
+        )
+        .join(models.JobEmail.jobs)
+        .outerjoin(models.Job, and_(models.Job.scraped_job_id == models.ScrapedJob.id, models.Job.owner_id == current_user.id))
+        .filter(models.ScrapedJob.owner_id == current_user.id)
+        .group_by(
+            models.JobEmail.platform,
+            models.JobEmail.alert_name,
+        )
+    )
+
+    results = query.all()
+    return [
+        {
+            "platform": result.platform or "Unknown",
+            "alert_name": result.alert_name,
+            "scraped_count": result.scraped_count,
+            "imported_count": result.imported_count,
+            "applied_count": result.applied_count,
+        }
+        for result in results
+    ]
 
 
 # PUT endpoint for regular users to update the entries

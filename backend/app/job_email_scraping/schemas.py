@@ -12,6 +12,32 @@ from app.data_tables.schemas import GeolocationOut
 from app.job_rating.schemas import JobRatingOut
 
 
+class Salary(BaseModel):
+    min_amount: float | None = None
+    max_amount: float | None = None
+    currency: str | None = None
+
+
+class JobInfo(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    url: str | None = None
+    raw_url: str | None = None
+    deadline: dt.datetime | None = None
+    salary: Salary = Field(default_factory=Salary)
+    is_closed: bool = False
+
+
+class JobResult(BaseModel):
+    platform: str | None = None
+    job_id: str | None = None
+    company: str | None = None
+    company_id: str | None = None
+    location: str | None = None
+    raw: str | None = None
+    job: JobInfo
+
+
 # --------------------------------------------------- JOB ALERT EMAIL --------------------------------------------------
 
 
@@ -143,6 +169,16 @@ class PaginatedScrapedJobIdsResponse(BaseModel):
     total_pages: int
 
 
+class PlatformAlertStats(BaseModel):
+    """Platform Alert Stats output schema"""
+
+    platform: str
+    alert_name: str | None = None
+    scraped_count: int
+    imported_count: int
+    applied_count: int
+
+
 # ----------------------------------------------------- SERVICE LOG ----------------------------------------------------
 
 
@@ -264,6 +300,8 @@ class ScrapingFilterOut(OwnedOut, ScrapingFilterCreate):
 class ScrapingFavouriteFilterOut(OwnedOut, ScrapingFilterCreate):
     """Scraped Job Favourite Filter output schema"""
 
+    pass
+
 
 # ------------------------------------------- FORWARDING CONFIRMATION LINK ---------------------------------------------
 
@@ -279,29 +317,3 @@ class ForwardingConfirmationLinkUpdate(BaseModel):
     """Forwarding Confirmation Link update schema"""
 
     is_used: bool
-
-
-class Salary(BaseModel):
-    min_amount: float | None = None
-    max_amount: float | None = None
-    currency: str | None = None
-
-
-class JobInfo(BaseModel):
-    title: str | None = None
-    description: str | None = None
-    url: str | None = None
-    raw_url: str | None = None
-    deadline: dt.datetime | None = None
-    salary: Salary = Field(default_factory=Salary)
-    is_closed: bool = False
-
-
-class JobResult(BaseModel):
-    platform: str | None = None
-    job_id: str | None = None
-    company: str | None = None
-    company_id: str | None = None
-    location: str | None = None
-    raw: str | None = None
-    job: JobInfo

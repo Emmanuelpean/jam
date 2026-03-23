@@ -178,6 +178,7 @@ class ScrapedJob(Owned, Base):
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="scraped_jobs")
     job_rating = relationship("JobRating", back_populates="scraped_job", uselist=False)
     exclusion_filter = relationship("ScrapingExclusionFilter", back_populates="filtered_jobs")
+    job = relationship("Job", back_populates="scraped_job")
     geolocation = relationship("Geolocation")
 
     # Constraints

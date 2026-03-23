@@ -2,6 +2,7 @@
 
 import datetime as dt
 import json
+import uuid
 
 import pytest
 from starlette import status
@@ -343,9 +344,9 @@ class TestPagedFilters:
         self._create_rating(session, job_a, setup.user.id, setup.qualification_id, overall_score=5)
         self._create_job(session, setup.user.id, setup.service_log_id, title="NoScore")
 
-        filters = json.dumps({
-            "job_rating.overall_score": {"type": "number", "min": None, "max": None, "nullFilter": "not_null"}
-        })
+        filters = json.dumps(
+            {"job_rating.overall_score": {"type": "number", "min": None, "max": None, "nullFilter": "not_null"}}
+        )
         response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
 
         assert response.status_code == status.HTTP_200_OK
@@ -360,9 +361,9 @@ class TestPagedFilters:
         self._create_rating(session, job_a, setup.user.id, setup.qualification_id, overall_score=5)
         self._create_job(session, setup.user.id, setup.service_log_id, title="NoScore")
 
-        filters = json.dumps({
-            "job_rating.overall_score": {"type": "number", "min": None, "max": None, "nullFilter": "null"}
-        })
+        filters = json.dumps(
+            {"job_rating.overall_score": {"type": "number", "min": None, "max": None, "nullFilter": "null"}}
+        )
         response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
 
         assert response.status_code == status.HTTP_200_OK
@@ -377,9 +378,9 @@ class TestPagedFilters:
         self._create_rating(session, job_a, setup.user.id, setup.qualification_id, overall_score=5)
         self._create_job(session, setup.user.id, setup.service_log_id, title="NoScore")
 
-        filters = json.dumps({
-            "job_rating.overall_score": {"type": "number", "min": None, "max": None, "nullFilter": "all"}
-        })
+        filters = json.dumps(
+            {"job_rating.overall_score": {"type": "number", "min": None, "max": None, "nullFilter": "all"}}
+        )
         response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
 
         assert response.status_code == status.HTTP_200_OK
@@ -396,9 +397,9 @@ class TestPagedFilters:
 
         self._create_job(session, setup.user.id, setup.service_log_id, title="NoScore")
 
-        filters = json.dumps({
-            "job_rating.overall_score": {"type": "number", "min": 5, "max": None, "nullFilter": "not_null"}
-        })
+        filters = json.dumps(
+            {"job_rating.overall_score": {"type": "number", "min": 5, "max": None, "nullFilter": "not_null"}}
+        )
         response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
 
         assert response.status_code == status.HTTP_200_OK
@@ -412,12 +413,18 @@ class TestPagedFilters:
         """Date filter with 'from' should exclude jobs with deadline before the date."""
 
         self._create_job(
-            session, setup.user.id, setup.service_log_id,
-            title="Past", deadline=dt.datetime(2020, 1, 1, tzinfo=dt.timezone.utc),
+            session,
+            setup.user.id,
+            setup.service_log_id,
+            title="Past",
+            deadline=dt.datetime(2020, 1, 1, tzinfo=dt.timezone.utc),
         )
         self._create_job(
-            session, setup.user.id, setup.service_log_id,
-            title="Future", deadline=dt.datetime(2099, 6, 15, tzinfo=dt.timezone.utc),
+            session,
+            setup.user.id,
+            setup.service_log_id,
+            title="Future",
+            deadline=dt.datetime(2099, 6, 15, tzinfo=dt.timezone.utc),
         )
 
         filters = json.dumps({"deadline": {"type": "date", "from": "2025-01-01", "to": None}})
@@ -432,16 +439,25 @@ class TestPagedFilters:
         """Date filter with from and to should return jobs within the range."""
 
         self._create_job(
-            session, setup.user.id, setup.service_log_id,
-            title="Early", deadline=dt.datetime(2025, 3, 1, tzinfo=dt.timezone.utc),
+            session,
+            setup.user.id,
+            setup.service_log_id,
+            title="Early",
+            deadline=dt.datetime(2025, 3, 1, tzinfo=dt.timezone.utc),
         )
         self._create_job(
-            session, setup.user.id, setup.service_log_id,
-            title="Mid", deadline=dt.datetime(2025, 3, 15, tzinfo=dt.timezone.utc),
+            session,
+            setup.user.id,
+            setup.service_log_id,
+            title="Mid",
+            deadline=dt.datetime(2025, 3, 15, tzinfo=dt.timezone.utc),
         )
         self._create_job(
-            session, setup.user.id, setup.service_log_id,
-            title="Late", deadline=dt.datetime(2025, 4, 10, tzinfo=dt.timezone.utc),
+            session,
+            setup.user.id,
+            setup.service_log_id,
+            title="Late",
+            deadline=dt.datetime(2025, 4, 10, tzinfo=dt.timezone.utc),
         )
 
         filters = json.dumps({"deadline": {"type": "date", "from": "2025-03-10", "to": "2025-03-31"}})
@@ -458,22 +474,36 @@ class TestPagedFilters:
         """Multiple filters should be combined with AND logic."""
 
         self._create_job(
-            session, setup.user.id, setup.service_log_id,
-            title="Python at Acme", company="Acme", platform="linkedin",
+            session,
+            setup.user.id,
+            setup.service_log_id,
+            title="Python at Acme",
+            company="Acme",
+            platform="linkedin",
         )
         self._create_job(
-            session, setup.user.id, setup.service_log_id,
-            title="Python at Beta", company="Beta", platform="indeed",
+            session,
+            setup.user.id,
+            setup.service_log_id,
+            title="Python at Beta",
+            company="Beta",
+            platform="indeed",
         )
         self._create_job(
-            session, setup.user.id, setup.service_log_id,
-            title="Java at Acme", company="Acme", platform="linkedin",
+            session,
+            setup.user.id,
+            setup.service_log_id,
+            title="Java at Acme",
+            company="Acme",
+            platform="linkedin",
         )
 
-        filters = json.dumps({
-            "title": {"type": "text", "value": "python"},
-            "platform": {"type": "select", "selected": ["linkedin"]},
-        })
+        filters = json.dumps(
+            {
+                "title": {"type": "text", "value": "python"},
+                "platform": {"type": "select", "selected": ["linkedin"]},
+            }
+        )
         response = regular_user_client.get(self.endpoint, params={"filters": filters, "show_past_deadline": "true"})
 
         assert response.status_code == status.HTTP_200_OK
@@ -731,3 +761,468 @@ class TestScrapedJobRegularUserUndefinedMethods:
         assert response.status_code == expected_status
         response = regular_user_client.request(http_method, f"{self.ENDPOINT}{path_suffix}")
         assert response.status_code == expected_status
+
+
+class TestPlatformStats:
+    endpoint = "/scraped-jobs/platform-stats"
+
+    @staticmethod
+    def _create_email(
+        session,
+        owner_id: int,
+        service_log_id: int,
+        platform: str = "linkedin",
+        alert_name: str = "default",
+    ) -> models.JobEmail:
+        """Create a test email."""
+
+        return create_db_entries(
+            session,
+            models.JobEmail,
+            {
+                "subject": "Test Subject",
+                "sender": "Test Sender",
+                "body": "Test Body",
+                "date_received": dt.datetime.now(tz=dt.timezone.utc),
+                "job_found_n": 20,
+                "external_email_id": uuid.uuid1(),
+                "owner_id": owner_id,
+                "platform": platform,
+                "alert_name": alert_name,
+                "service_log_id": service_log_id,
+            },
+        )[0]
+
+    @staticmethod
+    def _create_scraped_job(
+        session,
+        owner_id: int,
+        service_log_id: int,
+        platform: str = "linkedin",
+    ) -> models.ScrapedJob:
+        """Create a test scraped job."""
+
+        return create_db_entries(
+            session,
+            models.ScrapedJob,
+            {
+                "external_job_id": f"platform_stats_{uuid.uuid4()}",
+                "platform": platform,
+                "owner_id": owner_id,
+                "is_processed": True,
+                "is_scraped": True,
+                "is_active": True,
+                "service_log_id": service_log_id,
+            },
+        )[0]
+
+    @staticmethod
+    def _link_email_job(session, email: models.JobEmail, scraped_job: models.ScrapedJob) -> None:
+        """Link an email and a scraped job."""
+
+        email.jobs.append(scraped_job)
+        session.commit()
+
+    @staticmethod
+    def _create_job(
+        session,
+        scraped_job: models.ScrapedJob,
+        application_status: str | None = None,
+        application_date: dt.datetime | None = None,
+    ) -> models.Job:
+        """Create a test job."""
+
+        return create_db_entries(
+            session,
+            models.Job,
+            {
+                "title": "Test Job",
+                "scraped_job_id": scraped_job.id,
+                "application_status": application_status,
+                "owner_id": scraped_job.owner_id,
+                "application_date": application_date,
+            },
+        )[0]
+
+    def test_basic_counts(
+        self,
+        session,
+        regular_user_client,
+        test_regular_user,
+        test_job_scraping_service_logs,
+    ):
+        """Counts scraped, imported, and applied correctly."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+
+        email = self._create_email(session, service_log_id, test_regular_user.id, "linkedin", "backend")
+
+        # 3 scraped jobs
+        sj1 = self._create_scraped_job(session, test_regular_user.id, service_log_id)
+        sj2 = self._create_scraped_job(session, test_regular_user.id, service_log_id)
+        sj3 = self._create_scraped_job(session, test_regular_user.id, service_log_id)
+
+        for sj in (sj1, sj2, sj3):
+            self._link_email_job(session, email, sj)
+
+        # 2 imported
+        self._create_job(session, sj1)
+        self._create_job(session, sj2)
+
+        # 1 applied
+        self._create_job(session, sj1, application_status="applied")
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert len(data) == 1
+        expected = {
+            "platform": "linkedin",
+            "alert_name": "backend",
+            "scraped_count": 3,
+            "imported_count": 2,
+            "applied_count": 1,
+        }
+        assert data[0] == expected
+
+    def test_multiple_platforms_and_alerts(
+        self,
+        session,
+        regular_user_client,
+        test_regular_user,
+        test_job_scraping_service_logs,
+    ):
+        """Groups correctly by platform and alert."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+
+        email1 = self._create_email(session, test_regular_user.id, service_log_id, "linkedin", "backend")
+        email2 = self._create_email(session, test_regular_user.id, service_log_id, "indeed", "frontend")
+
+        sj1 = self._create_scraped_job(session, test_regular_user.id, service_log_id, "linkedin")
+        sj2 = self._create_scraped_job(session, test_regular_user.id, service_log_id, "indeed")
+
+        self._link_email_job(session, email1, sj1)
+        self._link_email_job(session, email2, sj2)
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert len(data) == 2
+
+        expected_1 = {
+            "platform": "linkedin",
+            "alert_name": "backend",
+            "scraped_count": 1,
+            "imported_count": 0,
+            "applied_count": 0,
+        }
+        expected_2 = {
+            "platform": "indeed",
+            "alert_name": "frontend",
+            "scraped_count": 1,
+            "imported_count": 0,
+            "applied_count": 0,
+        }
+        assert data[0] == expected_2
+        assert data[1] == expected_1
+
+    def test_ignores_other_users_data(
+        self,
+        session,
+        regular_user_client,
+        test_regular_user,
+        test_admin_user,
+        test_job_scraping_service_logs,
+    ):
+        """Should not include other users' data."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+
+        # Regular user data
+        email_user = self._create_email(session, test_regular_user.id, service_log_id)
+        sj_user = self._create_scraped_job(session, test_regular_user.id, service_log_id)
+        self._link_email_job(session, email_user, sj_user)
+
+        # Admin user data
+        email_admin = self._create_email(session, test_admin_user.id, service_log_id)
+        sj_admin = self._create_scraped_job(session, test_admin_user.id, service_log_id)
+        self._link_email_job(session, email_admin, sj_admin)
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert len(data) == 1
+        assert data[0]["scraped_count"] == 1
+
+    def test_no_jobs_returns_empty(
+        self,
+        regular_user_client,
+    ):
+        """No scraped jobs should return empty list."""
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == []
+
+    def test_unauthenticated(
+        self,
+        client,
+    ):
+        """Unauthenticated request should return 401."""
+
+        response = client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_scraped_job_in_multiple_alerts_counted_in_each(
+        self,
+        session,
+        regular_user_client,
+        test_regular_user,
+        test_job_scraping_service_logs,
+    ):
+        """A scraped job linked to two different alerts appears in both groups."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+
+        email_backend = self._create_email(session, test_regular_user.id, service_log_id, "linkedin", "backend")
+        email_python = self._create_email(session, test_regular_user.id, service_log_id, "linkedin", "python")
+
+        sj = self._create_scraped_job(session, test_regular_user.id, service_log_id)
+        self._link_email_job(session, email_backend, sj)
+        self._link_email_job(session, email_python, sj)
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert len(data) == 2
+        by_alert = {row["alert_name"]: row for row in data}
+        assert by_alert["backend"]["scraped_count"] == 1
+        assert by_alert["python"]["scraped_count"] == 1
+
+    def test_applied_count_uses_application_date(
+        self,
+        session,
+        regular_user_client,
+        test_regular_user,
+        test_job_scraping_service_logs,
+    ):
+        """A job with only application_date set (no status) still counts as applied."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        email = self._create_email(session, test_regular_user.id, service_log_id)
+        sj = self._create_scraped_job(session, test_regular_user.id, service_log_id)
+        self._link_email_job(session, email, sj)
+        self._create_job(session, sj, application_date=dt.datetime.now(tz=dt.timezone.utc))
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert len(data) == 1
+        assert data[0]["imported_count"] == 1
+        assert data[0]["applied_count"] == 1
+
+    def test_applied_count_any_non_applied_status(
+        self,
+        session,
+        regular_user_client,
+        test_regular_user,
+        test_job_scraping_service_logs,
+    ):
+        """interview, offer, rejected, and withdrawn statuses all count as applied."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        email = self._create_email(session, test_regular_user.id, service_log_id)
+
+        for application_status in ("interview", "offer", "rejected", "withdrawn"):
+            sj = self._create_scraped_job(session, test_regular_user.id, service_log_id)
+            self._link_email_job(session, email, sj)
+            self._create_job(session, sj, application_status=application_status)
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert len(data) == 1
+        assert data[0]["scraped_count"] == 4
+        assert data[0]["imported_count"] == 4
+        assert data[0]["applied_count"] == 4
+
+    def test_null_alert_name_grouped(
+        self,
+        session,
+        regular_user_client,
+        test_regular_user,
+        test_job_scraping_service_logs,
+    ):
+        """Emails with no alert_name group correctly (alert_name=None)."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+
+        email = create_db_entries(
+            session,
+            models.JobEmail,
+            {
+                "subject": "Test Subject",
+                "sender": "Test Sender",
+                "body": "Test Body",
+                "date_received": dt.datetime.now(tz=dt.timezone.utc),
+                "job_found_n": 0,
+                "external_email_id": uuid.uuid1(),
+                "owner_id": test_regular_user.id,
+                "platform": "linkedin",
+                "alert_name": None,
+                "service_log_id": service_log_id,
+            },
+        )[0]
+        sj = self._create_scraped_job(session, test_regular_user.id, service_log_id)
+        self._link_email_job(session, email, sj)
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert len(data) == 1
+        assert data[0]["platform"] == "linkedin"
+        assert data[0]["alert_name"] is None
+        assert data[0]["scraped_count"] == 1
+
+    def test_multiple_jobs_per_scraped_job_no_double_count(
+        self,
+        session,
+        regular_user_client,
+        test_regular_user,
+        test_job_scraping_service_logs,
+    ):
+        """A scraped job with multiple linked Jobs is counted once in imported and applied."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        email = self._create_email(session, test_regular_user.id, service_log_id)
+        sj = self._create_scraped_job(session, test_regular_user.id, service_log_id)
+        self._link_email_job(session, email, sj)
+
+        # Two jobs linked to the same scraped job: one plain import, one applied
+        self._create_job(session, sj)
+        self._create_job(session, sj, application_status="applied")
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert len(data) == 1
+        assert data[0]["scraped_count"] == 1
+        assert data[0]["imported_count"] == 1
+        assert data[0]["applied_count"] == 1
+
+    def test_multiple_emails_same_alert_accumulate(
+        self,
+        session,
+        regular_user_client,
+        test_regular_user,
+        test_job_scraping_service_logs,
+    ):
+        """Multiple emails for the same platform/alert accumulate scraped job counts."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+
+        email1 = self._create_email(session, test_regular_user.id, service_log_id, "indeed", "data")
+        email2 = self._create_email(session, test_regular_user.id, service_log_id, "indeed", "data")
+
+        sj1 = self._create_scraped_job(session, test_regular_user.id, service_log_id, "indeed")
+        sj2 = self._create_scraped_job(session, test_regular_user.id, service_log_id, "indeed")
+
+        self._link_email_job(session, email1, sj1)
+        self._link_email_job(session, email2, sj2)
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert len(data) == 1
+        assert data[0]["platform"] == "indeed"
+        assert data[0]["alert_name"] == "data"
+        assert data[0]["scraped_count"] == 2
+
+    def test_other_users_imported_job_not_counted(
+        self,
+        session,
+        regular_user_client,
+        test_regular_user,
+        test_admin_user,
+        test_job_scraping_service_logs,
+    ):
+        """imported_count and applied_count ignore Jobs owned by other users."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+
+        # Regular user has a scraped job but no linked Job
+        email = self._create_email(session, test_regular_user.id, service_log_id)
+        sj = self._create_scraped_job(session, test_regular_user.id, service_log_id)
+        self._link_email_job(session, email, sj)
+
+        # Admin creates a Job pointing at the regular user's scraped job (different owner)
+        create_db_entries(
+            session,
+            models.Job,
+            {
+                "title": "Admin Job",
+                "scraped_job_id": sj.id,
+                "owner_id": test_admin_user.id,
+                "application_status": "applied",
+            },
+        )
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert len(data) == 1
+        assert data[0]["imported_count"] == 0
+        assert data[0]["applied_count"] == 0
+
+    def test_same_scraped_job_in_multiple_emails_not_double_counted(
+        self,
+        session,
+        regular_user_client,
+        test_regular_user,
+        test_job_scraping_service_logs,
+    ):
+        """A scraped job appearing in two emails of the same alert is counted once, not twice."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+
+        email1 = self._create_email(session, test_regular_user.id, service_log_id, "linkedin", "backend")
+        email2 = self._create_email(session, test_regular_user.id, service_log_id, "linkedin", "backend")
+
+        sj = self._create_scraped_job(session, test_regular_user.id, service_log_id)
+        self._link_email_job(session, email1, sj)
+        self._link_email_job(session, email2, sj)
+
+        self._create_job(session, sj, application_status="applied")
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+
+        assert len(data) == 1
+        assert data[0]["scraped_count"] == 1
+        assert data[0]["imported_count"] == 1
+        assert data[0]["applied_count"] == 1

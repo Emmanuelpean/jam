@@ -399,6 +399,7 @@ class Job(Owned, Base):
     application_aggregator_id = Column(
         Integer, ForeignKey("aggregator.id", ondelete="SET NULL"), nullable=True, index=True
     )
+    scraped_job_id = Column(Integer, ForeignKey("scraped_job.id", ondelete="SET NULL"), nullable=True, index=True)
     recruiter_id = Column(Integer, ForeignKey("person.id", ondelete="SET NULL"), nullable=True, index=True)
     recruitment_company_id = Column(Integer, ForeignKey("company.id", ondelete="SET NULL"), nullable=True, index=True)
     cv_id = Column(Integer, ForeignKey("file.id", ondelete="SET NULL"), nullable=True, index=True)
@@ -421,6 +422,7 @@ class Job(Owned, Base):
     )
     application_cv = relationship("File", foreign_keys=[cv_id], lazy="select")
     application_cover_letter = relationship("File", foreign_keys=[cover_letter_id], lazy="select")
+    scraped_job = relationship("ScrapedJob", foreign_keys=[scraped_job_id], lazy="select")
 
     __table_args__ = (
         CheckConstraint("personal_rating >= 1 AND personal_rating <= 5", name=f"valid_rating_range"),

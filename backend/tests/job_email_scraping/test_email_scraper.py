@@ -11,7 +11,7 @@ from app import models
 from app.config import settings
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
 from app.job_email_scraping.schemas import JobResult
-from utils import job_email_resources
+from tests.utils import job_email_resources as resources
 from tests.job_email_scraping.mock_job_scrapers import MockIndeedBrightdataJobScraper
 from tests.utils.test_data import TOAST_USER_1_INDEX
 

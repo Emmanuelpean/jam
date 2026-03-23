@@ -217,6 +217,7 @@ class JobCreate(BaseModel):
     application_aggregator_id: int | None = None
     recruiter_id: int | None = None
     recruitment_company_id: int | None = None
+    scraped_job_id: int | None = None
     cv_id: int | None = None
     cover_letter_id: int | None = None
     keywords: list[int] = []
