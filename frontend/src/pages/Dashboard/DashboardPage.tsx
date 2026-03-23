@@ -53,7 +53,7 @@ const Dashboard: React.FC = () => {
 		}
 	}, [currentUser]);
 
-	const { totalJobs, jobApplications, jobApplicationPending, needsChase, upcomingDeadlines, upcomingInterviews, recentActivity } =
+	const { totalJobs, jobApplications, jobApplicationPending, offersReceived, activeApplications, needsChase, upcomingDeadlines, upcomingInterviews, recentActivity, interviewRate, offerRate, avgResponseTime } =
 		useDashboardData();
 
 	const handleLayoutChange = (_currentLayout: Layout, allLayouts: ResponsiveLayouts) => {
@@ -141,6 +141,16 @@ const Dashboard: React.FC = () => {
 				return <StatCard name="Pending" value={jobApplicationPending.length} icon="clock" variant="warning" description="Applications awaiting response" />;
 			case "follow_up":
 				return <StatCard name="Need Follow-up" value={needsChase.length} icon="telephone" variant="danger" description="Applications requiring action" />;
+			case "offers_received":
+				return <StatCard name="Offers Received" value={offersReceived.length} icon="trophy" variant="success" description="Applications that resulted in an offer" />;
+			case "active_applications":
+				return <StatCard name="Active Applications" value={activeApplications.length} icon="send-check" variant="info" description="Not yet rejected or withdrawn" />;
+			case "interview_rate":
+				return <StatCard name="Interview Rate" value={`${interviewRate}%`} icon="person-check" variant="primary" description="Applications that led to an interview" />;
+			case "offer_rate":
+				return <StatCard name="Offer Rate" value={`${offerRate}%`} icon="patch-check" variant="success" description="Applications that resulted in an offer" />;
+			case "avg_response_time":
+				return <StatCard name="Avg. Response Time" value={`${avgResponseTime}d`} icon="hourglass-split" variant="secondary" description="Average days from application to first update" />;
 			default:
 				return null;
 		}

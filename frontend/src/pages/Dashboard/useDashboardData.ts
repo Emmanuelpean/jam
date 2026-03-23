@@ -8,20 +8,30 @@ export interface DashboardData {
 	totalJobs: number;
 	jobApplications: EnrichedJobData[];
 	jobApplicationPending: EnrichedJobData[];
+	offersReceived: EnrichedJobData[];
+	activeApplications: EnrichedJobData[];
 	needsChase: EnrichedJobData[];
 	upcomingDeadlines: EnrichedJobData[];
 	upcomingInterviews: EnrichedInterviewData[];
 	recentActivity: RecentActivity[];
+	interviewRate: number;
+	offerRate: number;
+	avgResponseTime: number;
 }
 
 const EMPTY_DATA: DashboardData = {
 	totalJobs: 0,
 	jobApplications: [],
 	jobApplicationPending: [],
+	offersReceived: [],
+	activeApplications: [],
 	needsChase: [],
 	upcomingDeadlines: [],
 	upcomingInterviews: [],
 	recentActivity: [],
+	interviewRate: 0,
+	offerRate: 0,
+	avgResponseTime: 0,
 };
 
 export function useDashboardData(): DashboardData {
@@ -86,13 +96,47 @@ export function useDashboardData(): DashboardData {
 
 	allUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+	const offersReceived: EnrichedJobData[] = jobApplications.filter(
+		(job) => job.application_status === "offer"
+	);
+
+	const activeApplications: EnrichedJobData[] = jobApplications.filter(
+		(job) => job.application_status && !["rejected", "withdrawn"].includes(job.application_status)
+	);
+
+	const applicationsWithInterviews = new Set(interviews.map((i) => i.job_id));
+	const interviewRate =
+		jobApplications.length > 0
+			? Math.round((applicationsWithInterviews.size / jobApplications.length) * 100)
+			: 0;
+
+	const offerRate =
+		jobApplications.length > 0 ? Math.round((offersReceived.length / jobApplications.length) * 100) : 0;
+
+	const appsWithResponse = jobApplications.filter((job) => job.application_date && job.last_update_date);
+	const avgResponseTime =
+		appsWithResponse.length > 0
+			? Math.round(
+					appsWithResponse.reduce((sum, job) => {
+						const appDate = new Date(job.application_date as string).getTime();
+						const updateDate = new Date(job.last_update_date as string).getTime();
+						return sum + (updateDate - appDate) / (1000 * 60 * 60 * 24);
+					}, 0) / appsWithResponse.length
+			  )
+			: 0;
+
 	return {
 		totalJobs: jobs.length,
 		jobApplications,
 		jobApplicationPending,
+		offersReceived,
+		activeApplications,
 		needsChase,
 		upcomingDeadlines,
 		upcomingInterviews,
 		recentActivity: allUpdates.slice(0, currentUser.preferences.update_limit),
+		interviewRate,
+		offerRate,
+		avgResponseTime,
 	};
 }

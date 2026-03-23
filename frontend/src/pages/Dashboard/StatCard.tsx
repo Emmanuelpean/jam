@@ -3,7 +3,7 @@ import { Card } from "react-bootstrap";
 
 interface StatCardProps {
 	name: string;
-	value: number;
+	value: number | string;
 	icon: string;
 	variant: string;
 	description?: string;

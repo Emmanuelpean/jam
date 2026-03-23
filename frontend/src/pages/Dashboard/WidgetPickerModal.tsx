@@ -67,10 +67,9 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 
 	const currentTypeDef = selectedType ? WIDGET_TYPE_DEFS.find((t) => t.type === selectedType) : null;
 
-	const gridStyle: React.CSSProperties = {
-		display: "grid",
-		gridTemplateColumns: "repeat(2, 1fr)",
-		gap: "0.5rem",
+	const squareGrid = (count: number): React.CSSProperties => {
+		const cols = Math.ceil(Math.sqrt(count));
+		return { display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: "0.5rem" };
 	};
 
 	const cardBase: React.CSSProperties = {
@@ -79,7 +78,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 		alignItems: "center",
 		justifyContent: "center",
 		gap: "0.5rem",
-		padding: "1rem 0.75rem",
+		padding: "0.75rem 0.5rem",
 		borderRadius: "0.5rem",
 		border: "1.5px solid var(--bs-border-color)",
 		background: "transparent",
@@ -128,7 +127,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 				>
 					<div ref={contentRef} className="p-3">
 						{!selectedType ? (
-							<div style={gridStyle}>
+							<div style={squareGrid(WIDGET_TYPE_DEFS.length)}>
 								{WIDGET_TYPE_DEFS.map((typeDef) => {
 									const allPremium = !isPremium && typeDef.variants.every((v) => v.premiumOnly);
 									return (
@@ -180,7 +179,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 								})}
 							</div>
 						) : (
-							<div style={gridStyle}>
+							<div style={squareGrid(currentTypeDef?.variants.length ?? 0)}>
 								{currentTypeDef?.variants.map((variant) => {
 									const locked = variant.premiumOnly && !isPremium;
 									return (

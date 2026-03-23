@@ -1,7 +1,16 @@
 import { LayoutItem } from "react-grid-layout";
 import { CARD_REGISTRY, DashboardLayoutData } from "./cardRegistry";
 
-export type MetricVariant = "total_jobs" | "applications" | "pending" | "follow_up";
+export type MetricVariant =
+	| "total_jobs"
+	| "applications"
+	| "pending"
+	| "follow_up"
+	| "offers_received"
+	| "active_applications"
+	| "interview_rate"
+	| "offer_rate"
+	| "avg_response_time";
 export type TableVariant = "follow_up" | "upcoming_deadlines" | "job_alerts";
 export type TimelineVariant = "recent_activity" | "upcoming_interviews";
 export type CardVariant = "favourite_job";
@@ -118,11 +127,46 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Applications overdue for a chase",
 				premiumOnly: false,
 			},
+			{
+				key: "offers_received",
+				label: "Offers Received",
+				icon: "trophy",
+				description: "Applications that resulted in an offer",
+				premiumOnly: false,
+			},
+			{
+				key: "active_applications",
+				label: "Active Applications",
+				icon: "send-check",
+				description: "Applications not yet rejected or withdrawn",
+				premiumOnly: false,
+			},
+			{
+				key: "interview_rate",
+				label: "Interview Rate",
+				icon: "person-check",
+				description: "% of applications that led to an interview",
+				premiumOnly: false,
+			},
+			{
+				key: "offer_rate",
+				label: "Offer Rate",
+				icon: "patch-check",
+				description: "% of applications that resulted in an offer",
+				premiumOnly: false,
+			},
+			{
+				key: "avg_response_time",
+				label: "Avg. Response Time",
+				icon: "hourglass-split",
+				description: "Average days from application to first update",
+				premiumOnly: false,
+			},
 		],
 		defaultLayouts: {
-			lg: { x: 0, y: 0, w: 3, h: 4, minW: 1, minH: 4 },
-			md: { x: 0, y: 0, w: 3, h: 4, minW: 1, minH: 4 },
-			sm: { x: 0, y: 0, w: 6, h: 4, minW: 1, minH: 4 },
+			lg: { x: 0, y: 0, w: 2, h: 4, minW: 1, minH: 4 },
+			md: { x: 0, y: 0, w: 2, h: 4, minW: 1, minH: 4 },
+			sm: { x: 0, y: 0, w: 2, h: 4, minW: 1, minH: 4 },
 		},
 	},
 	{
