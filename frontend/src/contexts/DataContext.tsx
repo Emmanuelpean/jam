@@ -204,7 +204,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [scrapingFilters, setScrapingFilters] = useState<ScrapingFilterData[]>([]);
 	const [scrapingFavouriteFilters, setScrapingFavouriteFilters] = useState<ScrapingFilterData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
-	const [_scrapedJobs, setScrapedJobs] = useState<ScrapedJobData[]>([]);
 	const [currencies, setCurrencies] = useState<Currency[]>([]);
 	const [countries, setCountries] = useState<Country[]>([]);
 	const [aiSystemPrompts, setAiSystemPrompts] = useState<AiSystemPromptData[]>([]);
@@ -444,7 +443,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 	// Helper to get setter function for an entity type
 	const entityTypeToSetter = (type: EntityType) => {
-		const setterMap = {
+		const setterMap: Partial<Record<EntityType, (fn: any) => void>> = {
 			job: setRawJobs,
 			company: setCompanies,
 			person: setPersons,
@@ -455,11 +454,9 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			location: setLocations,
 			setting: setSettings,
 			user: setUsers,
-			scrapedJob: setScrapedJobs,
 			scrapingFilter: setScrapingFilters,
 			scrapingFavouriteFilter: setScrapingFavouriteFilters,
 			speculativeApplication: setSpeculativeApplications,
-			jobEmail: () => {},
 		};
 		return setterMap[type];
 	};
@@ -470,7 +467,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				const api: CrudApi<JamData> = entityTypeToApi(entityType);
 				const apiResult: ApiResponse<JamData> = await api.create(newData, token);
 				const setter = entityTypeToSetter(entityType);
-				setter((prev: any[]): any[] => [...prev, apiResult.data]);
+				setter?.((prev: any[]): any[] => [...prev, apiResult.data]);
 				return apiResult;
 			} catch (error) {
 				console.error(`Failed to add ${entityType}:`, error);
@@ -486,7 +483,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				const api: CrudApi<JamData> = entityTypeToApi(entityType);
 				const apiResult: ApiResponse<JamData> = await api.update(id, updatedData, token);
 				const setter = entityTypeToSetter(entityType);
-				setter((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? apiResult.data : item)));
+				setter?.((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? apiResult.data : item)));
 				return apiResult;
 			} catch (error) {
 				console.error(`Failed to update ${entityType}:`, error);
@@ -502,7 +499,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				const api: CrudApi<JamData> = entityTypeToApi(entityType);
 				await api.delete(id, token);
 				const setter = entityTypeToSetter(entityType);
-				setter((prev: any[]): any[] => prev.filter((item: any): boolean => item.id !== id));
+				setter?.((prev: any[]): any[] => prev.filter((item: any): boolean => item.id !== id));
 				if (entityType === "job") {
 					setRawInterviews((prev: InterviewData[]): InterviewData[] =>
 						prev.filter((interview: InterviewData): boolean => interview.job_id !== id)
@@ -521,7 +518,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 	const getEntityData = useCallback(
 		<T extends EntityType>(entityType: T): JamData[] => {
-			const dataMap: Record<EntityType, JamData[]> = {
+			const dataMap: Partial<Record<EntityType, JamData[]>> = {
 				job: jobs,
 				company: companies,
 				person: persons,
@@ -532,13 +529,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				location: locations,
 				setting: settings,
 				user: users,
-				scrapedJob: _scrapedJobs,
 				scrapingFilter: scrapingFilters,
 				scrapingFavouriteFilter: scrapingFavouriteFilters,
 				speculativeApplication: speculativeApplications,
-				jobEmail: [],
 			};
-			return dataMap[entityType];
+			return dataMap[entityType] ?? [];
 		},
 		[
 			jobs,
@@ -551,7 +546,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			locations,
 			settings,
 			users,
-			_scrapedJobs,
 			scrapingFilters,
 			scrapingFavouriteFilters,
 			speculativeApplications,
