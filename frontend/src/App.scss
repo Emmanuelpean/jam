@@ -412,6 +412,10 @@ textarea.form-control {
     transform: rotate(0deg);
 }
 
+.jam-select__arrow--above {
+    transform: rotate(-180deg);
+}
+
 .custom-dropdown-indicator:hover,
 .custom-dropdown-indicator.active,
 .jam-select__arrow:hover,

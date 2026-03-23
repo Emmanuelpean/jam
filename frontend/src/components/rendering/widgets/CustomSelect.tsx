@@ -552,7 +552,7 @@ export const CustomSelect = ({
 						<AddButtonIndicator addButton={addButton} parentData={parentData} />
 					) : (
 						<i
-							className={`bi bi-chevron-down jam-select__arrow${isOpen ? " jam-select__arrow--open" : ""}`}
+							className={`bi bi-chevron-down jam-select__arrow${isOpen ? " jam-select__arrow--open" : ""}${isOpen && menuPlacedAbove ? " jam-select__arrow--above" : ""}`}
 							aria-hidden="true"
 						></i>
 					)}
