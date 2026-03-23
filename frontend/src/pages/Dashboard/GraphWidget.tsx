@@ -14,6 +14,8 @@ import {
 	Tooltip,
 } from "recharts";
 import { useDataContext } from "../../contexts/DataContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { scrapedJobApi, ScrapedJobPlatformStat } from "../../services/api/Services";
 import { GraphConfig, GraphSource } from "./widgetRegistry";
 import { aggregateGraphData, ChartDataPoint, getFieldMeta, GRAPH_SOURCES } from "./graphAggregations";
 import { SelectOption } from "../../components/rendering/form/FormOptions";
@@ -45,7 +47,7 @@ interface GraphWidgetProps {
 	isEditMode?: boolean;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, suffix = "" }: any) => {
 	if (!active || !payload?.length) return null;
 	const entry = payload[0];
 	return (
@@ -59,12 +61,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 			}}
 		>
 			<p style={{ margin: 0, fontWeight: 600, color: "var(--bs-body-color)" }}>{entry.name ?? label}</p>
-			<p style={{ margin: 0, color: entry.color ?? "var(--bs-body-color)" }}>Count: {entry.value}</p>
+			<p style={{ margin: 0, color: entry.color ?? "var(--bs-body-color)" }}>{entry.value}{suffix}</p>
 		</div>
 	);
 };
 
-const renderLineChart = (data: ChartDataPoint[]) => (
+const renderLineChart = (data: ChartDataPoint[], suffix = "") => (
 	<ResponsiveContainer width="100%" height="100%">
 		<LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
 			<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
@@ -78,14 +80,15 @@ const renderLineChart = (data: ChartDataPoint[]) => (
 				tick={{ fontSize: 13, fill: "var(--bs-body-color)" }}
 				stroke="var(--bs-border-color)"
 				allowDecimals={false}
+				tickFormatter={(v) => `${v}${suffix}`}
 			/>
-			<Tooltip content={<CustomTooltip />} />
+			<Tooltip content={<CustomTooltip suffix={suffix} />} />
 			<Line type="monotone" dataKey="value" stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ r: 3 }} />
 		</LineChart>
 	</ResponsiveContainer>
 );
 
-const renderBarChart = (data: ChartDataPoint[]) => (
+const renderBarChart = (data: ChartDataPoint[], suffix = "") => (
 	<ResponsiveContainer width="100%" height="100%">
 		<BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
 			<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
@@ -102,8 +105,9 @@ const renderBarChart = (data: ChartDataPoint[]) => (
 				tick={{ fontSize: 13, fill: "var(--bs-body-color)" }}
 				stroke="var(--bs-border-color)"
 				allowDecimals={false}
+				tickFormatter={(v) => `${v}${suffix}`}
 			/>
-			<Tooltip content={<CustomTooltip />} />
+			<Tooltip content={<CustomTooltip suffix={suffix} />} />
 			<Bar
 				dataKey="value"
 				shape={(props: any) => (
@@ -120,21 +124,60 @@ const renderBarChart = (data: ChartDataPoint[]) => (
 
 const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEditMode }) => {
 	const dataContext = useDataContext();
+	const { token } = useAuth();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
+	const [rawPlatformStats, setRawPlatformStats] = useState<ScrapedJobPlatformStat[]>([]);
 
 	useEffect(() => {
 		if (!isEditMode) setSidebarOpen(false);
 	}, [isEditMode]);
 
+	useEffect(() => {
+		if (config.source !== "scraped_jobs" || !token) return;
+		scrapedJobApi.platformStats(token).then((res) => {
+			if (res.data) setRawPlatformStats(res.data);
+		});
+	}, [config.source, token]);
+
 	const sourceMeta = GRAPH_SOURCES[config.source];
 	const fieldMeta = getFieldMeta(config.source, config.field);
 	const effectiveChartType = config.chartType ?? fieldMeta?.defaultChartType ?? "bar";
 	const effectiveGranularity = config.granularity ?? "month";
+	const effectiveGroupBy = config.groupBy ?? "platform";
 
-	const data = useMemo(
-		() => aggregateGraphData(config.field, dataContext, effectiveGranularity),
-		[config.field, dataContext, effectiveGranularity]
-	);
+	const getGroupKey = (stat: ScrapedJobPlatformStat): string => {
+		if (effectiveGroupBy === "platform") return stat.platform;
+		if (effectiveGroupBy === "alert_name") return stat.alert_name ?? "Unknown";
+		return `${stat.platform} — ${stat.alert_name ?? "Unknown"}`;
+	};
+
+	const data = useMemo(() => {
+		if (config.source === "scraped_jobs") {
+			if (config.field === "import_rate" || config.field === "applied_rate") {
+				const numeratorKey = config.field === "import_rate" ? "imported_count" : "applied_count";
+				const scraped = new Map<string, number>();
+				const numerator = new Map<string, number>();
+				for (const stat of rawPlatformStats) {
+					const key = getGroupKey(stat);
+					scraped.set(key, (scraped.get(key) ?? 0) + stat.scraped_count);
+					numerator.set(key, (numerator.get(key) ?? 0) + stat[numeratorKey]);
+				}
+				return Array.from(scraped.entries())
+					.map(([name, total]) => ({ name, value: total > 0 ? Math.round((numerator.get(name)! / total) * 100) : 0 }))
+					.sort((a, b) => b.value - a.value);
+			}
+			const metricKey = config.field as "scraped_count" | "imported_count" | "applied_count";
+			const counts = new Map<string, number>();
+			for (const stat of rawPlatformStats) {
+				const key = getGroupKey(stat);
+				counts.set(key, (counts.get(key) ?? 0) + stat[metricKey]);
+			}
+			return Array.from(counts.entries())
+				.sort((a, b) => b[1] - a[1])
+				.map(([name, value]) => ({ name, value }));
+		}
+		return aggregateGraphData(config.field, dataContext, effectiveGranularity);
+	}, [config.source, config.field, config.groupBy, rawPlatformStats, effectiveGroupBy, dataContext, effectiveGranularity]);
 
 	const handleSourceChange = (newSource: GraphSource) => {
 		if (newSource === config.source) return;
@@ -157,19 +200,27 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 		label: ct.charAt(0).toUpperCase() + ct.slice(1),
 	}));
 
+	const groupByOptions: SelectOption[] = [
+		{ value: "platform", label: "Platform" },
+		{ value: "alert_name", label: "Alert Name" },
+		{ value: "platform_and_alert", label: "Platform & Alert" },
+	];
+
 	const granularityOptions: SelectOption[] = [
 		{ value: "week", label: "Week" },
 		{ value: "month", label: "Month" },
 	];
 
+	const suffix = config.field === "import_rate" || config.field === "applied_rate" ? "%" : "";
+
 	const renderChart = () => {
 		switch (effectiveChartType) {
 			case "line":
-				return renderLineChart(data);
+				return renderLineChart(data, suffix);
 			case "bar":
-				return renderBarChart(data);
+				return renderBarChart(data, suffix);
 			case "pie":
-				return <PieChart data={data} colors={CHART_COLORS} />;
+				return <PieChart data={data} colors={CHART_COLORS} suffix={suffix} />;
 		}
 	};
 
@@ -232,6 +283,25 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 							isClearable={false}
 							size="sm"
 						/>
+
+						{config.source === "scraped_jobs" && (
+							<>
+								<label className="graph-sidebar-label">Group By</label>
+								<CustomSelect
+									id="graph-group-by"
+									value={groupByOptions.find((o: SelectOption): boolean => o.value === effectiveGroupBy) ?? null}
+									onChange={(opt) =>
+										opt &&
+										!Array.isArray(opt) &&
+										onConfigChange({ ...config, groupBy: opt.value as GraphConfig["groupBy"] })
+									}
+									options={groupByOptions}
+									isSearchable={false}
+									isClearable={false}
+									size="sm"
+								/>
+							</>
+						)}
 
 						{fieldMeta && fieldMeta.supportedChartTypes.length > 1 && (
 							<>

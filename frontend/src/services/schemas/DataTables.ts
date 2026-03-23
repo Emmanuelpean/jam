@@ -126,6 +126,7 @@ export interface JobDataTransform {
 	application_aggregator_id: number | null;
 	application_url: string | null;
 	attendance_type: string | null;
+	scraped_job_id: number | null;
 	keywords: number[];
 	contacts: number[];
 }
@@ -158,6 +159,7 @@ export interface JobData extends OwnedOut {
 	attendance_type: string | null;
 	keywords: number[];
 	contacts: number[];
+	scraped_job_id: number | null;
 }
 
 export interface EnrichedJobData extends JobData {

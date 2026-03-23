@@ -58,6 +58,17 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 			{ key: "update_type", label: "Update Types", icon: "arrow-left-right", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
 		],
 	},
+	scraped_jobs: {
+		label: "Scraped Jobs",
+		icon: "inbox",
+		fields: [
+			{ key: "scraped_count", label: "Jobs Scraped", icon: "inbox", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
+			{ key: "imported_count", label: "Jobs Imported", icon: "box-arrow-in-down", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
+			{ key: "applied_count", label: "Jobs Applied", icon: "send-check", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
+			{ key: "import_rate", label: "Import Rate", icon: "percent", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
+			{ key: "applied_rate", label: "Application Rate", icon: "percent", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
+		],
+	},
 };
 
 export function getFieldMeta(source: GraphSource, field: GraphField): GraphFieldMeta | undefined {

@@ -38,7 +38,7 @@ export type TimelineVariant =
 	| "status_updates"
 	| "upcoming_deadlines_timeline"
 	| "past_interviews";
-export type GraphSource = "jobs" | "interviews" | "updates";
+export type GraphSource = "jobs" | "interviews" | "updates" | "scraped_jobs";
 export type GraphField =
 	| "application_date"
 	| "application_status"
@@ -54,7 +54,12 @@ export type GraphField =
 	| "interview_type"
 	| "interview_attendance"
 	| "update_date"
-	| "update_type";
+	| "update_type"
+	| "scraped_count"
+	| "imported_count"
+	| "applied_count"
+	| "import_rate"
+	| "applied_rate";
 
 export type WidgetType = "metric" | "table" | "timeline" | "graph";
 
@@ -76,6 +81,7 @@ export interface GraphConfig {
 	field: GraphField;
 	chartType?: "line" | "bar" | "pie";
 	granularity?: "week" | "month";
+	groupBy?: "platform" | "alert_name" | "platform_and_alert";
 }
 export type WidgetConfig = MetricConfig | TableConfig | TimelineConfig | GraphConfig;
 
@@ -385,6 +391,46 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Received vs sent updates",
 				premiumOnly: false,
 				group: "Updates",
+			},
+			{
+				key: "scraped_count",
+				label: "Jobs Scraped",
+				icon: "inbox",
+				description: "Total scraped jobs by platform or alert",
+				premiumOnly: true,
+				group: "Scraped Jobs",
+			},
+			{
+				key: "imported_count",
+				label: "Jobs Imported",
+				icon: "box-arrow-in-down",
+				description: "Scraped jobs imported as job entries",
+				premiumOnly: true,
+				group: "Scraped Jobs",
+			},
+			{
+				key: "applied_count",
+				label: "Jobs Applied",
+				icon: "send-check",
+				description: "Imported jobs that were applied to",
+				premiumOnly: true,
+				group: "Scraped Jobs",
+			},
+			{
+				key: "import_rate",
+				label: "Import Rate",
+				icon: "percent",
+				description: "% of scraped jobs imported",
+				premiumOnly: true,
+				group: "Scraped Jobs",
+			},
+			{
+				key: "applied_rate",
+				label: "Application Rate",
+				icon: "percent",
+				description: "% of scraped jobs applied to",
+				premiumOnly: true,
+				group: "Scraped Jobs",
 			},
 		],
 		defaultLayout: { x: 0, y: 0, w: 6, h: 12, minW: 3, minH: 8 },

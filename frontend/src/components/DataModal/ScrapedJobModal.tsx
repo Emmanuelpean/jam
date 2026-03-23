@@ -275,6 +275,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				keywords: formData.keywords || [],
 				contacts: formData.contacts || [],
 				attendance_type: formData.attendance_type?.trim() || null,
+				scraped_job_id: formData.id || null,
 			};
 			const result: ApiResponse<JamData> = await addEntity("job", jobData);
 			parentOnSuccess?.(result);

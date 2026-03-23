@@ -18,9 +18,10 @@ export interface PieChartProps {
 	data: PieDataPoint[];
 	colors: string[];
 	fontSize?: number;
+	suffix?: string;
 }
 
-const PieTooltip = ({ active, payload }: any) => {
+const PieTooltip = ({ active, payload, suffix = "" }: any) => {
 	if (!active || !payload?.length) return null;
 	const entry = payload[0];
 	return (
@@ -34,12 +35,12 @@ const PieTooltip = ({ active, payload }: any) => {
 			}}
 		>
 			<p style={{ margin: 0, fontWeight: 600, color: "var(--bs-body-color)" }}>{entry.name}</p>
-			<p style={{ margin: 0, color: entry.payload?.fill ?? "var(--bs-body-color)" }}>Count: {entry.value}</p>
+			<p style={{ margin: 0, color: entry.payload?.fill ?? "var(--bs-body-color)" }}>{entry.value}{suffix}</p>
 		</div>
 	);
 };
 
-export const PieChart = ({ data, colors, fontSize = 13 }: PieChartProps): JSX.Element => {
+export const PieChart = ({ data, colors, fontSize = 13, suffix = "" }: PieChartProps): JSX.Element => {
 	const [hiddenSlices, setHiddenSlices] = useState<Set<string>>(new Set());
 
 	const handleLegendClick = (e: any): void => {
@@ -84,7 +85,7 @@ export const PieChart = ({ data, colors, fontSize = 13 }: PieChartProps): JSX.El
 						/>
 					))}
 				</Pie>
-				<Tooltip content={<PieTooltip />} />
+				<Tooltip content={<PieTooltip suffix={suffix} />} />
 				<Legend
 					onClick={handleLegendClick}
 					wrapperStyle={{
