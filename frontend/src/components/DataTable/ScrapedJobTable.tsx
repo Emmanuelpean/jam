@@ -36,6 +36,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 	const [showFavouriteFilters, setShowFavouriteFilters] = useState<boolean>(false);
 	const [showPastDeadline, setShowPastDeadline] = useState<boolean>(false);
 	const [internalReloadTrigger, setInternalReloadTrigger] = useState<number>(0);
+	const [locallyReadIds, setLocallyReadIds] = useState<Set<number>>(new Set());
 	const filtersInitializedRef = useRef(false);
 	const { showProgress, hideProgress } = useProgressOverlay();
 
@@ -125,9 +126,10 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 					new Date(item.created_at) > new Date(currentUser.previous_login as string)
 				}
 				rowReadIndicator={(item: ScrapedJobData): boolean =>
-					!item.read_at ||
-					new Date(item.read_at) < new Date(item.created_at as string) ||
-					new Date(item.read_at) < new Date(item.scrape_datetime as string)
+					!locallyReadIds.has(item.id) &&
+					(!item.read_at ||
+						new Date(item.read_at) < new Date(item.created_at as string) ||
+						new Date(item.read_at) < new Date(item.scrape_datetime as string))
 				}
 				onItemOpen={(item: ScrapedJobData): void => {
 					if (
@@ -135,6 +137,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 						new Date(item.read_at) < new Date(item.created_at as string) ||
 						new Date(item.read_at) < new Date(item.scrape_datetime as string)
 					) {
+						setLocallyReadIds((prev) => new Set([...prev, item.id]));
 						updateEntity("scrapedJob", item.id, { read_at: new Date().toISOString() });
 					}
 				}}
