@@ -166,6 +166,118 @@ class TestJobScrapingTable(BaseTest):
         self.scrapingFilter_table_utils.deadline_toggle.click()
         assert self.scrapedJob_table_utils.check_id_in_table(scraped_job.id)
 
+    def test_new_alert_last_login(self) -> None:
+        """Test that alerts created after previous_login are highlighted with a NEW indicator,
+        and alerts created before previous_login are not."""
+
+        previous_login = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=12)
+
+        # Create an old job (before previous_login) and backdate its created_at
+        old_job = self._make_scraped_job(title="Old Alert - No Dot", is_scraped=True)
+        old_job.created_at = previous_login - dt.timedelta(hours=1)
+        self.db.commit()
+        self.db.refresh(old_job)
+
+        # Set previous_login on the user
+        user = self.db_user
+        user.previous_login = previous_login
+        self.db.commit()
+        self.db.expire_all()
+
+        # Create a new job (after previous_login — created_at will be now)
+        new_job = self._make_scraped_job(title="New Alert - Has Dot", is_scraped=True)
+
+        self.driver.refresh()
+
+        # Old job: first data cell should NOT have the table-cell--new class
+        self.scrapedJob_table_utils.set_search(old_job.title)
+        old_row = self.scrapedJob_table_utils.table_row(old_job.id)
+        assert not old_row.find_elements(By.CSS_SELECTOR, "td.table-cell--new")
+
+        # New job: first data cell SHOULD have the table-cell--new class
+        self.scrapedJob_table_utils.set_search(new_job.title)
+        new_row = self.scrapedJob_table_utils.table_row(new_job.id)
+        assert new_row.find_elements(By.CSS_SELECTOR, "td.table-cell--new")
+
+    def test_read_dot_visibility(self) -> None:
+        """Test that the read dot shows for unread jobs and hides for already-read jobs."""
+
+        unread_job = self._make_scraped_job(title="Unread Job - Has Read Dot", is_scraped=True)
+        read_job = self._make_scraped_job(title="Read Job - No Read Dot", is_scraped=True)
+        read_job.read_at = dt.datetime.now(dt.timezone.utc)
+        self.db.commit()
+        self.db.refresh(read_job)
+        self.driver.refresh()
+
+        self.show_job(unread_job)
+        assert self.scrapedJob_table_utils.table_row(unread_job.id).find_elements(
+            By.CSS_SELECTOR, "span.read-dot"
+        ), "Expected read-dot for unread job"
+
+        self.show_job(read_job)
+        assert not self.scrapedJob_table_utils.table_row(read_job.id).find_elements(
+            By.CSS_SELECTOR, "span.read-dot"
+        ), "Expected no read-dot for already-read job"
+
+    def test_read_dot_shown_when_scraped_after_read(self) -> None:
+        """Test that a job scraped after being read shows the read dot again."""
+
+        past = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=2)
+        job = self._make_scraped_job(title="Re-scraped Job - Has Read Dot", is_scraped=True)
+        job.read_at = past  # read before last scrape
+        job.scrape_datetime = past + dt.timedelta(hours=1)  # scraped after read
+        self.db.commit()
+        self.db.refresh(job)
+        self.driver.refresh()
+        self.show_job(job)
+
+        row = self.scrapedJob_table_utils.table_row(job.id)
+        assert row.find_elements(By.CSS_SELECTOR, "span.read-dot"), "Expected read-dot when scraped after last read"
+
+    def test_opening_row_marks_as_read(self) -> None:
+        """Test that opening an unread job sets read_at in the database and removes the read dot."""
+
+        job = self._make_scraped_job(title="Mark Read On Open Test Job", is_scraped=True)
+        assert job.read_at is None
+        self.driver.refresh()
+        self.show_job(job)
+
+        row = self.scrapedJob_table_utils.table_row(job.id)
+        assert row.find_elements(By.CSS_SELECTOR, "span.read-dot"), "Expected read-dot before opening"
+
+        row.click()
+        self.scrapedJob_modal_utils.wait_for_import_modal()
+        self.close_modal()
+
+        row = self.scrapedJob_table_utils.table_row(job.id)
+        assert not row.find_elements(By.CSS_SELECTOR, "span.read-dot"), "Expected read-dot to disappear after opening"
+
+        self.db.expire_all()
+        updated = self.db.query(models.ScrapedJob).filter_by(id=job.id).first()
+        assert updated.read_at is not None, "Expected read_at to be set in the database"
+
+    def test_already_read_job_does_not_update_read_at(self) -> None:
+        """Test that opening an already-read job does not update read_at."""
+
+        past = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=2)
+        job = self._make_scraped_job(title="Already Read Test Job", is_scraped=True)
+        # Backdate created_at and scrape_datetime so read_at is after both
+        job.created_at = past - dt.timedelta(hours=1)
+        job.scrape_datetime = past - dt.timedelta(hours=1)
+        read_time = past
+        job.read_at = read_time
+        self.db.commit()
+        self.db.refresh(job)
+        self.driver.refresh()
+        self.show_job(job)
+
+        self.scrapedJob_table_utils.table_row(job.id).click()
+        self.scrapedJob_modal_utils.wait_for_import_modal()
+
+        self.db.expire_all()
+        updated = self.db.query(models.ScrapedJob).filter_by(id=job.id).first()
+        assert updated.read_at.replace(tzinfo=dt.timezone.utc) == read_time, "Expected read_at to remain unchanged"
+
     # -------------------------------------------------- JOB SCRAPING --------------------------------------------------
 
     def test_scraped_job_skipped(self) -> None:
@@ -312,110 +424,6 @@ class TestJobScrapingTable(BaseTest):
         modal = self.scrapedJob_modal_utils.wait_for_import_modal()
         assert "Job description too short (minimum length is 100 characters)" in modal.text
         assert "Job Rating" not in modal.text
-
-    def test_new_alert_dot_indicator(self) -> None:
-        """Test that alerts created after previous_login are highlighted with a dot indicator,
-        and alerts created before previous_login are not."""
-
-        previous_login = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=12)
-
-        # Create an old job (before previous_login) and backdate its created_at
-        old_job = self._make_scraped_job(title="Old Alert - No Dot", is_scraped=True)
-        old_job.created_at = previous_login - dt.timedelta(hours=1)
-        self.db.commit()
-        self.db.refresh(old_job)
-
-        # Set previous_login on the user
-        user = self.db_user
-        user.previous_login = previous_login
-        self.db.commit()
-        self.db.expire_all()
-
-        # Create a new job (after previous_login — created_at will be now)
-        new_job = self._make_scraped_job(title="New Alert - Has Dot", is_scraped=True)
-
-        self.driver.refresh()
-
-        # Old job: first data cell should NOT have the table-cell--new class
-        self.scrapedJob_table_utils.set_search(old_job.title)
-        old_row = self.scrapedJob_table_utils.table_row(old_job.id)
-        assert not old_row.find_elements(By.CSS_SELECTOR, "td.table-cell--new")
-
-        # New job: first data cell SHOULD have the table-cell--new class
-        self.scrapedJob_table_utils.set_search(new_job.title)
-        new_row = self.scrapedJob_table_utils.table_row(new_job.id)
-        assert new_row.find_elements(By.CSS_SELECTOR, "td.table-cell--new")
-
-    def test_read_dot_shown_for_unread_job(self) -> None:
-        """Test that a job with no read_at shows the read dot indicator."""
-
-        job = self._make_scraped_job(title="Unread Job - Has Read Dot", is_scraped=True)
-        self.driver.refresh()
-        self.show_job(job)
-
-        row = self.scrapedJob_table_utils.table_row(job.id)
-        assert row.find_elements(By.CSS_SELECTOR, "span.read-dot"), "Expected read-dot for unread job"
-
-    def test_read_dot_hidden_for_already_read_job(self) -> None:
-        """Test that a job with read_at >= modified_at does not show the read dot."""
-
-        job = self._make_scraped_job(title="Read Job - No Read Dot", is_scraped=True)
-        job.read_at = dt.datetime.now(dt.timezone.utc)
-        self.db.commit()
-        self.db.refresh(job)
-        self.driver.refresh()
-        self.show_job(job)
-
-        row = self.scrapedJob_table_utils.table_row(job.id)
-        assert not row.find_elements(By.CSS_SELECTOR, "span.read-dot"), "Expected no read-dot for already-read job"
-
-    def test_read_dot_shown_when_modified_after_read(self) -> None:
-        """Test that a job modified after being read shows the read dot again."""
-
-        past = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=2)
-        job = self._make_scraped_job(title="Re-modified Job - Has Read Dot", is_scraped=True)
-        job.read_at = past  # read before last modification
-        job.modified_at = past + dt.timedelta(hours=1)  # modified after read
-        self.db.commit()
-        self.db.refresh(job)
-        self.driver.refresh()
-        self.show_job(job)
-
-        row = self.scrapedJob_table_utils.table_row(job.id)
-        assert row.find_elements(By.CSS_SELECTOR, "span.read-dot"), "Expected read-dot when modified after last read"
-
-    def test_opening_row_sets_read_at(self) -> None:
-        """Test that opening a scraped job row sets read_at in the database."""
-
-        job = self._make_scraped_job(title="Mark Read On Open Test Job", is_scraped=True)
-        assert job.read_at is None
-        self.driver.refresh()
-        self.show_job(job)
-
-        self.scrapedJob_table_utils.table_row(job.id).click()
-        self.scrapedJob_modal_utils.wait_for_import_modal()
-
-        self.db.expire_all()
-        updated = self.db.query(models.ScrapedJob).filter_by(id=job.id).first()
-        assert updated.read_at is not None, "Expected read_at to be set after opening the job row"
-
-    def test_already_read_job_does_not_update_read_at(self) -> None:
-        """Test that opening an already-read job does not update read_at."""
-
-        read_time = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=1)
-        job = self._make_scraped_job(title="Already Read Test Job", is_scraped=True)
-        job.read_at = read_time
-        self.db.commit()
-        self.db.refresh(job)
-        self.driver.refresh()
-        self.show_job(job)
-
-        self.scrapedJob_table_utils.table_row(job.id).click()
-        self.scrapedJob_modal_utils.wait_for_import_modal()
-
-        self.db.expire_all()
-        updated = self.db.query(models.ScrapedJob).filter_by(id=job.id).first()
-        assert updated.read_at.replace(tzinfo=dt.timezone.utc) == read_time, "Expected read_at to remain unchanged"
 
     def test_scraped_job_with_job_rating_with_notes(self) -> None:
         """Test that a scraped job with a rating with notes is displayed correctly."""

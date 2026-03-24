@@ -125,10 +125,16 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 					new Date(item.created_at) > new Date(currentUser.previous_login as string)
 				}
 				rowReadIndicator={(item: ScrapedJobData): boolean =>
-					!item.read_at || new Date(item.read_at) < new Date(item.modified_at as string)
+					!item.read_at ||
+					new Date(item.read_at) < new Date(item.created_at as string) ||
+					new Date(item.read_at) < new Date(item.scrape_datetime as string)
 				}
 				onItemOpen={(item: ScrapedJobData): void => {
-					if (!item.read_at) {
+					if (
+						!item.read_at ||
+						new Date(item.read_at) < new Date(item.created_at as string) ||
+						new Date(item.read_at) < new Date(item.scrape_datetime as string)
+					) {
 						updateEntity("scrapedJob", item.id, { read_at: new Date().toISOString() });
 					}
 				}}
