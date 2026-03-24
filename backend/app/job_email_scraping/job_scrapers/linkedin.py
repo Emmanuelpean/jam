@@ -49,6 +49,6 @@ class LinkedinBrightdataJobScraper(BrightdataJobScraper):
 
 
 if __name__ == "__main__":
-    scraper = LinkedinBrightdataJobScraper(["4313361652"])
+    scraper = LinkedinBrightdataJobScraper(["4384261503"])
     job_data1 = scraper.scrape_job()
-    print(job_data1[0])
+    # print(job_data1[0])
