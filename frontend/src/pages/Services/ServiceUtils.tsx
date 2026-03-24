@@ -98,7 +98,7 @@ export const createSeries = (logs: any[], id: string, color: string, getValue: (
 		.slice()
 		.reverse()
 		.map((log: any): { x: Date; y: number } => ({
-			x: new Date(log.run_datetime),
+			x: log.run_datetime,
 			y: getValue(log),
 		})),
 });

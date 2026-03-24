@@ -1,8 +1,6 @@
-import React, { useState } from "react";
+import React, { JSX, useState } from "react";
 import { Button, Collapse } from "react-bootstrap";
 import { JobRatingData } from "../../../services/schemas/Services";
-import { useConfig } from "../../../contexts/ConfigContext";
-import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 
 interface JobRatingCardProps {
 	jobRating: JobRatingData;

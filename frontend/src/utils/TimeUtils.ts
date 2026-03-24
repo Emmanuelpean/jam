@@ -1,5 +1,4 @@
-export function formatActivityDate(dateString: string | Date, dateOnly = false): string {
-	const date = new Date(dateString);
+export function formatActivityDate(date: Date, dateOnly = false): string {
 	const now = new Date();
 
 	const options: Intl.DateTimeFormatOptions = {
@@ -22,13 +21,13 @@ export function formatTimedelta(seconds: number): string {
 	return `${hours} hour${hours !== 1 ? "s" : ""}`;
 }
 
-export function convertToEndOfDay(date: Date | string): Date {
+export function convertToEndOfDay(date: Date): Date {
 	const endDate = new Date(date);
 	endDate.setHours(23, 59, 59, 0);
 	return endDate;
 }
 
-export function toDdMmYyyy(date: Date | string): string {
+export function toDdMmYyyy(date: Date): string {
 	const dateObj: Date = new Date(date);
 	const day: string = String(dateObj.getDate()).padStart(2, "0");
 	const month: string = String(dateObj.getMonth() + 1).padStart(2, "0");
@@ -36,21 +35,17 @@ export function toDdMmYyyy(date: Date | string): string {
 	return `${day}/${month}/${year}`;
 }
 
-export function toDdMmYyyyHhMm(date: Date | string): string {
-	const dateObj = typeof date === "string" ? new Date(date) : date;
-
-	const datePart = new Intl.DateTimeFormat(undefined, {
+export function toDdMmYyyyHhMm(date: Date): string {
+	const datePart: string = new Intl.DateTimeFormat(undefined, {
 		day: "2-digit",
 		month: "2-digit",
 		year: "numeric",
-	}).format(dateObj);
-
-	const timePart = new Intl.DateTimeFormat(undefined, {
+	}).format(date);
+	const timePart: string = new Intl.DateTimeFormat(undefined, {
 		hour: "2-digit",
 		minute: "2-digit",
 		hour12: false,
-	}).format(dateObj);
-
+	}).format(date);
 	return `${datePart} ${timePart}`;
 }
 
@@ -109,4 +104,30 @@ export const formatScheduledTime = (date: Date): string => {
 		hour: "2-digit",
 		minute: "2-digit",
 	});
+};
+
+const isIsoDateString = (value: any): boolean => {
+	return typeof value === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value);
+};
+
+export const parseDates = (data: any): any => {
+	if (Array.isArray(data)) {
+		return data.map(parseDates);
+	}
+
+	if (data && typeof data === "object") {
+		const parsed: any = {};
+		for (const key in data) {
+			const value = data[key];
+
+			if (isIsoDateString(value)) {
+				parsed[key] = new Date(value);
+			} else {
+				parsed[key] = parseDates(value);
+			}
+		}
+		return parsed;
+	}
+
+	return data;
 };

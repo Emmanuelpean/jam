@@ -122,23 +122,16 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 				enableColumnConfig={!dashboardMode}
 				reloadTrigger={(reloadTrigger ?? 0) + internalReloadTrigger}
 				rowIndicator={(item: ScrapedJobData): boolean =>
-					!!currentUser?.previous_login &&
-					new Date(item.created_at) > new Date(currentUser.previous_login as string)
+					!!currentUser?.previous_login && item.created_at > currentUser.previous_login
 				}
 				rowReadIndicator={(item: ScrapedJobData): boolean =>
 					!locallyReadIds.has(item.id) &&
-					(!item.read_at ||
-						new Date(item.read_at) < new Date(item.created_at as string) ||
-						new Date(item.read_at) < new Date(item.scrape_datetime as string))
+					(!item.read_at || item.read_at < item.created_at || item.read_at < item.scrape_datetime)
 				}
 				onItemOpen={(item: ScrapedJobData): void => {
-					if (
-						!item.read_at ||
-						new Date(item.read_at) < new Date(item.created_at as string) ||
-						new Date(item.read_at) < new Date(item.scrape_datetime as string)
-					) {
+					if (!item.read_at || item.read_at < item.created_at || item.read_at < item.scrape_datetime) {
 						setLocallyReadIds((prev) => new Set([...prev, item.id]));
-						updateEntity("scrapedJob", item.id, { read_at: new Date().toISOString() });
+						updateEntity("scrapedJob", item.id, { read_at: new Date() });
 					}
 				}}
 				enableMultiSelect={!dashboardMode}

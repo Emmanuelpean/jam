@@ -125,8 +125,8 @@ export function useDashboardData(): DashboardData {
 		appsWithResponse.length > 0
 			? Math.round(
 					appsWithResponse.reduce((sum: number, job: EnrichedJobData): number => {
-						const appDate: number = new Date(job.application_date as string).getTime();
-						const updateDate: number = new Date(job.last_update_date as string).getTime();
+						const appDate = job.application_date!.getTime();
+						const updateDate = job.last_update_date!.getTime();
 						return sum + (updateDate - appDate) / (1000 * 60 * 60 * 24);
 					}, 0) / appsWithResponse.length
 				)

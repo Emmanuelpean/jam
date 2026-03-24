@@ -459,7 +459,7 @@ class TestJobScrapingTable(BaseTest):
 class TestScrapingFilters(BaseTest):
 
     user_index = 0
-    page_url = "dashboard"
+    page_url = "scraped-jobs"
     test_data = dict(type="Attendance Type", operator="Contains", value="In Person")
     filtered_index = 1
     no_filtered_index = 3

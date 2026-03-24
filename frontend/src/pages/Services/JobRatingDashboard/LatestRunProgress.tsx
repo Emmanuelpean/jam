@@ -23,7 +23,7 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 					<p className="metric-item">
 						<span className="status-label">Run Time:</span>
 						<br />
-						{new Date(latestLog.run_datetime).toLocaleString()}
+						{latestLog.run_datetime.toLocaleString()}
 					</p>
 					<p className="metric-item">
 						<span className="status-label">Duration:</span> {formatDuration(latestLog.run_duration)}

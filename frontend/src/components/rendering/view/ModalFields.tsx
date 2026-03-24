@@ -1,6 +1,5 @@
 import React, { ReactNode } from "react";
 import { renderFunctions, RenderParams, RenderViewFieldWithContext, ViewField } from "./ViewRenders";
-import { ScrapedJobData } from "../../../services/schemas/Services";
 
 export interface ModalViewField extends ViewField {
 	label?: string;

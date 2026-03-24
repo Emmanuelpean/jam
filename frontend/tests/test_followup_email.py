@@ -1,4 +1,4 @@
-"""Tests for the scraped jobs."""
+"""Tests for follow up email generation."""
 
 from base_test import BaseTest, models
 

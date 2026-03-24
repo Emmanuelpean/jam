@@ -1,7 +1,6 @@
 import React, { forwardRef, JSX } from "react";
 import { SlideCarouselModal, SlideCarouselModalHandle } from "../SlideCarouselModal/SlideCarouselModal";
 import { LAST_VERSION, ReleaseSlide } from "../../releaseNotes/versions";
-import packageJson from "../../../package.json";
 
 export type WhatsNewModalHandle = SlideCarouselModalHandle;
 

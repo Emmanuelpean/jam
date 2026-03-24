@@ -115,7 +115,7 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 
 	useEffect((): void => {
 		if (!initialised.current || items.length === 0) return;
-		persistConfig(items);
+		void persistConfig(items);
 	}, [items]);
 
 	const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));

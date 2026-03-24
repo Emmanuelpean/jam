@@ -52,7 +52,7 @@ export const InterviewModal = forwardRef<DataModalHandle<InterviewData>, Intervi
 
 		const transformFormData = (data: InterviewDataTransform): InterviewDataTransform => {
 			return {
-				date: new Date(data.date),
+				date: data.date,
 				type: data.type,
 				location_id: data.location_id,
 				job_id: jobId || data.job_id,

@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useState, JSX } from "react";
 import { DataContextValue, JamData, useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../DataTable/InterviewTable";
 import JobApplicationUpdateTable from "../../DataTable/JobApplicationUpdateTable";
@@ -299,9 +299,8 @@ export const renderFunctions = {
 	},
 
 	datetime: (param: RenderParams): string | null => {
-		const date = param.item?.date ? new Date(param.item.date) : null;
-		if (!date) return null;
-		return toDdMmYyyyHhMm(date);
+		if (!param.item?.date) return null;
+		return toDdMmYyyyHhMm(param.item?.date);
 	},
 
 	// ----------------------------------------------------- OTHER -----------------------------------------------------

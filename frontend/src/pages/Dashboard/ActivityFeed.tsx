@@ -7,7 +7,12 @@ import {
 	ViewField,
 } from "../../components/rendering/view/ViewRenders";
 import { getTableIcon } from "../../components/rendering/view/Icons";
-import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, EnrichedJobData, JobData } from "../../services/schemas/DataTables";
+import {
+	EnrichedInterviewData,
+	EnrichedJobApplicationUpdateData,
+	EnrichedJobData,
+	JobData,
+} from "../../services/schemas/DataTables";
 import { formatActivityDate } from "../../utils/TimeUtils";
 import { DashboardCard } from "./DashboardCard";
 
@@ -43,12 +48,20 @@ interface TimelineItemProps {
 	icon: string;
 	isLast: boolean;
 	title: ReactNode;
-	date: string | Date;
+	date: Date;
 	dateOnly?: boolean;
 	children: ReactNode;
 }
 
-const TimelineItem: React.FC<TimelineItemProps> = ({ colorClass, icon, isLast, title, date, dateOnly, children }) => (
+const TimelineItem: React.FC<TimelineItemProps> = ({
+	colorClass,
+	icon,
+	isLast,
+	title,
+	date,
+	dateOnly,
+	children,
+}: TimelineItemProps): JSX.Element => (
 	<div className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
 		<div className="d-flex position-relative">
 			{!isLast && <div className="position-absolute activity-line" />}
@@ -62,7 +75,9 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ colorClass, icon, isLast, t
 			</div>
 			<div className="flex-grow-1 min-width-0">
 				<div className="activity-header d-flex align-items-start justify-content-between mb-1">
-					<div className="fw-semibold activity-title" style={{ fontSize: "1rem" }}>{title}</div>
+					<div className="fw-semibold activity-title" style={{ fontSize: "1rem" }}>
+						{title}
+					</div>
 					<small className="text-muted activity-date">{formatActivityDate(date, dateOnly)}</small>
 				</div>
 				{children}
@@ -115,7 +130,7 @@ export const ActivityFeedCard = <T,>({
 
 export interface RecentActivity {
 	data: JobData | EnrichedInterviewData | EnrichedJobApplicationUpdateData;
-	date: string | Date;
+	date: Date;
 	type: "Application" | "Interview" | "Job Application Update";
 	job_id: number | null | undefined | string;
 }
@@ -220,11 +235,7 @@ export const renderStatusUpdateItem = (
 	);
 };
 
-export const renderUpcomingDeadlineItem = (
-	job: EnrichedJobData,
-	index: number,
-	isLast: boolean
-): JSX.Element => {
+export const renderUpcomingDeadlineItem = (job: EnrichedJobData, index: number, isLast: boolean): JSX.Element => {
 	const jobField: ViewField = {
 		key: "activity-item-" + index,
 		render: (params: RenderParams) => renderFunctions.jobBadge(params),
@@ -238,7 +249,7 @@ export const renderUpcomingDeadlineItem = (
 			dateOnly
 			isLast={isLast}
 			title={job.name || job.title}
-			date={job.deadline as string | Date}
+			date={job.deadline as Date}
 		>
 			<RenderViewFieldWithContext field={jobField} item={{ job_id: job.id }} id={index.toString()} />
 		</TimelineItem>

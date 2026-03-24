@@ -83,14 +83,14 @@ export interface PersonData extends OwnedOut {
 // ----------------------------------------------- JOB APPLICATION UPDATE ----------------------------------------------
 
 export interface JobApplicationUpdateDataTransform {
-	date: Date | string;
+	date: Date;
 	type: string;
 	job_id: number;
 	note: string | null;
 }
 
 export interface JobApplicationUpdateData extends OwnedOut {
-	date: Date | string;
+	date: Date;
 	type: string;
 	job_id: number;
 	note: string | null;
@@ -112,14 +112,14 @@ export interface JobDataTransform {
 	salary_max: number | null;
 	salary_currency: string | null;
 	personal_rating: number | null;
-	deadline: Date | string | null;
+	deadline: Date | null;
 	company_id: number | null;
 	source_aggregator_id: number | null;
 	source_type: string | null;
 	recruiter_id: number | null;
 	recruitment_company_id: number | null;
 	location_id: number | null;
-	application_date: Date | string | null;
+	application_date: Date | null;
 	application_status: string | null;
 	applied_via: string | null;
 	application_note: string | null;
@@ -142,15 +142,15 @@ export interface JobData extends OwnedOut {
 	salary_max: number | null;
 	salary_currency: string | null;
 	personal_rating: number | null;
-	deadline: Date | string | null;
+	deadline: Date | null;
 	company_id: number | null;
 	source_aggregator_id: number | null;
 	source_type: string | null;
 	location_id: number | null;
 	recruiter_id: number | null;
 	recruitment_company_id: number | null;
-	followup_snooze_datetime: Date | string | null;
-	application_date: Date | string | null;
+	followup_snooze_datetime: Date | null;
+	application_date: Date | null;
 	application_status: string | null;
 	applied_via: string | null;
 	application_note: string | null;
@@ -163,7 +163,7 @@ export interface JobData extends OwnedOut {
 }
 
 export interface EnrichedJobData extends JobData {
-	last_update_date: Date | string | null;
+	last_update_date: Date | null;
 	last_update_type: string | null;
 	days_since_last_update: number | null;
 	days_until_deadline: number | null;
@@ -173,7 +173,7 @@ export interface EnrichedJobData extends JobData {
 // ----------------------------------------------------- INTERVIEW -----------------------------------------------------
 
 export interface InterviewDataTransform {
-	date: Date | string;
+	date: Date;
 	type: string;
 	location_id: number | null;
 	job_id: number;
@@ -183,7 +183,7 @@ export interface InterviewDataTransform {
 }
 
 export interface InterviewData extends OwnedOut {
-	date: Date | string;
+	date: Date;
 	type: string;
 	location_id: number | null;
 	job_id: number;
@@ -199,7 +199,7 @@ export interface EnrichedInterviewData extends InterviewData {
 // ---------------------------------------------- SPECULATIVE APPLICATION ----------------------------------------------
 
 export interface SpeculativeApplicationDataTransform {
-	date: Date | string | null;
+	date: Date | null;
 	note: string | null;
 	contact_email: string | null;
 	contacts: number[];
@@ -207,7 +207,7 @@ export interface SpeculativeApplicationDataTransform {
 }
 
 export interface SpeculativeApplicationData extends OwnedOut {
-	date: Date | string | null;
+	date: Date | null;
 	note: string | null;
 	contact_email: string | null;
 	contacts: number[];

@@ -540,7 +540,7 @@ function DataTableComponent<T extends JamData>(
 				const snoozeDate = new Date();
 				snoozeDate.setDate(snoozeDate.getDate() + weeks * 7);
 				const response: ApiResponse<JamData> = await dataContext.updateEntity(entityType, item.id, {
-					followup_snooze_datetime: snoozeDate.toISOString(),
+					followup_snooze_datetime: snoozeDate,
 				});
 				if ("title" in response.data) {
 					showToastSuccess(

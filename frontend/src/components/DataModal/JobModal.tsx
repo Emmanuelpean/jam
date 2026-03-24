@@ -276,7 +276,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				recruitment_company_id: jobData.recruitment_company_id || null,
 				keywords: jobData.keywords || [],
 				contacts: jobData.contacts || [],
-				application_date: jobData.application_date ? new Date(jobData.application_date) : null,
+				application_date: jobData.application_date,
 				application_url: jobData.application_url?.trim() || null,
 				application_status: jobData.application_status?.trim() || null,
 				applied_via: jobData.applied_via?.trim() || null,

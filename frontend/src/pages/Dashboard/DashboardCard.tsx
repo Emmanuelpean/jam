@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, JSX } from "react";
 import { Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "./DashboardPage.scss";
@@ -90,7 +90,12 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 				{isEmpty && emptyState ? renderEmptyState() : null}
 				<div
 					className={bodyPadding ? "px-3" : ""}
-					style={{ flexGrow: 1, minHeight: 0, display: isEmpty && emptyState ? "none" : "flex", flexDirection: "column" }}
+					style={{
+						flexGrow: 1,
+						minHeight: 0,
+						display: isEmpty && emptyState ? "none" : "flex",
+						flexDirection: "column",
+					}}
 				>
 					{children}
 				</div>

@@ -32,7 +32,7 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle<Speculativ
 
 		const transformData = (formData: SpeculativeApplicationDataTransform): SpeculativeApplicationDataTransform => {
 			return {
-				date: formData.date ? new Date(formData.date) : null,
+				date: formData.date,
 				note: formData.note?.trim() || null,
 				contact_email: formData.contact_email?.trim() || null,
 				company_id: formData.company_id,

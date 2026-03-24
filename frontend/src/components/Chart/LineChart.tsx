@@ -31,7 +31,7 @@ export interface LineChartProps {
 	yAxisLabel?: string;
 	fontsize?: number;
 	yAxisFormatter?: (value: number | null) => number | null;
-	xAxisFormatter?: (value: string | Date) => string;
+	xAxisFormatter?: (value: Date) => string;
 	isLoading?: boolean;
 	height?: number;
 }
@@ -41,7 +41,7 @@ export const LineChart = ({
 	yAxisLabel = "Y-axis",
 	xAxisLabel = "X-Axis",
 	fontsize = 14,
-	xAxisFormatter = (value: string | Date): string => toDdMmYyyyHhMm(value),
+	xAxisFormatter = (value: Date): string => toDdMmYyyyHhMm(value),
 	yAxisFormatter = (value: number | null): number | null => value,
 	isLoading = false,
 	height = 400,

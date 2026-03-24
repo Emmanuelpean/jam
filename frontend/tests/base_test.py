@@ -21,7 +21,6 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.wait import WebDriverWait
 
 from app import models
@@ -775,12 +774,14 @@ class DataModalUtils(BaseUtilsClass):
         expected += "Compensation & Priority\n"
         expected += format_field("Salary Range", self.salary_range(entry))
 
+        deadline = entry.deadline.strftime("%d/%m/%Y") if entry.deadline else None
+        expected += format_field("Application Deadline", deadline)
+
         expected += "Personal Rating\n"
         if not entry.personal_rating:
             expected += "Not Provided\n"
 
-        deadline = entry.deadline.strftime("%d/%m/%Y") if entry.deadline else None
-        expected += format_field("Application Deadline", deadline)
+        expected += "Favourite\n"
 
         expected += "Source & Links\n"
         if entry.source_type in ["aggregator", "aggregator_email"]:
@@ -1084,7 +1085,7 @@ class DataTableUtils(BaseUtilsClass):
         :param value: Value to select (e.g. "20", "40")"""
 
         if len(self.table_rows) >= 20:
-            Select(self.get_element("page-items-select")).select_by_value(value)
+            ReactSelect(self.get_element("page-items-select")).select_by_visible_text(f"Show {value} Entries")
 
     def table_row_click(self, row_index: int) -> None:
         """Click on a table row by its index (0-based)"""
@@ -1838,7 +1839,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            # chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
