@@ -5,7 +5,7 @@ import { modalViewFields } from "../rendering/view/ModalFields";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { SettingData, SettingDataTransform } from "../../services/schemas/Core";
 
-export const SettingModal = forwardRef<DataModalHandle, JamDataModalProps>(
+export const SettingModal = forwardRef<DataModalHandle<SettingData>, JamDataModalProps>(
 	({ size = "xl" }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 
@@ -49,7 +49,7 @@ export const SettingModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		};
 
 		return (
-			<DataModal
+			<DataModal<SettingData>
 				ref={ref}
 				size={size}
 				fields={fields}

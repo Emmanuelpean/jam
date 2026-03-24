@@ -6,7 +6,6 @@ import {
 	WidgetType,
 	WidgetTypeDef,
 	GraphField,
-	CardVariant,
 	MetricVariant,
 	TableVariant,
 	TimelineVariant,
@@ -55,9 +54,6 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 				break;
 			case "timeline":
 				config = { type: "timeline", feed: variantKey as TimelineVariant };
-				break;
-			case "card":
-				config = { type: "card", variant: variantKey as CardVariant };
 				break;
 			case "graph": {
 				const field = variantKey as GraphField;

@@ -7,7 +7,7 @@ import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { CompanyModal } from "./CompanyModal";
 import { PersonData, PersonTransform } from "../../services/schemas/DataTables";
 
-export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
+export const PersonModal = forwardRef<DataModalHandle<PersonData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const companyModalRef = React.useRef<DataModalHandle>(null);
 		const { companies } = useFormOptions();
@@ -80,7 +80,7 @@ export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 		return (
 			<>
-				<DataModal
+				<DataModal<PersonData>
 					ref={ref}
 					size={size}
 					fields={fields}

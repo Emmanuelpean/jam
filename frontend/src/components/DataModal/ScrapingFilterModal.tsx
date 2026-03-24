@@ -9,7 +9,7 @@ interface ScrapingFilterModalProps extends JamDataModalProps {
 	variant?: "scraping" | "favourite";
 }
 
-export const ScrapingFilterModal = forwardRef<DataModalHandle, ScrapingFilterModalProps>(
+export const ScrapingFilterModal = forwardRef<DataModalHandle<ScrapingFilterData>, ScrapingFilterModalProps>(
 	({ size = "lg", variant = "scraping" }: ScrapingFilterModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 		const isScraping = variant === "scraping";
@@ -78,7 +78,7 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle, ScrapingFilterMod
 		};
 
 		return (
-			<DataModal
+			<DataModal<ScrapingFilterData>
 				ref={ref}
 				size={size}
 				fields={fields}

@@ -5,7 +5,7 @@ import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { KeywordData, KeywordDataTransform } from "../../services/schemas/DataTables";
 
-export const KeywordModal = forwardRef<DataModalHandle, JamDataModalProps>(
+export const KeywordModal = forwardRef<DataModalHandle<KeywordData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 
@@ -39,7 +39,7 @@ export const KeywordModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		};
 
 		return (
-			<DataModal
+			<DataModal<KeywordData>
 				ref={ref}
 				size={size}
 				fields={fields}

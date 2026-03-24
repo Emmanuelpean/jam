@@ -126,7 +126,7 @@ export interface JobDataTransform {
 	application_aggregator_id: number | null;
 	application_url: string | null;
 	attendance_type: string | null;
-	scraped_job_id: number | null;
+	scraped_job_id?: number | null;
 	keywords: number[];
 	contacts: number[];
 }

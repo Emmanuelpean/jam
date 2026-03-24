@@ -22,7 +22,7 @@ import { useConfig } from "../../contexts/ConfigContext";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
 import { ApiResponse } from "../../services/api/Base";
 
-export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
+export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDataModalProps>(
 	({ size = "xl", onDelete, onSuccess: parentOnSuccess, canEdit = true }: JamDataModalProps, ref): JSX.Element => {
 		const { addEntity } = useDataContext();
 		const { config } = useConfig();
@@ -283,7 +283,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 		return (
 			<>
-				<DataModal
+				<DataModal<ScrapedJobData>
 					ref={ref}
 					fields={{ form: jobFormFields, view: viewFields }}
 					transformFormData={transformData}

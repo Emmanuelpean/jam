@@ -38,7 +38,7 @@ export interface ExtensionJobData {
 	geolocation?: GeoLocationData | null;
 }
 
-export const ExtensionJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
+export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataModalProps>(
 	({ size = "xl" }: JamDataModalProps, ref): JSX.Element => {
 		const locationModalRef = useRef<DataModalHandle>(null);
 		const personModalRef = useRef<DataModalHandle>(null);
@@ -255,7 +255,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 		return (
 			<>
-				<DataModal
+				<DataModal<JobData>
 					ref={ref}
 					transformFormData={transformFormData}
 					transformInputData={transformInputData}

@@ -5,7 +5,7 @@ import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { AggregatorData, AggregatorDataTransform } from "../../services/schemas/DataTables";
 
-export const AggregatorModal = forwardRef<DataModalHandle, JamDataModalProps>(
+export const AggregatorModal = forwardRef<DataModalHandle<AggregatorData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref) => {
 		const dataContext: DataContextValue = useDataContext();
 
@@ -55,7 +55,7 @@ export const AggregatorModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		};
 
 		return (
-			<DataModal
+			<DataModal<AggregatorData>
 				ref={ref}
 				additionalFields={additionalFields}
 				size={size}

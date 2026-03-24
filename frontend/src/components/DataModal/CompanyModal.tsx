@@ -6,7 +6,7 @@ import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { CompanyData, CompanyDataTransform } from "../../services/schemas/DataTables";
 
-export const CompanyModal = forwardRef<DataModalHandle, JamDataModalProps>(
+export const CompanyModal = forwardRef<DataModalHandle<CompanyData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 
@@ -67,7 +67,7 @@ export const CompanyModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		};
 
 		return (
-			<DataModal
+			<DataModal<CompanyData>
 				ref={ref}
 				size={size}
 				fields={fields}

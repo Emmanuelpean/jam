@@ -5,12 +5,12 @@ import { modalViewFields } from "../rendering/view/ModalFields";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { LocationModal } from "./LocationModal";
 import { PersonModal } from "./PersonModal";
-import { InterviewDataTransform, JobData } from "../../services/schemas/DataTables";
+import { InterviewData, InterviewDataTransform, JobData } from "../../services/schemas/DataTables";
 
 export interface InterviewModalProps extends JamDataModalProps {
 	jobId?: number;
 }
-export const InterviewModal = forwardRef<DataModalHandle, InterviewModalProps>(
+export const InterviewModal = forwardRef<DataModalHandle<InterviewData>, InterviewModalProps>(
 	({ size = "lg", jobId }: InterviewModalProps, ref) => {
 		const locationModalRef = useRef<DataModalHandle>(null);
 		const personModalRef = useRef<DataModalHandle>(null);
@@ -64,7 +64,7 @@ export const InterviewModal = forwardRef<DataModalHandle, InterviewModalProps>(
 
 		return (
 			<>
-				<DataModal
+				<DataModal<InterviewData>
 					ref={ref}
 					size={size}
 					fields={fields}

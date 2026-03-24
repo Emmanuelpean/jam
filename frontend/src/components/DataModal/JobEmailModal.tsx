@@ -1,8 +1,9 @@
 import React, { forwardRef, JSX } from "react";
+import { JobEmailData } from "../../services/schemas/Services";
 import DataModal, { DataModalHandle, Fields, JamDataModalProps, SectionConfig } from "./DataModal";
 import { modalViewFields } from "../rendering/view/ModalFields";
 
-export const JobEmailModal = forwardRef<DataModalHandle, JamDataModalProps & { scrapedJobsReadOnly?: boolean }>(
+export const JobEmailModal = forwardRef<DataModalHandle<JobEmailData>, JamDataModalProps & { scrapedJobsReadOnly?: boolean }>(
 	(
 		{ size = "xl", onDelete, scrapedJobsReadOnly = false }: JamDataModalProps & { scrapedJobsReadOnly?: boolean },
 		ref
@@ -35,7 +36,7 @@ export const JobEmailModal = forwardRef<DataModalHandle, JamDataModalProps & { s
 		];
 
 		return (
-			<DataModal
+			<DataModal<JobEmailData>
 				ref={ref}
 				fields={{ form: [], view: viewFields }}
 				entityType="jobEmail"

@@ -9,7 +9,7 @@ export interface JobApplicationUpdateModalProps extends JamDataModalProps {
 	jobId?: number;
 }
 
-export const JobApplicationUpdateModal = forwardRef<DataModalHandle, JobApplicationUpdateModalProps>(
+export const JobApplicationUpdateModal = forwardRef<DataModalHandle<JobApplicationUpdateData>, JobApplicationUpdateModalProps>(
 	({ size = "lg", jobId }: JobApplicationUpdateModalProps, ref): JSX.Element => {
 		const { jobs } = useFormOptions();
 
@@ -49,7 +49,7 @@ export const JobApplicationUpdateModal = forwardRef<DataModalHandle, JobApplicat
 
 		return (
 			<>
-				<DataModal
+				<DataModal<JobApplicationUpdateData>
 					ref={ref}
 					size={size}
 					fields={fields}

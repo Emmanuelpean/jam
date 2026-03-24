@@ -7,7 +7,7 @@ import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { LocationData, LocationDataTransform } from "../../services/schemas/DataTables";
 
-export const LocationModal = forwardRef<DataModalHandle, JamDataModalProps>(
+export const LocationModal = forwardRef<DataModalHandle<LocationData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const { countries } = useFormOptions();
 		const dataContext: DataContextValue = useDataContext();
@@ -89,7 +89,7 @@ export const LocationModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		};
 
 		return (
-			<DataModal
+			<DataModal<LocationData>
 				ref={ref}
 				size={size}
 				additionalFields={additionalFields}

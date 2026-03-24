@@ -6,7 +6,7 @@ import "../../pages/Auth/AuthPage.scss";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { UserData, UserDataTransform } from "../../services/schemas/Core";
 
-export const UserModal = forwardRef<DataModalHandle, JamDataModalProps>(
+export const UserModal = forwardRef<DataModalHandle<UserData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 
@@ -62,7 +62,7 @@ export const UserModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		};
 
 		return (
-			<DataModal
+			<DataModal<UserData>
 				ref={ref}
 				size={size}
 				fields={createFields}

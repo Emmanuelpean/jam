@@ -259,5 +259,7 @@ export function aggregateGraphData(
 			return bucketByTime(ctx.jobApplicationUpdates.map((u) => u.date), granularity);
 		case "update_type":
 			return groupAndCount(ctx.jobApplicationUpdates.map((u) => u.type), "Unknown");
+		default:
+			return [];
 	}
 }

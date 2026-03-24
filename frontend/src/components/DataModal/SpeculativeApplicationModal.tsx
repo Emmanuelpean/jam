@@ -8,7 +8,7 @@ import { CompanyModal } from "./CompanyModal";
 import { PersonModal } from "./PersonModal";
 import { SpeculativeApplicationData, SpeculativeApplicationDataTransform } from "../../services/schemas/DataTables";
 
-export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModalProps>(
+export const SpeculativeApplicationModal = forwardRef<DataModalHandle<SpeculativeApplicationData>, DataModalProps>(
 	({ size = "lg" }: DataModalProps, ref) => {
 		const personModalRef = useRef<DataModalHandle>(null);
 		const companyModalRef = useRef<DataModalHandle>(null);
@@ -58,7 +58,7 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModal
 
 		return (
 			<>
-				<DataModal
+				<DataModal<SpeculativeApplicationData>
 					ref={ref}
 					transformFormData={transformData}
 					entityType="speculativeApplication"
