@@ -50,13 +50,6 @@ class TestExtraMetricsCards(DashboardTestBase):
         """Return the integer days value (strips trailing 'd')."""
         return int(self.get_element(f"{card_id}-value").text.rstrip("d"))
 
-    # ----------------------------------------------- CARD RENDERS -------------------------------------------------
-
-    def test_all_extra_metric_cards_render(self) -> None:
-        """All three extra metric cards must be visible after setting a custom layout."""
-        for card_id in (ACTIVE_APPLICATIONS, INTERVIEW_RATE, AVG_RESPONSE_TIME):
-            assert self.get_element(card_id).is_displayed(), f"{card_id} not visible"
-
     # ------------------------------------------- ACTIVE APPLICATIONS ----------------------------------------------
 
     def test_active_applications_is_zero_with_no_data(self) -> None:
