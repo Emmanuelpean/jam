@@ -23,6 +23,7 @@ export const DashboardToolbar: React.FC<DashboardToolbarProps> = ({
 	<div className="dashboard-edit-toolbar">
 		<div className="dashboard-edit-toolbar-inner">
 			<button
+				id="dashboard-edit-btn"
 				className={`sidebar-icon-btn ${isEditMode ? "btn btn-outline-secondary active-edit" : "dashboard-edit-trigger-inline"}`}
 				onClick={isEditMode ? onCancel : onEdit}
 				title={isEditMode ? "Cancel" : "Customise dashboard"}
@@ -32,6 +33,7 @@ export const DashboardToolbar: React.FC<DashboardToolbarProps> = ({
 			{isEditMode && (
 				<>
 					<ActionButton
+						id="dashboard-save-btn"
 						variant="primary"
 						size="sm"
 						fullWidth={false}
@@ -45,6 +47,7 @@ export const DashboardToolbar: React.FC<DashboardToolbarProps> = ({
 						tooltipPlacement="left"
 					/>
 					<ActionButton
+						id="dashboard-add-widget-btn"
 						variant="outline-primary"
 						size="sm"
 						fullWidth={false}
@@ -56,6 +59,7 @@ export const DashboardToolbar: React.FC<DashboardToolbarProps> = ({
 						tooltipPlacement="left"
 					/>
 					<ActionButton
+						id="dashboard-reset-btn"
 						variant="outline-danger"
 						size="sm"
 						fullWidth={false}

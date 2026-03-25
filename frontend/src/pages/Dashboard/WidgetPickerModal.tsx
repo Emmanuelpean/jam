@@ -135,6 +135,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 									return (
 										<button
 											key={typeDef.type}
+											id={`widget-picker-type-${typeDef.type}`}
 											style={allPremium ? cardDisabled : cardBase}
 											className="widget-picker-card"
 											onClick={() => !allPremium && setSelectedType(typeDef.type)}
@@ -187,6 +188,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 									return (
 										<button
 											key={variant.key}
+											id={`widget-picker-variant-${variant.key}`}
 											style={locked ? cardDisabled : cardBase}
 											className="widget-picker-card"
 											onClick={() => !locked && handleAddVariant(currentTypeDef, variant.key)}

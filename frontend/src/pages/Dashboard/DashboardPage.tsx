@@ -363,6 +363,7 @@ const Dashboard: React.FC = () => {
 												<i className="bi bi-grip-horizontal"></i>
 											</div>
 											<button
+												id={`widget-remove-btn-${widget.id}`}
 												className="widget-remove-btn"
 												onClick={() => handleRemoveWidget(widget.id)}
 												title="Remove widget"
