@@ -10,6 +10,7 @@ import { StatCard } from "./StatCard";
 import { DashboardCard } from "./DashboardCard";
 import { ActivityFeedCard, renderRecentActivityItem, renderUpcomingInterviewItem, renderPastInterviewItem, renderStatusUpdateItem, renderUpcomingDeadlineItem } from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
+import FavouriteJobsTable from "../../components/DataTable/FavouriteJobsTable";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
 import {
 	DashboardLayoutDataV3,
@@ -66,7 +67,7 @@ const Dashboard: React.FC = () => {
 		}
 	}, [currentUser]);
 
-	const { totalJobs, jobApplications, jobApplicationPending, activeApplications, needsChase, upcomingDeadlines, upcomingInterviews, pastInterviews, statusUpdates, upcomingDeadlinesTimeline, recentActivity, interviewRate, avgResponseTime } =
+	const { totalJobs, jobApplications, jobApplicationPending, activeApplications, needsChase, upcomingDeadlines, upcomingInterviews, pastInterviews, statusUpdates, upcomingDeadlinesTimeline, recentActivity, interviewRate, avgResponseTime, favouriteJobs } =
 		useDashboardData();
 
 	const handleLayoutChange = (newLayout: Layout) => {
@@ -158,6 +159,7 @@ const Dashboard: React.FC = () => {
 			case "follow_up":
 				return (
 					<DashboardCard
+						id="table-card-follow_up"
 						icon="telephone"
 						title="Applications Requiring Follow-up"
 						badgeValue={needsChase.length}
@@ -170,6 +172,7 @@ const Dashboard: React.FC = () => {
 			case "upcoming_deadlines":
 				return (
 					<DashboardCard
+						id="table-card-upcoming_deadlines"
 						icon="clock"
 						title="Upcoming Deadlines"
 						badgeValue={upcomingDeadlines.length}
@@ -182,6 +185,7 @@ const Dashboard: React.FC = () => {
 			case "job_alerts":
 				return (
 					<DashboardCard
+						id="table-card-job_alerts"
 						icon={getEntityIcon("scrapedJob")}
 						title="Job Alerts"
 						subtitle="Jobs that you received from job boards"
@@ -196,9 +200,23 @@ const Dashboard: React.FC = () => {
 					</DashboardCard>
 				);
 
+			case "favourite_jobs":
+				return (
+					<DashboardCard
+						id="table-card-favourite_jobs"
+						icon="star"
+						title="Favourite Jobs"
+						badgeValue={favouriteJobs.length}
+						isEmpty={favouriteJobs.length === 0}
+						emptyState={{ icon: "star", title: "No favourite jobs", description: "Mark jobs as favourite to pin them here" }}
+					>
+						<FavouriteJobsTable data={favouriteJobs} />
+					</DashboardCard>
+				);
 			case "favourites":
 				return (
 					<DashboardCard
+						id="table-card-favourites"
 						icon="star-fill"
 						title="Favourite Job Alerts"
 						badgeValue={favouriteAlertCount}

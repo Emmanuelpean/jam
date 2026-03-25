@@ -31,7 +31,7 @@ export type MetricVariant =
 	| "active_applications"
 	| "interview_rate"
 	| "avg_response_time";
-export type TableVariant = "follow_up" | "upcoming_deadlines" | "job_alerts" | "favourites";
+export type TableVariant = "follow_up" | "upcoming_deadlines" | "job_alerts" | "favourites" | "favourite_jobs";
 export type TimelineVariant =
 	| "recent_activity"
 	| "upcoming_interviews"
@@ -217,6 +217,13 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				label: "Favourite Job Alerts",
 				icon: "star-fill",
 				description: "Scraped job alerts matching your favourite filters",
+				premiumOnly: false,
+			},
+			{
+				key: "favourite_jobs",
+				label: "Favourite Jobs",
+				icon: "star",
+				description: "Jobs you have marked as favourite",
 				premiumOnly: false,
 			},
 		],

@@ -50,6 +50,52 @@ class DashboardTestBase(BaseTest):
         self.db.refresh(update)
         return update
 
+    def _create_scraped_job(self, title: str = "Scraped Job", **kwargs) -> models.ScrapedJob:
+        """Create and persist a ScrapedJob owned by the current test user.
+
+        A JobEmailScrapingServiceLog is created automatically if service_log_id is not provided.
+        external_job_id defaults to a per-instance sequential value so multiple calls within
+        one test always produce unique IDs without any manual bookkeeping.
+        """
+        if not hasattr(self, "_scraped_job_seq"):
+            self._scraped_job_seq = 0
+        self._scraped_job_seq += 1
+
+        if "service_log_id" not in kwargs:
+            log = models.JobEmailScrapingServiceLog(run_datetime=dt.datetime.now(dt.timezone.utc))
+            self.db.add(log)
+            self.db.flush()
+            kwargs["service_log_id"] = log.id
+
+        external_job_id = kwargs.pop("external_job_id", f"ext-{self._scraped_job_seq}")
+        platform = kwargs.pop("platform", "Indeed")
+
+        scraped_job = models.ScrapedJob(
+            owner_id=self.user.id,
+            external_job_id=external_job_id,
+            platform=platform,
+            title=title,
+            **kwargs,
+        )
+        self.db.add(scraped_job)
+        self.db.commit()
+        self.db.refresh(scraped_job)
+        return scraped_job
+
+    def _create_favourite_filter(self, type: str, operator: str, value: str, **kwargs) -> models.ScrapingFavouriteFilter:
+        """Create and persist a ScrapingFavouriteFilter owned by the current test user."""
+        fav = models.ScrapingFavouriteFilter(
+            owner_id=self.user.id,
+            type=type,
+            operator=operator,
+            value=value,
+            **kwargs,
+        )
+        self.db.add(fav)
+        self.db.commit()
+        self.db.refresh(fav)
+        return fav
+
     def _reload(self) -> None:
         """Reload the dashboard page."""
         self.driver.refresh()
