@@ -44,6 +44,7 @@ const getActivityIcon = (type: string): string => {
 };
 
 interface TimelineItemProps {
+	id?: string;
 	colorClass: string;
 	icon: string;
 	isLast: boolean;
@@ -54,6 +55,7 @@ interface TimelineItemProps {
 }
 
 const TimelineItem: React.FC<TimelineItemProps> = ({
+	id,
 	colorClass,
 	icon,
 	isLast,
@@ -62,9 +64,9 @@ const TimelineItem: React.FC<TimelineItemProps> = ({
 	dateOnly,
 	children,
 }: TimelineItemProps): JSX.Element => (
-	<div className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
+	<div id={id} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
 		<div className="d-flex position-relative">
-			{!isLast && <div className="position-absolute activity-line" />}
+			{!isLast && <div id={id ? `${id}-line` : undefined} className="position-absolute activity-line" />}
 			<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
 				<div
 					className={`rounded-circle d-flex align-items-center justify-content-center badge ${colorClass}`}
@@ -95,10 +97,12 @@ interface ActivityFeedCardProps<T> {
 	emptyTitle: string;
 	emptyDescription: string;
 	items: T[];
+	id?: string;
 	renderItem: (item: T, index: number, isLast: boolean) => JSX.Element;
 }
 
 export const ActivityFeedCard = <T,>({
+	id,
 	icon,
 	title,
 	subtitle,
@@ -110,6 +114,7 @@ export const ActivityFeedCard = <T,>({
 	renderItem,
 }: ActivityFeedCardProps<T>): JSX.Element => (
 	<DashboardCard
+		id={id}
 		icon={icon}
 		title={title}
 		subtitle={subtitle}
@@ -122,7 +127,7 @@ export const ActivityFeedCard = <T,>({
 		}}
 		bodyPadding={false}
 	>
-		<div className="activity-timeline px-4 flex-grow-1" style={{ overflowY: "auto", height: "100%", minHeight: 0 }}>
+		<div id={id ? `${id}-timeline` : undefined} className="activity-timeline px-4 flex-grow-1" style={{ overflowY: "auto", height: "100%", minHeight: 0 }}>
 			{items.map((item, index) => renderItem(item, index, index === items.length - 1))}
 		</div>
 	</DashboardCard>
@@ -152,6 +157,7 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 	return (
 		<TimelineItem
 			key={`activity-${index}`}
+			id={`activity-item-recent_activity-${index}`}
 			colorClass={getActivityColor(activity.type)}
 			icon={getActivityIcon(activity.type)}
 			isLast={isLast}
@@ -176,6 +182,7 @@ export const renderUpcomingInterviewItem = (
 	return (
 		<TimelineItem
 			key={`interview-${index}`}
+			id={`activity-item-upcoming_interviews-${index}`}
 			colorClass={getActivityColor("Interview")}
 			icon={getActivityIcon("Interview")}
 			isLast={isLast}
@@ -200,6 +207,7 @@ export const renderPastInterviewItem = (
 	return (
 		<TimelineItem
 			key={`past-interview-${index}`}
+			id={`activity-item-past_interviews-${index}`}
 			colorClass="bg-secondary"
 			icon={getActivityIcon("Interview")}
 			isLast={isLast}
@@ -224,6 +232,7 @@ export const renderStatusUpdateItem = (
 	return (
 		<TimelineItem
 			key={`status-update-${index}`}
+			id={`activity-item-status_updates-${index}`}
 			colorClass={getActivityColor("Job Application Update")}
 			icon={getActivityIcon("Job Application Update")}
 			isLast={isLast}
@@ -244,6 +253,7 @@ export const renderUpcomingDeadlineItem = (job: EnrichedJobData, index: number, 
 	return (
 		<TimelineItem
 			key={`deadline-${index}`}
+			id={`activity-item-upcoming_deadlines_timeline-${index}`}
 			colorClass="bg-warning"
 			icon="alarm"
 			dateOnly

@@ -135,19 +135,19 @@ const Dashboard: React.FC = () => {
 	const renderMetricWidget = (metric: string): React.ReactNode => {
 		switch (metric) {
 			case "total_jobs":
-				return <StatCard name="Total Jobs" value={totalJobs} icon="briefcase" variant="primary" description="Jobs in your database" />;
+				return <StatCard id="stat-card-total_jobs" name="Total Jobs" value={totalJobs} icon="briefcase" variant="primary" description="Jobs in your database" />;
 			case "applications":
-				return <StatCard name="Applications" value={jobApplications.length} icon="send" variant="success" description="Total applications sent" />;
+				return <StatCard id="stat-card-applications" name="Applications" value={jobApplications.length} icon="send" variant="success" description="Total applications sent" />;
 			case "pending":
-				return <StatCard name="Pending" value={jobApplicationPending.length} icon="clock" variant="warning" description="Applications awaiting response" />;
+				return <StatCard id="stat-card-pending" name="Pending" value={jobApplicationPending.length} icon="clock" variant="warning" description="Applications awaiting response" />;
 			case "follow_up":
-				return <StatCard name="Need Follow-up" value={needsChase.length} icon="telephone" variant="danger" description="Applications requiring action" />;
+				return <StatCard id="stat-card-follow_up" name="Need Follow-up" value={needsChase.length} icon="telephone" variant="danger" description="Applications requiring action" />;
 			case "active_applications":
-				return <StatCard name="Active Applications" value={activeApplications.length} icon="send-check" variant="info" description="Not yet rejected or withdrawn" />;
+				return <StatCard id="stat-card-active_applications" name="Active Applications" value={activeApplications.length} icon="send-check" variant="info" description="Not yet rejected or withdrawn" />;
 			case "interview_rate":
-				return <StatCard name="Interview Rate" value={`${interviewRate}%`} icon="person-check" variant="primary" description="Applications that led to an interview" />;
+				return <StatCard id="stat-card-interview_rate" name="Interview Rate" value={`${interviewRate}%`} icon="person-check" variant="primary" description="Applications that led to an interview" />;
 			case "avg_response_time":
-				return <StatCard name="Avg. Response Time" value={`${avgResponseTime}d`} icon="hourglass-split" variant="secondary" description="Average days from application to first update" />;
+				return <StatCard id="stat-card-avg_response_time" name="Avg. Response Time" value={`${avgResponseTime}d`} icon="hourglass-split" variant="secondary" description="Average days from application to first update" />;
 			default:
 				return null;
 		}
@@ -220,6 +220,7 @@ const Dashboard: React.FC = () => {
 			case "recent_activity":
 				return (
 					<ActivityFeedCard
+						id="activity-card-recent_activity"
 						icon="clock-history"
 						title="Recent Activity"
 						badgeValue={recentActivity.length}
@@ -233,6 +234,7 @@ const Dashboard: React.FC = () => {
 			case "upcoming_interviews":
 				return (
 					<ActivityFeedCard
+						id="activity-card-upcoming_interviews"
 						icon="calendar-event"
 						title="Upcoming Interviews"
 						badgeValue={upcomingInterviews.length}
@@ -246,6 +248,7 @@ const Dashboard: React.FC = () => {
 			case "past_interviews":
 				return (
 					<ActivityFeedCard
+						id="activity-card-past_interviews"
 						icon="calendar-check"
 						title="Past Interviews"
 						badgeValue={pastInterviews.length}
@@ -259,6 +262,7 @@ const Dashboard: React.FC = () => {
 			case "status_updates":
 				return (
 					<ActivityFeedCard
+						id="activity-card-status_updates"
 						icon="envelope-open"
 						title="Status Updates"
 						badgeValue={statusUpdates.length}
@@ -272,6 +276,7 @@ const Dashboard: React.FC = () => {
 			case "upcoming_deadlines_timeline":
 				return (
 					<ActivityFeedCard
+						id="activity-card-upcoming_deadlines_timeline"
 						icon="alarm"
 						title="Upcoming Deadlines"
 						badgeValue={upcomingDeadlinesTimeline.length}

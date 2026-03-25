@@ -19,6 +19,7 @@ export interface DashboardCardProps {
 	isEmpty?: boolean;
 	emptyState?: EmptyStateProps;
 	children: ReactNode;
+	id?: string;
 	className?: string;
 	bodyPadding?: boolean;
 	headerAction?: ReactNode;
@@ -34,6 +35,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 	isEmpty = false,
 	emptyState,
 	children,
+	id,
 	className = "",
 	bodyPadding = true,
 	headerAction,
@@ -57,14 +59,14 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 				<div className="mb-3">
 					<i className={`bi bi-${emptyState.icon} text-muted`} style={{ fontSize: "3.5rem" }}></i>
 				</div>
-				<h6 className="text-muted fw-semibold">{emptyState.title}</h6>
+				<h6 id={id ? `${id}-empty` : undefined} className="text-muted fw-semibold">{emptyState.title}</h6>
 				<p className="text-muted small mb-0">{emptyState.description}</p>
 			</div>
 		);
 	};
 
 	return (
-		<Card className={`shadow-sm border-0 h-100 d-flex flex-column ${className}`}>
+		<Card id={id} className={`shadow-sm border-0 h-100 d-flex flex-column ${className}`}>
 			<Card.Header className="table-card-header border-0 p-0">
 				<div className="d-flex align-items-center justify-content-between p-4">
 					<div
@@ -81,7 +83,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 						</div>
 					</div>
 					<div className="d-flex align-items-center gap-2" style={{ height: "100%" }}>
-						{badgeValue != null && <div className="table-count-badge">{badgeValue}</div>}
+						{badgeValue != null && <div id={id ? `${id}-badge` : undefined} className="table-count-badge">{badgeValue}</div>}
 						{headerAction}
 					</div>
 				</div>
