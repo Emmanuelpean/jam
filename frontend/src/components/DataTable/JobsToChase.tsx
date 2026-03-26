@@ -4,8 +4,6 @@ import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../DataModal/JobModal";
 
 const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTableProps): JSX.Element => {
-	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
 	let defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns
@@ -16,19 +14,6 @@ const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: 
 					tableColumns.daysSinceLastUpdateColumn(),
 					tableColumns.lastUpdateTypeColumn(),
 				];
-
-	useEffect(() => {
-		const handleResize = (): void => setWindowWidth(window.innerWidth);
-		window.addEventListener("resize", handleResize);
-		return () => window.removeEventListener("resize", handleResize);
-	}, []);
-
-	if (windowWidth < 1300) {
-		defaultColumns = defaultColumns.filter((col: TableColumn): boolean => col.key !== "location");
-	}
-	if (windowWidth < 1000) {
-		defaultColumns = defaultColumns.filter((col: TableColumn): boolean => col.key !== "company");
-	}
 
 	return (
 		<DataTable

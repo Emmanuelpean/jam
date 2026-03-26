@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { GridLayout, Layout, LayoutItem, useContainerWidth } from "react-grid-layout";
+import React, { useEffect, useRef, useState, JSX } from "react";
+import { ResponsiveGridLayout, Layout, LayoutItem, ResponsiveLayouts, useContainerWidth } from "react-grid-layout";
 import { useAuth } from "../../contexts/AuthContext";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
@@ -8,7 +8,14 @@ import JobsToChase from "../../components/DataTable/JobsToChase";
 import UpcomingDeadlinesTable from "../../components/DataTable/UpcomingDeadlines";
 import { StatCard } from "./StatCard";
 import { DashboardCard } from "./DashboardCard";
-import { ActivityFeedCard, renderRecentActivityItem, renderUpcomingInterviewItem, renderPastInterviewItem, renderStatusUpdateItem, renderUpcomingDeadlineItem } from "./ActivityFeed";
+import {
+	ActivityFeedCard,
+	renderRecentActivityItem,
+	renderUpcomingInterviewItem,
+	renderPastInterviewItem,
+	renderStatusUpdateItem,
+	renderUpcomingDeadlineItem,
+} from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
 import FavouriteJobsTable from "../../components/DataTable/FavouriteJobsTable";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
@@ -17,8 +24,10 @@ import {
 	generateWidgetId,
 	getDefaultLayout,
 	getDefaultLayoutForConfig,
+	GraphConfig,
 	parseLayoutData,
 	WidgetConfig,
+	WidgetInstance,
 } from "./widgetRegistry";
 import GraphWidget from "./GraphWidget";
 import { useDashboardData } from "./useDashboardData";
@@ -26,6 +35,7 @@ import { useAlert } from "../../contexts/AlertContext";
 import WidgetPickerModal from "./WidgetPickerModal";
 import ExtensionBanner from "./ExtensionBanner";
 import { DashboardToolbar } from "./DashboardToolbar";
+import { MOBILE_BREAKPOINT, TABLET_BREAKPOINT } from "../../utils/Breakpoints";
 
 function findFirstFit(existing: LayoutItem[], w: number, h: number, cols: number): { x: number; y: number } {
 	const maxY = existing.reduce((max, item) => Math.max(max, item.y + item.h), 0);
@@ -67,15 +77,34 @@ const Dashboard: React.FC = () => {
 		}
 	}, [currentUser]);
 
-	const { totalJobs, jobApplications, jobApplicationPending, activeApplications, needsChase, upcomingDeadlines, upcomingInterviews, pastInterviews, statusUpdates, upcomingDeadlinesTimeline, recentActivity, interviewRate, avgResponseTime, favouriteJobs } =
-		useDashboardData();
+	const {
+		totalJobs,
+		jobApplications,
+		jobApplicationPending,
+		activeApplications,
+		needsChase,
+		upcomingDeadlines,
+		upcomingInterviews,
+		pastInterviews,
+		statusUpdates,
+		upcomingDeadlinesTimeline,
+		recentActivity,
+		interviewRate,
+		avgResponseTime,
+		favouriteJobs,
+	} = useDashboardData();
 
-	const handleLayoutChange = (newLayout: Layout) => {
+	const handleLayoutChange = (newLayout: Layout, allLayouts: ResponsiveLayouts): void => {
 		if (!isEditMode) return;
-		setLayoutData((prev) => ({ ...prev, layout: newLayout as LayoutItem[] }));
+		setLayoutData(
+			(prev: DashboardLayoutDataV3): DashboardLayoutDataV3 => ({
+				...prev,
+				layout: (allLayouts.lg ?? newLayout) as LayoutItem[],
+			})
+		);
 	};
 
-	const handleSave = async () => {
+	const handleSave = async (): Promise<void> => {
 		setIsSaving(true);
 		try {
 			await updateCurrentUser({ preferences: { dashboard_layout: JSON.stringify(layoutData) } });
@@ -86,12 +115,12 @@ const Dashboard: React.FC = () => {
 		}
 	};
 
-	const handleCancel = () => {
+	const handleCancel = (): void => {
 		setLayoutData(savedLayoutRef.current);
 		setIsEditMode(false);
 	};
 
-	const handleResetLayout = () => {
+	const handleResetLayout = (): void => {
 		void showConfirm({
 			title: "Reset layout",
 			message: "This will restore the default dashboard layout. Any custom arrangement will be lost.",
@@ -100,10 +129,10 @@ const Dashboard: React.FC = () => {
 		});
 	};
 
-	const handleAddWidget = (config: WidgetConfig) => {
-		const id = generateWidgetId();
+	const handleAddWidget = (config: WidgetConfig): void => {
+		const id: string = generateWidgetId();
 		const def = getDefaultLayoutForConfig(config);
-		setLayoutData((prev) => {
+		setLayoutData((prev: DashboardLayoutDataV3): DashboardLayoutDataV3 => {
 			const { x, y } = findFirstFit(prev.layout, def.w, def.h, 12);
 			return {
 				...prev,
@@ -113,42 +142,111 @@ const Dashboard: React.FC = () => {
 		});
 	};
 
-	const handleRemoveWidget = (widgetId: string) => {
+	const handleRemoveWidget = (widgetId: string): void => {
 		void showDelete({
 			title: "Remove widget",
 			message: "Are you sure you want to remove this widget?",
-			onSuccess: async () =>
-				setLayoutData((prev) => ({
-					...prev,
-					widgets: prev.widgets.filter((w) => w.id !== widgetId),
-					layout: prev.layout.filter((l) => l.i !== widgetId),
-				})),
+			onSuccess: async (): Promise<void> =>
+				setLayoutData(
+					(prev: DashboardLayoutDataV3): DashboardLayoutDataV3 => ({
+						...prev,
+						widgets: prev.widgets.filter((w: WidgetInstance): boolean => w.id !== widgetId),
+						layout: prev.layout.filter((l: LayoutItem): boolean => l.i !== widgetId),
+					})
+				),
 		});
 	};
 
-	const handleUpdateWidgetConfig = (widgetId: string, newConfig: WidgetConfig) => {
-		setLayoutData((prev) => ({
-			...prev,
-			widgets: prev.widgets.map((w) => (w.id === widgetId ? { ...w, config: newConfig } : w)),
-		}));
+	const handleUpdateWidgetConfig = (widgetId: string, newConfig: WidgetConfig): void => {
+		setLayoutData(
+			(prev: DashboardLayoutDataV3): DashboardLayoutDataV3 => ({
+				...prev,
+				widgets: prev.widgets.map(
+					(w: WidgetInstance): WidgetInstance => (w.id === widgetId ? { ...w, config: newConfig } : w)
+				),
+			})
+		);
 	};
 
 	const renderMetricWidget = (metric: string): React.ReactNode => {
 		switch (metric) {
 			case "total_jobs":
-				return <StatCard id="stat-card-total_jobs" name="Total Jobs" value={totalJobs} icon="briefcase" variant="primary" description="Jobs in your database" />;
+				return (
+					<StatCard
+						id="stat-card-total_jobs"
+						name="Total Jobs"
+						value={totalJobs}
+						icon="briefcase"
+						variant="primary"
+						description="Jobs in your database"
+					/>
+				);
 			case "applications":
-				return <StatCard id="stat-card-applications" name="Applications" value={jobApplications.length} icon="send" variant="success" description="Total applications sent" />;
+				return (
+					<StatCard
+						id="stat-card-applications"
+						name="Applications"
+						value={jobApplications.length}
+						icon="send"
+						variant="success"
+						description="Total applications sent"
+					/>
+				);
 			case "pending":
-				return <StatCard id="stat-card-pending" name="Pending" value={jobApplicationPending.length} icon="clock" variant="warning" description="Applications awaiting response" />;
+				return (
+					<StatCard
+						id="stat-card-pending"
+						name="Pending"
+						value={jobApplicationPending.length}
+						icon="clock"
+						variant="warning"
+						description="Applications awaiting response"
+					/>
+				);
 			case "follow_up":
-				return <StatCard id="stat-card-follow_up" name="Need Follow-up" value={needsChase.length} icon="telephone" variant="danger" description="Applications requiring action" />;
+				return (
+					<StatCard
+						id="stat-card-follow_up"
+						name="Need Follow-up"
+						value={needsChase.length}
+						icon="telephone"
+						variant="danger"
+						description="Applications requiring action"
+					/>
+				);
 			case "active_applications":
-				return <StatCard id="stat-card-active_applications" name="Active Applications" value={activeApplications.length} icon="send-check" variant="info" description="Not yet rejected or withdrawn" />;
+				return (
+					<StatCard
+						id="stat-card-active_applications"
+						name="Active Applications"
+						value={activeApplications.length}
+						icon="send-check"
+						variant="info"
+						description="Not yet rejected or withdrawn"
+					/>
+				);
 			case "interview_rate":
-				return <StatCard id="stat-card-interview_rate" name="Interview Rate" value={`${interviewRate}%`} icon="person-check" variant="primary" description="Applications that led to an interview" />;
+				return (
+					<StatCard
+						id="stat-card-interview_rate"
+						name="Interview Rate"
+						value={`${interviewRate}%`}
+						icon="person-check"
+						variant="primary"
+						description="Applications that led to an interview"
+					/>
+				);
 			case "avg_response_time":
-				return <StatCard id="stat-card-avg_response_time" name="Avg. Response Time" value={`${avgResponseTime}d`} icon="hourglass-split" variant="secondary" description="Average days from application to first update" />;
+				return (
+					<StatCard
+						id="stat-card-avg_response_time"
+						name="Avg. Response Time"
+						value={`${avgResponseTime}d`}
+						icon="hourglass-split"
+						variant="secondary"
+						description="Average days from application to first update"
+					/>
+				);
 			default:
 				return null;
 		}
@@ -164,7 +262,11 @@ const Dashboard: React.FC = () => {
 						title="Applications Requiring Follow-up"
 						badgeValue={needsChase.length}
 						isEmpty={needsChase.length === 0}
-						emptyState={{ icon: "telephone-x", title: "No follow-ups needed", description: "All your applications are up to date" }}
+						emptyState={{
+							icon: "telephone-x",
+							title: "No follow-ups needed",
+							description: "All your applications are up to date",
+						}}
 					>
 						<JobsToChase data={needsChase} />
 					</DashboardCard>
@@ -177,7 +279,11 @@ const Dashboard: React.FC = () => {
 						title="Upcoming Deadlines"
 						badgeValue={upcomingDeadlines.length}
 						isEmpty={upcomingDeadlines.length === 0}
-						emptyState={{ icon: "calendar-check", title: "No upcoming deadlines", description: "You have no application deadlines approaching" }}
+						emptyState={{
+							icon: "calendar-check",
+							title: "No upcoming deadlines",
+							description: "You have no application deadlines approaching",
+						}}
 					>
 						<UpcomingDeadlinesTable data={upcomingDeadlines} />
 					</DashboardCard>
@@ -192,9 +298,15 @@ const Dashboard: React.FC = () => {
 						badgeValue={scrapedJobCount}
 						path="/scraped-jobs"
 						isEmpty={scrapedJobCount === 0}
-						emptyState={{ icon: "bell-slash", title: "No job alerts", description: "Job alerts from your scrapers will appear here" }}
+						emptyState={{
+							icon: "bell-slash",
+							title: "No job alerts",
+							description: "Job alerts from your scrapers will appear here",
+						}}
 					>
-						<div style={{ paddingTop: "9px", paddingBottom: "18px", display: "flex", flex: 1, minHeight: 0 }}>
+						<div
+							style={{ paddingTop: "9px", paddingBottom: "18px", display: "flex", flex: 1, minHeight: 0 }}
+						>
 							<ScrapedJobsTable dashboardMode={true} onTotalCountChange={setScrapedJobCount} />
 						</div>
 					</DashboardCard>
@@ -208,7 +320,11 @@ const Dashboard: React.FC = () => {
 						title="Favourite Jobs"
 						badgeValue={favouriteJobs.length}
 						isEmpty={favouriteJobs.length === 0}
-						emptyState={{ icon: "star", title: "No favourite jobs", description: "Mark jobs as favourite to pin them here" }}
+						emptyState={{
+							icon: "star",
+							title: "No favourite jobs",
+							description: "Mark jobs as favourite to pin them here",
+						}}
 					>
 						<FavouriteJobsTable data={favouriteJobs} />
 					</DashboardCard>
@@ -221,10 +337,20 @@ const Dashboard: React.FC = () => {
 						title="Favourite Job Alerts"
 						badgeValue={favouriteAlertCount}
 						isEmpty={favouriteAlertCount === 0}
-						emptyState={{ icon: "star", title: "No favourite job alerts", description: "Create favourite filters to pin matching job alerts here" }}
+						emptyState={{
+							icon: "star",
+							title: "No favourite job alerts",
+							description: "Create favourite filters to pin matching job alerts here",
+						}}
 					>
-						<div style={{ paddingTop: "9px", paddingBottom: "18px", display: "flex", flex: 1, minHeight: 0 }}>
-							<ScrapedJobsTable dashboardMode={true} favouritesOnly={true} onTotalCountChange={setFavouriteAlertCount} />
+						<div
+							style={{ paddingTop: "9px", paddingBottom: "18px", display: "flex", flex: 1, minHeight: 0 }}
+						>
+							<ScrapedJobsTable
+								dashboardMode={true}
+								favouritesOnly={true}
+								onTotalCountChange={setFavouriteAlertCount}
+							/>
 						</div>
 					</DashboardCard>
 				);
@@ -322,7 +448,7 @@ const Dashboard: React.FC = () => {
 				return (
 					<GraphWidget
 						config={config}
-						onConfigChange={(updated) => handleUpdateWidgetConfig(widgetId, updated)}
+						onConfigChange={(updated: GraphConfig): void => handleUpdateWidgetConfig(widgetId, updated)}
 						isEditMode={isEditMode}
 					/>
 				);
@@ -337,8 +463,8 @@ const Dashboard: React.FC = () => {
 		);
 	}
 
-	const widgetIds = new Set(layoutData.widgets.map((w) => w.id));
-	const currentLayout: LayoutItem[] = layoutData.layout.filter((l) => widgetIds.has(l.i));
+	const widgetIds = new Set(layoutData.widgets.map((w: WidgetInstance): string => w.id));
+	const currentLayout: LayoutItem[] = layoutData.layout.filter((l: LayoutItem): boolean => widgetIds.has(l.i));
 
 	return (
 		<div className="dashboard-wrapper" data-loaded="true">
@@ -346,51 +472,57 @@ const Dashboard: React.FC = () => {
 				<ExtensionBanner />
 				<div className={isEditMode ? "dashboard-edit-mode" : ""}>
 					{mounted && (
-						<GridLayout
+						<ResponsiveGridLayout
 							className="dashboard-grid"
 							width={width}
-							layout={currentLayout}
-							gridConfig={{ cols: 12, rowHeight: 30 }}
+							layouts={{ lg: currentLayout }}
+							breakpoints={{ lg: TABLET_BREAKPOINT, sm: MOBILE_BREAKPOINT, xs: 0 }}
+							cols={{ lg: 12, sm: 8, xs: 2 }}
+							rowHeight={30}
 							dragConfig={{ enabled: isEditMode, handle: ".drag-handle" }}
 							resizeConfig={{ enabled: isEditMode, handles: ["sw", "nw", "se", "ne"] }}
 							onLayoutChange={handleLayoutChange}
 						>
-							{layoutData.widgets.map((widget) => (
-								<div key={widget.id} className="dashboard-grid-item">
-									{isEditMode && (
-										<>
-											<div className="drag-handle">
-												<i className="bi bi-grip-horizontal"></i>
-											</div>
-											<button
-												id={`widget-remove-btn-${widget.id}`}
-												className="widget-remove-btn"
-												onClick={() => handleRemoveWidget(widget.id)}
-												title="Remove widget"
-											>
-												<i className="bi bi-x"></i>
-											</button>
-										</>
-									)}
-									<div className="grid-item-content">{renderWidget(widget.config, widget.id)}</div>
-								</div>
-							))}
-						</GridLayout>
+							{layoutData.widgets.map(
+								(widget: WidgetInstance): JSX.Element => (
+									<div key={widget.id} className="dashboard-grid-item">
+										{isEditMode && (
+											<>
+												<div className="drag-handle">
+													<i className="bi bi-grip-horizontal"></i>
+												</div>
+												<button
+													id={`widget-remove-btn-${widget.id}`}
+													className="widget-remove-btn"
+													onClick={(): void => handleRemoveWidget(widget.id)}
+													title="Remove widget"
+												>
+													<i className="bi bi-x"></i>
+												</button>
+											</>
+										)}
+										<div className="grid-item-content">
+											{renderWidget(widget.config, widget.id)}
+										</div>
+									</div>
+								)
+							)}
+						</ResponsiveGridLayout>
 					)}
 				</div>
 			</div>
 			<DashboardToolbar
 				isEditMode={isEditMode}
 				isSaving={isSaving}
-				onEdit={() => setIsEditMode(true)}
+				onEdit={(): void => setIsEditMode(true)}
 				onCancel={handleCancel}
 				onSave={handleSave}
-				onAddWidget={() => setShowWidgetPicker(true)}
+				onAddWidget={(): void => setShowWidgetPicker(true)}
 				onReset={handleResetLayout}
 			/>
 			<WidgetPickerModal
 				show={showWidgetPicker}
-				onHide={() => setShowWidgetPicker(false)}
+				onHide={(): void => setShowWidgetPicker(false)}
 				onAddWidget={handleAddWidget}
 				isPremium={isPremium}
 				currentWidgets={layoutData.widgets}
