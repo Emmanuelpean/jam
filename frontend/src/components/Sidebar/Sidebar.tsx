@@ -6,6 +6,7 @@ import { getTableIcon } from "../rendering/view/Icons";
 import { ThemeSelector } from "./ThemeSelector";
 import "./Sidebar.scss";
 import { DEFAULT_THEME } from "../../utils/Theme";
+import { TABLET_BREAKPOINT } from "../../utils/Breakpoints";
 import { UserData } from "../../services/schemas/Core";
 import { useAlert } from "../../contexts/AlertContext";
 
@@ -54,10 +55,11 @@ export const Sidebar = (): JSX.Element => {
 	const expandTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const dropdownRef = useRef<HTMLDivElement | null>(null);
-	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 990);
+	const sidebarRef = useRef<HTMLDivElement | null>(null);
+	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= TABLET_BREAKPOINT);
 
 	useEffect(() => {
-		const handleResize = (): void => setIsMobile(window.innerWidth <= 990);
+		const handleResize = (): void => setIsMobile(window.innerWidth <= TABLET_BREAKPOINT);
 		window.addEventListener("resize", handleResize);
 		return (): void => window.removeEventListener("resize", handleResize);
 	}, []);
@@ -78,6 +80,24 @@ export const Sidebar = (): JSX.Element => {
 			document.removeEventListener("mousedown", handleClickOutside);
 		};
 	}, [showDropdown]);
+
+	useEffect(() => {
+		if (!isMobile || !isExpanded) return;
+		const blockEvent = (event: Event) => {
+			event.stopPropagation();
+			event.preventDefault();
+		};
+		const handleClickOutside = (event: MouseEvent) => {
+			if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+				event.stopPropagation();
+				event.preventDefault();
+				setIsExpanded(false);
+				document.addEventListener("click", blockEvent, { capture: true, once: true });
+			}
+		};
+		document.addEventListener("mousedown", handleClickOutside, { capture: true });
+		return () => document.removeEventListener("mousedown", handleClickOutside, { capture: true });
+	}, [isMobile, isExpanded]);
 
 	const handleSidebarToggle = (): void => setIsExpanded((prev: boolean): boolean => !prev);
 
@@ -285,19 +305,16 @@ export const Sidebar = (): JSX.Element => {
 
 	return (
 		<>
-			{isMobile && !isExpanded && (
-				<button className="sidebar-open-btn" onClick={handleSidebarToggle} aria-label="Toggle sidebar">
-					<i className="bi bi-list" style={{ fontSize: 21.6 }}></i>
-				</button>
-			)}
+			{isMobile && <div className="sidebar-chevron-spacer" />}
 			<div
+				ref={sidebarRef}
 				className={`custom-sidebar ${isExpanded ? "expanded" : "collapsed"}`}
 				onMouseEnter={!isMobile ? handleMouseEnter : undefined}
 				onMouseLeave={!isMobile ? handleMouseLeave : undefined}
 			>
-				{isMobile && isExpanded && (
-					<button className="sidebar-close-btn" onClick={handleSidebarToggle} aria-label="Close sidebar">
-						<i className="bi bi-x-lg" style={{ fontSize: 21.6 }}></i>
+				{isMobile && (
+					<button className="sidebar-chevron-btn" onClick={handleSidebarToggle} aria-label="Toggle sidebar">
+						<i className={`bi bi-chevron-${isExpanded ? "left" : "right"}`}></i>
 					</button>
 				)}
 				<div className="sidebar-header">
