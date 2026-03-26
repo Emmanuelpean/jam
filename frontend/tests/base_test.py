@@ -1104,7 +1104,11 @@ class DataTableUtils(BaseUtilsClass):
         """Return True if the filter sidebar has the 'open' CSS class"""
 
         sidebar = self.get_element("filter-sidebar", enabled=False)
-        return "open" in sidebar.get_attribute("class")
+        section_classes = sidebar.get_attribute("class")
+        if sidebar:
+            return "open" in sidebar
+        else:
+            return False
 
     def open_filter_sidebar(self) -> None:
         """Click the filter toggle button and wait for the sidebar to render"""
@@ -1116,7 +1120,11 @@ class DataTableUtils(BaseUtilsClass):
         """Return True if the filter section for the given column key is highlighted as active"""
 
         section = self.get_element(f"filter-section-{column_key}", enabled=False)
-        return "filter-section--active" in section.get_attribute("class")
+        section_classes = section.get_attribute("class")
+        if section_classes:
+            return "filter-section--active" in section_classes
+        else:
+            return False
 
     def get_filter_pills(self) -> list:
         """Return all visible filter pill span elements"""
@@ -1202,15 +1210,15 @@ class AuthentificationUtils(BaseUtilsClass):
 
         self.get_element("terms").click()
 
-    def set_first_name(self, value: str) -> WebElement:
+    def set_first_name(self, value: str) -> None:
         """Get the first name field"""
 
-        return self.get_element("firstName").send_keys(value)
+        self.get_element("firstName").send_keys(value)
 
-    def set_last_name(self, value: str) -> WebElement:
+    def set_last_name(self, value: str) -> None:
         """Get the last name field"""
 
-        return self.get_element("lastName").send_keys(value)
+        self.get_element("lastName").send_keys(value)
 
     def register_user(
         self,
