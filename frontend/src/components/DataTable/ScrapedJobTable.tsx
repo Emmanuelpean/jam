@@ -12,6 +12,7 @@ import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAlert } from "../../contexts/AlertContext";
 import { useProgressOverlay } from "../../contexts/useProgressOverlayContext";
 import { ApiResponsePromise } from "../../services/api/Base";
+import { MOBILE_BREAKPOINT, TABLET_BREAKPOINT } from "../../utils/Breakpoints";
 
 interface ScrapedJobTableProps extends DataTableProps {
 	favouritesOnly?: boolean;
@@ -38,7 +39,14 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 	const [internalReloadTrigger, setInternalReloadTrigger] = useState<number>(0);
 	const [locallyReadIds, setLocallyReadIds] = useState<Set<number>>(new Set());
 	const filtersInitializedRef = useRef(false);
+	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 	const { showProgress, hideProgress } = useProgressOverlay();
+
+	useEffect(() => {
+		const handleResize = (): void => setWindowWidth(window.innerWidth);
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
+	}, []);
 
 	const handleBulkDismiss = useCallback(
 		async (ids: number[]): Promise<void> => {
@@ -87,7 +95,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 		}),
 		[showPastDeadline, favouritesOnly]
 	);
-	const defaultColumns: TableColumn[] =
+	let defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns
 			: [
@@ -101,6 +109,13 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 					tableColumns.scrapingStatusColumn(),
 					tableColumns.createdAtColumn({ label: "Date Received" }),
 				];
+
+	if (dashboardMode && windowWidth < TABLET_BREAKPOINT) {
+		defaultColumns = defaultColumns.filter((col) => !["location", "url", "created_at"].includes(col.key));
+	}
+	if (dashboardMode && windowWidth < MOBILE_BREAKPOINT) {
+		defaultColumns = defaultColumns.filter((col) => !["company", "is_processed"].includes(col.key));
+	}
 
 	return (
 		<>

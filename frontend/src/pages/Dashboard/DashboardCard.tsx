@@ -95,6 +95,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 					style={{
 						flexGrow: 1,
 						minHeight: 0,
+						minWidth: 0,
 						display: isEmpty && emptyState ? "none" : "flex",
 						flexDirection: "column",
 					}}

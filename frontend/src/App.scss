@@ -759,15 +759,9 @@ textarea.form-control {
     .badge {
         display: inline-block;
         overflow: hidden;
-        max-width: 180px;
+        max-width: 100%;
         white-space: nowrap;
         text-overflow: ellipsis;
-    }
-}
-
-@media (width <= $mobile-breakpoint) {
-    .badge {
-        max-width: 108px;
     }
 }
 

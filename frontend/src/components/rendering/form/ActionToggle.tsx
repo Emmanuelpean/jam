@@ -30,6 +30,7 @@ export const ActionToggle: React.FC<ActionToggleProps> = ({
 				checked={checked}
 				onChange={onChange}
 				disabled={disabled || loading}
+				style={{ userSelect: "none" }}
 			/>
 		</div>
 	);

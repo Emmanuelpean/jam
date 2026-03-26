@@ -304,11 +304,7 @@ const Dashboard: React.FC = () => {
 							description: "Job alerts from your scrapers will appear here",
 						}}
 					>
-						<div
-							style={{ paddingTop: "9px", paddingBottom: "18px", display: "flex", flex: 1, minHeight: 0 }}
-						>
-							<ScrapedJobsTable dashboardMode={true} onTotalCountChange={setScrapedJobCount} />
-						</div>
+						<ScrapedJobsTable dashboardMode={true} onTotalCountChange={setScrapedJobCount} />
 					</DashboardCard>
 				);
 
@@ -477,7 +473,7 @@ const Dashboard: React.FC = () => {
 							width={width}
 							layouts={{ lg: currentLayout }}
 							breakpoints={{ lg: TABLET_BREAKPOINT, sm: MOBILE_BREAKPOINT, xs: 0 }}
-							cols={{ lg: 12, sm: 8, xs: 2 }}
+							cols={{ lg: 12, sm: 7, xs: 2 }}
 							rowHeight={30}
 							dragConfig={{ enabled: isEditMode, handle: ".drag-handle" }}
 							resizeConfig={{ enabled: isEditMode, handles: ["sw", "nw", "se", "ne"] }}
