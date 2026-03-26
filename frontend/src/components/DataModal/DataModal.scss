@@ -159,6 +159,13 @@
     padding-left: 2px;
 }
 
+/* Above mobile: scale width smoothly instead of snapping at Bootstrap's 992px breakpoint */
+@media (width > $mobile-breakpoint) {
+    .data-modal .modal-dialog {
+        max-width: min(90vw, 1140px);
+    }
+}
+
 /* Mobile fullscreen slide-in from right */
 @media (width <= $mobile-breakpoint) {
     .data-modal .modal-dialog {

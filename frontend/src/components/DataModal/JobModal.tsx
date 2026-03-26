@@ -299,12 +299,12 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 
 		const applicationTabTitle = (jobData: JobData): ReactNode => {
 			return jobData?.application_status ? (
-				<>
-					Job Application{" "}
-					<span className={`badge ${getApplicationStatusBadgeClass(jobData.application_status)} badge`}>
+				<span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }}>
+					Job Application
+					<span className={`badge ${getApplicationStatusBadgeClass(jobData.application_status)}`}>
 						{jobData.application_status}
 					</span>
-				</>
+				</span>
 			) : (
 				"Job Application"
 			);

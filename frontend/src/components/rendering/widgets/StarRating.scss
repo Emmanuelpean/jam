@@ -14,15 +14,12 @@
     cursor: pointer;
     user-select: none;
     color: #cfcfcf;
-    background: transparent;
-    -webkit-background-clip: unset;
-    background-clip: unset;
-    -webkit-text-fill-color: unset;
 }
 
-.star-rating-star.bi-star-fill {
+.star-rating-star.bi-star-fill::before {
     background: var(--primary-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+    display: inline-block;
 }
