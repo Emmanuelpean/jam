@@ -69,6 +69,11 @@ class TestDashboardCustomisation(DashboardTestBase):
         WebDriverWait(self.driver, 5).until(
             EC.element_to_be_clickable((By.ID, variant_id))
         ).click()
+        # Wait for the modal to close before returning so callers can rely on
+        # the new widget already being in the DOM.
+        WebDriverWait(self.driver, 5).until(
+            EC.invisibility_of_element_located((By.ID, variant_id))
+        )
 
     def _remove_widget(self, widget_id: str, confirm: bool = True) -> None:
         """Click the remove button for a widget and confirm (or cancel) the dialog."""
@@ -80,12 +85,6 @@ class TestDashboardCustomisation(DashboardTestBase):
 
     def _grid_item_count(self) -> int:
         return len(self.driver.find_elements(By.CSS_SELECTOR, ".dashboard-grid-item"))
-
-    def _wait_for_dashboard_loaded(self) -> None:
-        """Wait for the dashboard to finish loading after a page reload."""
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "[data-loaded='true']"))
-        )
 
     # ------------------------------------------- EDIT MODE TOGGLE ------------------------------------------
 
@@ -164,7 +163,6 @@ class TestDashboardCustomisation(DashboardTestBase):
         count_before_save = self._grid_item_count()
         self._save()
         self._reload()
-        self._wait_for_dashboard_loaded()
         assert self._grid_item_count() == count_before_save
 
     def test_save_persists_removed_widget_across_reload(self) -> None:
@@ -174,7 +172,6 @@ class TestDashboardCustomisation(DashboardTestBase):
         count_after_remove = self._grid_item_count()
         self._save()
         self._reload()
-        self._wait_for_dashboard_loaded()
         assert self._grid_item_count() == count_after_remove
 
     def test_cancel_discards_added_widget(self) -> None:
@@ -219,5 +216,4 @@ class TestDashboardCustomisation(DashboardTestBase):
         self._save()
         count_after_reset = self._grid_item_count()
         self._reload()
-        self._wait_for_dashboard_loaded()
         assert self._grid_item_count() == count_after_reset

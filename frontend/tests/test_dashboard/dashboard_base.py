@@ -4,6 +4,9 @@ import datetime as dt
 import json
 
 from base_test import BaseTest, models
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # Default grid dimensions per widget type (mirrors widgetRegistry.ts defaults)
 _LAYOUT_DEFAULTS: dict[str, dict] = {
@@ -97,8 +100,11 @@ class DashboardTestBase(BaseTest):
         return fav
 
     def _reload(self) -> None:
-        """Reload the dashboard page."""
+        """Reload the dashboard page and wait for data to finish loading."""
         self.driver.refresh()
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "[data-loaded='true']"))
+        )
 
     # ----------------------------------------------- LAYOUT HELPERS -----------------------------------------------
 
