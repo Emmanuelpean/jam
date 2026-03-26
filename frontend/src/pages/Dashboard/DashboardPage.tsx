@@ -341,7 +341,7 @@ const Dashboard: React.FC = () => {
 	const currentLayout: LayoutItem[] = layoutData.layout.filter((l) => widgetIds.has(l.i));
 
 	return (
-		<div className="dashboard-wrapper">
+		<div className="dashboard-wrapper" data-loaded="true">
 			<div className="dashboard-main" ref={containerRef as React.RefObject<HTMLDivElement>}>
 				<ExtensionBanner />
 				<div className={isEditMode ? "dashboard-edit-mode" : ""}>

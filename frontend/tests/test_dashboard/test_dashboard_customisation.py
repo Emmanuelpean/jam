@@ -84,11 +84,7 @@ class TestDashboardCustomisation(DashboardTestBase):
     def _wait_for_dashboard_loaded(self) -> None:
         """Wait for the dashboard to finish loading after a page reload."""
         WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, EDIT_BTN))
-        )
-        # Also wait for at least one grid item to be rendered
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".dashboard-grid-item"))
+            EC.presence_of_element_located((By.CSS_SELECTOR, "[data-loaded='true']"))
         )
 
     # ------------------------------------------- EDIT MODE TOGGLE ------------------------------------------
