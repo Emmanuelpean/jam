@@ -2,6 +2,7 @@ import React, { JSX, useCallback, useMemo } from "react";
 import { Form } from "react-bootstrap";
 import { NullFilter, NumberFilterConfig, NumberFilterValue } from "../FilterTypes";
 import "./NumberFilter.scss";
+import ClearButton from "../ClearButton";
 
 interface Props {
 	columnKey?: string;
@@ -108,7 +109,11 @@ const NumberInputs = ({ columnKey, config, value, onChange, disabled }: Props): 
 				step={step}
 				value={value.min ?? ""}
 				onChange={(e) =>
-					onChange({ type: "number", min: e.target.value === "" ? null : Number(e.target.value), max: value.max })
+					onChange({
+						type: "number",
+						min: e.target.value === "" ? null : Number(e.target.value),
+						max: value.max,
+					})
 				}
 				className="form-control--sm"
 				disabled={disabled}
@@ -121,20 +126,17 @@ const NumberInputs = ({ columnKey, config, value, onChange, disabled }: Props): 
 				step={step}
 				value={value.max ?? ""}
 				onChange={(e) =>
-					onChange({ type: "number", min: value.min, max: e.target.value === "" ? null : Number(e.target.value) })
+					onChange({
+						type: "number",
+						min: value.min,
+						max: e.target.value === "" ? null : Number(e.target.value),
+					})
 				}
 				className="form-control--sm"
 				disabled={disabled}
 			/>
 			{hasValue && !disabled && (
-				<button
-					type="button"
-					className="filter-input-clear-btn"
-					onClick={() => onChange({ type: "number", min: null, max: null })}
-					aria-label="Clear"
-				>
-					<i className="bi bi-x" />
-				</button>
+				<ClearButton onClick={() => onChange({ type: "number", min: null, max: null })} size="sm" />
 			)}
 		</div>
 	);
@@ -170,7 +172,12 @@ const NumberFilter = ({ columnKey, config, value, onChange, dataContext }: Props
 							id={columnKey ? `filter-null-${opt.value}-${columnKey}` : undefined}
 							type="button"
 							className={`filter-null-btn${currentNullFilter === opt.value ? " active" : ""}`}
-							onClick={() => onChange({ ...value, nullFilter: opt.value === "all" ? undefined : opt.value })}
+							onClick={() =>
+								onChange({
+									...value,
+									nullFilter: opt.value === "all" ? undefined : opt.value,
+								})
+							}
 						>
 							{opt.label}
 						</button>

@@ -194,31 +194,6 @@ thead.custom-header th {
     }
 }
 
-.search-clear-btn {
-    position: absolute;
-    top: 50%;
-    right: 0.8rem;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.3rem;
-    border: none;
-    background: none;
-    color: var(--bs-secondary-color);
-    cursor: pointer;
-    line-height: 1;
-
-    font-weight: 700;
-
-    border-radius: 4px;
-    transition: background-color 0.15s, color 0.15s;
-
-    &:hover {
-        color: var(--bs-body-color);
-        background-color: var(--bs-tertiary-bg);
-    }
-}
 
 .datatable-toolbar-actions {
     display: flex;

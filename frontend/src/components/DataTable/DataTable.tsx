@@ -43,6 +43,7 @@ import FilterPillsRow from "./FilterPillsRow";
 import { ColumnConfig, useColumnConfig } from "../../hooks/useColumnConfig";
 import ColumnConfigSidebar from "./ColumnConfigSidebar";
 import FilterSidebar from "./FilterSidebar";
+import ClearButton from "./ClearButton";
 import { CustomSelect } from "../rendering/widgets/CustomSelect";
 import { SelectOption } from "../rendering/form/FormOptions";
 import { isFilterActive } from "./FilterTypes";
@@ -732,7 +733,9 @@ function DataTableComponent<T extends JamData>(
 			{title && <PageHeader title={title} count={totalFilteredCount || data.length} icon={getTableIcon(title)} />}
 
 			<div className={`table-container${!compact ? " table-container--full-height" : ""}`}>
-				<div className={`datatable-toolbar ${compact ? "mb-2" : "mb-3"}${compact ? " datatable-toolbar--compact" : ""}`}>
+				<div
+					className={`datatable-toolbar ${compact ? "mb-2" : "mb-3"}${compact ? " datatable-toolbar--compact" : ""}`}
+				>
 					{showSearch && !compact && (
 						<div className="datatable-toolbar-search">
 							<div className="search-input-wrapper">
@@ -746,13 +749,7 @@ function DataTableComponent<T extends JamData>(
 									id="search-input"
 								/>
 								{searchTerm && (
-									<button
-										className="search-clear-btn"
-										onClick={() => setSearchTerm("")}
-										aria-label="Clear search"
-									>
-										<i className="bi-x-lg"></i>
-									</button>
+									<ClearButton onClick={() => setSearchTerm("")} ariaLabel="Clear search" size="md" />
 								)}
 							</div>
 							<span className="datatable-toolbar-count text-muted small">

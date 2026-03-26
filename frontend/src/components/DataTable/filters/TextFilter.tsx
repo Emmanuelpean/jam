@@ -1,4 +1,5 @@
 import React, { JSX } from "react";
+import ClearButton from "../ClearButton";
 import { Form } from "react-bootstrap";
 import { TextFilterValue } from "../FilterTypes";
 
@@ -18,16 +19,7 @@ const TextFilter = ({ columnKey, value, onChange }: Props): JSX.Element => (
 			onChange={(e) => onChange({ type: "text", value: e.target.value })}
 			className="form-control--sm"
 		/>
-		{value.value && (
-			<button
-				type="button"
-				className="filter-input-clear-btn"
-				onClick={() => onChange({ type: "text", value: "" })}
-				aria-label="Clear"
-			>
-				<i className="bi bi-x" />
-			</button>
-		)}
+		{value.value && <ClearButton onClick={() => onChange({ type: "text", value: "" })} size="sm" />}
 	</div>
 );
 
