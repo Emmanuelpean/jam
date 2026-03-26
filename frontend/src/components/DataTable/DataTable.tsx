@@ -732,95 +732,104 @@ function DataTableComponent<T extends JamData>(
 			{title && <PageHeader title={title} count={totalFilteredCount || data.length} icon={getTableIcon(title)} />}
 
 			<div className={`table-container${!compact ? " table-container--full-height" : ""}`}>
-				<div
-					className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
-					style={{ gap: compact ? "0.5rem" : "1rem" }}
-				>
+				<div className={`datatable-toolbar ${compact ? "mb-2" : "mb-3"}${compact ? " datatable-toolbar--compact" : ""}`}>
 					{showSearch && !compact && (
-						<div className="d-flex align-items-center gap-3" style={{ flex: 1, width: "auto" }}>
-							<input
-								type="text"
-								className="form-control"
-								style={smallSearch ? { height: "35px", minHeight: "unset" } : {}}
-								placeholder="Search..."
-								value={searchTerm}
-								onChange={(e): void => setSearchTerm(e.target.value)}
-								id="search-input"
-							/>
-							<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
+						<div className="datatable-toolbar-search">
+							<div className="search-input-wrapper">
+								<input
+									type="text"
+									className="form-control"
+									style={smallSearch ? { height: "35px", minHeight: "unset" } : {}}
+									placeholder="Search..."
+									value={searchTerm}
+									onChange={(e): void => setSearchTerm(e.target.value)}
+									id="search-input"
+								/>
+								{searchTerm && (
+									<button
+										className="search-clear-btn"
+										onClick={() => setSearchTerm("")}
+										aria-label="Clear search"
+									>
+										<i className="bi-x-lg"></i>
+									</button>
+								)}
+							</div>
+							<span className="datatable-toolbar-count text-muted small">
 								Showing {totalFilteredCount} of {totalCount} Entries
 							</span>
 						</div>
 					)}
-					{toolbarAddon && <div className="datatable-toolbar-addon">{toolbarAddon}</div>}
-					{showAdd && mode !== "import" && (
-						<Button
-							variant="primary"
-							{...(compact ? { size: "sm" as const } : {})}
-							onClick={() => openAddModal()}
-							className="d-flex align-items-center justify-content-center"
-							style={{
-								width: compact ? "100%" : "60%",
-								fontSize: compact ? "0.875rem" : undefined,
-								padding: compact ? "0.25rem 0.5rem" : undefined,
-								height: compact ? "2rem" : undefined,
-							}}
-							id={`add-${entityType}-button`}
-						>
-							<i className={`bi-plus-circle me-2`} style={{ fontSize: "1.1rem" }}></i>
-							{`Add ${entityName}`}
-						</Button>
-					)}
-					{enableMultiSelect && (
-						<BulkActionsDropdown
-							selectedCount={selectedIds.size}
-							totalCount={displayTotal}
-							actions={bulkActions}
-							onAction={handleBulkAction}
-							onClearSelection={() => setSelectedIds(new Set())}
-						/>
-					)}
-					{enableColumnConfig && !compact && (
-						<Button
-							id="column-config-toggle-btn"
-							variant={columnSidebarOpen ? "primary" : "outline-primary"}
-							onClick={() => {
-								setColumnSidebarOpen(!columnSidebarOpen);
-								setFilterSidebarOpen(false);
-							}}
-							className={"config-btn"}
-							data-sidebar-toggle="column"
-						>
-							<i className="bi bi-gear"></i>
-						</Button>
-					)}
-					{enableColumnConfig && !compact && (
-						<Button
-							id="filter-toggle-btn"
-							variant={filterSidebarOpen ? "primary" : "outline-primary"}
-							className={"config-btn"}
-							onClick={() => {
-								setFilterSidebarOpen(!filterSidebarOpen);
-								setColumnSidebarOpen(false);
-							}}
-							data-sidebar-toggle="filter"
-						>
-							<i className="bi bi-funnel"></i>
-							{activeFilterCount > 0 && (
-								<span
-									className="filter-button-count"
-									style={{
-										position: "absolute",
-										top: "-6px",
-										left: "-6px",
-										fontSize: "0.65rem",
-									}}
-								>
-									{activeFilterCount}
-								</span>
-							)}
-						</Button>
-					)}
+					<div className="datatable-toolbar-actions">
+						{toolbarAddon && <div className="datatable-toolbar-addon">{toolbarAddon}</div>}
+						{showAdd && mode !== "import" && (
+							<Button
+								variant="primary"
+								{...(compact ? { size: "sm" as const } : {})}
+								onClick={() => openAddModal()}
+								className="d-flex align-items-center justify-content-center"
+								style={{
+									fontSize: compact ? "0.875rem" : undefined,
+									padding: compact ? "0.25rem 0.5rem" : undefined,
+									height: compact ? "2rem" : undefined,
+								}}
+								id={`add-${entityType}-button`}
+							>
+								<i className={`bi-plus-circle me-2`} style={{ fontSize: "1.1rem" }}></i>
+								{`Add ${entityName}`}
+							</Button>
+						)}
+						{enableMultiSelect && (
+							<BulkActionsDropdown
+								selectedCount={selectedIds.size}
+								totalCount={displayTotal}
+								actions={bulkActions}
+								onAction={handleBulkAction}
+								onClearSelection={() => setSelectedIds(new Set())}
+							/>
+						)}
+						{enableColumnConfig && !compact && (
+							<Button
+								id="column-config-toggle-btn"
+								variant={columnSidebarOpen ? "primary" : "outline-primary"}
+								onClick={() => {
+									setColumnSidebarOpen(!columnSidebarOpen);
+									setFilterSidebarOpen(false);
+								}}
+								className={"config-btn"}
+								data-sidebar-toggle="column"
+							>
+								<i className="bi bi-gear"></i>
+							</Button>
+						)}
+						{enableColumnConfig && !compact && (
+							<Button
+								id="filter-toggle-btn"
+								variant={filterSidebarOpen ? "primary" : "outline-primary"}
+								className={"config-btn"}
+								onClick={() => {
+									setFilterSidebarOpen(!filterSidebarOpen);
+									setColumnSidebarOpen(false);
+								}}
+								data-sidebar-toggle="filter"
+							>
+								<i className="bi bi-funnel"></i>
+								{activeFilterCount > 0 && (
+									<span
+										className="filter-button-count"
+										style={{
+											position: "absolute",
+											top: "-6px",
+											left: "-6px",
+											fontSize: "0.65rem",
+										}}
+									>
+										{activeFilterCount}
+									</span>
+								)}
+							</Button>
+						)}
+					</div>
 				</div>
 
 				{/* Table */}

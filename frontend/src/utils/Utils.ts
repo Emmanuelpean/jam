@@ -39,15 +39,15 @@ export const findItemById = <T extends { id: number }>(objects: T[], key: number
 export const getColumnClass = (count: number): string => {
 	switch (count) {
 		case 1:
-			return "col-sm-12";
+			return "col-12";
 		case 2:
-			return "col-sm-6";
+			return "col-6";
 		case 3:
-			return "col-sm-4";
+			return "col-4";
 		case 4:
-			return "col-sm-3";
+			return "col-3";
 		default:
-			return "col-sm-6";
+			return "col-6";
 	}
 };
 

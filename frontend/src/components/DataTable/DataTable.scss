@@ -1,3 +1,5 @@
+@use "../../variables" as *;
+
 thead.custom-header {
     color: white;
     background: var(--primary-gradient);
@@ -162,6 +164,88 @@ thead.custom-header th {
 .bulk-actions-dropdown .dropdown-item.text-danger:hover,
 .bulk-actions-dropdown .dropdown-item.text-danger:focus {
     background-color: rgba(var(--bs-danger-rgb), 0.1);
+}
+
+.datatable-toolbar {
+    display: flex;
+    align-items: stretch;
+    gap: 1rem;
+
+    &.datatable-toolbar--compact {
+        gap: 0.5rem;
+    }
+}
+
+.datatable-toolbar-search {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.search-input-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+
+    .form-control {
+        padding-right: 2rem;
+    }
+}
+
+.search-clear-btn {
+    position: absolute;
+    top: 50%;
+    right: 0.8rem;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3rem;
+    border: none;
+    background: none;
+    color: var(--bs-secondary-color);
+    cursor: pointer;
+    line-height: 1;
+
+    font-weight: 700;
+
+    border-radius: 4px;
+    transition: background-color 0.15s, color 0.15s;
+
+    &:hover {
+        color: var(--bs-body-color);
+        background-color: var(--bs-tertiary-bg);
+    }
+}
+
+.datatable-toolbar-actions {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+@media (width <= $mobile-breakpoint) {
+    .datatable-toolbar {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .datatable-toolbar-search {
+        flex: unset;
+        width: 100%;
+    }
+
+    .datatable-toolbar-count {
+        display: none;
+    }
+
+    .datatable-toolbar-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
 }
 
 .bulk-actions-dropdown .dropdown-divider {
