@@ -766,6 +766,7 @@ function DataTableComponent<T extends JamData>(
 								onClick={() => openAddModal()}
 								className="d-flex align-items-center justify-content-center"
 								style={{
+									flex: compact ? undefined : 1,
 									fontSize: compact ? "0.875rem" : undefined,
 									padding: compact ? "0.25rem 0.5rem" : undefined,
 									height: compact ? "2rem" : undefined,
