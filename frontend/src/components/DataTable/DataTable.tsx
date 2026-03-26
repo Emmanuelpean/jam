@@ -757,7 +757,7 @@ function DataTableComponent<T extends JamData>(
 							</span>
 						</div>
 					)}
-					<div className="datatable-toolbar-actions">
+					<div className="datatable-toolbar-actions" style={!compact && showAdd && mode !== "import" ? { flex: 1 } : undefined}>
 						{toolbarAddon && <div className="datatable-toolbar-addon">{toolbarAddon}</div>}
 						{showAdd && mode !== "import" && (
 							<Button
