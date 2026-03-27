@@ -757,7 +757,10 @@ function DataTableComponent<T extends JamData>(
 							</span>
 						</div>
 					)}
-					<div className="datatable-toolbar-actions" style={!compact && showAdd && mode !== "import" ? { flex: 1 } : undefined}>
+					<div
+						className="datatable-toolbar-actions"
+						style={compact ? { width: "100%" } : showAdd && mode !== "import" ? { flex: 1 } : undefined}
+					>
 						{toolbarAddon && <div className="datatable-toolbar-addon">{toolbarAddon}</div>}
 						{showAdd && mode !== "import" && (
 							<Button
@@ -770,6 +773,7 @@ function DataTableComponent<T extends JamData>(
 									fontSize: compact ? "0.875rem" : undefined,
 									padding: compact ? "0.25rem 0.5rem" : undefined,
 									height: compact ? "2rem" : undefined,
+									width: "100%",
 								}}
 								id={`add-${entityType}-button`}
 							>
