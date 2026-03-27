@@ -815,11 +815,9 @@ class DataModalUtils(BaseUtilsClass):
 
         # Job Application
         self.get_element("application-tab").click()
-        expected = "Job Details\nJob Details\n"
+        expected = "Job Details\nJob Details\nJob Application\n"
         if entry.application_status:
-            expected += f"Job Application {entry.application_status.upper()}\n"
-        else:
-            expected += "Job Application\n"
+            expected += f"{entry.application_status.upper()}\n"
         expected += "Application Details\n"
         app_date = entry.application_date.astimezone().strftime("%d/%m/%Y") if entry.application_date else None
         expected += format_field("Application Date" if entry.application_date else "Date", app_date)

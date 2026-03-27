@@ -101,6 +101,8 @@ class BaseTablePage(BaseTest):
             return ""
 
     def get_entries_count(self) -> int:
+        """Get the number of entries in the database"""
+
         if hasattr(self.test_entries[0], "owner_id"):
             return len(self.db.query(self.model).filter_by(owner_id=self.user.id).all())
         else:
