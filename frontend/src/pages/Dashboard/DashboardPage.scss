@@ -1,3 +1,4 @@
+@use "../../variables" as *;
 .widget-picker-card:not(:disabled):hover {
     border-color: var(--primary-mid) !important;
     background: color-mix(in srgb, var(--primary-mid) 8%, transparent) !important;
@@ -64,6 +65,14 @@
 .activity-timeline {
     padding-top: 0.5rem;
     padding-bottom: 1rem;
+    overflow-y: auto;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+
+    @media (width <= $mobile-breakpoint) {
+        overflow-x: hidden;
+    }
 }
 
 .activity-item:first-child {
@@ -287,4 +296,8 @@
         margin-bottom: 1.8px;
         margin-left: 0 !important;
     }
+}
+
+.min-width-0 {
+    min-width: 0;
 }

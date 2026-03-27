@@ -127,7 +127,7 @@ export const ActivityFeedCard = <T,>({
 		}}
 		bodyPadding={false}
 	>
-		<div id={id ? `${id}-timeline` : undefined} className="activity-timeline px-4 flex-grow-1" style={{ overflowY: "auto", height: "100%", minHeight: 0 }}>
+		<div id={id ? `${id}-timeline` : undefined} className="activity-timeline px-4 flex-grow-1">
 			{items.map((item, index) => renderItem(item, index, index === items.length - 1))}
 		</div>
 	</DashboardCard>
