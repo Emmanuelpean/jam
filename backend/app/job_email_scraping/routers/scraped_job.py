@@ -43,6 +43,7 @@ def get_all(
     show_past_deadline: bool = False,
     since_last_login: bool = False,
     favourites_only: bool = False,
+    errors_only: bool = False,
     search: str | None = None,
     filters: str | None = None,
     ids_only: bool = False,
@@ -57,6 +58,7 @@ def get_all(
     :param show_past_deadline: Show scraped jobs with past deadlines
     :param since_last_login: Only show jobs created since last login
     :param favourites_only: Only show jobs that are in the user's favourites
+    :param errors_only: Only show jobs that failed to be scraped or rated
     :param search: Search term
     :param filters: JSON-encoded filter object
     :param ids_only: Return only IDs instead of full objects"""
@@ -86,10 +88,19 @@ def get_all(
         else:
             query = query.filter(False)
 
+    # Errors only
+    if errors_only:
+        query = query.outerjoin(models.JobRating).filter(
+            or_(
+                models.ScrapedJob.is_failed.is_(True),
+                models.JobRating.is_success.is_(False),
+            )
+        )
+
     # Total before deadline/login/search/column filters
     total = query.count()
 
-    if not show_past_deadline:
+    if not show_past_deadline and not errors_only:
         query = query.filter(
             or_(
                 models.ScrapedJob.deadline.is_(None),
@@ -115,7 +126,7 @@ def get_all(
         )
 
     # Determine if we need a JobRating join (for filters or sorting)
-    needs_rating_join = sort_by.startswith("job_rating.")
+    needs_rating_join = sort_by.startswith("job_rating.") and not errors_only
     filter_conditions = []
 
     # Parse JSON column filters
@@ -303,13 +314,21 @@ def get_platform_stats(
             # 2. Scraped jobs that have a linked Job entry
             func.count(distinct(case((models.Job.id.isnot(None), models.ScrapedJob.id)))).label("imported_count"),
             # 3. Scraped jobs whose linked Job has been applied to
-            func.count(distinct(case((
-                or_(models.Job.application_status.isnot(None), models.Job.application_date.isnot(None)),
-                models.ScrapedJob.id,
-            )))).label("applied_count"),
+            func.count(
+                distinct(
+                    case(
+                        (
+                            or_(models.Job.application_status.isnot(None), models.Job.application_date.isnot(None)),
+                            models.ScrapedJob.id,
+                        )
+                    )
+                )
+            ).label("applied_count"),
         )
         .join(models.JobEmail.jobs)
-        .outerjoin(models.Job, and_(models.Job.scraped_job_id == models.ScrapedJob.id, models.Job.owner_id == current_user.id))
+        .outerjoin(
+            models.Job, and_(models.Job.scraped_job_id == models.ScrapedJob.id, models.Job.owner_id == current_user.id)
+        )
         .filter(models.ScrapedJob.owner_id == current_user.id)
         .group_by(
             models.JobEmail.platform,

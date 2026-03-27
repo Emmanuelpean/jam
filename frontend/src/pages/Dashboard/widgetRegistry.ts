@@ -31,7 +31,7 @@ export type MetricVariant =
 	| "active_applications"
 	| "interview_rate"
 	| "avg_response_time";
-export type TableVariant = "follow_up" | "upcoming_deadlines" | "job_alerts" | "favourites" | "favourite_jobs";
+export type TableVariant = "follow_up" | "upcoming_deadlines" | "job_alerts" | "favourites" | "favourite_jobs" | "error_jobs";
 export type TimelineVariant =
 	| "recent_activity"
 	| "upcoming_interviews"
@@ -225,6 +225,13 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				icon: "star",
 				description: "Jobs you have marked as favourite",
 				premiumOnly: false,
+			},
+			{
+				key: "error_jobs",
+				label: "Failed Jobs",
+				icon: "exclamation-triangle",
+				description: "Jobs that failed to be scraped or rated",
+				premiumOnly: true,
 			},
 		],
 		defaultLayout: { x: 0, y: 0, w: 8, h: 12, minW: 4, minH: 8 },

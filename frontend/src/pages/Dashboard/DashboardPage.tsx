@@ -18,6 +18,7 @@ import {
 } from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
 import FavouriteJobsTable from "../../components/DataTable/FavouriteJobsTable";
+import FailedScrapedJobsTable from "../../components/DataTable/FailedScrapedJobsTable";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
 import {
 	DashboardLayoutDataV3,
@@ -59,6 +60,7 @@ const Dashboard: React.FC = () => {
 	const [showWidgetPicker, setShowWidgetPicker] = useState(false);
 	const [scrapedJobCount, setScrapedJobCount] = useState<number>(0);
 	const [favouriteAlertCount, setFavouriteAlertCount] = useState<number>(0);
+	const [errorJobCount, setErrorJobCount] = useState<number>(0);
 
 	const isPremium = currentUser?.premium.is_active ?? false;
 
@@ -348,6 +350,24 @@ const Dashboard: React.FC = () => {
 								onTotalCountChange={setFavouriteAlertCount}
 							/>
 						</div>
+					</DashboardCard>
+				);
+			case "error_jobs":
+				return (
+					<DashboardCard
+						id="table-card-error_jobs"
+						icon="exclamation-triangle"
+						title="Failed Jobs"
+						subtitle="Jobs that failed to be scraped or rated"
+						badgeValue={errorJobCount}
+						isEmpty={errorJobCount === 0}
+						emptyState={{
+							icon: "check-circle",
+							title: "No failed jobs",
+							description: "All your jobs have been scraped and rated successfully",
+						}}
+					>
+						<FailedScrapedJobsTable dashboardMode={true} onTotalCountChange={setErrorJobCount} />
 					</DashboardCard>
 				);
 			default:
