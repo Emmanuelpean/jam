@@ -749,11 +749,11 @@ class DataModalUtils(BaseUtilsClass):
         """Helper method to test the view modal for a job application update entry"""
 
         modal = self.wait_for_view_modal()
-        expected = "Job Details\nJob Details\nJob Application"
+        expected = "Job Details\nJob Details\nJob Application\n"
         if entry.application_status:
-            expected += f" {entry.application_status.upper()}"
-        expected += "\nOverview"
-        expected += f"\n{entry.title}\n"
+            expected += f"{entry.application_status.upper()}\n"
+        expected += "Overview\n"
+        expected += f"{entry.title}\n"
 
         company = entry.company.name.upper() if entry.company else None
         expected += format_field("Company", company)
@@ -1105,8 +1105,8 @@ class DataTableUtils(BaseUtilsClass):
 
         sidebar = self.get_element("filter-sidebar", enabled=False)
         section_classes = sidebar.get_attribute("class")
-        if sidebar:
-            return "open" in sidebar
+        if section_classes:
+            return "open" in section_classes
         else:
             return False
 
