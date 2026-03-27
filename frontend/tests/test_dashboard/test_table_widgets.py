@@ -11,6 +11,7 @@ UPCOMING_DEADLINES_TABLE = "table-card-upcoming_deadlines"
 JOB_ALERTS_TABLE = "table-card-job_alerts"
 FAVOURITES_TABLE = "table-card-favourites"
 FAVOURITE_JOBS_TABLE = "table-card-favourite_jobs"
+FAILED_JOBS_TABLE = "table-card-error_jobs"
 
 
 NOW = dt.datetime.now(dt.timezone.utc)
@@ -432,3 +433,108 @@ class TestFavouriteJobsTable(DashboardTestBase):
         self._reload()
         row = self._rows()[0]
         assert "Dream Job" in row.text
+
+
+class TestFailedJobsWidget(DashboardTestBase):
+    """Tests for the Failed Jobs table widget.
+
+    Shows scraped jobs where is_failed=True (permanent scrape failure)
+    or job_rating.is_success=False (AI rating failure).
+    Normal, successfully-scraped-and-rated jobs are never shown.
+    """
+
+    user_index = 0
+
+    def setup_function(self, request) -> None:
+        self._set_dashboard_widgets({"type": "table", "source": "error_jobs"})
+        self.login()
+
+    # --------------------------------------------------- HELPERS ---------------------------------------------------
+
+    def _badge_count(self) -> int:
+        return int(self.get_element(f"{FAILED_JOBS_TABLE}-badge").text)
+
+    def _rows(self):
+        card = self.get_element(FAILED_JOBS_TABLE)
+        return card.find_elements(By.CSS_SELECTOR, "[id^='table-row-scrapedJob-']")
+
+    def _empty_state_visible(self) -> bool:
+        return self.check_element_exists(f"{FAILED_JOBS_TABLE}-empty")
+
+    def _create_scraped_job_with_failed_rating(self, title: str = "Failed Rating Job", **kwargs) -> models.ScrapedJob:
+        """Create a scraped job that has a failed JobRating (is_success=False)."""
+        job = self._create_scraped_job(title=title, **kwargs)
+        rating = models.JobRating(
+            owner_id=self.user.id,
+            scraped_job_id=job.id,
+            is_success=False,
+        )
+        self.db.add(rating)
+        self.db.commit()
+        return job
+
+    # ---------------------------------------------------- TESTS ----------------------------------------------------
+
+    def test_failed_jobs_widget_renders(self) -> None:
+        """The Failed Jobs card must be visible on a dashboard with the widget configured."""
+        assert self.get_element(FAILED_JOBS_TABLE).is_displayed()
+
+    def test_failed_jobs_empty_state_with_no_data(self) -> None:
+        """With no failed jobs the empty state is shown."""
+        assert self._empty_state_visible()
+
+    def test_failed_jobs_badge_is_zero_with_no_data(self) -> None:
+        assert self._badge_count() == 0
+
+    def test_failed_jobs_shows_scrape_failed_job(self) -> None:
+        """A job with is_failed=True appears as one row."""
+        self._create_scraped_job(title="Scrape Error Job", is_failed=True)
+        self._reload()
+        assert len(self._rows()) == 1
+
+    def test_failed_jobs_shows_rating_failed_job(self) -> None:
+        """A job whose rating has is_success=False appears as one row."""
+        self._create_scraped_job_with_failed_rating(title="Rating Error Job")
+        self._reload()
+        assert len(self._rows()) == 1
+
+    def test_failed_jobs_excludes_normal_job(self) -> None:
+        """A successfully scraped job with no rating failure is not shown."""
+        self._create_scraped_job(title="Normal Job")
+        self._reload()
+        assert len(self._rows()) == 0
+
+    def test_failed_jobs_badge_reflects_row_count(self) -> None:
+        """Badge count matches the total number of failed jobs."""
+        self._create_scraped_job(title="Failed Scrape A", is_failed=True)
+        self._create_scraped_job_with_failed_rating(title="Failed Rating B")
+        self._reload()
+        assert self._badge_count() == 2
+        assert len(self._rows()) == 2
+
+    def test_failed_jobs_mixed_normal_and_failed(self) -> None:
+        """Only failed jobs are shown when a mix of normal and failed jobs exists."""
+        self._create_scraped_job(title="Normal Job")
+        self._create_scraped_job(title="Failed Scrape", is_failed=True)
+        self._reload()
+        assert len(self._rows()) == 1
+
+    def test_failed_jobs_row_displays_job_title(self) -> None:
+        """Each row must contain the job title."""
+        self._create_scraped_job(title="Broken Scrape", is_failed=True)
+        self._reload()
+        row = self._rows()[0]
+        assert "Broken Scrape" in row.text
+
+    def test_failed_jobs_shows_job_with_past_deadline(self) -> None:
+        """Failed jobs with a past deadline are still shown (deadline filter is skipped)."""
+        past_deadline = NOW - dt.timedelta(days=5)
+        self._create_scraped_job(title="Expired Failed", is_failed=True, deadline=past_deadline)
+        self._reload()
+        assert len(self._rows()) == 1
+
+    def test_failed_jobs_excludes_imported_failed_job(self) -> None:
+        """A failed job that has been imported is not shown (base filter still applies)."""
+        self._create_scraped_job(title="Imported Failed", is_failed=True, is_imported=True)
+        self._reload()
+        assert len(self._rows()) == 0

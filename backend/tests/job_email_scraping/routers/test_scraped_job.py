@@ -1226,3 +1226,212 @@ class TestPlatformStats:
         assert data[0]["scraped_count"] == 1
         assert data[0]["imported_count"] == 1
         assert data[0]["applied_count"] == 1
+
+
+class TestErrorsOnly:
+    """Tests for the errors_only query parameter on /scraped-jobs/paged."""
+
+    endpoint = "/scraped-jobs/paged"
+
+    @staticmethod
+    def _create_job(session, owner_id: int, service_log_id: int, **kwargs) -> models.ScrapedJob:
+        return create_db_entries(
+            session,
+            models.ScrapedJob,
+            {
+                "external_job_id": f"err_test_{id(kwargs)}_{kwargs.get('title', '')}",
+                "platform": kwargs.pop("platform", "linkedin"),
+                "owner_id": owner_id,
+                "is_processed": True,
+                "is_scraped": True,
+                "is_active": True,
+                "is_imported": False,
+                "service_log_id": service_log_id,
+                **kwargs,
+            },
+        )[0]
+
+    @staticmethod
+    def _create_rating(session, scraped_job_id: int, owner_id: int, qualification_id: int = 0, **kwargs) -> models.JobRating:
+        return create_db_entries(
+            session,
+            models.JobRating,
+            {
+                "scraped_job_id": scraped_job_id,
+                "owner_id": owner_id,
+                "llm_model": kwargs.pop("llm_model", "test-model"),
+                "user_qualification_id": kwargs.pop("user_qualification_id", qualification_id),
+                **kwargs,
+            },
+        )[0]
+
+    def test_errors_only_false_returns_normal_jobs(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs
+    ):
+        """errors_only=False should return jobs regardless of failure state."""
+
+        self._create_job(session, test_regular_user.id, test_job_scraping_service_logs[0].id, title="Normal Job")
+
+        response = regular_user_client.get(self.endpoint, params={"errors_only": "false"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 1
+
+    def test_errors_only_excludes_normal_jobs(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs
+    ):
+        """errors_only=True should return an empty set when no jobs have failed."""
+
+        self._create_job(session, test_regular_user.id, test_job_scraping_service_logs[0].id, title="Normal Job")
+
+        response = regular_user_client.get(self.endpoint, params={"errors_only": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 0
+        assert data["items"] == []
+
+    def test_errors_only_returns_failed_scrape_job(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs
+    ):
+        """A job with is_failed=True must appear when errors_only=True."""
+
+        uid = test_regular_user.id
+        slog = test_job_scraping_service_logs[0].id
+        self._create_job(session, uid, slog, title="Failed Scrape", is_failed=True)
+        self._create_job(session, uid, slog, title="Normal Job")
+
+        response = regular_user_client.get(self.endpoint, params={"errors_only": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 1
+        assert data["items"][0]["title"] == "Failed Scrape"
+
+    def test_errors_only_returns_failed_rating_job(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs, test_user_qualifications
+    ):
+        """A job whose JobRating has is_success=False must appear when errors_only=True."""
+
+        uid = test_regular_user.id
+        slog = test_job_scraping_service_logs[0].id
+        qid = test_user_qualifications[0].id
+        job = self._create_job(session, uid, slog, title="Failed Rating")
+        self._create_rating(session, job.id, uid, qid, is_success=False)
+        self._create_job(session, uid, slog, title="Normal Job")
+
+        response = regular_user_client.get(self.endpoint, params={"errors_only": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 1
+        assert data["items"][0]["title"] == "Failed Rating"
+
+    def test_errors_only_returns_both_failure_types(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs, test_user_qualifications
+    ):
+        """Both is_failed scrape jobs and failed-rating jobs appear together."""
+
+        uid = test_regular_user.id
+        slog = test_job_scraping_service_logs[0].id
+        qid = test_user_qualifications[0].id
+        self._create_job(session, uid, slog, title="Failed Scrape", is_failed=True)
+        rating_job = self._create_job(session, uid, slog, title="Failed Rating")
+        self._create_rating(session, rating_job.id, uid, qid, is_success=False)
+        self._create_job(session, uid, slog, title="Normal Job")
+
+        response = regular_user_client.get(self.endpoint, params={"errors_only": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 2
+        titles = {item["title"] for item in data["items"]}
+        assert titles == {"Failed Scrape", "Failed Rating"}
+
+    def test_errors_only_excludes_successful_rating(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs, test_user_qualifications
+    ):
+        """A job with a successful rating (is_success=True) is not returned."""
+
+        uid = test_regular_user.id
+        slog = test_job_scraping_service_logs[0].id
+        qid = test_user_qualifications[0].id
+        job = self._create_job(session, uid, slog, title="Rated OK")
+        self._create_rating(session, job.id, uid, qid, is_success=True)
+
+        response = regular_user_client.get(self.endpoint, params={"errors_only": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 0
+
+    def test_errors_only_excludes_imported_jobs(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs
+    ):
+        """Imported jobs with is_failed=True must still be excluded by the base filter."""
+
+        self._create_job(
+            session, test_regular_user.id, test_job_scraping_service_logs[0].id,
+            title="Imported Failed", is_failed=True, is_imported=True,
+        )
+
+        response = regular_user_client.get(self.endpoint, params={"errors_only": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 0
+
+    def test_errors_only_excludes_inactive_jobs(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs
+    ):
+        """Inactive jobs with is_failed=True must still be excluded by the base filter."""
+
+        self._create_job(
+            session, test_regular_user.id, test_job_scraping_service_logs[0].id,
+            title="Inactive Failed", is_failed=True, is_active=False,
+        )
+
+        response = regular_user_client.get(self.endpoint, params={"errors_only": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 0
+
+    def test_errors_only_ignores_deadline_filter(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs
+    ):
+        """errors_only=True should show failed jobs even if their deadline is in the past."""
+        import datetime as dt
+
+        past_deadline = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=5)
+        self._create_job(
+            session,
+            test_regular_user.id,
+            test_job_scraping_service_logs[0].id,
+            title="Past Deadline Failed",
+            is_failed=True,
+            deadline=past_deadline,
+        )
+
+        response = regular_user_client.get(self.endpoint, params={"errors_only": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 1
+
+    def test_errors_only_does_not_return_other_users_jobs(
+        self, session, regular_user_client, test_admin_user, test_job_scraping_service_logs
+    ):
+        """Failed jobs belonging to another user are never returned."""
+
+        self._create_job(
+            session, test_admin_user.id, test_job_scraping_service_logs[0].id,
+            title="Admin Failed", is_failed=True,
+        )
+
+        response = regular_user_client.get(self.endpoint, params={"errors_only": "true"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["total_filtered"] == 0
