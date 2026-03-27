@@ -4,6 +4,7 @@ import datetime as dt
 
 from selenium.webdriver.common.by import By
 
+from app import models
 from dashboard_base import DashboardTestBase
 
 FOLLOW_UP_TABLE = "table-card-follow_up"

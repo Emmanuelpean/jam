@@ -112,10 +112,8 @@ class TestFilterSidebar(BaseTest):
 
         # The X clear button appears only when the input has text
         section = self.driver.find_element(By.ID, "filter-section-title")
-        WebDriverWait(self.driver, 5).until(
-            lambda d: len(section.find_elements(By.CLASS_NAME, "filter-input-clear-btn")) > 0
-        )
-        section.find_element(By.CLASS_NAME, "filter-input-clear-btn").click()
+        WebDriverWait(self.driver, 5).until(lambda d: len(section.find_elements(By.ID, "clear-btn")) > 0)
+        section.find_element(By.ID, "clear-btn").click()
         time.sleep(0.5)
 
         assert self.job_table_utils.get_row_count() == initial_count
