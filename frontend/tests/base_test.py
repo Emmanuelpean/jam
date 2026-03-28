@@ -14,7 +14,7 @@ from typing import Generator
 import pytest
 import requests
 from selenium import webdriver
-from selenium.common import TimeoutException
+from selenium.common import StaleElementReferenceException, TimeoutException
 from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -106,17 +106,32 @@ class BaseUtils(object):
         selector: str = By.ID,
         timeout: float = 10.0,
         enabled=True,
+        within: WebElement | None = None,
     ) -> WebElement:
         """Get an element by its ID, with retry on stale element references.
         :param element_id: ID of the element to get
         :param selector: Selector to use for finding the element
         :param timeout: How long to wait before raising an error
-        :param enabled: Whether to wait for the element to be enabled"""
+        :param enabled: Whether to wait for the element to be enabled
+        :param within: Parent element to search within"""
 
         time.sleep(0.1)
         try:
             wait = WebDriverWait(self.driver, timeout)
-            if enabled:
+            if within:
+
+                def find_within(d):
+                    try:
+                        matches = within.find_elements(selector, element_id)
+                        return matches[0] if matches else None
+                    except StaleElementReferenceException:
+                        return None
+
+                element = wait.until(find_within)
+                if enabled:
+                    ActionChains(self.driver).move_to_element(element).perform()
+                return element
+            elif enabled:
                 element = wait.until(ec.element_to_be_clickable((selector, element_id)))
             else:
                 element = wait.until(ec.presence_of_element_located((selector, element_id)))

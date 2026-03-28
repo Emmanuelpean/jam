@@ -3,7 +3,6 @@
 import time
 
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
 
 from base_test import BaseTest
 
@@ -111,9 +110,8 @@ class TestFilterSidebar(BaseTest):
         assert self.job_table_utils.get_row_count() < initial_count
 
         # The X clear button appears only when the input has text
-        section = self.driver.find_element(By.ID, "filter-section-title")
-        WebDriverWait(self.driver, 5).until(lambda d: len(section.find_elements(By.ID, "clear-btn")) > 0)
-        section.find_element(By.ID, "clear-btn").click()
+        section = self.get_element("filter-section-title")
+        self.get_element("clear-btn", within=section).click()
         time.sleep(0.5)
 
         assert self.job_table_utils.get_row_count() == initial_count
@@ -222,7 +220,7 @@ class TestFilterSidebar(BaseTest):
     def test_date_filter_preset_activates_section(self) -> None:
         """Clicking a date preset highlights the section and creates a filter pill"""
         self.job_table_utils.open_filter_sidebar()
-        section = self.driver.find_element(By.ID, "filter-section-created_at")
+        section = self.get_element("filter-section-created_at")
         preset_btns = section.find_elements(By.CLASS_NAME, "filter-date-preset-btn")
         last_30_btn = next(b for b in preset_btns if "30" in b.text)
         last_30_btn.click()
@@ -236,7 +234,7 @@ class TestFilterSidebar(BaseTest):
     def test_date_filter_preset_deactivates_on_second_click(self) -> None:
         """Clicking an already-active preset button toggles it off"""
         self.job_table_utils.open_filter_sidebar()
-        section = self.driver.find_element(By.ID, "filter-section-created_at")
+        section = self.get_element("filter-section-created_at")
         preset_btns = section.find_elements(By.CLASS_NAME, "filter-date-preset-btn")
         last_30_btn = next(b for b in preset_btns if "30" in b.text)
 

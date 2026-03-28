@@ -447,6 +447,7 @@ class TestFailedJobsWidget(DashboardTestBase):
     user_index = 0
 
     def setup_function(self, request) -> None:
+        request.getfixturevalue("test_user_qualifications")
         self._set_dashboard_widgets({"type": "table", "source": "error_jobs"})
         self.login()
 
@@ -465,10 +466,13 @@ class TestFailedJobsWidget(DashboardTestBase):
     def _create_scraped_job_with_failed_rating(self, title: str = "Failed Rating Job", **kwargs) -> models.ScrapedJob:
         """Create a scraped job that has a failed JobRating (is_success=False)."""
         job = self._create_scraped_job(title=title, **kwargs)
+        qualification = self.db.query(models.UserQualification).filter_by(owner_id=self.user.id).first()
         rating = models.JobRating(
             owner_id=self.user.id,
             scraped_job_id=job.id,
+            user_qualification_id=qualification.id,
             is_success=False,
+            llm_model="XX",
         )
         self.db.add(rating)
         self.db.commit()
