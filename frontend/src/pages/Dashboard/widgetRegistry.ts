@@ -115,6 +115,7 @@ export interface VariantDef {
 	description?: string;
 	premiumOnly: boolean;
 	group?: string;
+	featured?: boolean;
 }
 
 export interface WidgetTypeDef {
@@ -293,6 +294,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Application volume by date",
 				premiumOnly: false,
 				group: "Jobs",
+				featured: true,
 			},
 			{
 				key: "application_status",
@@ -301,6 +303,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Applications split by status",
 				premiumOnly: false,
 				group: "Jobs",
+				featured: true,
 			},
 			{
 				key: "source_aggregator",
@@ -317,6 +320,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Salary ranges across your jobs",
 				premiumOnly: false,
 				group: "Jobs",
+				featured: true,
 			},
 			{
 				key: "attendance_type",
@@ -357,6 +361,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Interview volume by date",
 				premiumOnly: false,
 				group: "Interviews",
+				featured: true,
 			},
 			{
 				key: "interview_type",
@@ -389,6 +394,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Pipeline from applied to offer",
 				premiumOnly: false,
 				group: "Jobs",
+				featured: true,
 			},
 			{
 				key: "update_date",
@@ -413,6 +419,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Total scraped jobs by platform or alert",
 				premiumOnly: true,
 				group: "Scraped Jobs",
+				featured: true,
 			},
 			{
 				key: "imported_count",

@@ -6,13 +6,18 @@ import {
 	WidgetType,
 	WidgetTypeDef,
 	GraphField,
+	GraphConfig,
+	GraphSource,
 	MetricVariant,
 	TableVariant,
 	TimelineVariant,
 	WidgetInstance,
+	VariantDef,
 	configToVariantKey,
 } from "./widgetRegistry";
-import { getSourceForField } from "./graphAggregations";
+import { getSourceForField, GRAPH_SOURCES } from "./graphAggregations";
+import { CustomSelect } from "../../components/rendering/widgets/CustomSelect";
+import { SelectOption } from "../../components/rendering/form/FormOptions";
 
 interface WidgetPickerModalProps {
 	show: boolean;
@@ -22,8 +27,21 @@ interface WidgetPickerModalProps {
 	currentWidgets: WidgetInstance[];
 }
 
-const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onAddWidget, isPremium, currentWidgets }) => {
+const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
+	show,
+	onHide,
+	onAddWidget,
+	isPremium,
+	currentWidgets,
+}) => {
 	const [selectedType, setSelectedType] = useState<WidgetType | null>(null);
+	const [showCustomGraph, setShowCustomGraph] = useState(false);
+	const [draftSource, setDraftSource] = useState<GraphSource>("jobs");
+	const [draftField, setDraftField] = useState<GraphField | null>(null);
+	const [draftChartType, setDraftChartType] = useState<"line" | "bar" | "pie" | undefined>(undefined);
+	const [draftGranularity, setDraftGranularity] = useState<"week" | "month">("month");
+	const [draftGroupBy, setDraftGroupBy] = useState<"platform" | "alert_name" | "platform_and_alert">("platform");
+
 	const contentRef = useRef<HTMLDivElement>(null);
 	const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
 	const usedKeys = new Set(currentWidgets.map((w) => configToVariantKey(w.config)));
@@ -36,10 +54,16 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 		const ro = new ResizeObserver(() => setContentHeight(el.scrollHeight));
 		ro.observe(el);
 		return () => ro.disconnect();
-	}, [show]);
+	}, [show, selectedType, showCustomGraph]);
 
 	const handleClose = () => {
 		setSelectedType(null);
+		setShowCustomGraph(false);
+		setDraftSource("jobs");
+		setDraftField(null);
+		setDraftChartType(undefined);
+		setDraftGranularity("month");
+		setDraftGroupBy("platform");
 		onHide();
 	};
 
@@ -63,6 +87,33 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 		}
 		onAddWidget(config);
 		handleClose();
+	};
+
+	const handleAddCustomGraph = () => {
+		if (!draftField) return;
+		const fieldMeta = GRAPH_SOURCES[draftSource].fields.find((f) => f.key === draftField);
+		const config: GraphConfig = {
+			type: "graph",
+			source: draftSource,
+			field: draftField,
+			chartType: draftChartType ?? fieldMeta?.defaultChartType,
+			...(fieldMeta?.supportsGranularity && { granularity: draftGranularity }),
+			...(draftSource === "scraped_jobs" && { groupBy: draftGroupBy }),
+		};
+		onAddWidget(config);
+		handleClose();
+	};
+
+	const handleSourceChange = (source: GraphSource) => {
+		setDraftSource(source);
+		setDraftField(null);
+		setDraftChartType(undefined);
+	};
+
+	const handleFieldChange = (field: GraphField) => {
+		setDraftField(field);
+		const fieldMeta = GRAPH_SOURCES[draftSource].fields.find((f) => f.key === field);
+		setDraftChartType(fieldMeta?.defaultChartType);
 	};
 
 	const currentTypeDef = selectedType ? WIDGET_TYPE_DEFS.find((t) => t.type === selectedType) : null;
@@ -95,17 +146,93 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 		cursor: "not-allowed",
 	};
 
+	const renderVariantCard = (variant: VariantDef, typeDef: WidgetTypeDef) => {
+		const locked = variant.premiumOnly && !isPremium;
+		return (
+			<button
+				key={variant.key}
+				id={`widget-picker-variant-${variant.key}`}
+				style={locked ? cardDisabled : cardBase}
+				className="widget-picker-card"
+				onClick={() => !locked && handleAddVariant(typeDef, variant.key)}
+				disabled={locked}
+			>
+				<i className={`bi bi-${variant.icon}`} style={{ fontSize: "1.4rem", color: "var(--primary-mid)" }}></i>
+				<div className="fw-semibold" style={{ fontSize: "0.85rem" }}>
+					{variant.label}
+				</div>
+				{variant.description && (
+					<small className="text-muted" style={{ fontSize: "0.72rem", lineHeight: 1.3 }}>
+						{variant.description}
+					</small>
+				)}
+				{locked && (
+					<span className="badge" style={{ background: "var(--primary-gradient)", fontSize: "0.65rem" }}>
+						<i className="bi bi-star-fill me-1"></i>Premium
+					</span>
+				)}
+				{usedKeys.has(variant.key) && (
+					<span className="badge bg-success" style={{ fontSize: "0.65rem" }}>
+						<i className="bi bi-check2 me-1"></i>Added
+					</span>
+				)}
+			</button>
+		);
+	};
+
+	// Custom graph dropdown options
+	const availableSources = (Object.keys(GRAPH_SOURCES) as GraphSource[]).filter(
+		(src) => isPremium || src !== "scraped_jobs"
+	);
+	const sourceOptions: SelectOption[] = availableSources.map((src) => ({
+		value: src,
+		label: GRAPH_SOURCES[src].label,
+	}));
+	const fieldOptions: SelectOption[] = GRAPH_SOURCES[draftSource].fields.map((f) => ({
+		value: f.key,
+		label: f.label,
+	}));
+	const draftFieldMeta = draftField ? GRAPH_SOURCES[draftSource].fields.find((f) => f.key === draftField) : null;
+	const chartTypeOptions: SelectOption[] = (draftFieldMeta?.supportedChartTypes ?? []).map((ct) => ({
+		value: ct,
+		label: ct.charAt(0).toUpperCase() + ct.slice(1),
+	}));
+	const granularityOptions: SelectOption[] = [
+		{ value: "week", label: "Week" },
+		{ value: "month", label: "Month" },
+	];
+	const groupByOptions: SelectOption[] = [
+		{ value: "platform", label: "Platform" },
+		{ value: "alert_name", label: "Alert Name" },
+		{ value: "platform_and_alert", label: "Platform & Alert" },
+	];
+
+	const getTitle = () => {
+		if (showCustomGraph) return "Custom Graph";
+		if (selectedType) return `Add ${currentTypeDef?.label} Widget`;
+		return "Add Widget";
+	};
+
+	const handleBack = () => {
+		if (showCustomGraph) {
+			setShowCustomGraph(false);
+		} else {
+			setSelectedType(null);
+		}
+	};
+
+	const showBack = selectedType !== null;
+
 	return (
 		<Modal show={show} onHide={handleClose} centered>
 			<Modal.Header closeButton>
 				<Modal.Title style={{ overflow: "visible" }}>
-					{selectedType ? (
+					{showBack ? (
 						<>
 							<Button
 								variant="link"
-								size="sm"
-								className="me-2"
-								onClick={() => setSelectedType(null)}
+										className="me-2"
+								onClick={handleBack}
 								style={{
 									color: "var(--bs-heading-color, var(--bs-body-color)) !important",
 									fontSize: "1.2rem",
@@ -113,12 +240,12 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 									margin: "-2px 0",
 								}}
 							>
-								<i className="bi bi-arrow-left"></i>
+								<i className="bi bi-arrow-left" style={{ color: "white" }}></i>
 							</Button>
-							Add {currentTypeDef?.label} Widget
+							{getTitle()}
 						</>
 					) : (
-						"Add Widget"
+						getTitle()
 					)}
 				</Modal.Title>
 			</Modal.Header>
@@ -129,6 +256,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 				>
 					<div ref={contentRef} className="p-3">
 						{!selectedType ? (
+							// Level 1: widget type picker
 							<div style={squareGrid(WIDGET_TYPE_DEFS.length)}>
 								{WIDGET_TYPE_DEFS.map((typeDef) => {
 									const allPremium = !isPremium && typeDef.variants.every((v) => v.premiumOnly);
@@ -181,50 +309,179 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({ show, onHide, onA
 									);
 								})}
 							</div>
-						) : (
-							<div style={squareGrid(currentTypeDef?.variants.length ?? 0)}>
-								{currentTypeDef?.variants.map((variant) => {
-									const locked = variant.premiumOnly && !isPremium;
-									return (
-										<button
-											key={variant.key}
-											id={`widget-picker-variant-${variant.key}`}
-											style={locked ? cardDisabled : cardBase}
-											className="widget-picker-card"
-											onClick={() => !locked && handleAddVariant(currentTypeDef, variant.key)}
-											disabled={locked}
+						) : showCustomGraph ? (
+							// Level 3: custom graph configurator
+							<div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+								<div>
+									<label
+										style={{
+											fontSize: "0.78rem",
+											fontWeight: 600,
+											textTransform: "uppercase",
+											letterSpacing: "0.05em",
+											color: "var(--bs-secondary-color)",
+											marginBottom: "0.3rem",
+											display: "block",
+										}}
+									>
+										Source
+									</label>
+									<CustomSelect
+										id="custom-graph-source"
+										value={sourceOptions.find((o) => o.value === draftSource) ?? null}
+										onChange={(opt) =>
+											opt && !Array.isArray(opt) && handleSourceChange(opt.value as GraphSource)
+										}
+										options={sourceOptions}
+										isSearchable={false}
+										isClearable={false}
+													/>
+								</div>
+								<div>
+									<label
+										style={{
+											fontSize: "0.78rem",
+											fontWeight: 600,
+											textTransform: "uppercase",
+											letterSpacing: "0.05em",
+											color: "var(--bs-secondary-color)",
+											marginBottom: "0.3rem",
+											display: "block",
+										}}
+									>
+										Display
+									</label>
+									<CustomSelect
+										id="custom-graph-field"
+										value={fieldOptions.find((o) => o.value === draftField) ?? null}
+										onChange={(opt) =>
+											opt && !Array.isArray(opt) && handleFieldChange(opt.value as GraphField)
+										}
+										options={fieldOptions}
+										isSearchable={false}
+										isClearable={false}
+										placeholder="Select a field…"
+													/>
+								</div>
+								{draftFieldMeta && draftFieldMeta.supportedChartTypes.length > 1 && (
+									<div>
+										<label
+											style={{
+												fontSize: "0.78rem",
+												fontWeight: 600,
+												textTransform: "uppercase",
+												letterSpacing: "0.05em",
+												color: "var(--bs-secondary-color)",
+												marginBottom: "0.3rem",
+												display: "block",
+											}}
 										>
-											<i
-												className={`bi bi-${variant.icon}`}
-												style={{ fontSize: "1.4rem", color: "var(--primary-mid)" }}
-											></i>
-											<div className="fw-semibold" style={{ fontSize: "0.85rem" }}>
-												{variant.label}
-											</div>
-											{variant.description && (
-												<small className="text-muted" style={{ fontSize: "0.72rem", lineHeight: 1.3 }}>
-													{variant.description}
-												</small>
-											)}
-											{locked && (
-												<span
-													className="badge"
-													style={{
-														background: "var(--primary-gradient)",
-														fontSize: "0.65rem",
-													}}
-												>
-													<i className="bi bi-star-fill me-1"></i>Premium
-												</span>
-											)}
-										{usedKeys.has(variant.key) && (
-											<span className="badge bg-success" style={{ fontSize: "0.65rem" }}>
-												<i className="bi bi-check2 me-1"></i>Added
-											</span>
-										)}
-										</button>
-									);
-								})}
+											Chart Type
+										</label>
+										<CustomSelect
+											id="custom-graph-chart-type"
+											value={chartTypeOptions.find((o) => o.value === (draftChartType ?? draftFieldMeta.defaultChartType)) ?? null}
+											onChange={(opt) =>
+												opt && !Array.isArray(opt) && setDraftChartType(opt.value as "line" | "bar" | "pie")
+											}
+											options={chartTypeOptions}
+											isSearchable={false}
+											isClearable={false}
+															/>
+									</div>
+								)}
+								{draftFieldMeta?.supportsGranularity && (
+									<div>
+										<label
+											style={{
+												fontSize: "0.78rem",
+												fontWeight: 600,
+												textTransform: "uppercase",
+												letterSpacing: "0.05em",
+												color: "var(--bs-secondary-color)",
+												marginBottom: "0.3rem",
+												display: "block",
+											}}
+										>
+											Period
+										</label>
+										<CustomSelect
+											id="custom-graph-granularity"
+											value={granularityOptions.find((o) => o.value === draftGranularity) ?? null}
+											onChange={(opt) =>
+												opt && !Array.isArray(opt) && setDraftGranularity(opt.value as "week" | "month")
+											}
+											options={granularityOptions}
+											isSearchable={false}
+											isClearable={false}
+															/>
+									</div>
+								)}
+								{draftSource === "scraped_jobs" && (
+									<div>
+										<label
+											style={{
+												fontSize: "0.78rem",
+												fontWeight: 600,
+												textTransform: "uppercase",
+												letterSpacing: "0.05em",
+												color: "var(--bs-secondary-color)",
+												marginBottom: "0.3rem",
+												display: "block",
+											}}
+										>
+											Group By
+										</label>
+										<CustomSelect
+											id="custom-graph-group-by"
+											value={groupByOptions.find((o) => o.value === draftGroupBy) ?? null}
+											onChange={(opt) =>
+												opt && !Array.isArray(opt) && setDraftGroupBy(opt.value as "platform" | "alert_name" | "platform_and_alert")
+											}
+											options={groupByOptions}
+											isSearchable={false}
+											isClearable={false}
+															/>
+									</div>
+								)}
+								<Button
+									variant="primary"
+									disabled={!draftField}
+									onClick={handleAddCustomGraph}
+									style={{ marginTop: "0.25rem" }}
+								>
+									Add Widget
+								</Button>
+							</div>
+						) : selectedType === "graph" ? (
+							// Level 2 (graph): featured presets + Custom card
+							<div style={squareGrid((currentTypeDef?.variants.filter((v) => v.featured).length ?? 0) + 1)}>
+								{currentTypeDef?.variants
+									.filter((v) => v.featured)
+									.map((variant) => renderVariantCard(variant, currentTypeDef!))}
+								{/* Custom graph card */}
+								<button
+									id="widget-picker-variant-custom-graph"
+									style={cardBase}
+									className="widget-picker-card"
+									onClick={() => setShowCustomGraph(true)}
+								>
+									<i
+										className="bi bi-sliders"
+										style={{ fontSize: "1.4rem", color: "var(--primary-mid)" }}
+									></i>
+									<div className="fw-semibold" style={{ fontSize: "0.85rem" }}>
+										Custom
+									</div>
+									<small className="text-muted" style={{ fontSize: "0.72rem", lineHeight: 1.3 }}>
+										Build your own chart
+									</small>
+								</button>
+							</div>
+						) : (
+							// Level 2 (other types): show all variants
+							<div style={squareGrid(currentTypeDef?.variants.length ?? 0)}>
+								{currentTypeDef?.variants.map((variant) => renderVariantCard(variant, currentTypeDef!))}
 							</div>
 						)}
 					</div>
