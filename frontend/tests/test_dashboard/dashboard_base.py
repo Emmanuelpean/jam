@@ -99,6 +99,12 @@ class DashboardTestBase(BaseTest):
         self.db.refresh(fav)
         return fav
 
+    def _create_scraped_job_with_failed_rating(self, title: str = "Failed Rating Job", **kwargs) -> models.ScrapedJob:
+        """Create a scraped job that has a failed JobRating (is_success=False)."""
+        job = self._create_scraped_job(title=title, **kwargs)
+        self._create_job_rating(job, is_success=False, llm_model="XX")
+        return job
+
     def _reload(self) -> None:
         """Reload the dashboard page and wait for data to finish loading."""
         self.driver.refresh()

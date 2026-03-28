@@ -40,22 +40,6 @@ class TestJobScrapingTable(BaseTest):
         self.db.refresh(job)
         return job
 
-    def _make_job_rating(self, scraped_job: models.ScrapedJob, **kwargs) -> models.JobRating:
-        """Create and persist a JobRating linked to the given scraped job."""
-
-        qualification = self.db.query(models.UserQualification).filter_by(owner_id=self.db_user.id).first()
-        defaults = {
-            "scraped_job_id": scraped_job.id,
-            "owner_id": self.db_user.id,
-            "user_qualification_id": qualification.id,
-        }
-        defaults.update(kwargs)
-        rating = models.JobRating(**defaults)
-        self.db.add(rating)
-        self.db.commit()
-        self.db.refresh(rating)
-        return rating
-
     def show_job(self, scraped_job: models.ScrapedJob) -> None:
         """Show a job in the table.
         :param scraped_job: The scraped job to show."""
@@ -376,7 +360,7 @@ class TestJobScrapingTable(BaseTest):
         """Test that a scraped job with a rating is displayed correctly."""
 
         scraped_job = self._make_scraped_job(title="Rated Test Job", is_scraped=True)
-        self._make_job_rating(
+        self._create_job_rating(
             scraped_job,
             overall_score=4,
             technical_score=5,
@@ -397,7 +381,7 @@ class TestJobScrapingTable(BaseTest):
         """Test that a scraped job with a failed rating is displayed correctly."""
 
         scraped_job = self._make_scraped_job(title="Failed Rating Test Job", is_scraped=True)
-        self._make_job_rating(
+        self._create_job_rating(
             scraped_job, is_success=False, error="Failed to scrape job details: Page not found", llm_model="chatgpt"
         )
         self.driver.refresh()
@@ -411,7 +395,7 @@ class TestJobScrapingTable(BaseTest):
         """Test that a scraped job with a skipped rating is displayed correctly."""
 
         scraped_job = self._make_scraped_job(title="Skipped Rating Test Job", is_scraped=True)
-        self._make_job_rating(
+        self._create_job_rating(
             scraped_job,
             is_success=False,
             is_skipped=True,
@@ -429,7 +413,7 @@ class TestJobScrapingTable(BaseTest):
         """Test that a scraped job with a rating with notes is displayed correctly."""
 
         scraped_job = self._make_scraped_job(title="Rating With Notes Test Job", is_scraped=True)
-        self._make_job_rating(
+        self._create_job_rating(
             scraped_job,
             overall_score=6,
             technical_score=7,

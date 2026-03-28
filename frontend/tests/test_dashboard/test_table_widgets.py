@@ -4,7 +4,6 @@ import datetime as dt
 
 from selenium.webdriver.common.by import By
 
-from app import models
 from dashboard_base import DashboardTestBase
 
 FOLLOW_UP_TABLE = "table-card-follow_up"
@@ -462,21 +461,6 @@ class TestFailedJobsWidget(DashboardTestBase):
 
     def _empty_state_visible(self) -> bool:
         return self.check_element_exists(f"{FAILED_JOBS_TABLE}-empty")
-
-    def _create_scraped_job_with_failed_rating(self, title: str = "Failed Rating Job", **kwargs) -> models.ScrapedJob:
-        """Create a scraped job that has a failed JobRating (is_success=False)."""
-        job = self._create_scraped_job(title=title, **kwargs)
-        qualification = self.db.query(models.UserQualification).filter_by(owner_id=self.user.id).first()
-        rating = models.JobRating(
-            owner_id=self.user.id,
-            scraped_job_id=job.id,
-            user_qualification_id=qualification.id,
-            is_success=False,
-            llm_model="XX",
-        )
-        self.db.add(rating)
-        self.db.commit()
-        return job
 
     # ---------------------------------------------------- TESTS ----------------------------------------------------
 

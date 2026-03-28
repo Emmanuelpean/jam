@@ -2044,6 +2044,25 @@ class BaseTest(BaseUtils):
 
         return self.db.query(models.User).filter(models.User.email == email).all()
 
+    def _create_job_rating(self, scraped_job: models.ScrapedJob, **kwargs) -> models.JobRating:
+        """Create and persist a JobRating linked to the given scraped job.
+
+        Automatically resolves user_qualification_id from the test user's qualifications.
+        Requires test_user_qualifications fixture to be loaded.
+        """
+        qualification = self.db.query(models.UserQualification).filter_by(owner_id=self.user.id).first()
+        defaults = {
+            "owner_id": self.user.id,
+            "scraped_job_id": scraped_job.id,
+            "user_qualification_id": qualification.id,
+        }
+        defaults.update(kwargs)
+        rating = models.JobRating(**defaults)
+        self.db.add(rating)
+        self.db.commit()
+        self.db.refresh(rating)
+        return rating
+
 
 def contiguous_subdicts(dictionary: dict) -> list[dict]:
     """Return a list of all contiguous sub-dictionaries in the given dictionary.
