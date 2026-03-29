@@ -1,14 +1,4 @@
 import { LayoutItem } from "react-grid-layout";
-// V1 layout data type (kept for migration only)
-interface DashboardLayoutData {
-	version: number;
-	visibleCards: string[];
-	layouts: {
-		lg: LayoutItem[];
-		md: LayoutItem[];
-		sm: LayoutItem[];
-	};
-}
 
 // Default positions for the built-in layout (replaces legacy cardRegistry)
 const DEFAULT_POSITIONS: Record<string, Omit<LayoutItem, "i">> = {
@@ -102,16 +92,6 @@ export type WidgetConfig = MetricConfig | TableConfig | TimelineConfig | GraphCo
 export interface WidgetInstance {
 	id: string;
 	config: WidgetConfig;
-}
-
-interface DashboardLayoutDataV2 {
-	version: 2;
-	widgets: WidgetInstance[];
-	layouts: {
-		lg: LayoutItem[];
-		md: LayoutItem[];
-		sm: LayoutItem[];
-	};
 }
 
 export interface DashboardLayoutDataV3 {
@@ -541,41 +521,6 @@ function filterPremium(data: DashboardLayoutDataV3, isPremium: boolean): Dashboa
 	};
 }
 
-// --- V1 → V2 migration ---
-
-const OLD_ID_TO_CONFIG: Record<string, WidgetConfig> = {
-	"stat-total-jobs": { type: "metric", metric: "total_jobs" },
-	"stat-applications": { type: "metric", metric: "applications" },
-	"stat-pending": { type: "metric", metric: "pending" },
-	"stat-follow-up": { type: "metric", metric: "follow_up" },
-	"follow-up-table": { type: "table", source: "follow_up" },
-	"upcoming-deadlines": { type: "table", source: "upcoming_deadlines" },
-	"job-alerts": { type: "table", source: "job_alerts" },
-	"recent-activity": { type: "timeline", feed: "recent_activity" },
-	"upcoming-interviews": { type: "timeline", feed: "upcoming_interviews" },
-};
-
-function migrateV1toV3(v1: DashboardLayoutData): DashboardLayoutDataV3 {
-	const widgets: WidgetInstance[] = [];
-	const oldToNewId: Record<string, string> = {};
-
-	for (const oldId of v1.visibleCards) {
-		const config = OLD_ID_TO_CONFIG[oldId];
-		if (!config) continue;
-		const newId = `w-migrated-${oldId}`;
-		oldToNewId[oldId] = newId;
-		widgets.push({ id: newId, config });
-	}
-
-	const layout = v1.layouts.lg.filter((l) => l.i in oldToNewId).map((l) => ({ ...l, i: oldToNewId[l.i]! }));
-
-	return { version: 3, widgets, layout };
-}
-
-function migrateV2toV3(v2: DashboardLayoutDataV2): DashboardLayoutDataV3 {
-	return { version: 3, widgets: v2.widgets, layout: v2.layouts.lg };
-}
-
 // --- Default layout ---
 
 export function getDefaultLayout(isPremium: boolean): DashboardLayoutDataV3 {
@@ -613,12 +558,6 @@ export function parseLayoutData(data: string | null, isPremium: boolean): Dashbo
 	if (!data) return getDefaultLayout(isPremium);
 	try {
 		const parsed = JSON.parse(data) as Record<string, unknown>;
-		if (parsed.version === 1 && parsed.visibleCards && parsed.layouts) {
-			return filterPremium(migrateV1toV3(parsed as unknown as DashboardLayoutData), isPremium);
-		}
-		if (parsed.version === 2 && parsed.widgets && parsed.layouts) {
-			return filterPremium(migrateV2toV3(parsed as unknown as DashboardLayoutDataV2), isPremium);
-		}
 		if (parsed.version === 3 && parsed.widgets && parsed.layout) {
 			return filterPremium(parsed as unknown as DashboardLayoutDataV3, isPremium);
 		}
