@@ -308,9 +308,9 @@ textarea.form-control {
 
 /* Multi select tag style */
 @keyframes tagRemove {
-    0%   { opacity: 1; transform: translateX(0);    max-width: 300px; margin: 1.8px; padding: 5.4px 7.2px; }
-    45%  { opacity: 0; transform: translateX(20px); max-width: 300px; margin: 1.8px; padding: 5.4px 7.2px; }
-    100% { opacity: 0; transform: translateX(20px); max-width: 0;    margin: 0;      padding-left: 0; padding-right: 0; }
+    0%   { clip-path: inset(0 0%    0 0); max-width: 300px; margin: 1.8px; padding: 5.4px 7.2px; }
+    95%  { clip-path: inset(0 100%  0 0); max-width: 300px; margin: 1.8px; padding: 5.4px 7.2px; }
+    100% { clip-path: inset(0 100%  0 0); max-width: 0;     margin: 0;     padding-left: 0; padding-right: 0; }
 }
 
 .jam-select__tag {
@@ -344,17 +344,21 @@ textarea.form-control {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    min-width: 18px !important;
-    min-height: 18px !important;
-    margin-left: 3.6px !important;
-    padding: 3.6px !important;
+    width: 18px !important;
+    height: 18px !important;
+    padding: 4px !important;
     color: white !important;
-    border-radius: 3.6px !important;
+    border-radius: 4px !important;
     background-color: var(--primary-end) !important;
     border: none !important;
     cursor: pointer !important;
     font-size: 14px !important;
     line-height: 1 !important;
+    transition: filter 0.15s ease;
+}
+
+.jam-select__tag-remove:hover {
+    filter: brightness(1.25) !important;
 }
 
 /* Search input */
@@ -699,6 +703,11 @@ textarea.form-control {
     letter-spacing: 0.025em;
     text-transform: uppercase;
     border-radius: 7.2px;
+    display: inline-block;
+    overflow: hidden;
+    max-width: 100%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .badge:hover {
@@ -752,17 +761,6 @@ textarea.form-control {
     display: flex;
     flex-wrap: wrap;
     row-gap: 4.5px;
-}
-
-// Make badges truncate on smaller screens
-@media (width <= $tablet-breakpoint) {
-    .badge {
-        display: inline-block;
-        overflow: hidden;
-        max-width: 100%;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-    }
 }
 
 /* ---------------------------------------------------- CHECKBOX ---------------------------------------------------- */

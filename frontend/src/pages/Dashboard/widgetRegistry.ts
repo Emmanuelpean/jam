@@ -31,7 +31,13 @@ export type MetricVariant =
 	| "active_applications"
 	| "interview_rate"
 	| "avg_response_time";
-export type TableVariant = "follow_up" | "upcoming_deadlines" | "job_alerts" | "favourites" | "favourite_jobs" | "error_jobs";
+export type TableVariant =
+	| "follow_up"
+	| "upcoming_deadlines"
+	| "job_alerts"
+	| "favourites"
+	| "favourite_jobs"
+	| "error_jobs";
 export type TimelineVariant =
 	| "recent_activity"
 	| "upcoming_interviews"
@@ -61,7 +67,7 @@ export type GraphField =
 	| "import_rate"
 	| "applied_rate";
 
-export type WidgetType = "metric" | "table" | "timeline" | "graph";
+export type WidgetType = "metric" | "table" | "timeline" | "graph" | "map";
 
 export interface MetricConfig {
 	type: "metric";
@@ -75,15 +81,23 @@ export interface TimelineConfig {
 	type: "timeline";
 	feed: TimelineVariant;
 }
+
+export type ChartType = "line" | "bar" | "pie";
+
 export interface GraphConfig {
 	type: "graph";
 	source: GraphSource;
 	field: GraphField;
-	chartType?: "line" | "bar" | "pie";
+	chartType?: ChartType;
 	granularity?: "week" | "month";
 	groupBy?: "platform" | "alert_name" | "platform_and_alert";
 }
-export type WidgetConfig = MetricConfig | TableConfig | TimelineConfig | GraphConfig;
+export type MapMetric = "job_count" | "avg_salary" | "keywords";
+export interface MapConfig {
+	type: "map";
+	metric: MapMetric;
+}
+export type WidgetConfig = MetricConfig | TableConfig | TimelineConfig | GraphConfig | MapConfig;
 
 export interface WidgetInstance {
 	id: string;
@@ -456,6 +470,36 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 		],
 		defaultLayout: { x: 0, y: 0, w: 6, h: 12, minW: 3, minH: 8 },
 	},
+	{
+		type: "map",
+		label: "Map",
+		icon: "pin-map",
+		description: "Geographic view of your jobs",
+		variants: [
+			{
+				key: "job_count",
+				label: "Jobs by Location",
+				icon: "pin-map-fill",
+				description: "Number of jobs at each location",
+				premiumOnly: false,
+			},
+			{
+				key: "avg_salary",
+				label: "Salary by Location",
+				icon: "cash-stack",
+				description: "Average salary at each location",
+				premiumOnly: false,
+			},
+			{
+				key: "keywords",
+				label: "Keywords by Location",
+				icon: "tags",
+				description: "Top tags at each location",
+				premiumOnly: false,
+			},
+		],
+		defaultLayout: { x: 0, y: 0, w: 8, h: 14, minW: 4, minH: 10 },
+	},
 ];
 
 // --- Helpers ---
@@ -474,6 +518,8 @@ export function configToVariantKey(config: WidgetConfig): string {
 			return config.feed;
 		case "graph":
 			return config.field;
+		case "map":
+			return config.metric;
 	}
 }
 

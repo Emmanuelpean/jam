@@ -34,14 +34,16 @@ export interface CustomSelectProps {
 interface AddButtonIndicatorProps {
 	addButton: NonNullable<CustomSelectProps["addButton"]>;
 	parentData?: any;
+	onClose: () => void;
 }
 
-const AddButtonIndicator = ({ addButton, parentData }: AddButtonIndicatorProps): JSX.Element => {
+const AddButtonIndicator = ({ addButton, parentData, onClose }: AddButtonIndicatorProps): JSX.Element => {
 	const [hover, setHover] = useState(false);
 
 	const handleMouseDown = (e: React.MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
+		onClose();
 		const { modalRef, transformParentData, onSuccess } = addButton;
 		const cb = onSuccess ?? (() => {});
 		if (transformParentData && parentData) {
@@ -504,7 +506,7 @@ export const CustomSelect = ({
 									tabIndex={-1}
 									aria-label={`Remove ${v.label}`}
 								>
-									×
+									<i className="bi bi-x" />
 								</button>
 							</div>
 						))}
@@ -549,7 +551,7 @@ export const CustomSelect = ({
 					)}
 					<span className="jam-select__separator" aria-hidden="true" />
 					{addButton ? (
-						<AddButtonIndicator addButton={addButton} parentData={parentData} />
+						<AddButtonIndicator addButton={addButton} parentData={parentData} onClose={closeMenu} />
 					) : (
 						<i
 							className={`bi bi-chevron-down jam-select__arrow${isOpen ? " jam-select__arrow--open" : ""}${isOpen && menuPlacedAbove ? " jam-select__arrow--above" : ""}`}

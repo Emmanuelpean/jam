@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, JSX } from "react";
 import { Modal, Button } from "react-bootstrap";
 import {
 	WIDGET_TYPE_DEFS,
@@ -8,14 +8,16 @@ import {
 	GraphField,
 	GraphConfig,
 	GraphSource,
+	MapMetric,
 	MetricVariant,
 	TableVariant,
 	TimelineVariant,
 	WidgetInstance,
 	VariantDef,
 	configToVariantKey,
+	ChartType,
 } from "./widgetRegistry";
-import { getSourceForField, GRAPH_SOURCES } from "./graphAggregations";
+import { getSourceForField, GRAPH_SOURCES, GraphFieldMeta } from "./graphAggregations";
 import { CustomSelect } from "../../components/rendering/widgets/CustomSelect";
 import { SelectOption } from "../../components/rendering/form/FormOptions";
 
@@ -33,7 +35,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 	onAddWidget,
 	isPremium,
 	currentWidgets,
-}) => {
+}: WidgetPickerModalProps): JSX.Element => {
 	const [selectedType, setSelectedType] = useState<WidgetType | null>(null);
 	const [showCustomGraph, setShowCustomGraph] = useState(false);
 	const [draftSource, setDraftSource] = useState<GraphSource>("jobs");
@@ -44,11 +46,11 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 
 	const contentRef = useRef<HTMLDivElement>(null);
 	const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
-	const usedKeys = new Set(currentWidgets.map((w) => configToVariantKey(w.config)));
+	const usedKeys = new Set(currentWidgets.map((w: WidgetInstance): string => configToVariantKey(w.config)));
 
 	useEffect(() => {
 		if (!show) return;
-		const el = contentRef.current;
+		const el: HTMLDivElement | null = contentRef.current;
 		if (!el) return;
 		setContentHeight(el.scrollHeight);
 		const ro = new ResizeObserver(() => setContentHeight(el.scrollHeight));
@@ -84,6 +86,9 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 				config = { type: "graph", source: getSourceForField(field), field };
 				break;
 			}
+			case "map":
+				config = { type: "map", metric: variantKey as MapMetric };
+				break;
 		}
 		onAddWidget(config);
 		handleClose();
@@ -91,7 +96,9 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 
 	const handleAddCustomGraph = () => {
 		if (!draftField) return;
-		const fieldMeta = GRAPH_SOURCES[draftSource].fields.find((f) => f.key === draftField);
+		const fieldMeta: GraphFieldMeta | undefined = GRAPH_SOURCES[draftSource].fields.find(
+			(f: GraphFieldMeta): boolean => f.key === draftField
+		);
 		const config: GraphConfig = {
 			type: "graph",
 			source: draftSource,
@@ -104,22 +111,26 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 		handleClose();
 	};
 
-	const handleSourceChange = (source: GraphSource) => {
+	const handleSourceChange = (source: GraphSource): void => {
 		setDraftSource(source);
 		setDraftField(null);
 		setDraftChartType(undefined);
 	};
 
-	const handleFieldChange = (field: GraphField) => {
+	const handleFieldChange = (field: GraphField): void => {
 		setDraftField(field);
-		const fieldMeta = GRAPH_SOURCES[draftSource].fields.find((f) => f.key === field);
+		const fieldMeta: GraphFieldMeta | undefined = GRAPH_SOURCES[draftSource].fields.find(
+			(f: GraphFieldMeta): boolean => f.key === field
+		);
 		setDraftChartType(fieldMeta?.defaultChartType);
 	};
 
-	const currentTypeDef = selectedType ? WIDGET_TYPE_DEFS.find((t) => t.type === selectedType) : null;
+	const currentTypeDef: WidgetTypeDef | null | undefined = selectedType
+		? WIDGET_TYPE_DEFS.find((t: WidgetTypeDef): boolean => t.type === selectedType)
+		: null;
 
 	const squareGrid = (count: number): React.CSSProperties => {
-		const cols = Math.ceil(Math.sqrt(count));
+		const cols: number = Math.ceil(Math.sqrt(count));
 		return { display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: "0.5rem" };
 	};
 
@@ -146,15 +157,15 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 		cursor: "not-allowed",
 	};
 
-	const renderVariantCard = (variant: VariantDef, typeDef: WidgetTypeDef) => {
-		const locked = variant.premiumOnly && !isPremium;
+	const renderVariantCard = (variant: VariantDef, typeDef: WidgetTypeDef): JSX.Element => {
+		const locked: boolean = variant.premiumOnly && !isPremium;
 		return (
 			<button
 				key={variant.key}
 				id={`widget-picker-variant-${variant.key}`}
 				style={locked ? cardDisabled : cardBase}
 				className="widget-picker-card"
-				onClick={() => !locked && handleAddVariant(typeDef, variant.key)}
+				onClick={(): false | void => !locked && handleAddVariant(typeDef, variant.key)}
 				disabled={locked}
 			>
 				<i className={`bi bi-${variant.icon}`} style={{ fontSize: "1.4rem", color: "var(--primary-mid)" }}></i>
@@ -181,22 +192,30 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 	};
 
 	// Custom graph dropdown options
-	const availableSources = (Object.keys(GRAPH_SOURCES) as GraphSource[]).filter(
-		(src) => isPremium || src !== "scraped_jobs"
+	const availableSources: GraphSource[] = (Object.keys(GRAPH_SOURCES) as GraphSource[]).filter(
+		(src: GraphSource): boolean => isPremium || src !== "scraped_jobs"
 	);
-	const sourceOptions: SelectOption[] = availableSources.map((src) => ({
-		value: src,
-		label: GRAPH_SOURCES[src].label,
-	}));
-	const fieldOptions: SelectOption[] = GRAPH_SOURCES[draftSource].fields.map((f) => ({
-		value: f.key,
-		label: f.label,
-	}));
-	const draftFieldMeta = draftField ? GRAPH_SOURCES[draftSource].fields.find((f) => f.key === draftField) : null;
-	const chartTypeOptions: SelectOption[] = (draftFieldMeta?.supportedChartTypes ?? []).map((ct) => ({
-		value: ct,
-		label: ct.charAt(0).toUpperCase() + ct.slice(1),
-	}));
+	const sourceOptions: SelectOption[] = availableSources.map(
+		(src: GraphSource): SelectOption => ({
+			value: src,
+			label: GRAPH_SOURCES[src].label,
+		})
+	);
+	const fieldOptions: SelectOption[] = GRAPH_SOURCES[draftSource].fields.map(
+		(f: GraphFieldMeta): SelectOption => ({
+			value: f.key,
+			label: f.label,
+		})
+	);
+	const draftFieldMeta: GraphFieldMeta | null | undefined = draftField
+		? GRAPH_SOURCES[draftSource].fields.find((f: GraphFieldMeta): boolean => f.key === draftField)
+		: null;
+	const chartTypeOptions: SelectOption[] = (draftFieldMeta?.supportedChartTypes ?? []).map(
+		(ct: ChartType): SelectOption => ({
+			value: ct,
+			label: ct.charAt(0).toUpperCase() + ct.slice(1),
+		})
+	);
 	const granularityOptions: SelectOption[] = [
 		{ value: "week", label: "Week" },
 		{ value: "month", label: "Month" },
@@ -207,13 +226,13 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 		{ value: "platform_and_alert", label: "Platform & Alert" },
 	];
 
-	const getTitle = () => {
+	const getTitle = (): string => {
 		if (showCustomGraph) return "Custom Graph";
 		if (selectedType) return `Add ${currentTypeDef?.label} Widget`;
 		return "Add Widget";
 	};
 
-	const handleBack = () => {
+	const handleBack = (): void => {
 		if (showCustomGraph) {
 			setShowCustomGraph(false);
 		} else {
@@ -221,7 +240,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 		}
 	};
 
-	const showBack = selectedType !== null;
+	const showBack: boolean = selectedType !== null;
 
 	return (
 		<Modal show={show} onHide={handleClose} centered>
@@ -231,7 +250,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 						<>
 							<Button
 								variant="link"
-										className="me-2"
+								className="me-2"
 								onClick={handleBack}
 								style={{
 									color: "var(--bs-heading-color, var(--bs-body-color)) !important",
@@ -258,15 +277,16 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 						{!selectedType ? (
 							// Level 1: widget type picker
 							<div style={squareGrid(WIDGET_TYPE_DEFS.length)}>
-								{WIDGET_TYPE_DEFS.map((typeDef) => {
-									const allPremium = !isPremium && typeDef.variants.every((v) => v.premiumOnly);
+								{WIDGET_TYPE_DEFS.map((typeDef: WidgetTypeDef): JSX.Element => {
+									const allPremium: boolean =
+										!isPremium && typeDef.variants.every((v: VariantDef): boolean => v.premiumOnly);
 									return (
 										<button
 											key={typeDef.type}
 											id={`widget-picker-type-${typeDef.type}`}
 											style={allPremium ? cardDisabled : cardBase}
 											className="widget-picker-card"
-											onClick={() => !allPremium && setSelectedType(typeDef.type)}
+											onClick={(): false | void => !allPremium && setSelectedType(typeDef.type)}
 											disabled={allPremium}
 										>
 											<div
@@ -328,14 +348,17 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 									</label>
 									<CustomSelect
 										id="custom-graph-source"
-										value={sourceOptions.find((o) => o.value === draftSource) ?? null}
-										onChange={(opt) =>
+										value={
+											sourceOptions.find((o: SelectOption): boolean => o.value === draftSource) ??
+											null
+										}
+										onChange={(opt: SelectOption | SelectOption[] | null): false | void | null =>
 											opt && !Array.isArray(opt) && handleSourceChange(opt.value as GraphSource)
 										}
 										options={sourceOptions}
 										isSearchable={false}
 										isClearable={false}
-													/>
+									/>
 								</div>
 								<div>
 									<label
@@ -353,15 +376,18 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 									</label>
 									<CustomSelect
 										id="custom-graph-field"
-										value={fieldOptions.find((o) => o.value === draftField) ?? null}
-										onChange={(opt) =>
+										value={
+											fieldOptions.find((o: SelectOption): boolean => o.value === draftField) ??
+											null
+										}
+										onChange={(opt: SelectOption | SelectOption[] | null): false | void | null =>
 											opt && !Array.isArray(opt) && handleFieldChange(opt.value as GraphField)
 										}
 										options={fieldOptions}
 										isSearchable={false}
 										isClearable={false}
 										placeholder="Select a field…"
-													/>
+									/>
 								</div>
 								{draftFieldMeta && draftFieldMeta.supportedChartTypes.length > 1 && (
 									<div>
@@ -380,14 +406,23 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 										</label>
 										<CustomSelect
 											id="custom-graph-chart-type"
-											value={chartTypeOptions.find((o) => o.value === (draftChartType ?? draftFieldMeta.defaultChartType)) ?? null}
-											onChange={(opt) =>
-												opt && !Array.isArray(opt) && setDraftChartType(opt.value as "line" | "bar" | "pie")
+											value={
+												chartTypeOptions.find(
+													(o: SelectOption): boolean =>
+														o.value === (draftChartType ?? draftFieldMeta.defaultChartType)
+												) ?? null
+											}
+											onChange={(
+												opt: SelectOption | SelectOption[] | null
+											): false | void | null =>
+												opt &&
+												!Array.isArray(opt) &&
+												setDraftChartType(opt.value as "line" | "bar" | "pie")
 											}
 											options={chartTypeOptions}
 											isSearchable={false}
 											isClearable={false}
-															/>
+										/>
 									</div>
 								)}
 								{draftFieldMeta?.supportsGranularity && (
@@ -407,14 +442,22 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 										</label>
 										<CustomSelect
 											id="custom-graph-granularity"
-											value={granularityOptions.find((o) => o.value === draftGranularity) ?? null}
-											onChange={(opt) =>
-												opt && !Array.isArray(opt) && setDraftGranularity(opt.value as "week" | "month")
+											value={
+												granularityOptions.find(
+													(o: SelectOption): boolean => o.value === draftGranularity
+												) ?? null
+											}
+											onChange={(
+												opt: SelectOption | SelectOption[] | null
+											): false | void | null =>
+												opt &&
+												!Array.isArray(opt) &&
+												setDraftGranularity(opt.value as "week" | "month")
 											}
 											options={granularityOptions}
 											isSearchable={false}
 											isClearable={false}
-															/>
+										/>
 									</div>
 								)}
 								{draftSource === "scraped_jobs" && (
@@ -434,14 +477,24 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 										</label>
 										<CustomSelect
 											id="custom-graph-group-by"
-											value={groupByOptions.find((o) => o.value === draftGroupBy) ?? null}
-											onChange={(opt) =>
-												opt && !Array.isArray(opt) && setDraftGroupBy(opt.value as "platform" | "alert_name" | "platform_and_alert")
+											value={
+												groupByOptions.find(
+													(o: SelectOption): boolean => o.value === draftGroupBy
+												) ?? null
+											}
+											onChange={(
+												opt: SelectOption | SelectOption[] | null
+											): false | void | null =>
+												opt &&
+												!Array.isArray(opt) &&
+												setDraftGroupBy(
+													opt.value as "platform" | "alert_name" | "platform_and_alert"
+												)
 											}
 											options={groupByOptions}
 											isSearchable={false}
 											isClearable={false}
-															/>
+										/>
 									</div>
 								)}
 								<Button
@@ -455,16 +508,24 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 							</div>
 						) : selectedType === "graph" ? (
 							// Level 2 (graph): featured presets + Custom card
-							<div style={squareGrid((currentTypeDef?.variants.filter((v) => v.featured).length ?? 0) + 1)}>
+							<div
+								style={squareGrid(
+									(currentTypeDef?.variants.filter((v: VariantDef): boolean | undefined => v.featured)
+										.length ?? 0) + 1
+								)}
+							>
 								{currentTypeDef?.variants
-									.filter((v) => v.featured)
-									.map((variant) => renderVariantCard(variant, currentTypeDef!))}
+									.filter((v: VariantDef): boolean | undefined => v.featured)
+									.map(
+										(variant: VariantDef): JSX.Element =>
+											renderVariantCard(variant, currentTypeDef!)
+									)}
 								{/* Custom graph card */}
 								<button
 									id="widget-picker-variant-custom-graph"
 									style={cardBase}
 									className="widget-picker-card"
-									onClick={() => setShowCustomGraph(true)}
+									onClick={(): void => setShowCustomGraph(true)}
 								>
 									<i
 										className="bi bi-sliders"
@@ -481,7 +542,9 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 						) : (
 							// Level 2 (other types): show all variants
 							<div style={squareGrid(currentTypeDef?.variants.length ?? 0)}>
-								{currentTypeDef?.variants.map((variant) => renderVariantCard(variant, currentTypeDef!))}
+								{currentTypeDef?.variants.map(
+									(variant: VariantDef): JSX.Element => renderVariantCard(variant, currentTypeDef!)
+								)}
 							</div>
 						)}
 					</div>

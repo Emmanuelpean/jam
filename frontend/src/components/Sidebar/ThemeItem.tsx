@@ -1,4 +1,4 @@
-import React, { CSSProperties, JSX } from "react";
+import React, { CSSProperties, JSX, useMemo } from "react";
 
 export interface ThemeColor {
 	start: string;
@@ -44,7 +44,7 @@ export const ThemeItem: React.FC<ThemeItemProps> = ({
 	onMouseEnter,
 	onMouseLeave,
 }: ThemeItemProps): JSX.Element => {
-	const colors: ThemeColor = getThemeColors(themeKey);
+	const colors: ThemeColor = useMemo(() => getThemeColors(themeKey), [themeKey]);
 
 	const getItemStyle = (): CSSProperties => {
 		const baseStyle: CSSProperties = {

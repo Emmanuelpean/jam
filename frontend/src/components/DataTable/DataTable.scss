@@ -6,6 +6,12 @@ thead.custom-header {
     --bs-table-bg: transparent;
 }
 
+td, th {
+    .form-check-input {
+        margin-top: 0 !important;
+    }
+}
+
 thead.custom-header th {
     color: white;
 
