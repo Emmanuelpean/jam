@@ -1,4 +1,13 @@
 import { DataContextValue } from "../../contexts/DataContext";
+import {
+	appliedViaOptions,
+	applicationStatusOptions,
+	attendanceTypeOptions,
+	interviewAttendanceOptions,
+	interviewTypeOptions,
+	updateTypeOptions,
+	SelectOption,
+} from "../../components/rendering/form/FormOptions";
 import { GraphField, GraphSource } from "./widgetRegistry";
 
 export interface ChartDataPoint {
@@ -109,10 +118,19 @@ function bucketByTime(dates: (Date | string | null | undefined)[], granularity: 
 		.map(([name, value]) => ({ name, value }));
 }
 
-function groupAndCount(values: (string | null | undefined)[], labelFallback = "Unknown"): ChartDataPoint[] {
+function resolveLabel(value: string | null | undefined, options: SelectOption[], fallback: string): string {
+	if (!value) return fallback;
+	return options.find((o) => o.value === value)?.label ?? value;
+}
+
+function groupAndCount(
+	values: (string | null | undefined)[],
+	labelFallback = "Unknown",
+	options?: SelectOption[]
+): ChartDataPoint[] {
 	const counts = new Map<string, number>();
 	for (const v of values) {
-		const label = v || labelFallback;
+		const label = options ? resolveLabel(v, options, labelFallback) : v || labelFallback;
 		counts.set(label, (counts.get(label) ?? 0) + 1);
 	}
 	return Array.from(counts.entries())
@@ -219,7 +237,8 @@ export function aggregateGraphData(
 		case "application_status":
 			return groupAndCount(
 				ctx.jobs.filter((j) => j.application_status).map((j) => j.application_status),
-				"No Status"
+				"No Status",
+				applicationStatusOptions
 			);
 		case "source_aggregator":
 			return aggregateJobsBySource(ctx);
@@ -233,7 +252,8 @@ export function aggregateGraphData(
 		case "attendance_type":
 			return groupAndCount(
 				ctx.jobs.filter((j) => j.attendance_type).map((j) => j.attendance_type),
-				"Not Specified"
+				"Not Specified",
+				attendanceTypeOptions
 			);
 		case "personal_rating":
 			return aggregateJobsByRating(ctx);
@@ -244,21 +264,23 @@ export function aggregateGraphData(
 		case "applied_via":
 			return groupAndCount(
 				ctx.jobs.filter((j) => j.applied_via).map((j) => j.applied_via),
-				"Not Specified"
+				"Not Specified",
+				appliedViaOptions
 			);
 		case "application_funnel":
 			return aggregateApplicationFunnel(ctx);
 		case "interview_type":
-			return groupAndCount(ctx.interviews.map((i) => i.type), "Unknown");
+			return groupAndCount(ctx.interviews.map((i) => i.type), "Unknown", interviewTypeOptions);
 		case "interview_attendance":
 			return groupAndCount(
 				ctx.interviews.filter((i) => i.attendance_type).map((i) => i.attendance_type),
-				"Not Specified"
+				"Not Specified",
+				interviewAttendanceOptions
 			);
 		case "update_date":
 			return bucketByTime(ctx.jobApplicationUpdates.map((u) => u.date), granularity);
 		case "update_type":
-			return groupAndCount(ctx.jobApplicationUpdates.map((u) => u.type), "Unknown");
+			return groupAndCount(ctx.jobApplicationUpdates.map((u) => u.type), "Unknown", updateTypeOptions);
 		default:
 			return [];
 	}
