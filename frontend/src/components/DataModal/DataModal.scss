@@ -159,11 +159,12 @@
     padding-left: 2px;
 }
 
-/* Above mobile: scale width smoothly instead of snapping at Bootstrap's 992px breakpoint */
+/* Above mobile: smooth width per size class, bypassing Bootstrap's breakpoint snapping */
 @media (width > $mobile-breakpoint) {
-    .data-modal .modal-dialog {
-        max-width: min(90vw, 1140px);
-    }
+    .data-modal .modal-dialog { max-width: min(90vw, 500px); }
+    .data-modal .modal-dialog.modal-sm { max-width: min(90vw, 300px); }
+    .data-modal .modal-dialog.modal-lg { max-width: min(90vw, 800px); }
+    .data-modal .modal-dialog.modal-xl { max-width: min(90vw, 1140px); }
 }
 
 /* Mobile fullscreen slide-in from right */

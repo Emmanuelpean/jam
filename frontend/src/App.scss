@@ -760,7 +760,10 @@ textarea.form-control {
 .badge-group {
     display: flex;
     flex-wrap: wrap;
-    row-gap: 4.5px;
+}
+
+.badge-group > span {
+    display: flex;
 }
 
 /* ---------------------------------------------------- CHECKBOX ---------------------------------------------------- */

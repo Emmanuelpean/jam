@@ -31,6 +31,7 @@ const LocationsPage = () => {
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
 			title="Locations"
 			columns={columns}
+			modalSize={"sm"}
 			Modal={LocationModal}
 			enableColumnConfig={true}
 			children={locationMap}

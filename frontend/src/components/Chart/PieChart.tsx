@@ -75,6 +75,7 @@ export const PieChart = ({ data, colors, fontSize = 13, suffix = "" }: PieChartP
 						return <line stroke="var(--bs-body-color)" />;
 					}}
 					fontSize={fontSize}
+					isAnimationActive={false}
 				>
 					{chartData.map((d, i) => (
 						<Cell

@@ -343,15 +343,11 @@ const Dashboard: React.FC = () => {
 							description: "Create favourite filters to pin matching job alerts here",
 						}}
 					>
-						<div
-							style={{ paddingTop: "9px", paddingBottom: "18px", display: "flex", flex: 1, minHeight: 0 }}
-						>
-							<ScrapedJobsTable
-								dashboardMode={true}
-								favouritesOnly={true}
-								onTotalCountChange={setFavouriteAlertCount}
-							/>
-						</div>
+						<ScrapedJobsTable
+							dashboardMode={true}
+							favouritesOnly={true}
+							onTotalCountChange={setFavouriteAlertCount}
+						/>
 					</DashboardCard>
 				);
 			case "error_jobs":

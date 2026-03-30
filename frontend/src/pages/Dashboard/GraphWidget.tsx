@@ -61,7 +61,10 @@ const CustomTooltip = ({ active, payload, label, suffix = "" }: any) => {
 			}}
 		>
 			<p style={{ margin: 0, fontWeight: 600, color: "var(--bs-body-color)" }}>{entry.name ?? label}</p>
-			<p style={{ margin: 0, color: entry.color ?? "var(--bs-body-color)" }}>{entry.value}{suffix}</p>
+			<p style={{ margin: 0, color: entry.color ?? "var(--bs-body-color)" }}>
+				{entry.value}
+				{suffix}
+			</p>
 		</div>
 	);
 };
@@ -83,7 +86,14 @@ const renderLineChart = (data: ChartDataPoint[], suffix = "") => (
 				tickFormatter={(v) => `${v}${suffix}`}
 			/>
 			<Tooltip content={<CustomTooltip suffix={suffix} />} />
-			<Line type="monotone" dataKey="value" stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ r: 3 }} />
+			<Line
+				type="monotone"
+				dataKey="value"
+				stroke={CHART_COLORS[0]}
+				strokeWidth={2}
+				dot={{ r: 3 }}
+				isAnimationActive={false}
+			/>
 		</LineChart>
 	</ResponsiveContainer>
 );
@@ -110,6 +120,7 @@ const renderBarChart = (data: ChartDataPoint[], suffix = "") => (
 			<Tooltip content={<CustomTooltip suffix={suffix} />} />
 			<Bar
 				dataKey="value"
+				isAnimationActive={false}
 				shape={(props: any) => (
 					<Rectangle
 						{...props}
@@ -163,7 +174,10 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 					numerator.set(key, (numerator.get(key) ?? 0) + stat[numeratorKey]);
 				}
 				return Array.from(scraped.entries())
-					.map(([name, total]) => ({ name, value: total > 0 ? Math.round((numerator.get(name)! / total) * 100) : 0 }))
+					.map(([name, total]) => ({
+						name,
+						value: total > 0 ? Math.round((numerator.get(name)! / total) * 100) : 0,
+					}))
 					.sort((a, b) => b.value - a.value);
 			}
 			const metricKey = config.field as "scraped_count" | "imported_count" | "applied_count";
@@ -177,7 +191,15 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 				.map(([name, value]) => ({ name, value }));
 		}
 		return aggregateGraphData(config.field, dataContext, effectiveGranularity);
-	}, [config.source, config.field, config.groupBy, rawPlatformStats, effectiveGroupBy, dataContext, effectiveGranularity]);
+	}, [
+		config.source,
+		config.field,
+		config.groupBy,
+		rawPlatformStats,
+		effectiveGroupBy,
+		dataContext,
+		effectiveGranularity,
+	]);
 
 	const handleSourceChange = (newSource: GraphSource) => {
 		if (newSource === config.source) return;
@@ -237,14 +259,16 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 			bodyPadding={false}
 			headerAction={
 				isEditMode ? (
-					<Button
-						className="graph-sidebar-toggle"
-						variant={`${sidebarOpen ? "primary" : "outline-primary"}`}
-						onClick={(): void => setSidebarOpen((prev: boolean): boolean => !prev)}
-						title="Configure"
-					>
-						<i className={`bi bi-gear`}></i>
-					</Button>
+					<div style={{ paddingRight: "1rem" }}>
+						<Button
+							className="graph-sidebar-toggle"
+							variant={`${sidebarOpen ? "primary" : "outline-primary"}`}
+							onClick={(): void => setSidebarOpen((prev: boolean): boolean => !prev)}
+							title="Configure"
+						>
+							<i className={`bi bi-gear`}></i>
+						</Button>
+					</div>
 				) : undefined
 			}
 		>
@@ -289,7 +313,11 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 								<label className="graph-sidebar-label">Group By</label>
 								<CustomSelect
 									id="graph-group-by"
-									value={groupByOptions.find((o: SelectOption): boolean => o.value === effectiveGroupBy) ?? null}
+									value={
+										groupByOptions.find(
+											(o: SelectOption): boolean => o.value === effectiveGroupBy
+										) ?? null
+									}
 									onChange={(opt) =>
 										opt &&
 										!Array.isArray(opt) &&

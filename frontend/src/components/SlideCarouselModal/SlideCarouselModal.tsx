@@ -83,8 +83,15 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 		if (!slide) return <></>;
 
 		return (
-			<Modal show={show} onHide={markAsSeen} centered size="lg" className="slide-carousel-modal" id={id}
-				onEntered={measureSlides}>
+			<Modal
+				show={show}
+				onHide={markAsSeen}
+				centered
+				size="lg"
+				className="slide-carousel-modal"
+				id={id}
+				onEntered={measureSlides}
+			>
 				<ModalHeader onClose={markAsSeen}>
 					<Modal.Title>
 						<i className={`bi bi-${titleIcon} me-2`} />
@@ -108,7 +115,11 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 							</div>
 						))}
 					</div>
-					<div key={currentStep} className={`carousel-step${direction ? ` slide-${direction}` : ""}`} style={slideHeight ? { minHeight: slideHeight } : undefined}>
+					<div
+						key={currentStep}
+						className={`carousel-step${direction ? ` slide-${direction}` : ""}`}
+						style={slideHeight ? { minHeight: slideHeight } : undefined}
+					>
 						{slide.image ? (
 							<img src={slide.image} alt={slide.title} className="carousel-step-image" />
 						) : (
@@ -125,7 +136,10 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 								<button
 									key={index}
 									className={`carousel-dot ${index === currentStep ? "active" : ""}`}
-									onClick={() => { setDirection(index > currentStep ? "next" : "prev"); setCurrentStep(index); }}
+									onClick={() => {
+										setDirection(index > currentStep ? "next" : "prev");
+										setCurrentStep(index);
+									}}
 									aria-label={`Go to slide ${index + 1}`}
 								/>
 							)

@@ -370,8 +370,15 @@ export const CustomSelect = ({
 				onMouseEnter={(e) => {
 					setFocusedIndex(flatIdx);
 					if (!isClickingOptionRef.current && previewHandlers) {
+						if (window.innerWidth <= 768) return;
 						const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-						previewHandlers.onHover(opt, { top: rect.top, left: rect.right + 10 });
+						const GAP = 20;
+						const PREVIEW_WIDTH = 450;
+						const spaceRight = window.innerWidth - rect.right;
+						const left = spaceRight >= rect.left
+							? rect.right + GAP
+							: rect.left - GAP - PREVIEW_WIDTH;
+						previewHandlers.onHover(opt, { top: rect.top, left });
 					}
 				}}
 				onMouseLeave={() => {

@@ -14,7 +14,7 @@ export const InterviewModal = forwardRef<DataModalHandle<InterviewData>, Intervi
 	({ size = "lg", jobId }: InterviewModalProps, ref) => {
 		const locationModalRef = useRef<DataModalHandle>(null);
 		const personModalRef = useRef<DataModalHandle>(null);
-		const { locations, persons, jobs } = useFormOptions();
+		const { locations, persons, jobs, getPersonPreviewConfig, getLocationPreviewConfig } = useFormOptions();
 
 		const formFieldsArray: Fields = [
 			...(!jobId ? [formFields.job(jobs)] : []),
@@ -26,13 +26,13 @@ export const InterviewModal = forwardRef<DataModalHandle<InterviewData>, Intervi
 			],
 			[
 				formFields.interviewAttendanceType(),
-				formFields.location(locations, locationModalRef, null, null, {
+				formFields.location(locations, locationModalRef, null, getLocationPreviewConfig, {
 					displayCondition: (formData: JobData): boolean => {
 						return formData.attendance_type === "on-site";
 					},
 				}),
 			],
-			formFields.interviewers(persons, personModalRef),
+			formFields.interviewers(persons, personModalRef, null, getPersonPreviewConfig),
 			formFields.note({
 				placeholder: "Add notes about the interview, questions asked, impressions, etc...",
 			}),

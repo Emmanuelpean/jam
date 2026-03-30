@@ -177,6 +177,7 @@ export const LineChart = ({
 							stroke={series.color}
 							hide={hiddenSeries.has(series.id)}
 							strokeWidth={2}
+							isAnimationActive={false}
 						/>
 					)
 				)}

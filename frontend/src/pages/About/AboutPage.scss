@@ -168,3 +168,7 @@ body[data-mode="dark"] .link-gradient-purple:hover {
     color: white;
     letter-spacing: 0.2px;
 }
+
+.main-content:has(.gradient-bg) {
+    flex: none;
+}

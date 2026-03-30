@@ -94,29 +94,25 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 
 	const getCompanyPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
-		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.url(), [modalViewFields.description()]],
+		fields: [modalViewFields.url(), [modalViewFields.description()]],
 		getDataById: (id: number) => findItemById(dataContext.companies, id),
 	};
 
 	const getPersonPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
-		fields: [
-			modalViewFields.name({ isTitle: true }),
-			modalViewFields.email(),
-			[modalViewFields.companyBadge(), modalViewFields.role()],
-		],
+		fields: [modalViewFields.email(), [modalViewFields.companyBadge(), modalViewFields.role()]],
 		getDataById: (id: number) => findItemById(dataContext.persons, id),
 	};
 
 	const getLocationPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
-		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.locationMap({ label: "" })],
+		fields: [modalViewFields.locationMap({ label: "" })],
 		getDataById: (id: number) => findItemById(dataContext.locations, id),
 	};
 
 	const getAggregatorPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
-		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.url()],
+		fields: [modalViewFields.url()],
 		getDataById: (id: number) => findItemById(dataContext.aggregators, id),
 	};
 

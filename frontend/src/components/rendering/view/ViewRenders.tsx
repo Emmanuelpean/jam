@@ -632,12 +632,14 @@ export const renderFunctions = {
 
 		if (keywords.length > 0) {
 			return (
-				<div className="badge-group">
-					{keywords.map((keyword, index) => (
-						<span key={keyword.id || index} className="me-1">
-							<KeywordBadge item={keyword} badgeId={`${param.id}-${index}`} />
-						</span>
-					))}
+				<div className="badge-group" style={param.view ? { rowGap: "0.35rem" } : { rowGap: "0.15rem" }}>
+					{keywords.map(
+						(keyword: KeywordData, index: number): JSX.Element => (
+							<span key={keyword.id || index} className="me-1">
+								<KeywordBadge item={keyword} badgeId={`${param.id}-${index}`} />
+							</span>
+						)
+					)}
 				</div>
 			);
 		}
@@ -650,17 +652,19 @@ export const renderFunctions = {
 
 		if (persons.length > 0) {
 			return (
-				<div className="badge-group">
-					{persons.map((person: PersonData, index: number) => (
-						<span key={person.id || index} className="me-1">
-							<PersonBadge
-								item={person}
-								badgeId={`${param.id}-${index}`}
-								menuItemKeys={menuItemKeys}
-								parentItem={parent}
-							/>
-						</span>
-					))}
+				<div className="badge-group" style={param.view ? { rowGap: "0.35rem" } : { rowGap: "0.15rem" }}>
+					{persons.map(
+						(person: PersonData, index: number): JSX.Element => (
+							<span key={person.id || index} className="me-1">
+								<PersonBadge
+									item={person}
+									badgeId={`${param.id}-${index}`}
+									menuItemKeys={menuItemKeys}
+									parentItem={parent}
+								/>
+							</span>
+						)
+					)}
 				</div>
 			);
 		}

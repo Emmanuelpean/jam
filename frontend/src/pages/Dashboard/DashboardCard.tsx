@@ -59,7 +59,9 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 				<div className="mb-3">
 					<i className={`bi bi-${emptyState.icon} text-muted`} style={{ fontSize: "3.5rem" }}></i>
 				</div>
-				<h6 id={id ? `${id}-empty` : undefined} className="text-muted fw-semibold">{emptyState.title}</h6>
+				<h6 id={id ? `${id}-empty` : undefined} className="text-muted fw-semibold">
+					{emptyState.title}
+				</h6>
 				<p className="text-muted small mb-0">{emptyState.description}</p>
 			</div>
 		);
@@ -83,7 +85,11 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 						</div>
 					</div>
 					<div className="d-flex align-items-center gap-2" style={{ height: "100%" }}>
-						{badgeValue != null && <div id={id ? `${id}-badge` : undefined} className="table-count-badge">{badgeValue}</div>}
+						{badgeValue != null && (
+							<div id={id ? `${id}-badge` : undefined} className="table-count-badge">
+								{badgeValue}
+							</div>
+						)}
 						{headerAction}
 					</div>
 				</div>

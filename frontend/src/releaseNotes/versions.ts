@@ -1,6 +1,7 @@
 import V1_0_0 from "./V1_0_0";
 import V1_1_0 from "./V1_1_0";
 import V1_2_0 from "./V1_2_0";
+import V1_3_0 from "./V1_3_0";
 import followupGif from "../assets/demo_gifs/followup_email.gif";
 import speculativeApplicationGif from "../assets/demo_gifs/speculative_application.gif";
 import scrapingFilterGif from "../assets/demo_gifs/scraping_filter.gif";
@@ -11,8 +12,8 @@ import interviewsPng from "../assets/screenshots/interviews.png";
 import deadlinesPng from "../assets/screenshots/deadlines.png";
 import { getEntityIcon } from "../components/rendering/view/Icons";
 
-export type version = "1.0.0" | "1.1.0" | "1.2.0";
-export const VERSIONS: version[] = ["1.0.0", "1.1.0", "1.2.0"];
+export type version = "1.0.0" | "1.1.0" | "1.2.0" | "1.3.0";
+export const VERSIONS: version[] = ["1.0.0", "1.1.0", "1.2.0", "1.3.0"];
 export const LAST_VERSION: version = VERSIONS[VERSIONS.length - 1]!;
 
 export interface ReleaseSlide {
@@ -26,6 +27,7 @@ export const releaseNotes: Record<version, string> = {
 	"1.0.0": V1_0_0,
 	"1.1.0": V1_1_0,
 	"1.2.0": V1_2_0,
+	"1.3.0": V1_3_0,
 };
 
 export const WELCOME_SLIDES: ReleaseSlide[] = [
@@ -197,6 +199,30 @@ export const RELEASE_SLIDES: Record<version, ReleaseSlide[]> = {
 				"Job sources can be specified as Recruiter, Recruitment Company, Aggregator, or Other. " +
 				"Improved error messages with one-click support email. " +
 				"Rejected, Offered, and Withdrawn jobs are hidden from the Needs Chase table.",
+		},
+	],
+	"1.3.0": [
+		{
+			icon: "grid-1x2",
+			title: "Customisable Dashboard",
+			description:
+				"Your dashboard is now fully customisable. Add, remove, resize, and rearrange widgets in edit mode. " +
+				"Choose from Metric, Table, Timeline, Graph, and Map widget types, or build a custom graph from your own data.",
+			image: dashboardPng,
+		},
+		{
+			icon: "table",
+			title: "Customisable Table Columns",
+			description:
+				"All data tables now support column customisation. Show or hide columns to focus on what matters, " +
+				"with preferences saved per table.",
+		},
+		{
+			icon: "star-fill",
+			title: "Favourite Filters for Job Alerts",
+			description:
+				"Save your favourite filter configurations on the Job Alerts page and apply them with a single click. " +
+				"A dedicated Favourite Job Alerts dashboard widget highlights matching jobs at a glance.",
 		},
 	],
 };

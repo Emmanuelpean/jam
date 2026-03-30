@@ -10,12 +10,12 @@ import { PersonData, PersonTransform } from "../../services/schemas/DataTables";
 export const PersonModal = forwardRef<DataModalHandle<PersonData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const companyModalRef = React.useRef<DataModalHandle>(null);
-		const { companies } = useFormOptions();
+		const { companies, getCompanyPreviewConfig } = useFormOptions();
 		const dataContext: DataContextValue = useDataContext();
 
 		const formFieldsArray: Fields = [
 			[formFields.firstName({ placeholder: "Jane" }), formFields.lastName({ placeholder: "Doe" })],
-			[formFields.company(companies, companyModalRef), formFields.role({ placeholder: "Team Leader" })],
+			[formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig), formFields.role({ placeholder: "Team Leader" })],
 			[formFields.email({ placeholder: "jane.doe@company.com" }), formFields.phone()],
 			formFields.linkedinUrl({ placeholder: "https://linkedin.com/in/janedoe" }),
 			formFields.isRecruiter(),

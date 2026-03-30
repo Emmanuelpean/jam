@@ -40,6 +40,11 @@ export const FloatingPreview = ({ data, fields, position, show }: FloatingPrevie
 			newLeft = viewportWidth - previewRect.width - 20;
 		}
 
+		// Check if preview would overflow left edge
+		if (newLeft < 20) {
+			newLeft = 20;
+		}
+
 		setAdjustedPosition({ top: newTop, left: newLeft });
 	}, [show, position]);
 

@@ -11,7 +11,7 @@
     max-height: 450px;
     margin: 0;
     pointer-events: auto;
-    border: solid 1px #ccc;
+    border: solid 1px var(--bs-border-color);
     border-radius: 7px;
 }
 
@@ -36,7 +36,7 @@
     height: 0;
     content: "";
     border-top: 11px solid transparent;
-    border-right: 11px solid white;
+    border-right: 11px solid var(--bs-card-bg);
     border-bottom: 11px solid transparent;
 }
 
@@ -49,6 +49,6 @@
     height: 0;
     content: "";
     border-top: 11px solid transparent;
-    border-right: 11px solid rgb(0 0 0 / 5%);
+    border-right: 11px solid var(--bs-border-color-translucent);
     border-bottom: 11px solid transparent;
 }

@@ -32,7 +32,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 		const aggregatorModalRef = useRef<DataModalHandle>(null);
 		const keywordModalRef = useRef<DataModalHandle>(null);
 		const { currentUser } = useAuth();
-		const { companies, locations, keywords, persons, aggregators } = useFormOptions();
+		const { companies, locations, keywords, persons, aggregators, getCompanyPreviewConfig, getPersonPreviewConfig, getLocationPreviewConfig, getAggregatorPreviewConfig } = useFormOptions();
 
 		const jobFormFields: Fields = [
 			{
@@ -42,7 +42,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				icon: "bi-briefcase",
 				fields: [
 					formFields.jobTitle({ placeholder: "Python Software Engineer" }),
-					[formFields.company(companies, companyModalRef), formFields.jobURl()],
+					[formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig), formFields.jobURl()],
 				],
 			} as SectionConfig,
 			{
@@ -50,7 +50,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				key: "location-schedule",
 				title: "Location",
 				icon: "bi-geo-alt",
-				fields: [[formFields.attendanceType(), formFields.location(locations, locationModalRef)]],
+				fields: [[formFields.attendanceType(), formFields.location(locations, locationModalRef, null, getLocationPreviewConfig)]],
 			} as SectionConfig,
 			{
 				type: "section",
@@ -70,18 +70,18 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				fields: [
 					[
 						formFields.sourceType(),
-						formFields.aggregator(aggregators, aggregatorModalRef, null, null, {
+						formFields.aggregator(aggregators, aggregatorModalRef, null, getAggregatorPreviewConfig, {
 							name: "source_aggregator_id",
 							displayCondition: (formData: JobDataTransform): boolean => {
 								return ["aggregator", "aggregator_email"].includes(formData.source_type || "");
 							},
 						}),
-						formFields.recruiter(persons, personModalRef, null, null, {
+						formFields.recruiter(persons, personModalRef, null, getPersonPreviewConfig, {
 							displayCondition: (formData: JobDataTransform): boolean => {
 								return formData.source_type ? formData.source_type === "recruiter" : false;
 							},
 						}),
-						formFields.company(companies, companyModalRef, null, null, {
+						formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig, {
 							name: "recruitment_company_id",
 							displayCondition: (formData: JobDataTransform): boolean => {
 								return formData.source_type ? formData.source_type === "recruitment_company" : false;
@@ -96,7 +96,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				title: "Tags & Contacts",
 				icon: "bi-tags",
 				fields: [
-					[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
+					[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef, null, getPersonPreviewConfig)],
 				],
 			} as SectionConfig,
 			{
@@ -205,7 +205,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 					[formFields.applicationDate(), formFields.applicationStatus()],
 					[
 						formFields.applicationVia(),
-						formFields.aggregator(aggregators, aggregatorModalRef, null, null, {
+						formFields.aggregator(aggregators, aggregatorModalRef, null, getAggregatorPreviewConfig, {
 							name: "application_aggregator_id",
 							displayCondition: (formData: JobDataTransform): boolean => {
 								return formData.applied_via ? formData.applied_via === "aggregator" : true;
