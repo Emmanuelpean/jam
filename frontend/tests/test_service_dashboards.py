@@ -13,6 +13,7 @@ import uuid
 from datetime import datetime, timezone
 
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
 
 from base_test import BaseTest, models
 
@@ -261,8 +262,11 @@ class TestJobRatingDashboardErrors(ServiceDashboardBase):
     def test_errors_display(self) -> None:
         """Critical and rating errors both appear in the Error Summary card."""
 
-        # Wait for errors to load
-        self.wait.until(lambda d: self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text)
+        # Wait for errors to load — rating tab requires 3 chained API calls (logs → 2x errors),
+        # so use a 30s timeout rather than the default 10s to avoid intermittent CI failures.
+        WebDriverWait(self.driver, 30).until(
+            lambda d: self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text
+        )
         error_card = self.driver.find_element(By.ID, "error-summary-card")
 
         # Critical Errors column: rating service logs with error_message in the date range
