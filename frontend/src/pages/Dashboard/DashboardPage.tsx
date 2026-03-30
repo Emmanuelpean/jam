@@ -26,11 +26,13 @@ import {
 	getDefaultLayout,
 	getDefaultLayoutForConfig,
 	GraphConfig,
+	MapConfig,
 	parseLayoutData,
 	WidgetConfig,
 	WidgetInstance,
 } from "./widgetRegistry";
 import GraphWidget from "./GraphWidget";
+import MapWidget from "./MapWidget";
 import { useDashboardData } from "./useDashboardData";
 import { useAlert } from "../../contexts/AlertContext";
 import WidgetPickerModal from "./WidgetPickerModal";
@@ -468,6 +470,8 @@ const Dashboard: React.FC = () => {
 						isEditMode={isEditMode}
 					/>
 				);
+			case "map":
+				return <MapWidget config={config as MapConfig} />;
 		}
 	};
 

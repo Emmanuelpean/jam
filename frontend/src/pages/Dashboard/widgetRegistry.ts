@@ -1,14 +1,4 @@
 import { LayoutItem } from "react-grid-layout";
-// V1 layout data type (kept for migration only)
-interface DashboardLayoutData {
-	version: number;
-	visibleCards: string[];
-	layouts: {
-		lg: LayoutItem[];
-		md: LayoutItem[];
-		sm: LayoutItem[];
-	};
-}
 
 // Default positions for the built-in layout (replaces legacy cardRegistry)
 const DEFAULT_POSITIONS: Record<string, Omit<LayoutItem, "i">> = {
@@ -31,7 +21,13 @@ export type MetricVariant =
 	| "active_applications"
 	| "interview_rate"
 	| "avg_response_time";
-export type TableVariant = "follow_up" | "upcoming_deadlines" | "job_alerts" | "favourites" | "favourite_jobs" | "error_jobs";
+export type TableVariant =
+	| "follow_up"
+	| "upcoming_deadlines"
+	| "job_alerts"
+	| "favourites"
+	| "favourite_jobs"
+	| "error_jobs";
 export type TimelineVariant =
 	| "recent_activity"
 	| "upcoming_interviews"
@@ -61,7 +57,7 @@ export type GraphField =
 	| "import_rate"
 	| "applied_rate";
 
-export type WidgetType = "metric" | "table" | "timeline" | "graph";
+export type WidgetType = "metric" | "table" | "timeline" | "graph" | "map";
 
 export interface MetricConfig {
 	type: "metric";
@@ -75,29 +71,27 @@ export interface TimelineConfig {
 	type: "timeline";
 	feed: TimelineVariant;
 }
+
+export type ChartType = "line" | "bar" | "pie";
+
 export interface GraphConfig {
 	type: "graph";
 	source: GraphSource;
 	field: GraphField;
-	chartType?: "line" | "bar" | "pie";
+	chartType?: ChartType;
 	granularity?: "week" | "month";
 	groupBy?: "platform" | "alert_name" | "platform_and_alert";
 }
-export type WidgetConfig = MetricConfig | TableConfig | TimelineConfig | GraphConfig;
+export type MapMetric = "job_count" | "avg_salary" | "keywords";
+export interface MapConfig {
+	type: "map";
+	metric: MapMetric;
+}
+export type WidgetConfig = MetricConfig | TableConfig | TimelineConfig | GraphConfig | MapConfig;
 
 export interface WidgetInstance {
 	id: string;
 	config: WidgetConfig;
-}
-
-interface DashboardLayoutDataV2 {
-	version: 2;
-	widgets: WidgetInstance[];
-	layouts: {
-		lg: LayoutItem[];
-		md: LayoutItem[];
-		sm: LayoutItem[];
-	};
 }
 
 export interface DashboardLayoutDataV3 {
@@ -115,6 +109,7 @@ export interface VariantDef {
 	description?: string;
 	premiumOnly: boolean;
 	group?: string;
+	featured?: boolean;
 }
 
 export interface WidgetTypeDef {
@@ -293,6 +288,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Application volume by date",
 				premiumOnly: false,
 				group: "Jobs",
+				featured: true,
 			},
 			{
 				key: "application_status",
@@ -301,6 +297,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Applications split by status",
 				premiumOnly: false,
 				group: "Jobs",
+				featured: true,
 			},
 			{
 				key: "source_aggregator",
@@ -317,6 +314,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Salary ranges across your jobs",
 				premiumOnly: false,
 				group: "Jobs",
+				featured: true,
 			},
 			{
 				key: "attendance_type",
@@ -357,6 +355,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Interview volume by date",
 				premiumOnly: false,
 				group: "Interviews",
+				featured: true,
 			},
 			{
 				key: "interview_type",
@@ -389,6 +388,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Pipeline from applied to offer",
 				premiumOnly: false,
 				group: "Jobs",
+				featured: true,
 			},
 			{
 				key: "update_date",
@@ -413,6 +413,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				description: "Total scraped jobs by platform or alert",
 				premiumOnly: true,
 				group: "Scraped Jobs",
+				featured: true,
 			},
 			{
 				key: "imported_count",
@@ -449,6 +450,36 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 		],
 		defaultLayout: { x: 0, y: 0, w: 6, h: 12, minW: 3, minH: 8 },
 	},
+	{
+		type: "map",
+		label: "Map",
+		icon: "pin-map",
+		description: "Geographic view of your jobs",
+		variants: [
+			{
+				key: "job_count",
+				label: "Jobs by Location",
+				icon: "pin-map-fill",
+				description: "Number of jobs at each location",
+				premiumOnly: false,
+			},
+			{
+				key: "avg_salary",
+				label: "Salary by Location",
+				icon: "cash-stack",
+				description: "Average salary at each location",
+				premiumOnly: false,
+			},
+			{
+				key: "keywords",
+				label: "Keywords by Location",
+				icon: "tags",
+				description: "Top tags at each location",
+				premiumOnly: false,
+			},
+		],
+		defaultLayout: { x: 0, y: 0, w: 8, h: 14, minW: 4, minH: 10 },
+	},
 ];
 
 // --- Helpers ---
@@ -467,6 +498,8 @@ export function configToVariantKey(config: WidgetConfig): string {
 			return config.feed;
 		case "graph":
 			return config.field;
+		case "map":
+			return config.metric;
 	}
 }
 
@@ -486,41 +519,6 @@ function filterPremium(data: DashboardLayoutDataV3, isPremium: boolean): Dashboa
 		widgets: filteredWidgets,
 		layout: data.layout.filter((l) => widgetIds.has(l.i)),
 	};
-}
-
-// --- V1 → V2 migration ---
-
-const OLD_ID_TO_CONFIG: Record<string, WidgetConfig> = {
-	"stat-total-jobs": { type: "metric", metric: "total_jobs" },
-	"stat-applications": { type: "metric", metric: "applications" },
-	"stat-pending": { type: "metric", metric: "pending" },
-	"stat-follow-up": { type: "metric", metric: "follow_up" },
-	"follow-up-table": { type: "table", source: "follow_up" },
-	"upcoming-deadlines": { type: "table", source: "upcoming_deadlines" },
-	"job-alerts": { type: "table", source: "job_alerts" },
-	"recent-activity": { type: "timeline", feed: "recent_activity" },
-	"upcoming-interviews": { type: "timeline", feed: "upcoming_interviews" },
-};
-
-function migrateV1toV3(v1: DashboardLayoutData): DashboardLayoutDataV3 {
-	const widgets: WidgetInstance[] = [];
-	const oldToNewId: Record<string, string> = {};
-
-	for (const oldId of v1.visibleCards) {
-		const config = OLD_ID_TO_CONFIG[oldId];
-		if (!config) continue;
-		const newId = `w-migrated-${oldId}`;
-		oldToNewId[oldId] = newId;
-		widgets.push({ id: newId, config });
-	}
-
-	const layout = v1.layouts.lg.filter((l) => l.i in oldToNewId).map((l) => ({ ...l, i: oldToNewId[l.i]! }));
-
-	return { version: 3, widgets, layout };
-}
-
-function migrateV2toV3(v2: DashboardLayoutDataV2): DashboardLayoutDataV3 {
-	return { version: 3, widgets: v2.widgets, layout: v2.layouts.lg };
 }
 
 // --- Default layout ---
@@ -560,12 +558,6 @@ export function parseLayoutData(data: string | null, isPremium: boolean): Dashbo
 	if (!data) return getDefaultLayout(isPremium);
 	try {
 		const parsed = JSON.parse(data) as Record<string, unknown>;
-		if (parsed.version === 1 && parsed.visibleCards && parsed.layouts) {
-			return filterPremium(migrateV1toV3(parsed as unknown as DashboardLayoutData), isPremium);
-		}
-		if (parsed.version === 2 && parsed.widgets && parsed.layouts) {
-			return filterPremium(migrateV2toV3(parsed as unknown as DashboardLayoutDataV2), isPremium);
-		}
 		if (parsed.version === 3 && parsed.widgets && parsed.layout) {
 			return filterPremium(parsed as unknown as DashboardLayoutDataV3, isPremium);
 		}

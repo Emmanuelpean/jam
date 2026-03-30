@@ -94,6 +94,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
 				{currentUser && <Sidebar />}
 				<div
+					className={currentUser ? "sidebar-content-offset" : ""}
 					style={{
 						flex: 1,
 						minWidth: 0,
