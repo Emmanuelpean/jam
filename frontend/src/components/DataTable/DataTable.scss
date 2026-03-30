@@ -212,26 +212,6 @@ thead.custom-header th {
     gap: 0.5rem;
 }
 
-@media (width <= $mobile-breakpoint) {
-    .datatable-toolbar {
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .datatable-toolbar-search {
-        flex: unset;
-        width: 100%;
-    }
-
-    .datatable-toolbar-count {
-        display: none;
-    }
-
-    .datatable-toolbar-actions {
-        width: 100%;
-        justify-content: flex-end;
-    }
-}
 
 .bulk-actions-dropdown .dropdown-divider {
     margin: 4px 0;

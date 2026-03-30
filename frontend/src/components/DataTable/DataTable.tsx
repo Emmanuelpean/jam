@@ -176,6 +176,7 @@ function DataTableComponent<T extends JamData>(
 	const columnConfig: ColumnConfig = useColumnConfig(entityType, enableColumnConfig ? columns : undefined);
 	const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
 	const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
 	const effectiveColumns: TableColumn[] = enableColumnConfig ? columnConfig.visibleColumns : columns;
 	const columnSidebarRef = useRef<HTMLDivElement>(null);
 	const dataContext: DataContextValue = useDataContext();
@@ -195,6 +196,12 @@ function DataTableComponent<T extends JamData>(
 	const openImportModal = (item: T): void | undefined => modalRef.current?.showImport(item);
 
 	useImperativeHandle(ref, () => ({ openAddModal, clearSelection: () => setSelectedIds(new Set()) }));
+
+	useEffect(() => {
+		const handleResize = (): void => setIsMobile(window.innerWidth <= 768);
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
+	}, []);
 
 	// Close sidebars on outside click
 	useEffect(() => {
@@ -735,9 +742,10 @@ function DataTableComponent<T extends JamData>(
 			<div className={`table-container${!compact ? " table-container--full-height" : ""}`}>
 				<div
 					className={`datatable-toolbar ${compact ? "mb-2" : "mb-3"}${compact ? " datatable-toolbar--compact" : ""}`}
+					style={isMobile && showSearch && !compact && !smallSearch ? { flexWrap: "wrap" as const, gap: "0.5rem" } : undefined}
 				>
 					{showSearch && !compact && (
-						<div className="datatable-toolbar-search">
+						<div className="datatable-toolbar-search" style={isMobile && !smallSearch ? { flex: "0 0 100%" } : undefined}>
 							<div className="search-input-wrapper">
 								<input
 									type="text"
@@ -752,14 +760,14 @@ function DataTableComponent<T extends JamData>(
 									<ClearButton onClick={() => setSearchTerm("")} ariaLabel="Clear search" size="md" />
 								)}
 							</div>
-							<span className="datatable-toolbar-count text-muted small">
+							<span className="datatable-toolbar-count text-muted small" style={isMobile ? { display: "none" } : undefined}>
 								Showing {totalFilteredCount} of {totalCount} Entries
 							</span>
 						</div>
 					)}
 					<div
 						className="datatable-toolbar-actions"
-						style={compact ? { width: "100%" } : showAdd && mode !== "import" ? { flex: 1 } : undefined}
+						style={compact ? { width: "100%" } : isMobile ? { width: "100%" } : showAdd && mode !== "import" ? { flex: 1 } : undefined}
 					>
 						{toolbarAddon && <div className="datatable-toolbar-addon">{toolbarAddon}</div>}
 						{showAdd && mode !== "import" && (
