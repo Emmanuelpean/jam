@@ -23,7 +23,7 @@
 
 /* Hover effect - darken slightly */
 .email-service-dropdown:hover {
-    transition: var(--transition);
+    transition: all var(--transition);
     transform: translateY(-2px);
     background: var(--primary-hover-gradient);
     box-shadow: 0 7px 22px var(--jam-glow),

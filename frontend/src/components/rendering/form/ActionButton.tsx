@@ -108,7 +108,7 @@ export const ActionButton = ({
 
 	const button: JSX.Element = (
 		<div
-			tabIndex={0}
+			tabIndex={-1}
 			style={{
 				cursor: "not-allowed",
 				flex: "1 1",

@@ -10,7 +10,7 @@
 
 body {
     --danger-color: #e74c3c;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     --logo-font-family: "Quicksand", sans-serif;
 }
 
@@ -154,7 +154,7 @@ html {
     font-size: 0.95rem;
     min-height: 50px;
     padding: 0.875rem 1.25rem;
-    transition: var(--transition);
+    transition: all var(--transition);
     border: 3px solid;
     border-color: var(--bs-border-color);
     border-radius: 10px;
@@ -383,7 +383,7 @@ textarea.form-control {
     box-sizing: border-box;
     margin-left: 9.9px;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all var(--transition);
     color: var(--bs-body-color) !important;
 }
 
@@ -603,7 +603,7 @@ textarea.form-control {
     font-size: 1rem;
     font-weight: 600;
     padding: 0.75rem 2rem;
-    transition: var(--transition);
+    transition: transform var(--transition);
     border: none;
     border-radius: 9px;
     text-shadow: 0 1px 1.8px rgb(0 0 0 / 20%);
@@ -632,7 +632,7 @@ textarea.form-control {
 
 .btn-outline-primary,
 .btn-outline-danger {
-    transition: all 0.3s;
+    transition: none;
     color: var(--primary-mid);
     border: 2px solid var(--primary-mid);
     background: transparent;
@@ -649,6 +649,7 @@ textarea.form-control {
     background: var(--primary-gradient);
     color: white;
     border-color: var(--primary-mid);
+    border: none;
     box-shadow: none !important;
 }
 
@@ -815,7 +816,7 @@ textarea.form-control {
     width: 13.5px;
     height: 13.5px;
     content: "";
-    transition: var(--transition);
+    transition: all var(--transition);
     transform: translateY(-50%);
     border-radius: 50%;
     background-color: var(--bs-tertiary-bg);
