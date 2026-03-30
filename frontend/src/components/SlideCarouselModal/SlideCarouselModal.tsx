@@ -103,6 +103,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 					<div ref={measureRef} className="carousel-measure-container">
 						{slides.map((s: ReleaseSlide, i: number) => (
 							<div key={i} className="carousel-step">
+								{s.version && <p className="carousel-step-version">V{s.version}</p>}
 								{s.image ? (
 									<img src={s.image} alt={s.title} className="carousel-step-image" />
 								) : (
@@ -120,6 +121,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 						className={`carousel-step${direction ? ` slide-${direction}` : ""}`}
 						style={slideHeight ? { minHeight: slideHeight } : undefined}
 					>
+						{slide.version && <p className="carousel-step-version">V{slide.version}</p>}
 						{slide.image ? (
 							<img src={slide.image} alt={slide.title} className="carousel-step-image" />
 						) : (

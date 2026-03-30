@@ -21,6 +21,7 @@ export interface ReleaseSlide {
 	title: string;
 	description: string;
 	image?: string;
+	version?: string;
 }
 
 export const releaseNotes: Record<version, string> = {
@@ -245,5 +246,10 @@ export function getReleaseSlidesForLastVersion(): ReleaseSlide[] {
 export function getNewerReleaseSlides(userVersion: string): ReleaseSlide[] {
 	const newer: version[] = VERSIONS.filter((v: version): boolean => compareVersions(v, userVersion) > 0);
 	newer.sort(compareVersions);
-	return newer.flatMap((v: version): ReleaseSlide[] => RELEASE_SLIDES[v] ?? []);
+	const multipleVersions: boolean = newer.length > 1;
+	return newer.flatMap((v: version): ReleaseSlide[] =>
+		(RELEASE_SLIDES[v] ?? []).map((slide: ReleaseSlide): ReleaseSlide =>
+			multipleVersions ? { ...slide, version: v } : slide
+		)
+	);
 }

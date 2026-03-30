@@ -65,6 +65,16 @@
         object-fit: contain;
     }
 
+    .carousel-step-version {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--primary-mid);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        opacity: 0.6;
+        margin-bottom: 0.5rem;
+    }
+
     .carousel-step-title {
         font-weight: 700;
         color: var(--primary-mid);

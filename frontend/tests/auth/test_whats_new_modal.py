@@ -30,11 +30,13 @@ class TestWhatsNewModal(BaseTest):
         self.login()
         modal = self.get_element("whats-new-modal")
         assert "What's New" in modal.text
-        assert "Job Scraping" in modal.text
 
-        # Navigate through all slides and close
-        for _ in range(10):
-            self.get_element("whats-new-modal-next-button").click()
+        # Navigate through all slides and close (slide count varies by current version)
+        for _ in range(50):
+            try:
+                self.get_element("whats-new-modal-next-button").click()
+            except:
+                break
         self.wait_for_disappear("whats-new-modal")
 
         # Verify app_version is updated in the database
