@@ -13,7 +13,6 @@ import uuid
 from datetime import datetime, timezone
 
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
 
 from base_test import BaseTest, models
 
@@ -166,7 +165,7 @@ class TestJobScrapingDashboardErrors(ServiceDashboardBase):
             is_processed=True,
             scrape_error=[{"datetime": "2026-03-16T10:00:00+00:00", "error": self.SCRAPING_ERROR}],
             service_log_id=service_log.id,
-            url="http://test.com",
+            url="https://test.com",
         )
         self.db.add(scraped_job)
         self.db.commit()
@@ -224,7 +223,7 @@ class TestJobRatingDashboardErrors(ServiceDashboardBase):
             owner_id=self.db_user.id,
             is_processed=True,
             service_log_id=scraping_log.id,
-            url="http://test.com",
+            url="https://test.com",
         )
         self.db.add(scraped_job)
         self.db.commit()
@@ -262,11 +261,8 @@ class TestJobRatingDashboardErrors(ServiceDashboardBase):
     def test_errors_display(self) -> None:
         """Critical and rating errors both appear in the Error Summary card."""
 
-        # Wait for errors to load — rating tab requires 3 chained API calls (logs → 2x errors),
-        # so use a 30s timeout rather than the default 10s to avoid intermittent CI failures.
-        WebDriverWait(self.driver, 30).until(
-            lambda d: self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text
-        )
+        # Wait for errors to load
+        self.wait.until(lambda d: self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text)
         error_card = self.driver.find_element(By.ID, "error-summary-card")
 
         # Critical Errors column: rating service logs with error_message in the date range
