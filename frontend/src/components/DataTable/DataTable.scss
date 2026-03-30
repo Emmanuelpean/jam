@@ -10,6 +10,11 @@ td, th {
     .form-check-input {
         margin-top: 0 !important;
     }
+
+    &:has(> .form-check-input:focus) {
+        position: relative;
+        z-index: 100;
+    }
 }
 
 thead.custom-header th {
