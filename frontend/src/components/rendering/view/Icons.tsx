@@ -89,8 +89,8 @@ export const getAdminIcon = (isAdmin: boolean): string => {
 
 export const getTrueFalseBadge = (value: boolean): ReactNode => {
 	if (value) {
-		return <i className="bi bi-check-circle text-success"></i>;
+		return <i className="bi bi-check-circle"></i>;
 	} else {
-		return <i className="bi bi-x-circle text-danger"></i>;
+		return <i className="bi bi-x-circle"></i>;
 	}
 };
