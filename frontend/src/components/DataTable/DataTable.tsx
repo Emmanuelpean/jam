@@ -174,7 +174,7 @@ function DataTableComponent<T extends JamData>(
 	ref: React.Ref<DataTableHandle>
 ): JSX.Element {
 	const { token } = useAuth();
-	const { isMobile } = useViewport();
+	const { isTablet } = useViewport();
 	const columnConfig: ColumnConfig = useColumnConfig(entityType, enableColumnConfig ? columns : undefined);
 	const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
 	const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -718,7 +718,13 @@ function DataTableComponent<T extends JamData>(
 
 	// Whether to split toolbar into two rows on mobile (search on top, actions below)
 	const showAddButton = showAdd && mode !== "import";
-	const hasSecondRow = isMobile && !compact && !smallSearch && (showAddButton || !!toolbarAddon || enableMultiSelect);
+	const hasSecondRow = isTablet && !compact && !smallSearch && (showAddButton || !!toolbarAddon || enableMultiSelect);
+	const hasToolbarContent =
+		(showSearch && !compact) ||
+		!!toolbarAddon ||
+		showAddButton ||
+		enableMultiSelect ||
+		(enableColumnConfig && !compact);
 
 	// Render
 	if (contextError) {
@@ -739,124 +745,137 @@ function DataTableComponent<T extends JamData>(
 			{title && <PageHeader title={title} count={totalFilteredCount || data.length} icon={getTableIcon(title)} />}
 
 			<div className={`table-container${!compact ? " table-container--full-height" : ""}`}>
-				<div
-					className={`datatable-toolbar ${compact ? "mb-2" : "mb-3"}${compact ? " datatable-toolbar--compact" : ""}`}
-					style={
-						hasSecondRow ? { flexWrap: "wrap" as const, gap: "0.5rem" } : undefined
-					}
-				>
-					{showSearch && !compact && (
-						<div
-							className="datatable-toolbar-search"
-							style={hasSecondRow ? { flex: "0 0 100%" } : undefined}
-						>
-							<div className="search-input-wrapper">
-								<input
-									type="text"
-									className="form-control"
-									style={smallSearch ? { height: "35px", minHeight: "unset" } : {}}
-									placeholder="Search..."
-									value={searchTerm}
-									onChange={(e): void => setSearchTerm(e.target.value)}
-									id="search-input"
-								/>
-								{searchTerm && (
-									<ClearButton onClick={() => setSearchTerm("")} ariaLabel="Clear search" size="md" />
-								)}
-							</div>
-							<span
-								className="datatable-toolbar-count text-muted small"
-								style={isMobile ? { display: "none" } : undefined}
-							>
-								Showing {totalFilteredCount} of {totalCount} Entries
-							</span>
-						</div>
-					)}
+				{hasToolbarContent && (
 					<div
-						className="datatable-toolbar-actions"
-						style={
-							compact
-								? { width: "100%" }
-								: hasSecondRow
-									? { width: "100%" }
-									: showAdd && mode !== "import"
-										? { flex: 1 }
-										: undefined
-						}
+						className={`datatable-toolbar ${compact ? "mb-2" : "mb-3"}${compact ? " datatable-toolbar--compact" : ""}`}
+						style={hasSecondRow ? { flexWrap: "wrap" as const, gap: "0.5rem" } : undefined}
 					>
-						{toolbarAddon && <div className="datatable-toolbar-addon">{toolbarAddon}</div>}
-						{showAdd && mode !== "import" && (
-							<Button
-								variant="primary"
-								{...(compact ? { size: "sm" as const } : {})}
-								onClick={() => openAddModal()}
-								className="d-flex align-items-center justify-content-center"
-								style={{
-									flex: compact ? undefined : 1,
-									fontSize: compact ? "0.875rem" : undefined,
-									padding: compact ? "0.25rem 0.5rem" : undefined,
-									height: compact ? "2rem" : undefined,
-									width: "100%",
-								}}
-								id={`add-${entityType}-button`}
+						{showSearch && !compact && (
+							<div
+								className="datatable-toolbar-search"
+								style={hasSecondRow ? { flex: "0 0 100%" } : undefined}
 							>
-								<i className={`bi-plus-circle me-2`} style={{ fontSize: "1.1rem" }}></i>
-								{`Add ${entityName}`}
-							</Button>
+								<div className="search-input-wrapper">
+									<input
+										type="text"
+										className="form-control"
+										style={smallSearch ? { height: "40px", minHeight: "unset" } : {}}
+										placeholder="Search..."
+										value={searchTerm}
+										onChange={(e): void => setSearchTerm(e.target.value)}
+										id="search-input"
+									/>
+									{searchTerm && (
+										<ClearButton
+											onClick={() => setSearchTerm("")}
+											ariaLabel="Clear search"
+											size="md"
+										/>
+									)}
+								</div>
+								<span
+									className="datatable-toolbar-count text-muted small"
+									style={isTablet ? { textAlign: "center" } : undefined}
+								>
+									{isTablet ? (
+										<>
+											Showing {totalFilteredCount}
+											<br /> of {totalCount} Entries
+										</>
+									) : (
+										<>
+											Showing {totalFilteredCount} of {totalCount} Entries
+										</>
+									)}
+								</span>
+							</div>
 						)}
-						{enableMultiSelect && (
-							<BulkActionsDropdown
-								className="ms-auto"
-								selectedCount={selectedIds.size}
-								totalCount={displayTotal}
-								actions={bulkActions}
-								onAction={handleBulkAction}
-								onClearSelection={() => setSelectedIds(new Set())}
-							/>
-						)}
-						{enableColumnConfig && !compact && (
-							<Button
-								id="column-config-toggle-btn"
-								variant={columnSidebarOpen ? "primary" : "outline-primary"}
-								onClick={() => {
-									setColumnSidebarOpen(!columnSidebarOpen);
-									setFilterSidebarOpen(false);
-								}}
-								className={`config-btn${!enableMultiSelect ? " ms-auto" : ""}`}
-								data-sidebar-toggle="column"
-							>
-								<i className="bi bi-gear"></i>
-							</Button>
-						)}
-						{enableColumnConfig && !compact && (
-							<Button
-								id="filter-toggle-btn"
-								variant={filterSidebarOpen ? "primary" : "outline-primary"}
-								className={"config-btn"}
-								onClick={() => {
-									setFilterSidebarOpen(!filterSidebarOpen);
-									setColumnSidebarOpen(false);
-								}}
-								data-sidebar-toggle="filter"
-							>
-								<i className="bi bi-funnel"></i>
-								{activeFilterCount > 0 && (
-									<span
-										className="filter-button-count"
-										style={{
-											position: "absolute",
-											top: "-6px",
-											left: "-6px",
-											fontSize: "0.65rem",
-										}}
-									>
-										{activeFilterCount}
-									</span>
-								)}
-							</Button>
-						)}
+						<div
+							className="datatable-toolbar-actions"
+							style={
+								compact
+									? { width: "100%" }
+									: hasSecondRow
+										? { width: "100%" }
+										: showAdd && mode !== "import"
+											? { flex: 1 }
+											: undefined
+							}
+						>
+							{toolbarAddon && <div className="datatable-toolbar-addon">{toolbarAddon}</div>}
+							{showAdd && mode !== "import" && (
+								<Button
+									variant="primary"
+									{...(compact ? { size: "sm" as const } : {})}
+									onClick={() => openAddModal()}
+									className="d-flex align-items-center justify-content-center"
+									style={{
+										flex: compact ? undefined : 1,
+										fontSize: compact ? "0.875rem" : undefined,
+										padding: compact ? "0.25rem 0.5rem" : undefined,
+										height: compact ? "2rem" : undefined,
+										width: "100%",
+									}}
+									id={`add-${entityType}-button`}
+								>
+									<i className={`bi-plus-circle me-2`} style={{ fontSize: "1.1rem" }}></i>
+									{`Add ${entityName}`}
+								</Button>
+							)}
+							{enableMultiSelect && (
+								<BulkActionsDropdown
+									className="ms-auto"
+									selectedCount={selectedIds.size}
+									totalCount={displayTotal}
+									actions={bulkActions}
+									onAction={handleBulkAction}
+									onClearSelection={() => setSelectedIds(new Set())}
+								/>
+							)}
+							{enableColumnConfig && !compact && (
+								<Button
+									id="column-config-toggle-btn"
+									variant={columnSidebarOpen ? "primary" : "outline-primary"}
+									onClick={() => {
+										setColumnSidebarOpen(!columnSidebarOpen);
+										setFilterSidebarOpen(false);
+									}}
+									className={`config-btn${!enableMultiSelect ? " ms-auto" : ""}`}
+									data-sidebar-toggle="column"
+								>
+									<i className="bi bi-gear"></i>
+								</Button>
+							)}
+							{enableColumnConfig && !compact && (
+								<Button
+									id="filter-toggle-btn"
+									variant={filterSidebarOpen ? "primary" : "outline-primary"}
+									className={"config-btn"}
+									onClick={() => {
+										setFilterSidebarOpen(!filterSidebarOpen);
+										setColumnSidebarOpen(false);
+									}}
+									data-sidebar-toggle="filter"
+								>
+									<i className="bi bi-funnel"></i>
+									{activeFilterCount > 0 && (
+										<span
+											className="filter-button-count"
+											style={{
+												position: "absolute",
+												top: "-6px",
+												left: "-6px",
+												fontSize: "0.65rem",
+											}}
+										>
+											{activeFilterCount}
+										</span>
+									)}
+								</Button>
+							)}
+						</div>
 					</div>
-				</div>
+				)}
 
 				{/* Table */}
 				{showSpinner ? (

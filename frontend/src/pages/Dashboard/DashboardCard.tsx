@@ -99,6 +99,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 				<div
 					className={bodyPadding ? "px-3" : ""}
 					style={{
+						paddingTop: isEmpty && emptyState ? 0 : "10px",
 						flexGrow: 1,
 						minHeight: 0,
 						minWidth: 0,
