@@ -25,6 +25,7 @@ const DismissExpiredModal: React.FC<DismissExpiredModalProps> = ({
 		tableColumns.scrapedCompanyColumn(),
 		tableColumns.platformColumn(),
 		tableColumns.applicationDeadline(),
+		tableColumns.expiredReasonColumn(),
 		tableColumns.scrapingStatusColumn(),
 	];
 

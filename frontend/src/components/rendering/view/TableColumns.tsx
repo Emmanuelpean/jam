@@ -930,17 +930,23 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	// -------------------------------------------------- JOB EMAIL --------------------------------------------------
-
-	senderColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "sender",
-		label: "Sender",
-		sortable: true,
-		searchable: true,
-		type: "text",
-		filterConfig: { type: "text" },
+	expiredReasonColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_closed",
+		label: "Expired Reason",
+		sortable: false,
+		searchable: false,
+		render: ({ item }: RenderParams) => {
+			if (!item) return null;
+			const now = new Date();
+			if (item.is_closed) return <span className="badge bg-danger">Closed</span>;
+			if (item.deadline && new Date(item.deadline) < now)
+				return <span className="badge bg-warning text-dark">Past Deadline</span>;
+			return null;
+		},
 		...overrides,
 	}),
+
+	// -------------------------------------------------- JOB EMAIL --------------------------------------------------
 
 	alertNameColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "alert_name",

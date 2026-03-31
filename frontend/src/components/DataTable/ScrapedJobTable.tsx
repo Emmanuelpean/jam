@@ -12,9 +12,10 @@ import DismissExpiredModal from "./DismissExpiredModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAlert } from "../../contexts/AlertContext";
 import { useProgressOverlay } from "../../contexts/useProgressOverlayContext";
-import { ApiResponsePromise, baseApi } from "../../services/api/Base";
+import { ApiResponse, ApiResponsePromise } from "../../services/api/Base";
 import { MOBILE_BREAKPOINT, TABLET_BREAKPOINT } from "../../utils/Breakpoints";
 import { useViewport } from "../../contexts/ViewportContext";
+import { scrapedJobApi } from "../../services/api/Services";
 
 interface ScrapedJobTableProps extends DataTableProps {
 	favouritesOnly?: boolean;
@@ -54,27 +55,35 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 	}, []);
 
 	const handleDismissExpired = useCallback(async (): Promise<void> => {
+		if (!token) return;
+		showProgress("Loading expired alerts, please wait.", "Loading expired alerts...");
 		try {
-			const response = await baseApi.get("scraped-jobs/expired", token);
-			const jobs = response.data as ScrapedJobData[];
-			if (jobs.length === 0) {
+			const response: ApiResponse<ScrapedJobData[]> = await scrapedJobApi.getExpired(token);
+			if (response.data.length === 0) {
 				showToastSuccess("No expired job alerts found.");
 				return;
 			}
-			setExpiredJobs(jobs);
+			setExpiredJobs(response.data);
 			setShowDismissExpiredModal(true);
 		} catch {
 			showToastError("Failed to load expired alerts. Please try again.");
+		} finally {
+			hideProgress();
 		}
-	}, [showToastSuccess, showToastError, token]);
+	}, [showProgress, hideProgress, showToastSuccess, showToastError, token]);
 
 	const handleConfirmDismissExpired = useCallback(
 		async (ids: number[]): Promise<void> => {
 			setShowDismissExpiredModal(false);
 			showProgress("Dismissing expired alerts, please wait.", "Dismissing expired alerts…");
 			try {
-				const response = await baseApi.post("scraped-jobs/dismiss-expired", { ids }, token);
-				const n = response.data.dismissed;
+				await Promise.all(
+					ids.map(
+						(id: number): ApiResponsePromise<JamData> =>
+							updateEntity("scrapedJob", id, { is_active: false })
+					)
+				);
+				const n = ids.length;
 				showToastSuccess(`${n} expired job alert${n !== 1 ? "s" : ""} dismissed.`);
 				tableRef.current?.clearSelection();
 				setInternalReloadTrigger((t: number): number => t + 1);
@@ -84,7 +93,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 				hideProgress();
 			}
 		},
-		[showProgress, hideProgress, showToastSuccess, showToastError, token]
+		[updateEntity, showProgress, hideProgress, showToastSuccess, showToastError]
 	);
 
 	const handleBulkDismiss = useCallback(
@@ -223,7 +232,15 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 								{isMobile ? (
 									<i className="bi bi-funnel-fill"></i>
 								) : (
-									<>Scraping Filters ({dataContext.scrapingFilters.filter((filter: ScrapingFilterData): boolean => filter.is_active).length})</>
+									<>
+										Scraping Filters (
+										{
+											dataContext.scrapingFilters.filter(
+												(filter: ScrapingFilterData): boolean => filter.is_active
+											).length
+										}
+										)
+									</>
 								)}
 							</Button>
 						)}
