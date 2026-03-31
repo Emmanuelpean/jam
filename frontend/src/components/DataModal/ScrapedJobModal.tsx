@@ -31,7 +31,17 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 		const keywordModalRef = useRef<DataModalHandle>(null);
 		const personModalRef = useRef<DataModalHandle>(null);
 		const aggregatorModalRef = useRef<DataModalHandle>(null);
-		const { companies, locations, keywords, persons, aggregators } = useFormOptions();
+		const {
+			companies,
+			locations,
+			keywords,
+			persons,
+			aggregators,
+			getCompanyPreviewConfig,
+			getAggregatorPreviewConfig,
+			getLocationPreviewConfig,
+			getPersonPreviewConfig,
+		} = useFormOptions();
 
 		const transformInputData = (data: ScrapedJobData) => {
 			if (!data) return data;
@@ -63,9 +73,14 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				fields: [
 					modalViewFields.title({ isTitle: true }),
 					[
-						formFields.scrapedCompany(companies, companyModalRef, (scrapedJob: ScrapedJobData) => ({
-							name: scrapedJob.company,
-						})),
+						formFields.scrapedCompany(
+							companies,
+							companyModalRef,
+							(scrapedJob: ScrapedJobData) => ({
+								name: scrapedJob.company,
+							}),
+							getCompanyPreviewConfig
+						),
 						formFields.jobURl(),
 					],
 				],
@@ -84,7 +99,8 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 							postcode: scrapedJob.location_postcode,
 							city: scrapedJob.location_city,
 							country: scrapedJob.location_country,
-						})
+						}),
+						getLocationPreviewConfig
 					),
 					formFields.attendanceType(),
 					modalViewFields.scrapedLocationMap(),
@@ -116,7 +132,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 							(scrapedJob: ScrapedJobData) => ({
 								name: scrapedJob.platform ? capitalise(scrapedJob.platform) : undefined,
 							}),
-							null,
+							getAggregatorPreviewConfig,
 							{
 								name: "source_aggregator_id",
 								displayCondition: (formData: JobDataTransform): boolean => {
@@ -126,12 +142,12 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 								},
 							}
 						),
-						formFields.recruiter(persons, personModalRef, null, null, {
+						formFields.recruiter(persons, personModalRef, null, getPersonPreviewConfig, {
 							displayCondition: (formData: JobDataTransform): boolean => {
 								return formData.source_type ? formData.source_type === "recruiter" : false;
 							},
 						}),
-						formFields.company(companies, companyModalRef, null, null, {
+						formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig, {
 							name: "recruitment_company_id",
 							displayCondition: (formData: JobDataTransform): boolean => {
 								return formData.source_type ? formData.source_type === "recruitment_company" : false;
@@ -147,7 +163,10 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				title: "Tags & Contacts",
 				icon: "bi-tags",
 				fields: [
-					[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
+					[
+						formFields.keywords(keywords, keywordModalRef),
+						formFields.contacts(persons, personModalRef, null, getPersonPreviewConfig),
+					],
 				],
 			} as SectionConfig,
 

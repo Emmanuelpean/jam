@@ -85,8 +85,6 @@ def get_all(
         if fav_filters:
             fav_predicates = [rule_to_sql_predicate(f) for f in fav_filters]
             query = query.filter(or_(*fav_predicates))
-        else:
-            query = query.filter(False)
 
     # Errors only
     if errors_only:

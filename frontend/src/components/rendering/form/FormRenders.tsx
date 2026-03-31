@@ -443,6 +443,7 @@ export const formFields = {
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
+		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "company_id",
@@ -452,6 +453,7 @@ export const formFields = {
 		placeholder: "Select or search company...",
 		isSearchable: true,
 		isClearable: true,
+		previewConfig: previewConfig,
 		options: options,
 		addButton: { modalRef, transformParentData },
 		...overrides,
@@ -480,6 +482,7 @@ export const formFields = {
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
+		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "location_id",
@@ -489,6 +492,7 @@ export const formFields = {
 		placeholder: "Select or search location...",
 		isSearchable: true,
 		isClearable: true,
+		previewConfig: previewConfig,
 		options: options,
 		addButton: { modalRef, transformParentData },
 		...overrides,

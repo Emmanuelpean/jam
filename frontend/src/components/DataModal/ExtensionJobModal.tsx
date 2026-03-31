@@ -46,7 +46,17 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 		const aggregatorModalRef = useRef<DataModalHandle>(null);
 		const keywordModalRef = useRef<DataModalHandle>(null);
 		const { currentUser } = useAuth();
-		const { companies, locations, keywords, persons, aggregators } = useFormOptions();
+		const {
+			companies,
+			locations,
+			keywords,
+			persons,
+			aggregators,
+			getPersonPreviewConfig,
+			getAggregatorPreviewConfig,
+			getCompanyPreviewConfig,
+			getLocationPreviewConfig,
+		} = useFormOptions();
 		const { token } = useAuth();
 
 		const transformInputData = async (data: ExtensionJobData) => {
@@ -75,9 +85,14 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				icon: "bi-briefcase",
 				fields: [
 					modalViewFields.title({ isTitle: true }),
-					formFields.scrapedCompany(companies, companyModalRef, (data: ExtensionJobData) => ({
-						name: data.company,
-					})),
+					formFields.scrapedCompany(
+						companies,
+						companyModalRef,
+						(data: ExtensionJobData) => ({
+							name: data.company,
+						}),
+						getCompanyPreviewConfig
+					),
 					formFields.jobURl(),
 				],
 			} as SectionConfig,
@@ -95,6 +110,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 							city: data.geolocation?.city,
 							country: data.geolocation?.country,
 						}),
+						getLocationPreviewConfig,
 						{ secondaryName: "location" }
 					),
 					formFields.attendanceType(),
@@ -119,16 +135,16 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				fields: [
 					[
 						formFields.sourceType(),
-						formFields.aggregator(aggregators, aggregatorModalRef, null, null, {
+						formFields.aggregator(aggregators, aggregatorModalRef, null, getAggregatorPreviewConfig, {
 							name: "source_aggregator_id",
 							displayCondition: (formData: JobDataTransform): boolean =>
 								["aggregator", "aggregator_email"].includes(formData.source_type || ""),
 						}),
-						formFields.recruiter(persons, personModalRef, null, null, {
+						formFields.recruiter(persons, personModalRef, null, getPersonPreviewConfig, {
 							displayCondition: (formData: JobDataTransform): boolean =>
 								formData.source_type === "recruiter",
 						}),
-						formFields.company(companies, companyModalRef, null, null, {
+						formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig, {
 							name: "recruitment_company_id",
 							displayCondition: (formData: JobDataTransform): boolean =>
 								formData.source_type === "recruitment_company",
@@ -167,7 +183,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 					[formFields.applicationDate(), formFields.applicationStatus()],
 					[
 						formFields.applicationVia(),
-						formFields.aggregator(aggregators, aggregatorModalRef, null, null, {
+						formFields.aggregator(aggregators, aggregatorModalRef, null, getAggregatorPreviewConfig, {
 							name: "application_aggregator_id",
 							displayCondition: (formData: JobDataTransform): boolean =>
 								formData.applied_via ? formData.applied_via === "aggregator" : true,

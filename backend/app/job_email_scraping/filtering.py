@@ -63,8 +63,8 @@ def apply_rule_to_values(
 
 
 def job_matches_rule_python(
-    job: ScrapedJob | ScrapingFavouriteFilter,
-    job_filter: ScrapingExclusionFilter,
+    job: ScrapedJob,
+    job_filter: ScrapingExclusionFilter | ScrapingFavouriteFilter,
 ) -> bool:
     """Check if a job matches a given filter rule using Python logic.
     :param job: The ScrapedJob instance to check.
@@ -106,30 +106,7 @@ def is_job_filtered_out(
         return None
 
 
-def is_job_favoured(
-    session: Session,
-    job: ScrapedJob,
-) -> ScrapingExclusionFilter | None:
-    """Check if a job should be favoured out for a given user based on their rules.
-    :param session: SQLAlchemy session for database access.
-    :param job: The ScrapedJob instance to check.
-    :return: True if the job should be filtered out for the user."""
-
-    rules = (
-        session.query(ScrapingFavouriteFilter)
-        .filter(ScrapingFavouriteFilter.owner_id == job.owner_id)
-        .filter(ScrapingFavouriteFilter.is_active.is_(True))
-        .all()
-    )
-
-    for rule in rules:
-        if job_matches_rule_python(job, rule):
-            return rule
-    else:
-        return None
-
-
-def rule_to_sql_predicate(job_filter: ScrapingExclusionFilter):
+def rule_to_sql_predicate(job_filter: ScrapingExclusionFilter | ScrapingFavouriteFilter):
     """Convert a rule into a SQLAlchemy expression that matches jobs to EXCLUDE.
     Only applies if the field is not NULL."""
 
