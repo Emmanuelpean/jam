@@ -685,7 +685,7 @@ class DataModalUtils(BaseUtilsClass):
         if entry.jobs:
             expected += f"Jobs\n({len(entry.jobs)})\n"
         if entry.recruited_jobs:
-            expected += f"Recruited Jobs\n({len(entry.recruited_jobs)})\n"
+            expected += f"Submitted Jobs\n({len(entry.recruited_jobs)})\n"
         expected += "Close\nEdit"
         assert modal.text == expected
 

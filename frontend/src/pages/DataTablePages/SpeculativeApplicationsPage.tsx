@@ -19,7 +19,7 @@ const SpeculativeApplicationsPage = (): JSX.Element => {
 			title="Speculative Applications"
 			columns={columns}
 			Modal={SpeculativeApplicationModal}
-			modalSize="xl"
+			modalSize="lg"
 			enableColumnConfig={true}
 		/>
 	);

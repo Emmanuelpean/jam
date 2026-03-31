@@ -855,7 +855,7 @@ export const tableColumns = {
 
 	recruitedJobCountCompanyColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "recruiter_jobs",
-		label: "Recruited Jobs",
+		label: "Submitted Jobs",
 		sortable: true,
 		searchable: false,
 		sortField: (item: JamData, ctx: DataContextValue): number =>
