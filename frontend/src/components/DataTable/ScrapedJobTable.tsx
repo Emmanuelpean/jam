@@ -8,10 +8,11 @@ import { DataContextValue, JamData, useDataContext } from "../../contexts/DataCo
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionToggle } from "../rendering/form/ActionToggle";
 import ScrapingFilterTable from "./ScrapingFilterTable";
+import DismissExpiredModal from "./DismissExpiredModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAlert } from "../../contexts/AlertContext";
 import { useProgressOverlay } from "../../contexts/useProgressOverlayContext";
-import { ApiResponsePromise } from "../../services/api/Base";
+import { ApiResponsePromise, baseApi } from "../../services/api/Base";
 import { MOBILE_BREAKPOINT, TABLET_BREAKPOINT } from "../../utils/Breakpoints";
 import { useViewport } from "../../contexts/ViewportContext";
 
@@ -30,12 +31,14 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 }: ScrapedJobTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 	const { updateEntity } = dataContext;
-	const { currentUser } = useAuth();
+	const { currentUser, token } = useAuth();
 	const { showDelete } = useAlert();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const tableRef = useRef<DataTableHandle>(null);
 	const [showFilters, setShowFilters] = useState<boolean>(false);
 	const [showFavouriteFilters, setShowFavouriteFilters] = useState<boolean>(false);
+	const [expiredJobs, setExpiredJobs] = useState<ScrapedJobData[]>([]);
+	const [showDismissExpiredModal, setShowDismissExpiredModal] = useState<boolean>(false);
 	const [showPastDeadline, setShowPastDeadline] = useState<boolean>(false);
 	const [internalReloadTrigger, setInternalReloadTrigger] = useState<number>(0);
 	const [locallyReadIds, setLocallyReadIds] = useState<Set<number>>(new Set());
@@ -49,6 +52,40 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 		window.addEventListener("resize", handleResize);
 		return () => window.removeEventListener("resize", handleResize);
 	}, []);
+
+	const handleDismissExpired = useCallback(async (): Promise<void> => {
+		try {
+			const response = await baseApi.get("scraped-jobs/expired", token);
+			const jobs = response.data as ScrapedJobData[];
+			if (jobs.length === 0) {
+				showToastSuccess("No expired job alerts found.");
+				return;
+			}
+			setExpiredJobs(jobs);
+			setShowDismissExpiredModal(true);
+		} catch {
+			showToastError("Failed to load expired alerts. Please try again.");
+		}
+	}, [showToastSuccess, showToastError, token]);
+
+	const handleConfirmDismissExpired = useCallback(
+		async (ids: number[]): Promise<void> => {
+			setShowDismissExpiredModal(false);
+			showProgress("Dismissing expired alerts, please wait.", "Dismissing expired alerts…");
+			try {
+				const response = await baseApi.post("scraped-jobs/dismiss-expired", { ids }, token);
+				const n = response.data.dismissed;
+				showToastSuccess(`${n} expired job alert${n !== 1 ? "s" : ""} dismissed.`);
+				tableRef.current?.clearSelection();
+				setInternalReloadTrigger((t: number): number => t + 1);
+			} catch {
+				showToastError("Failed to dismiss expired alerts. Please try again.");
+			} finally {
+				hideProgress();
+			}
+		},
+		[showProgress, hideProgress, showToastSuccess, showToastError, token]
+	);
 
 	const handleBulkDismiss = useCallback(
 		async (ids: number[]): Promise<void> => {
@@ -157,10 +194,19 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 						? []
 						: [
 								{
+									id: "bulk-action-delete",
 									label: "Delete",
 									icon: "x-circle",
 									variant: "outline-danger",
 									onClick: (ids: number[]): Promise<void> => handleBulkDismiss(ids),
+								},
+								{ type: "divider" as const },
+								{
+									id: "bulk-action-delete-expired",
+									label: "Delete Expired",
+									icon: "calendar-x",
+									variant: "outline-danger",
+									onClick: (): Promise<void> => handleDismissExpired(),
 								},
 							]
 				}
@@ -218,6 +264,12 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 				onHide={(): void => {
 					setShowFavouriteFilters(false);
 				}}
+			/>
+			<DismissExpiredModal
+				show={showDismissExpiredModal}
+				jobs={expiredJobs}
+				onConfirm={handleConfirmDismissExpired}
+				onHide={(): void => setShowDismissExpiredModal(false)}
 			/>
 		</>
 	);

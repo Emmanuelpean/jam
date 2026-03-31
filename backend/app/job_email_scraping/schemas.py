@@ -122,6 +122,12 @@ class ScrapedJobUpdate(BaseModel):
     read_at: datetime | None = None
 
 
+class DismissJobsRequest(BaseModel):
+    """Request body for bulk-dismissing scraped jobs by ID."""
+
+    ids: list[int]
+
+
 class ScrapedJobOut(ScrapedJob, OwnedOut):
     """Scraped Job output schema"""
 

@@ -6,6 +6,7 @@ their module index. Import from this module instead in test subfolders.
 
 import json
 import os
+import uuid
 import platform
 import re
 import time
@@ -2043,6 +2044,27 @@ class BaseTest(BaseUtils):
         """Helper method to verify user exists in database"""
 
         return self.db.query(models.User).filter(models.User.email == email).all()
+
+    def _make_scraped_job(self, **kwargs) -> models.ScrapedJob:
+        """Create and persist a ScrapedJob owned by the current test user."""
+
+        service_log = self.db.query(models.JobEmailScrapingServiceLog).first()
+        defaults = {
+            "external_job_id": str(uuid.uuid4()),
+            "platform": "linkedin",
+            "owner_id": self.db_user.id,
+            "is_processed": True,
+            "is_scraped": True,
+            "title": "Test Job",
+            "url": "test.com",
+            "service_log_id": service_log.id,
+        }
+        defaults.update(kwargs)
+        job = models.ScrapedJob(**defaults)
+        self.db.add(job)
+        self.db.commit()
+        self.db.refresh(job)
+        return job
 
     def _create_job_rating(self, scraped_job: models.ScrapedJob, **kwargs) -> models.JobRating:
         """Create and persist a JobRating linked to the given scraped job.

@@ -50,6 +50,7 @@ const BulkActionsDropdown = ({
 					return (
 						<Dropdown.Item
 							key={i}
+							id={action.id}
 							className={action.variant?.includes("danger") ? "text-danger" : ""}
 							onClick={(): void => onAction(action)}
 						>

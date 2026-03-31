@@ -3,7 +3,7 @@ import AlertModal, { AlertState } from "../components/AlertModal/AlertModal";
 
 interface AlertConfig {
 	title?: string;
-	message: string;
+	message: string | ReactNode;
 	type?: "info" | "success" | "danger" | "warning" | "primary";
 	confirmText?: string;
 	cancelText?: string | null;

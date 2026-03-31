@@ -1,4 +1,4 @@
-import React, { JSX, useState } from "react";
+import React, { JSX, ReactNode, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { ActionButton, ButtonVariant } from "../rendering/form/ActionButton";
 import { ModalHeader } from "../ModalHeader/ModalHeader";
@@ -15,7 +15,7 @@ export interface AlertState {
 	show: boolean;
 	type?: AlertType;
 	title?: string;
-	message?: string;
+	message?: string | ReactNode;
 	icon?: string | null;
 	size?: ModalSize;
 	id?: string | null;

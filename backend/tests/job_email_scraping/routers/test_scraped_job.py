@@ -1435,3 +1435,192 @@ class TestErrorsOnly:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["total_filtered"] == 0
+
+
+class TestGetExpired:
+    """Test suite for GET /scraped-jobs/expired"""
+
+    endpoint = "/scraped-jobs/expired"
+
+    @staticmethod
+    def _create_job(session, owner_id: int, service_log_id: int, **kwargs) -> models.ScrapedJob:
+        return create_db_entries(
+            session,
+            models.ScrapedJob,
+            {
+                "external_job_id": f"expired_test_{id(kwargs)}_{kwargs.get('title', '')}",
+                "platform": "linkedin",
+                "owner_id": owner_id,
+                "is_processed": True,
+                "is_scraped": True,
+                "is_active": True,
+                "is_imported": False,
+                "service_log_id": service_log_id,
+                **kwargs,
+            },
+        )[0]
+
+    def test_returns_closed_jobs(self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs):
+        """Should return jobs marked as closed."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        closed = self._create_job(session, test_regular_user.id, service_log_id, title="Closed Job", is_closed=True)
+        self._create_job(session, test_regular_user.id, service_log_id, title="Active Job", is_closed=False)
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["id"] == closed.id
+
+    def test_returns_past_deadline_jobs(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs
+    ):
+        """Should return jobs with a deadline in the past."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        past = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)
+        future = dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=1)
+        expired = self._create_job(session, test_regular_user.id, service_log_id, title="Expired Deadline", deadline=past)
+        self._create_job(session, test_regular_user.id, service_log_id, title="Future Deadline", deadline=future)
+        self._create_job(session, test_regular_user.id, service_log_id, title="No Deadline")
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["id"] == expired.id
+
+    def test_excludes_imported_jobs(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs
+    ):
+        """Should not return jobs that have already been imported."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        self._create_job(session, test_regular_user.id, service_log_id, title="Imported Closed", is_closed=True, is_imported=True)
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 0
+
+    def test_excludes_inactive_jobs(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs
+    ):
+        """Should not return jobs that are already inactive."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        self._create_job(session, test_regular_user.id, service_log_id, title="Inactive Closed", is_closed=True, is_active=False)
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 0
+
+    def test_excludes_other_users_jobs(
+        self, session, regular_user_client, test_admin_user, test_job_scraping_service_logs
+    ):
+        """Should not return expired jobs belonging to another user."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        self._create_job(session, test_admin_user.id, service_log_id, title="Admin Closed", is_closed=True)
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == 0
+
+    def test_returns_empty_when_no_expired_jobs(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs
+    ):
+        """Should return an empty list when there are no expired jobs."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        self._create_job(session, test_regular_user.id, service_log_id, title="Normal Job")
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == []
+
+    def test_unauthenticated(self, client):
+        """Should return 401 when not authenticated."""
+
+        response = client.get(self.endpoint)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+class TestDismissExpired:
+    """Test suite for POST /scraped-jobs/dismiss-expired"""
+
+    endpoint = "/scraped-jobs/dismiss-expired"
+
+    @staticmethod
+    def _create_job(session, owner_id: int, service_log_id: int, **kwargs) -> models.ScrapedJob:
+        return create_db_entries(
+            session,
+            models.ScrapedJob,
+            {
+                "external_job_id": f"dismiss_test_{id(kwargs)}_{kwargs.get('title', '')}",
+                "platform": "linkedin",
+                "owner_id": owner_id,
+                "is_processed": True,
+                "is_scraped": True,
+                "is_active": True,
+                "is_imported": False,
+                "service_log_id": service_log_id,
+                **kwargs,
+            },
+        )[0]
+
+    def test_dismisses_jobs_by_ids(
+        self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs
+    ):
+        """Should deactivate jobs matching the given IDs owned by the user."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        job1 = self._create_job(session, test_regular_user.id, service_log_id, title="Job 1")
+        job2 = self._create_job(session, test_regular_user.id, service_log_id, title="Job 2")
+        job3 = self._create_job(session, test_regular_user.id, service_log_id, title="Job 3")
+
+        response = regular_user_client.post(self.endpoint, json={"ids": [job1.id, job2.id]})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["dismissed"] == 2
+
+        session.expire_all()
+        assert not session.get(models.ScrapedJob, job1.id).is_active
+        assert not session.get(models.ScrapedJob, job2.id).is_active
+        assert session.get(models.ScrapedJob, job3.id).is_active
+
+    def test_does_not_dismiss_other_users_jobs(
+        self, session, regular_user_client, test_admin_user, test_job_scraping_service_logs
+    ):
+        """Should not deactivate jobs belonging to another user."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        admin_job = self._create_job(session, test_admin_user.id, service_log_id, title="Admin Job")
+
+        response = regular_user_client.post(self.endpoint, json={"ids": [admin_job.id]})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["dismissed"] == 0
+
+        session.expire_all()
+        assert session.get(models.ScrapedJob, admin_job.id).is_active
+
+    def test_empty_ids_returns_zero_dismissed(self, regular_user_client):
+        """Should return dismissed=0 when given an empty list."""
+
+        response = regular_user_client.post(self.endpoint, json={"ids": []})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["dismissed"] == 0
+
+    def test_unauthenticated(self, client):
+        """Should return 401 when not authenticated."""
+
+        response = client.post(self.endpoint, json={"ids": [1, 2]})
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED

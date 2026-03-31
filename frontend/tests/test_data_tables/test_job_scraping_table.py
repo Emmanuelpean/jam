@@ -1,7 +1,6 @@
 """Tests for the scraped jobs."""
 
 import datetime as dt
-import uuid
 
 from selenium.webdriver.common.by import By
 
@@ -19,26 +18,6 @@ class TestJobScrapingTable(BaseTest):
         request.getfixturevalue("test_job_scraping_service_logs")
         request.getfixturevalue("test_user_qualifications")
         self.login()
-
-    def _make_scraped_job(self, **kwargs) -> models.ScrapedJob:
-        """Create and persist a ScrapedJob for this test."""
-
-        service_log = self.db.query(models.JobEmailScrapingServiceLog).first()
-        defaults = {
-            "external_job_id": str(uuid.uuid4()),
-            "platform": "linkedin",
-            "owner_id": self.db_user.id,
-            "is_processed": True,
-            "title": "Test Job",
-            "url": "test.com",
-            "service_log_id": service_log.id,
-        }
-        defaults.update(kwargs)
-        job = models.ScrapedJob(**defaults)
-        self.db.add(job)
-        self.db.commit()
-        self.db.refresh(job)
-        return job
 
     def show_job(self, scraped_job: models.ScrapedJob) -> None:
         """Show a job in the table.
@@ -503,3 +482,85 @@ class TestScrapingFilters(BaseTest):
         self.scrapingFilter_table_utils.table_row(self.filtered_index).click()
         assert self.scrapingFilter_modal_utils.deactivate_button().is_enabled()
         assert not self.scrapingFilter_modal_utils.edit_button("view", enabled=False).is_enabled()
+
+
+class TestDismissExpiredBulkAction(BaseTest):
+
+    user_index = 0
+    page_url = "scraped-jobs"
+
+    def setup_function(self, request) -> None:
+        """Setup for each test function."""
+
+        request.getfixturevalue("test_job_scraping_service_logs")
+        self.login()
+
+    def _open_bulk_actions(self) -> None:
+        """Open the bulk actions dropdown."""
+
+        self.get_element("bulk-actions-dropdown").click()
+
+    def _click_delete_expired(self) -> None:
+        """Open bulk actions and click Delete Expired."""
+
+        self._open_bulk_actions()
+        self.get_element("bulk-action-delete-expired").click()
+
+    def test_delete_expired_no_expired_jobs_shows_toast(self) -> None:
+        """When there are no expired jobs, clicking Delete Expired shows a success toast without opening a modal."""
+
+        self._make_scraped_job(title="Active Job", is_closed=False)
+        self.driver.refresh()
+        self.scrapedJob_table_utils.wait_for_table_load()
+
+        self._click_delete_expired()
+        self.scrapedJob_table_utils.assert_toast_message("No expired job alerts found.")
+
+    def test_delete_expired_opens_modal_with_expired_jobs(self) -> None:
+        """When there are expired jobs, clicking Delete Expired opens the confirmation modal with the jobs listed."""
+
+        expired_job = self._make_scraped_job(title="Expired Closed Job", is_closed=True)
+        self._make_scraped_job(
+            title="Past Deadline Job",
+            deadline=dt.datetime(2024, 1, 1, tzinfo=dt.timezone.utc),
+        )
+        self._make_scraped_job(title="Active Job", is_closed=False)
+        self.driver.refresh()
+        self.scrapedJob_table_utils.wait_for_table_load()
+
+        self._click_delete_expired()
+        modal = self.get_element("dismiss-expired-modal")
+        assert modal.is_displayed()
+        assert "Delete 2 Expired Job Alerts" in modal.text
+
+    def test_delete_expired_confirm_dismisses_jobs(self) -> None:
+        """Confirming dismissal deactivates the expired jobs and shows a toast."""
+
+        expired_job = self._make_scraped_job(title="Job To Dismiss", is_closed=True)
+        self.driver.refresh()
+        self.scrapedJob_table_utils.wait_for_table_load()
+
+        self._click_delete_expired()
+        self.get_element("dismiss-expired-modal")
+        self.get_element("dismiss-expired-confirm-btn").click()
+
+        self.scrapedJob_table_utils.assert_toast_message("1 expired job alert dismissed.")
+
+        self.db.expire_all()
+        updated = self.db.query(models.ScrapedJob).filter_by(id=expired_job.id).first()
+        assert not updated.is_active
+
+    def test_delete_expired_cancel_does_not_dismiss(self) -> None:
+        """Cancelling the confirmation modal leaves jobs active."""
+
+        expired_job = self._make_scraped_job(title="Job Not To Dismiss", is_closed=True)
+        self.driver.refresh()
+        self.scrapedJob_table_utils.wait_for_table_load()
+
+        self._click_delete_expired()
+        self.get_element("dismiss-expired-modal")
+        self.get_element("dismiss-expired-cancel-btn").click()
+
+        self.db.expire_all()
+        updated = self.db.query(models.ScrapedJob).filter_by(id=expired_job.id).first()
+        assert updated.is_active

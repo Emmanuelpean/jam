@@ -56,6 +56,7 @@ import { Direction, SortConfig } from "../../services/schemas/Core";
 export type BulkAction =
 	| {
 			type?: "action";
+			id?: string;
 			label: string;
 			icon?: string;
 			variant?: string;

@@ -349,6 +349,54 @@ def get_platform_stats(
     ]
 
 
+@scraped_job_router.get("/expired", response_model=list[schemas.ScrapedJobOut])
+def get_expired(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Return all active scraped jobs that are expired: closed or past deadline."""
+    now = dt.datetime.now(dt.timezone.utc)
+    # noinspection PyComparisonWithNone
+    return (
+        db.query(models.ScrapedJob)
+        .filter(models.ScrapedJob.owner_id == current_user.id)
+        .filter(models.ScrapedJob.is_imported.is_(False))
+        .filter(models.ScrapedJob.is_active.is_(True))
+        .filter(models.ScrapedJob.exclusion_filter_id == None)
+        .filter(
+            or_(
+                models.ScrapedJob.is_closed == True,
+                and_(
+                    models.ScrapedJob.deadline.isnot(None),
+                    models.ScrapedJob.deadline < now,
+                ),
+            ),
+        )
+        .all()
+    )
+
+
+@scraped_job_router.post("/dismiss-expired", status_code=status.HTTP_200_OK)
+def dismiss_expired(
+    request: schemas.DismissJobsRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Dismiss (deactivate) scraped jobs by ID."""
+    jobs = (
+        db.query(models.ScrapedJob)
+        .filter(
+            models.ScrapedJob.id.in_(request.ids),
+            models.ScrapedJob.owner_id == current_user.id,
+        )
+        .all()
+    )
+    for job in jobs:
+        job.is_active = False
+    db.commit()
+    return {"dismissed": len(jobs)}
+
+
 # PUT endpoint for regular users to update the entries
 generate_data_table_crud_router(
     table_model=models.ScrapedJob,
