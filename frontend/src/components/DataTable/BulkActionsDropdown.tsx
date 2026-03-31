@@ -8,6 +8,7 @@ interface BulkActionsDropdownProps {
 	actions: BulkAction[];
 	onAction: (action: Extract<BulkAction, { type?: "action" }>) => void;
 	onClearSelection: () => void;
+	className?: string;
 }
 
 const BulkActionsDropdown = ({
@@ -16,6 +17,7 @@ const BulkActionsDropdown = ({
 	actions,
 	onAction,
 	onClearSelection,
+	className,
 }: BulkActionsDropdownProps): JSX.Element => {
 	const header: string =
 		selectedCount > 0
@@ -23,7 +25,7 @@ const BulkActionsDropdown = ({
 			: `Apply to all ${totalCount} ${totalCount === 1 ? "item" : "items"}`;
 
 	return (
-		<Dropdown align="end" className="bulk-actions-dropdown">
+		<Dropdown align="end" className={`bulk-actions-dropdown${className ? ` ${className}` : ""}`}>
 			<Dropdown.Toggle
 				id="bulk-actions-dropdown"
 				variant={selectedCount > 0 ? "primary" : "outline-primary"}

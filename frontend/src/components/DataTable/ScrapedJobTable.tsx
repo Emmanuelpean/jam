@@ -13,6 +13,7 @@ import { useAlert } from "../../contexts/AlertContext";
 import { useProgressOverlay } from "../../contexts/useProgressOverlayContext";
 import { ApiResponsePromise } from "../../services/api/Base";
 import { MOBILE_BREAKPOINT, TABLET_BREAKPOINT } from "../../utils/Breakpoints";
+import { useViewport } from "../../contexts/ViewportContext";
 
 interface ScrapedJobTableProps extends DataTableProps {
 	favouritesOnly?: boolean;
@@ -41,6 +42,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 	const filtersInitializedRef = useRef(false);
 	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 	const { showProgress, hideProgress } = useProgressOverlay();
+	const { isMobile } = useViewport();
 
 	useEffect(() => {
 		const handleResize = (): void => setWindowWidth(window.innerWidth);
@@ -170,14 +172,13 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 								variant="outline-primary"
 								onClick={(): void => setShowFilters(true)}
 								id={"scraping-filters-button"}
+								title="Scraping Filters"
 							>
-								Scraping Filters (
-								{
-									dataContext.scrapingFilters.filter(
-										(filter: ScrapingFilterData): boolean => filter.is_active
-									).length
-								}
-								)
+								{isMobile ? (
+									<i className="bi bi-funnel-fill"></i>
+								) : (
+									<>Scraping Filters ({dataContext.scrapingFilters.filter((filter: ScrapingFilterData): boolean => filter.is_active).length})</>
+								)}
 							</Button>
 						)}
 						{favouritesOnly && (

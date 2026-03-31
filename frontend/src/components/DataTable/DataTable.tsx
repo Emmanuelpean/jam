@@ -108,6 +108,7 @@ export interface GenericTableProps<T extends JamData = JamData> {
 	emptyMessage?: string;
 	compact?: boolean;
 	showSearch?: boolean;
+	smallSearch?: boolean;
 	showAdd?: boolean;
 
 	// Additional content
@@ -125,7 +126,6 @@ export interface GenericTableProps<T extends JamData = JamData> {
 	rowIndicator?: (item: T) => boolean;
 	rowReadIndicator?: (item: T) => boolean;
 
-	smallSearch?: boolean;
 	onTotalCountChange?: (count: number) => void;
 	onSuccess?: () => void;
 	onItemOpen?: (item: T) => void;
@@ -716,6 +716,10 @@ function DataTableComponent<T extends JamData>(
 		}
 	};
 
+	// Whether to split toolbar into two rows on mobile (search on top, actions below)
+	const showAddButton = showAdd && mode !== "import";
+	const hasSecondRow = isMobile && !compact && !smallSearch && (showAddButton || !!toolbarAddon || enableMultiSelect);
+
 	// Render
 	if (contextError) {
 		return <div className="alert alert-danger mt-3">{contextError.message}</div>;
@@ -737,10 +741,15 @@ function DataTableComponent<T extends JamData>(
 			<div className={`table-container${!compact ? " table-container--full-height" : ""}`}>
 				<div
 					className={`datatable-toolbar ${compact ? "mb-2" : "mb-3"}${compact ? " datatable-toolbar--compact" : ""}`}
-					style={isMobile && showSearch && !compact && !smallSearch ? { flexWrap: "wrap" as const, gap: "0.5rem" } : undefined}
+					style={
+						hasSecondRow ? { flexWrap: "wrap" as const, gap: "0.5rem" } : undefined
+					}
 				>
 					{showSearch && !compact && (
-						<div className="datatable-toolbar-search" style={isMobile && !smallSearch ? { flex: "0 0 100%" } : undefined}>
+						<div
+							className="datatable-toolbar-search"
+							style={hasSecondRow ? { flex: "0 0 100%" } : undefined}
+						>
 							<div className="search-input-wrapper">
 								<input
 									type="text"
@@ -755,14 +764,25 @@ function DataTableComponent<T extends JamData>(
 									<ClearButton onClick={() => setSearchTerm("")} ariaLabel="Clear search" size="md" />
 								)}
 							</div>
-							<span className="datatable-toolbar-count text-muted small" style={isMobile ? { display: "none" } : undefined}>
+							<span
+								className="datatable-toolbar-count text-muted small"
+								style={isMobile ? { display: "none" } : undefined}
+							>
 								Showing {totalFilteredCount} of {totalCount} Entries
 							</span>
 						</div>
 					)}
 					<div
 						className="datatable-toolbar-actions"
-						style={compact ? { width: "100%" } : isMobile ? { width: "100%" } : showAdd && mode !== "import" ? { flex: 1 } : undefined}
+						style={
+							compact
+								? { width: "100%" }
+								: hasSecondRow
+									? { width: "100%" }
+									: showAdd && mode !== "import"
+										? { flex: 1 }
+										: undefined
+						}
 					>
 						{toolbarAddon && <div className="datatable-toolbar-addon">{toolbarAddon}</div>}
 						{showAdd && mode !== "import" && (
@@ -786,6 +806,7 @@ function DataTableComponent<T extends JamData>(
 						)}
 						{enableMultiSelect && (
 							<BulkActionsDropdown
+								className="ms-auto"
 								selectedCount={selectedIds.size}
 								totalCount={displayTotal}
 								actions={bulkActions}
@@ -801,7 +822,7 @@ function DataTableComponent<T extends JamData>(
 									setColumnSidebarOpen(!columnSidebarOpen);
 									setFilterSidebarOpen(false);
 								}}
-								className={"config-btn"}
+								className={`config-btn${!enableMultiSelect ? " ms-auto" : ""}`}
 								data-sidebar-toggle="column"
 							>
 								<i className="bi bi-gear"></i>

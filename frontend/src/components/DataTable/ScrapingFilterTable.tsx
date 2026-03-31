@@ -6,6 +6,8 @@ import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapingFilterModal } from "../DataModal/ScrapingFilterModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { ScrapingFilterData } from "../../services/schemas/Services";
+import { useViewport } from "../../contexts/ViewportContext";
+import { ActionButton } from "../rendering/form/ActionButton";
 
 interface ScrapingFilterTableProps extends DataTableProps {
 	show: boolean;
@@ -22,6 +24,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	variant = "scraping",
 }: ScrapingFilterTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
+	const { isMobile } = useViewport();
 	const [activeTab, setActiveTab] = useState<tabKeys>("active");
 	const [containerHeight, setContainerHeight] = useState("auto");
 	const contentRef = useRef<HTMLDivElement>(null);
@@ -137,8 +140,9 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 		<Modal
 			show={show}
 			onHide={onHide}
-			size="xl"
-			centered={true}
+			size={isMobile ? undefined : "xl"}
+			fullscreen={isMobile ? true : undefined}
+			centered={!isMobile}
 			backdrop={true}
 			keyboard={true}
 			id={isScraping ? "scraping-filters-modal" : "favourite-filters-modal"}
@@ -155,6 +159,16 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 				</i>
 				{renderTabs()}
 			</Modal.Body>
+			<Modal.Footer>
+				<div className="modal-buttons-container">
+					<ActionButton
+						id="scraping-filter-modal-close-btn"
+						variant="secondary"
+						onClick={onHide}
+						defaultText="Close"
+					/>
+				</div>
+			</Modal.Footer>
 		</Modal>
 	);
 };
