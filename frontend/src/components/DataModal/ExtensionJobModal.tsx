@@ -158,7 +158,10 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				title: "Tags & Contacts",
 				icon: "bi-tags",
 				fields: [
-					[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
+					[
+						formFields.keywords(keywords, keywordModalRef),
+						formFields.contacts(persons, personModalRef, null, getPersonPreviewConfig),
+					],
 				],
 			} as SectionConfig,
 			{
