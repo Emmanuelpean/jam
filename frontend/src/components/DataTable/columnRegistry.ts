@@ -34,6 +34,7 @@ function getDefaultColumnsMap(): Record<EntityType, TableColumn[]> {
 			tableColumns.urlColumn(),
 			tableColumns.jobCountCompanyColumn(),
 			tableColumns.personCountCompanyColumn(),
+			tableColumns.recruitedJobCountCompanyColumn(),
 			tableColumns.createdAtColumn(),
 		],
 		person: [

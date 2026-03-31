@@ -2,7 +2,7 @@ import { renderFunctions, RenderParams, ViewField } from "./ViewRenders";
 import { toDdMmYyyy } from "../../../utils/TimeUtils";
 import { DataContextValue, JamData } from "../../../contexts/DataContext";
 import { findItemById } from "../../../utils/Utils";
-import { PersonData } from "../../../services/schemas/DataTables";
+import { CompanyData, EnrichedJobData, PersonData } from "../../../services/schemas/DataTables";
 import { FilterConfig } from "../../DataTable/FilterTypes";
 import {
 	applicationStatusOptions,
@@ -853,6 +853,29 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	recruitedJobCountCompanyColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "recruiter_jobs",
+		label: "Recruited Jobs",
+		sortable: true,
+		searchable: false,
+		sortField: (item: JamData, ctx: DataContextValue): number =>
+			ctx.jobs.filter((p: EnrichedJobData): boolean => p.recruitment_company_id === item.id).length,
+		render: (param: RenderParams): number => renderFunctions._jobCount(param, "recruitment_company_id"),
+		filterConfig: {
+			type: "number",
+			min: 0,
+			step: 1,
+			display: "slider",
+			max: (ctx: DataContextValue): number =>
+				maxCount(
+					ctx.companies,
+					(c: CompanyData): number =>
+						ctx.jobs.filter((p: EnrichedJobData): boolean => p.recruitment_company_id === c.id).length
+				),
+		},
+		...overrides,
+	}),
+
 	filteredJobCountColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "filtered_jobs",
 		label: "Filtered Jobs",
@@ -943,7 +966,8 @@ export const tableColumns = {
 		label: "Date Received",
 		sortable: true,
 		type: "date",
-		searchFields: (item: JamData) => ("date_received" in item && item.date_received ? toDdMmYyyy(item.date_received) : ""),
+		searchFields: (item: JamData) =>
+			"date_received" in item && item.date_received ? toDdMmYyyy(item.date_received) : "",
 		render: (params: RenderParams) => renderFunctions._date(params, "date_received"),
 		filterConfig: { type: "date" },
 		...overrides,
