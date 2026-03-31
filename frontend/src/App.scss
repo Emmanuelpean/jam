@@ -646,10 +646,8 @@ textarea.form-control {
 }
 
 .btn-outline-primary:focus:not(:focus-visible) {
-    background: var(--primary-gradient);
     color: white;
     border-color: var(--primary-mid);
-    border: none;
     box-shadow: none !important;
 }
 
