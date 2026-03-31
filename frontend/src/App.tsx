@@ -15,6 +15,7 @@ import { Sidebar } from "./components/Sidebar/Sidebar";
 import JobApplicationUpdatesPage from "./pages/DataTablePages/JobApplicationUpdatesPage";
 import Dashboard from "./pages/Dashboard/DashboardPage";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
+import { ViewportProvider } from "./contexts/ViewportContext";
 import { UserManagementPage } from "./pages/DataTablePages/UserManagementPage";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 import { useToast, UseToastReturn } from "./hooks/useNotificationToast";
@@ -235,6 +236,7 @@ function AppContent(): JSX.Element {
 		<BrowserRouter basename="/jam">
 			<AuthProvider>
 				<LoadingProvider>
+				<ViewportProvider>
 					<DataProviderWrapper>
 						<ToastContext.Provider value={toastMethods}>
 							<AlertProvider>
@@ -257,7 +259,8 @@ function AppContent(): JSX.Element {
 							</AlertProvider>
 						</ToastContext.Provider>
 					</DataProviderWrapper>
-				</LoadingProvider>
+				</ViewportProvider>
+			</LoadingProvider>
 			</AuthProvider>
 		</BrowserRouter>
 	);

@@ -11,6 +11,7 @@ import React, {
 } from "react";
 import { Button } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
+import { useViewport } from "../../contexts/ViewportContext";
 import {
 	DataContextValue,
 	EntityType,
@@ -173,10 +174,10 @@ function DataTableComponent<T extends JamData>(
 	ref: React.Ref<DataTableHandle>
 ): JSX.Element {
 	const { token } = useAuth();
+	const { isMobile } = useViewport();
 	const columnConfig: ColumnConfig = useColumnConfig(entityType, enableColumnConfig ? columns : undefined);
 	const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
 	const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
 	const effectiveColumns: TableColumn[] = enableColumnConfig ? columnConfig.visibleColumns : columns;
 	const columnSidebarRef = useRef<HTMLDivElement>(null);
 	const dataContext: DataContextValue = useDataContext();
@@ -196,12 +197,6 @@ function DataTableComponent<T extends JamData>(
 	const openImportModal = (item: T): void | undefined => modalRef.current?.showImport(item);
 
 	useImperativeHandle(ref, () => ({ openAddModal, clearSelection: () => setSelectedIds(new Set()) }));
-
-	useEffect(() => {
-		const handleResize = (): void => setIsMobile(window.innerWidth <= 768);
-		window.addEventListener("resize", handleResize);
-		return () => window.removeEventListener("resize", handleResize);
-	}, []);
 
 	// Close sidebars on outside click
 	useEffect(() => {
