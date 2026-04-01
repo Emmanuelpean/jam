@@ -250,10 +250,10 @@ export const CustomSelect = ({
 				const isSelected = current.some((v) => v.value === opt.value);
 				const newValue = isSelected ? current.filter((v) => v.value !== opt.value) : [...current, opt];
 				onChange(newValue.length > 0 ? newValue : null);
-				if (effectiveCloseMenuOnSelect) closeMenu();
+				if (effectiveCloseMenuOnSelect) { closeMenu(); inputRef.current?.blur(); }
 			} else {
 				onChange(opt);
-				if (effectiveCloseMenuOnSelect) closeMenu();
+				if (effectiveCloseMenuOnSelect) { closeMenu(); inputRef.current?.blur(); }
 			}
 		},
 		[isMulti, value, onChange, effectiveCloseMenuOnSelect, closeMenu]
