@@ -12,6 +12,7 @@ export const Checkbox = ({ field, value, handleChange }: WidgetProps): JSX.Eleme
 			checked={value || false}
 			onChange={handleChange}
 			label={field.label}
+			style={{ userSelect: "none" }}
 		/>
 	);
 };

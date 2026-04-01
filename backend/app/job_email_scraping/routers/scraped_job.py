@@ -8,7 +8,7 @@ import json
 from typing import Literal
 
 from fastapi import Depends, HTTPException
-from sqlalchemy import and_, asc, case, desc, distinct, func, or_
+from sqlalchemy import and_, asc, case, desc, distinct, false, func, or_
 from sqlalchemy.orm import Session, joinedload
 from starlette import status
 
@@ -85,6 +85,8 @@ def get_all(
         if fav_filters:
             fav_predicates = [rule_to_sql_predicate(f) for f in fav_filters]
             query = query.filter(or_(*fav_predicates))
+        else:
+            query = query.filter(false())  # Filter out all rows if no favourites
 
     # Errors only
     if errors_only:

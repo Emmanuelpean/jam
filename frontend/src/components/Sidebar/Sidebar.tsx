@@ -6,9 +6,9 @@ import { getTableIcon } from "../rendering/view/Icons";
 import { ThemeSelector } from "./ThemeSelector";
 import "./Sidebar.scss";
 import { DEFAULT_THEME } from "../../utils/Theme";
-import { TABLET_BREAKPOINT } from "../../utils/Breakpoints";
 import { UserData } from "../../services/schemas/Core";
 import { useAlert } from "../../contexts/AlertContext";
+import { useViewport } from "../../contexts/ViewportContext";
 
 interface NavigationItem {
 	path?: string;
@@ -32,6 +32,7 @@ interface NavigationSubItem {
 export const Sidebar = (): JSX.Element => {
 	const location = useLocation();
 	const { logout, currentUser } = useAuth();
+	const { isMobile } = useViewport();
 	const { showDelete } = useAlert();
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -56,13 +57,6 @@ export const Sidebar = (): JSX.Element => {
 	const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const dropdownRef = useRef<HTMLDivElement | null>(null);
 	const sidebarRef = useRef<HTMLDivElement | null>(null);
-	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= TABLET_BREAKPOINT);
-
-	useEffect(() => {
-		const handleResize = (): void => setIsMobile(window.innerWidth <= TABLET_BREAKPOINT);
-		window.addEventListener("resize", handleResize);
-		return (): void => window.removeEventListener("resize", handleResize);
-	}, []);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {

@@ -38,7 +38,7 @@ import { useAlert } from "../../contexts/AlertContext";
 import WidgetPickerModal from "./WidgetPickerModal";
 import ExtensionBanner from "./ExtensionBanner";
 import { DashboardToolbar } from "./DashboardToolbar";
-import { MOBILE_BREAKPOINT, TABLET_BREAKPOINT } from "../../utils/Breakpoints";
+import { MOBILE_BREAKPOINT, TABLET_BREAKPOINT } from "../../contexts/ViewportContext";
 
 function findFirstFit(existing: LayoutItem[], w: number, h: number, cols: number): { x: number; y: number } {
 	const maxY = existing.reduce((max, item) => Math.max(max, item.y + item.h), 0);

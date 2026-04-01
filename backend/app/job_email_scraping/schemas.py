@@ -303,6 +303,17 @@ class ScrapingFavouriteFilterOut(OwnedOut, ScrapingFilterCreate):
     pass
 
 
+class FilterPreviewResponse(BaseModel):
+    """Response schema for filter preview endpoint"""
+
+    items: list[ScrapedJobOut]
+    total: int
+    total_filtered: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
 # ------------------------------------------- FORWARDING CONFIRMATION LINK ---------------------------------------------
 
 

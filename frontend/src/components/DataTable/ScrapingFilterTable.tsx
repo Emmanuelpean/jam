@@ -52,9 +52,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 		if (isScraping && item.filtered_jobs.length > 0) {
 			return item.is_active ? ["view", "deactivate"] : ["view", "activate"];
 		}
-		return item.is_active
-			? ["view", "edit", "deactivate", "delete"]
-			: ["view", "edit", "activate", "delete"];
+		return item.is_active ? ["view", "edit", "deactivate", "delete"] : ["view", "edit", "activate", "delete"];
 	};
 
 	const renderBodyContent = (): JSX.Element => {

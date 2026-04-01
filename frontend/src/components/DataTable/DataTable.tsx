@@ -47,7 +47,7 @@ import FilterSidebar from "./FilterSidebar";
 import ClearButton from "./ClearButton";
 import { CustomSelect } from "../rendering/widgets/CustomSelect";
 import { SelectOption } from "../rendering/form/FormOptions";
-import { isFilterActive } from "./FilterTypes";
+import { FilterValue, isFilterActive } from "./FilterTypes";
 import { applyFilters } from "./filterLogic";
 import BulkActionsDropdown from "./BulkActionsDropdown";
 import { useTableFilters } from "./useTableFilters";
@@ -130,6 +130,8 @@ export interface GenericTableProps<T extends JamData = JamData> {
 	onTotalCountChange?: (count: number) => void;
 	onSuccess?: () => void;
 	onItemOpen?: (item: T) => void;
+	defaultPageSize?: number;
+	pageSizeOptions?: number[];
 }
 
 export interface DataTableHandle {
@@ -171,6 +173,8 @@ function DataTableComponent<T extends JamData>(
 		onTotalCountChange,
 		onSuccess,
 		onItemOpen,
+		defaultPageSize = 20,
+		pageSizeOptions = [20, 30, 40, 50, 100],
 	}: GenericTableProps<T>,
 	ref: React.Ref<DataTableHandle>
 ): JSX.Element {
@@ -248,7 +252,7 @@ function DataTableComponent<T extends JamData>(
 	// UI state
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [currentPage, setCurrentPage] = useState<number>(0);
-	const [pageSize, setPageSize] = useState<number>(20);
+	const [pageSize, setPageSize] = useState<number>(defaultPageSize);
 	const [totalCount, setTotalCount] = useState<number>(0);
 	const [totalFilteredCount, setTotalFilteredCount] = useState<number>(0);
 	const [showSpinner, setShowSpinner] = useState<boolean>(false);
@@ -293,9 +297,11 @@ function DataTableComponent<T extends JamData>(
 			search: debouncedSearchTerm,
 		});
 		if (queryParams) {
-			Object.entries(queryParams).forEach(([key, value]) => params.set(key, value));
+			Object.entries(queryParams).forEach(([key, value]: [string, string]): void => params.set(key, value));
 		}
-		const activeFilterEntries = Object.entries(filters).filter(([, v]) => isFilterActive(v));
+		const activeFilterEntries: [string, FilterValue][] = Object.entries(filters).filter(
+			([, v]: [string, FilterValue]): boolean => isFilterActive(v)
+		);
 		if (activeFilterEntries.length > 0) {
 			params.set("filters", JSON.stringify(Object.fromEntries(activeFilterEntries)));
 		}
@@ -1169,14 +1175,14 @@ function DataTableComponent<T extends JamData>(
 									</span>
 									<CustomSelect
 										id="page-items-select"
-										options={[20, 30, 40, 50, 100].map(
+										options={pageSizeOptions.map(
 											(s: number): SelectOption => ({
 												value: String(s),
 												label: `Show ${s} Entries`,
 											})
 										)}
 										value={{ value: String(pageSize), label: `Show ${pageSize} Entries` }}
-										onChange={(opt): void => {
+										onChange={(opt: SelectOption | SelectOption[] | null): void => {
 											if (opt && !Array.isArray(opt))
 												setPageSize(Number((opt as SelectOption).value));
 										}}

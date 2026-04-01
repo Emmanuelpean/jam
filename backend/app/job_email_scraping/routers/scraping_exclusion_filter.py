@@ -4,6 +4,7 @@ Provides REST API endpoints for managing job alert emails, scraped job postings,
 and service execution logs with CRUD operations and admin access controls."""
 
 from fastapi import Depends, HTTPException
+from sqlalchemy import desc, asc, or_
 from sqlalchemy.orm import Session
 from starlette import status
 
@@ -11,7 +12,9 @@ from app import models
 from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.job_email_scraping import schemas
+from app.job_email_scraping.filtering import rule_to_sql_predicate
 from app.routers.utility import generate_data_table_crud_router, NOT_ALLOWED_EXCEPTION
+
 
 scraping_filter_router = generate_data_table_crud_router(
     table_model=models.ScrapingExclusionFilter,
@@ -22,6 +25,72 @@ scraping_filter_router = generate_data_table_crud_router(
     not_found_msg="Scraped Job Filter not found",
     allowed_actions=["get_all", "get_one", "post"],
 )
+
+
+@scraping_filter_router.get("/preview/paged", response_model=schemas.FilterPreviewResponse)
+def preview_scraping_filter_paged(
+    filter_type: str,
+    filter_operator: str,
+    filter_value: str,
+    case_sensitive: bool = False,
+    page: int = 0,
+    page_size: int = 10,
+    sort_by: str = "created_at",
+    sort_direction: str = "asc",
+    search: str = "",
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return the paged current user active and not imported scraped jobs matching a given filter rule.
+    :param filter_type: Filter field type
+    :param filter_operator: Filter operator
+    :param filter_value: Filter value
+    :param case_sensitive: Whether the comparison should be case-sensitive
+    :param page: Page number
+    :param page_size: Page size
+    :param sort_by: Sort key
+    :param sort_direction: Sort direction
+    :param search: Search term
+    :param current_user: Current authenticated user
+    :param db: Database session"""
+
+    filter_data = schemas.ScrapingFilterCreate(
+        type=filter_type,
+        operator=filter_operator,
+        value=filter_value,
+        case_sensitive=case_sensitive,
+    )
+    predicate = rule_to_sql_predicate(filter_data)
+    query = (
+        db.query(models.ScrapedJob)
+        .filter(models.ScrapedJob.owner_id == current_user.id)
+        .filter(models.ScrapedJob.is_imported.is_(False))
+        .filter(models.ScrapedJob.is_active.is_(True))
+        .filter(predicate)
+    )
+    total_count = query.count()
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                models.ScrapedJob.title.ilike(search_term),
+                models.ScrapedJob.company.ilike(search_term),
+                models.ScrapedJob.location.ilike(search_term),
+            )
+        )
+    filtered_count = query.count()
+    total_pages = (filtered_count + page_size - 1) // page_size if filtered_count > 0 else 1
+    sort_col = getattr(models.ScrapedJob, sort_by, models.ScrapedJob.scrape_datetime)
+    query = query.order_by(desc(sort_col).nulls_last() if sort_direction == "desc" else asc(sort_col).nulls_last())
+    items = query.offset(page * page_size).limit(page_size).all()
+    return {
+        "items": items,
+        "total": total_count,
+        "total_filtered": filtered_count,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    }
 
 
 @scraping_filter_router.put("/{filter_id}", status_code=status.HTTP_200_OK, response_model=schemas.ScrapingFilterOut)

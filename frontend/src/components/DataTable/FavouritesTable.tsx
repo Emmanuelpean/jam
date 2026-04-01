@@ -1,16 +1,11 @@
-import React, { JSX, useEffect, useState } from "react";
+import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../DataModal/JobModal";
+import { useViewport } from "../../contexts/ViewportContext";
 
 const FavouritesTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTableProps): JSX.Element => {
-	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
-	useEffect(() => {
-		const handleResize = (): void => setWindowWidth(window.innerWidth);
-		window.addEventListener("resize", handleResize);
-		return () => window.removeEventListener("resize", handleResize);
-	}, []);
+	const { isTablet, isSmallDesktop } = useViewport();
 
 	let defaultColumns: TableColumn[] =
 		columns.length > 0
@@ -23,10 +18,10 @@ const FavouritesTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: 
 					tableColumns.applicationStatusColumn(),
 				];
 
-	if (windowWidth < 1300) {
+	if (isSmallDesktop) {
 		defaultColumns = defaultColumns.filter((col: TableColumn): boolean => col.key !== "location");
 	}
-	if (windowWidth < 1000) {
+	if (isTablet) {
 		defaultColumns = defaultColumns.filter((col: TableColumn): boolean => col.key !== "company");
 	}
 

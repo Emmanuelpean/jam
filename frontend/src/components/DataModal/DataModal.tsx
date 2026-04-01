@@ -33,6 +33,8 @@ import { IsViewNull, ViewField } from "../rendering/view/ViewRenders";
 
 export type Field = ModalViewField | ModalFormField;
 
+export type GenericFormData = Record<string, any>;
+
 export interface SectionConfig {
 	type: "section";
 	key: string;
@@ -80,6 +82,7 @@ export interface DataModalProps<T extends JamData = JamData> {
 	canEdit?: boolean | ((formData: any) => string); // Controls edit button and edit mode access
 	canDelete?: boolean | ((formData: any) => string); // Controls delete button and edit mode access
 	showDeactivate?: boolean; // whether to show deactivate items in view mode
+	formExtraContent?: ((formData: GenericFormData) => React.ReactNode) | React.ReactNode; // extra content rendered below form fields in add/edit mode
 }
 
 interface ButtonState {
@@ -117,6 +120,7 @@ function DataModalComponent<T extends JamData>(
 		canEdit = true,
 		canDelete = true,
 		showDeactivate = false,
+		formExtraContent,
 	}: DataModalProps<T>,
 	ref: React.Ref<DataModalHandle<T>>
 ) {
@@ -181,8 +185,8 @@ function DataModalComponent<T extends JamData>(
 	}));
 
 	const [onSuccessCallback, setOnSuccessCallback] = useState<((data: any) => void) | null>(null);
-	const [formData, setFormData] = useState<Record<string, any>>({});
-	const [originalFormData, setOriginalFormData] = useState<Record<string, any>>({});
+	const [formData, setFormData] = useState<GenericFormData>({});
+	const [originalFormData, setOriginalFormData] = useState<GenericFormData>({});
 	const [submitting, setSubmitting] = useState<boolean>(false);
 	const [activeLoading, setActiveLoading] = useState<boolean>(false);
 	const [inputDataLoading, setInputDataLoading] = useState<boolean>(false);
@@ -865,6 +869,8 @@ function DataModalComponent<T extends JamData>(
 								)
 							)}
 						</div>
+						{formExtraContent &&
+							(typeof formExtraContent === "function" ? formExtraContent(formData) : formExtraContent)}
 					</div>
 				) : (
 					<div>

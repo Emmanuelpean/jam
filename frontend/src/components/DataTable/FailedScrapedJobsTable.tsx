@@ -1,11 +1,11 @@
-import React, { JSX, useMemo, useState } from "react";
+import React, { JSX, useMemo } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { RenderParams } from "../rendering/view/ViewRenders";
 import { ScrapedJobModal } from "../DataModal/ScrapedJobModal";
 import { ScrapedJobData } from "../../services/schemas/Services";
 import { Badge } from "react-bootstrap";
-import { TABLET_BREAKPOINT } from "../../utils/Breakpoints";
+import { useViewport } from "../../contexts/ViewportContext";
 
 interface FailedScrapedJobsTableProps extends DataTableProps {
 	dashboardMode?: boolean;
@@ -17,13 +17,7 @@ const FailedScrapedJobsTable: React.FC<FailedScrapedJobsTableProps> = ({
 	reloadTrigger,
 	dashboardMode = false,
 }: FailedScrapedJobsTableProps): JSX.Element => {
-	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
-	React.useEffect(() => {
-		const handleResize = (): void => setWindowWidth(window.innerWidth);
-		window.addEventListener("resize", handleResize);
-		return () => window.removeEventListener("resize", handleResize);
-	}, []);
+	const { isTablet } = useViewport();
 
 	const errorTypeColumn: TableColumn = useMemo(
 		() => ({
@@ -36,7 +30,11 @@ const FailedScrapedJobsTable: React.FC<FailedScrapedJobsTableProps> = ({
 					return <Badge bg="danger">Scrape Error</Badge>;
 				}
 				if (job.job_rating && job.job_rating.is_success === false) {
-					return <Badge bg="warning" text="dark">Rating Error</Badge>;
+					return (
+						<Badge bg="warning" text="dark">
+							Rating Error
+						</Badge>
+					);
 				}
 				return <Badge bg="secondary">Unknown</Badge>;
 			},
@@ -52,8 +50,8 @@ const FailedScrapedJobsTable: React.FC<FailedScrapedJobsTableProps> = ({
 		tableColumns.createdAtColumn({ label: "Date Received" }),
 	];
 
-	if (dashboardMode && windowWidth < TABLET_BREAKPOINT) {
-		columns = columns.filter((col) => !["company"].includes(col.key));
+	if (dashboardMode && isTablet) {
+		columns = columns.filter((col: TableColumn): boolean => !["company"].includes(col.key));
 	}
 
 	const queryParams = useMemo(() => ({ errors_only: "true" }), []);
