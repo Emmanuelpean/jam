@@ -424,6 +424,21 @@ class Job(Owned, Base):
     application_cover_letter = relationship("File", foreign_keys=[cover_letter_id], lazy="select")
     scraped_job = relationship("ScrapedJob", foreign_keys=[scraped_job_id], lazy="select")
 
+    @hybrid_property
+    def has_application(self) -> bool:
+        """True if any application field is populated."""
+        return any([self.application_status, self.application_date, self.applied_via, self.application_url])
+
+    @has_application.expression
+    def has_application(cls):
+        """True if any application field is populated for SQL queries"""
+        return (
+            cls.application_status.isnot(None)
+            | cls.application_date.isnot(None)
+            | cls.applied_via.isnot(None)
+            | cls.application_url.isnot(None)
+        )
+
     __table_args__ = (
         CheckConstraint("personal_rating >= 1 AND personal_rating <= 5", name=f"valid_rating_range"),
         CheckConstraint("salary_min <= salary_max", name=f"valid_salary_range"),

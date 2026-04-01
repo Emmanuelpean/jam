@@ -231,6 +231,7 @@ class JobOut(JobCreate, OwnedOut):
     contacts: list[int] = []
     interviews: list[OwnedOut] = []
     updates: list[OwnedOut] = []
+    has_application: bool = False
 
     @field_validator("keywords", "contacts", mode="before")
     @classmethod

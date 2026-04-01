@@ -51,7 +51,7 @@ export function useDashboardData(): DashboardData {
 	const now = new Date();
 
 	const jobApplications: EnrichedJobData[] = jobs.filter(
-		(job: EnrichedJobData) => job.application_date || job.application_status
+		(job: EnrichedJobData) => job.has_application
 	);
 
 	const jobApplicationPending: EnrichedJobData[] = jobApplications.filter(
@@ -74,8 +74,7 @@ export function useDashboardData(): DashboardData {
 	const upcomingDeadlines: EnrichedJobData[] = jobs.filter(
 		(job: EnrichedJobData): boolean =>
 			!!(
-				!job.application_date &&
-				!job.application_status &&
+				!job.has_application &&
 				job.deadline &&
 				new Date(job.deadline) > now &&
 				new Date(job.deadline) <= thresholdDate

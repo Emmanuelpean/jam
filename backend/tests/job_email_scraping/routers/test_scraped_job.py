@@ -829,6 +829,8 @@ class TestPlatformStats:
         scraped_job: models.ScrapedJob,
         application_status: str | None = None,
         application_date: dt.datetime | None = None,
+        applied_via: str | None = None,
+        application_url: str | None = None,
     ) -> models.Job:
         """Create a test job."""
 
@@ -841,6 +843,8 @@ class TestPlatformStats:
                 "application_status": application_status,
                 "owner_id": scraped_job.owner_id,
                 "application_date": application_date,
+                "applied_via": applied_via,
+                "application_url": application_url,
             },
         )[0]
 
@@ -1033,6 +1037,36 @@ class TestPlatformStats:
         assert len(data) == 1
         assert data[0]["imported_count"] == 1
         assert data[0]["applied_count"] == 1
+
+    def test_applied_count_uses_applied_via_and_application_url(
+        self,
+        session,
+        regular_user_client,
+        test_regular_user,
+        test_job_scraping_service_logs,
+    ):
+        """Jobs with only applied_via or application_url set also count as applied."""
+
+        service_log_id = test_job_scraping_service_logs[0].id
+        email = self._create_email(session, test_regular_user.id, service_log_id)
+
+        sj1 = self._create_scraped_job(session, test_regular_user.id, service_log_id)
+        sj2 = self._create_scraped_job(session, test_regular_user.id, service_log_id)
+        self._link_email_job(session, email, sj1)
+        self._link_email_job(session, email, sj2)
+
+        self._create_job(session, sj1, applied_via="email")
+        self._create_job(session, sj2, application_url="https://example.com/apply")
+
+        response = regular_user_client.get(self.endpoint)
+
+        assert response.status_code == 200
+        data = response.json()
+
+        assert len(data) == 1
+        assert data[0]["scraped_count"] == 2
+        assert data[0]["imported_count"] == 2
+        assert data[0]["applied_count"] == 2
 
     def test_applied_count_any_non_applied_status(
         self,

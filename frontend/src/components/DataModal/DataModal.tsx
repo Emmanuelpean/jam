@@ -79,6 +79,7 @@ export interface DataModalProps<T extends JamData = JamData> {
 	onSuccess?: (data: any, onSuccess?: (newData: any) => void) => void; // called when an entry is successfully added/modified
 	onDelete?: () => void; // called when an entry is successfully deleted
 	warningMessage?: (data: any) => WarningMessageConfig[] | null; // optional warning message to display
+	extraViewFooterButtons?: (activeTab: string | null, data: any) => React.ReactNode; // extra buttons in view mode footer
 	canEdit?: boolean | ((formData: any) => string); // Controls edit button and edit mode access
 	canDelete?: boolean | ((formData: any) => string); // Controls delete button and edit mode access
 	showDeactivate?: boolean; // whether to show deactivate items in view mode
@@ -121,6 +122,7 @@ function DataModalComponent<T extends JamData>(
 		canDelete = true,
 		showDeactivate = false,
 		formExtraContent,
+		extraViewFooterButtons,
 	}: DataModalProps<T>,
 	ref: React.Ref<DataModalHandle<T>>
 ) {
@@ -1091,27 +1093,55 @@ function DataModalComponent<T extends JamData>(
 				</Modal.Footer>
 			) : (
 				<Modal.Footer>
-					<div className="modal-buttons-container">
-						<ActionButton
-							id={getModalId() + "-cancel-button"}
-							variant="secondary"
-							onClick={handleHideImmediate}
-							defaultText="Close"
-							fullWidth={false}
-						/>
-						{canEdit && (
+					{(() => { const extraButtons = extraViewFooterButtons?.(activeTab, effectiveData); return extraButtons ? (
+						<div className="d-flex flex-column w-100 gap-2">
+							<div className="modal-buttons-container">
+								{extraButtons}
+								{canEdit && (
+									<ActionButton
+										id={getModalId() + "-edit-button"}
+										variant="primary"
+										onClick={handleEdit}
+										defaultText="Edit"
+										fullWidth={false}
+										disabled={editState.disabled}
+										tooltip={editState.message}
+										tooltipPlacement="top"
+									/>
+								)}
+							</div>
+							<div className="modal-buttons-container">
+								<ActionButton
+									id={getModalId() + "-cancel-button"}
+									variant="secondary"
+									onClick={handleHideImmediate}
+									defaultText="Close"
+								/>
+							</div>
+						</div>
+					) : (
+						<div className="modal-buttons-container">
 							<ActionButton
-								id={getModalId() + "-edit-button"}
-								variant="primary"
-								onClick={handleEdit}
-								defaultText="Edit"
+								id={getModalId() + "-cancel-button"}
+								variant="secondary"
+								onClick={handleHideImmediate}
+								defaultText="Close"
 								fullWidth={false}
-								disabled={editState.disabled}
-								tooltip={editState.message}
-								tooltipPlacement="top"
 							/>
-						)}
-					</div>
+							{canEdit && (
+								<ActionButton
+									id={getModalId() + "-edit-button"}
+									variant="primary"
+									onClick={handleEdit}
+									defaultText="Edit"
+									fullWidth={false}
+									disabled={editState.disabled}
+									tooltip={editState.message}
+									tooltipPlacement="top"
+								/>
+							)}
+						</div>
+					); })()}
 				</Modal.Footer>
 			);
 		}

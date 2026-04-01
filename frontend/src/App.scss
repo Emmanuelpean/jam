@@ -623,7 +623,6 @@ textarea.form-control {
     border-color: var(--primary-mid);
 }
 
-.btn:focus,
 .btn:focus-visible {
     outline: 2px solid var(--primary-mid) !important;
     outline-offset: 2px;
@@ -690,6 +689,12 @@ textarea.form-control {
 .dropdown-item:focus {
     background-color: var(--primary-mid);
     color: white;
+}
+
+// Tertiary button
+.btn-tertiary {
+    background: var(--primary-mid) !important;
+    border: none
 }
 
 /* ----------------------------------------------------- BADGES ----------------------------------------------------- */

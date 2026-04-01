@@ -18,6 +18,8 @@ import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { KeywordModal } from "./KeywordModal";
 import { LocationModal } from "./LocationModal";
+import FollowUpModal, { FollowUpModalHandle } from "../FollowUpModal/FollowUpModal";
+import { ActionButton } from "../rendering/form/ActionButton";
 import { JobData, JobDataTransform } from "../../services/schemas/DataTables";
 
 interface JobAndApplicationProps extends JamDataModalProps {
@@ -31,8 +33,19 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const aggregatorModalRef = useRef<DataModalHandle>(null);
 		const keywordModalRef = useRef<DataModalHandle>(null);
+		const followUpModalRef = useRef<FollowUpModalHandle>(null);
 		const { currentUser } = useAuth();
-		const { companies, locations, keywords, persons, aggregators, getCompanyPreviewConfig, getPersonPreviewConfig, getLocationPreviewConfig, getAggregatorPreviewConfig } = useFormOptions();
+		const {
+			companies,
+			locations,
+			keywords,
+			persons,
+			aggregators,
+			getCompanyPreviewConfig,
+			getPersonPreviewConfig,
+			getLocationPreviewConfig,
+			getAggregatorPreviewConfig,
+		} = useFormOptions();
 
 		const jobFormFields: Fields = [
 			{
@@ -42,7 +55,10 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				icon: "bi-briefcase",
 				fields: [
 					formFields.jobTitle({ placeholder: "Python Software Engineer" }),
-					[formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig), formFields.jobURl()],
+					[
+						formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig),
+						formFields.jobURl(),
+					],
 				],
 			} as SectionConfig,
 			{
@@ -50,7 +66,12 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				key: "location-schedule",
 				title: "Location",
 				icon: "bi-geo-alt",
-				fields: [[formFields.attendanceType(), formFields.location(locations, locationModalRef, null, getLocationPreviewConfig)]],
+				fields: [
+					[
+						formFields.attendanceType(),
+						formFields.location(locations, locationModalRef, null, getLocationPreviewConfig),
+					],
+				],
 			} as SectionConfig,
 			{
 				type: "section",
@@ -96,7 +117,10 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				title: "Tags & Contacts",
 				icon: "bi-tags",
 				fields: [
-					[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef, null, getPersonPreviewConfig)],
+					[
+						formFields.keywords(keywords, keywordModalRef),
+						formFields.contacts(persons, personModalRef, null, getPersonPreviewConfig),
+					],
 				],
 			} as SectionConfig,
 			{
@@ -339,6 +363,18 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 					tabs={tabs}
 					defaultActiveTab={defaultActiveTab}
 					validation={customValidation}
+					extraViewFooterButtons={(activeTab, data) =>
+						activeTab === "application" && data?.has_application ? (
+							<ActionButton
+								id="job-modal-follow-up-button"
+								variant="primary"
+								onClick={() => followUpModalRef.current?.show(data)}
+								defaultText="Follow-up Email"
+								defaultIcon="bi bi-envelope"
+								fullWidth={false}
+							/>
+						) : null
+					}
 				/>
 
 				<CompanyModal ref={companyModalRef} />
@@ -346,6 +382,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				<AggregatorModal ref={aggregatorModalRef} />
 				<KeywordModal ref={keywordModalRef} />
 				<LocationModal ref={locationModalRef} />
+				<FollowUpModal ref={followUpModalRef} />
 			</>
 		);
 	}

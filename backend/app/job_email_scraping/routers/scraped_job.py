@@ -318,7 +318,7 @@ def get_platform_stats(
                 distinct(
                     case(
                         (
-                            or_(models.Job.application_status.isnot(None), models.Job.application_date.isnot(None)),
+                            models.Job.has_application,
                             models.ScrapedJob.id,
                         )
                     )

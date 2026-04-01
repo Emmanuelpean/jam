@@ -211,7 +211,7 @@ function aggregateJobsByRating(ctx: DataContextValue): ChartDataPoint[] {
 
 function aggregateApplicationFunnel(ctx: DataContextValue): ChartDataPoint[] {
 	const jobsWithInterviews = new Set(ctx.interviews.map((i) => i.job_id));
-	const apps = ctx.jobs.filter((j) => j.application_date || j.application_status);
+	const apps = ctx.jobs.filter((j) => j.has_application);
 	return [
 		{ name: "Applied", value: apps.length },
 		{ name: "Interviewed", value: apps.filter((j) => jobsWithInterviews.has(j.id)).length },
