@@ -646,7 +646,7 @@ textarea.form-control {
 
 .btn-outline-primary:focus:not(:focus-visible) {
     color: white;
-    border-color: var(--primary-mid);
+    border-color: transparent;
     box-shadow: none !important;
 }
 
