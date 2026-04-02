@@ -90,7 +90,7 @@ Key files:
 
 ### Frontend (`frontend/src/`)
 
-React + TypeScript app (Create React App):
+React + TypeScript app (Vite):
 
 - `App.tsx` — routing and top-level layout
 - `components/DataModal/` — CRUD modals for each entity (Job, Company, Person, Interview, etc.)

@@ -44,6 +44,7 @@ export interface ModalFormField {
 	displayCondition?: (item: any) => boolean;
 	previewConfig?: SelectWidgetPreviewConfig | null;
 	isDisabled?: boolean;
+	highlight?: boolean;
 	autoHeight?: boolean;
 	maxChars?: number;
 }

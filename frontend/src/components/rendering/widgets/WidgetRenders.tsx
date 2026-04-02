@@ -90,7 +90,7 @@ export const renderFormField = (
 
 	if (field.type === "checkbox") {
 		return (
-			<Form.Group className="mb-3" id={`${field.name}-form-group`}>
+			<Form.Group className={`mb-3${field.highlight ? " field-highlight" : ""}`} id={`${field.name}-form-group`}>
 				<Checkbox {...widgetProps} />
 				{error && (
 					<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
@@ -102,7 +102,7 @@ export const renderFormField = (
 	}
 	if (field.type === "toggle") {
 		return (
-			<Form.Group className="mb-3" id={`${field.name}-form-group`}>
+			<Form.Group className={`mb-3${field.highlight ? " field-highlight" : ""}`} id={`${field.name}-form-group`}>
 				<Toggle {...widgetProps} />
 				{error && (
 					<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
@@ -114,7 +114,7 @@ export const renderFormField = (
 	}
 
 	return (
-		<Form.Group className="mb-3" id={`${field.name}-form-group`}>
+		<Form.Group className={`mb-3${field.highlight ? " field-highlight" : ""}`} id={`${field.name}-form-group`}>
 			{field.label && (
 				<Form.Label>
 					{field.icon && <i className={`${field.icon} me-2 text-muted`} aria-hidden="true" />}

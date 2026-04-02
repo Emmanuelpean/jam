@@ -150,8 +150,10 @@ export const CustomSelect = ({
 
 	const closeMenu = useCallback(() => {
 		if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-		setIsOpen(false); // arrow starts rotating immediately
-		setIsClosing(true);
+		setIsOpen((wasOpen) => {
+			if (wasOpen) setIsClosing(true);
+			return false;
+		});
 		setInputValue("");
 		setFocusedIndex(-1);
 		closeTimerRef.current = setTimeout(() => {
@@ -272,7 +274,7 @@ export const CustomSelect = ({
 		(e: React.MouseEvent) => {
 			if (isDisabled) return;
 			const target = e.target as HTMLElement;
-			if (target.closest(".jam-select__tag-remove") || target.closest(".jam-select__clear")) return;
+			if (target.closest(".jam-select__tag-remove") || target.closest(".jam-select__clear") || target.closest(".custom-dropdown-indicator")) return;
 			e.preventDefault();
 			if (isOpen) {
 				closeMenu();

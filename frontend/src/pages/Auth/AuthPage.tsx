@@ -475,6 +475,7 @@ function AuthForm(): JSX.Element {
 		label: "Email Address",
 		icon: "bi bi-envelope-fill",
 		placeholder: "Enter your email",
+		autoComplete: "email",
 	};
 
 	const passwordField: ModalFormField = {

@@ -58,6 +58,9 @@ class BaseUtils(object):
             raise AssertionError(f"Failed to wait for URL {url}. Current URL: {self.driver.current_url}")
 
     def advance_browser_clock_days(self, days: int) -> None:
+        """Advance the browser clock by the given number of days
+        :param days: Number of days to advance the clock by"""
+
         self.driver.execute_script(
             """
             const RealDate = window.Date;
@@ -121,7 +124,8 @@ class BaseUtils(object):
             wait = WebDriverWait(self.driver, timeout)
             if within:
 
-                def find_within(d):
+                def find_within(_d):
+                    """Find element within a parent element"""
                     try:
                         matches = within.find_elements(selector, element_id)
                         return matches[0] if matches else None
@@ -282,7 +286,11 @@ class BaseUtils(object):
         :param timeout: How long to wait before raising an error
         :return: The element once its text matches"""
 
-        def text_matches(driver):
+        def text_matches(driver) -> bool:
+            """Check if the element's text matches the expected value
+            :param driver: WebDriver instance
+            :return True if the text matches, False otherwise"""
+
             try:
                 el = driver.find_element(selector, element_id)
                 return el if el.text == expected_text else False
@@ -867,7 +875,9 @@ class DataModalUtils(BaseUtilsClass):
             "Notes\n"
             "No Job Application Updates found\n"
         )
-        expected += "Close\nEdit"
+        if entry.has_application:
+            expected += "Follow-up Email\n"
+        expected += "Edit\nClose"
         assert modal.text == expected
 
         # Close modal
@@ -1659,22 +1669,32 @@ class PremiumSettingsUtils(BaseUtilsClass):
 
     @property
     def confirmation_link_alert(self) -> WebElement:
+        """Get the confirmation link alert element."""
+
         return self.get_element("confirmation-link-alert")
 
     @property
     def confirmation_link_heading(self) -> WebElement:
+        """Get the confirmation link heading element."""
+
         return self.get_element("confirmation-link-heading")
 
     @property
     def confirmation_link_prompt(self) -> WebElement:
+        """Get the confirmation link prompt element."""
+
         return self.get_element("confirmation-link-prompt")
 
     @property
     def confirmation_link_confirm_button(self) -> WebElement:
+        """Get the confirmation link confirm button element."""
+
         return self.get_element("confirmation-link-prompt-confirm-button")
 
     @property
     def confirmation_link_cancel_button(self) -> WebElement:
+        """Get the confirmation link cancel button element."""
+
         return self.get_element("confirmation-link-prompt-cancel-button")
 
     def dismiss_confirmation_link_alert(self) -> None:

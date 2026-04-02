@@ -232,6 +232,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		label: "Email Address",
 		type: "text",
 		placeholder: "Enter your email address",
+		autoComplete: "email",
 		helpText: currentUser?.is_demo
 			? "This is a test account. Email changes are disabled."
 			: hasPendingEmail
@@ -256,6 +257,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		type: "password",
 		label: "New Password",
 		placeholder: "Enter new password",
+		autoComplete: "new-password",
 		isDisabled: currentUser?.is_demo,
 		helpText: currentUser?.is_demo ? "This is a test account. Password change is disabled." : null,
 	};
@@ -265,6 +267,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		type: "password",
 		label: "Confirm New Password",
 		placeholder: "Confirm new password",
+		autoComplete: "new-password",
 		isDisabled: currentUser?.is_demo,
 		helpText: currentUser?.is_demo ? "This is a test account. Password change is disabled." : null,
 	};

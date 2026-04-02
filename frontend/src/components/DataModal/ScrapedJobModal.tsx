@@ -54,7 +54,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 			};
 		};
 
-		const jobFormFields: Fields = [
+		const getJobFormFields = (mode: string, data: ScrapedJobData): Fields => [
 			{
 				type: "section",
 				key: "rating",
@@ -79,7 +79,8 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 							(scrapedJob: ScrapedJobData) => ({
 								name: scrapedJob.company,
 							}),
-							getCompanyPreviewConfig
+							getCompanyPreviewConfig,
+							{ highlight: mode === "import" && !!data?.company }
 						),
 						formFields.jobURl(),
 					],
@@ -100,7 +101,8 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 							city: scrapedJob.location_city,
 							country: scrapedJob.location_country,
 						}),
-						getLocationPreviewConfig
+						getLocationPreviewConfig,
+						{ highlight: mode === "import" && !!data?.parsed_location }
 					),
 					formFields.attendanceType(),
 					modalViewFields.scrapedLocationMap(),
@@ -304,7 +306,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 			<>
 				<DataModal<ScrapedJobData>
 					ref={ref}
-					fields={{ form: jobFormFields, view: viewFields }}
+					fields={(data: any, mode: string) => ({ form: getJobFormFields(mode, data), view: viewFields })}
 					transformFormData={transformData}
 					transformInputData={transformInputData}
 					entityType="scrapedJob"
