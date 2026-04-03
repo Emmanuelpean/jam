@@ -5,13 +5,13 @@ import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapingFilterModal } from "../DataModal/ScrapingFilterModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
-import { ScrapingFilterData } from "../../services/schemas/Services";
+import { FilterVariant, ScrapingFilterData } from "../../services/schemas/Services";
 import { ActionButton } from "../rendering/form/ActionButton";
 
 interface ScrapingFilterTableProps extends DataTableProps {
 	show: boolean;
 	onHide: () => void;
-	variant?: "scraping" | "favourite";
+	variant?: FilterVariant;
 }
 
 type tabKeys = "active" | "inactive";
@@ -20,13 +20,13 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	columns = [],
 	show,
 	onHide,
-	variant = "scraping",
+	variant = "exclusion",
 }: ScrapingFilterTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 	const [activeTab, setActiveTab] = useState<tabKeys>("active");
 	const [containerHeight, setContainerHeight] = useState("auto");
 	const contentRef = useRef<HTMLDivElement>(null);
-	const isScraping = variant === "scraping";
+	const isExclusion = variant === "exclusion";
 
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
@@ -36,10 +36,10 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 					tableColumns.filterOperatorColumn(),
 					tableColumns.valueColumn({ type: "text" }),
 					tableColumns.caseSensitiveColumn(),
-					...(isScraping ? [tableColumns.filteredJobCountColumn()] : []),
+					...(isExclusion ? [tableColumns.filteredJobCountColumn()] : []),
 				];
 
-	const filters = isScraping ? dataContext.scrapingFilters : dataContext.scrapingFavouriteFilters;
+	const filters = isExclusion ? dataContext.scrapingFilters : dataContext.scrapingFavouriteFilters;
 	const activeFilters: ScrapingFilterData[] = filters.filter((f: ScrapingFilterData) => f.is_active);
 	const deactivatedFilters: ScrapingFilterData[] = filters.filter((f: ScrapingFilterData) => !f.is_active);
 
@@ -49,7 +49,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	];
 
 	const menuItems = (item: ScrapingFilterData): string[] => {
-		if (isScraping && item.filtered_jobs.length > 0) {
+		if (isExclusion && item.filtered_jobs.length > 0) {
 			return item.is_active ? ["view", "deactivate"] : ["view", "activate"];
 		}
 		return item.is_active ? ["view", "edit", "deactivate", "delete"] : ["view", "edit", "activate", "delete"];
@@ -64,7 +64,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 				<div className="modal-content-animated-inner">
 					<div ref={contentRef} style={{ paddingTop: "4px" }}>
 						<DataTable
-							entityType={isScraping ? "scrapingFilter" : "scrapingFavouriteFilter"}
+							entityType={isExclusion ? "scrapingFilter" : "scrapingFavouriteFilter"}
 							data={data}
 							columns={defaultColumns}
 							initialSortConfig={{ key: "type", direction: "asc" }}
@@ -141,15 +141,15 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 			backdrop={true}
 			keyboard={true}
 			className="data-modal"
-			id={isScraping ? "scraping-filters-modal" : "favourite-filters-modal"}
+			id={isExclusion ? "scraping-filters-modal" : "favourite-filters-modal"}
 		>
 			<ModalHeader onClose={onHide}>
-				<Modal.Title>{isScraping ? "Scraped Job Filters" : "Favourite Filters"}</Modal.Title>
+				<Modal.Title>{isExclusion ? "Scraped Job Filters" : "Favourite Filters"}</Modal.Title>
 			</ModalHeader>
 
 			<Modal.Body>
 				<i style={{ margin: "0 9px 9px 9px", display: "block" }}>
-					{isScraping
+					{isExclusion
 						? 'Filters allow you to filter out specific jobs from your job alerts. For example, if you do not want to view jobs from company "ABC Corp", you can create a filter with Type "Company", Operator "Equals", and Value "ABC Corp".'
 						: "Favourite filters pin matching scraped job alerts to this widget. Jobs matching any active filter will appear here."}
 				</i>

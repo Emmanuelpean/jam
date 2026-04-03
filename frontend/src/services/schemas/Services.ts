@@ -127,6 +127,8 @@ export interface ScrapingFilterTransform {
 	case_sensitive: boolean;
 }
 
+export type FilterVariant = "exclusion" | "favourite";
+
 export interface ScrapingFilterData extends OwnedOut {
 	type: string;
 	operator: string;

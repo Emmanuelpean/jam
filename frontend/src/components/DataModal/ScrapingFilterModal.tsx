@@ -4,11 +4,11 @@ import DataModal, { DataModalHandle, Fields, GenericFormData, JamDataModalProps,
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
-import { ScrapingFilterData, ScrapingFilterTransform } from "../../services/schemas/Services";
+import { FilterVariant, ScrapingFilterData, ScrapingFilterTransform } from "../../services/schemas/Services";
 import ScrapedJobsTable from "../DataTable/ScrapedJobTable";
 
 interface ScrapingFilterModalProps extends JamDataModalProps {
-	variant?: "exclusion" | "favourite";
+	variant?: FilterVariant;
 }
 
 export const ScrapingFilterModal = forwardRef<DataModalHandle<ScrapingFilterData>, ScrapingFilterModalProps>(

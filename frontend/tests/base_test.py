@@ -1923,6 +1923,7 @@ class BaseTest(BaseUtils):
                 "speculativeApplication",
                 "scrapedJob",
                 "scrapingFilter",
+                "scrapingFavouriteFilter",
                 "setting",
             ]
 
