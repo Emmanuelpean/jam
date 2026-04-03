@@ -12,6 +12,7 @@ These tests cover:
 import uuid
 from datetime import datetime, timezone
 
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 
 from base_test import BaseTest, models
@@ -185,17 +186,23 @@ class TestJobScrapingDashboardErrors(ServiceDashboardBase):
         """Critical, service and scraping errors all appear in the Error Summary card."""
 
         # Wait for errors to load (card shows a spinner while fetching)
-        self.wait.until(lambda d: self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text)
-        error_card = self.driver.find_element(By.ID, "error-summary-card")
+        def _error_loaded(d):
+            try:
+                return self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text
+            except StaleElementReferenceException:
+                return False
+
+        self.wait.until(_error_loaded)
+        error_text = self.driver.find_element(By.ID, "error-summary-card").text
 
         # Critical Errors column: service logs with error_message within the date range
-        assert self.CRITICAL_ERROR in error_card.text
+        assert self.CRITICAL_ERROR in error_text
 
         # Service Errors column: service_errors linked to the latest log
-        assert self.SERVICE_ERROR in error_card.text
+        assert self.SERVICE_ERROR in error_text
 
         # Scraping Errors column: scraped job errors fetched via platform_stats
-        assert self.SCRAPING_ERROR in error_card.text
+        assert self.SCRAPING_ERROR in error_text
 
 
 class TestJobRatingDashboardErrors(ServiceDashboardBase):
@@ -262,11 +269,17 @@ class TestJobRatingDashboardErrors(ServiceDashboardBase):
         """Critical and rating errors both appear in the Error Summary card."""
 
         # Wait for errors to load
-        self.wait.until(lambda d: self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text)
-        error_card = self.driver.find_element(By.ID, "error-summary-card")
+        def _error_loaded(d):
+            try:
+                return self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text
+            except StaleElementReferenceException:
+                return False
+
+        self.wait.until(_error_loaded)
+        error_text = self.driver.find_element(By.ID, "error-summary-card").text
 
         # Critical Errors column: rating service logs with error_message in the date range
-        assert self.CRITICAL_ERROR in error_card.text
+        assert self.CRITICAL_ERROR in error_text
 
         # Job Rating Errors column: failed job ratings fetched via job_failed_ids
-        assert self.RATING_ERROR in error_card.text
+        assert self.RATING_ERROR in error_text
