@@ -83,6 +83,30 @@
 }
 
 /* Theme dropdown */
+@keyframes theme-dropdown-open {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes theme-dropdown-close {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.97);
+    }
+}
+
 .theme-dropdown {
     position: fixed;
     z-index: 1100;
@@ -95,6 +119,14 @@
     border-radius: 5px;
     background: var(--bs-secondary-bg);
     box-shadow: 0 4px 11px rgb(0 0 0 / 15%);
+
+    &.opening {
+        animation: theme-dropdown-open 0.15s ease forwards;
+    }
+
+    &.closing {
+        animation: theme-dropdown-close 0.15s ease forwards;
+    }
 }
 
 /* Navigation sections */

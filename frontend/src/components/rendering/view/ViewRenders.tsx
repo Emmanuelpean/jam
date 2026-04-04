@@ -898,7 +898,7 @@ export const AccordionTable = <T,>({
 				</>
 			}
 		>
-			{children(data)}
+			<div className={"mt-2"}>{children(data)}</div>
 		</Accordion>
 	);
 };
