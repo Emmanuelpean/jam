@@ -41,6 +41,8 @@ import { MaintenanceBanner } from "./components/AppBanner/MaintenanceBanner";
 import { DemoBanner } from "./components/AppBanner/DemoBanner";
 import { WhatsNewProvider } from "./contexts/WhatsNewContext";
 import ServiceDashboards from "./pages/Services/ServiceDashboards";
+import CommandPalette from "./components/CommandPalette/CommandPalette";
+import { useCommandPalette } from "./components/CommandPalette/useCommandPalette";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -62,6 +64,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	const location = useLocation();
 	const { currentUser, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
+	const { isOpen: isCommandPaletteOpen, close: closeCommandPalette } = useCommandPalette();
 	useSwetrixPageViews();
 
 	useEffect(() => {
@@ -90,6 +93,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 
 	return (
 		<div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+			<CommandPalette isOpen={isCommandPaletteOpen} onClose={closeCommandPalette} />
 			<MaintenanceBanner />
 			<DemoBanner />
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>

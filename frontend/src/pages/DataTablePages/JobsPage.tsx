@@ -66,6 +66,13 @@ const JobsPage = (): JSX.Element => {
 		navigate(location.pathname, { replace: true, state: {} });
 	}, [location.state?.extJob]); // eslint-disable-line react-hooks/exhaustive-deps
 
+	// Handle quick-add triggered by keyboard shortcut
+	useEffect((): void => {
+		if (!location.state?.quickAdd) return;
+		tableRef.current?.openAddModal();
+		navigate(location.pathname, { replace: true, state: {} });
+	}, [location.state?.quickAdd]); // eslint-disable-line react-hooks/exhaustive-deps
+
 	const columns: TableColumn[] = [
 		tableColumns.titleColumn(),
 		tableColumns.companyBadgeColumn(),
