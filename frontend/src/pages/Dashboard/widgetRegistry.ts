@@ -27,7 +27,8 @@ export type TableVariant =
 	| "job_alerts"
 	| "favourites"
 	| "favourite_jobs"
-	| "error_jobs";
+	| "error_jobs"
+	| "recent_updates";
 export type TimelineVariant =
 	| "recent_activity"
 	| "upcoming_interviews"
@@ -227,6 +228,13 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 				icon: "exclamation-triangle",
 				description: "Jobs that failed to be scraped or rated",
 				premiumOnly: true,
+			},
+			{
+				key: "recent_updates",
+				label: "Recent Updates",
+				icon: "clock-history",
+				description: "Jobs with the most recent interview or application activity",
+				premiumOnly: false,
 			},
 		],
 		defaultLayout: { x: 0, y: 0, w: 8, h: 12, minW: 4, minH: 8 },

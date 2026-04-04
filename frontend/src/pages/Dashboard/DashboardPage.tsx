@@ -19,6 +19,7 @@ import {
 import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
 import FavouriteJobsTable from "../../components/DataTable/FavouriteJobsTable";
 import FailedScrapedJobsTable from "../../components/DataTable/FailedScrapedJobsTable";
+import RecentUpdatesTable from "../../components/DataTable/RecentUpdatesTable";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
 import {
 	DashboardLayoutDataV3,
@@ -96,6 +97,7 @@ const Dashboard: React.FC = () => {
 		interviewRate,
 		avgResponseTime,
 		favouriteJobs,
+		recentUpdates,
 	} = useDashboardData();
 
 	const handleLayoutChange = (newLayout: Layout, allLayouts: ResponsiveLayouts): void => {
@@ -366,6 +368,24 @@ const Dashboard: React.FC = () => {
 						}}
 					>
 						<FailedScrapedJobsTable dashboardMode={true} onTotalCountChange={setErrorJobCount} />
+					</DashboardCard>
+				);
+			case "recent_updates":
+				return (
+					<DashboardCard
+						id="table-card-recent_updates"
+						icon="clock-history"
+						title="Recent Updates"
+						subtitle="Jobs with the most recent activity"
+						badgeValue={recentUpdates.length}
+						isEmpty={recentUpdates.length === 0}
+						emptyState={{
+							icon: "inbox",
+							title: "No recent activity",
+							description: "Jobs with interviews or application updates will appear here",
+						}}
+					>
+						<RecentUpdatesTable data={recentUpdates} />
 					</DashboardCard>
 				);
 			default:

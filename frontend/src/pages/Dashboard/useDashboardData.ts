@@ -23,6 +23,7 @@ export interface DashboardData {
 	interviewRate: number;
 	avgResponseTime: number;
 	favouriteJobs: EnrichedJobData[];
+	recentUpdates: EnrichedJobData[];
 }
 
 const EMPTY_DATA: DashboardData = {
@@ -40,6 +41,7 @@ const EMPTY_DATA: DashboardData = {
 	interviewRate: 0,
 	avgResponseTime: 0,
 	favouriteJobs: [],
+	recentUpdates: [],
 };
 
 export function useDashboardData(): DashboardData {
@@ -151,6 +153,13 @@ export function useDashboardData(): DashboardData {
 
 	const favouriteJobs: EnrichedJobData[] = jobs.filter((job: EnrichedJobData): boolean => job.is_favourite);
 
+	const recentUpdates: EnrichedJobData[] = [...jobApplications]
+		.filter((job: EnrichedJobData): boolean => !!job.last_update_date)
+		.sort(
+			(a: EnrichedJobData, b: EnrichedJobData): number =>
+				new Date(b.last_update_date!).getTime() - new Date(a.last_update_date!).getTime()
+		);
+
 	return {
 		totalJobs: jobs.length,
 		jobApplications,
@@ -166,5 +175,6 @@ export function useDashboardData(): DashboardData {
 		interviewRate,
 		avgResponseTime,
 		favouriteJobs,
+		recentUpdates,
 	};
 }

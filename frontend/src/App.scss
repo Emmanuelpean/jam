@@ -648,12 +648,6 @@ textarea.form-control {
     border-color: var(--danger-color);
 }
 
-.btn-outline-primary:focus:not(:focus-visible) {
-    color: white;
-    border-color: transparent;
-    box-shadow: none !important;
-}
-
 .btn-outline-primary:hover,
 .btn-outline-primary:focus-visible,
 .dropdown-toggle.btn-outline-primary.show{
@@ -813,7 +807,7 @@ textarea.form-control {
 
 .form-switch .form-check-input {
     position: relative;
-    width: 2.5rem;
+    width: 30px;
     height: 1.25rem;
     cursor: pointer;
     transition: background-color 0.3s ease;
@@ -824,9 +818,9 @@ textarea.form-control {
 .form-switch .form-check-input::before {
     position: absolute;
     top: 50%;
-    left: 1.8px;
-    width: 13.5px;
-    height: 13.5px;
+    left: 1px;
+    width: 12px;
+    height: 12px;
     content: "";
     transition: all var(--transition);
     transform: translateY(-50%);
@@ -839,7 +833,7 @@ textarea.form-control {
 }
 
 .form-switch .form-check-input:checked::before {
-    left: calc(100% - 15.3px);
+    left: calc(100% - 13px);
 }
 
 /* ----------------------------------------------------- SPINNER ---------------------------------------------------- */
