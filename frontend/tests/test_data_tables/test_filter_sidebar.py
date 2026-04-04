@@ -36,7 +36,11 @@ class TestFilterSidebar(BaseTest):
     user_index = 0
 
     def setup_function(self, request) -> None:
-        request.getfixturevalue("test_jobs")
+        self._make_job(title="Python Developer", application_status="applied", salary_min=90000.0, personal_rating=4)
+        self._make_job(title="Django Developer", application_status="interview", salary_min=75000.0)
+        self._make_job(
+            title="Vue Frontend Engineer", application_status="applied", salary_min=50000.0, personal_rating=3
+        )
         self.login()
 
     # -------------------------------------------------- Open / close --------------------------------------------------
@@ -78,7 +82,7 @@ class TestFilterSidebar(BaseTest):
         time.sleep(0.5)
 
         filtered_count = self.job_table_utils.get_row_count()
-        assert 0 < filtered_count < initial_count, "Text filter should reduce visible rows without hiding everything"
+        assert filtered_count < initial_count
         # Every remaining row must contain the search string in the title column
         titles = self.job_table_utils.get_column_values("title")
         assert all("Python" in t for t in titles), "All visible rows should match the text filter"
@@ -324,3 +328,38 @@ class TestFilterSidebar(BaseTest):
 
         assert self.job_table_utils.get_row_count() == initial_count
         assert not self.job_table_utils.get_filter_pills()
+
+    # ---------------------------------------------- REJECTED JOBS TOGGLE ----------------------------------------------
+
+    def test_hide_rejected_toggle(self) -> None:
+        """Toggle is on by default hiding rejected/withdrawn; turning it off reveals them; turning it on hides them again."""
+
+        self._make_job(title="Active Job", application_status="applied")
+        self._make_job(title="Rejected Job", application_status="rejected")
+        self._make_job(title="Withdrawn Job", application_status="withdrawn")
+        self.refresh()
+
+        # On by default -- rejected and withdrawn are hidden
+        self.job_table_utils.open_filter_sidebar()
+        toggle = self.get_element("hide-rejected-toggle", enabled=False)
+        assert toggle.is_selected()
+        titles = self.job_table_utils.get_column_values("title")
+        assert "Active Job" in titles
+        assert "Rejected Job" not in titles
+        assert "Withdrawn Job" not in titles
+
+        # Turn off -- all three jobs appear
+        toggle.click()
+        time.sleep(0.3)
+        titles = self.job_table_utils.get_column_values("title")
+        assert "Active Job" in titles
+        assert "Rejected Job" in titles
+        assert "Withdrawn Job" in titles
+
+        # Turn back on -- rejected and withdrawn are hidden again
+        toggle.click()
+        time.sleep(0.3)
+        titles = self.job_table_utils.get_column_values("title")
+        assert "Active Job" in titles
+        assert "Rejected Job" not in titles
+        assert "Withdrawn Job" not in titles

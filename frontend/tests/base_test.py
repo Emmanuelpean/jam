@@ -1881,7 +1881,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -2052,6 +2052,12 @@ class BaseTest(BaseUtils):
         self.wait_for_page(self.page_url)
         self.wait_for_disappear("loading-spinner")
 
+    def refresh(self) -> None:
+        """Refresh the page"""
+
+        self.driver.refresh()
+        self.wait_for_disappear("loading-spinner")
+
     # ---------------------------------------------------- DATABASE ----------------------------------------------------
 
     @property
@@ -2065,6 +2071,20 @@ class BaseTest(BaseUtils):
         """Helper method to verify user exists in database"""
 
         return self.db.query(models.User).filter(models.User.email == email).all()
+
+    def _make_job(self, **kwargs) -> models.Job:
+        """Create and persist a Job owned by the current test user."""
+
+        defaults = {
+            "title": "Test Job",
+            "owner_id": self.db_user.id,
+        }
+        defaults.update(kwargs)
+        job = models.Job(**defaults)
+        self.db.add(job)
+        self.db.commit()
+        self.db.refresh(job)
+        return job
 
     def _make_scraped_job(self, **kwargs) -> models.ScrapedJob:
         """Create and persist a ScrapedJob owned by the current test user."""

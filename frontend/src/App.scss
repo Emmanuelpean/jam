@@ -475,7 +475,11 @@ textarea.form-control {
 }
 
 .jam-select.jam-select--sm .jam-select__indicators > * {
-    margin-left: 4px;
+    margin-left: 6px;
+}
+
+.jam-select.jam-select--sm .jam-select__indicators {
+    padding-right: 6px;
 }
 
 .jam-select.jam-select--sm .jam-select__tag {

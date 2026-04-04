@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { renderFunctions, RenderParams, ViewField } from "./ViewRenders";
 import { toDdMmYyyy } from "../../../utils/TimeUtils";
 import { DataContextValue, JamData } from "../../../contexts/DataContext";
@@ -20,6 +21,7 @@ export interface TableColumn extends ViewField {
 	sortField?: string | ((item: JamData, dataContext: DataContextValue) => string | number | null);
 	searchFields?: string | ((item: JamData, dataContext: DataContextValue) => string | null);
 	filterConfig?: FilterConfig;
+	sidebarExtra?: ReactNode;
 }
 
 const getCompanyText = (item: JamData, context: DataContextValue): string | null => {

@@ -124,6 +124,7 @@ export interface GenericTableProps<T extends JamData = JamData> {
 	// Multi-select
 	enableMultiSelect?: boolean;
 	bulkActions?: BulkAction[];
+	rowFilter?: (item: T) => boolean;
 	rowIndicator?: (item: T) => boolean;
 	rowReadIndicator?: (item: T) => boolean;
 
@@ -167,6 +168,7 @@ function DataTableComponent<T extends JamData>(
 		enableColumnConfig = false,
 		enableMultiSelect = false,
 		bulkActions = [],
+		rowFilter,
 		rowIndicator,
 		rowReadIndicator,
 		smallSearch = false,
@@ -372,7 +374,7 @@ function DataTableComponent<T extends JamData>(
 
 	// Data processing
 	const getSortedData = (): T[] => {
-		let filteredData: T[] = [...data];
+		let filteredData: T[] = rowFilter ? data.filter(rowFilter) : [...data];
 		const searchTermLower: string = searchTerm.toLowerCase();
 
 		// Filter by search term
@@ -1103,7 +1105,10 @@ function DataTableComponent<T extends JamData>(
 									<FilterSidebar
 										isOpen={filterSidebarOpen}
 										onClose={() => setFilterSidebarOpen(false)}
-										columns={columnConfig.allColumns}
+										columns={columnConfig.allColumns.map((col) => {
+											const propCol = columns.find((c) => c.key === col.key);
+											return propCol?.sidebarExtra ? { ...col, sidebarExtra: propCol.sidebarExtra } : col;
+										})}
 										filters={filters}
 										onFiltersChange={setFilters}
 									/>

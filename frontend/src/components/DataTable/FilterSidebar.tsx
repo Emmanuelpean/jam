@@ -78,6 +78,7 @@ const FilterSection = ({ column, value, onChange, dataContext }: FilterSectionPr
 						dataContext={dataContext}
 					/>
 				)}
+				{column.sidebarExtra}
 			</div>
 		</div>
 	);
