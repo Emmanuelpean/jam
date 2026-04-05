@@ -1,11 +1,12 @@
 """Selenium tests for the command palette (keyboard shortcuts + UI)."""
 
 import pytest
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from base_test import BaseTest
 
@@ -13,6 +14,7 @@ CP_ITEM_ACTIVE = "[id^='cp-item-'].active"
 CP_ITEM_LABEL = ".cp-item-label"
 
 
+@pytest.mark.xdist_group("palette")
 class TestCommandPalette(BaseTest):
     user_index = 0
     page_url = "dashboard"
@@ -32,10 +34,10 @@ class TestCommandPalette(BaseTest):
         ).perform()
         self.get_element("cp-backdrop", enabled=False, timeout=5)
 
-    def _get_input(self):
+    def _get_input(self) -> WebElement:
         return self.get_element("cp-input")
 
-    def _get_items(self):
+    def _get_items(self) -> list[WebElement]:
         return self.driver.find_elements(By.CSS_SELECTOR, "[id^='cp-item-']")
 
     def _is_open(self) -> bool:
