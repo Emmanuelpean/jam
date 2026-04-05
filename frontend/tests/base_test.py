@@ -343,7 +343,9 @@ class BaseUtils(object):
         modifier_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
         element.send_keys(modifier_key, "a")
         element.send_keys(Keys.DELETE)
-        element.send_keys(text)
+        for char in text:
+            element.send_keys(char)
+            time.sleep(0.05)
 
     def _wait_for_modal_close(self, name: str) -> None:
         """Wait for the modal to close"""
@@ -1881,8 +1883,8 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            if os.environ.get("HEADLESS", "true").lower() != "false":
-                chrome_options.add_argument("--headless=new")
+            # if os.environ.get("HEADLESS", "true").lower() != "false":
+            #     chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")

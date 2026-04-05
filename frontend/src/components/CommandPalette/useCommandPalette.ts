@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useCommandPaletteContext } from "../../contexts/CommandPaletteContext";
 
 const ROUTES: Record<string, string> = {
 	d: "/dashboard", D: "/dashboard",
@@ -23,19 +24,32 @@ function isTypingTarget(el: Element | null): boolean {
 	return tag === "input" || tag === "textarea" || tag === "select" || (el as HTMLElement).isContentEditable;
 }
 
+
 export function useCommandPalette(): { isOpen: boolean; close: () => void } {
 	const { isAuthenticated } = useAuth();
 	const navigate = useNavigate();
-	const [isOpen, setIsOpen] = useState(false);
+	const { isOpen, setIsOpen } = useCommandPaletteContext();
 	const pendingJRef = useRef(false);
 	const jTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 	const lastShiftRef = useRef(0);
 
 	useEffect(() => {
+		if (!isOpen) return;
+		const handleEsc = (e: KeyboardEvent): void => {
+			if (e.key === "Escape") {
+				e.stopPropagation();
+				setIsOpen(false);
+			}
+		};
+		window.addEventListener("keydown", handleEsc, true);
+		return () => window.removeEventListener("keydown", handleEsc, true);
+	}, [isOpen]);
+
+	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent): void => {
 			if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
 				e.preventDefault();
-				setIsOpen((o) => !o);
+				setIsOpen(!isOpen);
 				return;
 			}
 
@@ -43,7 +57,7 @@ export function useCommandPalette(): { isOpen: boolean; close: () => void } {
 				const now = Date.now();
 				if (now - lastShiftRef.current < 300) {
 					e.preventDefault();
-					setIsOpen((o) => !o);
+					setIsOpen(!isOpen);
 					lastShiftRef.current = 0;
 				} else {
 					lastShiftRef.current = now;

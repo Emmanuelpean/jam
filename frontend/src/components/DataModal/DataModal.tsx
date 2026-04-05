@@ -3,6 +3,7 @@ import { Alert, Card, Form, Modal } from "react-bootstrap";
 import { ModalHeader } from "../ModalHeader/ModalHeader";
 import LoadingSpinner from "../Spinner/Spinner";
 import { useAuth } from "../../contexts/AuthContext";
+import { useCommandPaletteContext } from "../../contexts/CommandPaletteContext";
 import {
 	DataContextValue,
 	EntityType,
@@ -196,6 +197,7 @@ function DataModalComponent<T extends JamData>(
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const { currentUser } = useAuth();
 	const dataContext: DataContextValue = useDataContext();
+	const { isOpen: isCommandPaletteOpen } = useCommandPaletteContext();
 	const [activeTab, setActiveTab] = useState<string | null>((): string | null => {
 		if (hasTabs) {
 			return defaultActiveTab || tabs[0]!.key;
@@ -1165,6 +1167,7 @@ function DataModalComponent<T extends JamData>(
 				centered={true}
 				backdrop={true}
 				keyboard={true}
+				enforceFocus={!isCommandPaletteOpen}
 				id={getModalId()}
 			>
 				{isEditing ? <Form onSubmit={handleSubmit}>{modalContent}</Form> : modalContent}

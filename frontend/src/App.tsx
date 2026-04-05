@@ -43,6 +43,7 @@ import { WhatsNewProvider } from "./contexts/WhatsNewContext";
 import ServiceDashboards from "./pages/Services/ServiceDashboards";
 import CommandPalette from "./components/CommandPalette/CommandPalette";
 import { useCommandPalette } from "./components/CommandPalette/useCommandPalette";
+import { CommandPaletteProvider } from "./contexts/CommandPaletteContext";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -248,9 +249,11 @@ function AppContent(): JSX.Element {
 									<ThemeProvider>
 										<WhatsNewProvider>
 											<ContextMenuProvider>
-												<AppLayout>
-													<AppRoutes />
-												</AppLayout>
+												<CommandPaletteProvider>
+													<AppLayout>
+														<AppRoutes />
+													</AppLayout>
+												</CommandPaletteProvider>
 											</ContextMenuProvider>
 										</WhatsNewProvider>
 									</ThemeProvider>

@@ -170,10 +170,28 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 	}, [query]);
 
 	useEffect(() => {
-		if (isOpen) {
-			setTimeout(() => inputRef.current?.focus(), 50);
-		}
-	}, [isOpen]);
+		if (!isOpen) return;
+		setTimeout(() => inputRef.current?.focus(), 50);
+
+		const handleGlobalKeyDown = (e: KeyboardEvent): void => {
+			if (document.activeElement === inputRef.current) return;
+			if (e.key === "ArrowDown") {
+				e.preventDefault();
+				setActiveIndex((i) => Math.min(i + 1, filtered.length - 1));
+			} else if (e.key === "ArrowUp") {
+				e.preventDefault();
+				setActiveIndex((i) => Math.max(i - 1, 0));
+			} else if (e.key === "Enter") {
+				filtered[activeIndex]?.action();
+			} else if (e.key === "Backspace") {
+				setQuery((q) => q.slice(0, -1));
+			} else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+				setQuery((q) => q + e.key);
+			}
+		};
+		window.addEventListener("keydown", handleGlobalKeyDown, true);
+		return () => window.removeEventListener("keydown", handleGlobalKeyDown, true);
+	}, [isOpen, filtered, activeIndex]);
 
 	useEffect(() => {
 		const active = listRef.current?.querySelector<HTMLLIElement>(`[data-index="${activeIndex}"]`);
