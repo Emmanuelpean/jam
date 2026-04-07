@@ -35,7 +35,7 @@ export const SettingModal = forwardRef<DataModalHandle<SettingData>, JamDataModa
 			};
 		};
 
-		const customValidation = async (formData: SettingData): Promise<ValidationErrors> => {
+		const customValidation = (formData: SettingData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 			const duplicates: SettingData[] = dataContext.settings.filter(
 				(setting: SettingData): boolean =>

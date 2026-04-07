@@ -8,7 +8,6 @@ interface CommandItem {
 	label: string;
 	icon: string;
 	group: "Actions" | "Pages";
-	shortcut?: string[];
 	action: () => void;
 }
 
@@ -56,7 +55,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 				label: "Add Job",
 				icon: getEntityIcon("job"),
 				group: "Actions",
-				shortcut: ["J", "N"],
 				action: () => goTo("/jobs", { quickAdd: true }),
 			},
 			{
@@ -64,7 +62,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 				label: "Dashboard",
 				icon: getTableIcon("Dashboard"),
 				group: "Pages",
-				shortcut: ["J","D"],
 				action: () => goTo("/dashboard"),
 			},
 			{
@@ -72,7 +69,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 				label: "Jobs",
 				icon: getTableIcon("Jobs"),
 				group: "Pages",
-				shortcut: ["J","J"],
 				action: () => goTo("/jobs"),
 			},
 			{
@@ -80,7 +76,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 				label: "People",
 				icon: getTableIcon("People"),
 				group: "Pages",
-				shortcut: ["J","P"],
 				action: () => goTo("/persons"),
 			},
 			{
@@ -88,7 +83,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 				label: "Companies",
 				icon: getTableIcon("Companies"),
 				group: "Pages",
-				shortcut: ["J","C"],
 				action: () => goTo("/companies"),
 			},
 			{
@@ -96,7 +90,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 				label: "Interviews",
 				icon: getTableIcon("Interviews"),
 				group: "Pages",
-				shortcut: ["J","I"],
 				action: () => goTo("/interviews"),
 			},
 			{
@@ -104,7 +97,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 				label: "Speculative Applications",
 				icon: getTableIcon("Speculative Applications"),
 				group: "Pages",
-				shortcut: ["J", "V"],
 				action: () => goTo("/speculative-applications"),
 			},
 			{
@@ -112,7 +104,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 				label: "Job Application Updates",
 				icon: getTableIcon("Job Application Updates"),
 				group: "Pages",
-				shortcut: ["J", "U"],
 				action: () => goTo("/job-application-updates"),
 			},
 			{
@@ -120,7 +111,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 				label: "Locations",
 				icon: getTableIcon("Locations"),
 				group: "Pages",
-				shortcut: ["J","L"],
 				action: () => goTo("/locations"),
 			},
 			{
@@ -128,7 +118,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 				label: "Job Aggregators",
 				icon: getTableIcon("Job Aggregators"),
 				group: "Pages",
-				shortcut: ["J","A"],
 				action: () => goTo("/aggregators"),
 			},
 			{
@@ -136,7 +125,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 				label: "Keywords",
 				icon: getEntityIcon("keyword"),
 				group: "Pages",
-				shortcut: ["J","K"],
 				action: () => goTo("/keywords"),
 			},
 			{
@@ -144,7 +132,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 				label: "Settings",
 				icon: getTableIcon("User Settings"),
 				group: "Pages",
-				shortcut: ["J","S"],
 				action: () => goTo("/settings"),
 			},
 		],
@@ -262,13 +249,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 												<i className={`bi bi-${item.icon} cp-item-icon`} />
 											</div>
 											<span className="cp-item-label">{item.label}</span>
-											{item.shortcut && (
-												<span className="cp-shortcut">
-													{item.shortcut.map((key) => (
-														<kbd key={key}>{key}</kbd>
-													))}
-												</span>
-											)}
 										</li>
 									);
 								})}
@@ -276,7 +256,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 					))}
 				</ul>
 				<div className="cp-footer">
-					<span style={{ marginLeft: "auto" }}><kbd>⇧⇧</kbd> or <kbd>Ctrl</kbd><kbd>K</kbd> to open</span>
+					<span style={{ marginLeft: "auto" }}><kbd>Ctrl</kbd><kbd>K</kbd> to open</span>
 				</div>
 			</div>
 		</div>

@@ -26,7 +26,7 @@ export const KeywordModal = forwardRef<DataModalHandle<KeywordData>, JamDataModa
 			};
 		};
 
-		const customValidation = async (formData: KeywordData): Promise<ValidationErrors> => {
+		const customValidation = (formData: KeywordData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 			const nameDuplicates: KeywordData[] = dataContext.keywords.filter(
 				(keyword: KeywordData): boolean =>

@@ -35,7 +35,7 @@ export const UserModal = forwardRef<DataModalHandle<UserData>, JamDataModalProps
 			};
 		};
 
-		const customValidation = async (formData: UserData): Promise<ValidationErrors> => {
+		const customValidation = (formData: UserData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 			const duplicates: UserData[] = dataContext.users.filter(
 				(user: UserData): boolean =>

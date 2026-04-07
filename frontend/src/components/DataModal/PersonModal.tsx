@@ -15,7 +15,10 @@ export const PersonModal = forwardRef<DataModalHandle<PersonData>, JamDataModalP
 
 		const formFieldsArray: Fields = [
 			[formFields.firstName({ placeholder: "Jane" }), formFields.lastName({ placeholder: "Doe" })],
-			[formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig), formFields.role({ placeholder: "Team Leader" })],
+			[
+				formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig),
+				formFields.role({ placeholder: "Team Leader" }),
+			],
 			[formFields.email({ placeholder: "jane.doe@company.com" }), formFields.phone()],
 			formFields.linkedinUrl({ placeholder: "https://linkedin.com/in/janedoe" }),
 			formFields.isRecruiter(),
@@ -45,7 +48,7 @@ export const PersonModal = forwardRef<DataModalHandle<PersonData>, JamDataModalP
 			}),
 		];
 
-		const customValidation = async (formData: PersonData): Promise<ValidationErrors> => {
+		const customValidation = (formData: PersonData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 
 			const duplicates: PersonData[] = dataContext.persons.filter(

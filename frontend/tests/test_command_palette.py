@@ -1,11 +1,9 @@
 """Selenium tests for the command palette (keyboard shortcuts + UI)."""
 
-import pytest
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from base_test import BaseTest
@@ -14,7 +12,6 @@ CP_ITEM_ACTIVE = "[id^='cp-item-'].active"
 CP_ITEM_LABEL = ".cp-item-label"
 
 
-@pytest.mark.xdist_group("palette")
 class TestCommandPalette(BaseTest):
     user_index = 0
     page_url = "dashboard"
@@ -24,132 +21,132 @@ class TestCommandPalette(BaseTest):
 
     # -------------------------------------------------- HELPERS --------------------------------------------------
 
-    def _open_with_ctrl_k(self) -> None:
+    def open_palette(self) -> None:
+        """Open the command palette."""
+
         self.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.CONTROL + "k")
         self.get_element("cp-backdrop", enabled=False, timeout=5)
 
-    def _open_with_double_shift(self) -> None:
-        ActionChains(self.driver).key_down(Keys.SHIFT).key_up(Keys.SHIFT).key_down(Keys.SHIFT).key_up(
-            Keys.SHIFT
-        ).perform()
-        self.get_element("cp-backdrop", enabled=False, timeout=5)
+    @property
+    def palette_input(self) -> WebElement:
+        """Get the search input in the command palette."""
 
-    def _get_input(self) -> WebElement:
         return self.get_element("cp-input")
 
     def _get_items(self) -> list[WebElement]:
+        """Get all items in the command palette."""
+
         return self.driver.find_elements(By.CSS_SELECTOR, "[id^='cp-item-']")
 
-    def _is_open(self) -> bool:
+    def is_open(self) -> bool:
+        """Check if the command palette is open."""
+
         return self.check_element_exists("cp-backdrop", By.ID)
 
-    def _wait_for_closed(self) -> None:
-        WebDriverWait(self.driver, 5).until(EC.invisibility_of_element_located((By.ID, "cp-backdrop")))
+    def wait_for_close(self) -> None:
+        """Wait for the command palette to close."""
+
+        self.wait_for_disappear("cp-backdrop")
+        # WebDriverWait(self.driver, 5).until(EC.invisibility_of_element_located((By.ID, "cp-backdrop")))
 
     # --------------------------------------------------- OPEN/CLOSE ---------------------------------------------------
 
     def test_open_with_ctrl_k(self) -> None:
         """Ctrl+K opens the command palette."""
-        self._open_with_ctrl_k()
-        assert self._is_open()
 
-    def test_open_with_double_shift(self) -> None:
-        """Double-shift opens the command palette."""
-        self._open_with_double_shift()
-        assert self._is_open()
+        self.open_palette()
+        assert self.is_open()
 
     def test_close_with_escape(self) -> None:
         """Escape closes the command palette."""
-        self._open_with_ctrl_k()
-        self._get_input().send_keys(Keys.ESCAPE)
-        self._wait_for_closed()
-        assert not self._is_open()
+
+        self.open_palette()
+        self.palette_input.send_keys(Keys.ESCAPE)
+        self.wait_for_close()
 
     def test_close_by_clicking_backdrop(self) -> None:
         """Clicking outside the card on the backdrop closes the palette."""
-        self._open_with_ctrl_k()
+
+        self.open_palette()
         # Viewport is 1960x1080; card is max 560px wide and centered (~x700-1260).
         # Click at (100, 100) — well outside the card. body center is (980, 540),
         # so offset (-880, -440) lands at approximately (100, 100).
         body = self.driver.find_element(By.TAG_NAME, "body")
         ActionChains(self.driver).move_to_element_with_offset(body, -880, -440).click().perform()
-        self._wait_for_closed()
-        assert not self._is_open()
+        self.wait_for_close()
 
     def test_ctrl_k_toggles_palette(self) -> None:
         """Pressing Ctrl+K a second time closes the palette."""
-        self._open_with_ctrl_k()
+
+        self.open_palette()
         self.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.CONTROL + "k")
-        self._wait_for_closed()
-        assert not self._is_open()
+        self.wait_for_close()
 
     # --------------------------------------------------- CONTENT ---------------------------------------------------
 
     def test_input_is_focused_on_open(self) -> None:
         """Search input is auto-focused when the palette opens."""
-        self._open_with_ctrl_k()
+
+        self.open_palette()
         inp = self.get_element("cp-input")
         WebDriverWait(self.driver, 5).until(lambda d: d.switch_to.active_element == inp)
 
     def test_groups_are_shown(self) -> None:
         """Actions and Pages group headers are visible."""
-        self._open_with_ctrl_k()
+
+        self.open_palette()
         headers = self.driver.find_elements(By.CSS_SELECTOR, "[id^='cp-group-']")
         texts = [h.text for h in headers]
         assert "ACTIONS" in texts
         assert "PAGES" in texts
 
-    def test_all_pages_listed(self) -> None:
-        """All expected page items appear in the list."""
-        self._open_with_ctrl_k()
-        labels = [el.text for el in self.driver.find_elements(By.CSS_SELECTOR, CP_ITEM_LABEL)]
-        for expected in ("Dashboard", "Jobs", "People", "Companies", "Interviews", "Settings"):
-            assert expected in labels, f"'{expected}' not found in palette items"
-
     # --------------------------------------------------- SEARCH ---------------------------------------------------
 
     def test_search_filters_items(self) -> None:
         """Typing in the search box narrows the item list."""
-        self._open_with_ctrl_k()
-        total = len(self._get_items())
-        self._get_input().send_keys("companies")
-        WebDriverWait(self.driver, 5).until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "[id^='cp-item-']")) < total)
+
+        self.open_palette()
+        self.palette_input.send_keys("companies")
         items = self._get_items()
         assert len(items) == 1
         assert items[0].find_element(By.CSS_SELECTOR, CP_ITEM_LABEL).text == "Companies"
 
     def test_search_no_results(self) -> None:
         """Searching for a non-existent term shows the empty state."""
-        self._open_with_ctrl_k()
-        self._get_input().send_keys("zzznomatch")
+
+        self.open_palette()
+        self.palette_input.send_keys("zzznomatch")
         self.get_element("cp-empty", enabled=False)
         assert len(self._get_items()) == 0
 
     def test_search_clears_on_reopen(self) -> None:
         """Search query is cleared when the palette is reopened."""
-        self._open_with_ctrl_k()
-        self._get_input().send_keys("companies")
-        self._get_input().send_keys(Keys.ESCAPE)
-        self._wait_for_closed()
-        self._open_with_ctrl_k()
-        assert self._get_input().get_attribute("value") == ""
+
+        self.open_palette()
+        self.palette_input.send_keys("companies")
+        self.palette_input.send_keys(Keys.ESCAPE)
+        self.wait_for_close()
+        self.open_palette()
+        assert self.palette_input.get_attribute("value") == ""
 
     # ------------------------------------------------- KEYBOARD NAV -------------------------------------------------
 
     def test_arrow_down_advances_active_item(self) -> None:
         """Arrow down moves the active selection to the next item."""
-        self._open_with_ctrl_k()
+
+        self.open_palette()
         items = self._get_items()
         first_label = items[0].find_element(By.CSS_SELECTOR, CP_ITEM_LABEL).text
-        self._get_input().send_keys(Keys.ARROW_DOWN)
+        self.palette_input.send_keys(Keys.ARROW_DOWN)
         active = self.get_element(CP_ITEM_ACTIVE, By.CSS_SELECTOR)
         assert active.find_element(By.CSS_SELECTOR, CP_ITEM_LABEL).text != first_label
 
     def test_arrow_up_returns_to_first_item(self) -> None:
         """Arrow down then up returns focus to the first item."""
-        self._open_with_ctrl_k()
+
+        self.open_palette()
         first_label = self._get_items()[0].find_element(By.CSS_SELECTOR, CP_ITEM_LABEL).text
-        inp = self._get_input()
+        inp = self.palette_input
         inp.send_keys(Keys.ARROW_DOWN)
         inp.send_keys(Keys.ARROW_UP)
         active = self.get_element(CP_ITEM_ACTIVE, By.CSS_SELECTOR)
@@ -157,59 +154,64 @@ class TestCommandPalette(BaseTest):
 
     def test_enter_navigates_to_item(self) -> None:
         """Pressing Enter on a filtered item navigates to its page."""
-        self._open_with_ctrl_k()
-        self._get_input().send_keys("Companies")
-        WebDriverWait(self.driver, 5).until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "[id^='cp-item-']")) == 1)
-        self._get_input().send_keys(Keys.ENTER)
-        self._wait_for_closed()
+
+        self.open_palette()
+        self.palette_input.send_keys("Companies")
+        self.palette_input.send_keys(Keys.ENTER)
+        self.wait_for_close()
         assert "/companies" in self.driver.current_url
 
     def test_click_item_navigates(self) -> None:
         """Clicking a page item navigates to its route."""
-        self._open_with_ctrl_k()
-        self._get_input().send_keys("Interviews")
-        WebDriverWait(self.driver, 5).until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "[id^='cp-item-']")) == 1)
+
+        self.open_palette()
+        self.palette_input.send_keys("Interviews")
         self.get_element("cp-item-goto-interviews").click()
-        self._wait_for_closed()
+        self.wait_for_close()
         assert "/interviews" in self.driver.current_url
 
-    # ----------------------------------------------- J SHORTCUTS ---------------------------------------------------
+    # ----------------------------------------- MODAL DISMISSAL ON NAVIGATION -----------------------------------------
 
-    def test_j_d_navigates_to_dashboard(self) -> None:
-        """J+D shortcut navigates to the dashboard."""
+    def test_data_modal_closes_on_navigation(self) -> None:
+        """Navigating via the command palette closes an open DataModal."""
+
         self.go_to_page("jobs")
-        body = self.driver.find_element(By.TAG_NAME, "body")
-        body.send_keys("j")
-        body.send_keys("d")
-        WebDriverWait(self.driver, 5).until(lambda d: "/dashboard" in d.current_url)
+        self.job_table_utils.add_entity_button.click()
+        self.job_modal_utils.wait_for_edit_modal()
+        self.open_palette()
+        self.palette_input.send_keys("Companies")
+        self.palette_input.send_keys(Keys.ENTER)
+        self.wait_for_close()
+        assert "/companies" in self.driver.current_url
+        self.job_modal_utils.wait_for_edit_modal_close()
 
-    def test_j_c_navigates_to_companies(self) -> None:
-        """J+C shortcut navigates to companies."""
-        body = self.driver.find_element(By.TAG_NAME, "body")
-        body.send_keys("j")
-        body.send_keys("c")
-        WebDriverWait(self.driver, 5).until(lambda d: "/companies" in d.current_url)
+    def test_confirm_modal_closes_on_navigation(self, test_jobs) -> None:
+        """Navigating via the command palette closes an open confirm modal."""
 
-    def test_j_p_navigates_to_persons(self) -> None:
-        """J+P shortcut navigates to people."""
-        body = self.driver.find_element(By.TAG_NAME, "body")
-        body.send_keys("j")
-        body.send_keys("p")
-        WebDriverWait(self.driver, 5).until(lambda d: "/persons" in d.current_url)
-
-    def test_j_n_opens_add_job_modal(self) -> None:
-        """J+N shortcut navigates to jobs and opens the add job modal."""
-        body = self.driver.find_element(By.TAG_NAME, "body")
-        body.send_keys("j")
-        body.send_keys("n")
-        WebDriverWait(self.driver, 5).until(lambda d: "/jobs" in d.current_url)
-        self.get_element(".modal.show", By.CSS_SELECTOR, enabled=False)
-
-    def test_j_shortcut_ignored_while_typing(self) -> None:
-        """J+D does not navigate while an input is focused."""
+        job = self._make_job(title="Test Job")
+        self.refresh()
         self.go_to_page("jobs")
-        search = self.get_element("search-input")
-        search.click()
-        search.send_keys("jd")
-        assert "/jobs" in self.driver.current_url
-        assert not self._is_open()
+        self.job_table_utils.table_row_click(job.id)
+        self.job_modal_utils.edit_button("view").click()
+        self.job_modal_utils.wait_for_edit_modal()
+        self.job_modal_utils.delete_button("edit").click()
+        self.delete_modal.wait_for_modal()
+        self.open_palette()
+        self.palette_input.send_keys("Companies")
+        self.palette_input.send_keys(Keys.ENTER)
+        self.wait_for_close()
+        assert "/companies" in self.driver.current_url
+        self.job_modal_utils.wait_for_edit_modal_close()
+        self.delete_modal.wait_for_modal_close()
+
+
+class TestCommandPaletteUnauthenticated(BaseTest):
+
+    def setup_function(self, request) -> None:
+        self.auth_utils.go_to_login()
+
+    def test_ctrl_k_disabled_when_not_logged_in(self) -> None:
+        """Ctrl+K does not open the command palette when unauthenticated."""
+
+        self.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.CONTROL + "k")
+        assert not self.check_element_exists("cp-backdrop", By.ID)

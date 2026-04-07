@@ -49,13 +49,20 @@ class BaseTablePage(BaseTest):
     def test_display_entries(self) -> None:
         """Test that entries are displayed correctly"""
 
+        if hasattr(self.test_entries[0], "application_status"):
+            test_entries = [
+                entry for entry in self.test_entries if entry.application_status not in ["rejected", "withdrawn"]
+            ]
+        else:
+            test_entries = self.test_entries
+
         # Default 20 entries display
-        assert len(self.table_utils.table_rows) == min([20, len(self.test_entries)])
+        assert len(self.table_utils.table_rows) == min([20, len(test_entries)])
 
         # Increase to 40
         self.table_utils.set_page_item_select("40")
         self.table_utils.wait_for_table_load()
-        assert len(self.table_utils.table_rows) == min([40, len(self.test_entries)])
+        assert len(self.table_utils.table_rows) == min([40, len(test_entries)])
 
     # def test_search_functionality(self) -> None:
     #     """Test the search functionality"""

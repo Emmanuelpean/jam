@@ -238,7 +238,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 			attendance_type: jobData.attendance_type?.trim() || null,
 		});
 
-		const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
+		const customValidation = (formData: JobData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 			if (formData.salary_min && isNaN(Number(formData.salary_min)))
 				errors.salary_min = "Minimum salary must be a valid number";

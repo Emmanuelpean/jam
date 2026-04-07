@@ -40,7 +40,7 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle<Speculativ
 			};
 		};
 
-		const customValidation = async (formData: SpeculativeApplicationData): Promise<ValidationErrors> => {
+		const customValidation = (formData: SpeculativeApplicationData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 
 			if (formData.company_id) {

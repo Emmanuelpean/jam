@@ -41,7 +41,7 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle<ScrapingFilterData
 
 		const fields = { form: formFieldsArray, view: viewFieldsArray };
 
-		const customValidation = async (formData: ScrapingFilterData): Promise<ValidationErrors> => {
+		const customValidation = (formData: ScrapingFilterData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 			const filters: ScrapingFilterData[] = isExclusion
 				? dataContext.scrapingFilters

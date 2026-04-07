@@ -68,7 +68,7 @@ export interface DataModalProps<T extends JamData = JamData> {
 	mode?: modalModes; // modal mode
 	fields?: { view: Fields; form: Fields } | ((data: any, mode: string) => { view: Fields; form: Fields }); // fields to display
 	data?: T; // data to populate the fields (required for import mode)
-	validation?: ((data: any) => any) | null; // custom validation method before submit
+	validation?: ((data: any) => ValidationErrors) | null; // custom validation method before submit
 	transformFormData?: ((data: any) => any) | null; // custom data transformation before submit
 	transformInputData?: ((data: any) => any) | null; // custom data transformation when loading data into the form
 	additionalFields?: ModalViewField[]; // additional fields displayed outside the card in view mode
@@ -694,14 +694,10 @@ function DataModalComponent<T extends JamData>(
 
 		// 3) Custom entry validation
 		if (validation && Object.keys(newErrors).length === 0) {
-			if (typeof validation === "function") {
-				const customErrorsResult = validation(formData);
-				const customErrors =
-					customErrorsResult instanceof Promise ? await customErrorsResult : customErrorsResult;
-				Object.keys(customErrors).forEach((fieldName) => {
-					newErrors[fieldName] = customErrors[fieldName];
-				});
-			}
+			const customErrorsResult: ValidationErrors = validation(formData);
+			Object.keys(customErrorsResult).forEach((fieldName: string): void => {
+				newErrors[fieldName] = customErrorsResult[fieldName] ?? null;
+			});
 		}
 
 		// Switch to the tab containing the first error and expand sections with errors

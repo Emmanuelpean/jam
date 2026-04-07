@@ -10,7 +10,7 @@ from base_test import BaseTest, models
 class TestJobScrapingTable(BaseTest):
 
     user_index = 0
-    page_url = "dashboard"
+    page_url = "scraped-jobs"
 
     def setup_function(self, request) -> None:
         """Setup for each test function."""
@@ -239,7 +239,7 @@ class TestJobScrapingTable(BaseTest):
 
         self.db.expire_all()
         updated = self.db.query(models.ScrapedJob).filter_by(id=job.id).first()
-        assert updated.read_at.replace(tzinfo=dt.timezone.utc) == read_time, "Expected read_at to remain unchanged"
+        assert updated.read_at.astimezone(dt.timezone.utc) == read_time, "Expected read_at to remain unchanged"
 
     # -------------------------------------------------- JOB SCRAPING --------------------------------------------------
 

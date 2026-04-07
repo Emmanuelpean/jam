@@ -42,7 +42,7 @@ export const LocationModal = forwardRef<DataModalHandle<LocationData>, JamDataMo
 			}),
 		];
 
-		const customValidation = async (formData: LocationData): Promise<ValidationErrors> => {
+		const customValidation = (formData: LocationData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 
 			// Check if any value has been set

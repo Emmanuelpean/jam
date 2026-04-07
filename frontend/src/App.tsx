@@ -102,13 +102,13 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	return (
 		<div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
 			<CommandPalette isOpen={isCommandPaletteOpen} onClose={closeCommandPalette} />
-			<GuidedTour />
+			{isAuthenticated && <GuidedTour />}
 			<MaintenanceBanner />
 			<DemoBanner />
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-				{currentUser && <Sidebar />}
+				{isAuthenticated && currentUser && <Sidebar />}
 				<div
-					className={currentUser ? "sidebar-content-offset" : ""}
+					className={isAuthenticated && currentUser ? "sidebar-content-offset" : ""}
 					style={{
 						flex: 1,
 						minWidth: 0,
@@ -171,7 +171,13 @@ function DataProviderWrapper({ children }: { children: ReactNode }): JSX.Element
 		return <>{children}</>;
 	}
 
-	return <DataProvider token={token}>{children}</DataProvider>;
+	return (
+		<DataProvider token={token}>
+			<TourProvider>
+				<WhatsNewProvider>{children}</WhatsNewProvider>
+			</TourProvider>
+		</DataProvider>
+	);
 }
 
 interface RouteConfig {
@@ -250,32 +256,28 @@ function AppContent(): JSX.Element {
 			<AuthProvider>
 				<LoadingProvider>
 				<ViewportProvider>
-					<DataProviderWrapper>
-						<ToastContext.Provider value={toastMethods}>
-							<CommandPaletteProvider>
-							<AlertProvider>
-								<ProgressOverlayProvider>
-									<ThemeProvider>
-										<TourProvider>
-											<WhatsNewProvider>
-											<ContextMenuProvider>
-												<AppLayout>
-													<AppRoutes />
-												</AppLayout>
-											</ContextMenuProvider>
-										</WhatsNewProvider>
-										</TourProvider>
-									</ThemeProvider>
+					<ToastContext.Provider value={toastMethods}>
+						<CommandPaletteProvider>
+						<AlertProvider>
+							<ProgressOverlayProvider>
+								<ThemeProvider>
+									<DataProviderWrapper>
+										<ContextMenuProvider>
+											<AppLayout>
+												<AppRoutes />
+											</AppLayout>
+										</ContextMenuProvider>
+									</DataProviderWrapper>
 									<ToastStack
 										toasts={toastMethods.toasts}
 										onClose={toastMethods.hideToast}
 										position="top-end"
 									/>
-								</ProgressOverlayProvider>
-							</AlertProvider>
+								</ThemeProvider>
+							</ProgressOverlayProvider>
+						</AlertProvider>
 						</CommandPaletteProvider>
-						</ToastContext.Provider>
-					</DataProviderWrapper>
+					</ToastContext.Provider>
 				</ViewportProvider>
 			</LoadingProvider>
 			</AuthProvider>

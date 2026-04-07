@@ -52,7 +52,7 @@ export const CompanyModal = forwardRef<DataModalHandle<CompanyData>, JamDataModa
 			};
 		};
 
-		const customValidation = async (formData: CompanyData): Promise<ValidationErrors> => {
+		const customValidation = (formData: CompanyData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 			const nameDuplicates: CompanyData[] = dataContext.companies.filter(
 				(company: CompanyData): boolean =>

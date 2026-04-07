@@ -310,7 +310,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 			};
 		};
 
-		const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
+		const customValidation = (formData: JobData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 			if (formData.salary_min && isNaN(Number(formData.salary_min))) {
 				errors.salary_min = "Minimum Salary must be a valid number";

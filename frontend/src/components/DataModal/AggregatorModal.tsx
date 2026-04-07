@@ -33,7 +33,7 @@ export const AggregatorModal = forwardRef<DataModalHandle<AggregatorData>, JamDa
 			};
 		};
 
-		const customValidation = async (formData: AggregatorData): Promise<ValidationErrors> => {
+		const customValidation = (formData: AggregatorData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 			const nameDuplicates: AggregatorData[] = dataContext.aggregators.filter(
 				(aggregator: AggregatorData): boolean =>

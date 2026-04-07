@@ -343,9 +343,7 @@ class BaseUtils(object):
         modifier_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
         element.send_keys(modifier_key, "a")
         element.send_keys(Keys.DELETE)
-        for char in text:
-            element.send_keys(char)
-            time.sleep(0.05)
+        element.send_keys(text)
 
     def _wait_for_modal_close(self, name: str) -> None:
         """Wait for the modal to close"""
@@ -1214,17 +1212,17 @@ class AuthentificationUtils(BaseUtilsClass):
     def set_email(self, email: str) -> None:
         """Set the email field to the given value"""
 
-        self.get_element("email").send_keys(email)
+        self.set_text(self.get_element("email"), email)
 
     def set_password(self, password: str) -> None:
         """Set the password field to the given value"""
 
-        self.get_element("password").send_keys(password)
+        self.set_text(self.get_element("password"), password)
 
     def set_confirm_password(self, password: str) -> None:
         """Set the confirm password field to the given value"""
 
-        self.get_element("confirmPassword").send_keys(password)
+        self.set_text(self.get_element("confirmPassword"), password)
 
     def confirm(self) -> None:
         """Confirm the form submission"""
@@ -1883,8 +1881,8 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            # if os.environ.get("HEADLESS", "true").lower() != "false":
-            #     chrome_options.add_argument("--headless=new")
+            if os.environ.get("HEADLESS", "true").lower() != "false":
+                chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
