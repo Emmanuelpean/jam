@@ -1,9 +1,9 @@
 export interface TourStep {
 	id: string;
-	targetSelector: string | null;
+	targetId: string | null;
 	title: string;
 	content: string;
-	route: string | null;
+	route?: string | null;
 	placement: "top" | "bottom" | "left" | "right" | "center";
 	/** Auto-advance when this selector APPEARS in the DOM */
 	waitForSelector?: string;
@@ -21,12 +21,18 @@ export interface TourStep {
 	hideNextButton?: boolean;
 }
 
-// ── Passive spotlight steps ──────────────────────────────────────────────────
+export interface TourDefinition {
+	id: string;
+	title: string;
+	description: string;
+	icon: string;
+	steps: TourStep[];
+}
 
-export const TOUR_STEPS: TourStep[] = [
+const APP_OVERVIEW_STEPS: TourStep[] = [
 	{
 		id: "intro",
-		targetSelector: null,
+		targetId: null,
 		title: "Welcome to JAM!",
 		content: "Let's take a quick tour of your Job Application Manager. It'll only take a minute.",
 		route: null,
@@ -34,7 +40,7 @@ export const TOUR_STEPS: TourStep[] = [
 	},
 	{
 		id: "sidebar",
-		targetSelector: '[data-tour="nav-jobs"]',
+		targetId: "nav-jobs",
 		title: "Sidebar Navigation",
 		content:
 			"Use the sidebar to move between sections. Jobs is your central hub — log applications, track every status, and link each job to People and Interviews.",
@@ -43,7 +49,7 @@ export const TOUR_STEPS: TourStep[] = [
 	},
 	{
 		id: "dashboard-stats",
-		targetSelector: "#stat-card-total_jobs",
+		targetId: "stat-card-total_jobs",
 		title: "Your Overview at a Glance",
 		content:
 			"Stat cards show your pipeline at a glance — total applications, pending responses, upcoming deadlines, and more.",
@@ -52,7 +58,7 @@ export const TOUR_STEPS: TourStep[] = [
 	},
 	{
 		id: "dashboard-customise",
-		targetSelector: '[data-tour="dashboard-customise"]',
+		targetId: "dashboard-edit-btn",
 		title: "Customise Your Dashboard",
 		content:
 			"Click here to enter edit mode. Add, remove, reorder, and resize widgets to build a dashboard that suits your workflow.",
@@ -61,21 +67,30 @@ export const TOUR_STEPS: TourStep[] = [
 	},
 	{
 		id: "command-palette",
-		targetSelector: '[data-tour="take-a-tour-btn"]',
+		targetId: "take-a-tour-btn",
 		title: "Navigate in Seconds",
 		content:
-			"Press Ctrl+K (or Cmd+K on Mac) to open the command palette — jump to any page or trigger any action without touching the mouse. You can also re-run this tour any time from here.",
+			"Press Ctrl+K (or Cmd+K on Mac) to open the command palette — jump to any page or trigger any action without touching the mouse. Click 'Take a Tour' here any time to revisit these guides.",
 		route: "/jam/dashboard",
 		placement: "right",
 	},
+];
 
-	// ── Interactive job-creation walkthrough ─────────────────────────────────
-
+const FIRST_JOB_STEPS: TourStep[] = [
+	{
+		id: "first-job-intro",
+		targetId: null,
+		title: "Let's Log Your First Job",
+		content:
+			"This tour walks you through adding a job application from start to finish. We'll clean up any test data when you're done.",
+		route: "/jam/jobs",
+		placement: "center",
+	},
 	{
 		id: "open-job-modal",
-		targetSelector: '[data-tour="add-job-btn"]',
-		title: "Let's Add Your First Job",
-		content: "Click this button to log your first job application.",
+		targetId: "add-job-button",
+		title: "Add a Job Application",
+		content: "Click this button to open the job form.",
 		route: "/jam/jobs",
 		placement: "bottom",
 		waitForSelector: '.modal.show input[name="title"]',
@@ -83,52 +98,92 @@ export const TOUR_STEPS: TourStep[] = [
 	},
 	{
 		id: "job-title",
-		targetSelector: '.modal.show input[name="title"]',
+		targetId: "title",
 		title: "Enter a Job Title",
-		content: "Type any job title to continue. We'll automatically fill in a sample URL for you.",
-		route: null,
+		content: "Type any job title to continue.",
 		placement: "bottom",
 		waitForInput: '.modal.show input[name="title"]',
-		autoFill: {
-			watchSelector: '.modal.show input[name="title"]',
-			fillSelector: '.modal.show input[name="url"]',
-			fillValue: "https://example.com/jobs/software-engineer-tour",
-		},
 		hideNextButton: true,
 	},
 	{
+		id: "job-location",
+		targetId: "location_id-form-group",
+		title: "Location",
+		content:
+			"Select where the job is based. Click the + icon to add a new location — useful for tracking whether roles are remote, hybrid, or on-site.",
+		placement: "right",
+	},
+	{
+		id: "job-salary",
+		targetId: "salary_min-form-group",
+		title: "Salary Range",
+		content:
+			"Record the advertised salary range. The currency is taken from your preferred currency in User Settings.",
+		placement: "right",
+	},
+	{
+		id: "job-source",
+		targetId: "source_type-form-group",
+		title: "How Did You Find It?",
+		content:
+			"Log where you found the job — a job board, recruiter, LinkedIn, or elsewhere. Tracking your sources helps you see which channels land interviews.",
+		placement: "right",
+	},
+	{
+		id: "job-tags",
+		targetId: "keywords-form-group",
+		title: "Tags",
+		content:
+			"Add tags to categorise and filter your applications. Use them for tech stack, seniority level, or anything else that helps you stay organised.",
+		placement: "right",
+	},
+	{
+		id: "job-contacts",
+		targetId: "contacts-form-group",
+		title: "Contacts",
+		content:
+			"Link people to this job — hiring managers, recruiters, or anyone you've spoken to. Click the + icon to add a new contact on the fly.",
+		placement: "right",
+	},
+	{
 		id: "add-company",
-		targetSelector: '.modal.show [id="add-button"]',
+		targetId: "add-button",
 		title: "Add a Company",
 		content: "Click the + button next to the Company field to create your first company.",
-		route: null,
 		placement: "right",
 		waitForSelector: '.modal.show input[name="name"]',
 		hideNextButton: true,
 	},
 	{
 		id: "company-name",
-		targetSelector: '.modal.show input[name="name"]',
-		title: "Name Your Company",
-		content: "Type a company name and click Save to add it.",
-		route: null,
+		targetId: "name",
+		title: "Name the Company",
+		content: "Type a company name to continue.",
 		placement: "bottom",
+		waitForInput: '.modal.show input[name="name"]',
+		hideNextButton: true,
+	},
+	{
+		id: "save-company",
+		targetId: "modal-edit-company-confirm-button",
+		title: "Save the Company",
+		content: "Click to save. The company will be available to reuse on future job applications.",
+		placement: "top",
 		waitForSelectorGone: '.modal.show input[name="name"]',
 		hideNextButton: true,
 	},
 	{
 		id: "save-job",
-		targetSelector: '.modal.show .modal-footer .btn-primary',
+		targetId: "modal-edit-job-confirm-button",
 		title: "Save the Job",
 		content: "Everything looks great! Click to save your job application.",
-		route: null,
 		placement: "top",
 		waitForSelectorGone: '.modal.show input[name="title"]',
 		hideNextButton: true,
 	},
 	{
 		id: "done",
-		targetSelector: null,
+		targetId: null,
 		title: "You're All Set!",
 		content:
 			"You've added your first job application — great work! The job and company you just created will be removed when you click Done, so your data stays clean.",
@@ -136,3 +191,26 @@ export const TOUR_STEPS: TourStep[] = [
 		placement: "center",
 	},
 ];
+
+// ── Tour registry ─────────────────────────────────────────────────────────────
+
+export const TOURS: TourDefinition[] = [
+	{
+		id: "app-overview",
+		title: "App Overview",
+		description: "Get a quick tour of JAM's main features — the sidebar, dashboard, and command palette.",
+		icon: "compass",
+		steps: APP_OVERVIEW_STEPS,
+	},
+	{
+		id: "first-job",
+		title: "Adding Your First Job",
+		description: "A step-by-step walkthrough for logging your first job application.",
+		icon: "briefcase",
+		steps: FIRST_JOB_STEPS,
+	},
+];
+
+export function getTourById(id: string): TourDefinition | undefined {
+	return TOURS.find((t: TourDefinition): boolean => t.id === id);
+}

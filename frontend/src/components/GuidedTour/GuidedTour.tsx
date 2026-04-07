@@ -1,16 +1,19 @@
 import React, { JSX, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTour } from "../../contexts/TourContext";
-import { TOUR_STEPS, TourStep } from "./tourSteps";
+import { Button } from "react-bootstrap";
+import { getTourById, TourStep } from "./tourSteps";
 import "./GuidedTour.scss";
 
 const SPOTLIGHT_PAD = 8;
-const GAP = 16; // gap between spotlight edge and popover edge
-const POP_W = 300;
-const POP_MIN_H = 150;
-const MARGIN = 12; // min distance from viewport edge
+const GAP = 14; // gap between spotlight edge and popover edge
+const POP_W = 320;
+const POP_MIN_H = 120;
+const MARGIN = 16; // min distance from viewport edge
 
 type Side = "top" | "bottom" | "left" | "right";
+const OPPOSITE: Record<Side, Side> = { bottom: "top", top: "bottom", left: "right", right: "left" };
+const ALL_SIDES: Side[] = ["bottom", "top", "right", "left"];
 
 function bestSide(rect: DOMRect, preferred: Side): Side {
 	const vw = window.innerWidth;
@@ -21,30 +24,25 @@ function bestSide(rect: DOMRect, preferred: Side): Side {
 		right: vw - rect.right - SPOTLIGHT_PAD - GAP,
 		left: rect.left - SPOTLIGHT_PAD - GAP,
 	};
-
-	// Use preferred if there's enough room
-	const minH = POP_MIN_H;
-	const minW = POP_W + MARGIN;
 	const fits: Record<Side, boolean> = {
-		bottom: space.bottom >= minH,
-		top: space.top >= minH,
-		right: space.right >= minW,
-		left: space.left >= minW,
+		bottom: space.bottom >= POP_MIN_H + MARGIN,
+		top: space.top >= POP_MIN_H + MARGIN,
+		right: space.right >= POP_W + MARGIN,
+		left: space.left >= POP_W + MARGIN,
 	};
 
 	if (fits[preferred]) return preferred;
+	if (fits[OPPOSITE[preferred]]) return OPPOSITE[preferred];
 
-	// Fallback: pick side with most space (honouring axis preference)
-	const axis = preferred === "top" || preferred === "bottom" ? "vertical" : "horizontal";
-	if (axis === "vertical") {
-		if (fits.bottom || fits.top) return space.bottom >= space.top ? "bottom" : "top";
-		// No room on vertical — try horizontal
-		return space.right >= space.left ? "right" : "left";
-	} else {
-		if (fits.right || fits.left) return space.right >= space.left ? "right" : "left";
-		// No room on horizontal — try vertical
-		return space.bottom >= space.top ? "bottom" : "top";
+	// Try remaining sides sorted by available space
+	const others = ALL_SIDES.filter((s) => s !== preferred && s !== OPPOSITE[preferred]);
+	others.sort((a, b) => space[b] - space[a]);
+	for (const s of others) {
+		if (fits[s]) return s;
 	}
+
+	// Nothing fits — pick the side with the most space
+	return ALL_SIDES.reduce((a, b) => (space[a] >= space[b] ? a : b));
 }
 
 function computePopoverStyle(rect: DOMRect, preferred: TourStep["placement"]): React.CSSProperties {
@@ -54,33 +52,38 @@ function computePopoverStyle(rect: DOMRect, preferred: TourStep["placement"]): R
 	const vh = window.innerHeight;
 	const side = bestSide(rect, preferred as Side);
 
-	let top: number | undefined;
-	let bottom: number | undefined;
-	let left: number | undefined;
-	let right: number | undefined;
-	let maxHeight: number;
+	// Center the popover on the target's relevant axis, clamped to viewport
+	const leftCentered = Math.max(MARGIN, Math.min(
+		rect.left + rect.width / 2 - POP_W / 2,
+		vw - POP_W - MARGIN,
+	));
+	const topCentered = Math.max(MARGIN, Math.min(
+		rect.top + rect.height / 2 - POP_MIN_H / 2,
+		vh - POP_MIN_H - MARGIN,
+	));
 
-	if (side === "bottom") {
-		top = rect.bottom + SPOTLIGHT_PAD + GAP;
-		left = Math.min(Math.max(rect.left, MARGIN), vw - POP_W - MARGIN);
-		maxHeight = vh - top - MARGIN;
-	} else if (side === "top") {
-		const anchorBottom = rect.top - SPOTLIGHT_PAD - GAP;
-		maxHeight = anchorBottom - MARGIN;
-		bottom = vh - anchorBottom;
-		left = Math.min(Math.max(rect.left, MARGIN), vw - POP_W - MARGIN);
-	} else if (side === "right") {
-		left = rect.right + SPOTLIGHT_PAD + GAP;
-		top = Math.min(Math.max(rect.top, MARGIN), vh - POP_MIN_H - MARGIN);
-		maxHeight = vh - top - MARGIN;
-	} else {
-		// left
-		right = vw - (rect.left - SPOTLIGHT_PAD - GAP);
-		top = Math.min(Math.max(rect.top, MARGIN), vh - POP_MIN_H - MARGIN);
-		maxHeight = vh - top - MARGIN;
+	switch (side) {
+		case "bottom": {
+			const top = rect.bottom + SPOTLIGHT_PAD + GAP;
+			return { top, left: leftCentered, maxHeight: Math.max(vh - top - MARGIN, POP_MIN_H) };
+		}
+		case "top": {
+			const cssBottom = vh - (rect.top - SPOTLIGHT_PAD - GAP);
+			return {
+				bottom: cssBottom,
+				left: leftCentered,
+				maxHeight: Math.max(rect.top - SPOTLIGHT_PAD - GAP - MARGIN, POP_MIN_H),
+			};
+		}
+		case "right": {
+			const left = Math.min(rect.right + SPOTLIGHT_PAD + GAP, vw - POP_W - MARGIN);
+			return { left, top: topCentered, maxHeight: Math.max(vh - topCentered - MARGIN, POP_MIN_H) };
+		}
+		case "left": {
+			const left = Math.max(MARGIN, rect.left - SPOTLIGHT_PAD - GAP - POP_W);
+			return { left, top: topCentered, maxHeight: Math.max(vh - topCentered - MARGIN, POP_MIN_H) };
+		}
 	}
-
-	return { top, bottom, left, right, maxHeight: Math.max(maxHeight, POP_MIN_H) };
 }
 
 /** Force a value into a React-controlled input */
@@ -94,9 +97,11 @@ function setNativeInputValue(el: HTMLInputElement, value: string): void {
 }
 
 export function GuidedTour(): JSX.Element | null {
-	const { isTourActive, endTour, isCleaningUp } = useTour();
+	const { isTourActive, activeTourId, endTour, isCleaningUp } = useTour();
 	const navigate = useNavigate();
 	const location = useLocation();
+
+	const TOUR_STEPS = activeTourId ? (getTourById(activeTourId)?.steps ?? []) : [];
 
 	const [step, setStep] = useState<number>(0);
 	const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
@@ -110,24 +115,38 @@ export function GuidedTour(): JSX.Element | null {
 	locationRef.current = location.pathname;
 
 	const stopPoll = useCallback(() => {
-		if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+		if (pollRef.current) {
+			clearInterval(pollRef.current);
+			pollRef.current = null;
+		}
 	}, []);
 
 	const stopRaf = useCallback(() => {
-		if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+		if (rafRef.current) {
+			cancelAnimationFrame(rafRef.current);
+			rafRef.current = null;
+		}
 	}, []);
 
 	const stopWait = useCallback(() => {
-		if (waitPollRef.current) { clearInterval(waitPollRef.current); waitPollRef.current = null; }
+		if (waitPollRef.current) {
+			clearInterval(waitPollRef.current);
+			waitPollRef.current = null;
+		}
 		autoFillCleanupRef.current?.();
 		autoFillCleanupRef.current = null;
 	}, []);
 
 	const advanceToStep = useCallback(
 		(targetStep: number): void => {
-			stopPoll(); stopRaf(); stopWait();
+			stopPoll();
+			stopRaf();
+			stopWait();
 			setTargetRect(null);
-			if (targetStep >= TOUR_STEPS.length) { void endTour(true); return; }
+			if (targetStep >= TOUR_STEPS.length) {
+				void endTour(true);
+				return;
+			}
 			setStep(targetStep);
 		},
 		[stopPoll, stopRaf, stopWait, endTour]
@@ -137,7 +156,10 @@ export function GuidedTour(): JSX.Element | null {
 	useEffect(() => {
 		if (!isTourActive) return;
 		const stepDef = TOUR_STEPS[step];
-		if (!stepDef?.targetSelector) { setTargetRect(null); return; }
+		if (!stepDef?.targetId) {
+			setTargetRect(null);
+			return;
+		}
 
 		if (stepDef.route) {
 			const path = stepDef.route.replace("/jam", "");
@@ -147,24 +169,30 @@ export function GuidedTour(): JSX.Element | null {
 		// Poll until the element appears (with non-zero dimensions)
 		let elapsed = 0;
 		pollRef.current = setInterval(() => {
-			const el = document.querySelector<HTMLElement>(stepDef.targetSelector!);
+			const el = document.getElementById(stepDef.targetId!);
 			const r = el?.getBoundingClientRect();
 			if (r && r.width > 0 && r.height > 0) {
 				stopPoll();
 				// Short delay so Bootstrap modal animation has time to settle
 				setTimeout(() => {
-					const el2 = document.querySelector<HTMLElement>(stepDef.targetSelector!);
+					const el2 = document.getElementById(stepDef.targetId!);
 					if (!el2) return;
 					setTargetRect(el2.getBoundingClientRect());
 
 					// RAF loop keeps rect in sync with any ongoing animation / scroll
 					const trackRect = () => {
-						const el3 = document.querySelector<HTMLElement>(stepDef.targetSelector!);
+						const el3 = document.getElementById(stepDef.targetId!);
 						if (!el3) return;
 						const newR = el3.getBoundingClientRect();
-						setTargetRect(prev => {
-							if (prev && prev.top === newR.top && prev.left === newR.left &&
-								prev.width === newR.width && prev.height === newR.height) return prev;
+						setTargetRect((prev) => {
+							if (
+								prev &&
+								prev.top === newR.top &&
+								prev.left === newR.left &&
+								prev.width === newR.width &&
+								prev.height === newR.height
+							)
+								return prev;
 							return newR;
 						});
 						rafRef.current = requestAnimationFrame(trackRect);
@@ -173,11 +201,17 @@ export function GuidedTour(): JSX.Element | null {
 				}, 350);
 			} else {
 				elapsed += 50;
-				if (elapsed >= 3000) { stopPoll(); setStep(s => s + 1); }
+				if (elapsed >= 3000) {
+					stopPoll();
+					setStep((s) => s + 1);
+				}
 			}
 		}, 50);
 
-		return () => { stopPoll(); stopRaf(); };
+		return () => {
+			stopPoll();
+			stopRaf();
+		};
 	}, [step, isTourActive, navigate, stopPoll, stopRaf]);
 
 	// ── Interactive: waitForSelector / waitForSelectorGone / waitForInput ───
@@ -211,10 +245,14 @@ export function GuidedTour(): JSX.Element | null {
 			};
 
 			if (!attach()) {
-				retryTimer = setInterval(() => { if (attach()) clearInterval(retryTimer); }, 50);
+				retryTimer = setInterval(() => {
+					if (attach()) clearInterval(retryTimer);
+				}, 50);
 				const timeout = setTimeout(() => clearInterval(retryTimer), 5000);
 				autoFillCleanupRef.current = () => {
-					clearInterval(retryTimer); clearTimeout(timeout); cleanup?.();
+					clearInterval(retryTimer);
+					clearTimeout(timeout);
+					cleanup?.();
 				};
 			} else {
 				autoFillCleanupRef.current = () => cleanup?.();
@@ -232,7 +270,10 @@ export function GuidedTour(): JSX.Element | null {
 				const el = document.querySelector<HTMLInputElement>(waitForInput);
 				met = !!el && el.value.trim().length > 0;
 			}
-			if (met) { stopWait(); setStep(s => s + 1); }
+			if (met) {
+				stopWait();
+				setStep((s) => s + 1);
+			}
 		}, 50);
 
 		return stopWait;
@@ -241,17 +282,25 @@ export function GuidedTour(): JSX.Element | null {
 	// ── Escape key ───────────────────────────────────────────────────────────
 	useEffect(() => {
 		if (!isTourActive) return;
-		const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") void endTour(false); };
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") void endTour(false);
+		};
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
 	}, [isTourActive, endTour]);
 
 	// ── Reset on tour start ──────────────────────────────────────────────────
-	useEffect(() => { if (isTourActive) setStep(0); }, [isTourActive]);
+	useEffect(() => {
+		if (isTourActive) setStep(0);
+	}, [isTourActive]);
 
 	if (!isTourActive) return null;
 	const currentStep = TOUR_STEPS[step];
 	if (!currentStep) return null;
+
+	// Don't render until the target element has been located — prevents the popover
+	// from flashing at a default position while the poll / settle delay is running.
+	if (currentStep.targetId !== null && targetRect === null) return null;
 
 	const showNext = !currentStep.hideNextButton;
 	const isFirst = step === 0;
@@ -279,7 +328,9 @@ export function GuidedTour(): JSX.Element | null {
 				aria-label={`Tour step ${step + 1} of ${TOUR_STEPS.length}: ${currentStep.title}`}
 			>
 				<div className="tour-popover-header">
-					<span className="tour-step-counter">{step + 1} / {TOUR_STEPS.length}</span>
+					<span className="tour-step-counter">
+						{step + 1} / {TOUR_STEPS.length}
+					</span>
 					<button className="tour-skip-btn" onClick={() => void endTour(false)}>
 						Skip tour
 					</button>
@@ -294,17 +345,27 @@ export function GuidedTour(): JSX.Element | null {
 							</button>
 						)}
 						{showNext && (
-							<button
-								className="tour-btn-primary"
+							<Button
 								disabled={isCleaningUp}
-								onClick={() => isLast ? void endTour(true) : advanceToStep(step + 1)}
+								onClick={() => (isLast ? void endTour(true) : advanceToStep(step + 1))}
 							>
-								{isLast
-									? isCleaningUp
-										? <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />Cleaning up…</>
-										: "Done"
-									: "Next"}
-							</button>
+								{isLast ? (
+									isCleaningUp ? (
+										<>
+											<span
+												className="spinner-border spinner-border-sm me-2"
+												role="status"
+												aria-hidden="true"
+											/>
+											Cleaning up…
+										</>
+									) : (
+										"Done"
+									)
+								) : (
+									"Next"
+								)}
+							</Button>
 						)}
 					</div>
 				)}

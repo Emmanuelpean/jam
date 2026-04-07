@@ -46,6 +46,7 @@ import { useCommandPalette } from "./components/CommandPalette/useCommandPalette
 import { CommandPaletteProvider } from "./contexts/CommandPaletteContext";
 import { TourProvider } from "./contexts/TourContext";
 import { GuidedTour } from "./components/GuidedTour/GuidedTour";
+import { TourSelectPanel } from "./components/Tours/TourSelectPanel";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -103,6 +104,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 		<div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
 			<CommandPalette isOpen={isCommandPaletteOpen} onClose={closeCommandPalette} />
 			{isAuthenticated && <GuidedTour />}
+			{isAuthenticated && <TourSelectPanel />}
 			<MaintenanceBanner />
 			<DemoBanner />
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>

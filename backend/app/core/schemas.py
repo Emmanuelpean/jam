@@ -87,7 +87,7 @@ class UserPreferencesCreate(BaseModel):
     update_limit: int | None = None
     default_currency: str | None = None
     extension_banner_dismissed: bool | None = None
-    tour_completed: bool | None = None
+    completed_tours: list[str] | None = None
     dashboard_layout: str | None = None
     table_columns: dict[str, list[str]] | None = None
     table_sort: dict[str, dict[str, str]] | None = None
@@ -232,6 +232,8 @@ class UserQualificationUpsert(BaseModel):
     @field_validator("experience")
     @classmethod
     def validate_experience(cls, v: str | None) -> str | None:
+        """Validate the experience value"""
+
         EXPERIENCE_CHAR_LIMIT: int = 10000
         if v and len(v) > EXPERIENCE_CHAR_LIMIT:
             raise ValueError(f"Experience must not exceed {EXPERIENCE_CHAR_LIMIT} characters")
@@ -240,6 +242,8 @@ class UserQualificationUpsert(BaseModel):
     @field_validator("skills", "education", "qualities", "interests")
     @classmethod
     def validate_other_fields(cls, v: str | None) -> str | None:
+        """Validate the field values"""
+
         OTHER_CHAR_LIMIT: int = 3500
         if v and len(v) > OTHER_CHAR_LIMIT:
             raise ValueError(f"This field must not exceed {OTHER_CHAR_LIMIT} characters")

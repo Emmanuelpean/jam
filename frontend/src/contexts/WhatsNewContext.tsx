@@ -33,7 +33,7 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 	const whatsNewRef = useRef<WhatsNewModalHandle>(null);
 	const welcomeRef = useRef<WelcomeModalHandle>(null);
 	const { currentUser } = useAuth();
-	const { startTour } = useTour();
+	const { startTour, completedTourIds } = useTour();
 	const [slides, setSlides] = useState<ReleaseSlide[]>([]);
 
 	const showWhatsNew = useCallback((): void => {
@@ -78,8 +78,8 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 			<WelcomeModal
 				ref={welcomeRef}
 				onFinish={(): void => {
-					if (!currentUser?.preferences?.tour_completed) {
-						startTour();
+					if (!completedTourIds.has("app-overview")) {
+						startTour("app-overview");
 					}
 				}}
 			/>

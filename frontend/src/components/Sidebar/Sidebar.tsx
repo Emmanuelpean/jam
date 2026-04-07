@@ -35,10 +35,11 @@ export const Sidebar = (): JSX.Element => {
 	const location = useLocation();
 	const { logout, currentUser } = useAuth();
 	const { isMobile } = useViewport();
-	const { startTour } = useTour();
+	const { openTourSelect, isTourSelectOpen, isTourActive } = useTour();
 	const { showDelete } = useAlert();
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
+	const [isHovered, setIsHovered] = useState<boolean>(false);
 	const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
 
 	const handleLogoutClick = async (): Promise<void> => {
@@ -56,7 +57,6 @@ export const Sidebar = (): JSX.Element => {
 		}
 	};
 
-	const expandTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const dropdownRef = useRef<HTMLDivElement | null>(null);
 	const sidebarRef = useRef<HTMLDivElement | null>(null);
@@ -100,7 +100,7 @@ export const Sidebar = (): JSX.Element => {
 
 	const navigationItems: NavigationItem[] = [
 		{ path: "/dashboard", text: "Dashboard", position: "top" },
-		{ path: "/jobs", text: "Jobs", position: "top", tourId: "nav-jobs" },
+		{ path: "/jobs", text: "Jobs", position: "top", id: "nav-jobs", tourId: "nav-jobs" },
 		{
 			path: "/scraped-jobs",
 			text: "Job Alerts",
@@ -148,7 +148,7 @@ export const Sidebar = (): JSX.Element => {
 			icon: "map",
 			text: "Take a Tour",
 			position: "bottom",
-			onClick: startTour,
+			onClick: openTourSelect,
 			id: "take-a-tour-btn",
 			tourId: "take-a-tour-btn",
 		},
@@ -183,21 +183,34 @@ export const Sidebar = (): JSX.Element => {
 		setShowDropdown(false);
 	};
 
+	// Keep sidebar expanded during an active tour so target rects are measured at full width
+	useEffect(() => {
+		if (isTourActive) setIsExpanded(true);
+	}, [isTourActive]);
+
+	// Collapse when the tour panel closes and the mouse is no longer over the sidebar
+	useEffect(() => {
+		if (!isTourSelectOpen && !isHovered) {
+			setIsExpanded(false);
+			setShowDropdown(false);
+		}
+	}, [isTourSelectOpen, isHovered]);
+
 	const handleMouseEnter = () => {
 		if (collapseTimeoutRef.current) {
 			clearTimeout(collapseTimeoutRef.current);
 			collapseTimeoutRef.current = null;
 		}
-		expandTimeoutRef.current = setTimeout(() => {
-			setIsExpanded(true);
-		}, 200);
+		setIsHovered(true);
+		setIsExpanded(true);
 	};
 
-	const handleMouseLeave = () => {
-		if (expandTimeoutRef.current) {
-			clearTimeout(expandTimeoutRef.current);
-			expandTimeoutRef.current = null;
-		}
+	const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+		setIsHovered(false);
+		// Don't collapse during an active tour or when moving to the tour panel
+		if (isTourActive) return;
+		const relatedTarget = e.relatedTarget as Node | null;
+		if (document.getElementById("tsp-panel")?.contains(relatedTarget)) return;
 		collapseTimeoutRef.current = setTimeout(() => {
 			setIsExpanded(false);
 			setShowDropdown(false);
