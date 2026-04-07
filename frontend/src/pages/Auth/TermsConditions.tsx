@@ -1,5 +1,6 @@
 import React, { JSX } from "react";
 import { Button, Card, Modal } from "react-bootstrap";
+import JamModal from "../../components/JamModal/JamModal";
 import { Link } from "react-router-dom";
 import "./TermsConditions.scss";
 
@@ -320,7 +321,7 @@ interface TermsAndConditionsProps {
 
 function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Element {
 	return (
-		<Modal show={show} onHide={onHide} scrollable className="terms-modal">
+		<JamModal show={show} onHide={onHide} scrollable className="terms-modal">
 			<Modal.Header closeButton className="terms-header">
 				<Modal.Title className="d-flex align-items-center">
 					<i className="bi bi-file-earmark-text me-2"></i>
@@ -335,7 +336,7 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 					<i className="bi bi-check-circle me-2"></i>I Understand and Accept
 				</Button>
 			</Modal.Footer>
-		</Modal>
+		</JamModal>
 	);
 }
 

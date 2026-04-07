@@ -4,7 +4,11 @@ import { WELCOME_SLIDES } from "../../releaseNotes/versions";
 
 export type WelcomeModalHandle = SlideCarouselModalHandle;
 
-export const WelcomeModal = forwardRef<WelcomeModalHandle>((_props, ref): JSX.Element => {
+interface WelcomeModalProps {
+	onFinish?: () => void;
+}
+
+export const WelcomeModal = forwardRef<WelcomeModalHandle, WelcomeModalProps>(({ onFinish }, ref): JSX.Element => {
 	return (
 		<SlideCarouselModal
 			ref={ref}
@@ -14,6 +18,7 @@ export const WelcomeModal = forwardRef<WelcomeModalHandle>((_props, ref): JSX.El
 			slides={WELCOME_SLIDES}
 			finishText="Get Started!"
 			finishIcon="bi-rocket-takeoff"
+			onFinish={onFinish}
 		/>
 	);
 });

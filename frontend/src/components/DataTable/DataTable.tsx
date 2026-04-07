@@ -826,6 +826,7 @@ function DataTableComponent<T extends JamData>(
 										width: "100%",
 									}}
 									id={`add-${entityType}-button`}
+									{...(entityType === "job" ? { "data-tour": "add-job-btn" } : {})}
 								>
 									<i className={`bi-plus-circle me-2`} style={{ fontSize: "1.1rem" }}></i>
 									{`Add ${entityName}`}

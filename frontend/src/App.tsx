@@ -28,7 +28,7 @@ import ReleaseNotesPage from "./pages/About/ReleaseNotesPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.scss";
 import "./Themes.scss";
-import { AlertProvider } from "./contexts/AlertContext";
+import { AlertProvider, useAlert } from "./contexts/AlertContext";
 import SpeculativeApplicationsPage from "./pages/DataTablePages/SpeculativeApplicationsPage";
 import { ContextMenuProvider } from "./contexts/ContextMenuContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -44,6 +44,8 @@ import ServiceDashboards from "./pages/Services/ServiceDashboards";
 import CommandPalette from "./components/CommandPalette/CommandPalette";
 import { useCommandPalette } from "./components/CommandPalette/useCommandPalette";
 import { CommandPaletteProvider } from "./contexts/CommandPaletteContext";
+import { TourProvider } from "./contexts/TourContext";
+import { GuidedTour } from "./components/GuidedTour/GuidedTour";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -66,7 +68,12 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	const { currentUser, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
 	const { isOpen: isCommandPaletteOpen, close: closeCommandPalette } = useCommandPalette();
+	const { hideAlert } = useAlert();
 	useSwetrixPageViews();
+
+	useEffect(() => {
+		hideAlert();
+	}, [location.pathname]);
 
 	useEffect(() => {
 		if (!isAuthenticated) return;
@@ -95,6 +102,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	return (
 		<div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
 			<CommandPalette isOpen={isCommandPaletteOpen} onClose={closeCommandPalette} />
+			<GuidedTour />
 			<MaintenanceBanner />
 			<DemoBanner />
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
@@ -244,18 +252,19 @@ function AppContent(): JSX.Element {
 				<ViewportProvider>
 					<DataProviderWrapper>
 						<ToastContext.Provider value={toastMethods}>
+							<CommandPaletteProvider>
 							<AlertProvider>
 								<ProgressOverlayProvider>
 									<ThemeProvider>
-										<WhatsNewProvider>
+										<TourProvider>
+											<WhatsNewProvider>
 											<ContextMenuProvider>
-												<CommandPaletteProvider>
-													<AppLayout>
-														<AppRoutes />
-													</AppLayout>
-												</CommandPaletteProvider>
+												<AppLayout>
+													<AppRoutes />
+												</AppLayout>
 											</ContextMenuProvider>
 										</WhatsNewProvider>
+										</TourProvider>
 									</ThemeProvider>
 									<ToastStack
 										toasts={toastMethods.toasts}
@@ -264,6 +273,7 @@ function AppContent(): JSX.Element {
 									/>
 								</ProgressOverlayProvider>
 							</AlertProvider>
+						</CommandPaletteProvider>
 						</ToastContext.Provider>
 					</DataProviderWrapper>
 				</ViewportProvider>

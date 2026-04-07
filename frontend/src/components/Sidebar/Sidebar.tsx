@@ -1,6 +1,7 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTour } from "../../contexts/TourContext";
 import JamLogo from "../../assets/Logo.svg?react";
 import { getTableIcon } from "../rendering/view/Icons";
 import { ThemeSelector } from "./ThemeSelector";
@@ -20,6 +21,7 @@ interface NavigationItem {
 	onClick?: () => void;
 	className?: string;
 	id?: string;
+	tourId?: string;
 }
 
 interface NavigationSubItem {
@@ -33,6 +35,7 @@ export const Sidebar = (): JSX.Element => {
 	const location = useLocation();
 	const { logout, currentUser } = useAuth();
 	const { isMobile } = useViewport();
+	const { startTour } = useTour();
 	const { showDelete } = useAlert();
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -97,7 +100,7 @@ export const Sidebar = (): JSX.Element => {
 
 	const navigationItems: NavigationItem[] = [
 		{ path: "/dashboard", text: "Dashboard", position: "top" },
-		{ path: "/jobs", text: "Jobs", position: "top" },
+		{ path: "/jobs", text: "Jobs", position: "top", tourId: "nav-jobs" },
 		{
 			path: "/scraped-jobs",
 			text: "Job Alerts",
@@ -140,6 +143,14 @@ export const Sidebar = (): JSX.Element => {
 					alsoActiveFor: ["/app/settings", "/app/email-templates"],
 				},
 			],
+		},
+		{
+			icon: "map",
+			text: "Take a Tour",
+			position: "bottom",
+			onClick: startTour,
+			id: "take-a-tour-btn",
+			tourId: "take-a-tour-btn",
 		},
 		{
 			icon: "box-arrow-right",
@@ -278,6 +289,30 @@ export const Sidebar = (): JSX.Element => {
 				);
 			}
 
+			if (!item.path && item.onClick) {
+				return (
+					<div
+						key={item.text}
+						className={`nav-item ${item.className || ""}`}
+						onClick={item.onClick}
+						role="button"
+						tabIndex={0}
+						id={item.id}
+						{...(item.tourId ? { "data-tour": item.tourId } : {})}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ") item.onClick?.();
+						}}
+					>
+						<span className="nav-icon">
+							<i className={`bi bi-${item?.icon || getTableIcon(item.text)}`}></i>
+						</span>
+						<span className="nav-text-container">
+							<span className="nav-text">{item.text}</span>
+						</span>
+					</div>
+				);
+			}
+
 			return (
 				<Link
 					key={item.text}
@@ -285,6 +320,7 @@ export const Sidebar = (): JSX.Element => {
 					className={`nav-item ${isMenuActive(item.path!) ? "active" : ""} ${item.className || ""}`}
 					onClick={item.onClick}
 					id={item.id}
+					{...(item.tourId ? { "data-tour": item.tourId } : {})}
 				>
 					<span className="nav-icon">
 						<i className={`bi bi-${item?.icon || getTableIcon(item.text)}`}></i>

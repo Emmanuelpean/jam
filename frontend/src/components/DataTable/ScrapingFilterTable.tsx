@@ -1,5 +1,6 @@
 import React, { JSX, useLayoutEffect, useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
+import JamModal from "../JamModal/JamModal";
 import { ModalHeader } from "../ModalHeader/ModalHeader";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
@@ -133,7 +134,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	);
 
 	return (
-		<Modal
+		<JamModal
 			show={show}
 			onHide={onHide}
 			size="xl"
@@ -165,7 +166,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 					/>
 				</div>
 			</Modal.Footer>
-		</Modal>
+		</JamModal>
 	);
 };
 

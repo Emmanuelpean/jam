@@ -169,6 +169,7 @@ class UserPreferences(Owned, Base):
     table_columns = Column(JSON, nullable=True)
     table_sort = Column(JSON, nullable=True)
     extension_banner_dismissed = Column(Boolean, nullable=False, server_default="false")
+    tour_completed = Column(Boolean, nullable=False, server_default="false")
 
 
 class StripeDetails(Owned, Base):

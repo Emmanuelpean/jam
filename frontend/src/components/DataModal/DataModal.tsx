@@ -1,9 +1,9 @@
 import React, { forwardRef, JSX, ReactNode, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
+import JamModal from "../JamModal/JamModal";
 import { ModalHeader } from "../ModalHeader/ModalHeader";
 import LoadingSpinner from "../Spinner/Spinner";
 import { useAuth } from "../../contexts/AuthContext";
-import { useCommandPaletteContext } from "../../contexts/CommandPaletteContext";
 import {
 	DataContextValue,
 	EntityType,
@@ -197,7 +197,6 @@ function DataModalComponent<T extends JamData>(
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const { currentUser } = useAuth();
 	const dataContext: DataContextValue = useDataContext();
-	const { isOpen: isCommandPaletteOpen } = useCommandPaletteContext();
 	const [activeTab, setActiveTab] = useState<string | null>((): string | null => {
 		if (hasTabs) {
 			return defaultActiveTab || tabs[0]!.key;
@@ -1095,10 +1094,43 @@ function DataModalComponent<T extends JamData>(
 				</Modal.Footer>
 			) : (
 				<Modal.Footer>
-					{(() => { const extraButtons = extraViewFooterButtons?.(activeTab, effectiveData); return extraButtons ? (
-						<div className="d-flex flex-column w-100 gap-2">
+					{(() => {
+						const extraButtons = extraViewFooterButtons?.(activeTab, effectiveData);
+						return extraButtons ? (
+							<div className="d-flex flex-column w-100 gap-2">
+								<div className="modal-buttons-container">
+									{extraButtons}
+									{canEdit && (
+										<ActionButton
+											id={getModalId() + "-edit-button"}
+											variant="primary"
+											onClick={handleEdit}
+											defaultText="Edit"
+											fullWidth={false}
+											disabled={editState.disabled}
+											tooltip={editState.message}
+											tooltipPlacement="top"
+										/>
+									)}
+								</div>
+								<div className="modal-buttons-container">
+									<ActionButton
+										id={getModalId() + "-cancel-button"}
+										variant="secondary"
+										onClick={handleHideImmediate}
+										defaultText="Close"
+									/>
+								</div>
+							</div>
+						) : (
 							<div className="modal-buttons-container">
-								{extraButtons}
+								<ActionButton
+									id={getModalId() + "-cancel-button"}
+									variant="secondary"
+									onClick={handleHideImmediate}
+									defaultText="Close"
+									fullWidth={false}
+								/>
 								{canEdit && (
 									<ActionButton
 										id={getModalId() + "-edit-button"}
@@ -1112,38 +1144,8 @@ function DataModalComponent<T extends JamData>(
 									/>
 								)}
 							</div>
-							<div className="modal-buttons-container">
-								<ActionButton
-									id={getModalId() + "-cancel-button"}
-									variant="secondary"
-									onClick={handleHideImmediate}
-									defaultText="Close"
-								/>
-							</div>
-						</div>
-					) : (
-						<div className="modal-buttons-container">
-							<ActionButton
-								id={getModalId() + "-cancel-button"}
-								variant="secondary"
-								onClick={handleHideImmediate}
-								defaultText="Close"
-								fullWidth={false}
-							/>
-							{canEdit && (
-								<ActionButton
-									id={getModalId() + "-edit-button"}
-									variant="primary"
-									onClick={handleEdit}
-									defaultText="Edit"
-									fullWidth={false}
-									disabled={editState.disabled}
-									tooltip={editState.message}
-									tooltipPlacement="top"
-								/>
-							)}
-						</div>
-					); })()}
+						);
+					})()}
 				</Modal.Footer>
 			);
 		}
@@ -1159,7 +1161,7 @@ function DataModalComponent<T extends JamData>(
 
 	return (
 		<>
-			<Modal
+			<JamModal
 				className="data-modal"
 				show={internalShow}
 				onHide={handleCloseWithConfirmation}
@@ -1167,11 +1169,10 @@ function DataModalComponent<T extends JamData>(
 				centered={true}
 				backdrop={true}
 				keyboard={true}
-				enforceFocus={!isCommandPaletteOpen}
 				id={getModalId()}
 			>
 				{isEditing ? <Form onSubmit={handleSubmit}>{modalContent}</Form> : modalContent}
-			</Modal>
+			</JamModal>
 		</>
 	);
 }

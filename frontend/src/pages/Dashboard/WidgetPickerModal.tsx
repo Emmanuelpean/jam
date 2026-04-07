@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, JSX } from "react";
-import { Modal, Button } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
+import JamModal from "../../components/JamModal/JamModal";
 import {
 	WIDGET_TYPE_DEFS,
 	WidgetConfig,
@@ -243,7 +244,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 	const showBack: boolean = selectedType !== null;
 
 	return (
-		<Modal show={show} onHide={handleClose} centered>
+		<JamModal show={show} onHide={handleClose} centered>
 			<Modal.Header closeButton>
 				<Modal.Title style={{ overflow: "visible" }}>
 					{showBack ? (
@@ -550,7 +551,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 					</div>
 				</div>
 			</Modal.Body>
-		</Modal>
+		</JamModal>
 	);
 };
 

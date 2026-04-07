@@ -1,5 +1,6 @@
 import React, { forwardRef, JSX, useImperativeHandle, useState } from "react";
 import { Modal } from "react-bootstrap";
+import JamModal from "../JamModal/JamModal";
 import { Accordion } from "../Accordion/Accordion";
 import { useConfig } from "../../contexts/ConfigContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
@@ -32,7 +33,7 @@ export const ScrapingGuideModal = forwardRef<ScrapingGuideModalHandle>((_, ref):
 	};
 
 	return (
-		<Modal show={visible} onHide={() => setVisible(false)} centered size="lg">
+		<JamModal show={visible} onHide={() => setVisible(false)} centered size="lg">
 			<ModalHeader onClose={() => setVisible(false)}>
 				<Modal.Title>
 					<i className="bi bi-envelope-paper me-2" />
@@ -243,6 +244,6 @@ export const ScrapingGuideModal = forwardRef<ScrapingGuideModalHandle>((_, ref):
 					</ol>
 				</Accordion>
 			</Modal.Body>
-		</Modal>
+		</JamModal>
 	);
 });

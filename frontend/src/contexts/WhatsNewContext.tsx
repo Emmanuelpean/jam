@@ -1,5 +1,6 @@
 import React, { createContext, JSX, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
+import { useTour } from "./TourContext";
 import { WhatsNewModal, WhatsNewModalHandle } from "../components/WhatsNewModal/WhatsNewModal";
 import { WelcomeModal, WelcomeModalHandle } from "../components/WelcomeModal/WelcomeModal";
 import {
@@ -32,6 +33,7 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 	const whatsNewRef = useRef<WhatsNewModalHandle>(null);
 	const welcomeRef = useRef<WelcomeModalHandle>(null);
 	const { currentUser } = useAuth();
+	const { startTour } = useTour();
 	const [slides, setSlides] = useState<ReleaseSlide[]>([]);
 
 	const showWhatsNew = useCallback((): void => {
@@ -73,7 +75,14 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 		<WhatsNewContext.Provider value={{ showWhatsNew, showWelcome }}>
 			{children}
 			<WhatsNewModal ref={whatsNewRef} slides={slides} />
-			<WelcomeModal ref={welcomeRef} />
+			<WelcomeModal
+				ref={welcomeRef}
+				onFinish={(): void => {
+					if (!currentUser?.preferences?.tour_completed) {
+						startTour();
+					}
+				}}
+			/>
 		</WhatsNewContext.Provider>
 	);
 }

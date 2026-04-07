@@ -1,5 +1,6 @@
 import React, { JSX, ReactNode, useState } from "react";
 import { Modal } from "react-bootstrap";
+import JamModal from "../JamModal/JamModal";
 import { ActionButton, ButtonVariant } from "../rendering/form/ActionButton";
 import { ModalHeader } from "../ModalHeader/ModalHeader";
 
@@ -77,7 +78,7 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 	};
 
 	return (
-		<Modal show={alertState.show} onHide={hideAlert} centered size={getModalSize(alertState.size)} id={modalId}>
+		<JamModal show={alertState.show} onHide={hideAlert} centered size={getModalSize(alertState.size)} id={modalId}>
 			<ModalHeader onClose={hideAlert}>
 				{iconClass && <i className={`bi ${iconClass} me-2`} />}
 				<Modal.Title>{alertState.title}</Modal.Title>
@@ -113,7 +114,7 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 					)}
 				</div>
 			</Modal.Footer>
-		</Modal>
+		</JamModal>
 	);
 };
 

@@ -1,5 +1,6 @@
 import React, { forwardRef, JSX, useCallback, useImperativeHandle, useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
+import JamModal from "../JamModal/JamModal";
 import { ModalHeader } from "../ModalHeader/ModalHeader";
 import { ActionButton } from "../rendering/form/ActionButton";
 import { useAuth } from "../../contexts/AuthContext";
@@ -19,10 +20,11 @@ interface SlideCarouselModalProps {
 	slides: ReleaseSlide[];
 	finishText: string;
 	finishIcon: string;
+	onFinish?: () => void;
 }
 
 export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCarouselModalProps>(
-	({ id, title, titleIcon, slides, finishText, finishIcon }: SlideCarouselModalProps, ref): JSX.Element => {
+	({ id, title, titleIcon, slides, finishText, finishIcon, onFinish }: SlideCarouselModalProps, ref): JSX.Element => {
 		const [show, setShow] = useState<boolean>(false);
 		const [currentStep, setCurrentStep] = useState<number>(0);
 		const [direction, setDirection] = useState<"next" | "prev" | null>(null);
@@ -64,6 +66,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 				setLoading(false);
 			}
 			setShow(false);
+			onFinish?.();
 		};
 
 		const handleNext = (): void => {
@@ -83,7 +86,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 		if (!slide) return <></>;
 
 		return (
-			<Modal
+			<JamModal
 				show={show}
 				onHide={markAsSeen}
 				centered
@@ -170,7 +173,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 						/>
 					</div>
 				</Modal.Footer>
-			</Modal>
+			</JamModal>
 		);
 	}
 );

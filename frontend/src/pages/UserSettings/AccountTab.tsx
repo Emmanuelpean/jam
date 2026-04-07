@@ -1,5 +1,6 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
 import { Alert, Col, Form, Modal, Row } from "react-bootstrap";
+import JamModal from "../../components/JamModal/JamModal";
 import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
@@ -375,7 +376,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 				</p>
 			)}
 
-			<Modal show={showDeleteModal} onHide={closeDeleteModal} size={"lg"} centered id="delete-account-modal">
+			<JamModal show={showDeleteModal} onHide={closeDeleteModal} size={"lg"} centered id="delete-account-modal">
 				<Modal.Header closeButton>
 					<Modal.Title>
 						<i className="bi bi-exclamation-triangle"></i> Delete Account
@@ -405,9 +406,9 @@ export const AccountTab: React.FC = (): JSX.Element => {
 						id="continue-delete-button"
 					/>
 				</Modal.Footer>
-			</Modal>
+			</JamModal>
 
-			<Modal show={showConfirmModal} onHide={closeConfirmModal} size={"lg"} centered id="confirm-delete-modal">
+			<JamModal show={showConfirmModal} onHide={closeConfirmModal} size={"lg"} centered id="confirm-delete-modal">
 				<Modal.Header closeButton>
 					<Modal.Title>
 						<i className="bi bi-exclamation-triangle-fill"></i> Final Confirmation
@@ -468,7 +469,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 						id="final-delete-button"
 					/>
 				</Modal.Footer>
-			</Modal>
+			</JamModal>
 		</Form>
 	);
 };

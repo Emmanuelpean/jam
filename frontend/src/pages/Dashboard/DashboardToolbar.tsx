@@ -24,6 +24,7 @@ export const DashboardToolbar: React.FC<DashboardToolbarProps> = ({
 		<div className="dashboard-edit-toolbar-inner">
 			<button
 				id="dashboard-edit-btn"
+				data-tour="dashboard-customise"
 				className={`sidebar-icon-btn ${isEditMode ? "btn btn-outline-secondary active-edit" : "dashboard-edit-trigger-inline"}`}
 				onClick={isEditMode ? onCancel : onEdit}
 				title={isEditMode ? "Cancel" : "Customise dashboard"}

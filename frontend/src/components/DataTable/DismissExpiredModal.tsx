@@ -1,5 +1,6 @@
 import React, { JSX } from "react";
 import { Modal } from "react-bootstrap";
+import JamModal from "../JamModal/JamModal";
 import { ModalHeader } from "../ModalHeader/ModalHeader";
 import { DataTable } from "./DataTable";
 import { tableColumns } from "../rendering/view/TableColumns";
@@ -30,7 +31,7 @@ const DismissExpiredModal: React.FC<DismissExpiredModalProps> = ({
 	];
 
 	return (
-		<Modal
+		<JamModal
 			show={show}
 			onHide={onHide}
 			size="xl"
@@ -78,7 +79,7 @@ const DismissExpiredModal: React.FC<DismissExpiredModalProps> = ({
 					/>
 				</div>
 			</Modal.Footer>
-		</Modal>
+		</JamModal>
 	);
 };
 

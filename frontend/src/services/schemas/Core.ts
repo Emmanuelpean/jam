@@ -37,6 +37,7 @@ export interface UserPreferences {
 	update_limit: number;
 	default_currency: string;
 	extension_banner_dismissed: boolean;
+	tour_completed: boolean;
 	dashboard_layout: string | null;
 	table_columns: Record<string, string[]> | null;
 	table_sort: TableSortConfigs | null;

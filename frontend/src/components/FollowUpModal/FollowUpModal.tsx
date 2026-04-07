@@ -1,5 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { Button, ButtonGroup, Dropdown, Modal } from "react-bootstrap";
+import JamModal from "../JamModal/JamModal";
 import { useAlert } from "../../contexts/AlertContext";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { GroupedSelectOption, useFormOptions } from "../rendering/form/FormOptions";
@@ -239,7 +240,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 	};
 
 	return (
-		<Modal
+		<JamModal
 			show={internalShow}
 			onHide={handleCloseWithConfirmation}
 			centered={true}
@@ -309,7 +310,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 					</div>
 				</div>
 			</Modal.Footer>
-		</Modal>
+		</JamModal>
 	);
 });
 
