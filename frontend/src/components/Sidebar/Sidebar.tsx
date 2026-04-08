@@ -40,6 +40,7 @@ export const Sidebar = (): JSX.Element => {
 	const { openTourSelect, isTourSelectOpen, isTourActive } = useTour();
 	const { showConfirm } = useAlert();
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
+	const [dropdownTop, setDropdownTop] = useState<number>(72);
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
 	const [isHovered, setIsHovered] = useState<boolean>(false);
 	const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
@@ -390,7 +391,16 @@ export const Sidebar = (): JSX.Element => {
 				)}
 				<div className="sidebar-header">
 					<div ref={dropdownRef}>
-						<div onClick={() => setShowDropdown(!showDropdown)} style={{ cursor: "pointer" }}>
+						<div
+							onClick={(): void => {
+								if (!showDropdown && dropdownRef.current) {
+									const r = dropdownRef.current.getBoundingClientRect();
+									setDropdownTop(Math.round(r.top + 72));
+								}
+								setShowDropdown(!showDropdown);
+							}}
+							style={{ cursor: "pointer" }}
+						>
 							<div className="logo-container">
 								<JamLogo
 									style={{
@@ -407,6 +417,7 @@ export const Sidebar = (): JSX.Element => {
 							currentTheme={currentUser?.preferences.theme || DEFAULT_THEME}
 							onThemeChange={handleThemeChange}
 							isVisible={showDropdown && isExpanded}
+							dropdownTop={dropdownTop}
 						/>
 					</div>
 				</div>

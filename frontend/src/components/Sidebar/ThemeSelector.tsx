@@ -9,12 +9,14 @@ interface ThemeSelectorProps {
 	currentTheme: string;
 	onThemeChange: () => void;
 	isVisible: boolean;
+	dropdownTop?: number;
 }
 
 export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 	currentTheme,
 	onThemeChange,
 	isVisible,
+	dropdownTop,
 }: ThemeSelectorProps): JSX.Element | null => {
 	const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 	const [isRendered, setIsRendered] = useState(isVisible);
@@ -51,7 +53,11 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 	if (!isRendered) return null;
 
 	return (
-		<div className={`theme-dropdown ${isClosing ? "closing" : "opening"}`} onAnimationEnd={handleAnimationEnd}>
+		<div
+			className={`theme-dropdown ${isClosing ? "closing" : "opening"}`}
+			style={dropdownTop !== undefined ? { top: dropdownTop } : undefined}
+			onAnimationEnd={handleAnimationEnd}
+		>
 			<div className="fw-medium text-muted small mb-2 px-2">Themes</div>
 			{THEMES.map(
 				(theme: Theme): JSX.Element => (
