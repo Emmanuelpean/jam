@@ -151,7 +151,7 @@
 
     /* Gradient active state — matches sidebar .nav-item.active */
     &.active {
-        background: var(--primary-gradient);
+        background: var(--primary-mid);
 
         .cp-item-icon-wrapper { background: rgb(255 255 255 / 20%); }
         .cp-item-icon         { color: white; }

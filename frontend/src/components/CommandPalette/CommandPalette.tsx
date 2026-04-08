@@ -16,7 +16,10 @@ interface CommandPaletteProps {
 	onClose: () => void;
 }
 
-const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: CommandPaletteProps): JSX.Element | null => {
+const CommandPalette: React.FC<CommandPaletteProps> = ({
+	isOpen,
+	onClose,
+}: CommandPaletteProps): JSX.Element | null => {
 	const navigate = useNavigate();
 	const [query, setQuery] = useState("");
 	const [activeIndex, setActiveIndex] = useState(0);
@@ -227,15 +230,21 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 					<span className="cp-esc-hint">Esc</span>
 				</div>
 				<ul className="cp-list" ref={listRef}>
-					{filtered.length === 0 && <li id="cp-empty" className="cp-empty">No results for "{query}"</li>}
+					{filtered.length === 0 && (
+						<li id="cp-empty" className="cp-empty">
+							No results for "{query}"
+						</li>
+					)}
 					{groups.map((group) => (
 						<React.Fragment key={group}>
-							<li id={`cp-group-${group.toLowerCase()}`} className="cp-group-header">{group}</li>
+							<li id={`cp-group-${group.toLowerCase()}`} className="cp-group-header">
+								{group}
+							</li>
 							{filtered
-								.filter((item) => item.group === group)
-								.map((item) => {
+								.filter((item: CommandItem): boolean => item.group === group)
+								.map((item: CommandItem): JSX.Element => {
 									globalIndex++;
-									const idx = globalIndex;
+									const idx: number = globalIndex;
 									return (
 										<li
 											key={item.id}
@@ -256,7 +265,10 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }: Comm
 					))}
 				</ul>
 				<div className="cp-footer">
-					<span style={{ marginLeft: "auto" }}><kbd>Ctrl</kbd><kbd>K</kbd> to open</span>
+					<span style={{ marginLeft: "auto" }}>
+						<kbd>Ctrl</kbd>
+						<kbd>K</kbd> to open
+					</span>
 				</div>
 			</div>
 		</div>
