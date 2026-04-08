@@ -1,6 +1,6 @@
 export interface TourStep {
 	id: string;
-	targetId: string | null;
+	targetId?: string | null;
 	title: string;
 	content: string;
 	route?: string | null;
@@ -32,10 +32,9 @@ export interface TourDefinition {
 const APP_OVERVIEW_STEPS: TourStep[] = [
 	{
 		id: "intro",
-		targetId: null,
 		title: "Welcome to JAM!",
 		content: "Let's take a quick tour of your Job Application Manager. It'll only take a minute.",
-		route: null,
+		route: "jam/dashboard",
 		placement: "center",
 	},
 	{
@@ -44,7 +43,6 @@ const APP_OVERVIEW_STEPS: TourStep[] = [
 		title: "Sidebar Navigation",
 		content:
 			"Use the sidebar to move between sections. Jobs is your central hub — log applications, track every status, and link each job to People and Interviews.",
-		route: "/jam/dashboard",
 		placement: "right",
 	},
 	{
@@ -53,7 +51,6 @@ const APP_OVERVIEW_STEPS: TourStep[] = [
 		title: "Your Overview at a Glance",
 		content:
 			"Stat cards show your pipeline at a glance — total applications, pending responses, upcoming deadlines, and more.",
-		route: "/jam/dashboard",
 		placement: "bottom",
 	},
 	{
@@ -62,17 +59,14 @@ const APP_OVERVIEW_STEPS: TourStep[] = [
 		title: "Customise Your Dashboard",
 		content:
 			"Click here to enter edit mode. Add, remove, reorder, and resize widgets to build a dashboard that suits your workflow.",
-		route: "/jam/dashboard",
 		placement: "bottom",
 	},
 	{
 		id: "command-palette",
-		targetId: "take-a-tour-btn",
 		title: "Navigate in Seconds",
 		content:
 			"Press Ctrl+K (or Cmd+K on Mac) to open the command palette — jump to any page or trigger any action without touching the mouse. Click 'Take a Tour' here any time to revisit these guides.",
-		route: "/jam/dashboard",
-		placement: "right",
+		placement: "center",
 	},
 ];
 

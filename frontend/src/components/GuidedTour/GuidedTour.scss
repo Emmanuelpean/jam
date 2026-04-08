@@ -1,9 +1,17 @@
+/*
+ * Always rendered for the full tour — the box-shadow creates the dark overlay around
+ * the element, and the element itself is transparent (showing the page through).
+ * When there is no target, it is positioned off-screen (1×1 at -1,-1) so the hole
+ * is invisible and the overlay covers the full viewport with no flicker between steps.
+ */
 .tour-spotlight {
 	position: fixed;
 	z-index: 1401;
 	border-radius: 6px;
 	pointer-events: none;
-	box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+	box-shadow: 0 0 0 9999px rgb(0 0 0 / 55%);
+	outline: 2px solid rgb(255 255 255 / 20%);
+	outline-offset: 1px;
 	transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
 }
 
@@ -11,14 +19,23 @@
 	position: fixed;
 	z-index: 1402;
 	width: 320px; /* kept in sync with POP_W constant in GuidedTour.tsx */
-	max-height: calc(100vh - 32px);
-	overflow-y: auto;
+	overflow: hidden;
 	background: var(--bs-body-bg);
-	border: 1px solid var(--bs-border-color);
-	border-radius: 12px;
-	padding: 20px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-	animation: tour-popover-in 0.2s ease forwards;
+	border: 1px solid var(--bs-card-border-color);
+	border-radius: 10.8px;
+	padding: 0;
+	box-shadow: 0 20px 60px rgb(0 0 0 / 30%);
+	animation: tour-popover-in 0.18s ease forwards;
+
+	&::before {
+		content: "";
+		position: absolute;
+		top: 0;
+		right: 0;
+		left: 0;
+		height: 3px;
+		background: var(--primary-gradient);
+	}
 
 	&.tour-popover-center {
 		top: 50%;
@@ -27,25 +44,40 @@
 	}
 }
 
+.tour-popover-body {
+	padding: 20px;
+	overflow-y: auto;
+	max-height: calc(100vh - 32px);
+
+	&::-webkit-scrollbar { width: 3.6px; }
+
+	&::-webkit-scrollbar-thumb {
+		background: var(--bs-border-color);
+		border-radius: 2px;
+	}
+}
+
 @keyframes tour-popover-in {
 	from {
 		opacity: 0;
-		transform: translateY(6px);
+		transform: translateY(8px) scale(0.98);
 	}
+
 	to {
 		opacity: 1;
-		transform: translateY(0);
+		transform: translateY(0) scale(1);
 	}
 }
 
 @keyframes tour-popover-center-in {
 	from {
 		opacity: 0;
-		transform: translate(-50%, calc(-50% + 6px));
+		transform: translate(-50%, calc(-50% + 8px)) scale(0.98);
 	}
+
 	to {
 		opacity: 1;
-		transform: translate(-50%, -50%);
+		transform: translate(-50%, -50%) scale(1);
 	}
 }
 
@@ -54,44 +86,64 @@
 }
 
 .tour-popover-header {
+	position: relative;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 12px;
+	padding-bottom: 12px;
+	margin-bottom: 14px;
+
+	&::after {
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		height: 1.8px;
+		content: "";
+		opacity: 0.85;
+		background: var(--primary-gradient);
+	}
 }
 
 .tour-step-counter {
-	font-size: 0.75rem;
+	font-size: 0.7rem;
+	font-weight: 600;
 	color: var(--bs-secondary-color);
-	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
 }
 
 .tour-skip-btn {
-	background: none;
-	border: none;
-	font-size: 0.75rem;
+	display: inline-flex;
+	align-items: center;
+	background: var(--bs-secondary-bg);
+	border: 1px solid var(--bs-card-border-color);
+	border-radius: 4px;
+	font-size: 0.65rem;
+	font-family: inherit;
 	color: var(--bs-secondary-color);
 	cursor: pointer;
-	padding: 0;
-	text-decoration: underline;
+	padding: 2px 7px;
+	transition: color 0.12s, border-color 0.12s;
 
 	&:hover {
 		color: var(--bs-body-color);
+		border-color: var(--bs-secondary-color);
 	}
 }
 
 .tour-popover-title {
 	font-size: 1rem;
 	font-weight: 600;
-	margin-bottom: 8px;
+	margin-bottom: 6px;
 	color: var(--bs-body-color);
 }
 
 .tour-popover-content {
 	font-size: 0.875rem;
 	color: var(--bs-secondary-color);
-	line-height: 1.5;
-	margin-bottom: 16px;
+	line-height: 1.55;
+	margin-bottom: 18px;
 }
 
 .tour-popover-footer {
@@ -101,30 +153,42 @@
 }
 
 .tour-btn-primary {
-	background: var(--bs-primary);
-	color: #fff;
+	background: var(--primary-gradient);
+	color: white;
 	border: none;
-	border-radius: 6px;
-	padding: 6px 16px;
+	border-radius: 6.5px;
+	padding: 6px 18px;
 	font-size: 0.875rem;
 	font-weight: 500;
 	cursor: pointer;
+	transition: filter 0.15s ease;
 
 	&:hover {
-		filter: brightness(1.1);
+		filter: brightness(1.08);
+	}
+
+	&:active {
+		filter: brightness(0.95);
+	}
+
+	&:disabled {
+		opacity: 0.7;
+		cursor: default;
 	}
 }
 
 .tour-btn-secondary {
 	background: transparent;
 	color: var(--bs-secondary-color);
-	border: 1px solid var(--bs-border-color);
-	border-radius: 6px;
-	padding: 6px 16px;
+	border: 1px solid var(--bs-card-border-color);
+	border-radius: 6.5px;
+	padding: 6px 14px;
 	font-size: 0.875rem;
 	cursor: pointer;
+	transition: background 0.12s ease, color 0.12s ease;
 
 	&:hover {
-		background: var(--bs-tertiary-bg);
+		background: var(--bs-border-color);
+		color: var(--bs-body-color);
 	}
 }

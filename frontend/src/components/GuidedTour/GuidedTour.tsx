@@ -1,7 +1,7 @@
 import React, { JSX, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTour } from "../../contexts/TourContext";
-import { Button } from "react-bootstrap";
+
 import { getTourById, TourStep } from "./tourSteps";
 import "./GuidedTour.scss";
 
@@ -279,15 +279,42 @@ export function GuidedTour(): JSX.Element | null {
 		return stopWait;
 	}, [step, isTourActive, stopWait]);
 
-	// ── Escape key ───────────────────────────────────────────────────────────
+	// ── Keyboard navigation ──────────────────────────────────────────────────
+	const stepRef = useRef(step);
+	stepRef.current = step;
+	const tourStepsRef = useRef(TOUR_STEPS);
+	tourStepsRef.current = TOUR_STEPS;
+
 	useEffect(() => {
 		if (!isTourActive) return;
 		const onKey = (e: KeyboardEvent) => {
-			if (e.key === "Escape") void endTour(false);
+			// Don't hijack keys while the user is typing in an input/textarea
+			const tag = (e.target as HTMLElement)?.tagName;
+			const isTyping = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
+
+			if (e.key === "Escape") {
+				void endTour(false);
+				return;
+			}
+
+			if (isTyping) return;
+
+			const steps = tourStepsRef.current;
+			const s = stepRef.current;
+			const showNext = !steps[s]?.hideNextButton;
+
+			if ((e.key === "ArrowRight" || e.key === "Enter") && showNext && !isCleaningUp) {
+				e.preventDefault();
+				if (s >= steps.length - 1) void endTour(true);
+				else advanceToStep(s + 1);
+			} else if (e.key === "ArrowLeft" && s > 0 && showNext) {
+				e.preventDefault();
+				advanceToStep(s - 1);
+			}
 		};
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
-	}, [isTourActive, endTour]);
+	}, [isTourActive, endTour, advanceToStep, isCleaningUp]);
 
 	// ── Reset on tour start ──────────────────────────────────────────────────
 	useEffect(() => {
@@ -298,9 +325,9 @@ export function GuidedTour(): JSX.Element | null {
 	const currentStep = TOUR_STEPS[step];
 	if (!currentStep) return null;
 
-	// Don't render until the target element has been located — prevents the popover
-	// from flashing at a default position while the poll / settle delay is running.
-	if (currentStep.targetId !== null && targetRect === null) return null;
+	// Hide the popover (but keep the spotlight) while waiting for the target element.
+	// Returning null here would unmount the spotlight and cause the backdrop to flicker.
+	const waitingForTarget = currentStep.targetId != null && targetRect === null;
 
 	const showNext = !currentStep.hideNextButton;
 	const isFirst = step === 0;
@@ -309,67 +336,68 @@ export function GuidedTour(): JSX.Element | null {
 
 	return (
 		<>
-			{targetRect && (
-				<div
-					className="tour-spotlight"
-					style={{
-						top: targetRect.top - SPOTLIGHT_PAD,
-						left: targetRect.left - SPOTLIGHT_PAD,
-						width: targetRect.width + SPOTLIGHT_PAD * 2,
-						height: targetRect.height + SPOTLIGHT_PAD * 2,
-					}}
-				/>
-			)}
 			<div
+				className="tour-spotlight"
+				style={targetRect ? {
+					top: targetRect.top - SPOTLIGHT_PAD,
+					left: targetRect.left - SPOTLIGHT_PAD,
+					width: targetRect.width + SPOTLIGHT_PAD * 2,
+					height: targetRect.height + SPOTLIGHT_PAD * 2,
+				} : { top: -1, left: -1, width: 1, height: 1 }}
+			/>
+			{!waitingForTarget && <div
 				key={step}
 				className={`tour-popover${currentStep.placement === "center" ? " tour-popover-center" : ""}`}
 				style={{ width: POP_W, ...popoverStyle }}
 				role="dialog"
 				aria-label={`Tour step ${step + 1} of ${TOUR_STEPS.length}: ${currentStep.title}`}
 			>
-				<div className="tour-popover-header">
-					<span className="tour-step-counter">
-						{step + 1} / {TOUR_STEPS.length}
-					</span>
-					<button className="tour-skip-btn" onClick={() => void endTour(false)}>
-						Skip tour
-					</button>
-				</div>
-				<h5 className="tour-popover-title">{currentStep.title}</h5>
-				<p className="tour-popover-content">{currentStep.content}</p>
-				{(showNext || !isFirst) && (
-					<div className="tour-popover-footer">
-						{!isFirst && showNext && (
-							<button className="tour-btn-secondary" onClick={() => advanceToStep(step - 1)}>
-								Back
-							</button>
-						)}
-						{showNext && (
-							<Button
-								disabled={isCleaningUp}
-								onClick={() => (isLast ? void endTour(true) : advanceToStep(step + 1))}
-							>
-								{isLast ? (
-									isCleaningUp ? (
-										<>
-											<span
-												className="spinner-border spinner-border-sm me-2"
-												role="status"
-												aria-hidden="true"
-											/>
-											Cleaning up…
-										</>
-									) : (
-										"Done"
-									)
-								) : (
-									"Next"
-								)}
-							</Button>
-						)}
+				<div className="tour-popover-body">
+					<div className="tour-popover-header">
+						<span className="tour-step-counter">
+							Step {step + 1} of {TOUR_STEPS.length}
+						</span>
+						<button className="tour-skip-btn" onClick={() => void endTour(false)}>
+							Skip tour
+						</button>
 					</div>
-				)}
-			</div>
+					<h5 className="tour-popover-title">{currentStep.title}</h5>
+					<p className="tour-popover-content">{currentStep.content}</p>
+					{(showNext || !isFirst) && (
+						<div className="tour-popover-footer">
+							{!isFirst && showNext && (
+								<button className="tour-btn-secondary" onClick={() => advanceToStep(step - 1)}>
+									Back
+								</button>
+							)}
+							{showNext && (
+								<button
+									className="tour-btn-primary"
+									disabled={isCleaningUp}
+									onClick={() => (isLast ? void endTour(true) : advanceToStep(step + 1))}
+								>
+									{isLast ? (
+										isCleaningUp ? (
+											<>
+												<span
+													className="spinner-border spinner-border-sm me-2"
+													role="status"
+													aria-hidden="true"
+												/>
+												Cleaning up…
+											</>
+										) : (
+											"Done"
+										)
+									) : (
+										"Next"
+									)}
+								</button>
+							)}
+						</div>
+					)}
+				</div>
+			</div>}
 		</>
 	);
 }
