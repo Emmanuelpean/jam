@@ -105,6 +105,9 @@ export function GuidedTour(): JSX.Element | null {
 
 	const [step, setStep] = useState<number>(0);
 	const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+	// Separate from targetRect — never cleared on step advance so the spotlight
+	// glides directly from the old element to the new one with no jump.
+	const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
 
 	const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 	const rafRef = useRef<number | null>(null);
@@ -158,6 +161,7 @@ export function GuidedTour(): JSX.Element | null {
 		const stepDef = TOUR_STEPS[step];
 		if (!stepDef?.targetId) {
 			setTargetRect(null);
+			setSpotlightRect(null);
 			return;
 		}
 
@@ -173,32 +177,26 @@ export function GuidedTour(): JSX.Element | null {
 			const r = el?.getBoundingClientRect();
 			if (r && r.width > 0 && r.height > 0) {
 				stopPoll();
-				// Short delay so Bootstrap modal animation has time to settle
-				setTimeout(() => {
+				const initialRect = r;
+				setTargetRect(initialRect);
+				setSpotlightRect(initialRect);
+
+				// RAF loop keeps rect in sync with any ongoing animation / scroll
+				const trackRect = () => {
 					const el2 = document.getElementById(stepDef.targetId!);
 					if (!el2) return;
-					setTargetRect(el2.getBoundingClientRect());
-
-					// RAF loop keeps rect in sync with any ongoing animation / scroll
-					const trackRect = () => {
-						const el3 = document.getElementById(stepDef.targetId!);
-						if (!el3) return;
-						const newR = el3.getBoundingClientRect();
-						setTargetRect((prev) => {
-							if (
-								prev &&
-								prev.top === newR.top &&
-								prev.left === newR.left &&
-								prev.width === newR.width &&
-								prev.height === newR.height
-							)
-								return prev;
-							return newR;
-						});
-						rafRef.current = requestAnimationFrame(trackRect);
-					};
+					const newR = el2.getBoundingClientRect();
+					setTargetRect((prev) => {
+						if (prev && prev.top === newR.top && prev.left === newR.left && prev.width === newR.width && prev.height === newR.height) return prev;
+						return newR;
+					});
+					setSpotlightRect((prev) => {
+						if (prev && prev.top === newR.top && prev.left === newR.left && prev.width === newR.width && prev.height === newR.height) return prev;
+						return newR;
+					});
 					rafRef.current = requestAnimationFrame(trackRect);
-				}, 350);
+				};
+				rafRef.current = requestAnimationFrame(trackRect);
 			} else {
 				elapsed += 50;
 				if (elapsed >= 3000) {
@@ -318,7 +316,10 @@ export function GuidedTour(): JSX.Element | null {
 
 	// ── Reset on tour start ──────────────────────────────────────────────────
 	useEffect(() => {
-		if (isTourActive) setStep(0);
+		if (isTourActive) {
+			setStep(0);
+			setSpotlightRect(null);
+		}
 	}, [isTourActive]);
 
 	if (!isTourActive) return null;
@@ -338,11 +339,11 @@ export function GuidedTour(): JSX.Element | null {
 		<>
 			<div
 				className="tour-spotlight"
-				style={targetRect ? {
-					top: targetRect.top - SPOTLIGHT_PAD,
-					left: targetRect.left - SPOTLIGHT_PAD,
-					width: targetRect.width + SPOTLIGHT_PAD * 2,
-					height: targetRect.height + SPOTLIGHT_PAD * 2,
+				style={spotlightRect ? {
+					top: spotlightRect.top - SPOTLIGHT_PAD,
+					left: spotlightRect.left - SPOTLIGHT_PAD,
+					width: spotlightRect.width + SPOTLIGHT_PAD * 2,
+					height: spotlightRect.height + SPOTLIGHT_PAD * 2,
 				} : { top: -1, left: -1, width: 1, height: 1 }}
 			/>
 			{!waitingForTarget && <div
@@ -367,7 +368,7 @@ export function GuidedTour(): JSX.Element | null {
 						<div className="tour-popover-footer">
 							{!isFirst && showNext && (
 								<button className="tour-btn-secondary" onClick={() => advanceToStep(step - 1)}>
-									Back
+									<i className="bi bi-arrow-left me-1"></i>Back
 								</button>
 							)}
 							{showNext && (
@@ -390,7 +391,7 @@ export function GuidedTour(): JSX.Element | null {
 											"Done"
 										)
 									) : (
-										"Next"
+										<>Next <i className="bi bi-arrow-right"></i></>
 									)}
 								</button>
 							)}
