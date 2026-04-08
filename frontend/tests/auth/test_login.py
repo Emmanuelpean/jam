@@ -1,3 +1,5 @@
+"""Tests for login functionality"""
+
 import time
 
 from base_test import BaseTest
@@ -126,3 +128,11 @@ class TestLogIn(BaseTest):
         self.db.expire_all()
         assert self.user.last_login > login_dt
         assert self.user.previous_login == login_dt
+
+    def test_logout(self):
+        """Test logout"""
+
+        self.login()
+        self.get_element("logout-btn").click()
+        self.confirm_modal.confirm_button.click()
+        self.auth_utils.wait_for_login()
