@@ -38,7 +38,7 @@ export const Sidebar = (): JSX.Element => {
 	const { logout, currentUser } = useAuth();
 	const { isMobile } = useViewport();
 	const { openTourSelect, isTourSelectOpen, isTourActive } = useTour();
-	const { showDelete } = useAlert();
+	const { showConfirm } = useAlert();
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
 	const [isHovered, setIsHovered] = useState<boolean>(false);
@@ -46,16 +46,22 @@ export const Sidebar = (): JSX.Element => {
 
 	const handleLogoutClick = async (): Promise<void> => {
 		if (currentUser?.is_demo) {
-			const confirmed: boolean = await showDelete({
+			const confirmed: boolean = await showConfirm({
 				title: "Log out of demo account?",
 				message:
-					"All demo data — including your jobs, companies, and settings — will be permanently deleted when you log out.",
+					"All demo data - including your jobs, companies, and settings - will be permanently deleted when you log out.",
 				cancelText: "Stay",
 				confirmText: "Log out",
 			});
 			if (confirmed) logout();
 		} else {
-			logout();
+			const confirmed: boolean = await showConfirm({
+				title: "Log out?",
+				message: "Are you sure you want to log out?",
+				cancelText: "Stay",
+				confirmText: "Log out",
+			});
+			if (confirmed) logout();
 		}
 	};
 
@@ -300,7 +306,9 @@ export const Sidebar = (): JSX.Element => {
 											onClick={subItem.onClick}
 											role="button"
 											tabIndex={0}
-											onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") subItem.onClick?.(); }}
+											onKeyDown={(e) => {
+												if (e.key === "Enter" || e.key === " ") subItem.onClick?.();
+											}}
 										>
 											{inner}
 										</div>
