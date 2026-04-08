@@ -39,6 +39,7 @@ export interface ModalFormField {
 	addButton?: {
 		modalRef: React.RefObject<DataModalHandle | null>;
 		transformParentData?: ((parentData: any) => any) | null;
+		id?: string;
 	};
 	tabIndex?: number;
 	displayCondition?: (item: any) => boolean;
@@ -475,7 +476,7 @@ export const formFields = {
 		isClearable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-location" },
 		...overrides,
 	}),
 

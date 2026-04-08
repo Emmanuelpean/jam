@@ -504,7 +504,7 @@ const Dashboard: React.FC = () => {
 
 	return (
 		<div className="dashboard-wrapper" data-loaded="true">
-			<div className="dashboard-main" data-tour="dashboard-stats" ref={containerRef as React.RefObject<HTMLDivElement>}>
+			<div id="dashboard-main" className="dashboard-main" data-tour="dashboard-stats" ref={containerRef as React.RefObject<HTMLDivElement>}>
 				<ExtensionBanner />
 				<div className={isEditMode ? "dashboard-edit-mode" : ""}>
 					{mounted && (

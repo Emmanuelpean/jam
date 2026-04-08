@@ -38,28 +38,36 @@ const APP_OVERVIEW_STEPS: TourStep[] = [
 		placement: "center",
 	},
 	{
-		id: "sidebar",
-		targetId: "nav-jobs",
-		title: "Sidebar Navigation",
+		id: "dashboard-overview",
+		targetId: "dashboard-main",
+		title: "Your Dashboard",
 		content:
-			"Use the sidebar to move between sections. Jobs is your central hub — log applications, track every status, and link each job to People and Interviews.",
-		placement: "right",
-	},
-	{
-		id: "dashboard-stats",
-		targetId: "stat-card-total_jobs",
-		title: "Your Overview at a Glance",
-		content:
-			"Stat cards show your pipeline at a glance — total applications, pending responses, upcoming deadlines, and more.",
-		placement: "bottom",
+			"This is your personal dashboard - allowing you to keep an eye on your job application progress at a glance.",
+		route: "/jam/dashboard",
+		placement: "center",
 	},
 	{
 		id: "dashboard-customise",
 		targetId: "dashboard-edit-btn",
 		title: "Customise Your Dashboard",
 		content:
-			"Click here to enter edit mode. Add, remove, reorder, and resize widgets to build a dashboard that suits your workflow.",
+			"Click here to enter edit mode. Add, remove, reorder, and resize widgets to build a dashboard that suits YOU.",
 		placement: "bottom",
+	},
+	{
+		id: "sidebar",
+		targetId: "nav-jobs",
+		title: "Sidebar Navigation",
+		content:
+			"Use the sidebar to move between sections. Jobs is your central hub - log applications, track every updates and interviews.",
+		placement: "right",
+	},
+	{
+		id: "settings",
+		targetId: "nav-user-settings",
+		title: "User Settings",
+		content: "",
+		placement: "right",
 	},
 	{
 		id: "command-palette",
@@ -97,15 +105,41 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		content: "Type any job title to continue.",
 		placement: "bottom",
 		waitForInput: '.modal.show input[name="title"]',
+	},
+	{
+		id: "expand-location-section",
+		targetId: "location-schedule",
+		title: "Location",
+		content: "Click the Location section to expand it.",
+		placement: "top",
+		waitForSelector: "#location-schedule .accordion-collapse.show",
 		hideNextButton: true,
 	},
 	{
 		id: "job-location",
-		targetId: "location_id-form-group",
+		targetId: "add-button-location",
 		title: "Location",
-		content:
-			"Select where the job is based. Click the + icon to add a new location — useful for tracking whether roles are remote, hybrid, or on-site.",
+		content: "Click the + button to add a new location for this job.",
 		placement: "right",
+		waitForSelector: '.modal.show input[name="city"]',
+		hideNextButton: true,
+	},
+	{
+		id: "location-city",
+		targetId: "city",
+		title: "Enter a City",
+		content: "Type a city name to continue.",
+		placement: "bottom",
+		waitForInput: '.modal.show input[name="city"]',
+	},
+	{
+		id: "save-location",
+		targetId: "modal-edit-location-confirm-button",
+		title: "Save the Location",
+		content: "Click to save. This location will be available to reuse on future job applications.",
+		placement: "top",
+		waitForSelectorGone: '.modal.show input[name="city"]',
+		hideNextButton: true,
 	},
 	{
 		id: "job-salary",
@@ -155,7 +189,6 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		content: "Type a company name to continue.",
 		placement: "bottom",
 		waitForInput: '.modal.show input[name="name"]',
-		hideNextButton: true,
 	},
 	{
 		id: "save-company",

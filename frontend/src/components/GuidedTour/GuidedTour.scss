@@ -1,9 +1,13 @@
-/*
- * Always rendered for the full tour — the box-shadow creates the dark overlay around
- * the element, and the element itself is transparent (showing the page through).
- * When there is no target, it is positioned off-screen (1×1 at -1,-1) so the hole
- * is invisible and the overlay covers the full viewport with no flicker between steps.
- */
+/* Shown on steps with no targetId — plain full-screen dark overlay */
+.tour-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 1401;
+	background: rgb(0 0 0 / 55%);
+	pointer-events: none;
+}
+
+/* Shown on steps with a targetId — box-shadow creates the overlay, element itself is transparent */
 .tour-spotlight {
 	position: fixed;
 	z-index: 1401;
@@ -12,7 +16,7 @@
 	box-shadow: 0 0 0 9999px rgb(0 0 0 / 55%);
 	outline: 2px solid rgb(255 255 255 / 20%);
 	outline-offset: 1px;
-	transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+	transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease, opacity 0.2s ease;
 }
 
 .tour-popover {

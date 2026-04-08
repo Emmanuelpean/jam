@@ -23,6 +23,7 @@ export interface CustomSelectProps {
 		modalRef: React.RefObject<any>;
 		transformParentData?: ((parentData: any) => any) | null;
 		onSuccess?: (newData: any) => void;
+		id?: string;
 	};
 	parentData?: any;
 	previewHandlers?: {
@@ -38,6 +39,7 @@ interface AddButtonIndicatorProps {
 }
 
 const AddButtonIndicator = ({ addButton, parentData, onClose }: AddButtonIndicatorProps): JSX.Element => {
+	const buttonId = addButton.id ?? "add-button";
 	const [hover, setHover] = useState(false);
 
 	const handleMouseDown = (e: React.MouseEvent) => {
@@ -68,7 +70,7 @@ const AddButtonIndicator = ({ addButton, parentData, onClose }: AddButtonIndicat
 			aria-label="Add new item"
 			role="button"
 			title="Add new item"
-			id="add-button"
+			id={buttonId}
 		>
 			<i className="bi bi-plus-circle"></i>
 		</div>

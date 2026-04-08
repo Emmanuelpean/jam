@@ -25,10 +25,12 @@ interface NavigationItem {
 }
 
 interface NavigationSubItem {
-	path: string;
+	path?: string;
 	icon?: string;
 	text: string;
 	alsoActiveFor?: string[];
+	onClick?: () => void;
+	id?: string;
 }
 
 export const Sidebar = (): JSX.Element => {
@@ -121,7 +123,7 @@ export const Sidebar = (): JSX.Element => {
 				{ path: "/job-application-updates", text: "Job Application Updates" },
 			],
 		},
-		{ path: "/settings", text: "User Settings", position: "bottom" },
+		{ path: "/settings", text: "User Settings", id: "nav-user-settings", position: "bottom" },
 		{
 			text: "About",
 			position: "bottom",
@@ -129,6 +131,7 @@ export const Sidebar = (): JSX.Element => {
 				{ path: "/about", text: "About JAM" },
 				{ path: "/browser-extension", text: "Browser Extension" },
 				{ path: "/release-notes", text: "Release Notes" },
+				{ text: "Take a Tour", icon: "map", onClick: openTourSelect, id: "take-a-tour-btn" },
 			],
 		},
 		{
@@ -143,14 +146,6 @@ export const Sidebar = (): JSX.Element => {
 					alsoActiveFor: ["/app/settings", "/app/email-templates"],
 				},
 			],
-		},
-		{
-			icon: "map",
-			text: "Take a Tour",
-			position: "bottom",
-			onClick: openTourSelect,
-			id: "take-a-tour-btn",
-			tourId: "take-a-tour-btn",
 		},
 		{
 			icon: "box-arrow-right",
@@ -224,6 +219,7 @@ export const Sidebar = (): JSX.Element => {
 	};
 
 	const isSubMenuItemActive = (item: NavigationSubItem): boolean => {
+		if (!item.path) return false;
 		if (location.pathname.startsWith(item.path)) return true;
 		return item.alsoActiveFor?.some((p: string): boolean => location.pathname.startsWith(p)) ?? false;
 	};
@@ -278,25 +274,47 @@ export const Sidebar = (): JSX.Element => {
 
 						<div className={`submenu ${showSubmenu ? "open" : ""}`}>
 							{/*Create the submenus*/}
-							{item.submenu.map((subItem: NavigationSubItem, subIndex: number) => (
-								<Link
-									key={subItem.text}
-									to={subItem.path}
-									className={`nav-item submenu-item ${isSubMenuItemActive(subItem) ? "active" : ""}`}
-									style={{
-										transitionDelay: showSubmenu
-											? `${subIndex * 0.05 + 0.1}s`
-											: `${(item.submenu!.length - subIndex - 1) * 0.03}s`,
-									}}
-								>
-									<span className="nav-icon">
-										<i className={`bi bi-${subItem?.icon || getTableIcon(subItem.text)}`}></i>
-									</span>
-									<span className="nav-text-container">
-										<span className="nav-text">{subItem.text}</span>
-									</span>
-								</Link>
-							))}
+							{item.submenu.map((subItem: NavigationSubItem, subIndex: number) => {
+								const transitionDelay = showSubmenu
+									? `${subIndex * 0.05 + 0.1}s`
+									: `${(item.submenu!.length - subIndex - 1) * 0.03}s`;
+								const inner = (
+									<>
+										<span className="nav-icon">
+											<i className={`bi bi-${subItem?.icon || getTableIcon(subItem.text)}`}></i>
+										</span>
+										<span className="nav-text-container">
+											<span className="nav-text">{subItem.text}</span>
+										</span>
+									</>
+								);
+								if (subItem.onClick) {
+									return (
+										<div
+											key={subItem.text}
+											id={subItem.id}
+											className="nav-item submenu-item"
+											style={{ transitionDelay, cursor: "pointer" }}
+											onClick={subItem.onClick}
+											role="button"
+											tabIndex={0}
+											onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") subItem.onClick?.(); }}
+										>
+											{inner}
+										</div>
+									);
+								}
+								return (
+									<Link
+										key={subItem.text}
+										to={subItem.path!}
+										className={`nav-item submenu-item ${isSubMenuItemActive(subItem) ? "active" : ""}`}
+										style={{ transitionDelay }}
+									>
+										{inner}
+									</Link>
+								);
+							})}
 						</div>
 					</div>
 				);

@@ -105,6 +105,7 @@ export function GuidedTour(): JSX.Element | null {
 
 	const [step, setStep] = useState<number>(0);
 	const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+	const [inputValid, setInputValid] = useState<boolean>(false);
 	// Separate from targetRect — never cleared on step advance so the spotlight
 	// glides directly from the old element to the new one with no jump.
 	const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
@@ -161,7 +162,6 @@ export function GuidedTour(): JSX.Element | null {
 		const stepDef = TOUR_STEPS[step];
 		if (!stepDef?.targetId) {
 			setTargetRect(null);
-			setSpotlightRect(null);
 			return;
 		}
 
@@ -259,14 +259,17 @@ export function GuidedTour(): JSX.Element | null {
 
 		// Condition polling
 		waitPollRef.current = setInterval(() => {
+			if (waitForInput) {
+				// Don't auto-advance — just keep the Next button enabled/disabled
+				const el = document.querySelector<HTMLInputElement>(waitForInput);
+				setInputValid(!!el && el.value.trim().length > 0);
+				return;
+			}
 			let met = false;
 			if (waitForSelector) {
 				met = !!document.querySelector(waitForSelector);
 			} else if (waitForSelectorGone) {
 				met = !document.querySelector(waitForSelectorGone);
-			} else if (waitForInput) {
-				const el = document.querySelector<HTMLInputElement>(waitForInput);
-				met = !!el && el.value.trim().length > 0;
 			}
 			if (met) {
 				stopWait();
@@ -282,6 +285,8 @@ export function GuidedTour(): JSX.Element | null {
 	stepRef.current = step;
 	const tourStepsRef = useRef(TOUR_STEPS);
 	tourStepsRef.current = TOUR_STEPS;
+	const inputValidRef = useRef(inputValid);
+	inputValidRef.current = inputValid;
 
 	useEffect(() => {
 		if (!isTourActive) return;
@@ -300,8 +305,9 @@ export function GuidedTour(): JSX.Element | null {
 			const steps = tourStepsRef.current;
 			const s = stepRef.current;
 			const showNext = !steps[s]?.hideNextButton;
+			const inputBlocked = !!steps[s]?.waitForInput && !inputValidRef.current;
 
-			if ((e.key === "ArrowRight" || e.key === "Enter") && showNext && !isCleaningUp) {
+			if ((e.key === "ArrowRight" || e.key === "Enter") && showNext && !isCleaningUp && !inputBlocked) {
 				e.preventDefault();
 				if (s >= steps.length - 1) void endTour(true);
 				else advanceToStep(s + 1);
@@ -319,8 +325,13 @@ export function GuidedTour(): JSX.Element | null {
 		if (isTourActive) {
 			setStep(0);
 			setSpotlightRect(null);
+			setInputValid(false);
 		}
 	}, [isTourActive]);
+
+	useEffect(() => {
+		setInputValid(false);
+	}, [step]);
 
 	if (!isTourActive) return null;
 	const currentStep = TOUR_STEPS[step];
@@ -333,19 +344,24 @@ export function GuidedTour(): JSX.Element | null {
 	const showNext = !currentStep.hideNextButton;
 	const isFirst = step === 0;
 	const isLast = step === TOUR_STEPS.length - 1;
+	const nextDisabled = isCleaningUp || (!!currentStep.waitForInput && !inputValid);
 	const popoverStyle = targetRect ? computePopoverStyle(targetRect, currentStep.placement) : {};
 
 	return (
 		<>
 			<div
 				className="tour-spotlight"
-				style={spotlightRect ? {
-					top: spotlightRect.top - SPOTLIGHT_PAD,
-					left: spotlightRect.left - SPOTLIGHT_PAD,
-					width: spotlightRect.width + SPOTLIGHT_PAD * 2,
-					height: spotlightRect.height + SPOTLIGHT_PAD * 2,
-				} : { top: -1, left: -1, width: 1, height: 1 }}
+				style={{
+					opacity: currentStep.targetId != null && spotlightRect ? 1 : 0,
+					...(spotlightRect ? {
+						top: spotlightRect.top - SPOTLIGHT_PAD,
+						left: spotlightRect.left - SPOTLIGHT_PAD,
+						width: spotlightRect.width + SPOTLIGHT_PAD * 2,
+						height: spotlightRect.height + SPOTLIGHT_PAD * 2,
+					} : { top: '50vh', left: '50vw', width: 0, height: 0 }),
+				}}
 			/>
+			{currentStep.targetId == null && <div className="tour-backdrop" />}
 			{!waitingForTarget && <div
 				key={step}
 				className={`tour-popover${currentStep.placement === "center" ? " tour-popover-center" : ""}`}
@@ -374,7 +390,7 @@ export function GuidedTour(): JSX.Element | null {
 							{showNext && (
 								<button
 									className="tour-btn-primary"
-									disabled={isCleaningUp}
+									disabled={nextDisabled}
 									onClick={() => (isLast ? void endTour(true) : advanceToStep(step + 1))}
 								>
 									{isLast ? (
