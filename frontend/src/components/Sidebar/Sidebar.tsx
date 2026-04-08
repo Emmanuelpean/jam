@@ -127,6 +127,7 @@ export const Sidebar = (): JSX.Element => {
 		{
 			text: "About",
 			position: "bottom",
+			id: "nav-about",
 			submenu: [
 				{ path: "/about", text: "About JAM" },
 				{ path: "/browser-extension", text: "Browser Extension" },
@@ -255,6 +256,7 @@ export const Sidebar = (): JSX.Element => {
 				return (
 					<div key={`submenu-${item.text}`}>
 						<div
+							id={item.id}
 							className={`nav-item ${isSubmenuItemActive ? "active" : ""}`}
 							onClick={() => isExpanded && handleGroupMenuToggle(item.text)}
 							style={{ cursor: isExpanded ? "pointer" : "default" }}

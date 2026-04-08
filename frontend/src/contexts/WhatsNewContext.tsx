@@ -3,6 +3,7 @@ import { useAuth } from "./AuthContext";
 import { useTour } from "./TourContext";
 import { WhatsNewModal, WhatsNewModalHandle } from "../components/WhatsNewModal/WhatsNewModal";
 import { WelcomeModal, WelcomeModalHandle } from "../components/WelcomeModal/WelcomeModal";
+import { TourHintPopup } from "../components/TourHintPopup/TourHintPopup";
 import {
 	getNewerReleaseSlides,
 	getReleaseSlidesForLastVersion,
@@ -33,8 +34,13 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 	const whatsNewRef = useRef<WhatsNewModalHandle>(null);
 	const welcomeRef = useRef<WelcomeModalHandle>(null);
 	const { currentUser } = useAuth();
-	const { startTour, completedTourIds } = useTour();
+	const { isTourSelectOpen } = useTour();
 	const [slides, setSlides] = useState<ReleaseSlide[]>([]);
+	const [showTourHint, setShowTourHint] = useState<boolean>(false);
+
+	useEffect(() => {
+		if (isTourSelectOpen) setShowTourHint(false);
+	}, [isTourSelectOpen]);
 
 	const showWhatsNew = useCallback((): void => {
 		const newSlides: ReleaseSlide[] = getReleaseSlidesForLastVersion();
@@ -78,11 +84,10 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 			<WelcomeModal
 				ref={welcomeRef}
 				onFinish={(): void => {
-					if (!completedTourIds.has("app-overview")) {
-						startTour("app-overview");
-					}
+					setShowTourHint(true);
 				}}
 			/>
+			{showTourHint && <TourHintPopup onClose={(): void => setShowTourHint(false)} />}
 		</WhatsNewContext.Provider>
 	);
 }
