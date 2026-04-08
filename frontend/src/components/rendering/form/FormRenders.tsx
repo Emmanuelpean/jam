@@ -437,7 +437,7 @@ export const formFields = {
 		isClearable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-company" },
 		...overrides,
 	}),
 
@@ -457,7 +457,7 @@ export const formFields = {
 		isClearable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-company" },
 		...overrides,
 	}),
 
@@ -496,7 +496,7 @@ export const formFields = {
 		isClearable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-location" },
 		...overrides,
 	}),
 
@@ -514,7 +514,7 @@ export const formFields = {
 		isSearchable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-keyword" },
 		...overrides,
 	}),
 
@@ -532,7 +532,7 @@ export const formFields = {
 		isSearchable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-contact" },
 		...overrides,
 	}),
 
@@ -549,7 +549,7 @@ export const formFields = {
 		isSearchable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-interviewer" },
 		...overrides,
 	}),
 
@@ -566,7 +566,7 @@ export const formFields = {
 		isSearchable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-recruiter" },
 		...overrides,
 	}),
 
@@ -597,7 +597,7 @@ export const formFields = {
 		isClearable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-aggregator" },
 		...overrides,
 	}),
 

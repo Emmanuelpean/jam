@@ -210,8 +210,8 @@ export const Sidebar = (): JSX.Element => {
 
 	const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
 		setIsHovered(false);
-		// Don't collapse during an active tour or when moving to the tour panel
-		if (isTourActive) return;
+		// Don't collapse during an active tour or while the tour select panel is open
+		if (isTourActive || isTourSelectOpen) return;
 		const relatedTarget = e.relatedTarget as Node | null;
 		if (document.getElementById("tsp-panel")?.contains(relatedTarget)) return;
 		collapseTimeoutRef.current = setTimeout(() => {

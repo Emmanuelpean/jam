@@ -39,7 +39,7 @@ interface AddButtonIndicatorProps {
 }
 
 const AddButtonIndicator = ({ addButton, parentData, onClose }: AddButtonIndicatorProps): JSX.Element => {
-	const buttonId = addButton.id ?? "add-button";
+	const buttonId: string = addButton.id ?? "add-button";
 	const [hover, setHover] = useState(false);
 
 	const handleMouseDown = (e: React.MouseEvent) => {
@@ -254,10 +254,16 @@ export const CustomSelect = ({
 				const isSelected = current.some((v) => v.value === opt.value);
 				const newValue = isSelected ? current.filter((v) => v.value !== opt.value) : [...current, opt];
 				onChange(newValue.length > 0 ? newValue : null);
-				if (effectiveCloseMenuOnSelect) { closeMenu(); inputRef.current?.blur(); }
+				if (effectiveCloseMenuOnSelect) {
+					closeMenu();
+					inputRef.current?.blur();
+				}
 			} else {
 				onChange(opt);
-				if (effectiveCloseMenuOnSelect) { closeMenu(); inputRef.current?.blur(); }
+				if (effectiveCloseMenuOnSelect) {
+					closeMenu();
+					inputRef.current?.blur();
+				}
 			}
 		},
 		[isMulti, value, onChange, effectiveCloseMenuOnSelect, closeMenu]
@@ -276,7 +282,12 @@ export const CustomSelect = ({
 		(e: React.MouseEvent) => {
 			if (isDisabled) return;
 			const target = e.target as HTMLElement;
-			if (target.closest(".jam-select__tag-remove") || target.closest(".jam-select__clear") || target.closest(".custom-dropdown-indicator")) return;
+			if (
+				target.closest(".jam-select__tag-remove") ||
+				target.closest(".jam-select__clear") ||
+				target.closest(".custom-dropdown-indicator")
+			)
+				return;
 			e.preventDefault();
 			if (isOpen) {
 				closeMenu();
@@ -379,9 +390,7 @@ export const CustomSelect = ({
 						const GAP = 20;
 						const PREVIEW_WIDTH = 450;
 						const spaceRight = window.innerWidth - rect.right;
-						const left = spaceRight >= rect.left
-							? rect.right + GAP
-							: rect.left - GAP - PREVIEW_WIDTH;
+						const left = spaceRight >= rect.left ? rect.right + GAP : rect.left - GAP - PREVIEW_WIDTH;
 						previewHandlers.onHover(opt, { top: rect.top, left });
 					}
 				}}

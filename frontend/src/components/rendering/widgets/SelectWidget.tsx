@@ -165,6 +165,7 @@ export const SelectInput = ({
 								modalRef: field.addButton.modalRef,
 								transformParentData: field.addButton.transformParentData,
 								onSuccess: handleAddSuccess,
+								id: field.addButton.id,
 						  }
 						: undefined
 				}

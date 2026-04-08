@@ -1,4 +1,4 @@
-import React, { JSX, useEffect, useRef, useState } from "react";
+import React, { JSX, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTour } from "../../contexts/TourContext";
 import { TOURS } from "../GuidedTour/tourSteps";
 import "./TourSelectPanel.scss";
@@ -6,7 +6,17 @@ import "./TourSelectPanel.scss";
 export function TourSelectPanel(): JSX.Element | null {
 	const { isTourSelectOpen, closeTourSelect, startTour, completedTourIds, isTourActive } = useTour();
 	const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+	const [panelTop, setPanelTop] = useState<number>(0);
+	const panelRef = useRef<HTMLDivElement>(null);
 	const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	useLayoutEffect(() => {
+		if (!anchorRect || !panelRef.current) return;
+		const panelHeight = panelRef.current.offsetHeight;
+		const margin = 6;
+		const clamped = Math.min(anchorRect.top, window.innerHeight - panelHeight - margin);
+		setPanelTop(Math.max(clamped, margin));
+	}, [anchorRect]);
 
 	useEffect(() => {
 		if (!isTourSelectOpen) {
@@ -58,9 +68,10 @@ export function TourSelectPanel(): JSX.Element | null {
 
 	return (
 		<div
+			ref={panelRef}
 			id="tsp-panel"
 			className="tsp-panel"
-			style={{ top: anchorRect.top, left: anchorRect.right + 8 }}
+			style={{ top: panelTop || anchorRect.top, left: anchorRect.right + 12 }}
 			role="dialog"
 			aria-label="Guided Tours"
 		>

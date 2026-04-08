@@ -9,16 +9,6 @@
 	min-width: 220px;
 	box-shadow: 0 20px 60px rgb(0 0 0 / 25%);
 	animation: tsp-pop-in 0.15s ease forwards;
-
-	&::before {
-		content: "";
-		position: absolute;
-		top: 0;
-		right: 0;
-		left: 0;
-		height: 3px;
-		background: var(--primary-gradient);
-	}
 }
 
 @keyframes tsp-pop-in {
@@ -40,17 +30,6 @@
 	justify-content: space-between;
 	padding: 9px 10px 8px;
 	margin-bottom: 2px;
-
-	&::after {
-		position: absolute;
-		right: 0;
-		bottom: 0;
-		left: 0;
-		height: 1.8px;
-		content: "";
-		opacity: 0.85;
-		background: var(--primary-gradient);
-	}
 }
 
 .tsp-heading {
