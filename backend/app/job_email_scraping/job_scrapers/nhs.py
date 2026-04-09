@@ -3,105 +3,76 @@
 import datetime as dt
 import re
 
-from apify_client import ApifyClient
-
-from app.config import settings
+from app.job_email_scraping.job_scrapers.apify import ApifyJobScraper
 from app.job_email_scraping.schemas import Salary, JobInfo, JobResult
 
 
-class NhsJobScraper:
+class NhsJobScraper(ApifyJobScraper):
     """Scraper for NHS job listings."""
 
     base_url = "https://beta.jobs.nhs.uk/candidate/jobadvert/"
+    name = "nhs"
+    actor_id = "memo23/nhs-scraper"
 
-    def __init__(self, job_ids: str | list[str]) -> None:
-        """Initialize the scraper with headers and delay settings.
-        :param job_ids: The job listing ID(s)"""
+    def _process_job_data(self, job_data: dict) -> JobResult:
+        """Process job data to extract relevant information
+        :param job_data: Job data dictionary
+        :return: JobResult containing job information"""
 
-        self.job_ids = [job_ids] if isinstance(job_ids, str) else job_ids
-        self.job_urls = [f"{self.base_url}{job_id}" for job_id in self.job_ids]
+        # Deadline
+        deadline = None
+        is_closed = False
+        if job_data.get("closingDate", "").upper() == "THIS JOB IS NOW CLOSED":
+            is_closed = True
+        else:
+            try:
+                deadline = dt.datetime.strptime(job_data.get("closingDate"), "%d %B %Y")
+            except:
+                pass
 
-    def scrape_job(self) -> list[JobResult]:
-        """Scrape job data from a specific NHS job listing URL"""
+        # Salary
+        pattern = r"(?P<currency>£)\s*(?P<min>[\d,]+)\s*to\s*(?P=currency)\s*(?P<max>[\d,]+).*?(?P<frequency>a year|per annum)"
+        match = re.search(pattern, job_data.get("salary") or "", re.IGNORECASE)
 
-        client = ApifyClient(settings.apify_api_key)
+        min_salary = max_salary = None
+        currency = None
+        if match:
+            frequency = match.group("frequency").lower()
+            if "year" in frequency or "annum" in frequency:
+                currency = match.group("currency")
+                min_salary = int(match.group("min").replace(",", ""))
+                max_salary = int(match.group("max").replace(",", ""))
 
-        run_input = {
-            "proxy": {
-                "useApifyProxy": True,
-                "apifyProxyGroups": ["RESIDENTIAL"],
-            },
-            "startUrls": self.job_urls,
-        }
+        # Description
+        description = [job_data.get("jobSummaryText"), job_data.get("mainDutiesText"), job_data.get("aboutUsText")]
+        description = "\n\n".join([d for d in description if d])
 
-        actor_id = "memo23/nhs-scraper"
+        # Raise an exception if planned downtime
+        if (
+            job_data.get("title") == "NHS Jobs: Planned downtime"
+            or job_data.get("title") == "Sorry, there is a problem with the service"
+        ):
+            raise Exception(job_data.get("title"))
 
-        run = client.actor(actor_id).call(run_input=run_input)
-        job_data = client.dataset(run["defaultDatasetId"]).list_items().items
-        if not job_data:
-            raise Exception("No job data found.")
-
-        processed_job_data = []
-        for job in job_data:
-
-            # Deadline
-            deadline = None
-            is_closed = False
-            if job.get("closingDate", "").upper() == "THIS JOB IS NOW CLOSED":
-                is_closed = True
-            else:
-                try:
-                    deadline = dt.datetime.strptime(job.get("closingDate"), "%d %B %Y")
-                except:
-                    pass
-
-            # Salary
-            pattern = r"(?P<currency>£)\s*(?P<min>[\d,]+)\s*to\s*(?P=currency)\s*(?P<max>[\d,]+).*?(?P<frequency>a year|per annum)"
-            match = re.search(pattern, job.get("salary") or "", re.IGNORECASE)
-
-            min_salary = max_salary = None
-            currency = None
-            if match:
-                frequency = match.group("frequency").lower()
-                if "year" in frequency or "annum" in frequency:
-                    currency = match.group("currency")
-                    min_salary = int(match.group("min").replace(",", ""))
-                    max_salary = int(match.group("max").replace(",", ""))
-
-            # Description
-            description = [job.get("jobSummaryText"), job.get("mainDutiesText"), job.get("aboutUsText")]
-            description = "\n\n".join([d for d in description if d])
-
-            # Raise an exception if planned downtime
-            if (
-                job.get("title") == "NHS Jobs: Planned downtime"
-                or job.get("title") == "Sorry, there is a problem with the service"
-            ):
-                raise Exception(job.get("title"))
-
-            processed_job_data.append(
-                JobResult(
-                    company=job.get("employer") or None,
-                    location=" ".join(job.get("employerAddress", "")) or None,
-                    job=JobInfo(
-                        title=job.get("title") or None,
-                        description=description or None,
-                        deadline=deadline,
-                        is_closed=is_closed,
-                        salary=Salary(
-                            min_amount=min_salary,
-                            max_amount=max_salary,
-                            currency=currency,
-                        ),
-                    ),
-                    raw=str(job),
-                )
-            )
-
-        return processed_job_data
+        return JobResult(
+            company=job_data.get("employer") or None,
+            location=" ".join(job_data.get("employerAddress", "")) or None,
+            job=JobInfo(
+                title=job_data.get("title") or None,
+                description=description or None,
+                deadline=deadline,
+                is_closed=is_closed,
+                salary=Salary(
+                    min_amount=min_salary,
+                    max_amount=max_salary,
+                    currency=currency,
+                ),
+            ),
+            raw=str(job_data),
+        )
 
 
 if __name__ == "__main__":
-    scraper = NhsJobScraper("M9043-25-0282")
+    scraper = NhsJobScraper("H9001-26-0286")
     nhsjob_data = scraper.scrape_job()
     print(nhsjob_data)
