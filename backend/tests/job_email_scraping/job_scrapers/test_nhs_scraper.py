@@ -14,8 +14,8 @@ from app.job_email_scraping.job_scrapers.nhs import NhsJobScraper
 def make_apify_mock(items: list[dict]) -> MagicMock:
     """Return a patched ApifyClient mock that yields the given items from the dataset."""
     mock_client = MagicMock()
-    mock_run = {"defaultDatasetId": "dataset-123"}
-    mock_client.actor.return_value.call.return_value = mock_run
+    mock_client.actor.return_value.start.return_value = {"id": "run-123", "defaultDatasetId": "dataset-123"}
+    mock_client.run.return_value.get.return_value = {"status": "SUCCEEDED"}
     mock_client.dataset.return_value.list_items.return_value.items = items
     return mock_client
 
@@ -41,10 +41,10 @@ def make_job(**overrides) -> dict:
 
 @pytest.fixture
 def mock_apify_cls():
-    """Patches ApifyClient and settings for NhsJobScraper."""
+    """Patches ApifyClient and settings for NhsJobScraper (via the base class module)."""
     with (
-        patch("app.job_email_scraping.job_scrapers.nhs.ApifyClient") as mock_cls,
-        patch("app.job_email_scraping.job_scrapers.nhs.settings") as mock_settings,
+        patch("app.job_email_scraping.job_scrapers.apify.ApifyClient") as mock_cls,
+        patch("app.job_email_scraping.job_scrapers.apify.settings") as mock_settings,
     ):
         mock_settings.apify_api_key = "test_key"
         yield mock_cls
@@ -85,7 +85,7 @@ class TestScrapeJob:
     def test_raises_when_no_job_data(self, mock_apify_cls) -> None:
         mock_apify_cls.return_value = make_apify_mock([])
         scraper = NhsJobScraper("H9040-26-0303")
-        with pytest.raises(Exception, match="No job data found"):
+        with pytest.raises(Exception, match="No data returned from actor run"):
             scraper.scrape_job()
 
     def test_apify_client_called_with_correct_urls(self, mock_apify_cls) -> None:
@@ -95,9 +95,9 @@ class TestScrapeJob:
         scraper = NhsJobScraper("H9040-26-0303")
         scraper.scrape_job()
 
-        call_kwargs = mock_client.actor.return_value.call.call_args
+        call_kwargs = mock_client.actor.return_value.start.call_args
         run_input = call_kwargs.kwargs["run_input"]
-        assert run_input["startUrls"] == scraper.job_urls
+        assert run_input["startUrls"] == [{"url": url} for url in scraper.job_urls]
 
     def test_apify_actor_id_is_correct(self, mock_apify_cls) -> None:
         mock_client = make_apify_mock([make_job()])
