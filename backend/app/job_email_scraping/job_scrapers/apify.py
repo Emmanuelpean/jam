@@ -35,8 +35,7 @@ class ApifyJobScraper(object):
         self.max_attempts *= len(self.job_ids)
 
         # Load credentials from the secrets file
-        self.api_key = settings.apify_api_key
-        self.client = ApifyClient(self.api_key)
+        self.client = ApifyClient(settings.apify_api_key)
 
     def _start_actor_run(self) -> dict:
         """Start the Apify actor run

@@ -51,6 +51,7 @@ class TestGetLastLogLine:
 
     def test_returns_none_for_empty_file(self, tmp_path) -> None:
         log_file = tmp_path / "empty.log"
+        # noinspection PyTypeChecker
         log_file.write_bytes(b"")
         with patch("app.utils.settings") as mock_settings:
             mock_settings.log_directory = str(tmp_path)

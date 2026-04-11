@@ -258,6 +258,7 @@ textarea.form-control {
     cursor: pointer;
     padding: 8px 12px;
     box-sizing: border-box;
+    margin-bottom: 2px;
 }
 
 /* Dropdown value hovering and focus */
@@ -282,6 +283,19 @@ textarea.form-control {
     color: var(--bs-secondary-color);
     text-transform: uppercase;
     padding: 6px 12px 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    justify-content: center;
+
+    &::before,
+    &::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--bs-border-color);
+    }
 }
 
 /* Text colour */

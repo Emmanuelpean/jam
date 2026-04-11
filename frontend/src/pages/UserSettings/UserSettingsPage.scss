@@ -79,15 +79,14 @@
     height: 32.4px;
     aspect-ratio: 1 !important;
     font-size: 1rem;
-    color: var(--primary-mid);
     background: var(--bs-tertiary-bg);
     border-radius: 7.2px;
     transition: all 0.2s ease;
+    color: white
 }
 
 .settings-nav-item:hover .settings-nav-icon {
     background: var(--primary-mid);
-    color: white;
 }
 
 /* Navigation Label */

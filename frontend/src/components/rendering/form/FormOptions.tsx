@@ -139,13 +139,18 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 		const interviewContacts: PersonData[] = persons.filter((person: PersonData): boolean =>
 			interviews.some((interview: InterviewData) => interview.interviewers?.includes(person.id))
 		);
+		const excludedIds = new Set<number>([
+			...jobContacts.map((p) => p.id),
+			...interviewContacts.map((p) => p.id),
+		]);
+		const otherContacts: PersonData[] = persons.filter((p) => !excludedIds.has(p.id));
 		return [
 			{ label: "Job Contacts", options: toSelectOptions(jobContacts, "id", getPersonLabel) },
 			{
 				label: "Interviewers",
 				options: toSelectOptions(interviewContacts, "id", getPersonLabel),
 			},
-			{ label: "All Contacts", options: toSelectOptions(persons, "id", getPersonLabel) },
+			{ label: "Other Contacts", options: toSelectOptions(otherContacts, "id", getPersonLabel) },
 		];
 	};
 
