@@ -128,6 +128,7 @@ export function GuidedTour(): JSX.Element | null {
 	const waitPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 	const autoFillCleanupRef = useRef<(() => void) | null>(null);
 	const locationRef = useRef(location.pathname);
+	const directionRef = useRef<1 | -1>(1);
 	const stepRef = useRef(step);
 	stepRef.current = step;
 	const tourStepsRef = useRef(TOUR_STEPS);
@@ -170,6 +171,7 @@ export function GuidedTour(): JSX.Element | null {
 				void endTour(true);
 				return;
 			}
+			directionRef.current = targetStep >= stepRef.current ? 1 : -1;
 			setStep(targetStep);
 		},
 		[stopPoll, stopRaf, stopWait, endTour]
@@ -198,14 +200,16 @@ export function GuidedTour(): JSX.Element | null {
 	useEffect(() => {
 		if (!isTourActive) return;
 		const stepDef = TOUR_STEPS[step];
-		if (!stepDef?.targetId) {
-			setTargetRect(null);
-			return;
-		}
+		if (!stepDef) return;
 
 		if (stepDef.route) {
 			const path = stepDef.route.replace("/jam", "");
 			if (locationRef.current !== path) navigate(path);
+		}
+
+		if (!stepDef.targetId) {
+			setTargetRect(null);
+			return;
 		}
 
 		// Poll until the element appears (with non-zero dimensions)
@@ -240,7 +244,7 @@ export function GuidedTour(): JSX.Element | null {
 				elapsed += 50;
 				if (elapsed >= 3000) {
 					stopPoll();
-					setStep((s) => s + 1);
+					setStep((s) => s + directionRef.current);
 				}
 			}
 		}, 50);

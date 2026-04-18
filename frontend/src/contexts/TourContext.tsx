@@ -1,4 +1,5 @@
 import React, { createContext, JSX, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { useDataContext } from "./DataContext";
 
@@ -39,6 +40,10 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	const { currentUser, updateCurrentUser } = useAuth();
 	const { jobs, companies, addEntity, deleteEntity, setDemoFilter } = useDataContext();
 
+	const navigate = useNavigate();
+	const location = useLocation();
+	const originPathRef = useRef<string | null>(null);
+
 	const isTourActive: boolean = activeTourId !== null;
 
 	// Snapshot of IDs that existed before the first-job tour started
@@ -61,6 +66,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 
 	const startTour = useCallback(
 		async (tourId: string): Promise<void> => {
+			originPathRef.current = location.pathname;
 			preInteractiveJobIds.current = new Set(jobs.map((j) => j.id));
 			preInteractiveCompanyIds.current = new Set(companies.map((c) => c.id));
 
@@ -143,7 +149,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			setIsTourSelectOpen(false);
 			setActiveTourId(tourId);
 		},
-		[jobs, companies, addEntity, setDemoFilter]
+		[jobs, companies, addEntity, setDemoFilter, location.pathname]
 	);
 
 	const endTour = useCallback(
@@ -199,8 +205,13 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					}
 				}
 			}
+
+			if (originPathRef.current) {
+				navigate(originPathRef.current);
+				originPathRef.current = null;
+			}
 		},
-		[activeTourId, completedTourIds, currentUser, updateCurrentUser, jobs, companies, deleteEntity, setDemoFilter]
+		[activeTourId, completedTourIds, currentUser, updateCurrentUser, jobs, companies, deleteEntity, setDemoFilter, navigate]
 	);
 
 	const openTourSelect = useCallback((): void => setIsTourSelectOpen(true), []);

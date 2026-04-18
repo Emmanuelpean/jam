@@ -38,22 +38,23 @@ const APP_OVERVIEW_STEPS: TourStep[] = [
 		id: "intro",
 		title: "Welcome to JAM!",
 		content: "Let's take a quick tour of your Job Application Manager. It'll only take a minute.",
-		route: "jam/dashboard",
+		route: "dashboard",
 		placement: "center",
 	},
 	{
 		id: "dashboard-overview",
 		targetId: "dashboard-main",
 		title: "Your Dashboard",
+		route: "dashboard",
 		content:
 			"This is your personal dashboard - allowing you to keep an eye on your job application progress at a glance.",
-		route: "dashboard",
 		placement: "center",
 	},
 	{
 		id: "dashboard-customise",
 		targetId: "dashboard-edit-btn",
 		title: "Customise Your Dashboard",
+		route: "dashboard",
 		content:
 			"Click here to enter edit mode. Add, remove, reorder, and resize widgets to build a dashboard that suits YOU.",
 		placement: "bottom",
@@ -61,25 +62,28 @@ const APP_OVERVIEW_STEPS: TourStep[] = [
 	{
 		id: "sidebar",
 		targetId: "nav-jobs",
-		title: "Sidebar Navigation",
+		title: "Jobs",
 		route: "jobs",
 		content:
 			"Use the sidebar to move between sections. Jobs is your central hub - log applications, track every updates and interviews.",
 		placement: "right",
 	},
 	{
-		id: "settings",
-		targetId: "nav-user-settings",
-		title: "User Settings",
-		content: "",
-		route: "settings/account",
-		placement: "right",
+		id: "premium",
+		title: "Go Further with Premium",
+		route: "settings/premium",
+		content:
+			"Land your dream job faster with JAM Premium - automatically scrape jobs from LinkedIn, Indeed, and more " +
+			"straight into JAM, then let AI rate each one against your profile so the best matches rise to the top.",
+		targetId: "premium-tab",
+		placement: "center",
 	},
 	{
 		id: "command-palette",
 		title: "Navigate in Seconds",
 		content:
-			"Press Ctrl+K (or Cmd+K on Mac) to open the command palette — jump to any page or trigger any action without touching the mouse. Click 'Take a Tour' here any time to revisit these guides.",
+			"Press Ctrl+K (or Cmd+K on Mac) to open the command palette - jump to any page or trigger any action " +
+			"without touching the mouse. Click 'Take a Tour' here any time to revisit these guides.",
 		placement: "center",
 	},
 ];
@@ -220,14 +224,23 @@ const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
 		id: "follow-up-intro",
 		targetId: null,
 		title: "Follow-up Email Generator",
-		content: "JAM can draft a personalised follow-up email for any job application in seconds. How would you like to open it?",
+		content:
+			"JAM can draft a personalised follow-up email for any job application in seconds. How would you like to open it?",
 		route: "/jam/jobs",
 		placement: "center",
 		hideNextButton: true,
 		choices: [
 			{ label: "Right-click a job row", icon: "bi-table", targetStepId: "follow-up-open-via-table" },
-			{ label: "Right-click a contact badge", icon: "bi-person-badge-fill", targetStepId: "follow-up-open-via-badge-1" },
-			{ label: "Button in the Application tab", icon: "bi-send-fill", targetStepId: "follow-up-open-via-button-1" },
+			{
+				label: "Right-click a contact badge",
+				icon: "bi-person-badge-fill",
+				targetStepId: "follow-up-open-via-badge-1",
+			},
+			{
+				label: "Button in the Application tab",
+				icon: "bi-send-fill",
+				targetStepId: "follow-up-open-via-button-1",
+			},
 		],
 	},
 	// ── Method 1: right-click job row ────────────────────────────────────────
@@ -235,7 +248,8 @@ const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
 		id: "follow-up-open-via-table",
 		targetId: "[demo-job-row]",
 		title: "Right-click the Job Row",
-		content: "Right-click this job row and select Follow-up Email. The tour will continue automatically once the generator is open.",
+		content:
+			"Right-click this job row and select Follow-up Email. The tour will continue automatically once the generator is open.",
 		route: "/jam/jobs",
 		placement: "top",
 		waitForSelector: "#follow-up-modal",
@@ -258,7 +272,8 @@ const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
 		id: "follow-up-open-via-badge-2",
 		targetId: "modal-view-job-0",
 		title: "Right-click the Contact Badge",
-		content: "Right-click this contact badge and select Follow-up Email. The tour will continue automatically once the generator is open.",
+		content:
+			"Right-click this contact badge and select Follow-up Email. The tour will continue automatically once the generator is open.",
 		placement: "bottom",
 		waitForSelector: "#follow-up-modal",
 		hideNextButton: true,
@@ -290,7 +305,8 @@ const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
 		id: "follow-up-open-via-button-3",
 		targetId: "job-modal-follow-up-button",
 		title: "Click Follow-up Email",
-		content: "Click this button to open the Follow-up Email Generator. The tour will continue automatically once the generator is open.",
+		content:
+			"Click this button to open the Follow-up Email Generator. The tour will continue automatically once the generator is open.",
 		placement: "top",
 		waitForSelector: "#follow-up-modal",
 		hideNextButton: true,

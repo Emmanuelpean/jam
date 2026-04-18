@@ -3,7 +3,7 @@
 	position: fixed;
 	inset: 0;
 	z-index: 1401;
-	background: rgb(0 0 0 / 55%);
+	background: rgb(0 0 0 / 75%);
 	pointer-events: none;
 }
 
@@ -13,7 +13,7 @@
 	z-index: 1401;
 	border-radius: 6px;
 	pointer-events: none;
-	box-shadow: 0 0 0 9999px rgb(0 0 0 / 55%);
+	box-shadow: 0 0 0 9999px rgb(0 0 0 / 75%);
 	outline: 2px solid rgb(255 255 255 / 20%);
 	outline-offset: 1px;
 	transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease, opacity 0.2s ease;
@@ -28,7 +28,7 @@
 	border: 1px solid var(--bs-card-border-color);
 	border-radius: 10.8px;
 	padding: 0;
-	box-shadow: 0 20px 60px rgb(0 0 0 / 30%);
+	box-shadow: 0 20px 60px rgb(0 0 0 / 50%);
 	animation: tour-popover-in 0.18s ease forwards;
 
 	&::before {

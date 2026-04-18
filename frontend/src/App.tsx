@@ -102,6 +102,29 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 
 	return (
 		<div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+			{isLoading && (
+				<div className="global-loading-overlay">
+					<div className="d-flex flex-column justify-content-center align-items-center h-100">
+						<div className="spinner-border mb-3" role="status" id="loading-spinner">
+							<span className="visually-hidden">Loading...</span>
+						</div>
+						<p className="mb-3">{loadingMessage}</p>
+						{progress !== undefined && (
+							<div className="progress" style={{ width: "315px" }}>
+								<div
+									className="progress-bar progress-bar-striped progress-bar-animated"
+									role="progressbar"
+									style={{ width: `${progress}%` }}
+									aria-valuenow={progress}
+									aria-valuemin={0}
+									aria-valuemax={100}
+								/>
+								<span className="progress-text">{progress}%</span>
+							</div>
+						)}
+					</div>
+				</div>
+			)}
 			<CommandPalette isOpen={isCommandPaletteOpen} onClose={closeCommandPalette} />
 			{isAuthenticated && <GuidedTour />}
 			{isAuthenticated && <TourSelectPanel />}
@@ -125,29 +148,6 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 						className={!isAuthPage ? `main-content` : ""}
 						style={isAuthPage ? { height: "100%" } : undefined}
 					>
-						{isLoading && (
-							<div className="global-loading-overlay">
-								<div className="d-flex flex-column justify-content-center align-items-center h-100">
-									<div className="spinner-border mb-3" role="status" id="loading-spinner">
-										<span className="visually-hidden">Loading...</span>
-									</div>
-									<p className="mb-3">{loadingMessage}</p>
-									{progress !== undefined && (
-										<div className="progress" style={{ width: "315px" }}>
-											<div
-												className="progress-bar progress-bar-striped progress-bar-animated"
-												role="progressbar"
-												style={{ width: `${progress}%` }}
-												aria-valuenow={progress}
-												aria-valuemin={0}
-												aria-valuemax={100}
-											/>
-											<span className="progress-text">{progress}%</span>
-										</div>
-									)}
-								</div>
-							</div>
-						)}
 						{children}
 					</div>
 				</div>
