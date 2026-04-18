@@ -100,6 +100,7 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
+    border: 2px solid transparent;
 }
 
 .grid-item-content {
@@ -174,7 +175,6 @@
     .dashboard-grid-item {
         border: 2px dashed var(--bs-border-color);
         border-radius: 0.5rem;
-        background: var(--bs-body-bg);
     }
 
     .react-grid-placeholder {

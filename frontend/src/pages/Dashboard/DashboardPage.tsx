@@ -525,6 +525,7 @@ const Dashboard: React.FC = () => {
 							breakpoints={{ lg: TABLET_BREAKPOINT, sm: MOBILE_BREAKPOINT, xs: 0 }}
 							cols={{ lg: 12, sm: 7, xs: 2 }}
 							rowHeight={30}
+							containerPadding={[0, 0]}
 							dragConfig={{ enabled: isEditMode, handle: ".drag-handle" }}
 							resizeConfig={{ enabled: isEditMode, handles: ["sw", "nw", "se", "ne"] }}
 							onLayoutChange={handleLayoutChange}
