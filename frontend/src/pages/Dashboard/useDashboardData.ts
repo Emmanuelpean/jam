@@ -57,18 +57,16 @@ export function useDashboardData(): DashboardData {
 	);
 
 	const jobApplicationPending: EnrichedJobData[] = jobApplications.filter(
-		(job: EnrichedJobData): boolean =>
-			!!(job.application_status && !["rejected", "withdrawn"].includes(job.application_status))
+		(job: EnrichedJobData): boolean => job.has_active_application
 	);
 
-	const needsChase: EnrichedJobData[] = jobApplicationPending.filter(
+	const needsChase: EnrichedJobData[] = jobApplications.filter(
 		(job: EnrichedJobData): boolean =>
 			!!(
+				job.has_open_application &&
 				job.days_since_last_update &&
 				job.days_since_last_update > currentUser.preferences.chase_threshold &&
-				(!job.followup_snooze_datetime || job.followup_snooze_datetime <= now) &&
-				job.application_status &&
-				!["rejected", "offer", "withdrawn"].includes(job.application_status)
+				(!job.followup_snooze_datetime || job.followup_snooze_datetime <= now)
 			)
 	);
 
@@ -113,8 +111,7 @@ export function useDashboardData(): DashboardData {
 	);
 
 	const activeApplications: EnrichedJobData[] = jobApplications.filter(
-		(job: EnrichedJobData): boolean =>
-			!!(job.application_status && !["rejected", "withdrawn"].includes(job.application_status))
+		(job: EnrichedJobData): boolean => job.has_active_application
 	);
 
 	const applicationsWithInterviews = new Set(interviews.map((i: EnrichedInterviewData): number => i.job_id));

@@ -161,6 +161,8 @@ export interface JobData extends OwnedOut {
 	contacts: number[];
 	scraped_job_id: number | null;
 	has_application: boolean;
+	has_active_application: boolean;
+	has_open_application: boolean;
 }
 
 export interface EnrichedJobData extends JobData {

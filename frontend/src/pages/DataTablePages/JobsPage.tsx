@@ -106,12 +106,9 @@ const JobsPage = (): JSX.Element => {
 				entityType="job"
 				initialSortConfig={{ key: "created_at", direction: "desc" }}
 				title="Jobs"
-				rowFilter={
-					hideRejected
-						? (job: JobData) =>
-								!(["rejected", "withdrawn"] as (string | null)[]).includes(job.application_status)
-						: undefined
-				}
+				rowFilter={(job: JobData): boolean => {
+					return !(hideRejected && job.has_application && !job.has_active_application);
+				}}
 				columns={columns}
 				Modal={JobModal}
 				modalSize="xl"

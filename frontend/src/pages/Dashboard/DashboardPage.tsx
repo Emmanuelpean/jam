@@ -58,6 +58,11 @@ const Dashboard: React.FC = () => {
 	const { currentUser, updateCurrentUser } = useAuth();
 	const { showConfirm, showDelete } = useAlert();
 	const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
+	const [debouncedWidth, setDebouncedWidth] = useState(width);
+	useEffect(() => {
+		const timer = setTimeout(() => setDebouncedWidth(width), 50);
+		return () => clearTimeout(timer);
+	}, [width]);
 	const [isEditMode, setIsEditMode] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [showWidgetPicker, setShowWidgetPicker] = useState(false);
@@ -504,13 +509,18 @@ const Dashboard: React.FC = () => {
 
 	return (
 		<div className="dashboard-wrapper" data-loaded="true">
-			<div id="dashboard-main" className="dashboard-main" data-tour="dashboard-stats" ref={containerRef as React.RefObject<HTMLDivElement>}>
+			<div
+				id="dashboard-main"
+				className="dashboard-main"
+				data-tour="dashboard-stats"
+				ref={containerRef as React.RefObject<HTMLDivElement>}
+			>
 				<ExtensionBanner />
 				<div className={isEditMode ? "dashboard-edit-mode" : ""}>
 					{mounted && (
 						<ResponsiveGridLayout
 							className="dashboard-grid"
-							width={width}
+							width={debouncedWidth}
 							layouts={{ lg: currentLayout }}
 							breakpoints={{ lg: TABLET_BREAKPOINT, sm: MOBILE_BREAKPOINT, xs: 0 }}
 							cols={{ lg: 12, sm: 7, xs: 2 }}

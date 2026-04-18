@@ -86,6 +86,19 @@ function computePopoverStyle(rect: DOMRect, preferred: TourStep["placement"]): R
 	}
 }
 
+/** Expand step-definition placeholders to real DOM ids */
+function expandTargetId(targetId: string, demoJobId: number | null): string {
+	if (targetId === "[demo-job-row]") return demoJobId !== null ? `table-row-job-${demoJobId}` : targetId;
+	return targetId;
+}
+
+/** Resolve a targetId to a DOM element — supports plain IDs and CSS selectors */
+function resolveTarget(targetId: string): Element | null {
+	return targetId.startsWith("#") || targetId.startsWith(".") || targetId.includes(" ")
+		? document.querySelector(targetId)
+		: document.getElementById(targetId);
+}
+
 /** Force a value into a React-controlled input */
 function setNativeInputValue(el: HTMLInputElement, value: string): void {
 	const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
@@ -97,7 +110,7 @@ function setNativeInputValue(el: HTMLInputElement, value: string): void {
 }
 
 export function GuidedTour(): JSX.Element | null {
-	const { isTourActive, activeTourId, endTour, isCleaningUp } = useTour();
+	const { isTourActive, activeTourId, endTour, isCleaningUp, demoJobId } = useTour();
 	const navigate = useNavigate();
 	const location = useLocation();
 
@@ -115,6 +128,12 @@ export function GuidedTour(): JSX.Element | null {
 	const waitPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 	const autoFillCleanupRef = useRef<(() => void) | null>(null);
 	const locationRef = useRef(location.pathname);
+	const stepRef = useRef(step);
+	stepRef.current = step;
+	const tourStepsRef = useRef(TOUR_STEPS);
+	tourStepsRef.current = TOUR_STEPS;
+	const inputValidRef = useRef(inputValid);
+	inputValidRef.current = inputValid;
 
 	locationRef.current = location.pathname;
 
@@ -147,7 +166,7 @@ export function GuidedTour(): JSX.Element | null {
 			stopRaf();
 			stopWait();
 			setTargetRect(null);
-			if (targetStep >= TOUR_STEPS.length) {
+			if (targetStep >= tourStepsRef.current.length) {
 				void endTour(true);
 				return;
 			}
@@ -155,6 +174,25 @@ export function GuidedTour(): JSX.Element | null {
 		},
 		[stopPoll, stopRaf, stopWait, endTour]
 	);
+
+	const advanceToStepById = useCallback(
+		(stepId: string): void => {
+			const idx = TOUR_STEPS.findIndex((s) => s.id === stepId);
+			if (idx !== -1) advanceToStep(idx);
+		},
+		[advanceToStep]
+	);
+
+	const advanceFromCurrentStep = useCallback((): void => {
+		const s = stepRef.current;
+		const steps = tourStepsRef.current;
+		const nextId = steps[s]?.nextStepId;
+		if (nextId) {
+			const idx = steps.findIndex((t) => t.id === nextId);
+			if (idx !== -1) { advanceToStep(idx); return; }
+		}
+		advanceToStep(s + 1);
+	}, [advanceToStep]);
 
 	// ── Find target element, then track it with RAF ─────────────────────────
 	useEffect(() => {
@@ -171,9 +209,10 @@ export function GuidedTour(): JSX.Element | null {
 		}
 
 		// Poll until the element appears (with non-zero dimensions)
+		const resolvedTargetId = expandTargetId(stepDef.targetId!, demoJobId);
 		let elapsed = 0;
 		pollRef.current = setInterval(() => {
-			const el = document.getElementById(stepDef.targetId!);
+			const el = resolveTarget(resolvedTargetId);
 			const r = el?.getBoundingClientRect();
 			if (r && r.width > 0 && r.height > 0) {
 				stopPoll();
@@ -183,7 +222,7 @@ export function GuidedTour(): JSX.Element | null {
 
 				// RAF loop keeps rect in sync with any ongoing animation / scroll
 				const trackRect = () => {
-					const el2 = document.getElementById(stepDef.targetId!);
+					const el2 = resolveTarget(resolvedTargetId);
 					if (!el2) return;
 					const newR = el2.getBoundingClientRect();
 					setTargetRect((prev) => {
@@ -210,7 +249,7 @@ export function GuidedTour(): JSX.Element | null {
 			stopPoll();
 			stopRaf();
 		};
-	}, [step, isTourActive, navigate, stopPoll, stopRaf]);
+	}, [step, isTourActive, demoJobId, navigate, stopPoll, stopRaf]);
 
 	// ── Interactive: waitForSelector / waitForSelectorGone / waitForInput ───
 	useEffect(() => {
@@ -273,21 +312,14 @@ export function GuidedTour(): JSX.Element | null {
 			}
 			if (met) {
 				stopWait();
-				setStep((s) => s + 1);
+				advanceFromCurrentStep();
 			}
 		}, 50);
 
 		return stopWait;
-	}, [step, isTourActive, stopWait]);
+	}, [step, isTourActive, stopWait, advanceFromCurrentStep]);
 
 	// ── Keyboard navigation ──────────────────────────────────────────────────
-	const stepRef = useRef(step);
-	stepRef.current = step;
-	const tourStepsRef = useRef(TOUR_STEPS);
-	tourStepsRef.current = TOUR_STEPS;
-	const inputValidRef = useRef(inputValid);
-	inputValidRef.current = inputValid;
-
 	useEffect(() => {
 		if (!isTourActive) return;
 		const onKey = (e: KeyboardEvent) => {
@@ -310,15 +342,15 @@ export function GuidedTour(): JSX.Element | null {
 			if ((e.key === "ArrowRight" || e.key === "Enter") && showNext && !isCleaningUp && !inputBlocked) {
 				e.preventDefault();
 				if (s >= steps.length - 1) void endTour(true);
-				else advanceToStep(s + 1);
-			} else if (e.key === "ArrowLeft" && s > 0 && showNext) {
+				else advanceFromCurrentStep();
+			} else if (e.key === "ArrowLeft" && s > 0 && showNext && !steps[s - 1]?.hideNextButton) {
 				e.preventDefault();
 				advanceToStep(s - 1);
 			}
 		};
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
-	}, [isTourActive, endTour, advanceToStep, isCleaningUp]);
+	}, [isTourActive, endTour, advanceToStep, advanceFromCurrentStep, isCleaningUp]);
 
 	// ── Reset on tour start ──────────────────────────────────────────────────
 	useEffect(() => {
@@ -345,6 +377,7 @@ export function GuidedTour(): JSX.Element | null {
 	const isFirst = step === 0;
 	const isLast = step === TOUR_STEPS.length - 1;
 	const nextDisabled = isCleaningUp || (!!currentStep.waitForInput && !inputValid);
+	const canGoBack = !isFirst && showNext && !TOUR_STEPS[step - 1]?.hideNextButton;
 	const popoverStyle = targetRect ? computePopoverStyle(targetRect, currentStep.placement) : {};
 
 	return (
@@ -380,9 +413,23 @@ export function GuidedTour(): JSX.Element | null {
 					</div>
 					<h5 className="tour-popover-title">{currentStep.title}</h5>
 					<p className="tour-popover-content">{currentStep.content}</p>
-					{(showNext || !isFirst) && (
+					{currentStep.choices && (
+						<div className="tour-choices">
+							{currentStep.choices.map((choice) => (
+								<button
+									key={choice.targetStepId}
+									className="tour-choice-btn"
+									onClick={() => advanceToStepById(choice.targetStepId)}
+								>
+									<i className={`bi ${choice.icon} me-2`} />
+									{choice.label}
+								</button>
+							))}
+						</div>
+					)}
+					{(showNext || canGoBack) && (
 						<div className="tour-popover-footer">
-							{!isFirst && showNext && (
+							{canGoBack && (
 								<button className="tour-btn-secondary" onClick={() => advanceToStep(step - 1)}>
 									<i className="bi bi-arrow-left me-1"></i>Back
 								</button>
@@ -391,7 +438,7 @@ export function GuidedTour(): JSX.Element | null {
 								<button
 									className="tour-btn-primary"
 									disabled={nextDisabled}
-									onClick={() => (isLast ? void endTour(true) : advanceToStep(step + 1))}
+									onClick={() => (isLast ? void endTour(true) : advanceFromCurrentStep())}
 								>
 									{isLast ? (
 										isCleaningUp ? (

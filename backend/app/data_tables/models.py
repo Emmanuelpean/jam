@@ -439,6 +439,26 @@ class Job(Owned, Base):
             | cls.application_url.isnot(None)
         )
 
+    @hybrid_property
+    def has_active_application(self) -> bool:
+        """True if there is an application and it has not been rejected or withdrawn."""
+        return self.has_application and self.application_status not in ("rejected", "withdrawn")
+
+    @has_active_application.expression
+    def has_active_application(cls):
+        """True if there is an application and it has not been rejected or withdrawn for SQL queries."""
+        return cls.has_application & cls.application_status.notin_(("rejected", "withdrawn"))
+
+    @hybrid_property
+    def has_open_application(self) -> bool:
+        """True if there is an application that is not closed (not rejected, withdrawn, or offered)."""
+        return self.has_application and self.application_status not in ("rejected", "withdrawn", "offer")
+
+    @has_open_application.expression
+    def has_open_application(cls):
+        """True if there is an application that is not closed for SQL queries."""
+        return cls.has_application & cls.application_status.notin_(("rejected", "withdrawn", "offer"))
+
     __table_args__ = (
         CheckConstraint("personal_rating >= 1 AND personal_rating <= 5", name=f"valid_rating_range"),
         CheckConstraint("salary_min <= salary_max", name=f"valid_salary_range"),

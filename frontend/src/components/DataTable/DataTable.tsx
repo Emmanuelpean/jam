@@ -893,7 +893,7 @@ function DataTableComponent<T extends JamData>(
 				) : (
 					<>
 						<div style={{ display: "flex", minHeight: 0, flex: 1 }}>
-							<div className="table-responsive" style={{ minWidth: 0, width: "100%" }}>
+							<div className="table-responsive" id={`${entityType}-data-table`} style={{ minWidth: 0, width: "100%" }}>
 								<table
 									className={`table table-striped table-hover ${compact ? "table-sm rounded-3 overflow-hidden" : ""}`}
 									style={{

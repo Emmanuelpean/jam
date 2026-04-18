@@ -19,6 +19,10 @@ export interface TourStep {
 	};
 	/** Hide the Next button — step advances automatically or by user action */
 	hideNextButton?: boolean;
+	/** Render choice buttons that jump to a specific step by id */
+	choices?: Array<{ label: string; icon: string; targetStepId: string }>;
+	/** After this step auto-advances (or Next is clicked), jump to this step id instead of the next index */
+	nextStepId?: string;
 }
 
 export interface TourDefinition {
@@ -43,7 +47,7 @@ const APP_OVERVIEW_STEPS: TourStep[] = [
 		title: "Your Dashboard",
 		content:
 			"This is your personal dashboard - allowing you to keep an eye on your job application progress at a glance.",
-		route: "/jam/dashboard",
+		route: "dashboard",
 		placement: "center",
 	},
 	{
@@ -58,6 +62,7 @@ const APP_OVERVIEW_STEPS: TourStep[] = [
 		id: "sidebar",
 		targetId: "nav-jobs",
 		title: "Sidebar Navigation",
+		route: "jobs",
 		content:
 			"Use the sidebar to move between sections. Jobs is your central hub - log applications, track every updates and interviews.",
 		placement: "right",
@@ -67,6 +72,7 @@ const APP_OVERVIEW_STEPS: TourStep[] = [
 		targetId: "nav-user-settings",
 		title: "User Settings",
 		content: "",
+		route: "settings/account",
 		placement: "right",
 	},
 	{
@@ -209,6 +215,140 @@ const FIRST_JOB_STEPS: TourStep[] = [
 	},
 ];
 
+const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
+	{
+		id: "follow-up-intro",
+		targetId: null,
+		title: "Follow-up Email Generator",
+		content: "JAM can draft a personalised follow-up email for any job application in seconds. How would you like to open it?",
+		route: "/jam/jobs",
+		placement: "center",
+		hideNextButton: true,
+		choices: [
+			{ label: "Right-click a job row", icon: "bi-table", targetStepId: "follow-up-open-via-table" },
+			{ label: "Right-click a contact badge", icon: "bi-person-badge-fill", targetStepId: "follow-up-open-via-badge-1" },
+			{ label: "Button in the Application tab", icon: "bi-send-fill", targetStepId: "follow-up-open-via-button-1" },
+		],
+	},
+	// ── Method 1: right-click job row ────────────────────────────────────────
+	{
+		id: "follow-up-open-via-table",
+		targetId: "[demo-job-row]",
+		title: "Right-click the Job Row",
+		content: "Right-click this job row and select Follow-up Email. The tour will continue automatically once the generator is open.",
+		route: "/jam/jobs",
+		placement: "top",
+		waitForSelector: "#follow-up-modal",
+		hideNextButton: true,
+		nextStepId: "follow-up-contact",
+	},
+	// ── Method 2: right-click contact badge ──────────────────────────────────
+	{
+		id: "follow-up-open-via-badge-1",
+		targetId: "[demo-job-row]",
+		title: "Open the Job",
+		content: "Click this job row to open the job details.",
+		route: "/jam/jobs",
+		placement: "top",
+		waitForSelector: "#job-tab",
+		hideNextButton: true,
+		nextStepId: "follow-up-open-via-badge-2",
+	},
+	{
+		id: "follow-up-open-via-badge-2",
+		targetId: "modal-view-job-0",
+		title: "Right-click the Contact Badge",
+		content: "Right-click this contact badge and select Follow-up Email. The tour will continue automatically once the generator is open.",
+		placement: "bottom",
+		waitForSelector: "#follow-up-modal",
+		hideNextButton: true,
+		nextStepId: "follow-up-contact",
+	},
+	// ── Method 3: button in Application tab ──────────────────────────────────
+	{
+		id: "follow-up-open-via-button-1",
+		targetId: "[demo-job-row]",
+		title: "Open the Job",
+		content: "Click this job row to open the job details.",
+		route: "/jam/jobs",
+		placement: "top",
+		waitForSelector: "#application-tab",
+		hideNextButton: true,
+		nextStepId: "follow-up-open-via-button-2",
+	},
+	{
+		id: "follow-up-open-via-button-2",
+		targetId: "application-tab",
+		title: "Switch to the Application Tab",
+		content: "Click the Application tab to see your application details.",
+		placement: "bottom",
+		waitForSelector: "#job-modal-follow-up-button",
+		hideNextButton: true,
+		nextStepId: "follow-up-open-via-button-3",
+	},
+	{
+		id: "follow-up-open-via-button-3",
+		targetId: "job-modal-follow-up-button",
+		title: "Click Follow-up Email",
+		content: "Click this button to open the Follow-up Email Generator. The tour will continue automatically once the generator is open.",
+		placement: "top",
+		waitForSelector: "#follow-up-modal",
+		hideNextButton: true,
+		nextStepId: "follow-up-contact",
+	},
+	{
+		id: "follow-up-contact",
+		targetId: "contactId-form-group",
+		title: "Select a Contact",
+		content:
+			"Choose who you want to email. Switching contacts updates the greeting in the email body and pre-fills their email address.",
+		placement: "right",
+	},
+	{
+		id: "follow-up-subject",
+		targetId: "subject-form-group",
+		title: "Email Subject",
+		content: "The subject is pre-filled based on the job title. Edit it if you'd like a different subject line.",
+		placement: "right",
+	},
+	{
+		id: "follow-up-body",
+		targetId: "body-form-group",
+		title: "Email Body",
+		content:
+			"A professional follow-up message is generated automatically. Personalise it before sending — especially the opening line.",
+		placement: "right",
+	},
+	{
+		id: "follow-up-send",
+		targetId: "email-service-dropdown",
+		title: "Send Your Email",
+		content:
+			"Click Send Email to open your default email client. Use the dropdown arrow to send via Gmail or Outlook instead.",
+		placement: "top",
+		hideNextButton: true,
+		waitForSelector: "#confirm-alert-modal-buttons",
+	},
+	{
+		id: "follow-up-log-update",
+		targetId: "confirm-alert-modal-dialog",
+		title: "Log the Email",
+		content:
+			"After clicking Send, JAM asks if you want to record the email as a job application update. Click Yes to keep a full history of your follow-ups, or No to skip.",
+		placement: "top",
+		hideNextButton: true,
+		waitForSelectorGone: "#confirm-alert-modal-dialog",
+	},
+	{
+		id: "follow-up-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"That's the Follow-up Email Generator! Use it to stay on top of your applications and keep your job history complete.",
+		placement: "center",
+	},
+];
+
 // ── Tour registry ─────────────────────────────────────────────────────────────
 
 export const TOURS: TourDefinition[] = [
@@ -225,6 +365,13 @@ export const TOURS: TourDefinition[] = [
 		description: "A step-by-step walkthrough for logging your first job application.",
 		icon: "briefcase",
 		steps: FIRST_JOB_STEPS,
+	},
+	{
+		id: "follow-up-email",
+		title: "Sending a Follow-up Email",
+		description: "Learn how to generate and send a personalised follow-up email for a job application.",
+		icon: "envelope",
+		steps: FOLLOW_UP_EMAIL_STEPS,
 	},
 ];
 

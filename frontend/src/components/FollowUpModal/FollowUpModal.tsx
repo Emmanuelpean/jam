@@ -273,6 +273,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 							as={ButtonGroup}
 							className="email-service-dropdown flex-fill"
 							style={{ width: "100%" }}
+							id={"email-service-dropdown"}
 						>
 							<Button variant="primary" onClick={(): void => handleSend("default")} id={"send-btn"}>
 								<i className="bi bi-send-fill me-2"></i>

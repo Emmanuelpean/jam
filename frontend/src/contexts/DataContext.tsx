@@ -180,6 +180,8 @@ export interface DataContextValue {
 
 	error: ApiError | null;
 
+	setDemoFilter: (filter: { jobIds: number[]; personIds: number[] } | null) => void;
+
 	// Generic update functions
 	addEntity: <T extends EntityType>(type: T, data: any) => ApiResponsePromise<JamData>;
 	updateEntity: <T extends EntityType>(type: T, id: number, data: Partial<JamData>) => ApiResponsePromise<JamData>;
@@ -194,6 +196,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [rawJobs, setRawJobs] = useState<JobData[]>([]);
 	const [companies, setCompanies] = useState<CompanyData[]>([]);
 	const [persons, setPersons] = useState<PersonData[]>([]);
+	const [demoFilter, setDemoFilter] = useState<{ jobIds: number[]; personIds: number[] } | null>(null);
 	const [rawInterviews, setRawInterviews] = useState<InterviewData[]>([]);
 	const [rawJobApplicationUpdates, setRawJobApplicationUpdates] = useState<JobApplicationUpdateData[]>([]);
 	const [aggregators, setAggregators] = useState<AggregatorData[]>([]);
@@ -213,10 +216,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const interviews: EnrichedInterviewData[] = useMemo<EnrichedInterviewData[]>((): EnrichedInterviewData[] => {
 		// Enrich interviews with their sequence number per job
 		return rawInterviews.map((interview: InterviewData): EnrichedInterviewData => {
-			const job: JobData | undefined = rawJobs.find((j: JobData): boolean => j.id === interview.job_id)!;
-
 			let jobInterviews: InterviewData[] = rawInterviews.filter(
-				(i: InterviewData): boolean => i.job_id === job.id
+				(i: InterviewData): boolean => i.job_id === interview.job_id
 			);
 			jobInterviews = sortByKey(jobInterviews, "date", true);
 
@@ -254,7 +255,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const jobs: EnrichedJobData[] = useMemo<EnrichedJobData[]>((): EnrichedJobData[] => {
 		// Enrich jobs with calculated fields
 
-		return rawJobs.map((job: JobData): EnrichedJobData => {
+		const sourceJobs = demoFilter ? rawJobs.filter((j) => demoFilter.jobIds.includes(j.id)) : rawJobs;
+		return sourceJobs.map((job: JobData): EnrichedJobData => {
 			const jobInterviews: InterviewData[] = rawInterviews.filter(
 				(i: InterviewData): boolean => i.job_id === job.id
 			);
@@ -331,7 +333,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				name: jobName,
 			};
 		});
-	}, [rawJobs, rawInterviews, rawJobApplicationUpdates, companies]);
+	}, [rawJobs, rawInterviews, rawJobApplicationUpdates, companies, demoFilter]);
 
 	const fetchAllData = async () => {
 		setError(null);
@@ -568,7 +570,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			value={{
 				jobs,
 				companies,
-				persons,
+				persons: demoFilter ? persons.filter((p) => demoFilter.personIds.includes(p.id)) : persons,
 				interviews,
 				jobApplicationUpdates,
 				aggregators,
@@ -583,6 +585,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				settings,
 				users,
 				error,
+				setDemoFilter,
 				updateEntity,
 				deleteEntity,
 				addEntity,

@@ -86,7 +86,7 @@ export function TourSelectPanel(): JSX.Element | null {
 					const completed = completedTourIds.has(tour.id);
 					return (
 						<li key={tour.id}>
-							<button className="tsp-item" disabled={isTourActive} onClick={() => startTour(tour.id)}>
+							<button className="tsp-item" disabled={isTourActive} onClick={() => void startTour(tour.id)}>
 								<i className={`bi bi-check-circle ${completed ? "tsp-icon--done" : "tsp-icon"}`} />
 								<span>{tour.title}</span>
 							</button>

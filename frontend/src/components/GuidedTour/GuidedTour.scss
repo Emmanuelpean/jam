@@ -150,6 +150,34 @@
 	margin-bottom: 18px;
 }
 
+.tour-choices {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 18px;
+}
+
+.tour-choice-btn {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	background: var(--bs-secondary-bg);
+	border: 1px solid var(--bs-card-border-color);
+	border-radius: 7px;
+	padding: 9px 14px;
+	font-size: 0.875rem;
+	font-family: inherit;
+	color: var(--bs-body-color);
+	cursor: pointer;
+	text-align: left;
+	transition: background 0.12s ease, border-color 0.12s ease;
+
+	&:hover {
+		background: var(--bs-tertiary-bg);
+		border-color: var(--bs-secondary-color);
+	}
+}
+
 .tour-popover-footer {
 	display: flex;
 	justify-content: flex-end;

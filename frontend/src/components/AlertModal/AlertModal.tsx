@@ -79,6 +79,8 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 
 	return (
 		<JamModal show={alertState.show} onHide={hideAlert} centered size={getModalSize(alertState.size)} id={modalId}>
+			{/* Transparent sentinel that fills .modal-content — used by the guided tour to spotlight this dialog */}
+			<div id={`${modalId}-dialog`} style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
 			<ModalHeader onClose={hideAlert}>
 				{iconClass && <i className={`bi ${iconClass} me-2`} />}
 				<Modal.Title>{alertState.title}</Modal.Title>
@@ -91,7 +93,7 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 				)}
 			</Modal.Body>
 			<Modal.Footer>
-				<div className="modal-buttons-container">
+				<div className="modal-buttons-container" id={`${modalId}-buttons`}>
 					{alertState.cancelText && (
 						<ActionButton
 							id={`${modalId}-cancel-button`}
