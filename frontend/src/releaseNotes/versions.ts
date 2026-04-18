@@ -8,6 +8,7 @@ import scrapingFilterGif from "../assets/demo_gifs/scraping_filter.gif";
 import jobsGif from "../assets/demo_gifs/job_page.gif";
 import scrapedJobsPng from "../assets/screenshots/scraped-jobs.png";
 import dashboardPng from "../assets/screenshots/dashboard.png";
+import { PREMIUM_PRICE } from "../pages/UserSettings/PremiumTab";
 import interviewsPng from "../assets/screenshots/interviews.png";
 import deadlinesPng from "../assets/screenshots/deadlines.png";
 import { getEntityIcon } from "../components/rendering/view/Icons";
@@ -67,7 +68,7 @@ export const WELCOME_SLIDES: ReleaseSlide[] = [
 		title: "Premium - Job Alert Scraping and Rating",
 		description:
 			"Typical job seekers receive hundreds of job alerts every month from job aggregators like LinkedIn and Indeed. " +
-			"For only £5/month, JAM automatically scrapes these job details, rates them against your qualifications, " +
+			"For only " + PREMIUM_PRICE + "/month, JAM automatically scrapes these job details, rates them against your qualifications, " +
 			"and highlights the best matches for you.",
 		image: scrapedJobsPng,
 	},
@@ -248,8 +249,8 @@ export function getNewerReleaseSlides(userVersion: string): ReleaseSlide[] {
 	newer.sort(compareVersions);
 	const multipleVersions: boolean = newer.length > 1;
 	return newer.flatMap((v: version): ReleaseSlide[] =>
-		(RELEASE_SLIDES[v] ?? []).map((slide: ReleaseSlide): ReleaseSlide =>
-			multipleVersions ? { ...slide, version: v } : slide
+		(RELEASE_SLIDES[v] ?? []).map(
+			(slide: ReleaseSlide): ReleaseSlide => (multipleVersions ? { ...slide, version: v } : slide)
 		)
 	);
 }

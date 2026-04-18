@@ -13,6 +13,8 @@ import { forwardingConfirmationApi } from "../../services/api/Services";
 import { ForwardingConfirmationLinkData } from "../../services/schemas/Services";
 import { PremiumDetails } from "../../services/schemas/Core";
 
+export const PREMIUM_PRICE = "£8";
+
 interface SubscriptionStatusDisplay {
 	title: string;
 	message: string | ReactNode;
@@ -211,12 +213,6 @@ export const PremiumTab = (): JSX.Element => {
 		});
 	};
 
-	const copyScraperEmail = (_: React.MouseEvent): void => {
-		navigator.clipboard.writeText(config.support_email).then((_: void): void => {
-			showToastSuccess(`${config.support_email} copied to clipboard`);
-		});
-	};
-
 	const statusDisplay: SubscriptionStatusDisplay = getSubscriptionStatusDisplay(
 		currentUser?.stripe_details.subscription_status ?? null,
 		currentUser?.stripe_details.trial_end_date ?? null,
@@ -309,7 +305,7 @@ export const PremiumTab = (): JSX.Element => {
 						{statusDisplay.showSubscribeButton ? (
 							<div className="d-flex flex-column align-items-center gap-3">
 								<div className="premium-price-tag">
-									<span style={{ fontSize: "1.5rem", fontWeight: 700 }}>£5</span>
+									<span style={{ fontSize: "1.5rem", fontWeight: 700 }}>{PREMIUM_PRICE}</span>
 									<span style={{ opacity: 0.8 }}>/month</span>
 								</div>
 								{!currentUser?.stripe_details.trial_end_date && (
@@ -329,7 +325,7 @@ export const PremiumTab = (): JSX.Element => {
 						) : hasActiveSubscription ? (
 							<div className="d-flex flex-column align-items-center gap-3">
 								<div className="premium-price-tag">
-									<span style={{ fontSize: "1.25rem", fontWeight: 600 }}>£5</span>
+									<span style={{ fontSize: "1.25rem", fontWeight: 600 }}>{PREMIUM_PRICE}</span>
 									<span style={{ opacity: 0.8 }}>/month</span>
 								</div>
 								<ActionButton

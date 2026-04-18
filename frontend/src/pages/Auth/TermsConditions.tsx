@@ -3,6 +3,7 @@ import { Button, Card, Modal } from "react-bootstrap";
 import JamModal from "../../components/JamModal/JamModal";
 import { Link } from "react-router-dom";
 import "./TermsConditions.scss";
+import { PREMIUM_PRICE } from "../UserSettings/PremiumTab";
 
 interface TermsSectionProps {
 	number: number;
@@ -94,7 +95,7 @@ export function TermsContent(): JSX.Element {
 				<TermsSubsection title="3.1 TOAST Premium Subscription">
 					<ul className="terms-list">
 						<li>
-							<strong>Price:</strong> £5.00 per month (GBP)
+							<strong>Price:</strong> {PREMIUM_PRICE} per month (GBP)
 						</li>
 						<li>
 							<strong>Free Trial:</strong> New customers receive a 14-day free trial with no payment
