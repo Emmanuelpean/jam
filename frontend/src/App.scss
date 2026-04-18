@@ -627,6 +627,13 @@ textarea.form-control {
     text-shadow: 0 1px 1.8px rgb(0 0 0 / 20%);
 }
 
+.btn.active,
+.btn:first-child:active,
+:not(.btn-check) + .btn:active {
+    background: var(--primary-gradient);
+    border: none;
+}
+
 // Primary button (e.g. submit)
 .btn-primary {
     background: var(--primary-gradient);

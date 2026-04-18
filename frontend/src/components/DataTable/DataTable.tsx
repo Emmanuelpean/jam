@@ -845,12 +845,12 @@ function DataTableComponent<T extends JamData>(
 							{enableColumnConfig && !compact && (
 								<Button
 									id="column-config-toggle-btn"
-									variant={columnSidebarOpen ? "primary" : "outline-primary"}
+									variant="outline-primary"
 									onClick={() => {
 										setColumnSidebarOpen(!columnSidebarOpen);
 										setFilterSidebarOpen(false);
 									}}
-									className={`config-btn${!enableMultiSelect ? " ms-auto" : ""}`}
+									className={`config-btn${!enableMultiSelect ? " ms-auto" : ""}${columnSidebarOpen ? " active" : ""}`}
 									data-sidebar-toggle="column"
 								>
 									<i className="bi bi-gear"></i>
@@ -859,8 +859,8 @@ function DataTableComponent<T extends JamData>(
 							{enableColumnConfig && !compact && (
 								<Button
 									id="filter-toggle-btn"
-									variant={filterSidebarOpen ? "primary" : "outline-primary"}
-									className={"config-btn"}
+									variant="outline-primary"
+									className={`config-btn${filterSidebarOpen ? " active" : ""}`}
 									onClick={() => {
 										setFilterSidebarOpen(!filterSidebarOpen);
 										setColumnSidebarOpen(false);
