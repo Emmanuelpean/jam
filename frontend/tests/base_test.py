@@ -1234,6 +1234,11 @@ class AuthentificationUtils(BaseUtilsClass):
 
         self.get_element("terms").click()
 
+    def set_remember_me(self) -> None:
+        """Check the remember me checkbox"""
+
+        self.get_element("remember-me").click()
+
     def set_first_name(self, value: str) -> None:
         """Get the first name field"""
 

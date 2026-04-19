@@ -136,3 +136,32 @@ class TestLogIn(BaseTest):
         self.get_element("logout-btn").click()
         self.confirm_modal.confirm_button.click()
         self.auth_utils.wait_for_login()
+
+    def test_remember_me_unchecked_stores_in_session_storage(self, test_regular_user) -> None:
+        """Test that login without remember me stores the token in sessionStorage, not localStorage"""
+
+        self.auth_utils.set_email(test_regular_user.email)
+        self.auth_utils.set_password(test_regular_user.plain_password)
+        self.auth_utils.confirm()
+        self.auth_utils.wait_for_dashboard()
+
+        token_in_local = self.driver.execute_script("return window.localStorage.getItem('token')")
+        token_in_session = self.driver.execute_script("return window.sessionStorage.getItem('token')")
+
+        assert token_in_local is None, "Token should not be in localStorage when remember me is unchecked"
+        assert token_in_session is not None, "Token should be in sessionStorage when remember me is unchecked"
+
+    def test_remember_me_checked_stores_in_local_storage(self, test_regular_user) -> None:
+        """Test that login with remember me checked stores the token in localStorage, not sessionStorage"""
+
+        self.auth_utils.set_email(test_regular_user.email)
+        self.auth_utils.set_password(test_regular_user.plain_password)
+        self.auth_utils.set_remember_me()
+        self.auth_utils.confirm()
+        self.auth_utils.wait_for_dashboard()
+
+        token_in_local = self.driver.execute_script("return window.localStorage.getItem('token')")
+        token_in_session = self.driver.execute_script("return window.sessionStorage.getItem('token')")
+
+        assert token_in_local is not None, "Token should be in localStorage when remember me is checked"
+        assert token_in_session is None, "Token should not be in sessionStorage when remember me is checked"

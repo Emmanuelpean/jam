@@ -61,6 +61,7 @@ function AuthForm(): JSX.Element {
 	const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 	const [showTerms, setShowTerms] = useState<boolean>(false);
 	const [showPrivacy, setShowPrivacy] = useState<boolean>(false);
+	const [rememberMe, setRememberMe] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [demoLoading, setDemoLoading] = useState<boolean>(false);
 	const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
@@ -310,7 +311,7 @@ function AuthForm(): JSX.Element {
 		setButtonDisabled(true);
 
 		try {
-			const result: GenericResponse = await login(formData.email, formData.password);
+			const result: GenericResponse = await login(formData.email, formData.password, rememberMe);
 
 			if (result.success) {
 				navigate("/dashboard");
@@ -745,7 +746,17 @@ function AuthForm(): JSX.Element {
 										<>
 											{renderFormField(emailField, formData, handleInputChange, fieldErrors)}
 											{renderFormField(passwordField, formData, handleInputChange, fieldErrors)}
-											<div className="text-end mb-3">
+											<div className="d-flex justify-content-between align-items-center mb-3">
+												<Form.Check
+													type="checkbox"
+													id="remember-me"
+													label="Remember me"
+													checked={rememberMe}
+													onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+														setRememberMe(e.target.checked)
+													}
+													className="small"
+												/>
 												<button
 													type="button"
 													onClick={switchToForgotPassword}

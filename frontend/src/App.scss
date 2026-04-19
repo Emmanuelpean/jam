@@ -796,6 +796,7 @@ textarea.form-control {
     height: 1.2rem;
     margin-right: 9px !important;
     margin-left: 0 !important;
+    margin-top: 0 !important;
     padding: 1.8px !important;
     border: 2px solid var(--bs-border-color) !important;
     outline-offset: 2px;
@@ -820,8 +821,12 @@ textarea.form-control {
     padding-right: 0.5rem;
     padding-left: 0.5rem;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 0;
+}
+
+.form-check-label {
+    user-select: none;
 }
 
 /* ----------------------------------------------------- TOGGLE ----------------------------------------------------- */
