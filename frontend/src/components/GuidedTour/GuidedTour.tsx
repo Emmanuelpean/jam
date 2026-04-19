@@ -7,7 +7,7 @@ import "./GuidedTour.scss";
 
 const SPOTLIGHT_PAD = 8;
 const GAP = 14; // gap between spotlight edge and popover edge
-const POP_W = 320;
+const POP_W = 450;
 const POP_MIN_H = 120;
 const MARGIN = 16; // min distance from viewport edge
 
@@ -53,14 +53,8 @@ function computePopoverStyle(rect: DOMRect, preferred: TourStep["placement"]): R
 	const side = bestSide(rect, preferred as Side);
 
 	// Center the popover on the target's relevant axis, clamped to viewport
-	const leftCentered = Math.max(MARGIN, Math.min(
-		rect.left + rect.width / 2 - POP_W / 2,
-		vw - POP_W - MARGIN,
-	));
-	const topCentered = Math.max(MARGIN, Math.min(
-		rect.top + rect.height / 2 - POP_MIN_H / 2,
-		vh - POP_MIN_H - MARGIN,
-	));
+	const leftCentered = Math.max(MARGIN, Math.min(rect.left + rect.width / 2 - POP_W / 2, vw - POP_W - MARGIN));
+	const topCentered = Math.max(MARGIN, Math.min(rect.top + rect.height / 2 - POP_MIN_H / 2, vh - POP_MIN_H - MARGIN));
 
 	switch (side) {
 		case "bottom": {
@@ -191,7 +185,10 @@ export function GuidedTour(): JSX.Element | null {
 		const nextId = steps[s]?.nextStepId;
 		if (nextId) {
 			const idx = steps.findIndex((t) => t.id === nextId);
-			if (idx !== -1) { advanceToStep(idx); return; }
+			if (idx !== -1) {
+				advanceToStep(idx);
+				return;
+			}
 		}
 		advanceToStep(s + 1);
 	}, [advanceToStep]);
@@ -230,11 +227,25 @@ export function GuidedTour(): JSX.Element | null {
 					if (!el2) return;
 					const newR = el2.getBoundingClientRect();
 					setTargetRect((prev) => {
-						if (prev && prev.top === newR.top && prev.left === newR.left && prev.width === newR.width && prev.height === newR.height) return prev;
+						if (
+							prev &&
+							prev.top === newR.top &&
+							prev.left === newR.left &&
+							prev.width === newR.width &&
+							prev.height === newR.height
+						)
+							return prev;
 						return newR;
 					});
 					setSpotlightRect((prev) => {
-						if (prev && prev.top === newR.top && prev.left === newR.left && prev.width === newR.width && prev.height === newR.height) return prev;
+						if (
+							prev &&
+							prev.top === newR.top &&
+							prev.left === newR.left &&
+							prev.width === newR.width &&
+							prev.height === newR.height
+						)
+							return prev;
 						return newR;
 					});
 					rafRef.current = requestAnimationFrame(trackRect);
@@ -390,85 +401,97 @@ export function GuidedTour(): JSX.Element | null {
 				className="tour-spotlight"
 				style={{
 					opacity: currentStep.targetId != null && spotlightRect ? 1 : 0,
-					...(spotlightRect ? {
-						top: spotlightRect.top - SPOTLIGHT_PAD,
-						left: spotlightRect.left - SPOTLIGHT_PAD,
-						width: spotlightRect.width + SPOTLIGHT_PAD * 2,
-						height: spotlightRect.height + SPOTLIGHT_PAD * 2,
-					} : { top: '50vh', left: '50vw', width: 0, height: 0 }),
+					...(spotlightRect
+						? {
+								top: spotlightRect.top - SPOTLIGHT_PAD,
+								left: spotlightRect.left - SPOTLIGHT_PAD,
+								width: spotlightRect.width + SPOTLIGHT_PAD * 2,
+								height: spotlightRect.height + SPOTLIGHT_PAD * 2,
+							}
+						: { top: "50vh", left: "50vw", width: 0, height: 0 }),
 				}}
 			/>
-			{currentStep.targetId == null && <div id="tour-backdrop" className="tour-backdrop" />}
-			{!waitingForTarget && <div
-				key={step}
-				id="tour-popover"
-				className={`tour-popover${currentStep.placement === "center" ? " tour-popover-center" : ""}`}
-				style={{ width: POP_W, ...popoverStyle }}
-				role="dialog"
-				aria-label={`Tour step ${step + 1} of ${TOUR_STEPS.length}: ${currentStep.title}`}
-			>
-				<div className="tour-popover-body">
-					<div className="tour-popover-header">
-						<span id="tour-step-counter" className="tour-step-counter">
-							Step {step + 1} of {TOUR_STEPS.length}
-						</span>
-						<button id="tour-skip-btn" className="tour-skip-btn" onClick={() => void endTour(false)}>
-							Skip tour
-						</button>
-					</div>
-					<h5 id="tour-popover-title" className="tour-popover-title">{currentStep.title}</h5>
-					<p className="tour-popover-content">{currentStep.content}</p>
-					{currentStep.choices && (
-						<div className="tour-choices">
-							{currentStep.choices.map((choice) => (
-								<button
-									key={choice.targetStepId}
-									id={`tour-choice-${choice.targetStepId}`}
-									className="tour-choice-btn"
-									onClick={() => advanceToStepById(choice.targetStepId)}
-								>
-									<i className={`bi ${choice.icon} me-2`} />
-									{choice.label}
-								</button>
-							))}
+			<div id="tour-backdrop" className="tour-backdrop" style={{ opacity: currentStep.targetId == null ? 1 : 0 }} />
+			{!waitingForTarget && (
+				<div
+					key={step}
+					id="tour-popover"
+					className={`tour-popover${currentStep.placement === "center" ? " tour-popover-center" : ""}`}
+					style={{ width: POP_W, ...popoverStyle }}
+					role="dialog"
+					aria-label={`Tour step ${step + 1} of ${TOUR_STEPS.length}: ${currentStep.title}`}
+				>
+					<div className="tour-popover-body">
+						<div className="tour-popover-header">
+							<span id="tour-step-counter" className="tour-step-counter">
+								Step {step + 1} of {TOUR_STEPS.length}
+							</span>
+							<button id="tour-skip-btn" className="tour-skip-btn" onClick={() => void endTour(false)}>
+								Skip tour
+							</button>
 						</div>
-					)}
-					{(showNext || canGoBack) && (
-						<div className="tour-popover-footer">
-							{canGoBack && (
-								<button id="tour-back-btn" className="tour-btn-secondary" onClick={() => advanceToStep(step - 1)}>
-									<i className="bi bi-arrow-left me-1"></i>Back
-								</button>
-							)}
-							{showNext && (
-								<button
-									id="tour-next-btn"
-									className="tour-btn-primary"
-									disabled={nextDisabled}
-									onClick={() => (isLast ? void endTour(true) : advanceFromCurrentStep())}
-								>
-									{isLast ? (
-										isCleaningUp ? (
-											<>
-												<span
-													className="spinner-border spinner-border-sm me-2"
-													role="status"
-													aria-hidden="true"
-												/>
-												Cleaning up…
-											</>
+						<h5 id="tour-popover-title" className="tour-popover-title">
+							{currentStep.title}
+						</h5>
+						<p className="tour-popover-content">{currentStep.content}</p>
+						{currentStep.choices && (
+							<div className="tour-choices">
+								{currentStep.choices.map((choice) => (
+									<button
+										key={choice.targetStepId}
+										id={`tour-choice-${choice.targetStepId}`}
+										className="tour-choice-btn"
+										onClick={() => advanceToStepById(choice.targetStepId)}
+									>
+										<i className={`bi ${choice.icon} me-2`} />
+										{choice.label}
+									</button>
+								))}
+							</div>
+						)}
+						{(showNext || canGoBack) && (
+							<div className="tour-popover-footer">
+								{canGoBack && (
+									<button
+										id="tour-back-btn"
+										className="tour-btn-secondary"
+										onClick={() => advanceToStep(step - 1)}
+									>
+										<i className="bi bi-arrow-left me-1"></i>Back
+									</button>
+								)}
+								{showNext && (
+									<button
+										id="tour-next-btn"
+										className="tour-btn-primary"
+										disabled={nextDisabled}
+										onClick={() => (isLast ? void endTour(true) : advanceFromCurrentStep())}
+									>
+										{isLast ? (
+											isCleaningUp ? (
+												<>
+													<span
+														className="spinner-border spinner-border-sm me-2"
+														role="status"
+														aria-hidden="true"
+													/>
+													Cleaning up…
+												</>
+											) : (
+												"Done"
+											)
 										) : (
-											"Done"
-										)
-									) : (
-										<>Next <i className="bi bi-arrow-right"></i></>
-									)}
-								</button>
-							)}
-						</div>
-					)}
+											<>
+												Next <i className="bi bi-arrow-right"></i>
+											</>
+										)}
+									</button>
+								)}
+							</div>
+						)}
+					</div>
 				</div>
-			</div>}
+			)}
 		</>
 	);
 }

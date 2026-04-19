@@ -16,13 +16,13 @@
 	box-shadow: 0 0 0 9999px rgb(0 0 0 / 75%);
 	outline: 2px solid rgb(255 255 255 / 20%);
 	outline-offset: 1px;
-	transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease, opacity 0.2s ease;
+	transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
 }
 
 .tour-popover {
 	position: fixed;
 	z-index: 1402;
-	width: 320px; /* kept in sync with POP_W constant in GuidedTour.tsx */
+	width: 450px; /* kept in sync with POP_W constant in GuidedTour.tsx */
 	overflow: hidden;
 	background: var(--bs-body-bg);
 	border: 1px solid var(--bs-card-border-color);
