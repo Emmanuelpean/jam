@@ -1,9 +1,12 @@
 """Selenium tests for the App Overview guided tour."""
 
+import time
+
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
+from app import models
 from base_test import BaseTest
 
 # Tour element IDs
@@ -45,11 +48,11 @@ class TestAppOverviewTour(BaseTest):
         self.driver.execute_script(f"document.getElementById('{TAKE_A_TOUR_BTN}').click();")
         self.get_element(TSP_PANEL, enabled=False, timeout=5)
 
-    def _start_tour(self, tour_id: str = TOUR_ID) -> None:
+    def _start_tour(self, tour_id: str = TOUR_ID, popover_timeout: float = 10.0) -> None:
         """Open the tour select panel and start the given tour."""
         self._open_tour_select()
         self.get_element(f"tsp-item-{tour_id}").click()
-        self._wait_for_popover()
+        self._wait_for_popover(timeout=popover_timeout)
 
     def _wait_for_popover(self, timeout: float = 10.0) -> None:
         """Wait for the tour popover to appear in the DOM."""
@@ -94,6 +97,23 @@ class TestAppOverviewTour(BaseTest):
         WebDriverWait(self.driver, timeout).until(
             lambda d: f"STEP {n} OF" in d.find_element(By.ID, TOUR_COUNTER).text.upper()
         )
+
+    def _poll_db_count(self, model_class, owner_id: int, expected: int, timeout: float = 10.0) -> None:
+        """Poll the DB until the row count for owner_id equals expected, or raise."""
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            # rollback() ends the current transaction so the next query gets a fresh
+            # READ COMMITTED snapshot and can see rows committed by the backend API process.
+            self.db.expire_all()
+            self.db.rollback()
+            count = self.db.query(model_class).filter_by(owner_id=owner_id).count()
+            if count == expected:
+                return
+            time.sleep(0.5)
+        self.db.expire_all()
+        self.db.rollback()
+        actual = self.db.query(model_class).filter_by(owner_id=owner_id).count()
+        assert actual == expected, f"{model_class.__name__}: expected {expected}, got {actual} after {timeout}s"
 
     # ── Tour Select Panel ─────────────────────────────────────────────────────
 
@@ -272,3 +292,71 @@ class TestAppOverviewTour(BaseTest):
         self._open_tour_select()
         for tour_id in ["app-overview", "first-job", "follow-up-email"]:
             assert not self.get_element(f"tsp-item-{tour_id}", enabled=False).is_enabled()
+
+    # ----------------------------------------------------- CLEANUP ----------------------------------------------------
+
+    def test_skip_cleans_up_follow_up_email_tour_data(self) -> None:
+        """Skipping the follow-up-email tour deletes the pre-seeded demo entities."""
+
+        owner_id = self.user.id
+        self.db.expire_all()
+        self.db.rollback()
+        initial_jobs = self.db.query(models.Job).filter_by(owner_id=owner_id).count()
+        initial_persons = self.db.query(models.Person).filter_by(owner_id=owner_id).count()
+        initial_interviews = self.db.query(models.Interview).filter_by(owner_id=owner_id).count()
+
+        # Starting the tour seeds 1 job, 2 persons, 1 interview via sequential API calls —
+        # use a longer timeout because the popover only appears after all seeding is done.
+        # The popover appearing is sufficient proof that seeding completed — no DB assertion needed.
+        self._start_tour("follow-up-email", popover_timeout=30.0)
+
+        self._click_skip()
+        self._wait_for_popover_gone()
+
+        # Cleanup is async — poll until all seeded entities are deleted
+        self._poll_db_count(models.Job, owner_id, initial_jobs)
+        self._poll_db_count(models.Person, owner_id, initial_persons)
+        self._poll_db_count(models.Interview, owner_id, initial_interviews)
+
+    def test_skip_cleans_up_first_job_tour_data(self) -> None:
+        """Skipping the first-job tour mid-flow deletes any job/company created during it."""
+
+        owner_id = self.user.id
+        self.db.expire_all()
+        self.db.rollback()
+        initial_jobs = self.db.query(models.Job).filter_by(owner_id=owner_id).count()
+        initial_companies = self.db.query(models.Company).filter_by(owner_id=owner_id).count()
+
+        self._start_tour("first-job")
+        # The tour navigates to /jobs; wait for the page before interacting with its elements
+        self.wait_for_page("jobs")
+
+        # Step 0 (first-job-intro): informational — click Next
+        self._click_next()
+
+        # Step 1 (open-job-modal): click the highlighted button to open the add-job form
+        self.get_element("add-job-button").click()
+
+        # Step 2 (job-title): tour auto-advances when modal opens; type a title to enable Next
+        self.get_element("title").send_keys("Skip Test Job")
+        self._click_next()
+
+        # Step 3 (add-company): click the + button to open the inline company form
+        self.get_element("add-button-company").click()
+
+        # Step 4 (company-name): type a company name to enable Next
+        self.get_element("name").send_keys("Skip Test Company")
+        self._click_next()
+
+        # Step 5 (save-company): click Confirm — company is persisted to the DB
+        self.get_element("modal-edit-company-confirm-button").click()
+
+        # Confirm the company reached the DB before skipping
+        self._poll_db_count(models.Company, owner_id, initial_companies + 1)
+
+        self._click_skip()
+        self._wait_for_popover_gone()
+
+        # Both the job (if partially saved) and the company must be removed
+        self._poll_db_count(models.Company, owner_id, initial_companies)
+        self._poll_db_count(models.Job, owner_id, initial_jobs)

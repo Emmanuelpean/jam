@@ -160,49 +160,46 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			// Always clear the demo filter when the tour ends (completed or skipped)
 			if (tourId === "follow-up-email") setDemoFilter(null);
 
-			if (completed && tourId) {
-				if (!completedTourIds.has(tourId)) {
-					const newIds = [...completedTourIds, tourId];
-					setCompletedTourIds(new Set(newIds));
-					void updateCurrentUser({ preferences: { completed_tours: newIds } });
-				}
+			if (completed && tourId && !completedTourIds.has(tourId)) {
+				const newIds = [...completedTourIds, tourId];
+				setCompletedTourIds(new Set(newIds));
+				void updateCurrentUser({ preferences: { completed_tours: newIds } });
+			}
 
-				// Clean up test data created during the first-job tour
-				if (tourId === "first-job") {
-					const newJobIds = jobs.map((j) => j.id).filter((id) => !preInteractiveJobIds.current.has(id));
-					const newCompanyIds = companies
-						.map((c) => c.id)
-						.filter((id) => !preInteractiveCompanyIds.current.has(id));
+			// Clean up test data regardless of whether the tour was completed or skipped
+			if (tourId === "first-job") {
+				const newJobIds = jobs.map((j) => j.id).filter((id) => !preInteractiveJobIds.current.has(id));
+				const newCompanyIds = companies
+					.map((c) => c.id)
+					.filter((id) => !preInteractiveCompanyIds.current.has(id));
 
-					if (newJobIds.length > 0 || newCompanyIds.length > 0) {
-						setIsCleaningUp(true);
-						try {
-							await Promise.all([
-								...newJobIds.map((id) => deleteEntity("job", id)),
-								...newCompanyIds.map((id) => deleteEntity("company", id)),
-							]);
-						} finally {
-							setIsCleaningUp(false);
-						}
-					}
-				}
-
-				// Delete demo entities created for the follow-up-email tour
-				if (tourId === "follow-up-email") {
-					const { personIds, jobId, interviewId } = demoEntityIds.current;
+				if (newJobIds.length > 0 || newCompanyIds.length > 0) {
 					setIsCleaningUp(true);
 					try {
-						const deletions: Promise<void>[] = [];
-						if (interviewId !== null) deletions.push(deleteEntity("interview", interviewId));
-						if (jobId !== null) deletions.push(deleteEntity("job", jobId));
-						await Promise.all(deletions);
-						await Promise.all(personIds.map((id) => deleteEntity("person", id)));
+						await Promise.all([
+							...newJobIds.map((id) => deleteEntity("job", id)),
+							...newCompanyIds.map((id) => deleteEntity("company", id)),
+						]);
 					} finally {
 						setIsCleaningUp(false);
-						demoEntityIds.current = { personIds: [], jobId: null, interviewId: null };
-						setDemoJobId(null);
-						setDemoFilter(null);
 					}
+				}
+			}
+
+			if (tourId === "follow-up-email") {
+				const { personIds, jobId, interviewId } = demoEntityIds.current;
+				setIsCleaningUp(true);
+				try {
+					const deletions: Promise<void>[] = [];
+					if (interviewId !== null) deletions.push(deleteEntity("interview", interviewId));
+					if (jobId !== null) deletions.push(deleteEntity("job", jobId));
+					await Promise.all(deletions);
+					await Promise.all(personIds.map((id) => deleteEntity("person", id)));
+				} finally {
+					setIsCleaningUp(false);
+					demoEntityIds.current = { personIds: [], jobId: null, interviewId: null };
+					setDemoJobId(null);
+					setDemoFilter(null);
 				}
 			}
 
