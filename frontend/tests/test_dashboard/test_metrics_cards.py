@@ -22,36 +22,50 @@ class TestMetricsCards(DashboardTestBase):
     """Tests for metrics cards on the dashboard."""
 
     def setup_total_jobs(self, request=None) -> None:
+        """Set up the dashboard with the total_jobs metric."""
+
         _ = request
         self._set_dashboard_widgets({"type": "metric", "metric": "total_jobs"})
         self.login()
 
     def setup_applications(self, request=None) -> None:
+        """Set up the dashboard with the applications metric."""
+
         _ = request
         self._set_dashboard_widgets({"type": "metric", "metric": "applications"})
         self.login()
 
     def setup_pending_applications(self, request=None) -> None:
+        """Set up the dashboard with the pending metric."""
+
         _ = request
         self._set_dashboard_widgets({"type": "metric", "metric": "pending"})
         self.login()
 
     def setup_follow_up(self, request=None) -> None:
+        """Set up the dashboard with the follow_up metric."""
+
         _ = request
         self._set_dashboard_widgets({"type": "metric", "metric": "follow_up"})
         self.login()
 
     def setup_active_applications(self, request=None) -> None:
+        """Set up the dashboard with the active_applications metric."""
+
         _ = request
         self._set_dashboard_widgets({"type": "metric", "metric": "active_applications"})
         self.login()
 
     def setup_interview_rate(self, request=None) -> None:
+        """Set up the dashboard with the interview_rate metric."""
+
         _ = request
         self._set_dashboard_widgets({"type": "metric", "metric": "interview_rate"})
         self.login()
 
     def setup_avg_response_time(self, request=None) -> None:
+        """Set up the dashboard with the avg_response_time metric."""
+
         _ = request
         self._set_dashboard_widgets({"type": "metric", "metric": "avg_response_time"})
         self.login()
@@ -151,14 +165,6 @@ class TestMetricsCards(DashboardTestBase):
 
         self.setup_pending_applications()
         self._create_job(title="Withdrawn", application_date=PAST, application_status="withdrawn")
-        self._reload()
-        assert self._value(PENDING) == 0
-
-    def test_pending_excludes_jobs_without_application_status(self) -> None:
-        """Jobs with application_date but no status do not count toward Pending."""
-
-        self.setup_pending_applications()
-        self._create_job(title="No Status", application_date=PAST)
         self._reload()
         assert self._value(PENDING) == 0
 

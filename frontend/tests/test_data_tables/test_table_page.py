@@ -406,7 +406,7 @@ class TestPersonsPage(BaseTablePage):
 
         self.table_utils.add_entity_button.click()
         self.modal_utils._fill_modal(first_name="John", last_name="Doe")
-        self.get_element("add-button").click()
+        self.get_element("add-button-company").click()
         self.company_modal_utils.add_entry(name="Company")
         assert self.get_element("first_name").get_attribute("value") == "John"
         assert self.get_element("last_name").get_attribute("value") == "Doe"
