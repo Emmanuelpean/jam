@@ -93,6 +93,29 @@ function resolveTarget(targetId: string): Element | null {
 		: document.getElementById(targetId);
 }
 
+/**
+ * Returns true if the element is hidden by any scrollable ancestor (including the window).
+ * A plain viewport check misses elements clipped inside a scrollable modal body.
+ */
+function isClippedByScroll(el: Element): boolean {
+	const r = el.getBoundingClientRect();
+	// Outside the window
+	if (r.bottom < 0 || r.top > window.innerHeight || r.right < 0 || r.left > window.innerWidth) {
+		return true;
+	}
+	// Walk up scrollable ancestors
+	let parent = el.parentElement;
+	while (parent && parent !== document.documentElement) {
+		const { overflowY, overflow } = window.getComputedStyle(parent);
+		if (/(auto|scroll)/.test(overflowY + overflow)) {
+			const pr = parent.getBoundingClientRect();
+			if (r.top < pr.top || r.bottom > pr.bottom) return true;
+		}
+		parent = parent.parentElement;
+	}
+	return false;
+}
+
 /** Force a value into a React-controlled input */
 function setNativeInputValue(el: HTMLInputElement, value: string): void {
 	const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
@@ -217,6 +240,12 @@ export function GuidedTour(): JSX.Element | null {
 			const r = el?.getBoundingClientRect();
 			if (r && r.width > 0 && r.height > 0) {
 				stopPoll();
+
+				// Scroll into view if clipped by the window or any scrollable ancestor (e.g. modal body)
+				if (el && isClippedByScroll(el)) {
+					el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+				}
+
 				const initialRect = r;
 				setTargetRect(initialRect);
 				setSpotlightRect(initialRect);

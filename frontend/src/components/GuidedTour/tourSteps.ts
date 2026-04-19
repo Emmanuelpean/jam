@@ -270,7 +270,7 @@ const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
 	},
 	{
 		id: "follow-up-open-via-badge-2",
-		targetId: "modal-view-job-0",
+		targetId: "modal-view-job-person-0",
 		title: "Right-click the Contact Badge",
 		content:
 			"Right-click this contact badge and select Follow-up Email. The tour will continue automatically once the generator is open.",
