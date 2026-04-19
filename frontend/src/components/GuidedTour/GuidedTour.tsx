@@ -398,9 +398,10 @@ export function GuidedTour(): JSX.Element | null {
 					} : { top: '50vh', left: '50vw', width: 0, height: 0 }),
 				}}
 			/>
-			{currentStep.targetId == null && <div className="tour-backdrop" />}
+			{currentStep.targetId == null && <div id="tour-backdrop" className="tour-backdrop" />}
 			{!waitingForTarget && <div
 				key={step}
+				id="tour-popover"
 				className={`tour-popover${currentStep.placement === "center" ? " tour-popover-center" : ""}`}
 				style={{ width: POP_W, ...popoverStyle }}
 				role="dialog"
@@ -408,20 +409,21 @@ export function GuidedTour(): JSX.Element | null {
 			>
 				<div className="tour-popover-body">
 					<div className="tour-popover-header">
-						<span className="tour-step-counter">
+						<span id="tour-step-counter" className="tour-step-counter">
 							Step {step + 1} of {TOUR_STEPS.length}
 						</span>
-						<button className="tour-skip-btn" onClick={() => void endTour(false)}>
+						<button id="tour-skip-btn" className="tour-skip-btn" onClick={() => void endTour(false)}>
 							Skip tour
 						</button>
 					</div>
-					<h5 className="tour-popover-title">{currentStep.title}</h5>
+					<h5 id="tour-popover-title" className="tour-popover-title">{currentStep.title}</h5>
 					<p className="tour-popover-content">{currentStep.content}</p>
 					{currentStep.choices && (
 						<div className="tour-choices">
 							{currentStep.choices.map((choice) => (
 								<button
 									key={choice.targetStepId}
+									id={`tour-choice-${choice.targetStepId}`}
 									className="tour-choice-btn"
 									onClick={() => advanceToStepById(choice.targetStepId)}
 								>
@@ -434,12 +436,13 @@ export function GuidedTour(): JSX.Element | null {
 					{(showNext || canGoBack) && (
 						<div className="tour-popover-footer">
 							{canGoBack && (
-								<button className="tour-btn-secondary" onClick={() => advanceToStep(step - 1)}>
+								<button id="tour-back-btn" className="tour-btn-secondary" onClick={() => advanceToStep(step - 1)}>
 									<i className="bi bi-arrow-left me-1"></i>Back
 								</button>
 							)}
 							{showNext && (
 								<button
+									id="tour-next-btn"
 									className="tour-btn-primary"
 									disabled={nextDisabled}
 									onClick={() => (isLast ? void endTour(true) : advanceFromCurrentStep())}

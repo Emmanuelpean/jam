@@ -77,7 +77,7 @@ export function TourSelectPanel(): JSX.Element | null {
 		>
 			<div className="tsp-header">
 				<p className="tsp-heading">Guided Tours</p>
-				<span className="tsp-progress">
+				<span id="tsp-progress" className="tsp-progress">
 					{TOURS.filter((t) => completedTourIds.has(t.id)).length} / {TOURS.length}
 				</span>
 			</div>
@@ -86,8 +86,8 @@ export function TourSelectPanel(): JSX.Element | null {
 					const completed = completedTourIds.has(tour.id);
 					return (
 						<li key={tour.id}>
-							<button className="tsp-item" disabled={isTourActive} onClick={() => void startTour(tour.id)}>
-								<i className={`bi bi-check-circle ${completed ? "tsp-icon--done" : "tsp-icon"}`} />
+							<button id={`tsp-item-${tour.id}`} className="tsp-item" disabled={isTourActive} onClick={() => void startTour(tour.id)}>
+								<i id={`tsp-icon-${tour.id}`} className={`bi bi-check-circle ${completed ? "tsp-icon--done" : "tsp-icon"}`} />
 								<span>{tour.title}</span>
 							</button>
 						</li>
