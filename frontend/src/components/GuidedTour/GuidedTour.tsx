@@ -81,8 +81,10 @@ function computePopoverStyle(rect: DOMRect, preferred: TourStep["placement"]): R
 }
 
 /** Expand step-definition placeholders to real DOM ids */
-function expandTargetId(targetId: string, demoJobId: number | null): string {
+function expandTargetId(targetId: string, demoJobId: number | null, demoScrapedJobId: number | null): string {
 	if (targetId === "[demo-job-row]") return demoJobId !== null ? `table-row-job-${demoJobId}` : targetId;
+	if (targetId === "[demo-scraped-job-row]")
+		return demoScrapedJobId !== null ? `table-row-scrapedJob-${demoScrapedJobId}` : targetId;
 	return targetId;
 }
 
@@ -127,7 +129,7 @@ function setNativeInputValue(el: HTMLInputElement, value: string): void {
 }
 
 export function GuidedTour(): JSX.Element | null {
-	const { isTourActive, activeTourId, endTour, isCleaningUp, demoJobId } = useTour();
+	const { isTourActive, activeTourId, endTour, isCleaningUp, demoJobId, demoScrapedJobId } = useTour();
 	const navigate = useNavigate();
 	const location = useLocation();
 
@@ -233,7 +235,7 @@ export function GuidedTour(): JSX.Element | null {
 		}
 
 		// Poll until the element appears (with non-zero dimensions)
-		const resolvedTargetId = expandTargetId(stepDef.targetId!, demoJobId);
+		const resolvedTargetId = expandTargetId(stepDef.targetId!, demoJobId, demoScrapedJobId);
 		let elapsed = 0;
 		pollRef.current = setInterval(() => {
 			const el = resolveTarget(resolvedTargetId);

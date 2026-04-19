@@ -2,6 +2,8 @@ import React, { createContext, JSX, ReactNode, useCallback, useContext, useEffec
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { useDataContext } from "./DataContext";
+import { scrapedJobApi } from "../services/api/Services";
+import { useGlobalToast } from "../hooks/useNotificationToast";
 
 interface TourContextType {
 	startTour: (tourId: string) => Promise<void>;
@@ -15,6 +17,8 @@ interface TourContextType {
 	closeTourSelect: () => void;
 	/** ID of the demo job created for the follow-up-email tour, null otherwise */
 	demoJobId: number | null;
+	/** ID of the demo scraped job created for the import-scraped-job tour, null otherwise */
+	demoScrapedJobId: number | null;
 }
 
 const TourContext = createContext<TourContextType | undefined>(undefined);
@@ -31,14 +35,38 @@ interface TourProviderProps {
 	children: ReactNode;
 }
 
+/** Snapshot of entity IDs that existed before the tour started. */
+interface EntitySnapshot {
+	jobIds: Set<number>;
+	companyIds: Set<number>;
+	personIds: Set<number>;
+	locationIds: Set<number>;
+	interviewIds: Set<number>;
+	jobApplicationUpdateIds: Set<number>;
+}
+
+function emptySnapshot(): EntitySnapshot {
+	return {
+		jobIds: new Set(),
+		companyIds: new Set(),
+		personIds: new Set(),
+		locationIds: new Set(),
+		interviewIds: new Set(),
+		jobApplicationUpdateIds: new Set(),
+	};
+}
+
 export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	const [activeTourId, setActiveTourId] = useState<string | null>(null);
 	const [isTourSelectOpen, setIsTourSelectOpen] = useState<boolean>(false);
 	const [isCleaningUp, setIsCleaningUp] = useState<boolean>(false);
 	const [completedTourIds, setCompletedTourIds] = useState<Set<string>>(new Set());
 	const [demoJobId, setDemoJobId] = useState<number | null>(null);
-	const { currentUser, updateCurrentUser } = useAuth();
-	const { jobs, companies, addEntity, deleteEntity, setDemoFilter } = useDataContext();
+	const [demoScrapedJobId, setDemoScrapedJobId] = useState<number | null>(null);
+	const { currentUser, updateCurrentUser, token } = useAuth();
+	const { jobs, companies, persons, locations, interviews, jobApplicationUpdates, addEntity, deleteEntity, setDemoFilter } =
+		useDataContext();
+	const { showToastError } = useGlobalToast();
 
 	const navigate = useNavigate();
 	const location = useLocation();
@@ -46,16 +74,9 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 
 	const isTourActive: boolean = activeTourId !== null;
 
-	// Snapshot of IDs that existed before the first-job tour started
-	const preInteractiveJobIds = useRef<Set<number>>(new Set());
-	const preInteractiveCompanyIds = useRef<Set<number>>(new Set());
-
-	// IDs of entities created for the follow-up-email tour demo data
-	const demoEntityIds = useRef<{ personIds: number[]; jobId: number | null; interviewId: number | null }>({
-		personIds: [],
-		jobId: null,
-		interviewId: null,
-	});
+	// Snapshot of all entity IDs that existed before the tour started.
+	// At cleanup time we diff against this to find (and delete) everything created during the tour.
+	const preInteractiveSnapshot = useRef<EntitySnapshot>(emptySnapshot());
 
 	// Seed completed tours from preferences
 	useEffect((): void => {
@@ -66,90 +87,102 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 
 	const startTour = useCallback(
 		async (tourId: string): Promise<void> => {
-			originPathRef.current = location.pathname;
-			preInteractiveJobIds.current = new Set(jobs.map((j) => j.id));
-			preInteractiveCompanyIds.current = new Set(companies.map((c) => c.id));
+			try {
+				originPathRef.current = location.pathname;
 
-			if (tourId === "follow-up-email") {
-				demoEntityIds.current = { personIds: [], jobId: null, interviewId: null };
+				// Capture a snapshot of every tracked entity that exists right now.
+				// endTour will delete anything created after this point.
+				preInteractiveSnapshot.current = {
+					jobIds: new Set(jobs.map((j) => j.id)),
+					companyIds: new Set(companies.map((c) => c.id)),
+					personIds: new Set(persons.map((p) => p.id)),
+					locationIds: new Set(locations.map((l) => l.id)),
+					interviewIds: new Set(interviews.map((i) => i.id)),
+					jobApplicationUpdateIds: new Set(jobApplicationUpdates.map((u) => u.id)),
+				};
 
-				const [personResult, interviewerResult] = await Promise.all([
-					addEntity("person", {
-						first_name: "Alex",
-						last_name: "Johnson",
-						email: "alex.johnson@example.com",
-						phone: null,
-						role: "Hiring Manager",
-						linkedin_url: null,
+				if (tourId === "follow-up-email") {
+					const [personResult, interviewerResult] = await Promise.all([
+						addEntity("person", {
+							first_name: "Alex",
+							last_name: "Johnson",
+							email: "alex.johnson@example.com",
+							phone: null,
+							role: "Hiring Manager",
+							linkedin_url: null,
+							company_id: null,
+							is_recruiter: false,
+						}),
+						addEntity("person", {
+							first_name: "Sarah",
+							last_name: "Mitchell",
+							email: "sarah.mitchell@example.com",
+							phone: null,
+							role: "Engineering Manager",
+							linkedin_url: null,
+							company_id: null,
+							is_recruiter: false,
+						}),
+					]);
+
+					const personId: number = personResult.data.id;
+					const interviewerId: number = interviewerResult.data.id;
+
+					const jobResult = await addEntity("job", {
+						title: "Software Engineer",
+						is_favourite: false,
+						description: null,
+						note: null,
+						url: null,
+						salary_min: null,
+						salary_max: null,
+						salary_currency: null,
+						personal_rating: null,
+						deadline: null,
 						company_id: null,
-						is_recruiter: false,
-					}),
-					addEntity("person", {
-						first_name: "Sarah",
-						last_name: "Mitchell",
-						email: "sarah.mitchell@example.com",
-						phone: null,
-						role: "Engineering Manager",
-						linkedin_url: null,
-						company_id: null,
-						is_recruiter: false,
-					}),
-				]);
+						source_aggregator_id: null,
+						source_type: null,
+						recruiter_id: null,
+						recruitment_company_id: null,
+						location_id: null,
+						application_date: new Date().toISOString(),
+						application_status: "applied",
+						applied_via: null,
+						application_note: null,
+						application_aggregator_id: null,
+						application_url: null,
+						attendance_type: null,
+						keywords: [],
+						contacts: [personId],
+					});
 
-				const personId: number = personResult.data.id;
-				const interviewerId: number = interviewerResult.data.id;
-				demoEntityIds.current.personIds = [personId, interviewerId];
+					const jobId: number = jobResult.data.id;
+					setDemoJobId(jobId);
+					setDemoFilter({ jobIds: [jobId], personIds: [personId, interviewerId] });
 
-				const jobResult = await addEntity("job", {
-					title: "Software Engineer",
-					is_favourite: false,
-					description: null,
-					note: null,
-					url: null,
-					salary_min: null,
-					salary_max: null,
-					salary_currency: null,
-					personal_rating: null,
-					deadline: null,
-					company_id: null,
-					source_aggregator_id: null,
-					source_type: null,
-					recruiter_id: null,
-					recruitment_company_id: null,
-					location_id: null,
-					application_date: new Date().toISOString(),
-					application_status: "applied",
-					applied_via: null,
-					application_note: null,
-					application_aggregator_id: null,
-					application_url: null,
-					attendance_type: null,
-					keywords: [],
-					contacts: [personId],
-				});
+					await addEntity("interview", {
+						job_id: jobId,
+						type: "video",
+						date: new Date().toISOString(),
+						location_id: null,
+						note: null,
+						attendance_type: "remote",
+						interviewers: [interviewerId],
+					});
+				}
 
-				const jobId: number = jobResult.data.id;
-				demoEntityIds.current.jobId = jobId;
-				setDemoJobId(jobId);
-				setDemoFilter({ jobIds: [jobId], personIds: [personId, interviewerId] });
+				if (tourId === "import-scraped-job") {
+					const result = await scrapedJobApi.createTourDemo(token!);
+					setDemoScrapedJobId(result.data.id);
+				}
 
-				const interviewResult = await addEntity("interview", {
-					job_id: jobId,
-					type: "video",
-					date: new Date().toISOString(),
-					location_id: null,
-					note: null,
-					attendance_type: "remote",
-					interviewers: [interviewerId],
-				});
-
-				demoEntityIds.current.interviewId = interviewResult.data.id;
+				setIsTourSelectOpen(false);
+				setActiveTourId(tourId);
+			} catch (err: any) {
+				showToastError(`Failed to start tour: ${err?.message ?? "Unknown error"}`);
 			}
-
-			setIsTourSelectOpen(false);
-			setActiveTourId(tourId);
 		},
-		[jobs, companies, addEntity, setDemoFilter, location.pathname]
+		[jobs, companies, persons, locations, interviews, jobApplicationUpdates, addEntity, setDemoFilter, token, location.pathname, showToastError]
 	);
 
 	const endTour = useCallback(
@@ -157,8 +190,11 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			const tourId = activeTourId;
 			setActiveTourId(null);
 
-			// Always clear the demo filter when the tour ends (completed or skipped)
-			if (tourId === "follow-up-email") setDemoFilter(null);
+			// Clear the demo filter as soon as the tour ends
+			if (tourId === "follow-up-email") {
+				setDemoFilter(null);
+				setDemoJobId(null);
+			}
 
 			if (completed && tourId && !completedTourIds.has(tourId)) {
 				const newIds = [...completedTourIds, tourId];
@@ -166,40 +202,60 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				void updateCurrentUser({ preferences: { completed_tours: newIds } });
 			}
 
-			// Clean up test data regardless of whether the tour was completed or skipped
-			if (tourId === "first-job") {
-				const newJobIds = jobs.map((j) => j.id).filter((id) => !preInteractiveJobIds.current.has(id));
-				const newCompanyIds = companies
-					.map((c) => c.id)
-					.filter((id) => !preInteractiveCompanyIds.current.has(id));
+			// Generic cleanup: delete every entity created after the tour started.
+			// Diff the current arrays against the pre-tour snapshot to find new IDs,
+			// then delete in dependency order so foreign-key constraints are not violated.
+			const snapshot = preInteractiveSnapshot.current;
+			const newInterviewIds = interviews.map((i) => i.id).filter((id) => !snapshot.interviewIds.has(id));
+			const newJobApplicationUpdateIds = jobApplicationUpdates
+				.map((u) => u.id)
+				.filter((id) => !snapshot.jobApplicationUpdateIds.has(id));
+			const newJobIds = jobs.map((j) => j.id).filter((id) => !snapshot.jobIds.has(id));
+			const newCompanyIds = companies.map((c) => c.id).filter((id) => !snapshot.companyIds.has(id));
+			const newLocationIds = locations.map((l) => l.id).filter((id) => !snapshot.locationIds.has(id));
+			const newPersonIds = persons.map((p) => p.id).filter((id) => !snapshot.personIds.has(id));
 
-				if (newJobIds.length > 0 || newCompanyIds.length > 0) {
-					setIsCleaningUp(true);
-					try {
-						await Promise.all([
-							...newJobIds.map((id) => deleteEntity("job", id)),
-							...newCompanyIds.map((id) => deleteEntity("company", id)),
-						]);
-					} finally {
-						setIsCleaningUp(false);
-					}
+			const hasNewEntities = [
+				newInterviewIds,
+				newJobApplicationUpdateIds,
+				newJobIds,
+				newCompanyIds,
+				newLocationIds,
+				newPersonIds,
+			].some((arr) => arr.length > 0);
+
+			if (hasNewEntities) {
+				setIsCleaningUp(true);
+				try {
+					// Round 1: delete child entities first (interviews, updates depend on jobs)
+					await Promise.all([
+						...newInterviewIds.map((id) => deleteEntity("interview", id)),
+						...newJobApplicationUpdateIds.map((id) => deleteEntity("jobApplicationUpdate", id)),
+					]);
+					// Round 2: delete jobs (depend on companies, locations, persons)
+					await Promise.all(newJobIds.map((id) => deleteEntity("job", id)));
+					// Round 3: delete base entities in parallel
+					await Promise.all([
+						...newCompanyIds.map((id) => deleteEntity("company", id)),
+						...newLocationIds.map((id) => deleteEntity("location", id)),
+						...newPersonIds.map((id) => deleteEntity("person", id)),
+					]);
+				} finally {
+					setIsCleaningUp(false);
+					preInteractiveSnapshot.current = emptySnapshot();
 				}
 			}
 
-			if (tourId === "follow-up-email") {
-				const { personIds, jobId, interviewId } = demoEntityIds.current;
-				setIsCleaningUp(true);
-				try {
-					const deletions: Promise<void>[] = [];
-					if (interviewId !== null) deletions.push(deleteEntity("interview", interviewId));
-					if (jobId !== null) deletions.push(deleteEntity("job", jobId));
-					await Promise.all(deletions);
-					await Promise.all(personIds.map((id) => deleteEntity("person", id)));
-				} finally {
-					setIsCleaningUp(false);
-					demoEntityIds.current = { personIds: [], jobId: null, interviewId: null };
-					setDemoJobId(null);
-					setDemoFilter(null);
+			// Delete the demo scraped job — not tracked in DataContext so handled separately
+			if (tourId === "import-scraped-job") {
+				const scrapedId = demoScrapedJobId;
+				setDemoScrapedJobId(null);
+				if (scrapedId !== null) {
+					try {
+						await scrapedJobApi.deleteTourDemo(scrapedId, token!);
+					} catch {
+						// Best-effort: the record may have already been deleted
+					}
 				}
 			}
 
@@ -208,7 +264,22 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				originPathRef.current = null;
 			}
 		},
-		[activeTourId, completedTourIds, currentUser, updateCurrentUser, jobs, companies, deleteEntity, setDemoFilter, navigate]
+		[
+			activeTourId,
+			completedTourIds,
+			updateCurrentUser,
+			jobs,
+			companies,
+			persons,
+			locations,
+			interviews,
+			jobApplicationUpdates,
+			deleteEntity,
+			setDemoFilter,
+			demoScrapedJobId,
+			token,
+			navigate,
+		]
 	);
 
 	const openTourSelect = useCallback((): void => setIsTourSelectOpen(true), []);
@@ -227,6 +298,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				openTourSelect,
 				closeTourSelect,
 				demoJobId,
+				demoScrapedJobId,
 			}}
 		>
 			{children}

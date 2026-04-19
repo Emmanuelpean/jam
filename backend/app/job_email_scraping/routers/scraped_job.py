@@ -386,3 +386,88 @@ generate_data_table_crud_router(
     allowed_actions=["put"],
     router=scraped_job_router,
 )
+
+
+@scraped_job_router.post("/tour-demo", response_model=schemas.ScrapedJobOut, status_code=status.HTTP_201_CREATED)
+def create_tour_demo(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Create a demo scraped job for the guided tour. Idempotent: deletes any existing demo first."""
+    now = dt.datetime.now(dt.timezone.utc)
+
+    # Remove any leftover demo job from a previous tour run so the unique constraint never fires
+    existing = (
+        db.query(models.ScrapedJob)
+        .filter(
+            models.ScrapedJob.owner_id == current_user.id,
+            models.ScrapedJob.external_job_id == f"tour-demo-{current_user.id}",
+        )
+        .first()
+    )
+    if existing:
+        old_log_id = existing.service_log_id
+        db.delete(existing)
+        db.flush()
+        if old_log_id is not None:
+            old_log = db.query(models.JobEmailScrapingServiceLog).filter(
+                models.JobEmailScrapingServiceLog.id == old_log_id
+            ).first()
+            if old_log:
+                db.delete(old_log)
+                db.flush()
+
+    service_log = models.JobEmailScrapingServiceLog(
+        run_datetime=now,
+        is_success=True,
+        user_found_ids=[],
+        user_processed_ids=[],
+        email_found_n=0,
+    )
+    db.add(service_log)
+    db.flush()
+
+    scraped_job = models.ScrapedJob(
+        owner_id=current_user.id,
+        service_log_id=service_log.id,
+        external_job_id=f"tour-demo-{current_user.id}",
+        platform="LinkedIn",
+        is_processed=True,
+        is_scraped=True,
+        scrape_datetime=now,
+        is_active=True,
+        title="Senior Python Developer",
+        company="Acme Corp",
+        location_city="London",
+        location_country="United Kingdom",
+        attendance_type="hybrid",
+        salary_min=70000,
+        salary_max=90000,
+        salary_currency="GBP",
+        description="We are looking for a Senior Python Developer to join our growing engineering team. "
+        "You will design and build scalable backend services, mentor junior developers, and collaborate "
+        "closely with product and data teams.",
+        url="https://www.linkedin.com/jobs/view/tour-demo",
+    )
+    db.add(scraped_job)
+    db.commit()
+    db.refresh(scraped_job)
+    return scraped_job
+
+
+@scraped_job_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_scraped_job(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Hard-delete a scraped job owned by the current user."""
+    scraped_job = (
+        db.query(models.ScrapedJob)
+        .filter(models.ScrapedJob.id == id, models.ScrapedJob.owner_id == current_user.id)
+        .first()
+    )
+    if not scraped_job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scraped Job not found")
+    db.delete(scraped_job)
+    db.commit()

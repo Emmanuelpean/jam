@@ -17,6 +17,7 @@ export const ScrapedJobsPage = (): JSX.Element => {
 		<>
 			<div className="d-flex gap-3">
 				<PageHeader
+					id="scraped-jobs-header"
 					className="flex-fill"
 					title="Job Alerts"
 					icon={getEntityIcon("scrapedJob")}
@@ -28,6 +29,7 @@ export const ScrapedJobsPage = (): JSX.Element => {
 					active={activeTab === "alerts"}
 				/>
 				<PageHeader
+					id="job-emails-header"
 					className="flex-fill"
 					title="Job Emails"
 					icon={getEntityIcon("jobEmail")}

@@ -365,6 +365,110 @@ const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
 	},
 ];
 
+const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
+	{
+		id: "scraped-intro",
+		targetId: null,
+		title: "Job Alert Scraping",
+		content:
+			"JAM automatically scans your email alert subscriptions from LinkedIn, Indeed, and similar platforms — " +
+			"pulling matching jobs straight into JAM so you never miss an opportunity. " +
+			"We've added a demo alert so you can try the full import flow.",
+		route: "/scraped-jobs",
+		placement: "center",
+	},
+	{
+		id: "scraped-table",
+		targetId: "scrapedJob-data-table",
+		title: "Your Job Alerts",
+		content:
+			"Every job found in your alert emails appears here. " +
+			"New alerts since your last login are highlighted. " +
+			"Use the search bar and column headers to sort and filter.",
+		route: "/scraped-jobs",
+		placement: "center",
+	},
+	{
+		id: "scraped-emails-tab",
+		targetId: "job-emails-header",
+		title: "Job Emails",
+		content:
+			"The Job Emails tab shows the raw alert emails that triggered each scraping run. " +
+			"Open an email to see exactly which alerts came from it — useful for tracing the source of a job or diagnosing why an alert wasn't picked up.",
+		route: "/scraped-jobs",
+		placement: "bottom",
+	},
+	{
+		id: "scraped-ai-score",
+		targetId: "table-header-job_rating.overall_score",
+		title: "AI Score",
+		content:
+			"JAM rates each alert against your profile — skills, experience, and preferences. " +
+			"Higher scores mean a stronger match. Set up your profile in User Settings to tune the ratings.",
+		route: "/scraped-jobs",
+		placement: "bottom",
+	},
+	{
+		id: "scraped-filters",
+		targetId: "scraping-filters-button",
+		title: "Scraping Filters",
+		content:
+			"Click here to configure what gets scraped — include or exclude keywords, locations, and platforms. " +
+			"Only alerts matching your active filters will appear in the table.",
+		route: "/scraped-jobs",
+		placement: "bottom",
+	},
+	{
+		id: "scraped-open-row",
+		targetId: "[demo-scraped-job-row]",
+		title: "Open the Demo Alert",
+		content: "Click this demo job alert to open the import form.",
+		route: "/scraped-jobs",
+		placement: "top",
+		waitForSelector: "#modal-import-scrapedJob",
+		hideNextButton: true,
+	},
+	{
+		id: "scraped-review-form",
+		targetId: "modal-import-scrapedJob",
+		title: "Review the Import Form",
+		content:
+			"The scraped data is pre-filled — title, company, salary, location, and more. " +
+			"Edit any field before importing. When you're happy, click Import.",
+		placement: "left",
+	},
+	{
+		id: "scraped-company-location",
+		targetId: "company_id-form-group",
+		title: "Check Company & Location",
+		content:
+			"JAM automatically tries to match the scraped company and location to entries you've already created. " +
+			"These fields are highlighted when a match is found — always verify they're correct before importing, " +
+			"as a partial match could link the job to the wrong entry.",
+		placement: "right",
+	},
+	{
+		id: "scraped-import-btn",
+		targetId: "modal-import-scrapedJob-import-button",
+		title: "Import the Job",
+		content:
+			"Click Import to add this job to your applications. " +
+			"The demo data will be cleaned up automatically when the tour ends.",
+		placement: "top",
+		waitForSelectorGone: "#modal-import-scrapedJob",
+		hideNextButton: true,
+	},
+	{
+		id: "scraped-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"The job is now in your job list. JAM will keep pulling in new alerts automatically — " +
+			"just visit Job Alerts whenever you want to review and import the latest matches.",
+		placement: "center",
+	},
+];
+
 // ── Tour registry ─────────────────────────────────────────────────────────────
 
 export const TOURS: TourDefinition[] = [
@@ -388,6 +492,14 @@ export const TOURS: TourDefinition[] = [
 		description: "Learn how to generate and send a personalised follow-up email for a job application.",
 		icon: "envelope",
 		steps: FOLLOW_UP_EMAIL_STEPS,
+	},
+	{
+		id: "import-scraped-job",
+		title: "Importing Job Alerts",
+		description:
+			"See how JAM scrapes job alerts from your emails, rates them with AI, and lets you import them in one click.",
+		icon: "envelope-arrow-down",
+		steps: IMPORT_SCRAPED_JOB_STEPS,
 	},
 ];
 
