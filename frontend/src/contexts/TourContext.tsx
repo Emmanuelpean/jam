@@ -43,6 +43,7 @@ interface EntitySnapshot {
 	locationIds: Set<number>;
 	interviewIds: Set<number>;
 	jobApplicationUpdateIds: Set<number>;
+	scrapingFilterIds: Set<number>;
 }
 
 function emptySnapshot(): EntitySnapshot {
@@ -53,6 +54,7 @@ function emptySnapshot(): EntitySnapshot {
 		locationIds: new Set(),
 		interviewIds: new Set(),
 		jobApplicationUpdateIds: new Set(),
+		scrapingFilterIds: new Set(),
 	};
 }
 
@@ -64,7 +66,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	const [demoJobId, setDemoJobId] = useState<number | null>(null);
 	const [demoScrapedJobId, setDemoScrapedJobId] = useState<number | null>(null);
 	const { currentUser, updateCurrentUser, token } = useAuth();
-	const { jobs, companies, persons, locations, interviews, jobApplicationUpdates, addEntity, deleteEntity, setDemoFilter } =
+	const { jobs, companies, persons, locations, interviews, jobApplicationUpdates, scrapingFilters, addEntity, deleteEntity, setDemoFilter } =
 		useDataContext();
 	const { showToastError } = useGlobalToast();
 
@@ -99,6 +101,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					locationIds: new Set(locations.map((l) => l.id)),
 					interviewIds: new Set(interviews.map((i) => i.id)),
 					jobApplicationUpdateIds: new Set(jobApplicationUpdates.map((u) => u.id)),
+					scrapingFilterIds: new Set(scrapingFilters.map((f) => f.id)),
 				};
 
 				if (tourId === "follow-up-email") {
@@ -182,7 +185,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				showToastError(`Failed to start tour: ${err?.message ?? "Unknown error"}`);
 			}
 		},
-		[jobs, companies, persons, locations, interviews, jobApplicationUpdates, addEntity, setDemoFilter, token, location.pathname, showToastError]
+		[jobs, companies, persons, locations, interviews, jobApplicationUpdates, scrapingFilters, addEntity, setDemoFilter, token, location.pathname, showToastError]
 	);
 
 	const endTour = useCallback(
@@ -214,6 +217,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			const newCompanyIds = companies.map((c) => c.id).filter((id) => !snapshot.companyIds.has(id));
 			const newLocationIds = locations.map((l) => l.id).filter((id) => !snapshot.locationIds.has(id));
 			const newPersonIds = persons.map((p) => p.id).filter((id) => !snapshot.personIds.has(id));
+			const newScrapingFilterIds = scrapingFilters.map((f) => f.id).filter((id) => !snapshot.scrapingFilterIds.has(id));
 
 			const hasNewEntities = [
 				newInterviewIds,
@@ -222,6 +226,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				newCompanyIds,
 				newLocationIds,
 				newPersonIds,
+				newScrapingFilterIds,
 			].some((arr) => arr.length > 0);
 
 			if (hasNewEntities) {
@@ -239,6 +244,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 						...newCompanyIds.map((id) => deleteEntity("company", id)),
 						...newLocationIds.map((id) => deleteEntity("location", id)),
 						...newPersonIds.map((id) => deleteEntity("person", id)),
+						...newScrapingFilterIds.map((id) => deleteEntity("scrapingFilter", id)),
 					]);
 				} finally {
 					setIsCleaningUp(false);
@@ -274,6 +280,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			locations,
 			interviews,
 			jobApplicationUpdates,
+			scrapingFilters,
 			deleteEntity,
 			setDemoFilter,
 			demoScrapedJobId,

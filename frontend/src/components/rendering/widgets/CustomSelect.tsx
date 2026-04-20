@@ -477,6 +477,16 @@ export const CustomSelect = ({
 		...(inputShrunk ? { flex: "0 0 auto", minWidth: "2px", width: "2px" } : {}),
 	};
 
+	const backdrop = (
+		<div
+			className={`jam-select__backdrop${isClosing ? " jam-select__backdrop--closing" : ""}`}
+			onPointerDown={(e) => {
+				e.preventDefault();
+				closeMenu();
+			}}
+		/>
+	);
+
 	const menu = (
 		<div
 			id={listboxId}
@@ -580,7 +590,7 @@ export const CustomSelect = ({
 					)}
 				</div>
 			</div>
-			{(isOpen || isClosing) && createPortal(menu, document.getElementById("jam-select-portal") ?? document.body)}
+			{(isOpen || isClosing) && createPortal(<>{backdrop}{menu}</>, document.getElementById("jam-select-portal") ?? document.body)}
 		</div>
 	);
 };

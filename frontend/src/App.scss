@@ -235,6 +235,18 @@ textarea.form-control {
     z-index: 9999 !important;
 }
 
+.jam-select__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(0, 0, 0, 0.4);
+    animation: backdropFadeIn 0.15s ease;
+}
+
+.jam-select__backdrop--closing {
+    animation: backdropFadeOut 0.15s ease forwards;
+}
+
 .jam-select__portal .jam-select__menu {
     margin-top: 4px;
     border: 1px solid var(--bs-border-color) !important;
@@ -531,6 +543,16 @@ textarea.form-control {
     padding: 4px;
 }
 
+@keyframes backdropFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes backdropFadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
 @keyframes selectMenuFadeIn {
     from {
         opacity: 0;
@@ -627,9 +649,12 @@ textarea.form-control {
     text-shadow: 0 1px 1.8px rgb(0 0 0 / 20%);
 }
 
-.btn.active,
-.btn:first-child:active,
-:not(.btn-check) + .btn:active {
+.btn-primary.active,
+.btn-primary:first-child:active,
+:not(.btn-check) + .btn-primary:active,
+.btn-outline-primary.active,
+.btn-outline-primary:first-child:active,
+:not(.btn-check) + .btn-outline-primary:active {
     background: var(--primary-gradient);
     border: none;
 }

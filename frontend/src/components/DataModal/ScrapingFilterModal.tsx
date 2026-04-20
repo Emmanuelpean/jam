@@ -105,6 +105,7 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle<ScrapingFilterData
 					return (
 						<div className="mt-3">
 							<Button
+								id="scraping-filter-test-btn"
 								size="sm"
 								variant="outline-primary"
 								style={{ width: "100%", marginBottom: "10px" }}

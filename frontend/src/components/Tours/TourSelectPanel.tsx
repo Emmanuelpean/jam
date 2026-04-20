@@ -1,6 +1,6 @@
 import React, { JSX, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTour } from "../../contexts/TourContext";
-import { TOURS } from "../GuidedTour/tourSteps";
+import { isTourGroup, TOUR_STRUCTURE, TOURS, TourDefinition } from "../GuidedTour/tourSteps";
 import "./TourSelectPanel.scss";
 
 export function TourSelectPanel(): JSX.Element | null {
@@ -64,6 +64,30 @@ export function TourSelectPanel(): JSX.Element | null {
 		};
 	}, [isTourSelectOpen, anchorRect, closeTourSelect]);
 
+	const implementedTours = TOURS.filter((t) => !t.comingSoon);
+	const completedCount = implementedTours.filter((t) => completedTourIds.has(t.id)).length;
+
+	const renderTourItem = (tour: TourDefinition, indented: boolean): JSX.Element => {
+		const completed = completedTourIds.has(tour.id);
+		return (
+			<li key={tour.id}>
+				<button
+					id={`tsp-item-${tour.id}`}
+					className={`tsp-item${indented ? " tsp-item--indented" : ""}`}
+					disabled={isTourActive || !!tour.comingSoon}
+					onClick={tour.comingSoon ? undefined : (): void => void startTour(tour.id)}
+				>
+					<i
+						id={`tsp-icon-${tour.id}`}
+						className={`bi bi-check-circle ${completed ? "tsp-icon--done" : "tsp-icon"}`}
+					/>
+					<span className="tsp-item-title">{tour.title}</span>
+					{tour.comingSoon && <span className="tsp-badge tsp-badge--soon">Soon</span>}
+				</button>
+			</li>
+		);
+	};
+
 	if (!isTourSelectOpen || !anchorRect) return null;
 
 	return (
@@ -78,20 +102,26 @@ export function TourSelectPanel(): JSX.Element | null {
 			<div className="tsp-header">
 				<p className="tsp-heading">Guided Tours</p>
 				<span id="tsp-progress" className="tsp-progress">
-					{TOURS.filter((t) => completedTourIds.has(t.id)).length} / {TOURS.length}
+					{completedCount} / {implementedTours.length}
 				</span>
 			</div>
 			<ul className="tsp-list">
-				{TOURS.map((tour) => {
-					const completed = completedTourIds.has(tour.id);
-					return (
-						<li key={tour.id}>
-							<button id={`tsp-item-${tour.id}`} className="tsp-item" disabled={isTourActive} onClick={() => void startTour(tour.id)}>
-								<i id={`tsp-icon-${tour.id}`} className={`bi bi-check-circle ${completed ? "tsp-icon--done" : "tsp-icon"}`} />
-								<span>{tour.title}</span>
-							</button>
-						</li>
-					);
+				{TOUR_STRUCTURE.map((item) => {
+					if (isTourGroup(item)) {
+						return (
+							<li key={item.id} className="tsp-group">
+								<div className="tsp-group-header">
+									<i className={`bi bi-${item.icon} tsp-group-icon`} />
+									<span className="tsp-group-title">{item.title}</span>
+									{item.badge && <span className="tsp-badge tsp-badge--section">{item.badge}</span>}
+								</div>
+								<ul className="tsp-sublist">
+									{item.tours.map((tour) => renderTourItem(tour, true))}
+								</ul>
+							</li>
+						);
+					}
+					return renderTourItem(item, false);
 				})}
 			</ul>
 		</div>

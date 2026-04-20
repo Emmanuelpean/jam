@@ -31,6 +31,24 @@ export interface TourDefinition {
 	description: string;
 	icon: string;
 	steps: TourStep[];
+	/** Not yet implemented — shown in the panel as disabled with a "Soon" badge */
+	comingSoon?: boolean;
+}
+
+export interface TourGroup {
+	type: "group";
+	id: string;
+	title: string;
+	icon: string;
+	/** Optional badge label shown next to the group heading (e.g. "Premium") */
+	badge?: string;
+	tours: TourDefinition[];
+}
+
+export type TourStructureItem = TourDefinition | TourGroup;
+
+export function isTourGroup(item: TourStructureItem): item is TourGroup {
+	return (item as TourGroup).type === "group";
 }
 
 const APP_OVERVIEW_STEPS: TourStep[] = [
@@ -469,9 +487,122 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 	},
 ];
 
+const SCRAPING_FILTER_STEPS: TourStep[] = [
+	{
+		id: "sf-intro",
+		targetId: null,
+		title: "Scraping Filters",
+		content:
+			"Scraping filters let you control exactly which job alerts get pulled into JAM. " +
+			"Exclusion filters silently drop alerts that match — keeping your table free of irrelevant results. " +
+			"This tour walks you through creating and testing one.",
+		route: "/scraped-jobs",
+		placement: "center",
+	},
+	{
+		id: "sf-open",
+		targetId: "scraping-filters-button",
+		title: "Open the Filter Panel",
+		content: "Click the Scraping Filters button to open the filter manager.",
+		route: "/scraped-jobs",
+		placement: "bottom",
+		waitForSelector: "#scraping-filters-modal",
+		hideNextButton: true,
+	},
+	{
+		id: "sf-overview",
+		targetId: "scraping-filters-modal",
+		title: "The Filter Panel",
+		content:
+			"This panel lists all your exclusion filters. Active filters run automatically during each scrape — " +
+			"any alert that matches is silently dropped before it reaches your table.",
+		placement: "left",
+	},
+	{
+		id: "sf-tabs",
+		targetId: "active-tab",
+		title: "Active & Inactive Filters",
+		content:
+			"Filters have two states: Active filters are applied on every scrape. " +
+			"Switch to the Inactive tab to see filters you've paused — deactivate a filter to temporarily stop it without deleting it.",
+		placement: "bottom",
+	},
+	{
+		id: "sf-add",
+		targetId: "add-scrapingFilter-button",
+		title: "Create a Filter",
+		content: "Click here to open the filter form and create your first filter.",
+		placement: "bottom",
+		waitForSelector: "#modal-edit-scrapingFilter",
+		hideNextButton: true,
+	},
+	{
+		id: "sf-type",
+		targetId: "type-form-group",
+		title: "Filter Type",
+		content:
+			"Choose what part of the job alert to match against — for example Title, Company, or Location. " +
+			"Selecting Title will check the job title of every incoming alert.",
+		placement: "right",
+	},
+	{
+		id: "sf-operator",
+		targetId: "operator-form-group",
+		title: "Operator",
+		content:
+			"Pick how the match is performed. Contains checks for a substring anywhere in the field; " +
+			"Equals requires an exact match; Starts With and Ends With match the beginning or end.",
+		placement: "right",
+	},
+	{
+		id: "sf-value",
+		targetId: "value-form-group",
+		title: "Filter Value",
+		content: "Type the word or phrase to match against. For example, enter 'Senior' to exclude senior-level roles.",
+		placement: "right",
+		waitForInput: "#modal-edit-scrapingFilter input[name='value']",
+	},
+	{
+		id: "sf-test",
+		targetId: "scraping-filter-test-btn",
+		title: "Test the Filter",
+		content:
+			"Before saving, click Test to preview which existing job alerts this filter would match. " +
+			"A table of matching alerts appears below — if it looks right, go ahead and save.",
+		placement: "top",
+	},
+	{
+		id: "sf-save",
+		targetId: "modal-edit-scrapingFilter-confirm-button",
+		title: "Save the Filter",
+		content: "Happy with the filter? Click Save to activate it. It will be applied on the next scraping run.",
+		placement: "top",
+		waitForSelectorGone: "#modal-edit-scrapingFilter",
+		hideNextButton: true,
+	},
+	{
+		id: "sf-manage",
+		targetId: "scrapingFilter-data-table",
+		title: "Managing Filters",
+		content:
+			"Your new filter now appears in the table. Right-click any row to edit, deactivate, or delete a filter. " +
+			"The filter created during this tour will be removed automatically when you click Done.",
+		placement: "top",
+	},
+	{
+		id: "sf-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"You know how to create and manage scraping filters. " +
+			"Use them to keep irrelevant alerts out of your table and surface only the roles that matter to you.",
+		placement: "center",
+	},
+];
+
 // ── Tour registry ─────────────────────────────────────────────────────────────
 
-export const TOURS: TourDefinition[] = [
+export const TOUR_STRUCTURE: TourStructureItem[] = [
 	{
 		id: "app-overview",
 		title: "App Overview",
@@ -488,20 +619,65 @@ export const TOURS: TourDefinition[] = [
 	},
 	{
 		id: "follow-up-email",
-		title: "Sending a Follow-up Email",
+		title: "Generating Follow-up Emails",
 		description: "Learn how to generate and send a personalised follow-up email for a job application.",
 		icon: "envelope",
 		steps: FOLLOW_UP_EMAIL_STEPS,
 	},
 	{
-		id: "import-scraped-job",
-		title: "Importing Job Alerts",
-		description:
-			"See how JAM scrapes job alerts from your emails, rates them with AI, and lets you import them in one click.",
-		icon: "envelope-arrow-down",
-		steps: IMPORT_SCRAPED_JOB_STEPS,
+		type: "group",
+		id: "premium",
+		title: "JAM Premium",
+		icon: "stars",
+		badge: "Premium",
+		tours: [
+			{
+				id: "import-scraped-job",
+				title: "Overview & Importing Job Alerts",
+				description:
+					"See how JAM scrapes job alerts from your emails, rates them with AI, and lets you import them in one click.",
+				icon: "envelope-arrow-down",
+				steps: IMPORT_SCRAPED_JOB_STEPS,
+			},
+			{
+				id: "scraping-filters",
+				title: "Creating & Managing Scraping Filters",
+				description: "Learn how to set up filters to control which job alerts get scraped into JAM.",
+				icon: "funnel",
+				steps: SCRAPING_FILTER_STEPS,
+			},
+		],
+	},
+	{
+		type: "group",
+		id: "dashboard",
+		title: "Dashboard",
+		icon: "speedometer2",
+		tours: [
+			{
+				id: "dashboard-overview",
+				title: "Overview",
+				description: "Get an overview of the JAM dashboard and its main widgets.",
+				icon: "grid",
+				steps: [],
+				comingSoon: true,
+			},
+			{
+				id: "dashboard-widgets",
+				title: "Adding Widgets & Customising",
+				description: "Learn how to add, remove, and rearrange widgets to build your perfect dashboard.",
+				icon: "layout-wtf",
+				steps: [],
+				comingSoon: true,
+			},
+		],
 	},
 ];
+
+/** Flat list of every tour (including coming-soon). Used by getTourById. */
+export const TOURS: TourDefinition[] = TOUR_STRUCTURE.flatMap(
+	(item: TourStructureItem): TourDefinition[] => (isTourGroup(item) ? item.tours : [item])
+);
 
 export function getTourById(id: string): TourDefinition | undefined {
 	return TOURS.find((t: TourDefinition): boolean => t.id === id);
