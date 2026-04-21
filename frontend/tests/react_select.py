@@ -251,10 +251,19 @@ class ReactSelect(object):
         return False
 
     def _close_menu(self) -> None:
-        """Close the select menu if it is open"""
+        """Close the select menu if it is open.
+
+        Uses JavaScript dispatch instead of a Selenium click because the backdrop overlay
+        (z-index 9998) covers the control element, causing ElementClickInterceptedException
+        when the select menu is open."""
 
         if self._is_menu_open():
-            self._click_select_arrow_button()
+            control = self.select_menu.find_element(By.CLASS_NAME, self.select_control)
+            self.driver.execute_script(
+                "arguments[0].dispatchEvent(new MouseEvent('mousedown', {bubbles: true, cancelable: true, view: window, buttons: 1}))",
+                control,
+            )
+            time.sleep(0.2)
 
     def _unset_selected(self, selected_option) -> None:
         """Deselect the given selected option element"""

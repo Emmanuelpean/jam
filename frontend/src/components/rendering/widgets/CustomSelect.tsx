@@ -536,7 +536,7 @@ export const CustomSelect = ({
 									tabIndex={-1}
 									aria-label={`Remove ${v.label}`}
 								>
-									<i className="bi bi-x" />
+									×
 								</button>
 							</div>
 						))}
