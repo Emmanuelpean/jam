@@ -585,6 +585,8 @@ class TestFavouritesOnly:
 
     @pytest.fixture()
     def setup(self, session, test_regular_user, test_job_scraping_service_logs):
+        """Create a test setup with a user and a service log."""
+
         class Ctx:
             user = test_regular_user
             service_log_id = test_job_scraping_service_logs[0].id
@@ -749,8 +751,8 @@ class TestScrapedJobCRUDAdminUser(CRUDTestBase):
 
 class TestScrapedJobRegularUserUndefinedMethods:
     ENDPOINT = "/scraped-jobs"
-    DEFINED_ACTIONS = ["PUT", "GET_ALL"]
-    UNDEFINED_ACTIONS = ["POST", "GET_ONE", "DELETE"]
+    DEFINED_ACTIONS = ["PUT", "GET_ALL", "POST", "DELETE"]
+    UNDEFINED_ACTIONS = ["GET_ONE"]
 
     @pytest.mark.parametrize(
         "http_method,path_suffix,expected_status",
@@ -1286,7 +1288,9 @@ class TestErrorsOnly:
         )[0]
 
     @staticmethod
-    def _create_rating(session, scraped_job_id: int, owner_id: int, qualification_id: int = 0, **kwargs) -> models.JobRating:
+    def _create_rating(
+        session, scraped_job_id: int, owner_id: int, qualification_id: int = 0, **kwargs
+    ) -> models.JobRating:
         return create_db_entries(
             session,
             models.JobRating,
@@ -1406,8 +1410,12 @@ class TestErrorsOnly:
         """Imported jobs with is_failed=True must still be excluded by the base filter."""
 
         self._create_job(
-            session, test_regular_user.id, test_job_scraping_service_logs[0].id,
-            title="Imported Failed", is_failed=True, is_imported=True,
+            session,
+            test_regular_user.id,
+            test_job_scraping_service_logs[0].id,
+            title="Imported Failed",
+            is_failed=True,
+            is_imported=True,
         )
 
         response = regular_user_client.get(self.endpoint, params={"errors_only": "true"})
@@ -1422,8 +1430,12 @@ class TestErrorsOnly:
         """Inactive jobs with is_failed=True must still be excluded by the base filter."""
 
         self._create_job(
-            session, test_regular_user.id, test_job_scraping_service_logs[0].id,
-            title="Inactive Failed", is_failed=True, is_active=False,
+            session,
+            test_regular_user.id,
+            test_job_scraping_service_logs[0].id,
+            title="Inactive Failed",
+            is_failed=True,
+            is_active=False,
         )
 
         response = regular_user_client.get(self.endpoint, params={"errors_only": "true"})
@@ -1436,7 +1448,6 @@ class TestErrorsOnly:
         self, session, regular_user_client, test_regular_user, test_job_scraping_service_logs
     ):
         """errors_only=True should show failed jobs even if their deadline is in the past."""
-        import datetime as dt
 
         past_deadline = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=5)
         self._create_job(
@@ -1460,8 +1471,11 @@ class TestErrorsOnly:
         """Failed jobs belonging to another user are never returned."""
 
         self._create_job(
-            session, test_admin_user.id, test_job_scraping_service_logs[0].id,
-            title="Admin Failed", is_failed=True,
+            session,
+            test_admin_user.id,
+            test_job_scraping_service_logs[0].id,
+            title="Admin Failed",
+            is_failed=True,
         )
 
         response = regular_user_client.get(self.endpoint, params={"errors_only": "true"})
@@ -1516,7 +1530,9 @@ class TestGetExpired:
         service_log_id = test_job_scraping_service_logs[0].id
         past = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)
         future = dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=1)
-        expired = self._create_job(session, test_regular_user.id, service_log_id, title="Expired Deadline", deadline=past)
+        expired = self._create_job(
+            session, test_regular_user.id, service_log_id, title="Expired Deadline", deadline=past
+        )
         self._create_job(session, test_regular_user.id, service_log_id, title="Future Deadline", deadline=future)
         self._create_job(session, test_regular_user.id, service_log_id, title="No Deadline")
 
@@ -1533,7 +1549,9 @@ class TestGetExpired:
         """Should not return jobs that have already been imported."""
 
         service_log_id = test_job_scraping_service_logs[0].id
-        self._create_job(session, test_regular_user.id, service_log_id, title="Imported Closed", is_closed=True, is_imported=True)
+        self._create_job(
+            session, test_regular_user.id, service_log_id, title="Imported Closed", is_closed=True, is_imported=True
+        )
 
         response = regular_user_client.get(self.endpoint)
 
@@ -1546,7 +1564,9 @@ class TestGetExpired:
         """Should not return jobs that are already inactive."""
 
         service_log_id = test_job_scraping_service_logs[0].id
-        self._create_job(session, test_regular_user.id, service_log_id, title="Inactive Closed", is_closed=True, is_active=False)
+        self._create_job(
+            session, test_regular_user.id, service_log_id, title="Inactive Closed", is_closed=True, is_active=False
+        )
 
         response = regular_user_client.get(self.endpoint)
 
@@ -1584,5 +1604,3 @@ class TestGetExpired:
 
         response = client.get(self.endpoint)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-

@@ -53,8 +53,8 @@ def open_json(filepath: str) -> list[dict]:
     :param filepath: The json file to open
     :return: The contents of the file"""
 
-    BASE_DIR = os.path.dirname(__file__)
-    path = os.path.join(BASE_DIR, "..", filepath)
+    base_dir = os.path.dirname(__file__)
+    path = os.path.join(base_dir, "..", filepath)
     with open(path, "r", encoding="utf8") as ofile:
         return json.load(ofile)
 

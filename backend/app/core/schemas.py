@@ -234,9 +234,9 @@ class UserQualificationUpsert(BaseModel):
     def validate_experience(cls, v: str | None) -> str | None:
         """Validate the experience value"""
 
-        EXPERIENCE_CHAR_LIMIT: int = 10000
-        if v and len(v) > EXPERIENCE_CHAR_LIMIT:
-            raise ValueError(f"Experience must not exceed {EXPERIENCE_CHAR_LIMIT} characters")
+        char_limit: int = 10000
+        if v and len(v) > char_limit:
+            raise ValueError(f"Experience must not exceed {char_limit} characters")
         return v
 
     @field_validator("skills", "education", "qualities", "interests")
@@ -244,9 +244,9 @@ class UserQualificationUpsert(BaseModel):
     def validate_other_fields(cls, v: str | None) -> str | None:
         """Validate the field values"""
 
-        OTHER_CHAR_LIMIT: int = 3500
-        if v and len(v) > OTHER_CHAR_LIMIT:
-            raise ValueError(f"This field must not exceed {OTHER_CHAR_LIMIT} characters")
+        char_limit: int = 3500
+        if v and len(v) > char_limit:
+            raise ValueError(f"This field must not exceed {char_limit} characters")
         return v
 
 

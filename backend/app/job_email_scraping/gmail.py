@@ -22,6 +22,6 @@ def extract_gmail_originator(email_text: str) -> str | None:
     :param email_text: Raw email body
     :return: Gmail originator email address or None if not found"""
 
-    GMAIL_REGEX = r"\b[a-zA-Z0-9._%+-]+@gmail\.com\b"
-    match = re.search(GMAIL_REGEX, email_text)
+    gmail_regex = r"\b[a-zA-Z0-9._%+-]+@gmail\.com\b"
+    match = re.search(gmail_regex, email_text)
     return match.group(0) if match else None

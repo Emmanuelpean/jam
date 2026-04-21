@@ -12,8 +12,8 @@ def open_file(file: str, **kwargs) -> str:
     :param file: The file to open
     :return: The contents of the file"""
 
-    BASE_DIR = os.path.dirname(__file__)
-    filepath = os.path.join(BASE_DIR, "resources/job_alert_emails", file)
+    base_dir = os.path.dirname(__file__)
+    filepath = os.path.join(base_dir, "resources/job_alert_emails", file)
     with open(filepath, "r", **kwargs) as ofile:
         return ofile.read()
 

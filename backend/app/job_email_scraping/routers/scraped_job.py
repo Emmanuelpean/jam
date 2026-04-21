@@ -410,9 +410,11 @@ def create_tour_demo(
         db.delete(existing)
         db.flush()
         if old_log_id is not None:
-            old_log = db.query(models.JobEmailScrapingServiceLog).filter(
-                models.JobEmailScrapingServiceLog.id == old_log_id
-            ).first()
+            old_log = (
+                db.query(models.JobEmailScrapingServiceLog)
+                .filter(models.JobEmailScrapingServiceLog.id == old_log_id)
+                .first()
+            )
             if old_log:
                 db.delete(old_log)
                 db.flush()
@@ -455,16 +457,16 @@ def create_tour_demo(
     return scraped_job
 
 
-@scraped_job_router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@scraped_job_router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_scraped_job(
-    id: int,
+    item_id: int,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
     """Hard-delete a scraped job owned by the current user."""
     scraped_job = (
         db.query(models.ScrapedJob)
-        .filter(models.ScrapedJob.id == id, models.ScrapedJob.owner_id == current_user.id)
+        .filter(models.ScrapedJob.id == item_id, models.ScrapedJob.owner_id == current_user.id)
         .first()
     )
     if not scraped_job:

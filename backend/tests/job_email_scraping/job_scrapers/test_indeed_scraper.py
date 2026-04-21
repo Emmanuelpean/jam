@@ -1,12 +1,11 @@
 """Tests for IndeedBrightdataJobScraper and IndeedApifyJobScraper._process_job_data."""
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
 from app.job_email_scraping.job_scrapers.indeed import IndeedBrightdataJobScraper, IndeedApifyJobScraper
 from app.job_email_scraping.schemas import JobResult
-
 
 # ================================================ BRIGHTDATA ================================================
 
@@ -23,6 +22,8 @@ BRIGHTDATA_FULL_JOB = {
 
 @pytest.fixture
 def brightdata_scraper():
+    """A IndeedBrightdataJobScraper with mocked settings."""
+
     with (
         patch("app.job_email_scraping.job_scrapers.brightdata.settings") as mock_settings,
         patch("app.job_email_scraping.job_scrapers.brightdata.requests"),
@@ -167,6 +168,8 @@ APIFY_FULL_JOB = {
 
 @pytest.fixture
 def apify_scraper():
+    """A IndeedApifyJobScraper with mocked settings."""
+
     with (
         patch("app.job_email_scraping.job_scrapers.apify.ApifyClient"),
         patch("app.job_email_scraping.job_scrapers.apify.settings") as mock_settings,
