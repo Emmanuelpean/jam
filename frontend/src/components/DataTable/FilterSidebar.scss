@@ -198,3 +198,9 @@
 	flex-shrink: 0;
 }
 
+body[data-mode="dark"] {
+	.filter-active-dot {
+		color: var(--primary-light);
+	}
+}
+

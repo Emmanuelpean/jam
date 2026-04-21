@@ -88,3 +88,37 @@
         }
     }
 }
+
+body[data-mode="dark"] {
+    .filter-pills-clear-btn {
+        color: var(--primary-light);
+        border-color: color-mix(in srgb, var(--primary-light) 35%, transparent);
+
+        &:hover {
+            background-color: color-mix(in srgb, var(--primary-light) 10%, transparent);
+            border-color: color-mix(in srgb, var(--primary-light) 55%, transparent);
+        }
+    }
+
+    .header-filter-pill {
+        background: color-mix(in srgb, var(--primary-light) 12%, var(--bs-secondary-bg));
+        border-color: color-mix(in srgb, var(--primary-light) 35%, transparent);
+
+        &:hover {
+            border-color: color-mix(in srgb, var(--primary-light) 55%, transparent);
+        }
+
+        &-label {
+            color: var(--primary-light);
+        }
+
+        &-remove {
+            color: color-mix(in srgb, var(--primary-light) 55%, transparent);
+
+            &:hover {
+                background-color: color-mix(in srgb, var(--primary-light) 15%, transparent);
+                color: var(--primary-light);
+            }
+        }
+    }
+}

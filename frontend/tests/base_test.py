@@ -48,12 +48,16 @@ class BaseUtils(object):
         # self.driver.get(f"{self.frontend_base_url}/{page}")
         self.wait_for_page(page)
 
-    def wait_for_page(self, page_url: str) -> None:
+    def wait_for_page(self, page_url: str, timeout=None) -> None:
         """Wait for the dashboard to load"""
 
+        if not timeout:
+            wait = self.wait
+        else:
+            wait = WebDriverWait(self.driver, timeout)
         url = f"{self.frontend_base_url}/{page_url}"
         try:
-            self.wait.until(ec.url_to_be(url))
+            wait.until(ec.url_to_be(url))
         except:
             raise AssertionError(f"Failed to wait for URL {url}. Current URL: {self.driver.current_url}")
 

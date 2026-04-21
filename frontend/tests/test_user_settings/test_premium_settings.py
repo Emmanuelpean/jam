@@ -103,7 +103,7 @@ class TestPremiumSettingsPage(BaseTest):
         self.set_text(self.get_element("cardExpiry"), "1228")
         self.set_text(self.get_element("billingName"), "Test User")
         self.get_element("[data-testid='hosted-payment-submit-button']", By.CSS_SELECTOR).click()
-        self.wait_for_page("settings/premium?success=true")
+        self.wait_for_page("settings/premium?success=true", 20)
 
     def _cancel_subscription(self) -> None:
         """Cancel the user subscription"""
