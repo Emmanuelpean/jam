@@ -1890,8 +1890,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            # if os.environ.get("HEADLESS", "true").lower() != "false":
-            # chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
