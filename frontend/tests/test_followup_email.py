@@ -11,21 +11,32 @@ class TestFollowUpEmail(BaseTest):
     def setup_function(self, request) -> None:
         """Setup for each test function."""
 
-        request.getfixturevalue("test_jobs")
+        tech_corp = self._make_company(name="Tech Corp")
+        cloudfirst = self._make_company(name="CloudFirst Inc")
+        john = self._make_person(first_name="John", last_name="Doe", company_id=tech_corp.id, email="j.d@mail.com")
+        mike = self._make_person(first_name="Mike", last_name="Taylor", company_id=tech_corp.id, email="m.t@mail.com")
+        alex = self._make_person(first_name="Alex", last_name="Johnson", company_id=cloudfirst.id, email="a.j@mail.com")
+        self.test_job = self._make_job(
+            title="Senior Python Developer",
+            application_status="applied",
+        )
+        self.test_job.contacts = [john, mike, alex]
+        self.db.commit()
+        self.db.refresh(self.test_job)
         self.login()
 
     def test_generate_followup_email(self) -> None:
         """Test generating a follow-up email and displaying a toast notification."""
 
-        self.job_table_utils.table_context_menu(1, "followup")
+        self.job_table_utils.table_context_menu(self.test_job.id, "followup")
         modal = self.followup_modal.wait_for_modal()
         expected = (
             "Follow Up Email Generator\n"
             "Contact\n"
-            "John Doe (Tech Corp)\n"
+            "Alex Johnson (CloudFirst Inc)\n"
             "Email Subject\n"
             "Email Body\n"
-            "Hi John,\n"
+            "Hi Alex,\n"
             "\n"
             "I hope you are well. I am writing to follow up on my application for the "
             "Senior Python Developer position and to kindly ask if there have been any "
@@ -46,7 +57,7 @@ class TestFollowUpEmail(BaseTest):
     def test_cancel(self) -> None:
         """Test cancelling the follow-up email modal."""
 
-        self.job_table_utils.table_context_menu(1, "followup")
+        self.job_table_utils.table_context_menu(self.test_job.id, "followup")
         self.followup_modal.wait_for_modal()
         self.followup_modal.cancel_button.click()
         self.followup_modal.wait_for_modal_close()
@@ -54,20 +65,20 @@ class TestFollowUpEmail(BaseTest):
     def test_send_email(self) -> None:
         """Test sending the follow-up email and displaying a toast notification."""
 
-        self.job_table_utils.table_context_menu(1, "followup")
+        self.job_table_utils.table_context_menu(self.test_job.id, "followup")
         self.followup_modal.wait_for_modal()
         self.followup_modal.send_button.click()
         self.confirm_modal.wait_for_modal()
         self.confirm_modal.confirm_button.click()
         self.assert_toast_message("Follow up email update created successfully.")
-        entry = self.db.query(models.JobApplicationUpdate).order_by(models.JobApplicationUpdate.id.desc()).first()
-        assert entry.note.startswith("Follow up email sent to John Doe")
+        entry = self.db.query(models.JobApplicationUpdate).first()
+        assert entry.note.startswith("Follow up email sent to Alex Johnson")
         self.followup_modal.wait_for_modal_close()
 
     def test_send_email_no_update(self) -> None:
         """Test sending the follow-up email and displaying a toast notification."""
 
-        self.job_table_utils.table_context_menu(1, "followup")
+        self.job_table_utils.table_context_menu(self.test_job.id, "followup")
         self.followup_modal.wait_for_modal()
         self.followup_modal.send_button.click()
         self.confirm_modal.wait_for_modal()
@@ -77,7 +88,7 @@ class TestFollowUpEmail(BaseTest):
     def test_send_email_gmail(self) -> None:
         """Test sending the follow-up email via Gmail and displaying a toast notification."""
 
-        self.job_table_utils.table_context_menu(1, "followup")
+        self.job_table_utils.table_context_menu(self.test_job.id, "followup")
         self.followup_modal.wait_for_modal()
         self.followup_modal.send_menu_button.click()
         self.followup_modal.gmail_option.click()
@@ -89,7 +100,7 @@ class TestFollowUpEmail(BaseTest):
     def test_send_email_outlook(self) -> None:
         """Test sending the follow-up email via Outlook and displaying a toast notification."""
 
-        self.job_table_utils.table_context_menu(1, "followup")
+        self.job_table_utils.table_context_menu(self.test_job.id, "followup")
         self.followup_modal.wait_for_modal()
         self.followup_modal.send_menu_button.click()
         self.followup_modal.outlook_option.click()
@@ -101,7 +112,7 @@ class TestFollowUpEmail(BaseTest):
     def test_contact_send_email(self) -> None:
         """Test sending the follow-up email from the job view modal."""
 
-        self.job_table_utils.table_row_click(1)
+        self.job_table_utils.table_row_click(self.test_job.id)
         self.job_modal_utils.wait_for_view_modal()
         person_badge = self.get_element("modal-view-job-person-0")
         self.context_menu(person_badge, "followup")

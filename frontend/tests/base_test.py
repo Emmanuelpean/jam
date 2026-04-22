@@ -1890,8 +1890,8 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            if os.environ.get("HEADLESS", "true").lower() != "false":
-                chrome_options.add_argument("--headless=new")
+            # if os.environ.get("HEADLESS", "true").lower() != "false":
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -2081,6 +2081,35 @@ class BaseTest(BaseUtils):
         """Helper method to verify user exists in database"""
 
         return self.db.query(models.User).filter(models.User.email == email).all()
+
+    def _make_company(self, **kwargs) -> models.Company:
+        """Create and persist a Company owned by the current test user."""
+
+        defaults = {
+            "name": "Test Company",
+            "owner_id": self.db_user.id,
+        }
+        defaults.update(kwargs)
+        company = models.Company(**defaults)
+        self.db.add(company)
+        self.db.commit()
+        self.db.refresh(company)
+        return company
+
+    def _make_person(self, **kwargs) -> models.Person:
+        """Create and persist a Person owned by the current test user."""
+
+        defaults = {
+            "first_name": "Test",
+            "last_name": "Person",
+            "owner_id": self.db_user.id,
+        }
+        defaults.update(kwargs)
+        person = models.Person(**defaults)
+        self.db.add(person)
+        self.db.commit()
+        self.db.refresh(person)
+        return person
 
     def _make_job(self, **kwargs) -> models.Job:
         """Create and persist a Job owned by the current test user."""

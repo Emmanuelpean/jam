@@ -36,7 +36,8 @@
 		"underscore": ">=1.13.8",
 		"svgo": ">=2.8.1",
 		"node-forge": ">=1.4.0",
-		"picomatch": ">=4.0.4"
+		"picomatch": ">=4.0.4",
+		"follow-redirects": ">=1.16.0"
 	},
 	"devDependencies": {
 		"@types/leaflet": "^1.9.20",

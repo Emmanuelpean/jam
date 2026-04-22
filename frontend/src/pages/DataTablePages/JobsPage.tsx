@@ -112,7 +112,7 @@ const JobsPage = (): JSX.Element => {
 				columns={columns}
 				Modal={JobModal}
 				modalSize="xl"
-				menuItems={["view", "edit", "delete", "followup"]}
+				menuItems={(job: JobData) => ["view", "edit", "delete", ...(job.has_application ? ["followup"] : [])]}
 				enableColumnConfig={true}
 			/>
 			<ExtensionJobModal ref={extensionModalRef} />

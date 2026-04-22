@@ -2,6 +2,7 @@ import React, { JSX, useEffect, useState } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../DataModal/JobModal";
+import { JobData } from "../../services/schemas/DataTables";
 
 const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTableProps): JSX.Element => {
 	let defaultColumns: TableColumn[] =
@@ -25,7 +26,13 @@ const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: 
 			modalSize="xl"
 			showSearch={false}
 			showAdd={false}
-			menuItems={["view", "edit", "delete", "snooze", "followup"]}
+			menuItems={(job: JobData) => [
+				"view",
+				"edit",
+				"delete",
+				"snooze",
+				...(job.has_application ? ["followup"] : []),
+			]}
 			modalProps={{ defaultActiveTab: "application" }}
 		/>
 	);

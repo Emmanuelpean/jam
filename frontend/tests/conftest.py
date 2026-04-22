@@ -119,10 +119,10 @@ def print_backend_pid() -> None:
 def frontend_url(worker_id) -> str:
     """Calculate frontend URL for this worker without starting the server"""
     if worker_id == "master":
-        port = 3001
+        port = 3100
     else:
         worker_num = int(worker_id.replace("gw", ""))
-        port = 3000 + worker_num + 1  # gw0 -> 3001, gw1 -> 3002, etc.
+        port = 3100 + worker_num
     return f"http://localhost:{port}"
 
 
@@ -136,11 +136,11 @@ def test_backend_server(database_url, worker_id, engine, frontend_url) -> Genera
 
     # Determine port based on worker_id
     if worker_id == "master":
-        port = 8001
+        port = 8100
     else:
         # Extract worker number from worker_id (e.g., "gw0" -> 0)
         worker_num = int(worker_id.replace("gw", ""))
-        port = 8000 + worker_num + 1  # gw0 -> 8001, gw1 -> 8002, etc.
+        port = 8100 + worker_num
 
     print(f"Using port: {port}")
     kill_process_on_port(port)
