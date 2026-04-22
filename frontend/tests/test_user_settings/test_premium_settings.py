@@ -57,7 +57,8 @@ class TestPremiumSettingsPage(BaseTest):
             raise RuntimeError("Stripe listener failed to start within timeout")
 
         # Start a thread to continuously drain stdout so the buffer doesn't fill up and block
-        def drain_stdout():
+        def drain_stdout() -> None:
+            """Drain the stripe listener stdout to prevent it from filling up the buffer"""
             for l in self.stripe_listener.stdout:
                 print(f"[STRIPE] {l.strip()}")
 
