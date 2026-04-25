@@ -1,3 +1,10 @@
+/* Transparent blocking panels — prevent interaction outside the spotlight hole */
+.tour-block {
+	position: fixed;
+	z-index: 1400;
+	pointer-events: all;
+}
+
 /* Shown on steps with no targetId — plain full-screen dark overlay */
 .tour-backdrop {
 	position: fixed;

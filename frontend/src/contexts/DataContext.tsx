@@ -181,6 +181,7 @@ export interface DataContextValue {
 	error: ApiError | null;
 
 	setDemoFilter: (filter: { jobIds: number[]; personIds: number[] } | null) => void;
+	setTourScrapingFilterIds: (ids: Set<number> | null) => void;
 
 	// Generic update functions
 	addEntity: <T extends EntityType>(type: T, data: any) => ApiResponsePromise<JamData>;
@@ -197,6 +198,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [companies, setCompanies] = useState<CompanyData[]>([]);
 	const [persons, setPersons] = useState<PersonData[]>([]);
 	const [demoFilter, setDemoFilter] = useState<{ jobIds: number[]; personIds: number[] } | null>(null);
+	const [tourScrapingFilterIds, setTourScrapingFilterIds] = useState<Set<number> | null>(null);
 	const [rawInterviews, setRawInterviews] = useState<InterviewData[]>([]);
 	const [rawJobApplicationUpdates, setRawJobApplicationUpdates] = useState<JobApplicationUpdateData[]>([]);
 	const [aggregators, setAggregators] = useState<AggregatorData[]>([]);
@@ -576,7 +578,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				aggregators,
 				keywords,
 				locations,
-				scrapingFilters,
+				scrapingFilters: tourScrapingFilterIds !== null ? scrapingFilters.filter((f) => !tourScrapingFilterIds.has(f.id)) : scrapingFilters,
 				scrapingFavouriteFilters,
 				countries,
 				currencies,
@@ -586,6 +588,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				users,
 				error,
 				setDemoFilter,
+				setTourScrapingFilterIds,
 				updateEntity,
 				deleteEntity,
 				addEntity,

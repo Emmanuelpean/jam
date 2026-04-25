@@ -494,7 +494,7 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 		title: "Scraping Filters",
 		content:
 			"Scraping filters let you control exactly which job alerts get pulled into JAM. " +
-			"Exclusion filters silently drop alerts that match — keeping your table free of irrelevant results. " +
+			"Exclusion filters silently drop alerts that match - keeping your table free of irrelevant results. " +
 			"This tour walks you through creating and testing one.",
 		route: "/scraped-jobs",
 		placement: "center",
@@ -511,12 +511,13 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 	},
 	{
 		id: "sf-overview",
-		targetId: "scraping-filters-modal",
+		targetId: "scraping-filters-tables",
 		title: "The Filter Panel",
 		content:
-			"This panel lists all your exclusion filters. Active filters run automatically during each scrape — " +
+			"This panel lists all your exclusion filters. Active filters run automatically during each scrape - " +
 			"any alert that matches is silently dropped before it reaches your table.",
 		placement: "left",
+		hideNextButton: false,
 	},
 	{
 		id: "sf-tabs",
@@ -524,7 +525,7 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 		title: "Active & Inactive Filters",
 		content:
 			"Filters have two states: Active filters are applied on every scrape. " +
-			"Switch to the Inactive tab to see filters you've paused — deactivate a filter to temporarily stop it without deleting it.",
+			"Switch to the Inactive tab to see filters you have paused - deactivate a filter to temporarily stop it without deleting it.",
 		placement: "bottom",
 	},
 	{
@@ -544,6 +545,7 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 			"Choose what part of the job alert to match against — for example Title, Company, or Location. " +
 			"Selecting Title will check the job title of every incoming alert.",
 		placement: "right",
+		waitForInput: "#type-form-group .jam-select__input",
 	},
 	{
 		id: "sf-operator",
@@ -553,6 +555,7 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 			"Pick how the match is performed. Contains checks for a substring anywhere in the field; " +
 			"Equals requires an exact match; Starts With and Ends With match the beginning or end.",
 		placement: "right",
+		waitForInput: "#operator-form-group .jam-select__input",
 	},
 	{
 		id: "sf-value",
@@ -582,7 +585,7 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 	},
 	{
 		id: "sf-manage",
-		targetId: "scrapingFilter-data-table",
+		targetId: "[demo-scraping-filter-row]",
 		title: "Managing Filters",
 		content:
 			"Your new filter now appears in the table. Right-click any row to edit, deactivate, or delete a filter. " +
@@ -675,8 +678,8 @@ export const TOUR_STRUCTURE: TourStructureItem[] = [
 ];
 
 /** Flat list of every tour (including coming-soon). Used by getTourById. */
-export const TOURS: TourDefinition[] = TOUR_STRUCTURE.flatMap(
-	(item: TourStructureItem): TourDefinition[] => (isTourGroup(item) ? item.tours : [item])
+export const TOURS: TourDefinition[] = TOUR_STRUCTURE.flatMap((item: TourStructureItem): TourDefinition[] =>
+	isTourGroup(item) ? item.tours : [item]
 );
 
 export function getTourById(id: string): TourDefinition | undefined {

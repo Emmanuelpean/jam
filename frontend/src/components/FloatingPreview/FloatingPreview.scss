@@ -1,11 +1,13 @@
 .floating-preview-container {
     margin-left: 5px;
+    z-index: 9999;
     animation: fadeIn 0.2s ease-in;
     pointer-events: none;
     border-radius: 4px;
 }
 
 .floating-preview-container .card {
+    z-index: 9999;
     overflow-y: auto;
     width: 450px;
     max-height: 450px;

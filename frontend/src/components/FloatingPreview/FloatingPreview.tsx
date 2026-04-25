@@ -1,4 +1,5 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Card } from "react-bootstrap";
 import { ModalViewField, ModalViewFields, renderModalViewField } from "../rendering/view/ModalFields";
 import "./FloatingPreview.scss";
@@ -73,7 +74,7 @@ export const FloatingPreview = ({ data, fields, position, show }: FloatingPrevie
 		);
 	};
 
-	return (
+	return createPortal(
 		<div
 			ref={previewRef}
 			className="floating-preview-container"
@@ -81,7 +82,7 @@ export const FloatingPreview = ({ data, fields, position, show }: FloatingPrevie
 				position: "fixed",
 				top: `${adjustedPosition.top}px`,
 				left: `${adjustedPosition.left}px`,
-				zIndex: 9999,
+				zIndex: 10000,
 				maxWidth: "360px",
 			}}
 			onMouseDown={handleMouseDown}
@@ -89,6 +90,7 @@ export const FloatingPreview = ({ data, fields, position, show }: FloatingPrevie
 			<Card>
 				<Card.Body>{fields.map((item, index: number) => renderFieldGroup(item, index))}</Card.Body>
 			</Card>
-		</div>
+		</div>,
+		document.getElementById("jam-select-portal") ?? document.body
 	);
 };

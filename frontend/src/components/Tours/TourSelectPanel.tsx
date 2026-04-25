@@ -1,10 +1,13 @@
 import React, { JSX, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTour } from "../../contexts/TourContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { isTourGroup, TOUR_STRUCTURE, TOURS, TourDefinition } from "../GuidedTour/tourSteps";
 import "./TourSelectPanel.scss";
 
 export function TourSelectPanel(): JSX.Element | null {
 	const { isTourSelectOpen, closeTourSelect, startTour, completedTourIds, isTourActive } = useTour();
+	const { currentUser } = useAuth();
+	const isPremium = currentUser?.premium.is_active ?? false;
 	const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
 	const [panelTop, setPanelTop] = useState<number>(0);
 	const panelRef = useRef<HTMLDivElement>(null);
@@ -64,7 +67,9 @@ export function TourSelectPanel(): JSX.Element | null {
 		};
 	}, [isTourSelectOpen, anchorRect, closeTourSelect]);
 
-	const implementedTours = TOURS.filter((t) => !t.comingSoon);
+	const visibleStructure = TOUR_STRUCTURE.filter((item) => !isTourGroup(item) || isPremium || item.id !== "premium");
+	const visibleTours = TOURS.filter((t) => isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id));
+	const implementedTours = visibleTours.filter((t) => !t.comingSoon);
 	const completedCount = implementedTours.filter((t) => completedTourIds.has(t.id)).length;
 
 	const renderTourItem = (tour: TourDefinition, indented: boolean): JSX.Element => {
@@ -106,7 +111,7 @@ export function TourSelectPanel(): JSX.Element | null {
 				</span>
 			</div>
 			<ul className="tsp-list">
-				{TOUR_STRUCTURE.map((item) => {
+				{visibleStructure.map((item) => {
 					if (isTourGroup(item)) {
 						return (
 							<li key={item.id} className="tsp-group">

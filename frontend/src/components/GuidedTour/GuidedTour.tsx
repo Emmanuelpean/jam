@@ -81,10 +81,12 @@ function computePopoverStyle(rect: DOMRect, preferred: TourStep["placement"]): R
 }
 
 /** Expand step-definition placeholders to real DOM ids */
-function expandTargetId(targetId: string, demoJobId: number | null, demoScrapedJobId: number | null): string {
+function expandTargetId(targetId: string, demoJobId: number | null, demoScrapedJobId: number | null, demoScrapingFilterId: number | null): string {
 	if (targetId === "[demo-job-row]") return demoJobId !== null ? `table-row-job-${demoJobId}` : targetId;
 	if (targetId === "[demo-scraped-job-row]")
 		return demoScrapedJobId !== null ? `table-row-scrapedJob-${demoScrapedJobId}` : targetId;
+	if (targetId === "[demo-scraping-filter-row]")
+		return demoScrapingFilterId !== null ? `table-row-scrapingFilter-${demoScrapingFilterId}` : targetId;
 	return targetId;
 }
 
@@ -129,7 +131,7 @@ function setNativeInputValue(el: HTMLInputElement, value: string): void {
 }
 
 export function GuidedTour(): JSX.Element | null {
-	const { isTourActive, activeTourId, endTour, isCleaningUp, demoJobId, demoScrapedJobId } = useTour();
+	const { isTourActive, activeTourId, endTour, isCleaningUp, demoJobId, demoScrapedJobId, demoScrapingFilterId } = useTour();
 	const navigate = useNavigate();
 	const location = useLocation();
 
@@ -235,7 +237,7 @@ export function GuidedTour(): JSX.Element | null {
 		}
 
 		// Poll until the element appears (with non-zero dimensions)
-		const resolvedTargetId = expandTargetId(stepDef.targetId!, demoJobId, demoScrapedJobId);
+		const resolvedTargetId = expandTargetId(stepDef.targetId!, demoJobId, demoScrapedJobId, demoScrapingFilterId);
 		let elapsed = 0;
 		pollRef.current = setInterval(() => {
 			const el = resolveTarget(resolvedTargetId);
@@ -295,7 +297,7 @@ export function GuidedTour(): JSX.Element | null {
 			stopPoll();
 			stopRaf();
 		};
-	}, [step, isTourActive, demoJobId, navigate, stopPoll, stopRaf]);
+	}, [step, isTourActive, demoJobId, demoScrapedJobId, demoScrapingFilterId, navigate, stopPoll, stopRaf]);
 
 	// ── Interactive: waitForSelector / waitForSelectorGone / waitForInput ───
 	useEffect(() => {
@@ -347,7 +349,18 @@ export function GuidedTour(): JSX.Element | null {
 			if (waitForInput) {
 				// Don't auto-advance — just keep the Next button enabled/disabled
 				const el = document.querySelector<HTMLInputElement>(waitForInput);
-				setInputValid(!!el && el.value.trim().length > 0);
+				if (!el) {
+					setInputValid(false);
+				} else if (el.classList.contains("jam-select__input")) {
+					// CustomSelect: the matched element is the search box, not the value.
+					// Check for an actual selected value in the parent select container.
+					const container = el.closest(".jam-select");
+					setInputValid(
+						!!container?.querySelector(".jam-select__single-value, .jam-select__tag")
+					);
+				} else {
+					setInputValid(el.value.trim().length > 0);
+				}
 				return;
 			}
 			let met = false;
@@ -428,6 +441,39 @@ export function GuidedTour(): JSX.Element | null {
 
 	return (
 		<>
+			{/* Blocking overlays — prevent interaction outside the targeted element */}
+			{currentStep.targetId != null && spotlightRect ? (
+				<>
+					<div
+						className="tour-block"
+						style={{ top: 0, left: 0, right: 0, height: spotlightRect.top - SPOTLIGHT_PAD }}
+					/>
+					<div
+						className="tour-block"
+						style={{ top: spotlightRect.bottom + SPOTLIGHT_PAD, left: 0, right: 0, bottom: 0 }}
+					/>
+					<div
+						className="tour-block"
+						style={{
+							top: spotlightRect.top - SPOTLIGHT_PAD,
+							left: 0,
+							width: spotlightRect.left - SPOTLIGHT_PAD,
+							height: spotlightRect.height + SPOTLIGHT_PAD * 2,
+						}}
+					/>
+					<div
+						className="tour-block"
+						style={{
+							top: spotlightRect.top - SPOTLIGHT_PAD,
+							left: spotlightRect.right + SPOTLIGHT_PAD,
+							right: 0,
+							height: spotlightRect.height + SPOTLIGHT_PAD * 2,
+						}}
+					/>
+				</>
+			) : currentStep.targetId == null ? (
+				<div className="tour-block" style={{ top: 0, left: 0, right: 0, bottom: 0 }} />
+			) : null}
 			<div
 				className="tour-spotlight"
 				style={{
@@ -442,7 +488,11 @@ export function GuidedTour(): JSX.Element | null {
 						: { top: "50vh", left: "50vw", width: 0, height: 0 }),
 				}}
 			/>
-			<div id="tour-backdrop" className="tour-backdrop" style={{ opacity: currentStep.targetId == null ? 1 : 0 }} />
+			<div
+				id="tour-backdrop"
+				className="tour-backdrop"
+				style={{ opacity: currentStep.targetId == null ? 1 : 0 }}
+			/>
 			{!waitingForTarget && (
 				<div
 					key={step}

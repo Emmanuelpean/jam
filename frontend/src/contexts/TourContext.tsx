@@ -19,6 +19,8 @@ interface TourContextType {
 	demoJobId: number | null;
 	/** ID of the demo scraped job created for the import-scraped-job tour, null otherwise */
 	demoScrapedJobId: number | null;
+	/** ID of the scraping filter created during the scraping-filters tour, null otherwise */
+	demoScrapingFilterId: number | null;
 }
 
 const TourContext = createContext<TourContextType | undefined>(undefined);
@@ -65,8 +67,9 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	const [completedTourIds, setCompletedTourIds] = useState<Set<string>>(new Set());
 	const [demoJobId, setDemoJobId] = useState<number | null>(null);
 	const [demoScrapedJobId, setDemoScrapedJobId] = useState<number | null>(null);
+	const [demoScrapingFilterId, setDemoScrapingFilterId] = useState<number | null>(null);
 	const { currentUser, updateCurrentUser, token } = useAuth();
-	const { jobs, companies, persons, locations, interviews, jobApplicationUpdates, scrapingFilters, addEntity, deleteEntity, setDemoFilter } =
+	const { jobs, companies, persons, locations, interviews, jobApplicationUpdates, scrapingFilters, addEntity, deleteEntity, setDemoFilter, setTourScrapingFilterIds } =
 		useDataContext();
 	const { showToastError } = useGlobalToast();
 
@@ -86,6 +89,15 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 		const ids = new Set<string>(currentUser.preferences?.completed_tours ?? []);
 		setCompletedTourIds(ids);
 	}, [currentUser]);
+
+	// Detect the scraping filter created during the scraping-filters tour
+	useEffect((): void => {
+		if (activeTourId !== "scraping-filters") return;
+		if (demoScrapingFilterId !== null) return;
+		const snapshot = preInteractiveSnapshot.current;
+		const newFilter = scrapingFilters.find((f) => !snapshot.scrapingFilterIds.has(f.id));
+		if (newFilter) setDemoScrapingFilterId(newFilter.id);
+	}, [activeTourId, scrapingFilters, demoScrapingFilterId]);
 
 	const startTour = useCallback(
 		async (tourId: string): Promise<void> => {
@@ -179,13 +191,17 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					setDemoScrapedJobId(result.data.id);
 				}
 
+				if (tourId === "scraping-filters") {
+					setTourScrapingFilterIds(preInteractiveSnapshot.current.scrapingFilterIds);
+				}
+
 				setIsTourSelectOpen(false);
 				setActiveTourId(tourId);
 			} catch (err: any) {
 				showToastError(`Failed to start tour: ${err?.message ?? "Unknown error"}`);
 			}
 		},
-		[jobs, companies, persons, locations, interviews, jobApplicationUpdates, scrapingFilters, addEntity, setDemoFilter, token, location.pathname, showToastError]
+		[jobs, companies, persons, locations, interviews, jobApplicationUpdates, scrapingFilters, addEntity, setDemoFilter, setTourScrapingFilterIds, token, location.pathname, showToastError]
 	);
 
 	const endTour = useCallback(
@@ -197,6 +213,11 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			if (tourId === "follow-up-email") {
 				setDemoFilter(null);
 				setDemoJobId(null);
+			}
+
+			if (tourId === "scraping-filters") {
+				setDemoScrapingFilterId(null);
+				setTourScrapingFilterIds(null);
 			}
 
 			if (completed && tourId && !completedTourIds.has(tourId)) {
@@ -283,6 +304,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			scrapingFilters,
 			deleteEntity,
 			setDemoFilter,
+			setTourScrapingFilterIds,
 			demoScrapedJobId,
 			token,
 			navigate,
@@ -306,6 +328,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				closeTourSelect,
 				demoJobId,
 				demoScrapedJobId,
+				demoScrapingFilterId,
 			}}
 		>
 			{children}

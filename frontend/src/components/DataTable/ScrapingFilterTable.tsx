@@ -113,7 +113,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	}, [activeTab, show]);
 
 	const renderTabs = (): JSX.Element => (
-		<>
+		<div id={isExclusion ? "scraping-filters-tables" : "favourite-filters-tables"}>
 			<div className="custom-tab-nav">
 				{tabs.map(
 					(tab): JSX.Element => (
@@ -130,7 +130,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 				)}
 			</div>
 			<div className="custom-tab-content">{renderBodyContent()}</div>
-		</>
+		</div>
 	);
 
 	return (
@@ -142,30 +142,31 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 			backdrop={true}
 			keyboard={true}
 			className="data-modal"
-			id={isExclusion ? "scraping-filters-modal" : "favourite-filters-modal"}
 		>
-			<ModalHeader onClose={onHide}>
-				<Modal.Title>{isExclusion ? "Scraped Job Filters" : "Favourite Filters"}</Modal.Title>
-			</ModalHeader>
+			<div id={isExclusion ? "scraping-filters-modal" : "favourite-filters-modal"}>
+				<ModalHeader onClose={onHide}>
+					<Modal.Title>{isExclusion ? "Scraped Job Filters" : "Favourite Filters"}</Modal.Title>
+				</ModalHeader>
 
-			<Modal.Body>
-				<i style={{ margin: "0 9px 9px 9px", display: "block" }}>
-					{isExclusion
-						? 'Filters allow you to filter out specific jobs from your job alerts. For example, if you do not want to view jobs from company "ABC Corp", you can create a filter with Type "Company", Operator "Equals", and Value "ABC Corp".'
-						: "Favourite filters pin matching scraped job alerts to this widget. Jobs matching any active filter will appear here."}
-				</i>
-				{renderTabs()}
-			</Modal.Body>
-			<Modal.Footer>
-				<div className="modal-buttons-container">
-					<ActionButton
-						id="scraping-filter-modal-close-btn"
-						variant="secondary"
-						onClick={onHide}
-						defaultText="Close"
-					/>
-				</div>
-			</Modal.Footer>
+				<Modal.Body>
+					<i style={{ margin: "0 9px 9px 9px", display: "block" }}>
+						{isExclusion
+							? 'Filters allow you to filter out specific jobs from your job alerts. For example, if you do not want to view jobs from company "ABC Corp", you can create a filter with Type "Company", Operator "Equals", and Value "ABC Corp".'
+							: "Favourite filters pin matching scraped job alerts to this widget. Jobs matching any active filter will appear here."}
+					</i>
+					{renderTabs()}
+				</Modal.Body>
+				<Modal.Footer>
+					<div className="modal-buttons-container">
+						<ActionButton
+							id="scraping-filter-modal-close-btn"
+							variant="secondary"
+							onClick={onHide}
+							defaultText="Close"
+						/>
+					</div>
+				</Modal.Footer>
+			</div>
 		</JamModal>
 	);
 };
