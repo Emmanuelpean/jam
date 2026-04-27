@@ -56,15 +56,6 @@ function getDefaultColumnsMap(): Record<EntityType, TableColumn[]> {
 			tableColumns.noteColumn(),
 			tableColumns.createdAtColumn(),
 		],
-		location: [
-			tableColumns.nameColumn(),
-			tableColumns.cityColumn(),
-			tableColumns.postcodeColumn(),
-			tableColumns.countryColumn(),
-			tableColumns.jobCountLocationColumn(),
-			tableColumns.interviewCountLocationColumn(),
-			tableColumns.createdAtColumn(),
-		],
 		aggregator: [
 			tableColumns.nameColumn(),
 			tableColumns.urlColumn(),
@@ -83,7 +74,7 @@ function getDefaultColumnsMap(): Record<EntityType, TableColumn[]> {
 		scrapedJob: [
 			tableColumns.titleColumn(),
 			tableColumns.scrapedCompanyColumn(),
-			tableColumns.scrapedLocationColumn(),
+			tableColumns.locationBadgeColumn(),
 			tableColumns.salaryRangeColumn(),
 			tableColumns.overallScore(),
 			tableColumns.technicalScoreColumn(),

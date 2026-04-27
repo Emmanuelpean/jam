@@ -109,14 +109,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 				group: "Pages",
 				action: () => goTo("/job-application-updates"),
 			},
-			{
-				id: "goto-locations",
-				label: "Locations",
-				icon: getTableIcon("Locations"),
-				group: "Pages",
-				action: () => goTo("/locations"),
-			},
-			{
+{
 				id: "goto-aggregators",
 				label: "Job Aggregators",
 				icon: getTableIcon("Job Aggregators"),

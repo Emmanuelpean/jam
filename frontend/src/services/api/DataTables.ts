@@ -6,7 +6,6 @@ import {
 	JobApplicationUpdateData,
 	JobData,
 	KeywordData,
-	LocationData,
 	PersonData,
 	SpeculativeApplicationData,
 } from "../schemas/DataTables";
@@ -16,7 +15,6 @@ import { ScrapingFilterData } from "../schemas/Services";
 
 export const jobsApi: CrudApi<JobData> = createCrudApi("jobs");
 export const companiesApi: CrudApi<CompanyData> = createCrudApi("companies");
-export const locationsApi: CrudApi<LocationData> = createCrudApi("locations");
 export const keywordsApi: CrudApi<KeywordData> = createCrudApi("keywords");
 export const personsApi: CrudApi<PersonData> = createCrudApi("persons");
 export const aggregatorsApi: CrudApi<AggregatorData> = createCrudApi("aggregators");

@@ -349,25 +349,6 @@ class TestCompaniesPage(BaseTablePage):
     model = models.Company
 
 
-class TestLocationsPage(BaseTablePage):
-    """Test class for Aggregators Page functionality including:
-    - Displaying entries
-    - Adding new entries
-    - Viewing entries
-    - Editing entries
-    - Deleting entries"""
-
-    endpoint = "locations"
-    page_url = "locations"
-    entry_type = "location"
-    test_fixture = "test_locations"
-    test_data = {"city": "Oxford", "postcode": "OX1", "country": "United Kingdom"}
-    required_fields = []
-    columns = ["city", "postcode", "country"]
-    duplicate_fields = ["city", "postcode", "country"]
-    model = models.Location
-
-
 class TestPersonsPage(BaseTablePage):
     """Test class for Aggregators Page functionality including:
     - Displaying entries
@@ -478,24 +459,10 @@ class TestInterviewPage(BaseTablePage):
     def test_modal_interviewers_badge(self) -> None:
         """Test that the person badge is displayed correctly in the modal"""
 
-        self.table_utils.table_row(self.test_entry.id).click()
+        self.table_utils.table_row_click(self.test_entry.id)
         self.modal_utils.wait_for_view_modal()
         self.get_element("modal-view-interview-person-0").click()
         self.person_modal_utils.check_person_view_modal(self.test_entry.interviewers[0])
-
-    def test_table_location_badge_table(self) -> None:
-        """Test that the location badge is displayed correctly in the table"""
-
-        self.get_element("table-row-1-locationBadge").click()
-        self.location_modal_utils.check_location_view_modal(self.test_entry.location)
-
-    def test_modal_location_badge(self) -> None:
-        """Test that the location badge is displayed correctly in the modal"""
-
-        self.table_utils.table_row(self.test_entry.id).click()
-        self.modal_utils.wait_for_view_modal()
-        self.get_element("modal-view-interview-location").click()
-        self.location_modal_utils.check_location_view_modal(self.test_entry.location)
 
 
 class TestJobPage(BaseTablePage):
@@ -643,6 +610,65 @@ class TestJobPage(BaseTablePage):
 
         # Verify the update view modal displays the updated information
         self.jobApplicationUpdate_modal_utils.check_update_view_modal(update, False)
+
+    #
+    # def test_location_badge_location_only(self) -> None:
+    #     """Test clicking a location badge for a job that has a location but no attendance type"""
+    #
+    #     job = self._make_job(location="London, UK")
+    #     self.driver.refresh()
+    #     self.table_utils.set_page_item_select("100")
+    #
+    #     badge = self.get_element(f"table-row-{job.id}-locationBadge")
+    #     assert badge.text == "LONDON, UK"
+    #     badge.click()
+    #
+    #     modal = self.get_element("modal-view-geolocation")
+    #     assert "London, UK" in modal.text
+    #
+    # def test_location_badge_attendance_only(self) -> None:
+    #     """Test clicking a location badge for a job that has an attendance type but no location"""
+    #
+    #     job = self._make_job(attendance_type="on-site")
+    #     self.driver.refresh()
+    #     self.table_utils.set_page_item_select("100")
+    #
+    #     badge = self.get_element(f"table-row-{job.id}-locationBadge")
+    #     assert badge.text == "ON-SITE"
+    #     badge.click()
+    #
+    #     modal = self.get_element("modal-view-geolocation")
+    #     assert "On-site" in modal.text
+    #
+    # def test_location_badge_remote(self) -> None:
+    #     """Test clicking a location badge for a job with remote attendance type and no location"""
+    #
+    #     job = self._make_job(attendance_type="remote")
+    #     self.driver.refresh()
+    #     self.table_utils.set_page_item_select("100")
+    #
+    #     badge = self.get_element(f"table-row-{job.id}-locationBadge")
+    #     assert badge.text == "REMOTE"
+    #     badge.click()
+    #
+    #     modal = self.get_element("modal-view-geolocation")
+    #     assert "Remote" in modal.text
+    #     assert "This job is fully remote" in modal.text
+    #
+    # def test_location_badge_location_and_attendance(self) -> None:
+    #     """Test clicking a location badge for a job that has both a location and a non-remote attendance type"""
+    #
+    #     job = self._make_job(location="Berlin, Germany", attendance_type="hybrid")
+    #     self.driver.refresh()
+    #     self.table_utils.set_page_item_select("100")
+    #
+    #     badge = self.get_element(f"table-row-{job.id}-locationBadge")
+    #     assert badge.text == "BERLIN, GERMANY (HYBRID)"
+    #     badge.click()
+    #
+    #     modal = self.get_element("modal-view-geolocation")
+    #     assert "Berlin, Germany" in modal.text
+    #     assert "Hybrid" in modal.text
 
 
 class TestSpeculativeApplicationPage(BaseTablePage):

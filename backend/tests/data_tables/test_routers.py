@@ -8,11 +8,12 @@ from CRUDTestBase to ensure consistent testing of standard CRUD operations, incl
 validation, and error handling. Additional custom endpoint tests are included where applicable.
 """
 
+from app.data_tables import models
 from app.data_tables import schemas
+from app.data_tables.models import Geolocation
 from tests.conftest import CRUDTestBase
 from tests.utils.test_data import (
     COMPANY_DATA,
-    LOCATION_DATA,
     PERSON_DATA,
     AGGREGATOR_DATA,
     KEYWORD_DATA,
@@ -84,18 +85,6 @@ class TestCompanyCRUD(CRUDTestBase):
         response = authorised_clients[1].get(f"{self.endpoint}/?id=1")
         assert response.status_code == 200
         assert len(response.json()) == 0
-
-
-class TestLocationCRUD(CRUDTestBase):
-    endpoint = "/locations"
-    create_schema = schemas.LocationCreate
-    out_schema = schemas.LocationOut
-    test_data_ref = "test_locations"
-    create_data = LOCATION_DATA
-    update_data = {
-        "postcode": "OX5 1HN",
-        "id": 1,
-    }
 
 
 class TestFileCRUD(CRUDTestBase):
@@ -217,7 +206,6 @@ class TestJobCRUD(CRUDTestBase):
     test_data_ref = "test_jobs"
     required_fixture = [
         "test_persons",
-        "test_locations",
         "test_keywords",
         "test_companies",
         "test_aggregators",
@@ -253,7 +241,7 @@ class TestInterviewCRUD(CRUDTestBase):
     create_schema = schemas.InterviewCreate
     out_schema = schemas.InterviewOut
     test_data_ref = "test_interviews"
-    required_fixture = ["test_jobs", "test_locations", "test_persons"]
+    required_fixture = ["test_jobs", "test_persons"]
     create_data = INTERVIEW_DATA
     update_data = {
         "job_id": 1,
@@ -276,3 +264,56 @@ class TestSpeculativeApplicationCRUD(CRUDTestBase):
         "note": "Interview went very well - positive feedback",
         "id": 1,
     }
+
+
+# ------------------------------------------------- GEOLOCATION CASCADE ------------------------------------------------
+
+
+class TestGeolocationCascade:
+    """Tests for geolocation foreign key cascade behavior on Job and Interview."""
+
+    def test_deleting_job_does_not_delete_geolocation(self, session, test_jobs, test_geolocations) -> None:
+        """Deleting a job with a geolocation does not delete the geolocation."""
+        job = next(j for j in test_jobs if j.geolocation_id is not None)
+        geolocation_id = job.geolocation_id
+
+        session.delete(job)
+        session.commit()
+
+        geo = session.query(Geolocation).filter_by(id=geolocation_id).first()
+        assert geo is not None
+
+    def test_deleting_geolocation_sets_job_fk_to_null(self, session, test_jobs, test_geolocations) -> None:
+        """Deleting a geolocation sets the job's geolocation_id to NULL (ondelete=SET NULL)."""
+        job = next(j for j in test_jobs if j.geolocation_id is not None)
+        geolocation_id = job.geolocation_id
+
+        geolocation = session.query(Geolocation).filter_by(id=geolocation_id).first()
+        session.delete(geolocation)
+        session.commit()
+
+        session.refresh(job)
+        assert job.geolocation_id is None
+
+    def test_deleting_interview_does_not_delete_geolocation(self, session, test_interviews, test_geolocations) -> None:
+        """Deleting an interview with a geolocation does not delete the geolocation."""
+        interview = next(i for i in test_interviews if i.geolocation_id is not None)
+        geolocation_id = interview.geolocation_id
+
+        session.delete(interview)
+        session.commit()
+
+        geo = session.query(Geolocation).filter_by(id=geolocation_id).first()
+        assert geo is not None
+
+    def test_deleting_geolocation_sets_interview_fk_to_null(self, session, test_interviews, test_geolocations) -> None:
+        """Deleting a geolocation sets the interview's geolocation_id to NULL (ondelete=SET NULL)."""
+        interview = next(i for i in test_interviews if i.geolocation_id is not None)
+        geolocation_id = interview.geolocation_id
+
+        geolocation = session.query(Geolocation).filter_by(id=geolocation_id).first()
+        session.delete(geolocation)
+        session.commit()
+
+        session.refresh(interview)
+        assert interview.geolocation_id is None

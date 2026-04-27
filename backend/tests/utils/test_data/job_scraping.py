@@ -856,7 +856,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/3789012345",
         "scrape_datetime": "2025-08-15T14:32:18.123456+00:00",
         "service_log_id": 1,
-        "geolocation_id": 4,
+        "geolocation_id": 18,
         "deadline": "2024-01-01 00:00:00",
         "parsed_location": "San Francisco",
     },
@@ -895,7 +895,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/1122334455",
         "scrape_datetime": "2025-08-28T16:20:45.456789+00:00",
         "service_log_id": 1,
-        "geolocation_id": 1,
+        "geolocation_id": 19,
         "parsed_location": "New York",
     },
     {
@@ -938,7 +938,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/4123456789",
         "scrape_datetime": "2025-09-01T10:15:30.123456+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 20,
         "parsed_location": "London, UK",
     },
     {
@@ -959,7 +959,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://totaljobs.com/job/flutter-healthcare-567890",
         "scrape_datetime": "2025-09-03T14:22:45.789012+00:00",
         "service_log_id": 1,
-        "geolocation_id": 16,
+        "geolocation_id": 21,
         "parsed_location": "UK",
     },
     {
@@ -980,7 +980,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://reed.co.uk/jobs/ml-engineer-edinburgh/345678",
         "scrape_datetime": "2025-09-05T09:33:12.345678+00:00",
         "service_log_id": 1,
-        "geolocation_id": 15,
+        "geolocation_id": 22,
         "parsed_location": "Edinburgh, UK",
     },
     {
@@ -1001,7 +1001,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://jobsite.co.uk/job/fullstack-js-manchester-901234",
         "scrape_datetime": "2025-09-09T13:20:15.567890+00:00",
         "service_log_id": 1,
-        "geolocation_id": 14,
+        "geolocation_id": 23,
         "parsed_location": "Manchester, UK",
     },
     {
@@ -1017,7 +1017,7 @@ SCRAPED_JOB_DATA = [
         "location": "London",
         "location_city": "London",
         "exclusion_filter_id": 2,
-        "geolocation_id": 3,
+        "geolocation_id": 24,
         "parsed_location": "London",
     },
     {
@@ -1052,7 +1052,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1110",
         "scrape_datetime": "2025-01-15T10:00:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 20,
         "parsed_location": "London, UK",
     },
     {
@@ -1074,7 +1074,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1111",
         "scrape_datetime": "2025-01-14T11:30:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 14,
+        "geolocation_id": 23,
         "parsed_location": "Manchester, UK",
     },
     {
@@ -1096,7 +1096,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1116",
         "scrape_datetime": "2025-01-09T12:00:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 25,
         "parsed_location": "Leeds, UK",
     },
     {
@@ -1118,7 +1118,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1117",
         "scrape_datetime": "2025-01-08T15:45:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 26,
         "parsed_location": "Liverpool, UK",
     },
     {
@@ -1140,7 +1140,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1118",
         "scrape_datetime": "2025-01-07T10:30:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 27,
         "parsed_location": "Cardiff, UK",
     },
     {
@@ -1162,7 +1162,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1119",
         "scrape_datetime": "2025-01-06T09:00:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 28,
         "parsed_location": "Newcastle, UK",
     },
     {
@@ -1185,7 +1185,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1125",
         "scrape_datetime": "2024-12-31T10:00:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 20,
         "parsed_location": "London, UK",
     },
     {
@@ -1208,7 +1208,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1126",
         "scrape_datetime": "2024-12-30T11:30:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 14,
+        "geolocation_id": 23,
         "parsed_location": "Manchester, UK",
     },
     {
@@ -1231,7 +1231,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1127",
         "scrape_datetime": "2024-12-29T14:15:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 29,
         "parsed_location": "Birmingham, UK",
     },
     {
@@ -1254,7 +1254,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1128",
         "scrape_datetime": "2024-12-28T16:00:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 15,
+        "geolocation_id": 22,
         "parsed_location": "Edinburgh, UK",
     },
     {
@@ -1277,7 +1277,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1129",
         "scrape_datetime": "2024-12-27T09:30:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 30,
         "parsed_location": "Bristol, UK",
     },
     {
@@ -1300,7 +1300,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1130",
         "scrape_datetime": "2024-12-26T12:45:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 31,
         "parsed_location": "Glasgow, UK",
     },
     {
@@ -1323,7 +1323,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1131",
         "scrape_datetime": "2024-12-25T15:00:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 25,
         "parsed_location": "Leeds, UK",
     },
     {
@@ -1346,7 +1346,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1132",
         "scrape_datetime": "2024-12-24T08:15:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 26,
         "parsed_location": "Liverpool, UK",
     },
     {
@@ -1447,7 +1447,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1138",
         "scrape_datetime": "2024-12-18T14:00:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 32,
         "parsed_location": "Cambridge, UK",
     },
     {
@@ -1466,7 +1466,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1139",
         "scrape_datetime": "2024-12-17T16:30:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 33,
         "parsed_location": "Oxford, UK",
     },
     {
@@ -1485,7 +1485,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1140",
         "scrape_datetime": "2024-12-16T08:45:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 34,
         "parsed_location": "Reading, UK",
     },
     {
@@ -1503,7 +1503,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1141",
         "scrape_datetime": "2024-12-15T12:15:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 35,
         "parsed_location": "Brighton, UK",
     },
     {
@@ -1521,7 +1521,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1142",
         "scrape_datetime": "2024-12-14T14:45:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 36,
         "parsed_location": "Southampton, UK",
     },
     {
@@ -1543,7 +1543,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1143",
         "scrape_datetime": "2024-12-13T10:00:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 37,
         "parsed_location": "Nottingham, UK",
     },
     {
@@ -1565,7 +1565,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1146",
         "scrape_datetime": "2024-12-10T15:45:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 14,
+        "geolocation_id": 23,
         "parsed_location": "Manchester, UK",
     },
     {
@@ -1587,7 +1587,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1147",
         "scrape_datetime": "2024-12-09T09:00:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 29,
         "parsed_location": "Birmingham, UK",
     },
     {
@@ -1609,7 +1609,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1148",
         "scrape_datetime": "2024-12-08T10:30:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 15,
+        "geolocation_id": 22,
         "parsed_location": "Edinburgh, UK",
     },
     {
@@ -1631,7 +1631,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1149",
         "scrape_datetime": "2024-12-07T12:00:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 30,
         "parsed_location": "Bristol, UK",
     },
     {
@@ -1653,7 +1653,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1153",
         "scrape_datetime": "2024-12-03T10:15:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 31,
         "parsed_location": "Glasgow, UK",
     },
     {
@@ -1675,7 +1675,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1154",
         "scrape_datetime": "2024-12-02T11:45:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 25,
         "parsed_location": "Leeds, UK",
     },
     {
@@ -1697,7 +1697,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1155",
         "scrape_datetime": "2024-12-01T13:30:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 26,
         "parsed_location": "Liverpool, UK",
     },
     {
@@ -1719,7 +1719,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1156",
         "scrape_datetime": "2024-11-30T15:00:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 27,
         "parsed_location": "Cardiff, UK",
     },
     {
@@ -1741,7 +1741,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1157",
         "scrape_datetime": "2024-11-29T09:45:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 28,
         "parsed_location": "Newcastle, UK",
     },
     {
@@ -1763,7 +1763,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1158",
         "scrape_datetime": "2024-11-28T11:15:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 20,
         "parsed_location": "London, UK",
     },
     {
@@ -1785,7 +1785,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1159",
         "scrape_datetime": "2024-11-27T13:45:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 14,
+        "geolocation_id": 23,
         "parsed_location": "Manchester, UK",
     },
     # Scraping Failed
@@ -1960,7 +1960,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1112",
         "scrape_datetime": "2025-01-13T09:15:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 29,
         "parsed_location": "Birmingham, UK",
     },
     {
@@ -2003,7 +2003,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1113",
         "scrape_datetime": "2025-01-12T14:45:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 15,
+        "geolocation_id": 22,
         "parsed_location": "Edinburgh, UK",
     },
     {
@@ -2024,7 +2024,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1114",
         "scrape_datetime": "2025-01-11T16:20:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 30,
         "parsed_location": "Bristol, UK",
     },
     # Skipped
@@ -2048,7 +2048,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1115",
         "scrape_datetime": "2025-01-10T08:30:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 31,
         "parsed_location": "Glasgow, UK",
     },
     {
@@ -2071,7 +2071,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1144",
         "scrape_datetime": "2024-12-12T11:30:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 38,
         "parsed_location": "Sheffield, UK",
     },
     {
@@ -2094,7 +2094,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1145",
         "scrape_datetime": "2024-12-11T13:15:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 3,
+        "geolocation_id": 20,
         "parsed_location": "London, UK",
     },
     # Closed
@@ -2118,7 +2118,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1159",
         "scrape_datetime": "2024-11-27T13:45:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 14,
+        "geolocation_id": 23,
         "parsed_location": "Manchester, UK",
     },
     # Scraping retry
@@ -2146,7 +2146,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/job_1159",
         "scrape_datetime": "2024-11-27T13:45:00.000+00:00",
         "service_log_id": 1,
-        "geolocation_id": 14,
+        "geolocation_id": 23,
         "parsed_location": "Manchester, UK",
     },
 ]

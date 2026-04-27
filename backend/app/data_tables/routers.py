@@ -44,37 +44,6 @@ company_router = generate_data_table_crud_router(
 )
 
 
-# Location router
-def transform_location(location_data: dict, db: Session, entry_data: dict | None = None) -> dict:
-    """Geolocate the location data before creating/updating the record.
-    :param location_data: The location data dictionary.
-    :param db: The database session.
-    :param entry_data: optional original data of the entry
-    :return: The transformed location data dictionary with geolocation_id set."""
-
-    if entry_data:
-        location_data = location_data.copy()
-        location_data.update(entry_data)
-    params = {
-        "postcode": location_data.get("postcode"),
-        "city": location_data.get("city"),
-        "country": location_data.get("country"),
-    }
-    geolocation = geocode_location(params, db) if params else None
-    return {"geolocation_id": geolocation.id if geolocation else None}
-
-
-location_router = generate_data_table_crud_router(
-    table_model=models.Location,
-    create_schema=schemas.LocationCreate,
-    update_schema=schemas.LocationUpdate,
-    out_schema=schemas.LocationOut,
-    endpoint="locations",
-    not_found_msg="Location not found",
-    transform=transform_location,
-)
-
-
 # File router
 file_router = generate_data_table_crud_router(
     table_model=models.File,
@@ -137,6 +106,20 @@ def download_file(
 # --------------------------------------------------- COMPLEX TABLES ---------------------------------------------------
 
 
+def geocode_entry_location(entry: dict, db: Session, entry_data: dict | None = None) -> dict:
+    """Geocode the location string on Job create/update.
+    :param entry: The entry data dictionary.
+    :param db: The database session.
+    :param entry_data: optional original data of the entry
+    :return: Dictionary with geolocation_id set."""
+
+    location = entry.get("location") or (entry_data or {}).get("location")
+    if location and location.strip():
+        geolocation = geocode_location(location.strip(), db)
+        return {"geolocation_id": geolocation.id if geolocation else None}
+    return {"geolocation_id": None}
+
+
 # Person router
 person_router = generate_data_table_crud_router(
     table_model=models.Person,
@@ -155,6 +138,7 @@ job_router = generate_data_table_crud_router(
     out_schema=schemas.JobOut,
     endpoint="jobs",
     not_found_msg="Job not found",
+    transform=geocode_entry_location,
     many_to_many_fields={
         "keywords": {
             "table": models.job_keyword_mapping,
@@ -179,6 +163,7 @@ interview_router = generate_data_table_crud_router(
     out_schema=schemas.InterviewOut,
     endpoint="interviews",
     not_found_msg="Interview not found",
+    transform=geocode_entry_location,
     many_to_many_fields={
         "interviewers": {
             "table": models.interview_interviewer_mapping,

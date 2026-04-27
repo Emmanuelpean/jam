@@ -148,7 +148,7 @@ def export_all(
                 get_model_rows(job, JOB_FIELDS)
                 + [
                     job.company.name if job.company else "",
-                    job.location.name if job.location else "",
+                    job.location or "",
                     job.source_aggregator.name if job.source_aggregator else "",
                     job.application_aggregator.name if job.application_aggregator else "",
                     "; ".join(k.name for k in job.keywords),

@@ -145,7 +145,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 			: [
 					tableColumns.titleColumn(),
 					tableColumns.scrapedCompanyColumn(),
-					tableColumns.scrapedLocationColumn(),
+					tableColumns.locationBadgeColumn(),
 					tableColumns.salaryRangeColumn(),
 					tableColumns.overallScore(),
 					tableColumns.urlGenericColumn(),

@@ -535,7 +535,6 @@ class DataModalUtils(BaseUtilsClass):
                     "operator",
                     "country",
                     "company_id",
-                    "location_id",
                     "job_id",
                     "aggregator_id",
                     "job_application_id",
@@ -582,8 +581,6 @@ class DataModalUtils(BaseUtilsClass):
             self.check_aggregator_view_modal(entry)
         elif self.entry_type == "company":
             self.check_company_view_modal(entry)
-        elif self.entry_type == "location":
-            self.check_location_view_modal(entry)
         elif self.entry_type == "person":
             self.check_person_view_modal(entry)
         elif self.entry_type == "jobApplicationUpdate":
@@ -632,36 +629,6 @@ class DataModalUtils(BaseUtilsClass):
         # Close modal
         self.cancel_button("view").click()
         self.wait_for_view_modal_close()
-
-    def check_location_view_modal(self, entry: models.Location) -> None:
-        """Helper method to test the view modal for a location entry"""
-
-        modal = self.wait_for_view_modal()
-        WebDriverWait(self.driver, 30).until(lambda d: "Finding location on map..." not in modal.text)
-        if (
-            "No mappable locations found" in modal.text
-            or "This location could not be found" in modal.text
-            or "An error occurred when trying to locate this entry" in modal.text
-        ):
-            return
-
-        # Verify modal contains the entry information
-        expected = (
-            f"Location Details\nCity\n{entry.city}\nPostcode\n{entry.postcode}"
-            f"\nCountry\n{entry.country}\n"
-            f"Location on Map\n+\n−\nLeaflet | © OpenStreetMap contributors © CARTO\n"
-        )
-        if entry.jobs:
-            expected += f"Jobs\n({len(entry.jobs)})\n"
-        if entry.interviews:
-            expected += f"Interviews\n({len(entry.interviews)})\n"
-        expected += "Close\nEdit"
-        assert modal.text == expected
-
-        # Close modal
-        self.cancel_button("view").click()
-        self.wait_for_view_modal_close()
-        return
 
     def check_company_view_modal(self, entry: models.Company) -> None:
         """Helper method to test the view modal for a company entry"""
@@ -723,7 +690,7 @@ class DataModalUtils(BaseUtilsClass):
         if entry.attendance_type and not entry.location:
             expected += f"Location\n{entry.attendance_type.upper()}\n"
         elif entry.location:
-            expected += "Location\n" f"{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
+            expected += "Location\n" f"{entry.location.upper()} ({entry.attendance_type.upper()})\n"
         else:
             expected += format_field("Location", None)
 
@@ -789,9 +756,9 @@ class DataModalUtils(BaseUtilsClass):
         if entry.attendance_type and not entry.location:
             expected += f"Location\n{entry.attendance_type.upper()}\n"
         elif entry.attendance_type and entry.location:
-            expected += f"Location\n{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
+            expected += f"Location\n{entry.location.upper()} ({entry.attendance_type.upper()})\n"
         elif not entry.attendance_type and entry.location:
-            expected += f"Location\n{entry.location.name.upper()}\n"
+            expected += f"Location\n{entry.location.upper()}\n"
         else:
             expected += format_field("Location", None)
 
@@ -1820,10 +1787,6 @@ class BaseTest(BaseUtils):
     keyword_modal_utils: DataModalUtils = None
     keyword_table_utils: DataTableUtils = None
 
-    # Location
-    location_modal_utils: DataModalUtils = None
-    location_table_utils: DataTableUtils = None
-
     # Person
     person_modal_utils: DataModalUtils = None
     person_table_utils: DataTableUtils = None
@@ -1890,7 +1853,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -1924,7 +1887,6 @@ class BaseTest(BaseUtils):
                 "company",
                 "aggregator",
                 "keyword",
-                "location",
                 "person",
                 "job",
                 "interview",

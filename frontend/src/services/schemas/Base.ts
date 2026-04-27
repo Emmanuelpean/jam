@@ -8,7 +8,8 @@ export interface OwnedOut extends BaseOut {
 	owner_id: number;
 }
 
-export interface GeoLocationData {
+export interface GeoLocationData extends BaseOut {
+	query: string;
 	latitude: number | null;
 	longitude: number | null;
 	city: string | null;

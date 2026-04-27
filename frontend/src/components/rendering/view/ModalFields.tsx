@@ -237,7 +237,7 @@ export const modalViewFields = {
 	locationBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location",
 		label: "Location",
-		render: (params: RenderParams) => renderFunctions.LocationBadge({ ...params, view: true }, false),
+		render: (params: RenderParams) => renderFunctions.LocationBadge({ ...params, view: true }),
 		...overrides,
 	}),
 
@@ -306,20 +306,12 @@ export const modalViewFields = {
 
 	// ----------------------------------------------------- OTHER -----------------------------------------------------
 
-	locationMap: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	geolocationMap: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location_map",
 		label: "Location on Map",
 		type: "custom",
 		render: renderFunctions.locationMap,
-		...overrides,
-	}),
-
-	scrapedLocationMap: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "location_map",
-		label: "Location on Map",
-		type: "custom",
-		render: renderFunctions.scrapedLocationMap,
-		displayCondition: (item) => "location" in item && !!item.location,
+		displayCondition: (item): boolean => "location" in item && !!item.location,
 		...overrides,
 	}),
 
@@ -399,12 +391,6 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	accordionInterviewTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "interviews",
-		render: (param) => renderFunctions.AccordionInterviewTable(param, "location_id"),
-		...overrides,
-	}),
-
 	accordionInterviewTablePerson: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "interviews",
 		render: (param) => renderFunctions.AccordionInterviewTable(param, "interviewers"),
@@ -445,12 +431,6 @@ export const modalViewFields = {
 	accordionJobTableKeyword: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "jobs",
 		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "keywords"),
-		...overrides,
-	}),
-
-	accordionJobTableLocation: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "jobs",
-		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "location_id"),
 		...overrides,
 	}),
 

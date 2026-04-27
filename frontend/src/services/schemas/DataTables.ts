@@ -38,23 +38,6 @@ export interface CompanyData extends OwnedOut {
 	jobs: OwnedOut[];
 }
 
-// ------------------------------------------------------ LOCATION -----------------------------------------------------
-
-export interface LocationDataTransform {
-	city?: string | null;
-	postcode?: string | null;
-	country?: string | null;
-}
-
-export interface LocationData extends OwnedOut {
-	city?: string | null;
-	postcode?: string | null;
-	country?: string | null;
-	name: string;
-	short_name: string;
-	geolocation: GeoLocationData | null;
-}
-
 // ------------------------------------------------------- PERSON ------------------------------------------------------
 
 export interface PersonTransform {
@@ -118,7 +101,7 @@ export interface JobDataTransform {
 	source_type: string | null;
 	recruiter_id: number | null;
 	recruitment_company_id: number | null;
-	location_id: number | null;
+	location: string | null;
 	application_date: Date | null;
 	application_status: string | null;
 	applied_via: string | null;
@@ -146,7 +129,8 @@ export interface JobData extends OwnedOut {
 	company_id: number | null;
 	source_aggregator_id: number | null;
 	source_type: string | null;
-	location_id: number | null;
+	location: string | null;
+	geolocation: GeoLocationData | null;
 	recruiter_id: number | null;
 	recruitment_company_id: number | null;
 	followup_snooze_datetime: Date | null;
@@ -178,7 +162,7 @@ export interface EnrichedJobData extends JobData {
 export interface InterviewDataTransform {
 	date: Date;
 	type: string;
-	location_id: number | null;
+	location: string | null;
 	job_id: number;
 	interviewers: number[];
 	note: string | null;
@@ -188,7 +172,8 @@ export interface InterviewDataTransform {
 export interface InterviewData extends OwnedOut {
 	date: Date;
 	type: string;
-	location_id: number | null;
+	location: string | null;
+	geolocation: GeoLocationData | null;
 	job_id: number;
 	interviewers: number[];
 	note: string | null;

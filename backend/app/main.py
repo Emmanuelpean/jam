@@ -72,7 +72,6 @@ async def demo_schema_middleware(request: Request, call_next):
 # Data table routers
 app.include_router(data_table_routers.company_router)
 app.include_router(data_table_routers.person_router)
-app.include_router(data_table_routers.location_router)
 app.include_router(data_table_routers.job_router)
 app.include_router(data_table_routers.aggregator_router)
 app.include_router(data_table_routers.interview_router)

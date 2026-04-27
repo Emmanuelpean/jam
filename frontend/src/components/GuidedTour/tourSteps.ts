@@ -160,30 +160,12 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		hideNextButton: true,
 	},
 	{
-		id: "add-location",
-		targetId: "add-button-location",
+		id: "job-location",
+		targetId: "location-form-group",
 		title: "Location",
-		content: "Click the + button to add a new location for this job.",
+		content:
+			"Type a location for this job - e.g. 'London, UK'. JAM will geocode it automatically so it appears on the map.",
 		placement: "right",
-		waitForSelector: '.modal.show input[name="city"]',
-		hideNextButton: true,
-	},
-	{
-		id: "location-city",
-		targetId: "city",
-		title: "Enter a City",
-		content: "Type a city name to continue.",
-		placement: "bottom",
-		waitForInput: '.modal.show input[name="city"]',
-	},
-	{
-		id: "save-location",
-		targetId: "modal-edit-location-confirm-button",
-		title: "Save the Location",
-		content: "Click to save. This location will be available to reuse on future job applications.",
-		placement: "top",
-		waitForSelectorGone: '.modal.show input[name="city"]',
-		hideNextButton: true,
 	},
 	{
 		id: "job-salary",
@@ -460,9 +442,8 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		targetId: "company_id-form-group",
 		title: "Check Company & Location",
 		content:
-			"JAM automatically tries to match the scraped company and location to entries you've already created. " +
-			"These fields are highlighted when a match is found — always verify they're correct before importing, " +
-			"as a partial match could link the job to the wrong entry.",
+			"JAM automatically tries to match the scraped company to one you've already created. " +
+			"The field is highlighted when a match is found — always verify it's correct before importing.",
 		placement: "right",
 	},
 	{

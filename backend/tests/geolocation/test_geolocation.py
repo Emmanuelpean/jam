@@ -150,6 +150,8 @@ class TestRateLimiting:
         original_get = geolocation_module.requests.get
 
         def tracking_get(*args, **kwargs):
+            """Thread-safe wrapper around requests.get that tracks call times."""
+
             with lock:
                 call_times.append(time.monotonic())
             return original_get(*args, **kwargs)
@@ -169,35 +171,3 @@ class TestRateLimiting:
         for i in range(1, len(call_times)):
             gap = call_times[i] - call_times[i - 1]
             assert gap >= 0.9, f"Gap between call {i - 1} and {i} was only {gap:.3f}s"
-
-
-class TestGeolocationCascade:
-    """Tests for geolocation foreign key cascade behavior."""
-
-    def test_deleting_location_does_not_delete_geolocation(self, session, test_locations, test_geolocations) -> None:
-        """Deleting a location with a geolocation sets geolocation_id to NULL but does not delete the geolocation."""
-
-        location = test_locations[0]
-        geolocation_id = location.geolocation_id
-        assert geolocation_id is not None
-
-        session.delete(location)
-        session.commit()
-
-        # Geolocation should still exist
-        geo = session.query(Geolocation).filter_by(id=geolocation_id).first()
-        assert geo is not None
-
-    def test_deleting_geolocation_sets_location_fk_to_null(self, session, test_locations, test_geolocations) -> None:
-        """Deleting a geolocation sets the location's geolocation_id to NULL (ondelete=SET NULL)."""
-
-        location = test_locations[0]
-        geolocation_id = location.geolocation_id
-        assert geolocation_id is not None
-
-        geolocation = session.query(Geolocation).filter_by(id=geolocation_id).first()
-        session.delete(geolocation)
-        session.commit()
-
-        session.refresh(location)
-        assert location.geolocation_id is None

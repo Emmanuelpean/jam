@@ -11,7 +11,6 @@ import {
 	JobApplicationUpdateData,
 	JobData,
 	KeywordData,
-	LocationData,
 	PersonData,
 } from "../../../services/schemas/DataTables";
 import JobsTable from "../../DataTable/JobTable";
@@ -21,6 +20,7 @@ import { formatTimedelta, toDdMmYyyy, toDdMmYyyyHhMm } from "../../../utils/Time
 import {
 	getAdminIcon,
 	getApplicationStatusBadgeClass,
+	getLocationIcon,
 	getTableIcon,
 	getTrueFalseBadge,
 	getUpdateTypeIcon,
@@ -430,13 +430,7 @@ export const renderFunctions = {
 	},
 
 	locationMap: (param: RenderParams): ReactNode => {
-		const location: LocationData = param.item;
-		const locations: LocationData[] = location ? [location] : [];
-		return <LocationMap locations={locations} />;
-	},
-
-	scrapedLocationMap: (param: RenderParams): ReactNode => {
-		return <LocationMap locations={[param.item]} scrollWheelZoom={false} />;
+		return <LocationMap geolocatedEntry={[param.item]} />;
 	},
 
 	lastUpdateDays: (params: RenderParams): ReactNode => {
@@ -476,11 +470,6 @@ export const renderFunctions = {
 	},
 
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
-
-	_interviewCount: (param: RenderParams, key: keyof InterviewData): number => {
-		const ctx: DataContextValue = param.dataContext;
-		return filterByKey(ctx.interviews, key, param.item?.id).length;
-	},
 
 	_jobCount: (param: RenderParams, key: keyof JobData): number => {
 		const ctx: DataContextValue = param.dataContext;
@@ -540,47 +529,22 @@ export const renderFunctions = {
 		}
 	},
 
-	LocationBadge: (param: RenderParams, shortName: boolean = false): ReactNode => {
-		const ctx: DataContextValue = param.dataContext;
-		const location: LocationData | undefined = getJamData(ctx.locations, param.item?.location_id);
-		const attendanceType: string | null = param.item?.attendance_type;
-
-		let icon: string;
-		if (attendanceType === "on-site") {
-			icon = "building";
-		} else if (attendanceType === "hybrid") {
-			icon = "house-door";
-		} else {
-			icon = "house";
-		}
-
-		let attendanceString: string | null =
-			attendanceTypeOptions.filter((option: SelectOption): boolean => option.value === attendanceType)[0]
-				?.label || null;
-
-		let locationName: string | null = null;
-		if (shortName && location) {
-			locationName = location.short_name;
-		} else if (!shortName && location) {
-			locationName = location.name;
-		}
-
-		let displayText: string | null = null;
-		if (locationName && attendanceString) {
-			displayText = `${locationName} (${attendanceString})`;
-		} else if (locationName) {
-			displayText = locationName;
-		} else if (attendanceString) {
-			displayText = attendanceString;
-		} else {
-			return null;
-		}
-
-		if (displayText) {
-			return <LocationBadge item={location} badgeId={param.id} icon={icon} displayText={displayText} />;
-		} else {
-			return null;
-		}
+	LocationBadge: (param: RenderParams): ReactNode => {
+		const locationString: string | null = (param.item as ScrapedJobData).parsed_location ?? param.item.location;
+		if (!locationString && !param.item?.attendance_type) return null;
+		const attendanceLabel: string | null =
+			attendanceTypeOptions.find((o: SelectOption): boolean => o.value === param.item.attendance_type)?.label ??
+			null;
+		let displayText: string = locationString || attendanceLabel || "";
+		if (locationString && attendanceLabel) displayText = `${locationString} (${attendanceLabel})`;
+		return (
+			<LocationBadge
+				item={param.item}
+				badgeId={param.id}
+				displayText={displayText}
+				icon={getLocationIcon(param.item.attendance_type)}
+			/>
+		);
 	},
 
 	CompanyBadge: (param: RenderParams): ReactNode => {

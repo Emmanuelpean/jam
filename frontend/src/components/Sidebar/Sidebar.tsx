@@ -123,7 +123,6 @@ export const Sidebar = (): JSX.Element => {
 			text: "Other",
 			position: "top",
 			submenu: [
-				{ path: "/locations", text: "Locations" },
 				{ path: "/aggregators", text: "Job Aggregators" },
 				{ path: "/keywords", text: "Tags" },
 				{ path: "/interviews", text: "Interviews" },

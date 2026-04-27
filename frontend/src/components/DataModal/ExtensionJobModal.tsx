@@ -12,15 +12,12 @@ import { modalViewFields } from "../rendering/view/ModalFields";
 import { findClosestOption, findExactOption, useFormOptions } from "../rendering/form/FormOptions";
 import { getApplicationStatusBadgeClass } from "../rendering/view/Icons";
 import { useAuth } from "../../contexts/AuthContext";
-import { GeoLocationData } from "../../services/schemas/Base";
 import { CompanyModal } from "./CompanyModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { KeywordModal } from "./KeywordModal";
-import { LocationModal } from "./LocationModal";
-import { JobData, JobDataTransform, LocationDataTransform } from "../../services/schemas/DataTables";
+import { JobData, JobDataTransform } from "../../services/schemas/DataTables";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
-import { geolocationApi } from "../../services/api/Others";
 
 export interface ExtensionJobData {
 	title: string;
@@ -35,12 +32,10 @@ export interface ExtensionJobData {
 	platform: string | null;
 	application_status: string | null;
 	deadline?: string | null;
-	geolocation?: GeoLocationData | null;
 }
 
 export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataModalProps>(
 	({ size = "xl" }: JamDataModalProps, ref): JSX.Element => {
-		const locationModalRef = useRef<DataModalHandle>(null);
 		const personModalRef = useRef<DataModalHandle>(null);
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const aggregatorModalRef = useRef<DataModalHandle>(null);
@@ -48,32 +43,21 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 		const { currentUser } = useAuth();
 		const {
 			companies,
-			locations,
 			keywords,
 			persons,
 			aggregators,
 			getPersonPreviewConfig,
 			getAggregatorPreviewConfig,
 			getCompanyPreviewConfig,
-			getLocationPreviewConfig,
 		} = useFormOptions();
-		const { token } = useAuth();
 
 		const transformInputData = async (data: ExtensionJobData) => {
 			if (!data) return data;
-			let geolocation: GeoLocationData;
-			if (data.location && token) {
-				geolocation = await geolocationApi.get(data.location, token);
-			} else {
-				geolocation = { postcode: null, city: null, country: null, latitude: null, longitude: null };
-			}
 			return {
 				...data,
 				company_id: data.company ? findClosestOption(companies, data.company) : null,
-				location_id: data.location ? findClosestOption(locations, data.location) : null,
 				source_aggregator_id: data.platform ? findExactOption(aggregators, data.platform) : null,
 				source_type: "aggregator",
-				geolocation: geolocation,
 			};
 		};
 
@@ -101,21 +85,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				key: "location",
 				title: "Location",
 				icon: "bi-geo-alt",
-				fields: [
-					formFields.scrapedLocation(
-						locations,
-						locationModalRef,
-						(data: ExtensionJobData): LocationDataTransform => ({
-							postcode: data.geolocation?.postcode,
-							city: data.geolocation?.city,
-							country: data.geolocation?.country,
-						}),
-						getLocationPreviewConfig,
-						{ secondaryName: "location" }
-					),
-					formFields.attendanceType(),
-					modalViewFields.scrapedLocationMap(),
-				],
+				fields: [formFields.location(), formFields.attendanceType()],
 			} as SectionConfig,
 			{
 				type: "section",
@@ -123,7 +93,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				title: "Compensation & Priority",
 				icon: "bi-currency-pound",
 				fields: [
-					[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
+					[formFields.salaryMin(), formFields.salaryMax()],
 					[formFields.personalRating(), formFields.isFavourite(), formFields.deadline()],
 				],
 			} as SectionConfig,
@@ -133,23 +103,17 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				title: "Source",
 				icon: "bi-search",
 				fields: [
-					[
-						formFields.sourceType(),
-						formFields.aggregator(aggregators, aggregatorModalRef, null, getAggregatorPreviewConfig, {
-							name: "source_aggregator_id",
-							displayCondition: (formData: JobDataTransform): boolean =>
-								["aggregator", "aggregator_email"].includes(formData.source_type || ""),
-						}),
-						formFields.recruiter(persons, personModalRef, null, getPersonPreviewConfig, {
-							displayCondition: (formData: JobDataTransform): boolean =>
-								formData.source_type === "recruiter",
-						}),
-						formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig, {
-							name: "recruitment_company_id",
-							displayCondition: (formData: JobDataTransform): boolean =>
-								formData.source_type === "recruitment_company",
-						}),
-					],
+					formFields.sourceGroup(
+						aggregators,
+						aggregatorModalRef,
+						getAggregatorPreviewConfig,
+						persons,
+						personModalRef,
+						getPersonPreviewConfig,
+						companies,
+						companyModalRef,
+						getCompanyPreviewConfig
+					),
 				],
 			} as SectionConfig,
 			{
@@ -221,7 +185,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 			personal_rating: jobData.personal_rating || null,
 			is_favourite: jobData.is_favourite ?? false,
 			company_id: jobData.company_id || null,
-			location_id: jobData.location_id || null,
+			location: jobData.location?.trim() || null,
 			deadline: jobData.deadline ? convertToEndOfDay(jobData.deadline) : null,
 			source_aggregator_id: jobData.source_aggregator_id || null,
 			source_type: jobData.source_type?.trim() || null,
@@ -287,7 +251,6 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				<PersonModal ref={personModalRef} />
 				<AggregatorModal ref={aggregatorModalRef} />
 				<KeywordModal ref={keywordModalRef} />
-				<LocationModal ref={locationModalRef} />
 			</>
 		);
 	}

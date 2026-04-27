@@ -87,33 +87,25 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config }) => {
 	}, []);
 
 	const points = useMemo((): MapDataPoint[] => {
-		const locationLookup = new Map<number, { lat: number; lng: number; label: string }>();
-		for (const loc of ctx.locations) {
-			const geo = loc.geolocation;
-			if (geo?.latitude != null && geo?.longitude != null) {
-				locationLookup.set(loc.id, {
-					lat: geo.latitude,
-					lng: geo.longitude,
-					label: loc.name || loc.city || loc.country || "Unknown",
-				});
-			}
-		}
-
 		const keywordLookup = new Map<number, string>();
 		for (const kw of ctx.keywords) {
 			keywordLookup.set(kw.id, kw.name);
 		}
 
-		const jobsByLocation = new Map<number, typeof ctx.jobs>();
+		const jobsByGeoKey = new Map<string, typeof ctx.jobs>();
 		for (const job of ctx.jobs) {
-			if (job.location_id == null || !locationLookup.has(job.location_id)) continue;
-			const arr = jobsByLocation.get(job.location_id) ?? [];
+			const geo = job.geolocation;
+			if (geo?.latitude == null || geo?.longitude == null) continue;
+			const key = `${geo.latitude},${geo.longitude}`;
+			const arr = jobsByGeoKey.get(key) ?? [];
 			arr.push(job);
-			jobsByLocation.set(job.location_id, arr);
+			jobsByGeoKey.set(key, arr);
 		}
 
-		return Array.from(jobsByLocation.entries()).map(([locId, jobs]) => {
-			const loc = locationLookup.get(locId)!;
+		return Array.from(jobsByGeoKey.entries()).map(([, jobs]) => {
+			const firstJob = jobs[0]!;
+			const geo = firstJob.geolocation!;
+			const label = firstJob.location || geo.city || geo.country || "Unknown";
 			const jobCount = jobs.length;
 
 			let value = jobCount;
@@ -139,9 +131,9 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config }) => {
 				.slice(0, 5)
 				.map(([name]) => name);
 
-			return { locationId: locId, lat: loc.lat, lng: loc.lng, label: loc.label, value, jobCount, topKeywords };
+			return { locationId: jobs[0]!.id, lat: geo.latitude!, lng: geo.longitude!, label, value, jobCount, topKeywords };
 		});
-	}, [ctx.jobs, ctx.locations, ctx.keywords, config.metric]);
+	}, [ctx.jobs, ctx.keywords, config.metric]);
 
 	const maxValue = Math.max(...points.map((p) => p.value), 1);
 	const minValue = Math.min(...points.map((p) => p.value), 0);

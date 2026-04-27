@@ -3,7 +3,6 @@ import DataModal, { DataModalHandle, Fields, JamDataModalProps } from "./DataMod
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { useFormOptions } from "../rendering/form/FormOptions";
-import { LocationModal } from "./LocationModal";
 import { PersonModal } from "./PersonModal";
 import { InterviewData, InterviewDataTransform, JobData } from "../../services/schemas/DataTables";
 
@@ -11,10 +10,9 @@ export interface InterviewModalProps extends JamDataModalProps {
 	jobId?: number;
 }
 export const InterviewModal = forwardRef<DataModalHandle<InterviewData>, InterviewModalProps>(
-	({ size = "lg", jobId }: InterviewModalProps, ref) => {
-		const locationModalRef = useRef<DataModalHandle>(null);
+	({ size = "lg", jobId }: InterviewModalProps, ref): JSX.Element => {
 		const personModalRef = useRef<DataModalHandle>(null);
-		const { locations, persons, jobs, getPersonPreviewConfig, getLocationPreviewConfig } = useFormOptions();
+		const { persons, jobs, getPersonPreviewConfig } = useFormOptions();
 
 		const formFieldsArray: Fields = [
 			...(!jobId ? [formFields.job(jobs)] : []),
@@ -24,14 +22,7 @@ export const InterviewModal = forwardRef<DataModalHandle<InterviewData>, Intervi
 				}),
 				formFields.interviewType(),
 			],
-			[
-				formFields.interviewAttendanceType(),
-				formFields.location(locations, locationModalRef, null, getLocationPreviewConfig, {
-					displayCondition: (formData: JobData): boolean => {
-						return formData.attendance_type === "on-site";
-					},
-				}),
-			],
+			[formFields.interviewAttendanceType(), formFields.location()],
 			formFields.interviewers(persons, personModalRef, null, getPersonPreviewConfig),
 			formFields.note({
 				placeholder: "Add notes about the interview, questions asked, impressions, etc...",
@@ -54,7 +45,7 @@ export const InterviewModal = forwardRef<DataModalHandle<InterviewData>, Intervi
 			return {
 				date: data.date,
 				type: data.type,
-				location_id: data.location_id,
+				location: data.location?.trim() || null,
 				job_id: jobId || data.job_id,
 				attendance_type: data.attendance_type,
 				interviewers: data.interviewers || [],
@@ -72,7 +63,6 @@ export const InterviewModal = forwardRef<DataModalHandle<InterviewData>, Intervi
 					transformFormData={transformFormData}
 				/>
 
-				<LocationModal ref={locationModalRef} />
 				<PersonModal ref={personModalRef} />
 			</>
 		);

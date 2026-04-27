@@ -19,7 +19,7 @@ const ScrapedJobsTableReadOnly: React.FC<ScrapedJobsTableReadOnlyProps> = ({
 			: [
 					tableColumns.titleColumn(),
 					tableColumns.scrapedCompanyColumn(),
-					tableColumns.scrapedLocationColumn(),
+					tableColumns.locationBadgeColumn(),
 					tableColumns.salaryRangeColumn(),
 					tableColumns.isImportedColumn(),
 					tableColumns.isActiveColumn(),

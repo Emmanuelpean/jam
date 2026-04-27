@@ -122,12 +122,6 @@ def seed_demo_data(db: Session, user: models.User) -> None:
     # Companies
     companies = create_db_entries(db, models.Company, _filter_owner(data_tables.COMPANY_DATA, owner_id))
 
-    # Locations (remap geolocation_id)
-    location_data = override_properties(
-        _filter_owner(data_tables.LOCATION_DATA, owner_id), ("geolocation_id", geolocations)
-    )
-    locations = create_db_entries(db, models.Location, location_data)
-
     # Persons (remap company_id)
     person_data = override_properties(_filter_owner(data_tables.PERSON_DATA, owner_id), ("company_id", companies))
     persons = create_db_entries(db, models.Person, person_data)
@@ -145,7 +139,6 @@ def seed_demo_data(db: Session, user: models.User) -> None:
     job_data = override_properties(
         _filter_owner(data_tables.JOB_DATA, owner_id),
         ("company_id", companies),
-        ("location_id", locations),
         ("source_aggregator_id", aggregators),
         ("cv_id", files),
         ("cover_letter_id", files),
@@ -178,10 +171,9 @@ def seed_demo_data(db: Session, user: models.User) -> None:
     )
     db.flush()
 
-    # Interviews (remap location_id, job_id)
+    # Interviews (remap job_id)
     interview_data = override_properties(
         _filter_owner(data_tables.INTERVIEW_DATA, owner_id),
-        ("location_id", locations),
         ("job_id", jobs),
     )
     interviews = create_db_entries(db, models.Interview, interview_data)

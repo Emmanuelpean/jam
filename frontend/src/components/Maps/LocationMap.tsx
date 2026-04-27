@@ -5,8 +5,8 @@ import "leaflet/dist/leaflet.css";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import { LocationData } from "../../services/schemas/DataTables";
 import { ScrapedJobData } from "../../services/schemas/Services";
+import { JobData, InterviewData } from "../../services/schemas/DataTables";
 import { GeoLocationData } from "../../services/schemas/Base";
 import "./LocationMap.scss";
 
@@ -17,33 +17,21 @@ L.Icon.Default.mergeOptions({
 	shadowUrl: markerShadow,
 });
 
-type MapLocation = LocationData | ScrapedJobData;
+export type GeolocatedEntry = ScrapedJobData | JobData | InterviewData;
 
 interface LocationMapProps {
-	locations?: MapLocation[];
+	geolocatedEntry?: GeolocatedEntry[];
 	height?: string;
 	scrollWheelZoom?: boolean;
 }
 
 interface MapViewUpdaterProps {
-	locations: MapLocation[];
+	locations: GeolocatedEntry[];
 }
 
-const isScrapedJobData = (location: MapLocation): location is ScrapedJobData => {
-	return "location_city" in location;
-};
+type MappableLocation = GeolocatedEntry & { geolocation: GeoLocationData & { latitude: number; longitude: number } };
 
-const formatLocationName = (location: MapLocation): string => {
-	if (isScrapedJobData(location)) {
-		const parts = [location.location_postcode, location.location_city, location.location_country].filter(Boolean);
-		return parts.join(", ");
-	}
-	return location.name;
-};
-
-type MappableLocation = MapLocation & { geolocation: GeoLocationData & { latitude: number; longitude: number } };
-
-const isMappable = (location: MapLocation): location is MappableLocation =>
+const isMappable = (location: GeolocatedEntry): location is MappableLocation =>
 	location.geolocation != null && location.geolocation.latitude != null && location.geolocation.longitude != null;
 
 const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpdaterProps) => {
@@ -51,7 +39,7 @@ const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpd
 
 	useEffect((): (() => void) | void => {
 		const updateView = (): void => {
-			// Check if map container and pane are properly initialized
+			// Check if map container and pane are properly initialised
 			if (!map || !map.getContainer() || !map.getPane("mapPane")) return;
 
 			const geolocatedLocations: MappableLocation[] = locations.filter(isMappable);
@@ -95,7 +83,7 @@ const MAP_TILES = {
 };
 
 const LocationMap: React.FC<LocationMapProps> = ({
-	locations = [],
+	geolocatedEntry = [],
 	height = "360px",
 	scrollWheelZoom = true,
 }: LocationMapProps): JSX.Element => {
@@ -123,7 +111,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
 		return () => observer.disconnect();
 	}, []);
 
-	const mappableLocations: MappableLocation[] = locations.filter(isMappable);
+	const mappableLocations: MappableLocation[] = geolocatedEntry.filter(isMappable);
 	const currentTileConfig = isDarkMode ? MAP_TILES.dark : MAP_TILES.light;
 
 	if (mappableLocations.length === 0) {
@@ -131,8 +119,8 @@ const LocationMap: React.FC<LocationMapProps> = ({
 		let title = "No mappable locations found";
 		let message = "Could not find coordinates for any of the provided locations.";
 
-		if (locations.length === 1) {
-			const [single] = locations;
+		if (geolocatedEntry.length === 1) {
+			const [single] = geolocatedEntry;
 			if (single!.geolocation === null) {
 				icon = "bi-exclamation-triangle";
 				title = "An error occurred when trying to locate this entry";
@@ -190,7 +178,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
 							>
 								<Popup>
 									<div>
-										<strong>{formatLocationName(location)}</strong>
+										<strong>{location.geolocation.query}</strong>
 									</div>
 								</Popup>
 							</Marker>

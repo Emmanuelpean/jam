@@ -3,7 +3,6 @@ import { MenuItem } from "../../ContextMenu/ContextMenu";
 import { DataModalHandle } from "../../DataModal/DataModal";
 import { useContextMenu } from "../../../contexts/ContextMenuContext";
 import FollowUpModal, { FollowUpModalHandle } from "../../FollowUpModal/FollowUpModal";
-import { LocationModal } from "../../DataModal/LocationModal";
 import { CompanyModal } from "../../DataModal/CompanyModal";
 import { PersonModal } from "../../DataModal/PersonModal";
 import { KeywordModal } from "../../DataModal/KeywordModal";
@@ -15,14 +14,8 @@ import { useDeleteEntityConfirm } from "../../../utils/DeleteHandler";
 import { DataContextValue, EntityType, JamData, useDataContext } from "../../../contexts/DataContext";
 import { getEntityIcon } from "./Icons";
 import { useGlobalToast } from "../../../hooks/useNotificationToast";
-import {
-	AggregatorData,
-	CompanyData,
-	JobData,
-	KeywordData,
-	LocationData,
-	PersonData,
-} from "../../../services/schemas/DataTables";
+import { AggregatorData, CompanyData, JobData, KeywordData, PersonData } from "../../../services/schemas/DataTables";
+import { LocationModal } from "../../DataModal/LocationModal";
 
 type FlexibleModalComponent = React.ForwardRefExoticComponent<any>;
 
@@ -167,12 +160,7 @@ export const CompanyBadge = createDataBadge(
 	"bg-success",
 	(item: CompanyData): string => item.name
 );
-export const LocationBadge = createDataBadge(
-	LocationModal,
-	"location",
-	"bg-warning",
-	(item: LocationData): string => item.name
-);
+export const LocationBadge = createDataBadge(LocationModal, "geolocation", "bg-warning", (): string => "", ["view"]);
 export const KeywordBadge = createDataBadge(
 	KeywordModal,
 	"keyword",

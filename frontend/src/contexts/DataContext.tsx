@@ -8,7 +8,6 @@ import {
 	jobApplicationUpdatesApi,
 	jobsApi,
 	keywordsApi,
-	locationsApi,
 	personsApi,
 	scrapingExclusionFilterApi,
 	scrapingFavouriteFilterApi,
@@ -33,7 +32,6 @@ import {
 	JobApplicationUpdateData,
 	JobData,
 	KeywordData,
-	LocationData,
 	PersonData,
 	SpeculativeApplicationData,
 } from "../services/schemas/DataTables";
@@ -41,6 +39,7 @@ import { SettingData, UserData } from "../services/schemas/Core";
 import { AiSystemPromptData, JobEmailData, ScrapedJobData, ScrapingFilterData } from "../services/schemas/Services";
 import { Country, Currency } from "../services/schemas/Others";
 import { ApiError } from "../services/api/ApiError";
+import { GeoLocationData } from "../services/schemas/Base";
 
 export type EntityType =
 	| "job"
@@ -50,18 +49,17 @@ export type EntityType =
 	| "jobApplicationUpdate"
 	| "aggregator"
 	| "keyword"
-	| "location"
 	| "setting"
 	| "user"
 	| "scrapedJob"
 	| "scrapingFilter"
 	| "scrapingFavouriteFilter"
 	| "speculativeApplication"
-	| "jobEmail";
+	| "jobEmail"
+	| "geolocation";
 
 export type JamData =
 	| KeywordData
-	| LocationData
 	| AggregatorData
 	| PersonData
 	| CompanyData
@@ -73,7 +71,8 @@ export type JamData =
 	| ScrapedJobData
 	| ScrapingFilterData
 	| SpeculativeApplicationData
-	| JobEmailData;
+	| JobEmailData
+	| GeoLocationData;
 
 export const entityTypeToGenericName = (entityType: EntityType): string => {
 	const nameMap: Record<EntityType, string> = {
@@ -84,7 +83,6 @@ export const entityTypeToGenericName = (entityType: EntityType): string => {
 		jobApplicationUpdate: "Job Application Update",
 		aggregator: "Aggregator",
 		keyword: "Tag",
-		location: "Location",
 		setting: "Setting",
 		user: "User",
 		scrapedJob: "Scraped Job",
@@ -92,6 +90,7 @@ export const entityTypeToGenericName = (entityType: EntityType): string => {
 		scrapingFavouriteFilter: "Favourite Filter",
 		speculativeApplication: "Speculative Application",
 		jobEmail: "Job Email",
+		geolocation: "Location",
 	};
 	return nameMap[entityType];
 };
@@ -105,7 +104,6 @@ export const entityTypeToName = (
 		keyword: (data: JamData): string => (data as KeywordData).name,
 		aggregator: (data: JamData): string => (data as AggregatorData).name,
 		company: (data: JamData): string => (data as CompanyData).name,
-		location: (data: JamData): string => (data as LocationData).name,
 		person: (data: JamData): string => (data as PersonData).name,
 		speculativeApplication: (data: JamData): string => {
 			const company: CompanyData = findItemById(
@@ -129,12 +127,13 @@ export const entityTypeToName = (
 		scrapingFilter: (data: JamData): string => getScrapingFilterName(data as ScrapingFilterData),
 		scrapingFavouriteFilter: (data: JamData): string => getScrapingFilterName(data as ScrapingFilterData),
 		jobEmail: (data: JamData): string => (data as JobEmailData)?.subject || "Job Email",
+		geolocation: (data: JamData): string => (data as GeoLocationData).query || "Location",
 	};
 	return nameMap[entityType];
 };
 
-const entityTypeToApi = (entityType: EntityType) => {
-	const apiMap = {
+const entityTypeToApi = (entityType: EntityType): CrudApi<JamData> | null => {
+	const apiMap: Partial<Record<EntityType, CrudApi<JamData>>> = {
 		job: jobsApi,
 		company: companiesApi,
 		person: personsApi,
@@ -142,7 +141,6 @@ const entityTypeToApi = (entityType: EntityType) => {
 		jobApplicationUpdate: jobApplicationUpdatesApi,
 		aggregator: aggregatorsApi,
 		keyword: keywordsApi,
-		location: locationsApi,
 		setting: settingsApi,
 		user: userApi,
 		scrapedJob: scrapedJobApi,
@@ -151,7 +149,7 @@ const entityTypeToApi = (entityType: EntityType) => {
 		speculativeApplication: speculativeApplicationsApi,
 		jobEmail: jobEmailApi,
 	};
-	return apiMap[entityType];
+	return apiMap[entityType] ?? null;
 };
 
 interface TypedFetchOperation<T> {
@@ -168,7 +166,6 @@ export interface DataContextValue {
 	jobApplicationUpdates: EnrichedJobApplicationUpdateData[];
 	aggregators: AggregatorData[];
 	keywords: KeywordData[];
-	locations: LocationData[];
 	speculativeApplications: SpeculativeApplicationData[];
 	settings: SettingData[];
 	scrapingFilters: ScrapingFilterData[];
@@ -203,7 +200,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [rawJobApplicationUpdates, setRawJobApplicationUpdates] = useState<JobApplicationUpdateData[]>([]);
 	const [aggregators, setAggregators] = useState<AggregatorData[]>([]);
 	const [keywords, setKeywords] = useState<KeywordData[]>([]);
-	const [locations, setLocations] = useState<LocationData[]>([]);
 	const [speculativeApplications, setSpeculativeApplications] = useState<SpeculativeApplicationData[]>([]);
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [scrapingFilters, setScrapingFilters] = useState<ScrapingFilterData[]>([]);
@@ -356,7 +352,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			} as TypedFetchOperation<JobApplicationUpdateData[]>,
 			{ promise: aggregatorsApi.getAll(token), label: "Aggregators" } as TypedFetchOperation<AggregatorData[]>,
 			{ promise: keywordsApi.getAll(token), label: "Keywords" } as TypedFetchOperation<KeywordData[]>,
-			{ promise: locationsApi.getAll(token), label: "Locations" } as TypedFetchOperation<LocationData[]>,
 			{
 				promise: scrapingExclusionFilterApi.getAll(token),
 				label: "Scraping Filters",
@@ -411,7 +406,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				jobApplicationUpdatesData,
 				aggregatorsData,
 				keywordsData,
-				locationsData,
 				scrapingFiltersData,
 				scrapingFavouriteFiltersData,
 				currenciesData,
@@ -428,7 +422,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			setRawJobApplicationUpdates(jobApplicationUpdatesData.data || []);
 			setAggregators(aggregatorsData.data || []);
 			setKeywords(keywordsData.data || []);
-			setLocations(locationsData.data || []);
 			setScrapingFilters(scrapingFiltersData.data || []);
 			setScrapingFavouriteFilters(scrapingFavouriteFiltersData.data || []);
 			setCurrencies(currenciesData.data || []);
@@ -455,7 +448,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			jobApplicationUpdate: setRawJobApplicationUpdates,
 			aggregator: setAggregators,
 			keyword: setKeywords,
-			location: setLocations,
 			setting: setSettings,
 			user: setUsers,
 			scrapingFilter: setScrapingFilters,
@@ -468,7 +460,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const addEntity = useCallback(
 		async <T extends EntityType>(entityType: T, newData: any): Promise<any> => {
 			try {
-				const api: CrudApi<JamData> = entityTypeToApi(entityType);
+				const api = entityTypeToApi(entityType);
+				if (!api) return;
 				const apiResult: ApiResponse<JamData> = await api.create(newData, token);
 				const setter = entityTypeToSetter(entityType);
 				setter?.((prev: any[]): any[] => [...prev, apiResult.data]);
@@ -484,7 +477,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const updateEntity = useCallback(
 		async <T extends EntityType>(entityType: T, id: number, updatedData: any): Promise<any> => {
 			try {
-				const api: CrudApi<JamData> = entityTypeToApi(entityType);
+				const api = entityTypeToApi(entityType);
+				if (!api) return;
 				const apiResult: ApiResponse<JamData> = await api.update(id, updatedData, token);
 				const setter = entityTypeToSetter(entityType);
 				setter?.((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? apiResult.data : item)));
@@ -500,7 +494,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const deleteEntity = useCallback(
 		async <T extends EntityType>(entityType: T, id: number): Promise<void> => {
 			try {
-				const api: CrudApi<JamData> = entityTypeToApi(entityType);
+				const api = entityTypeToApi(entityType);
+				if (!api) return;
 				await api.delete(id, token);
 				const setter = entityTypeToSetter(entityType);
 				setter?.((prev: any[]): any[] => prev.filter((item: any): boolean => item.id !== id));
@@ -530,7 +525,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				jobApplicationUpdate: jobApplicationUpdates,
 				aggregator: aggregators,
 				keyword: keywords,
-				location: locations,
 				setting: settings,
 				user: users,
 				scrapingFilter: scrapingFilters,
@@ -547,7 +541,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			jobApplicationUpdates,
 			aggregators,
 			keywords,
-			locations,
 			settings,
 			users,
 			scrapingFilters,
@@ -577,8 +570,10 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				jobApplicationUpdates,
 				aggregators,
 				keywords,
-				locations,
-				scrapingFilters: tourScrapingFilterIds !== null ? scrapingFilters.filter((f) => !tourScrapingFilterIds.has(f.id)) : scrapingFilters,
+				scrapingFilters:
+					tourScrapingFilterIds !== null
+						? scrapingFilters.filter((f) => !tourScrapingFilterIds.has(f.id))
+						: scrapingFilters,
 				scrapingFavouriteFilters,
 				countries,
 				currencies,

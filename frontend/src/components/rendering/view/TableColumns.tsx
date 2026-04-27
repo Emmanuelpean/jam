@@ -31,12 +31,9 @@ const getCompanyText = (item: JamData, context: DataContextValue): string | null
 	return null;
 };
 
-const getLocationText = (item: JamData, context: DataContextValue): string | null => {
-	if ("location_id" in item && item.location_id) {
-		const location = findItemById(context.locations, item.location_id);
-		if (location) {
-			return location.name + item.attendance_type;
-		}
+const getLocationText = (item: JamData): string | null => {
+	if ("location" in item && item.location) {
+		return (item.location as string) + ((item as any).attendance_type || "");
 	}
 	return null;
 };
@@ -148,15 +145,6 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	typeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "type",
-		label: "Type",
-		sortable: true,
-		searchable: true,
-		type: "text",
-		...overrides,
-	}),
-
 	interviewTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "type",
 		label: "Type",
@@ -176,45 +164,6 @@ export const tableColumns = {
 		type: "text",
 		render: renderFunctions.updateType,
 		filterConfig: { type: "select", options: updateTypeOptions },
-		...overrides,
-	}),
-
-	scrapedLocationColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "location",
-		label: "Location",
-		sortable: true,
-		searchable: true,
-		type: "text",
-		...overrides,
-	}),
-
-	cityColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "city",
-		label: "City",
-		sortable: true,
-		searchable: true,
-		type: "text",
-		filterConfig: { type: "text" },
-		...overrides,
-	}),
-
-	postcodeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "postcode",
-		label: "Postcode",
-		sortable: true,
-		searchable: true,
-		type: "text",
-		filterConfig: { type: "text" },
-		...overrides,
-	}),
-
-	countryColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "country",
-		label: "Country",
-		sortable: true,
-		searchable: true,
-		type: "text",
-		filterConfig: { type: "text" },
 		...overrides,
 	}),
 
@@ -515,8 +464,8 @@ export const tableColumns = {
 		type: "text",
 		sortField: getLocationText,
 		searchFields: getLocationText,
-		render: (params: RenderParams) => renderFunctions.LocationBadge(params, true),
-		filterConfig: { type: "reference", entityKey: "locations", valueField: "location_id" },
+		render: (params: RenderParams): ReactNode => renderFunctions.LocationBadge(params),
+		filterConfig: { type: "text" },
 		...overrides,
 	}),
 
@@ -716,25 +665,6 @@ export const tableColumns = {
 
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
 
-	interviewCountLocationColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "interviews",
-		label: "Interviews",
-		sortable: true,
-		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) =>
-			ctx.interviews.filter((i: any) => i.location_id === item.id).length,
-		render: (param: RenderParams) => renderFunctions._interviewCount(param, "location_id"),
-		filterConfig: {
-			type: "number",
-			min: 0,
-			step: 1,
-			display: "slider",
-			max: (ctx: DataContextValue) =>
-				maxCount(ctx.locations, (loc) => ctx.interviews.filter((i: any) => i.location_id === loc.id).length),
-		},
-		...overrides,
-	}),
-
 	jobCountCompanyColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "jobs",
 		label: "Jobs",
@@ -769,25 +699,6 @@ export const tableColumns = {
 			display: "slider",
 			max: (ctx: DataContextValue) =>
 				maxCount(ctx.aggregators, (a) => ctx.jobs.filter((j: any) => j.source_aggregator_id === a.id).length),
-		},
-		...overrides,
-	}),
-
-	jobCountLocationColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "jobs",
-		label: "Jobs",
-		sortable: true,
-		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) =>
-			ctx.jobs.filter((j: any) => j.location_id === item.id).length,
-		render: (param: RenderParams) => renderFunctions._jobCount(param, "location_id"),
-		filterConfig: {
-			type: "number",
-			min: 0,
-			step: 1,
-			display: "slider",
-			max: (ctx: DataContextValue) =>
-				maxCount(ctx.locations, (loc) => ctx.jobs.filter((j: any) => j.location_id === loc.id).length),
 		},
 		...overrides,
 	}),

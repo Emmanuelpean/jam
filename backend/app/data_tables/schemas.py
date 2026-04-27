@@ -96,33 +96,6 @@ class GeolocationOut(BaseModel):
     formatted_address: str | None = None
 
 
-# ------------------------------------------------------ LOCATION ------------------------------------------------------
-
-
-class LocationCreate(BaseModel):
-    """Location create schema"""
-
-    postcode: str | None = None
-    city: str | None = None
-    country: str | None = None
-
-
-class LocationOut(LocationCreate, OwnedOut):
-    """Location output schema with job and interview data"""
-
-    name: str | None = None
-    short_name: str | None = None
-    geolocation: GeolocationOut | None = None
-    jobs: list[OwnedOut] = []
-    interviews: list[OwnedOut] = []
-
-
-class LocationUpdate(LocationCreate):
-    """Location update schema"""
-
-    pass
-
-
 # -------------------------------------------------------- FILES -------------------------------------------------------
 
 
@@ -208,10 +181,10 @@ class JobCreate(BaseModel):
     applied_via: str | None = None
     source_type: str | None = None
     followup_snooze_datetime: datetime | None = None
+    location: str | None = None
 
     # Foreign keys
     company_id: int | None = None
-    location_id: int | None = None
     duplicate_id: int | None = None
     source_aggregator_id: int | None = None
     application_aggregator_id: int | None = None
@@ -234,6 +207,7 @@ class JobOut(JobCreate, OwnedOut):
     has_application: bool = False
     has_active_application: bool = False
     has_open_application: bool = False
+    geolocation: GeolocationOut | None = None
 
     @field_validator("keywords", "contacts", mode="before")
     @classmethod
@@ -258,7 +232,7 @@ class InterviewCreate(BaseModel):
     type: str
     job_id: int
     attendance_type: str | None = None
-    location_id: int | None = None
+    location: str | None = None
     note: str | None = None
     interviewers: list[int] | None = None
 
@@ -267,6 +241,7 @@ class InterviewOut(InterviewCreate, OwnedOut):
     """Interview output with bare location and person data, and job data"""
 
     interviewers: list[int] = []
+    geolocation: GeolocationOut | None = None
 
     @field_validator("interviewers", mode="before")
     @classmethod

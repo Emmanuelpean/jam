@@ -1,102 +1,72 @@
-import React, { forwardRef, JSX } from "react";
-import DataModal, { DataModalHandle, Fields, JamDataModalProps, ValidationErrors } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
-import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
-import { tableColumns } from "../rendering/view/TableColumns";
-import { useFormOptions } from "../rendering/form/FormOptions";
-import { DataContextValue, useDataContext } from "../../contexts/DataContext";
-import { LocationData, LocationDataTransform } from "../../services/schemas/DataTables";
+import React, { forwardRef, JSX, ReactNode } from "react";
+import DataModal, { DataModalHandle, JamDataModalProps } from "./DataModal";
+import { ModalViewField } from "../rendering/view/ModalFields";
+import { GeoLocationData } from "../../services/schemas/Base";
+import { RenderParams } from "../rendering/view/ViewRenders";
+import LocationMap, { GeolocatedEntry } from "../Maps/LocationMap";
+import { ScrapedJobData } from "../../services/schemas/Services";
+import { attendanceTypeOptions, SelectOption } from "../rendering/form/FormOptions";
+import { getLocationIcon } from "../rendering/view/Icons";
 
-export const LocationModal = forwardRef<DataModalHandle<LocationData>, JamDataModalProps>(
+export const LocationModal = forwardRef<DataModalHandle<GeoLocationData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
-		const { countries } = useFormOptions();
-		const dataContext: DataContextValue = useDataContext();
-
-		const formFieldsArray: Fields = [
-			formFields.city({ placeholder: "Oxford" }),
-			formFields.postcode({ placeholder: "OX1 1AA" }),
-			formFields.country(countries),
-		];
-		const viewFieldsArray: Fields = [
-			[modalViewFields.city(), modalViewFields.postcode(), modalViewFields.country()],
-			modalViewFields.locationMap(),
-		];
-
-		const fields = {
-			form: formFieldsArray,
-			view: viewFieldsArray,
+		const ATTENDANCE_MESSAGES: Record<string, string> = {
+			remote: "This job is fully remote",
+			hybrid: "This is a hybrid position (part remote, part on-site)",
+			"on-site": "This job requires on-site attendance",
 		};
 
-		const additionalFields: ModalViewField[] = [
-			modalViewFields.accordionJobTableLocation({
-				helpText: "List of jobs at this location.",
-			}),
-			modalViewFields.accordionInterviewTable({
-				columns: [
-					tableColumns.dateColumn(),
-					tableColumns.jobBadgeColumn(),
-					tableColumns.typeColumn(),
-					tableColumns.noteColumn(),
-				],
-				helpText: "Interviews at this location.",
-			}),
-		];
-
-		const customValidation = (formData: LocationData): ValidationErrors => {
-			const errors: ValidationErrors = {};
-
-			// Check if any value has been set
-			const hasCity: string | null | undefined = formData.city && formData.city.trim();
-			const hasPostcode: string | null | undefined = formData.postcode && formData.postcode.trim();
-			const hasCountry: string | null | undefined = formData.country && formData.country.trim();
-			const hasAnyValue: boolean = !!(hasCity || hasPostcode || hasCountry);
-			if (!hasAnyValue) {
-				errors.city =
-					errors.country =
-					errors.postcode =
-						"Please fill in at least one field (city, postcode, or country)";
-			}
-
-			// Check if the location already exists
-			if (Object.keys(errors).length === 0) {
-				const duplicates: LocationData[] = dataContext.locations.filter((location: LocationData): boolean => {
-					const cityMatch: boolean =
-						location.city?.trim().toLowerCase() === formData.city?.trim().toLowerCase();
-					const postcodeMatch: boolean =
-						location.postcode?.trim().toLowerCase() === formData.postcode?.trim().toLowerCase();
-					const countryMatch: boolean =
-						location.country?.trim().toLowerCase() === formData.country?.trim().toLowerCase();
-					return cityMatch && postcodeMatch && countryMatch && formData?.id !== location.id;
-				});
-
-				if (duplicates.length > 0) {
-					const duplicateName: string = duplicates[0]!.name;
-					errors.city =
-						errors.postcode =
-						errors.country =
-							`A location with these details already exists: "${duplicateName}"`;
-				}
-			}
-			return errors;
-		};
-
-		const transformFormData = (data: LocationData): LocationDataTransform => {
-			return {
-				city: data.city?.trim() || null,
-				postcode: data.postcode?.trim() || null,
-				country: data.country?.trim() || null,
-			};
+		const fields: { view: ModalViewField[]; form: [] } = {
+			view: [
+				{
+					key: "location",
+					isTitle: true,
+					render: (param: RenderParams): ReactNode => {
+						const item = param.item as GeolocatedEntry;
+						const locationString = (item as ScrapedJobData).parsed_location ?? item.location;
+						const attendanceLabel =
+							attendanceTypeOptions.find((o: SelectOption): boolean => o.value === item.attendance_type)
+								?.label ?? null;
+						if (locationString && attendanceLabel) return `${locationString} (${attendanceLabel})`;
+						return locationString || attendanceLabel || null;
+					},
+				},
+				{
+					key: "location_map",
+					label: "Location on Map",
+					render: (param: RenderParams): ReactNode => (
+						<LocationMap geolocatedEntry={[param.item as GeolocatedEntry]} scrollWheelZoom={false} />
+					),
+					displayCondition: (item: GeolocatedEntry): boolean => !!item.geolocation,
+				},
+				{
+					key: "attendance_message",
+					render: (param: RenderParams): ReactNode => {
+						const item = param.item as GeolocatedEntry;
+						const icon = getLocationIcon(item.attendance_type);
+						const msg = item.attendance_type ? ATTENDANCE_MESSAGES[item.attendance_type] : null;
+						if (!msg) return null;
+						return (
+							<div className="text-center py-4">
+								{icon && <i className={`bi bi-${icon} display-1 d-block mb-3`}></i>}
+								<p className="lead fst-italic text-muted">{msg}</p>
+							</div>
+						);
+					},
+					displayCondition: (item: GeolocatedEntry): boolean => !item.geolocation && !!item.attendance_type,
+				},
+			],
+			form: [],
 		};
 
 		return (
-			<DataModal<LocationData>
+			<DataModal<GeoLocationData>
 				ref={ref}
+				entityType="geolocation"
 				size={size}
-				additionalFields={additionalFields}
 				fields={fields}
-				entityType="location"
-				validation={customValidation}
-				transformFormData={transformFormData}
+				canEdit={false}
+				canDelete={false}
 			/>
 		);
 	}

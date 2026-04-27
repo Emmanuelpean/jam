@@ -11,12 +11,11 @@ import { findClosestOption, findExactOption, useFormOptions } from "../rendering
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { capitalise } from "../../utils/StringUtils";
 import { CompanyModal } from "./CompanyModal";
-import { LocationModal } from "./LocationModal";
 import { KeywordModal } from "./KeywordModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { JamData, useDataContext } from "../../contexts/DataContext";
-import { JobData, JobDataTransform, LocationDataTransform } from "../../services/schemas/DataTables";
+import { JobData, JobDataTransform } from "../../services/schemas/DataTables";
 import { ScrapedJobData, ScrapedJobUpdate } from "../../services/schemas/Services";
 import { useConfig } from "../../contexts/ConfigContext";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
@@ -27,19 +26,16 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 		const { addEntity } = useDataContext();
 		const { config } = useConfig();
 		const companyModalRef = useRef<DataModalHandle>(null);
-		const locationModalRef = useRef<DataModalHandle>(null);
 		const keywordModalRef = useRef<DataModalHandle>(null);
 		const personModalRef = useRef<DataModalHandle>(null);
 		const aggregatorModalRef = useRef<DataModalHandle>(null);
 		const {
 			companies,
-			locations,
 			keywords,
 			persons,
 			aggregators,
 			getCompanyPreviewConfig,
 			getAggregatorPreviewConfig,
-			getLocationPreviewConfig,
 			getPersonPreviewConfig,
 		} = useFormOptions();
 
@@ -48,7 +44,6 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 			return {
 				...data,
 				company_id: data.company ? findClosestOption(companies, data.company) : null,
-				location_id: data.parsed_location ? findClosestOption(locations, data.parsed_location) : null,
 				source_aggregator_id: data.platform ? findExactOption(aggregators, data.platform) : null,
 				source_type: "aggregator_email",
 			};
@@ -93,19 +88,8 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				title: "Location",
 				icon: "bi-geo-alt",
 				fields: [
-					formFields.scrapedLocation(
-						locations,
-						locationModalRef,
-						(scrapedJob: ScrapedJobData): LocationDataTransform => ({
-							postcode: scrapedJob.location_postcode,
-							city: scrapedJob.location_city,
-							country: scrapedJob.location_country,
-						}),
-						getLocationPreviewConfig,
-						{ highlight: mode === "import" && !!data?.parsed_location }
-					),
-					formFields.attendanceType(),
-					modalViewFields.scrapedLocationMap(),
+					[formFields.attendanceType(), formFields.location({ name: "parsed_location" })],
+					modalViewFields.geolocationMap(),
 				],
 			} as SectionConfig,
 
@@ -115,7 +99,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				title: "Compensation & Priority",
 				icon: "bi-currency-pound",
 				fields: [
-					[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
+					[formFields.salaryMin(), formFields.salaryMax()],
 					[formFields.personalRating(), formFields.isFavourite(), formFields.deadline()],
 				],
 			} as SectionConfig,
@@ -126,36 +110,20 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				title: "Source",
 				icon: "bi-search",
 				fields: [
-					[
-						formFields.sourceType(),
-						formFields.aggregator(
-							aggregators,
-							aggregatorModalRef,
-							(scrapedJob: ScrapedJobData) => ({
-								name: scrapedJob.platform ? capitalise(scrapedJob.platform) : undefined,
-							}),
-							getAggregatorPreviewConfig,
-							{
-								name: "source_aggregator_id",
-								displayCondition: (formData: JobDataTransform): boolean => {
-									return ["aggregator", "aggregator_email"].includes(
-										formData.source_type ? formData.source_type : ""
-									);
-								},
-							}
-						),
-						formFields.recruiter(persons, personModalRef, null, getPersonPreviewConfig, {
-							displayCondition: (formData: JobDataTransform): boolean => {
-								return formData.source_type ? formData.source_type === "recruiter" : false;
-							},
-						}),
-						formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig, {
-							name: "recruitment_company_id",
-							displayCondition: (formData: JobDataTransform): boolean => {
-								return formData.source_type ? formData.source_type === "recruitment_company" : false;
-							},
-						}),
-					],
+					formFields.sourceGroup(
+						aggregators,
+						aggregatorModalRef,
+						getAggregatorPreviewConfig,
+						persons,
+						personModalRef,
+						getPersonPreviewConfig,
+						companies,
+						companyModalRef,
+						getCompanyPreviewConfig,
+						(scrapedJob: ScrapedJobData) => ({
+							name: scrapedJob.platform ? capitalise(scrapedJob.platform) : undefined,
+						})
+					),
 				],
 			} as SectionConfig,
 
@@ -202,7 +170,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 			modalViewFields.description(),
 			[modalViewFields.company(), modalViewFields.location()],
 			[modalViewFields.platform(), modalViewFields.url()],
-			modalViewFields.scrapedLocationMap(),
+			modalViewFields.geolocationMap(),
 		];
 
 		const warningMessage = (data: ScrapedJobData): WarningMessageConfig[] | null => {
@@ -287,7 +255,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				personal_rating: formData.personal_rating || null,
 				is_favourite: formData.is_favourite ?? false,
 				company_id: formData.company_id || null,
-				location_id: formData.location_id || null,
+				location: formData.location?.trim() || null, // geolocation upon entry creation in db
 				source_type: formData.source_type || null,
 				source_aggregator_id: formData.source_aggregator_id || null,
 				recruiter_id: formData.recruiter_id || null,
@@ -317,7 +285,6 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 					canEdit={canEdit}
 				/>
 				<CompanyModal ref={companyModalRef} />
-				<LocationModal ref={locationModalRef} />
 				<KeywordModal ref={keywordModalRef} />
 				<PersonModal ref={personModalRef} />
 				<AggregatorModal ref={aggregatorModalRef} />

@@ -42,7 +42,6 @@ interface EntitySnapshot {
 	jobIds: Set<number>;
 	companyIds: Set<number>;
 	personIds: Set<number>;
-	locationIds: Set<number>;
 	interviewIds: Set<number>;
 	jobApplicationUpdateIds: Set<number>;
 	scrapingFilterIds: Set<number>;
@@ -53,7 +52,6 @@ function emptySnapshot(): EntitySnapshot {
 		jobIds: new Set(),
 		companyIds: new Set(),
 		personIds: new Set(),
-		locationIds: new Set(),
 		interviewIds: new Set(),
 		jobApplicationUpdateIds: new Set(),
 		scrapingFilterIds: new Set(),
@@ -69,7 +67,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	const [demoScrapedJobId, setDemoScrapedJobId] = useState<number | null>(null);
 	const [demoScrapingFilterId, setDemoScrapingFilterId] = useState<number | null>(null);
 	const { currentUser, updateCurrentUser, token } = useAuth();
-	const { jobs, companies, persons, locations, interviews, jobApplicationUpdates, scrapingFilters, addEntity, deleteEntity, setDemoFilter, setTourScrapingFilterIds } =
+	const { jobs, companies, persons, interviews, jobApplicationUpdates, scrapingFilters, addEntity, deleteEntity, setDemoFilter, setTourScrapingFilterIds } =
 		useDataContext();
 	const { showToastError } = useGlobalToast();
 
@@ -110,7 +108,6 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					jobIds: new Set(jobs.map((j) => j.id)),
 					companyIds: new Set(companies.map((c) => c.id)),
 					personIds: new Set(persons.map((p) => p.id)),
-					locationIds: new Set(locations.map((l) => l.id)),
 					interviewIds: new Set(interviews.map((i) => i.id)),
 					jobApplicationUpdateIds: new Set(jobApplicationUpdates.map((u) => u.id)),
 					scrapingFilterIds: new Set(scrapingFilters.map((f) => f.id)),
@@ -159,7 +156,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 						source_type: null,
 						recruiter_id: null,
 						recruitment_company_id: null,
-						location_id: null,
+						location: null,
 						application_date: new Date().toISOString(),
 						application_status: "applied",
 						applied_via: null,
@@ -179,7 +176,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 						job_id: jobId,
 						type: "video",
 						date: new Date().toISOString(),
-						location_id: null,
+						location: null,
 						note: null,
 						attendance_type: "remote",
 						interviewers: [interviewerId],
@@ -201,7 +198,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				showToastError(`Failed to start tour: ${err?.message ?? "Unknown error"}`);
 			}
 		},
-		[jobs, companies, persons, locations, interviews, jobApplicationUpdates, scrapingFilters, addEntity, setDemoFilter, setTourScrapingFilterIds, token, location.pathname, showToastError]
+		[jobs, companies, persons, interviews, jobApplicationUpdates, scrapingFilters, addEntity, setDemoFilter, setTourScrapingFilterIds, token, location.pathname, showToastError]
 	);
 
 	const endTour = useCallback(
@@ -236,7 +233,6 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				.filter((id) => !snapshot.jobApplicationUpdateIds.has(id));
 			const newJobIds = jobs.map((j) => j.id).filter((id) => !snapshot.jobIds.has(id));
 			const newCompanyIds = companies.map((c) => c.id).filter((id) => !snapshot.companyIds.has(id));
-			const newLocationIds = locations.map((l) => l.id).filter((id) => !snapshot.locationIds.has(id));
 			const newPersonIds = persons.map((p) => p.id).filter((id) => !snapshot.personIds.has(id));
 			const newScrapingFilterIds = scrapingFilters.map((f) => f.id).filter((id) => !snapshot.scrapingFilterIds.has(id));
 
@@ -245,7 +241,6 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				newJobApplicationUpdateIds,
 				newJobIds,
 				newCompanyIds,
-				newLocationIds,
 				newPersonIds,
 				newScrapingFilterIds,
 			].some((arr) => arr.length > 0);
@@ -263,7 +258,6 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					// Round 3: delete base entities in parallel
 					await Promise.all([
 						...newCompanyIds.map((id) => deleteEntity("company", id)),
-						...newLocationIds.map((id) => deleteEntity("location", id)),
 						...newPersonIds.map((id) => deleteEntity("person", id)),
 						...newScrapingFilterIds.map((id) => deleteEntity("scrapingFilter", id)),
 					]);
@@ -298,7 +292,6 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			jobs,
 			companies,
 			persons,
-			locations,
 			interviews,
 			jobApplicationUpdates,
 			scrapingFilters,

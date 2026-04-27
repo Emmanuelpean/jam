@@ -14,7 +14,7 @@ import {
 	updateTypeOptions,
 } from "./FormOptions";
 import { DataModalHandle } from "../../DataModal/DataModal";
-import { EnrichedJobData } from "../../../services/schemas/DataTables";
+import { EnrichedJobData, JobData } from "../../../services/schemas/DataTables";
 import { DataContextValue } from "../../../contexts/DataContext";
 
 export interface ModalFormField {
@@ -133,6 +133,18 @@ export const formFields = {
 					j.url?.trim().toLowerCase() === value.trim().toLowerCase() && j.id !== formData?.id
 			);
 			return dup ? "A job with this URL already exists" : null;
+		},
+		...overrides,
+	}),
+
+	location: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "location",
+		label: "Location",
+		type: "text",
+		placeholder: "e.g. London, UK",
+		isClearable: true,
+		displayCondition: (formData: JobData): boolean => {
+			return formData.attendance_type !== "remote";
 		},
 		...overrides,
 	}),
@@ -336,7 +348,7 @@ export const formFields = {
 		name: "salary_min",
 		label: "Minimum Salary",
 		type: "salary",
-		placeholder: "Enter minimum salary",
+		placeholder: "35000",
 		step: "1000",
 		...overrides,
 	}),
@@ -345,7 +357,7 @@ export const formFields = {
 		name: "salary_max",
 		label: "Maximum Salary",
 		type: "salary",
-		placeholder: "Enter maximum salary",
+		placeholder: "45000",
 		step: "1000",
 		...overrides,
 	}),
@@ -461,45 +473,6 @@ export const formFields = {
 		...overrides,
 	}),
 
-	location: (
-		options: SelectOption[] = [],
-		modalRef: React.RefObject<DataModalHandle | null>,
-		transformParentData?: ((parentData: any) => any) | null,
-		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {}
-	): ModalFormField => ({
-		name: "location_id",
-		label: "Location",
-		type: "select",
-		placeholder: "Select or search location...",
-		isSearchable: true,
-		isClearable: true,
-		previewConfig: previewConfig,
-		options: options,
-		addButton: { modalRef, transformParentData, id: "add-button-location" },
-		...overrides,
-	}),
-
-	scrapedLocation: (
-		options: SelectOption[] = [],
-		modalRef: React.RefObject<DataModalHandle | null>,
-		transformParentData?: ((parentData: any) => any) | null,
-		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {}
-	): ModalFormField => ({
-		name: "location_id",
-		secondaryName: "parsed_location",
-		label: "Location",
-		type: "select",
-		placeholder: "Select or search location...",
-		isSearchable: true,
-		isClearable: true,
-		previewConfig: previewConfig,
-		options: options,
-		addButton: { modalRef, transformParentData, id: "add-button-location" },
-		...overrides,
-	}),
-
 	keywords: (
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
@@ -611,6 +584,39 @@ export const formFields = {
 		isClearable: true,
 		...overrides,
 	}),
+
+	sourceGroup: (
+		aggregators: SelectOption[],
+		aggregatorModalRef: React.RefObject<DataModalHandle | null>,
+		getAggregatorPreviewConfig: SelectWidgetPreviewConfig | null,
+		persons: SelectOption[],
+		personModalRef: React.RefObject<DataModalHandle | null>,
+		getPersonPreviewConfig: SelectWidgetPreviewConfig | null,
+		companies: SelectOption[],
+		companyModalRef: React.RefObject<DataModalHandle | null>,
+		getCompanyPreviewConfig: SelectWidgetPreviewConfig | null,
+		aggregatorTransformParentData: ((parentData: any) => any) | null = null
+	): ModalFormField[] => [
+		formFields.sourceType(),
+		formFields.aggregator(
+			aggregators,
+			aggregatorModalRef,
+			aggregatorTransformParentData,
+			getAggregatorPreviewConfig,
+			{
+				name: "source_aggregator_id",
+				displayCondition: (formData: any): boolean =>
+					["aggregator", "aggregator_email"].includes(formData.source_type || ""),
+			}
+		),
+		formFields.recruiter(persons, personModalRef, null, getPersonPreviewConfig, {
+			displayCondition: (formData: any): boolean => formData.source_type === "recruiter",
+		}),
+		formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig, {
+			name: "recruitment_company_id",
+			displayCondition: (formData: any): boolean => formData.source_type === "recruitment_company",
+		}),
+	],
 
 	scrapingFilterType: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "type",

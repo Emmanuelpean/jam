@@ -31,7 +31,6 @@ export function getTableIcon(title: string): string {
 		Jobs: getEntityIcon("job"),
 		Companies: getEntityIcon("company"),
 		People: getEntityIcon("person"),
-		Locations: getEntityIcon("location"),
 		Tags: getEntityIcon("keyword"),
 		"Job Application Updates": getEntityIcon("jobApplicationUpdate"),
 		Interviews: getEntityIcon("interview"),
@@ -93,4 +92,11 @@ export const getTrueFalseBadge = (value: boolean): ReactNode => {
 	} else {
 		return <i className="bi bi-x-circle text-danger"></i>;
 	}
+};
+
+export const getLocationIcon = (attendanceType: string | null): string => {
+	if (attendanceType === "on-site") return "building";
+	if (attendanceType === "hybrid") return "house-door";
+	if (attendanceType === "remote") return "house";
+	return "";
 };

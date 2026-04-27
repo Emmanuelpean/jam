@@ -3,7 +3,6 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
 import Login from "./pages/Auth/AuthPage";
-import LocationsPage from "./pages/DataTablePages/LocationsPage";
 import CompaniesPage from "./pages/DataTablePages/CompaniesPage";
 import JobsPage from "./pages/DataTablePages/JobsPage";
 import PersonPage from "./pages/DataTablePages/PersonPage";
@@ -202,7 +201,6 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/about", element: <AboutPage />, protected: true },
 	{ path: "/browser-extension", element: <ExtensionPage />, protected: true },
 	{ path: "/release-notes", element: <ReleaseNotesPage />, protected: true },
-	{ path: "/locations", element: <LocationsPage />, protected: true },
 	{ path: "/companies", element: <CompaniesPage />, protected: true },
 	{ path: "/jobs", element: <JobsPage />, protected: true },
 	{ path: "/style-guide", element: <StyleGuidePage />, protected: true, adminOnly: true },

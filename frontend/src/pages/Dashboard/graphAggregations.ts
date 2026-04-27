@@ -164,16 +164,9 @@ function aggregateSalaryDistribution(ctx: DataContextValue): ChartDataPoint[] {
 }
 
 function aggregateJobsByLocationField(ctx: DataContextValue, field: "city" | "country"): ChartDataPoint[] {
-	const locationMap = new Map<number, string>();
-	for (const loc of ctx.locations) {
-		const value = loc[field];
-		if (value) locationMap.set(loc.id, value);
-	}
-
 	const counts = new Map<string, number>();
 	for (const job of ctx.jobs) {
-		if (job.location_id == null) continue;
-		const name = locationMap.get(job.location_id);
+		const name = job.geolocation?.[field];
 		if (!name) continue;
 		counts.set(name, (counts.get(name) ?? 0) + 1);
 	}

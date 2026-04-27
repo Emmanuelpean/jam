@@ -17,7 +17,6 @@ import { CompanyModal } from "./CompanyModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { KeywordModal } from "./KeywordModal";
-import { LocationModal } from "./LocationModal";
 import FollowUpModal, { FollowUpModalHandle } from "../FollowUpModal/FollowUpModal";
 import { ActionButton } from "../rendering/form/ActionButton";
 import { JobData, JobDataTransform } from "../../services/schemas/DataTables";
@@ -28,7 +27,6 @@ interface JobAndApplicationProps extends JamDataModalProps {
 
 export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationProps>(
 	({ size = "xl", defaultActiveTab = "job" }: JobAndApplicationProps, ref) => {
-		const locationModalRef = useRef<DataModalHandle>(null);
 		const personModalRef = useRef<DataModalHandle>(null);
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const aggregatorModalRef = useRef<DataModalHandle>(null);
@@ -37,13 +35,11 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 		const { currentUser } = useAuth();
 		const {
 			companies,
-			locations,
 			keywords,
 			persons,
 			aggregators,
 			getCompanyPreviewConfig,
 			getPersonPreviewConfig,
-			getLocationPreviewConfig,
 			getAggregatorPreviewConfig,
 		} = useFormOptions();
 
@@ -66,12 +62,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				key: "location-schedule",
 				title: "Location",
 				icon: "bi-geo-alt",
-				fields: [
-					[
-						formFields.attendanceType(),
-						formFields.location(locations, locationModalRef, null, getLocationPreviewConfig),
-					],
-				],
+				fields: [[formFields.attendanceType(), formFields.location()]],
 			} as SectionConfig,
 			{
 				type: "section",
@@ -79,7 +70,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				title: "Compensation & Priority",
 				icon: "bi-currency-pound",
 				fields: [
-					[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
+					[formFields.salaryMin(), formFields.salaryMax()],
 					[formFields.personalRating(), formFields.isFavourite(), formFields.deadline()],
 				],
 			} as SectionConfig,
@@ -89,26 +80,17 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				title: "Source",
 				icon: "bi-search",
 				fields: [
-					[
-						formFields.sourceType(),
-						formFields.aggregator(aggregators, aggregatorModalRef, null, getAggregatorPreviewConfig, {
-							name: "source_aggregator_id",
-							displayCondition: (formData: JobDataTransform): boolean => {
-								return ["aggregator", "aggregator_email"].includes(formData.source_type || "");
-							},
-						}),
-						formFields.recruiter(persons, personModalRef, null, getPersonPreviewConfig, {
-							displayCondition: (formData: JobDataTransform): boolean => {
-								return formData.source_type ? formData.source_type === "recruiter" : false;
-							},
-						}),
-						formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig, {
-							name: "recruitment_company_id",
-							displayCondition: (formData: JobDataTransform): boolean => {
-								return formData.source_type ? formData.source_type === "recruitment_company" : false;
-							},
-						}),
-					],
+					formFields.sourceGroup(
+						aggregators,
+						aggregatorModalRef,
+						getAggregatorPreviewConfig,
+						persons,
+						personModalRef,
+						getPersonPreviewConfig,
+						companies,
+						companyModalRef,
+						getCompanyPreviewConfig
+					),
 				],
 			} as SectionConfig,
 			{
@@ -292,7 +274,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				salary_currency: currentUser?.preferences.default_currency?.trim() || null,
 				personal_rating: jobData.personal_rating || null,
 				company_id: jobData.company_id || null,
-				location_id: jobData.location_id || null,
+				location: jobData.location?.trim() || null,
 				deadline: jobData.deadline ? convertToEndOfDay(jobData.deadline) : null,
 				source_aggregator_id: jobData.source_aggregator_id || null,
 				source_type: jobData.source_type?.trim() || null,
@@ -381,7 +363,6 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				<PersonModal ref={personModalRef} />
 				<AggregatorModal ref={aggregatorModalRef} />
 				<KeywordModal ref={keywordModalRef} />
-				<LocationModal ref={locationModalRef} />
 				<FollowUpModal ref={followUpModalRef} />
 			</>
 		);

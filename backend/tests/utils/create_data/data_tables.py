@@ -30,20 +30,6 @@ def create_companies(db, users: list[models.User]) -> list[models.Company]:
     return create_db_entries(db, models.Company, data)
 
 
-def create_locations(db, users: list[models.User], geolocations: list[models.Geolocation]) -> list[models.Location]:
-    """Create sample locations"""
-
-    data = override_properties(data_tables.LOCATION_DATA, ("owner_id", users))
-    for d in data:
-        query = [d.get("postcode"), d.get("city"), d.get("country")]
-        query = ", ".join(filter(None, query))
-        geolocation = [g for g in geolocations if query == g.query]
-        if geolocation:
-            d["geolocation_id"] = geolocation[0].id
-    print(f"Creating {len(data)} Locations...")
-    return create_db_entries(db, models.Location, data)
-
-
 def create_geolocations(db) -> list[models.Geolocation]:
     """Create sample geolocations"""
 
@@ -73,9 +59,9 @@ def create_jobs(
     persons,
     users: list[models.User],
     companies: list[models.Company],
-    locations: list[models.Location],
     aggregators: list[models.Aggregator],
     files: list[models.File],
+    geolocations: list[models.Geolocation],
     job_data: list[dict] | None = None,
     job_keyword_mappings: list[dict] | None = None,
     job_contact_mappings: list[dict] | None = None,
@@ -88,11 +74,11 @@ def create_jobs(
         job_data,
         ("owner_id", users),
         ("company_id", companies),
-        ("location_id", locations),
         ("source_aggregator_id", aggregators),
         ("application_aggregator_id", aggregators),
         ("cv_id", files),
         ("cover_letter_id", files),
+        ("geolocation_id", geolocations),
     )
     print(f"Creating {len(data)} Jobs...")
     jobs = create_db_entries(db, models.Job, data)
@@ -137,8 +123,8 @@ def create_interviews(
     db,
     persons,
     users: list[models.User],
-    locations: list[models.Location],
     jobs: list[models.Job],
+    geolocations: list[models.Geolocation],
     interview_data: list[dict] | None = None,
     interview_interviewer_mappings: list[dict] | None = None,
 ) -> list[models.Interview]:
@@ -146,7 +132,7 @@ def create_interviews(
 
     if interview_data is None:
         interview_data = data_tables.INTERVIEW_DATA
-    data = override_properties(interview_data, ("owner_id", users), ("location_id", locations), ("job_id", jobs))
+    data = override_properties(interview_data, ("owner_id", users), ("job_id", jobs), ("geolocation_id", geolocations))
     print(f"Creating {len(data)} Interviews...")
     interviews = create_db_entries(db, models.Interview, data)
 

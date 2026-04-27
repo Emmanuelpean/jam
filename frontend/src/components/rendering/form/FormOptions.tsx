@@ -3,12 +3,12 @@ import { useMemo } from "react";
 import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 import { modalViewFields } from "../view/ModalFields";
-import { InterviewData, JobData, PersonData } from "../../../services/schemas/DataTables";
+import { AggregatorData, CompanyData, InterviewData, JobData, PersonData } from "../../../services/schemas/DataTables";
+import Fuse, { FuseResult } from "fuse.js";
 
 export type SelectOption = {
 	value: string;
 	label: string;
-	data?: any;
 };
 
 export interface GroupedSelectOption {
@@ -16,45 +16,25 @@ export interface GroupedSelectOption {
 	options: SelectOption[];
 }
 
-function diceCoefficient(a: string, b: string): number {
-	if (a.length < 2 || b.length < 2) return 0;
-	const bigrams = (s: string): Map<string, number> => {
-		const map = new Map<string, number>();
-		for (let i = 0; i < s.length - 1; i++) {
-			const bg = s.slice(i, i + 2).toLowerCase();
-			map.set(bg, (map.get(bg) ?? 0) + 1);
-		}
-		return map;
-	};
-	const ab = bigrams(a), bb = bigrams(b);
-	let intersection = 0;
-	for (const [bg, count] of ab) intersection += Math.min(count, bb.get(bg) ?? 0);
-	return (2 * intersection) / (a.length - 1 + b.length - 1);
-}
-
-export function findClosestOption(options: SelectOption[], name: string): string | null {
+export function findClosestOption(options: SelectOption[], name: string): number | null {
 	if (!name || options.length === 0) return null;
-	const MIN_SIMILARITY_THRESHOLD = 0.4;
-	let bestRating = -1, bestIndex = 0;
-	options.forEach((opt, i) => {
-		const rating = diceCoefficient(name, opt.label);
-		if (rating > bestRating) { bestRating = rating; bestIndex = i; }
-	});
-	if (bestRating < MIN_SIMILARITY_THRESHOLD) return null;
-	return options[bestIndex]?.value || null;
+	const fuse = new Fuse(options, { keys: ["label"], threshold: 0.4, includeScore: true });
+	const results: FuseResult<SelectOption>[] = fuse.search(name);
+	if (!results.length) return null;
+	const value: string | undefined = results[0]?.item.value;
+	return value != null ? Number(value) : null;
 }
 
-export function findExactOption(options: SelectOption[], name: string): string | null | undefined {
+export function findExactOption(options: SelectOption[], name: string): number | null {
 	if (!name || options.length === 0) return null;
 	const match: SelectOption | undefined = options.find(
 		(opt: SelectOption): boolean => opt.label.toLowerCase() === name.toLowerCase()
 	);
-	return match ? match.value : null;
+	return match ? Number(match.value) : null;
 }
 
 interface UseFormOptionsReturn {
 	companies: SelectOption[];
-	locations: SelectOption[];
 	keywords: SelectOption[];
 	persons: SelectOption[];
 	aggregators: SelectOption[];
@@ -64,7 +44,6 @@ interface UseFormOptionsReturn {
 	currencyNames: SelectOption[];
 	getCompanyPreviewConfig: SelectWidgetPreviewConfig;
 	getPersonPreviewConfig: SelectWidgetPreviewConfig;
-	getLocationPreviewConfig: SelectWidgetPreviewConfig;
 	getAggregatorPreviewConfig: SelectWidgetPreviewConfig;
 	getContactOptions: (job: JobData) => GroupedSelectOption[];
 }
@@ -74,17 +53,16 @@ export const toSelectOptions = <T extends Record<string, any>>(
 	valueKey: keyof T | ((item: T) => any) = "id",
 	labelKey: keyof T | ((item: T) => any) = "name"
 ): SelectOption[] => {
-	const sorted = [...data].sort((a, b) => {
+	const sorted: T[] = [...data].sort((a: T, b: T): number => {
 		const aLabel: any = typeof labelKey === "function" ? labelKey(a) : a[labelKey];
 		const bLabel: any = typeof labelKey === "function" ? labelKey(b) : b[labelKey];
 		return String(aLabel).localeCompare(String(bLabel));
 	});
 
 	return sorted.map(
-		(item): SelectOption => ({
+		(item: T): SelectOption => ({
 			value: typeof valueKey === "function" ? valueKey(item) : item[valueKey],
 			label: typeof labelKey === "function" ? labelKey(item) : item[labelKey],
-			data: item,
 		})
 	);
 };
@@ -95,30 +73,24 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 	const getCompanyPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
 		fields: [modalViewFields.url(), [modalViewFields.description()]],
-		getDataById: (id: number) => findItemById(dataContext.companies, id),
+		getDataById: (id: number): CompanyData | null => findItemById(dataContext.companies, id),
 	};
 
 	const getPersonPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
 		fields: [modalViewFields.email(), [modalViewFields.companyBadge(), modalViewFields.role()]],
-		getDataById: (id: number) => findItemById(dataContext.persons, id),
-	};
-
-	const getLocationPreviewConfig: SelectWidgetPreviewConfig = {
-		enabled: true,
-		fields: [modalViewFields.locationMap({ label: "" })],
-		getDataById: (id: number) => findItemById(dataContext.locations, id),
+		getDataById: (id: number): PersonData | null => findItemById(dataContext.persons, id),
 	};
 
 	const getAggregatorPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
 		fields: [modalViewFields.url()],
-		getDataById: (id: number) => findItemById(dataContext.aggregators, id),
+		getDataById: (id: number): AggregatorData | null => findItemById(dataContext.aggregators, id),
 	};
 
 	const getPersonLabel = (person: PersonData): string => {
 		if (person.company_id) {
-			const company = findItemById(dataContext.companies, person.company_id);
+			const company: CompanyData | null = findItemById(dataContext.companies, person.company_id);
 			if (company) {
 				return `${person.name} (${company.name})`;
 			}
@@ -140,10 +112,10 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 			interviews.some((interview: InterviewData) => interview.interviewers?.includes(person.id))
 		);
 		const excludedIds = new Set<number>([
-			...jobContacts.map((p) => p.id),
-			...interviewContacts.map((p) => p.id),
+			...jobContacts.map((p: PersonData): number => p.id),
+			...interviewContacts.map((p: PersonData): number => p.id),
 		]);
-		const otherContacts: PersonData[] = persons.filter((p) => !excludedIds.has(p.id));
+		const otherContacts: PersonData[] = persons.filter((p: PersonData): boolean => !excludedIds.has(p.id));
 		return [
 			{ label: "Job Contacts", options: toSelectOptions(jobContacts, "id", getPersonLabel) },
 			{
@@ -158,10 +130,6 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 	const companyOptions: SelectOption[] = useMemo(
 		(): SelectOption[] => toSelectOptions(dataContext.companies),
 		[dataContext.companies]
-	);
-	const locationOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(dataContext.locations),
-		[dataContext.locations]
 	);
 	const keywordOptions: SelectOption[] = useMemo(
 		(): SelectOption[] => toSelectOptions(dataContext.keywords),
@@ -194,7 +162,6 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 
 	return {
 		companies: companyOptions,
-		locations: locationOptions,
 		keywords: keywordOptions,
 		persons: personOptions,
 		aggregators: aggregatorOptions,
@@ -204,7 +171,6 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 		currencyNames: currencyNameOptions,
 		getCompanyPreviewConfig,
 		getPersonPreviewConfig,
-		getLocationPreviewConfig,
 		getAggregatorPreviewConfig,
 		getContactOptions,
 	};
