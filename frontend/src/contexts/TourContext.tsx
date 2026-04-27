@@ -1,7 +1,7 @@
 import React, { createContext, JSX, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
-import { useDataContext } from "./DataContext";
+import { TourSnapshot, useDataContext } from "./DataContext";
 import { scrapedJobApi } from "../services/api/Services";
 import { useGlobalToast } from "../hooks/useNotificationToast";
 
@@ -37,17 +37,7 @@ interface TourProviderProps {
 	children: ReactNode;
 }
 
-/** Snapshot of entity IDs that existed before the tour started. */
-interface EntitySnapshot {
-	jobIds: Set<number>;
-	companyIds: Set<number>;
-	personIds: Set<number>;
-	interviewIds: Set<number>;
-	jobApplicationUpdateIds: Set<number>;
-	scrapingFilterIds: Set<number>;
-}
-
-function emptySnapshot(): EntitySnapshot {
+function emptySnapshot(): TourSnapshot {
 	return {
 		jobIds: new Set(),
 		companyIds: new Set(),
@@ -55,6 +45,8 @@ function emptySnapshot(): EntitySnapshot {
 		interviewIds: new Set(),
 		jobApplicationUpdateIds: new Set(),
 		scrapingFilterIds: new Set(),
+		aggregatorIds: new Set(),
+		keywordIds: new Set(),
 	};
 }
 
@@ -67,7 +59,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	const [demoScrapedJobId, setDemoScrapedJobId] = useState<number | null>(null);
 	const [demoScrapingFilterId, setDemoScrapingFilterId] = useState<number | null>(null);
 	const { currentUser, updateCurrentUser, token } = useAuth();
-	const { jobs, companies, persons, interviews, jobApplicationUpdates, scrapingFilters, addEntity, deleteEntity, setDemoFilter, setTourScrapingFilterIds } =
+	const { jobs, companies, persons, interviews, jobApplicationUpdates, aggregators, keywords, scrapingFilters, addEntity, deleteEntity, setTourSnapshot } =
 		useDataContext();
 	const { showToastError } = useGlobalToast();
 
@@ -79,7 +71,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 
 	// Snapshot of all entity IDs that existed before the tour started.
 	// At cleanup time we diff against this to find (and delete) everything created during the tour.
-	const preInteractiveSnapshot = useRef<EntitySnapshot>(emptySnapshot());
+	const preInteractiveSnapshot = useRef<TourSnapshot>(emptySnapshot());
 
 	// Seed completed tours from preferences
 	useEffect((): void => {
@@ -111,6 +103,8 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					interviewIds: new Set(interviews.map((i) => i.id)),
 					jobApplicationUpdateIds: new Set(jobApplicationUpdates.map((u) => u.id)),
 					scrapingFilterIds: new Set(scrapingFilters.map((f) => f.id)),
+					aggregatorIds: new Set(aggregators.map((a) => a.id)),
+					keywordIds: new Set(keywords.map((k) => k.id)),
 				};
 
 				if (tourId === "follow-up-email") {
@@ -170,8 +164,6 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 
 					const jobId: number = jobResult.data.id;
 					setDemoJobId(jobId);
-					setDemoFilter({ jobIds: [jobId], personIds: [personId, interviewerId] });
-
 					await addEntity("interview", {
 						job_id: jobId,
 						type: "video",
@@ -188,33 +180,28 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					setDemoScrapedJobId(result.data.id);
 				}
 
-				if (tourId === "scraping-filters") {
-					setTourScrapingFilterIds(preInteractiveSnapshot.current.scrapingFilterIds);
-				}
-
+				setTourSnapshot(preInteractiveSnapshot.current);
 				setIsTourSelectOpen(false);
 				setActiveTourId(tourId);
 			} catch (err: any) {
 				showToastError(`Failed to start tour: ${err?.message ?? "Unknown error"}`);
 			}
 		},
-		[jobs, companies, persons, interviews, jobApplicationUpdates, scrapingFilters, addEntity, setDemoFilter, setTourScrapingFilterIds, token, location.pathname, showToastError]
+		[jobs, companies, persons, interviews, jobApplicationUpdates, aggregators, keywords, scrapingFilters, addEntity, setTourSnapshot, token, location.pathname, showToastError]
 	);
 
 	const endTour = useCallback(
 		async (completed: boolean): Promise<void> => {
 			const tourId = activeTourId;
 			setActiveTourId(null);
+			setTourSnapshot(null);
 
-			// Clear the demo filter as soon as the tour ends
 			if (tourId === "follow-up-email") {
-				setDemoFilter(null);
 				setDemoJobId(null);
 			}
 
 			if (tourId === "scraping-filters") {
 				setDemoScrapingFilterId(null);
-				setTourScrapingFilterIds(null);
 			}
 
 			if (completed && tourId && !completedTourIds.has(tourId)) {
@@ -296,8 +283,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			jobApplicationUpdates,
 			scrapingFilters,
 			deleteEntity,
-			setDemoFilter,
-			setTourScrapingFilterIds,
+			setTourSnapshot,
 			demoScrapedJobId,
 			token,
 			navigate,

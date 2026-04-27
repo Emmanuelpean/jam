@@ -41,6 +41,17 @@ import { Country, Currency } from "../services/schemas/Others";
 import { ApiError } from "../services/api/ApiError";
 import { GeoLocationData } from "../services/schemas/Base";
 
+export interface TourSnapshot {
+	jobIds: Set<number>;
+	companyIds: Set<number>;
+	personIds: Set<number>;
+	interviewIds: Set<number>;
+	jobApplicationUpdateIds: Set<number>;
+	scrapingFilterIds: Set<number>;
+	aggregatorIds: Set<number>;
+	keywordIds: Set<number>;
+}
+
 export type EntityType =
 	| "job"
 	| "company"
@@ -177,8 +188,7 @@ export interface DataContextValue {
 
 	error: ApiError | null;
 
-	setDemoFilter: (filter: { jobIds: number[]; personIds: number[] } | null) => void;
-	setTourScrapingFilterIds: (ids: Set<number> | null) => void;
+	setTourSnapshot: (snapshot: TourSnapshot | null) => void;
 
 	// Generic update functions
 	addEntity: <T extends EntityType>(type: T, data: any) => ApiResponsePromise<JamData>;
@@ -194,8 +204,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [rawJobs, setRawJobs] = useState<JobData[]>([]);
 	const [companies, setCompanies] = useState<CompanyData[]>([]);
 	const [persons, setPersons] = useState<PersonData[]>([]);
-	const [demoFilter, setDemoFilter] = useState<{ jobIds: number[]; personIds: number[] } | null>(null);
-	const [tourScrapingFilterIds, setTourScrapingFilterIds] = useState<Set<number> | null>(null);
+	const [tourSnapshot, setTourSnapshot] = useState<TourSnapshot | null>(null);
 	const [rawInterviews, setRawInterviews] = useState<InterviewData[]>([]);
 	const [rawJobApplicationUpdates, setRawJobApplicationUpdates] = useState<JobApplicationUpdateData[]>([]);
 	const [aggregators, setAggregators] = useState<AggregatorData[]>([]);
@@ -253,7 +262,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const jobs: EnrichedJobData[] = useMemo<EnrichedJobData[]>((): EnrichedJobData[] => {
 		// Enrich jobs with calculated fields
 
-		const sourceJobs = demoFilter ? rawJobs.filter((j) => demoFilter.jobIds.includes(j.id)) : rawJobs;
+		const sourceJobs = rawJobs;
 		return sourceJobs.map((job: JobData): EnrichedJobData => {
 			const jobInterviews: InterviewData[] = rawInterviews.filter(
 				(i: InterviewData): boolean => i.job_id === job.id
@@ -331,7 +340,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				name: jobName,
 			};
 		});
-	}, [rawJobs, rawInterviews, rawJobApplicationUpdates, companies, demoFilter]);
+	}, [rawJobs, rawInterviews, rawJobApplicationUpdates, companies]);
 
 	const fetchAllData = async () => {
 		setError(null);
@@ -563,17 +572,35 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	return (
 		<DataContext.Provider
 			value={{
-				jobs,
-				companies,
-				persons: demoFilter ? persons.filter((p) => demoFilter.personIds.includes(p.id)) : persons,
-				interviews,
-				jobApplicationUpdates,
-				aggregators,
-				keywords,
-				scrapingFilters:
-					tourScrapingFilterIds !== null
-						? scrapingFilters.filter((f) => !tourScrapingFilterIds.has(f.id))
-						: scrapingFilters,
+				jobs: tourSnapshot
+					? jobs.filter((j: EnrichedJobData): boolean => !tourSnapshot.jobIds.has(j.id))
+					: jobs,
+				companies: tourSnapshot
+					? companies.filter((c: CompanyData): boolean => !tourSnapshot.companyIds.has(c.id))
+					: companies,
+				persons: tourSnapshot
+					? persons.filter((p: PersonData): boolean => !tourSnapshot.personIds.has(p.id))
+					: persons,
+				interviews: tourSnapshot
+					? interviews.filter((i: EnrichedInterviewData): boolean => !tourSnapshot.interviewIds.has(i.id))
+					: interviews,
+				jobApplicationUpdates: tourSnapshot
+					? jobApplicationUpdates.filter(
+							(u: EnrichedJobApplicationUpdateData): boolean =>
+								!tourSnapshot.jobApplicationUpdateIds.has(u.id)
+						)
+					: jobApplicationUpdates,
+				aggregators: tourSnapshot
+					? aggregators.filter((a: AggregatorData): boolean => !tourSnapshot.aggregatorIds.has(a.id))
+					: aggregators,
+				keywords: tourSnapshot
+					? keywords.filter((k: KeywordData): boolean => !tourSnapshot.keywordIds.has(k.id))
+					: keywords,
+				scrapingFilters: tourSnapshot
+					? scrapingFilters.filter(
+							(f: ScrapingFilterData): boolean => !tourSnapshot.scrapingFilterIds.has(f.id)
+						)
+					: scrapingFilters,
 				scrapingFavouriteFilters,
 				countries,
 				currencies,
@@ -582,8 +609,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				settings,
 				users,
 				error,
-				setDemoFilter,
-				setTourScrapingFilterIds,
+				setTourSnapshot,
 				updateEntity,
 				deleteEntity,
 				addEntity,
