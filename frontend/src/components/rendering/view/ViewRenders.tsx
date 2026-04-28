@@ -433,6 +433,14 @@ export const renderFunctions = {
 		return <LocationMap geolocatedEntry={[param.item]} />;
 	},
 
+	locationAttendance: (param: RenderParams): ReactNode => {
+		const attendanceLabel: string | null =
+			attendanceTypeOptions.find((o: SelectOption): boolean => o.value === param.item.attendance_type)?.label ??
+			null;
+		if (!attendanceLabel) return param.item.location ?? null;
+		return <>{param.item.location}<br />({attendanceLabel})</>;
+	},
+
 	lastUpdateDays: (params: RenderParams): ReactNode => {
 		const daysSinceLastUpdate: number | undefined | null = params.item?.days_since_last_update;
 		return <span className={"text-danger"}>{daysSinceLastUpdate} days</span>;
@@ -529,8 +537,8 @@ export const renderFunctions = {
 		}
 	},
 
-	LocationBadge: (param: RenderParams): ReactNode => {
-		const locationString: string | null = (param.item as ScrapedJobData).parsed_location ?? param.item.location;
+	locationBadge: (param: RenderParams): ReactNode => {
+		const locationString: string | null = param.item.location;
 		if (!locationString && !param.item?.attendance_type) return null;
 		const attendanceLabel: string | null =
 			attendanceTypeOptions.find((o: SelectOption): boolean => o.value === param.item.attendance_type)?.label ??

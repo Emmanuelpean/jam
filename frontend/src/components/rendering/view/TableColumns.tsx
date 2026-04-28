@@ -464,7 +464,7 @@ export const tableColumns = {
 		type: "text",
 		sortField: getLocationText,
 		searchFields: getLocationText,
-		render: (params: RenderParams): ReactNode => renderFunctions.LocationBadge(params),
+		render: (params: RenderParams): ReactNode => renderFunctions.locationBadge(params),
 		filterConfig: { type: "text" },
 		...overrides,
 	}),

@@ -110,10 +110,7 @@ class ScrapedJob(Owned, Base):
     - `raw_url` (str, optional): Raw URL to the job posting.
     - `deadline` (datetime, optional): Deadline for the job.
     - `company` (str, optional): Company name of the job.
-    - `location_postcode` (str, optional): Postcode of the job location.
-    - `location_city` (str, optional): City of the job location.
-    - `location_country` (str, optional): Country of the job location.
-    - `parsed_location` (str, optional): Parsed location of the job posting.
+    - `location` (str, optional): Parsed location of the job posting.
     - `attendance_type` (str, optional): Attendance type of the job (e.g., remote, on-site).
     - `is_closed` (bool): Indicates whether the job is closed.
 
@@ -156,11 +153,8 @@ class ScrapedJob(Owned, Base):
     raw_url = Column(String, nullable=True)
     deadline = Column(TIMESTAMP(timezone=True), nullable=True)
     company = Column(String, nullable=True)
+    raw_location = Column(String, nullable=True)
     location = Column(String, nullable=True)
-    location_postcode = Column(String, nullable=True)
-    location_city = Column(String, nullable=True)
-    location_country = Column(String, nullable=True)
-    parsed_location = Column(String, nullable=True)
     attendance_type = Column(String, nullable=True)
     is_closed = Column(Boolean, nullable=False, default=expression.false())
 
@@ -404,7 +398,7 @@ class Filter(object):
     # Constraints
     __table_args__ = (
         CheckConstraint(
-            "type IN ('title', 'company', 'location', 'location_city', 'location_country', 'salary_min', 'salary_max', 'attendance_type')",
+            "type IN ('title', 'company', 'location', 'salary_min', 'salary_max', 'attendance_type')",
             name="valid_filter_type",
         ),
         CheckConstraint(

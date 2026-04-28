@@ -5,8 +5,6 @@ import "leaflet/dist/leaflet.css";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import { ScrapedJobData } from "../../services/schemas/Services";
-import { JobData, InterviewData } from "../../services/schemas/DataTables";
 import { GeoLocationData } from "../../services/schemas/Base";
 import "./LocationMap.scss";
 
@@ -17,7 +15,12 @@ L.Icon.Default.mergeOptions({
 	shadowUrl: markerShadow,
 });
 
-export type GeolocatedEntry = ScrapedJobData | JobData | InterviewData;
+export interface GeolocatedEntry {
+	id: number;
+	location?: string | null;
+	attendance_type?: string | null;
+	geolocation: GeoLocationData | null;
+}
 
 interface LocationMapProps {
 	geolocatedEntry?: GeolocatedEntry[];

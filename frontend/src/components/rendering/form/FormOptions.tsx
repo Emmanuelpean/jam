@@ -224,8 +224,6 @@ export const scrapingFilterTypeOptions: SelectOption[] = [
 	{ value: "title", label: "Job Title" },
 	{ value: "company", label: "Company Name" },
 	{ value: "location", label: "Location" },
-	{ value: "location_city", label: "City" },
-	{ value: "location_country", label: "Country" },
 	{ value: "salary_min", label: "Minimum Salary" },
 	{ value: "salary_max", label: "Maximum Salary" },
 	{ value: "attendance_type", label: "Attendance Type" },

@@ -200,8 +200,6 @@ class TestUpdateScrapedJobData:
         # Verify the data was saved correctly
         assert sample_scraped_job.is_scraped is True
         assert sample_scraped_job.company == "Initial Company Name"  # not overwritten
-        assert sample_scraped_job.location_city == "Greater London"
-        assert sample_scraped_job.location_country == "United Kingdom"
         assert sample_scraped_job.title == sample_job_data["job"]["title"]
         assert sample_scraped_job.description == sample_job_data["job"]["description"]
         assert sample_scraped_job.salary_min == sample_job_data["job"]["salary"]["min_amount"]  # overwritten

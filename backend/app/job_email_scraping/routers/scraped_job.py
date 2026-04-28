@@ -440,8 +440,6 @@ def create_tour_demo(
         is_active=True,
         title="Senior Python Developer",
         company="Acme Corp",
-        location_city="London",
-        location_country="United Kingdom",
         attendance_type="hybrid",
         salary_min=70000,
         salary_max=90000,

@@ -265,16 +265,13 @@ class JobEmailScraper(EmailService):
         result = {}  # noqa
 
         # Location & attendance type
-        result["location"] = job_result.location
-        result["parsed_location"], result["attendance_type"] = self.location_parser.parse_location(result["location"])
+        result["raw_location"] = job_result.location
+        result["location"], result["attendance_type"] = self.location_parser.parse_location(result["raw_location"])
 
-        if result["parsed_location"]:
-            geolocation = geocode_location(result["parsed_location"], self.db, self.logger)
+        if result["location"]:
+            geolocation = geocode_location(result["location"], self.db, self.logger)
             if geolocation:
                 result["geolocation_id"] = geolocation.id
-                result["location_postcode"] = geolocation.postcode
-                result["location_city"] = geolocation.city
-                result["location_country"] = geolocation.country
 
         # Salary
         result["salary_min"] = job_result.job.salary.min_amount
@@ -397,10 +394,9 @@ class JobEmailScraper(EmailService):
             "deadline",
             "company",
             "is_closed",
+            "raw_location",
             "location",
-            "location_city",
-            "location_country",
-            "location_postcode",
+
             "attendance_type",
         ]
         for key in columns:

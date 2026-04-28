@@ -65,6 +65,8 @@ export const modalViewFields = {
 	location: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location",
 		label: "Location",
+		render: renderFunctions.locationAttendance,
+		displayCondition: (item: any) => !!item.location,
 		...overrides,
 	}),
 
@@ -140,18 +142,24 @@ export const modalViewFields = {
 	city: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "city",
 		label: "City",
+		render: (param: RenderParams) => param.item?.geolocation?.city ?? param.item?.city ?? null,
+		displayCondition: (item: any) => !!(item.geolocation?.city ?? item.city),
 		...overrides,
 	}),
 
 	postcode: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "postcode",
 		label: "Postcode",
+		render: (param: RenderParams) => param.item?.geolocation?.postcode ?? param.item?.postcode ?? null,
+		displayCondition: (item: any) => !!(item.geolocation?.postcode ?? item.postcode),
 		...overrides,
 	}),
 
 	country: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "country",
 		label: "Country",
+		render: (param: RenderParams) => param.item?.geolocation?.country ?? param.item?.country ?? null,
+		displayCondition: (item: any) => !!(item.geolocation?.country ?? item.country),
 		...overrides,
 	}),
 
@@ -237,7 +245,7 @@ export const modalViewFields = {
 	locationBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location",
 		label: "Location",
-		render: (params: RenderParams) => renderFunctions.LocationBadge({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.locationBadge({ ...params, view: true }),
 		...overrides,
 	}),
 

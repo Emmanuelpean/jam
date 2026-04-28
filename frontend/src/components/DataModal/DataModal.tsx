@@ -502,19 +502,15 @@ function DataModalComponent<T extends JamData>(
 
 	// ------------------------------------------------- MODAL CONTENT -------------------------------------------------
 
-	const renderFieldGroup = (item: Field | Field[], index: number, isFormMode = true): JSX.Element => {
+	const renderFieldGroup = (item: Field | Field[], index: number, totalItems = 0): JSX.Element => {
 		const itemList: Field[] = normaliseArray(item);
 
 		// Handle title fields in view mode
 		if (!isEditing && itemList.length === 1) {
-			const firstItem = itemList[0];
+			const firstItem: Field | undefined = itemList[0];
 			if (firstItem && "isTitle" in firstItem && firstItem.isTitle) {
-				const currentFields = getCurrentFields();
-				const fieldsToCheck = isFormMode ? currentFields.form : currentFields.view;
-				const hasElementsUnderneath = index < fieldsToCheck.length - 1;
-
 				return (
-					<div className={hasElementsUnderneath ? "mb-3" : ""} key={index}>
+					<div className={totalItems !== 1 ? "mb-3" : ""} key={index}>
 						{renderModalViewField(firstItem as ModalViewField, effectiveData, getModalId())}
 					</div>
 				);
@@ -524,7 +520,11 @@ function DataModalComponent<T extends JamData>(
 		const columnClass = getColumnClass(itemList.length);
 
 		return (
-			<div key={index} className="row mb-3" style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}>
+			<div
+				key={index}
+				className={`row${totalItems !== 1 ? " mb-3" : ""}`}
+				style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}
+			>
 				{itemList.map((field: Field, fieldIndex: number): JSX.Element => {
 					const fieldKey: string | string[] =
 						("key" in field ? field.key : null) ||
@@ -543,7 +543,7 @@ function DataModalComponent<T extends JamData>(
 		);
 	};
 
-	const renderSection = (section: SectionConfig, index: number, isFormMode = true): JSX.Element => {
+	const renderSection = (section: SectionConfig, index: number): JSX.Element => {
 		return (
 			<ModalSection
 				key={section.key || index}
@@ -555,17 +555,17 @@ function DataModalComponent<T extends JamData>(
 			>
 				{section.fields.map(
 					(item: Field | Field[], fieldIndex: number): JSX.Element =>
-						renderFieldGroup(item, fieldIndex, isFormMode)
+						renderFieldGroup(item, fieldIndex, section.fields.length)
 				)}
 			</ModalSection>
 		);
 	};
 
-	const renderFieldItem = (item: FieldItem, index: number, isFormMode = true): JSX.Element => {
+	const renderFieldItem = (item: FieldItem, index: number, totalItems = 0): JSX.Element => {
 		if (isSectionConfig(item)) {
-			return renderSection(item, index, isFormMode);
+			return renderSection(item, index);
 		}
-		return renderFieldGroup(item as Field | Field[], index, isFormMode);
+		return renderFieldGroup(item as Field | Field[], index, totalItems);
 	};
 
 	// ----------------------------------------------------- DELETE ----------------------------------------------------
@@ -864,7 +864,9 @@ function DataModalComponent<T extends JamData>(
 						<div>
 							{currentFields.form.map(
 								(item: FieldItem, index: number): JSX.Element => (
-									<div key={`form-field-${index}`}>{renderFieldItem(item, index, true)}</div>
+									<div key={`form-field-${index}`}>
+										{renderFieldItem(item, index, currentFields.form.length)}
+									</div>
 								)
 							)}
 						</div>
@@ -880,7 +882,7 @@ function DataModalComponent<T extends JamData>(
 										{currentFields.view.map(
 											(item: FieldItem, index: number): JSX.Element => (
 												<div key={`view-field-${index}`}>
-													{renderFieldItem(item, index, false)}
+													{renderFieldItem(item, index, currentFields.view.length)}
 												</div>
 											)
 										)}

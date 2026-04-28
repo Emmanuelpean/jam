@@ -87,10 +87,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				key: "location",
 				title: "Location",
 				icon: "bi-geo-alt",
-				fields: [
-					[formFields.attendanceType(), formFields.location({ name: "parsed_location" })],
-					modalViewFields.geolocationMap(),
-				],
+				fields: [[formFields.attendanceType(), formFields.location()], modalViewFields.geolocationMap()],
 			} as SectionConfig,
 
 			{
@@ -168,7 +165,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 			modalViewFields.jobRatingSection(),
 			modalViewFields.title({ isTitle: true }),
 			modalViewFields.description(),
-			[modalViewFields.company(), modalViewFields.location()],
+			[modalViewFields.company(), modalViewFields.locationBadge()],
 			[modalViewFields.platform(), modalViewFields.url()],
 			modalViewFields.geolocationMap(),
 		];
