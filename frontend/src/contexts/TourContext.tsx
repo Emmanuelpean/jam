@@ -59,8 +59,19 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	const [demoScrapedJobId, setDemoScrapedJobId] = useState<number | null>(null);
 	const [demoScrapingFilterId, setDemoScrapingFilterId] = useState<number | null>(null);
 	const { currentUser, updateCurrentUser, token } = useAuth();
-	const { jobs, companies, persons, interviews, jobApplicationUpdates, aggregators, keywords, scrapingFilters, addEntity, deleteEntity, setTourSnapshot } =
-		useDataContext();
+	const {
+		jobs,
+		companies,
+		persons,
+		interviews,
+		jobApplicationUpdates,
+		aggregators,
+		keywords,
+		scrapingFilters,
+		addEntity,
+		deleteEntity,
+		setTourSnapshot,
+	} = useDataContext();
 	const { showToastError } = useGlobalToast();
 
 	const navigate = useNavigate();
@@ -88,6 +99,14 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 		const newFilter = scrapingFilters.find((f) => !snapshot.scrapingFilterIds.has(f.id));
 		if (newFilter) setDemoScrapingFilterId(newFilter.id);
 	}, [activeTourId, scrapingFilters, demoScrapingFilterId]);
+
+	// Detect the job created by the user during the first-job tour
+	useEffect((): void => {
+		if (activeTourId !== "first-job") return;
+		if (demoJobId !== null) return;
+		const newJob = jobs.find((j) => !preInteractiveSnapshot.current.jobIds.has(j.id));
+		if (newJob) setDemoJobId(newJob.id);
+	}, [activeTourId, jobs, demoJobId]);
 
 	const startTour = useCallback(
 		async (tourId: string): Promise<void> => {
@@ -180,14 +199,66 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					setDemoScrapedJobId(result.data.id);
 				}
 
-				setTourSnapshot(preInteractiveSnapshot.current);
+				if (tourId === "log-interview" || tourId === "log-update") {
+					const jobResult = await addEntity("job", {
+						title: "Software Engineer",
+						is_favourite: false,
+						description: null,
+						note: null,
+						url: null,
+						salary_min: null,
+						salary_max: null,
+						salary_currency: null,
+						personal_rating: null,
+						deadline: null,
+						company_id: null,
+						source_aggregator_id: null,
+						source_type: null,
+						recruiter_id: null,
+						recruitment_company_id: null,
+						location: null,
+						application_date: new Date().toISOString(),
+						application_status: "applied",
+						applied_via: null,
+						application_note: null,
+						application_aggregator_id: null,
+						application_url: null,
+						attendance_type: null,
+						keywords: [],
+						contacts: [],
+					});
+					setDemoJobId(jobResult.data.id);
+				}
+
+				const ISOLATED_TOURS = new Set([
+					"first-job",
+					"follow-up-email",
+					"scraping-filters",
+					"log-interview",
+					"log-update",
+				]);
+				if (ISOLATED_TOURS.has(tourId)) setTourSnapshot(preInteractiveSnapshot.current);
 				setIsTourSelectOpen(false);
 				setActiveTourId(tourId);
 			} catch (err: any) {
 				showToastError(`Failed to start tour: ${err?.message ?? "Unknown error"}`);
 			}
 		},
-		[jobs, companies, persons, interviews, jobApplicationUpdates, aggregators, keywords, scrapingFilters, addEntity, setTourSnapshot, token, location.pathname, showToastError]
+		[
+			jobs,
+			companies,
+			persons,
+			interviews,
+			jobApplicationUpdates,
+			aggregators,
+			keywords,
+			scrapingFilters,
+			addEntity,
+			setTourSnapshot,
+			token,
+			location.pathname,
+			showToastError,
+		]
 	);
 
 	const endTour = useCallback(
@@ -196,7 +267,9 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			setActiveTourId(null);
 			setTourSnapshot(null);
 
-			if (tourId === "follow-up-email") {
+			document.querySelectorAll<HTMLElement>('.modal.show .btn-close').forEach(btn => btn.click());
+
+			if (tourId === "follow-up-email" || tourId === "first-job" || tourId === "log-interview" || tourId === "log-update") {
 				setDemoJobId(null);
 			}
 
@@ -221,7 +294,9 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			const newJobIds = jobs.map((j) => j.id).filter((id) => !snapshot.jobIds.has(id));
 			const newCompanyIds = companies.map((c) => c.id).filter((id) => !snapshot.companyIds.has(id));
 			const newPersonIds = persons.map((p) => p.id).filter((id) => !snapshot.personIds.has(id));
-			const newScrapingFilterIds = scrapingFilters.map((f) => f.id).filter((id) => !snapshot.scrapingFilterIds.has(id));
+			const newScrapingFilterIds = scrapingFilters
+				.map((f) => f.id)
+				.filter((id) => !snapshot.scrapingFilterIds.has(id));
 
 			const hasNewEntities = [
 				newInterviewIds,

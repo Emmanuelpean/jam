@@ -209,6 +209,14 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		hideNextButton: true,
 	},
 	{
+		id: "show-job-in-table",
+		targetId: "[demo-job-row]",
+		title: "Job Saved!",
+		content:
+			"Your new job application now appears in the table. Use the columns to track status, deadline, and last activity at a glance.",
+		placement: "top",
+	},
+	{
 		id: "done",
 		targetId: null,
 		title: "You're All Set!",
@@ -584,6 +592,200 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 	},
 ];
 
+const LOG_INTERVIEW_STEPS: TourStep[] = [
+	{
+		id: "interview-intro",
+		targetId: null,
+		title: "Logging an Interview",
+		content:
+			"Once you've heard back about an interview, JAM lets you record every detail — type, date, location, and who you spoke with. We've added a demo application so you can try it now.",
+		route: "/jam/jobs",
+		placement: "center",
+	},
+	{
+		id: "interview-open-job",
+		targetId: "[demo-job-row]",
+		title: "Open the Application",
+		content: "Click this job row to open the application details.",
+		route: "/jam/jobs",
+		placement: "top",
+		waitForSelector: "#application-tab",
+		hideNextButton: true,
+	},
+	{
+		id: "interview-application-tab",
+		targetId: "application-tab",
+		title: "Switch to the Application Tab",
+		content: "Click here to see your application history, including interviews and status updates.",
+		placement: "bottom",
+		waitForSelector: "#add-interview-button",
+		hideNextButton: true,
+	},
+	{
+		id: "interview-add",
+		targetId: "add-interview-button",
+		title: "Add an Interview",
+		content: "Click this button to log a new interview.",
+		placement: "bottom",
+		waitForSelector: "#modal-edit-interview",
+		hideNextButton: true,
+	},
+	{
+		id: "interview-date",
+		targetId: "date-form-group",
+		title: "Date & Time",
+		content: "Set when the interview took place (or is scheduled). JAM uses this to keep your timeline in order.",
+		placement: "right",
+		waitForInput: '.modal.show input[name="date"]',
+	},
+	{
+		id: "interview-type",
+		targetId: "type-form-group",
+		title: "Interview Type",
+		content:
+			"Record the format — phone screen, video call, technical, or on-site. Tracking types helps you spot patterns across your applications.",
+		placement: "right",
+		waitForInput: "#type-form-group .jam-select__input",
+	},
+	{
+		id: "interview-attendance",
+		targetId: "attendance_type-form-group",
+		title: "Attendance",
+		content: "Log whether the interview is remote, on-site, or hybrid.",
+		placement: "right",
+	},
+	{
+		id: "interview-interviewers",
+		targetId: "interviewers-form-group",
+		title: "Interviewers",
+		content:
+			"Link the people who interviewed you. Contacts already in JAM appear here — or add someone new on the fly.",
+		placement: "right",
+	},
+	{
+		id: "interview-note",
+		targetId: "note-form-group",
+		title: "Notes",
+		content: "Capture anything worth remembering — questions asked, impressions, or things to follow up on.",
+		placement: "right",
+	},
+	{
+		id: "interview-save",
+		targetId: "modal-edit-interview-confirm-button",
+		title: "Save the Interview",
+		content:
+			"Click Save to record the interview. It'll appear in the application timeline and feed into your dashboard stats.",
+		placement: "top",
+		waitForSelectorGone: "#modal-edit-interview",
+		hideNextButton: true,
+	},
+	{
+		id: "interview-show-in-table",
+		targetId: "interview-data-table",
+		title: "Interview Logged!",
+		content: "Your interview now appears in the timeline. Right-click any row to edit or delete it.",
+		placement: "top",
+	},
+	{
+		id: "interview-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"You've logged your first interview. The demo application will be cleaned up automatically when you click Done.",
+		placement: "center",
+	},
+];
+
+const LOG_UPDATE_STEPS: TourStep[] = [
+	{
+		id: "update-intro",
+		targetId: null,
+		title: "Logging an Application Update",
+		content:
+			"Heard back from a company? JAM lets you log any status change — rejection, offer, under review — so your application history stays complete. We've added a demo application to try it on.",
+		route: "/jam/jobs",
+		placement: "center",
+	},
+	{
+		id: "update-open-job",
+		targetId: "[demo-job-row]",
+		title: "Open the Application",
+		content: "Click this job row to open the application details.",
+		route: "/jam/jobs",
+		placement: "top",
+		waitForSelector: "#application-tab",
+		hideNextButton: true,
+	},
+	{
+		id: "update-application-tab",
+		targetId: "application-tab",
+		title: "Switch to the Application Tab",
+		content: "Click here to see your application history.",
+		placement: "bottom",
+		waitForSelector: "#add-jobApplicationUpdate-button",
+		hideNextButton: true,
+	},
+	{
+		id: "update-add",
+		targetId: "add-jobApplicationUpdate-button",
+		title: "Log an Update",
+		content: "Click this button to record a new status update.",
+		placement: "bottom",
+		waitForSelector: "#modal-edit-jobApplicationUpdate",
+		hideNextButton: true,
+	},
+	{
+		id: "update-date",
+		targetId: "date-form-group",
+		title: "Date",
+		content:
+			"When did you receive this update? JAM uses this to order your timeline and calculate days since last activity.",
+		placement: "right",
+		waitForInput: '.modal.show input[name="date"]',
+	},
+	{
+		id: "update-type",
+		targetId: "type-form-group",
+		title: "Update Type",
+		content:
+			"Choose the status — Rejected, Offer Received, Under Review, and more. This feeds your dashboard stats and helps you spot where applications are stalling.",
+		placement: "right",
+		waitForInput: "#type-form-group .jam-select__input",
+	},
+	{
+		id: "update-note",
+		targetId: "note-form-group",
+		title: "Notes",
+		content: "Add any details — feedback received, next steps, or a reminder for yourself.",
+		placement: "right",
+	},
+	{
+		id: "update-save",
+		targetId: "modal-edit-jobApplicationUpdate-confirm-button",
+		title: "Save the Update",
+		content:
+			"Click Save to record it. The update appears in the application timeline and updates the job's last activity date.",
+		placement: "top",
+		waitForSelectorGone: "#modal-edit-jobApplicationUpdate",
+		hideNextButton: true,
+	},
+	{
+		id: "update-show-in-table",
+		targetId: "jobApplicationUpdate-data-table",
+		title: "Update Logged!",
+		content: "Your update now appears in the application timeline. Right-click any row to edit or delete it.",
+		placement: "top",
+	},
+	{
+		id: "update-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"Keep logging updates as they come in and your dashboard will always reflect where you really stand. The demo application will be removed when you click Done.",
+		placement: "center",
+	},
+];
+
 // ── Tour registry ─────────────────────────────────────────────────────────────
 
 export const TOUR_STRUCTURE: TourStructureItem[] = [
@@ -600,6 +802,21 @@ export const TOUR_STRUCTURE: TourStructureItem[] = [
 		description: "A step-by-step walkthrough for logging your first job application.",
 		icon: "briefcase",
 		steps: FIRST_JOB_STEPS,
+	},
+	{
+		id: "log-interview",
+		title: "Logging an Interview",
+		description: "Walk through recording an interview — type, date, location, and who you spoke with.",
+		icon: "camera-video",
+		steps: LOG_INTERVIEW_STEPS,
+	},
+	{
+		id: "log-update",
+		title: "Logging an Application Update",
+		description:
+			"Learn how to log a status change — rejection, offer, under review — to keep your application history complete.",
+		icon: "arrow-repeat",
+		steps: LOG_UPDATE_STEPS,
 	},
 	{
 		id: "follow-up-email",

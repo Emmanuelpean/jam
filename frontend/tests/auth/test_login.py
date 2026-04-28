@@ -134,7 +134,7 @@ class TestLogIn(BaseTest):
 
         self.login()
         self.get_element("logout-btn").click()
-        self.confirm_modal.confirm_button.click()
+        self.logout_modal.confirm_button.click()
         self.auth_utils.wait_for_login()
 
     def test_remember_me_unchecked_stores_in_session_storage(self, test_regular_user) -> None:

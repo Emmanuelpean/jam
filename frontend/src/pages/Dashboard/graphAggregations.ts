@@ -38,44 +38,184 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 		label: "Jobs",
 		icon: "briefcase",
 		fields: [
-			{ key: "application_date", label: "Applications Over Time", icon: "graph-up", supportedChartTypes: ["line", "bar"], defaultChartType: "line", supportsGranularity: true },
-			{ key: "application_status", label: "Status Breakdown", icon: "pie-chart", supportedChartTypes: ["pie", "bar"], defaultChartType: "pie", supportsGranularity: false },
-			{ key: "source_aggregator", label: "By Source", icon: "signpost-split", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
-			{ key: "salary", label: "Salary Distribution", icon: "cash-stack", supportedChartTypes: ["bar"], defaultChartType: "bar", supportsGranularity: false },
-			{ key: "attendance_type", label: "By Attendance", icon: "building", supportedChartTypes: ["pie", "bar"], defaultChartType: "pie", supportsGranularity: false },
-			{ key: "personal_rating", label: "By Rating", icon: "star", supportedChartTypes: ["bar"], defaultChartType: "bar", supportsGranularity: false },
-			{ key: "city", label: "By City", icon: "geo-alt", supportedChartTypes: ["bar"], defaultChartType: "bar", supportsGranularity: false },
-			{ key: "country", label: "By Country", icon: "globe2", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
-			{ key: "applied_via", label: "Applied Via", icon: "cursor-fill", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
-			{ key: "application_funnel", label: "Application Funnel", icon: "funnel", supportedChartTypes: ["bar"], defaultChartType: "bar", supportsGranularity: false },
+			{
+				key: "application_date",
+				label: "Applications Over Time",
+				icon: "graph-up",
+				supportedChartTypes: ["line", "bar"],
+				defaultChartType: "line",
+				supportsGranularity: true,
+			},
+			{
+				key: "application_status",
+				label: "Status Breakdown",
+				icon: "pie-chart",
+				supportedChartTypes: ["pie", "bar"],
+				defaultChartType: "pie",
+				supportsGranularity: false,
+			},
+			{
+				key: "source_aggregator",
+				label: "By Source",
+				icon: "signpost-split",
+				supportedChartTypes: ["bar", "pie"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
+			{
+				key: "salary",
+				label: "Salary Distribution",
+				icon: "cash-stack",
+				supportedChartTypes: ["bar"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
+			{
+				key: "attendance_type",
+				label: "By Attendance",
+				icon: "building",
+				supportedChartTypes: ["pie", "bar"],
+				defaultChartType: "pie",
+				supportsGranularity: false,
+			},
+			{
+				key: "personal_rating",
+				label: "By Rating",
+				icon: "star",
+				supportedChartTypes: ["bar"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
+			{
+				key: "city",
+				label: "By City",
+				icon: "geo-alt",
+				supportedChartTypes: ["bar"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
+			{
+				key: "country",
+				label: "By Country",
+				icon: "globe2",
+				supportedChartTypes: ["bar", "pie"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
+			{
+				key: "applied_via",
+				label: "Applied Via",
+				icon: "cursor-fill",
+				supportedChartTypes: ["bar", "pie"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
+			{
+				key: "application_funnel",
+				label: "Application Funnel",
+				icon: "funnel",
+				supportedChartTypes: ["bar"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
 		],
 	},
 	interviews: {
 		label: "Interviews",
 		icon: "calendar-event",
 		fields: [
-			{ key: "interview_date", label: "Interviews Over Time", icon: "graph-up-arrow", supportedChartTypes: ["line", "bar"], defaultChartType: "line", supportsGranularity: true },
-			{ key: "interview_type", label: "Interview Types", icon: "person-badge", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
-			{ key: "interview_attendance", label: "Interview Attendance", icon: "building", supportedChartTypes: ["pie", "bar"], defaultChartType: "pie", supportsGranularity: false },
+			{
+				key: "interview_date",
+				label: "Interviews Over Time",
+				icon: "graph-up-arrow",
+				supportedChartTypes: ["line", "bar"],
+				defaultChartType: "line",
+				supportsGranularity: true,
+			},
+			{
+				key: "interview_type",
+				label: "Interview Types",
+				icon: "person-badge",
+				supportedChartTypes: ["bar", "pie"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
+			{
+				key: "interview_attendance",
+				label: "Interview Attendance",
+				icon: "building",
+				supportedChartTypes: ["pie", "bar"],
+				defaultChartType: "pie",
+				supportsGranularity: false,
+			},
 		],
 	},
 	updates: {
 		label: "Updates",
 		icon: "chat-left-text",
 		fields: [
-			{ key: "update_date", label: "Updates Over Time", icon: "chat-left-text", supportedChartTypes: ["line", "bar"], defaultChartType: "line", supportsGranularity: true },
-			{ key: "update_type", label: "Update Types", icon: "arrow-left-right", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
+			{
+				key: "update_date",
+				label: "Updates Over Time",
+				icon: "chat-left-text",
+				supportedChartTypes: ["line", "bar"],
+				defaultChartType: "line",
+				supportsGranularity: true,
+			},
+			{
+				key: "update_type",
+				label: "Update Types",
+				icon: "arrow-left-right",
+				supportedChartTypes: ["bar", "pie"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
 		],
 	},
 	scraped_jobs: {
 		label: "Scraped Jobs",
 		icon: "inbox",
 		fields: [
-			{ key: "scraped_count", label: "Jobs Scraped", icon: "inbox", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
-			{ key: "imported_count", label: "Jobs Imported", icon: "box-arrow-in-down", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
-			{ key: "applied_count", label: "Jobs Applied", icon: "send-check", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
-			{ key: "import_rate", label: "Import Rate", icon: "percent", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
-			{ key: "applied_rate", label: "Application Rate", icon: "percent", supportedChartTypes: ["bar", "pie"], defaultChartType: "bar", supportsGranularity: false },
+			{
+				key: "scraped_count",
+				label: "Jobs Scraped",
+				icon: "inbox",
+				supportedChartTypes: ["bar", "pie"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
+			{
+				key: "imported_count",
+				label: "Jobs Imported",
+				icon: "box-arrow-in-down",
+				supportedChartTypes: ["bar", "pie"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
+			{
+				key: "applied_count",
+				label: "Jobs Applied",
+				icon: "send-check",
+				supportedChartTypes: ["bar", "pie"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
+			{
+				key: "import_rate",
+				label: "Import Rate",
+				icon: "percent",
+				supportedChartTypes: ["bar", "pie"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
+			{
+				key: "applied_rate",
+				label: "Application Rate",
+				icon: "percent",
+				supportedChartTypes: ["bar", "pie"],
+				defaultChartType: "bar",
+				supportsGranularity: false,
+			},
 		],
 	},
 };
@@ -263,7 +403,11 @@ export function aggregateGraphData(
 		case "application_funnel":
 			return aggregateApplicationFunnel(ctx);
 		case "interview_type":
-			return groupAndCount(ctx.interviews.map((i) => i.type), "Unknown", interviewTypeOptions);
+			return groupAndCount(
+				ctx.interviews.map((i) => i.type),
+				"Unknown",
+				interviewTypeOptions
+			);
 		case "interview_attendance":
 			return groupAndCount(
 				ctx.interviews.filter((i) => i.attendance_type).map((i) => i.attendance_type),
@@ -271,9 +415,16 @@ export function aggregateGraphData(
 				interviewAttendanceOptions
 			);
 		case "update_date":
-			return bucketByTime(ctx.jobApplicationUpdates.map((u) => u.date), granularity);
+			return bucketByTime(
+				ctx.jobApplicationUpdates.map((u) => u.date),
+				granularity
+			);
 		case "update_type":
-			return groupAndCount(ctx.jobApplicationUpdates.map((u) => u.type), "Unknown", updateTypeOptions);
+			return groupAndCount(
+				ctx.jobApplicationUpdates.map((u) => u.type),
+				"Unknown",
+				updateTypeOptions
+			);
 		default:
 			return [];
 	}

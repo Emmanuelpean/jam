@@ -224,7 +224,7 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		return showAlert({
 			title,
 			message,
-			type: "warning",
+			type: "danger",
 			confirmText,
 			cancelText,
 			icon: "bi bi-box-arrow-right",

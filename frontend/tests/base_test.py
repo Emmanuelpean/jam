@@ -1641,6 +1641,12 @@ class DeleteModalUtils(AlertModalUtils):
     key = "delete"
 
 
+class LogoutModalUtils(AlertModalUtils):
+    """Utilities for the Logout Confirm Modal."""
+
+    key = "logout"
+
+
 class PremiumSettingsUtils(BaseUtilsClass):
 
     @property
@@ -1825,6 +1831,7 @@ class BaseTest(BaseUtils):
     followup_modal: FollowUpEmailModalUtils = None
     confirm_modal: ConfirmModalUtils = None
     delete_modal: DeleteModalUtils = None
+    logout_modal: LogoutModalUtils = None
     premium_settings_utils: PremiumSettingsUtils = None
 
     @pytest.fixture(autouse=True)
@@ -1915,6 +1922,7 @@ class BaseTest(BaseUtils):
             self.followup_modal = FollowUpEmailModalUtils(**shared_kwargs)
             self.confirm_modal = ConfirmModalUtils(**shared_kwargs)
             self.delete_modal = DeleteModalUtils(**shared_kwargs)
+            self.logout_modal = LogoutModalUtils(**shared_kwargs)
             self.premium_settings_utils = PremiumSettingsUtils(**shared_kwargs)
 
             self.driver.get(self.frontend_base_url)

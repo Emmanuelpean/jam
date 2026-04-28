@@ -38,7 +38,7 @@ export const Sidebar = (): JSX.Element => {
 	const { logout, currentUser } = useAuth();
 	const { isMobile } = useViewport();
 	const { openTourSelect, isTourSelectOpen, isTourActive } = useTour();
-	const { showConfirm } = useAlert();
+	const { showLogout } = useAlert();
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
 	const [dropdownTop, setDropdownTop] = useState<number>(72);
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -47,7 +47,7 @@ export const Sidebar = (): JSX.Element => {
 
 	const handleLogoutClick = async (): Promise<void> => {
 		if (currentUser?.is_demo) {
-			const confirmed: boolean = await showConfirm({
+			const confirmed: boolean = await showLogout({
 				title: "Log out of demo account?",
 				message:
 					"All demo data - including your jobs, companies, and settings - will be permanently deleted when you log out.",
@@ -56,7 +56,7 @@ export const Sidebar = (): JSX.Element => {
 			});
 			if (confirmed) logout();
 		} else {
-			const confirmed: boolean = await showConfirm({
+			const confirmed: boolean = await showLogout({
 				title: "Log out?",
 				message: "Are you sure you want to log out?",
 				cancelText: "Stay",

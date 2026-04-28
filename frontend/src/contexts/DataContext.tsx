@@ -262,8 +262,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const jobs: EnrichedJobData[] = useMemo<EnrichedJobData[]>((): EnrichedJobData[] => {
 		// Enrich jobs with calculated fields
 
-		const sourceJobs = rawJobs;
-		return sourceJobs.map((job: JobData): EnrichedJobData => {
+		return rawJobs.map((job: JobData): EnrichedJobData => {
 			const jobInterviews: InterviewData[] = rawInterviews.filter(
 				(i: InterviewData): boolean => i.job_id === job.id
 			);
@@ -524,38 +523,39 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		[token]
 	);
 
+	const visibleData = useMemo(() => {
+		const s = tourSnapshot;
+		return {
+			jobs: s ? jobs.filter((j) => !s.jobIds.has(j.id)) : jobs,
+			companies: s ? companies.filter((c) => !s.companyIds.has(c.id)) : companies,
+			persons: s ? persons.filter((p) => !s.personIds.has(p.id)) : persons,
+			interviews: s ? interviews.filter((i) => !s.interviewIds.has(i.id)) : interviews,
+			jobApplicationUpdates: s ? jobApplicationUpdates.filter((u) => !s.jobApplicationUpdateIds.has(u.id)) : jobApplicationUpdates,
+			aggregators: s ? aggregators.filter((a) => !s.aggregatorIds.has(a.id)) : aggregators,
+			keywords: s ? keywords.filter((k) => !s.keywordIds.has(k.id)) : keywords,
+			scrapingFilters: s ? scrapingFilters.filter((f) => !s.scrapingFilterIds.has(f.id)) : scrapingFilters,
+		};
+	}, [tourSnapshot, jobs, companies, persons, interviews, jobApplicationUpdates, aggregators, keywords, scrapingFilters]);
+
 	const getEntityData = useCallback(
 		<T extends EntityType>(entityType: T): JamData[] => {
 			const dataMap: Partial<Record<EntityType, JamData[]>> = {
-				job: jobs,
-				company: companies,
-				person: persons,
-				interview: interviews,
-				jobApplicationUpdate: jobApplicationUpdates,
-				aggregator: aggregators,
-				keyword: keywords,
+				job: visibleData.jobs,
+				company: visibleData.companies,
+				person: visibleData.persons,
+				interview: visibleData.interviews,
+				jobApplicationUpdate: visibleData.jobApplicationUpdates,
+				aggregator: visibleData.aggregators,
+				keyword: visibleData.keywords,
+				scrapingFilter: visibleData.scrapingFilters,
 				setting: settings,
 				user: users,
-				scrapingFilter: scrapingFilters,
 				scrapingFavouriteFilter: scrapingFavouriteFilters,
 				speculativeApplication: speculativeApplications,
 			};
 			return dataMap[entityType] ?? [];
 		},
-		[
-			jobs,
-			companies,
-			persons,
-			interviews,
-			jobApplicationUpdates,
-			aggregators,
-			keywords,
-			settings,
-			users,
-			scrapingFilters,
-			scrapingFavouriteFilters,
-			speculativeApplications,
-		]
+		[visibleData, settings, users, scrapingFavouriteFilters, speculativeApplications]
 	);
 
 	// Show loading immediately on mount — DataProvider only renders when !!token,
@@ -572,35 +572,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	return (
 		<DataContext.Provider
 			value={{
-				jobs: tourSnapshot
-					? jobs.filter((j: EnrichedJobData): boolean => !tourSnapshot.jobIds.has(j.id))
-					: jobs,
-				companies: tourSnapshot
-					? companies.filter((c: CompanyData): boolean => !tourSnapshot.companyIds.has(c.id))
-					: companies,
-				persons: tourSnapshot
-					? persons.filter((p: PersonData): boolean => !tourSnapshot.personIds.has(p.id))
-					: persons,
-				interviews: tourSnapshot
-					? interviews.filter((i: EnrichedInterviewData): boolean => !tourSnapshot.interviewIds.has(i.id))
-					: interviews,
-				jobApplicationUpdates: tourSnapshot
-					? jobApplicationUpdates.filter(
-							(u: EnrichedJobApplicationUpdateData): boolean =>
-								!tourSnapshot.jobApplicationUpdateIds.has(u.id)
-						)
-					: jobApplicationUpdates,
-				aggregators: tourSnapshot
-					? aggregators.filter((a: AggregatorData): boolean => !tourSnapshot.aggregatorIds.has(a.id))
-					: aggregators,
-				keywords: tourSnapshot
-					? keywords.filter((k: KeywordData): boolean => !tourSnapshot.keywordIds.has(k.id))
-					: keywords,
-				scrapingFilters: tourSnapshot
-					? scrapingFilters.filter(
-							(f: ScrapingFilterData): boolean => !tourSnapshot.scrapingFilterIds.has(f.id)
-						)
-					: scrapingFilters,
+				...visibleData,
 				scrapingFavouriteFilters,
 				countries,
 				currencies,
