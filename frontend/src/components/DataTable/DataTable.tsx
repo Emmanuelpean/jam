@@ -857,17 +857,19 @@ function DataTableComponent<T extends JamData>(
 								</Button>
 							)}
 							{enableColumnConfig && !compact && (
-								<Button
-									id="filter-toggle-btn"
-									variant="outline-primary"
-									className={`config-btn${filterSidebarOpen ? " active" : ""}`}
-									onClick={() => {
-										setFilterSidebarOpen(!filterSidebarOpen);
-										setColumnSidebarOpen(false);
-									}}
-									data-sidebar-toggle="filter"
-								>
-									<i className="bi bi-funnel"></i>
+								<div style={{ position: "relative", display: "inline-flex", height: "100%" }}>
+									<Button
+										id="filter-toggle-btn"
+										variant="outline-primary"
+										className={`config-btn${filterSidebarOpen ? " active" : ""}`}
+										onClick={() => {
+											setFilterSidebarOpen(!filterSidebarOpen);
+											setColumnSidebarOpen(false);
+										}}
+										data-sidebar-toggle="filter"
+									>
+										<i className="bi bi-funnel"></i>
+									</Button>
 									{activeFilterCount > 0 && (
 										<span
 											className="filter-button-count"
@@ -876,12 +878,13 @@ function DataTableComponent<T extends JamData>(
 												top: "-6px",
 												left: "-6px",
 												fontSize: "0.65rem",
+												pointerEvents: "none",
 											}}
 										>
 											{activeFilterCount}
 										</span>
 									)}
-								</Button>
+								</div>
 							)}
 						</div>
 					</div>
