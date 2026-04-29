@@ -47,6 +47,7 @@ function emptySnapshot(): TourSnapshot {
 		scrapingFilterIds: new Set(),
 		aggregatorIds: new Set(),
 		keywordIds: new Set(),
+		speculativeApplicationIds: new Set(),
 	};
 }
 
@@ -68,6 +69,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 		aggregators,
 		keywords,
 		scrapingFilters,
+		speculativeApplications,
 		addEntity,
 		deleteEntity,
 		setTourSnapshot,
@@ -124,6 +126,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					scrapingFilterIds: new Set(scrapingFilters.map((f) => f.id)),
 					aggregatorIds: new Set(aggregators.map((a) => a.id)),
 					keywordIds: new Set(keywords.map((k) => k.id)),
+					speculativeApplicationIds: new Set(speculativeApplications.map((s) => s.id)),
 				};
 
 				if (tourId === "follow-up-email") {
@@ -230,12 +233,46 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					setDemoJobId(jobResult.data.id);
 				}
 
+				if (tourId === "log-application") {
+					const jobResult = await addEntity("job", {
+						title: "Software Engineer",
+						is_favourite: false,
+						description: null,
+						note: null,
+						url: null,
+						salary_min: null,
+						salary_max: null,
+						salary_currency: null,
+						personal_rating: null,
+						deadline: null,
+						company_id: null,
+						source_aggregator_id: null,
+						source_type: null,
+						recruiter_id: null,
+						recruitment_company_id: null,
+						location: null,
+						application_date: null,
+						application_status: null,
+						applied_via: null,
+						application_note: null,
+						application_aggregator_id: null,
+						application_url: null,
+						attendance_type: null,
+						keywords: [],
+						contacts: [],
+					});
+					setDemoJobId(jobResult.data.id);
+				}
+
 				const ISOLATED_TOURS = new Set([
 					"first-job",
 					"follow-up-email",
 					"scraping-filters",
 					"log-interview",
 					"log-update",
+					"log-application",
+					"add-contact",
+					"speculative-applications",
 				]);
 				if (ISOLATED_TOURS.has(tourId)) setTourSnapshot(preInteractiveSnapshot.current);
 				setIsTourSelectOpen(false);
@@ -253,6 +290,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			aggregators,
 			keywords,
 			scrapingFilters,
+			speculativeApplications,
 			addEntity,
 			setTourSnapshot,
 			token,
@@ -269,7 +307,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 
 			document.querySelectorAll<HTMLElement>('.modal.show .btn-close').forEach(btn => btn.click());
 
-			if (tourId === "follow-up-email" || tourId === "first-job" || tourId === "log-interview" || tourId === "log-update") {
+			if (tourId === "follow-up-email" || tourId === "first-job" || tourId === "log-interview" || tourId === "log-update" || tourId === "log-application") {
 				setDemoJobId(null);
 			}
 
@@ -297,6 +335,9 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			const newScrapingFilterIds = scrapingFilters
 				.map((f) => f.id)
 				.filter((id) => !snapshot.scrapingFilterIds.has(id));
+			const newSpeculativeApplicationIds = speculativeApplications
+				.map((s) => s.id)
+				.filter((id) => !snapshot.speculativeApplicationIds.has(id));
 
 			const hasNewEntities = [
 				newInterviewIds,
@@ -305,6 +346,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				newCompanyIds,
 				newPersonIds,
 				newScrapingFilterIds,
+				newSpeculativeApplicationIds,
 			].some((arr) => arr.length > 0);
 
 			if (hasNewEntities) {
@@ -322,6 +364,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 						...newCompanyIds.map((id) => deleteEntity("company", id)),
 						...newPersonIds.map((id) => deleteEntity("person", id)),
 						...newScrapingFilterIds.map((id) => deleteEntity("scrapingFilter", id)),
+						...newSpeculativeApplicationIds.map((id) => deleteEntity("speculativeApplication", id)),
 					]);
 				} finally {
 					setIsCleaningUp(false);
@@ -357,6 +400,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			interviews,
 			jobApplicationUpdates,
 			scrapingFilters,
+			speculativeApplications,
 			deleteEntity,
 			setTourSnapshot,
 			demoScrapedJobId,

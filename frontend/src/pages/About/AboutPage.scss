@@ -157,6 +157,13 @@ body[data-mode="dark"] .link-gradient-purple:hover {
     letter-spacing: 0.3px;
     vertical-align: middle;
     text-transform: uppercase;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+    &:hover {
+        transform: translateY(-1.5px);
+        box-shadow: 0 6px 16px rgb(0 0 0 / 20%);
+        color: white;
+    }
 }
 
 .extension-platform-badge {
@@ -170,5 +177,5 @@ body[data-mode="dark"] .link-gradient-purple:hover {
 }
 
 .main-content:has(.gradient-bg) {
-    flex: none;
+    flex: 1;
 }

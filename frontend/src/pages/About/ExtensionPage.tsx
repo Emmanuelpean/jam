@@ -34,7 +34,7 @@ const extensionFeatures: Feature[] = [
 
 const ExtensionPage = (): JSX.Element => {
 	return (
-		<div className="gradient-bg" style={{ borderRadius: "18px", overflow: "hidden", minHeight: "100%" }}>
+		<div className="gradient-bg d-flex flex-column align-items-center justify-content-center" style={{ borderRadius: "18px", overflow: "hidden", minHeight: "100%" }}>
 			<Container className="py-5">
 				<div className="text-center mb-4">
 					<div className="extension-about-icon">

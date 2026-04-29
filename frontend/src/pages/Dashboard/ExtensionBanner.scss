@@ -46,6 +46,12 @@
     background: var(--primary-gradient);
     color: white;
     letter-spacing: 0.2px;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+    &:hover {
+        transform: translateY(-1.5px);
+        box-shadow: 0 6px 16px rgb(0 0 0 / 20%);
+        color: white;}
 }
 
 .extension-banner-subtitle {

@@ -50,6 +50,7 @@ export interface TourSnapshot {
 	scrapingFilterIds: Set<number>;
 	aggregatorIds: Set<number>;
 	keywordIds: Set<number>;
+	speculativeApplicationIds: Set<number>;
 }
 
 export type EntityType =

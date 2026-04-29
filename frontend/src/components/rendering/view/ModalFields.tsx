@@ -319,7 +319,7 @@ export const modalViewFields = {
 		label: "Location on Map",
 		type: "custom",
 		render: renderFunctions.locationMap,
-		displayCondition: (item): boolean => "location" in item && !!item.location,
+		displayCondition: (item): boolean => !!item.location && item.attendance_type !== "remote",
 		...overrides,
 	}),
 

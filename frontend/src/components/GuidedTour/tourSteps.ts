@@ -17,7 +17,7 @@ export interface TourStep {
 		fillSelector: string;
 		fillValue: string;
 	};
-	/** Hide the Next button — step advances automatically or by user action */
+	/** Hide the Next button - step advances automatically or by user action */
 	hideNextButton?: boolean;
 	/** Render choice buttons that jump to a specific step by id */
 	choices?: Array<{ label: string; icon: string; targetStepId: string }>;
@@ -31,7 +31,7 @@ export interface TourDefinition {
 	description: string;
 	icon: string;
 	steps: TourStep[];
-	/** Not yet implemented — shown in the panel as disabled with a "Soon" badge */
+	/** Not yet implemented - shown in the panel as disabled with a "Soon" badge */
 	comingSoon?: boolean;
 }
 
@@ -180,7 +180,7 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		targetId: "source_type-form-group",
 		title: "How Did You Find It?",
 		content:
-			"Log where you found the job — a job board, recruiter, LinkedIn, or elsewhere. Tracking your sources helps you see which channels land interviews.",
+			"Log where you found the job - a job board, recruiter, LinkedIn, or elsewhere. Tracking your sources helps you see which channels land interviews.",
 		placement: "right",
 	},
 	{
@@ -196,7 +196,7 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		targetId: "contacts-form-group",
 		title: "Contacts",
 		content:
-			"Link people to this job — hiring managers, recruiters, or anyone you've spoken to. Click the + icon to add a new contact on the fly.",
+			"Link people to this job - hiring managers, recruiters, or anyone you've spoken to. Click the + icon to add a new contact on the fly.",
 		placement: "right",
 	},
 	{
@@ -221,7 +221,7 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		targetId: null,
 		title: "You're All Set!",
 		content:
-			"You've added your first job application — great work! The job and company you just created will be removed when you click Done, so your data stays clean.",
+			"You've added your first job application - great work! The job and company you just created will be removed when you click Done, so your data stays clean.",
 		route: null,
 		placement: "center",
 	},
@@ -340,7 +340,7 @@ const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
 		targetId: "body-form-group",
 		title: "Email Body",
 		content:
-			"A professional follow-up message is generated automatically. Personalise it before sending — especially the opening line.",
+			"A professional follow-up message is generated automatically. Personalise it before sending - especially the opening line.",
 		placement: "right",
 	},
 	{
@@ -379,7 +379,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		targetId: null,
 		title: "Job Alert Scraping",
 		content:
-			"JAM automatically scans your email alert subscriptions from LinkedIn, Indeed, and similar platforms — " +
+			"JAM automatically scans your email alert subscriptions from LinkedIn, Indeed, and similar platforms -" +
 			"pulling matching jobs straight into JAM so you never miss an opportunity. " +
 			"We've added a demo alert so you can try the full import flow.",
 		route: "/scraped-jobs",
@@ -402,7 +402,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		title: "Job Emails",
 		content:
 			"The Job Emails tab shows the raw alert emails that triggered each scraping run. " +
-			"Open an email to see exactly which alerts came from it — useful for tracing the source of a job or diagnosing why an alert wasn't picked up.",
+			"Open an email to see exactly which alerts came from it - useful for tracing the source of a job or diagnosing why an alert wasn't picked up.",
 		route: "/scraped-jobs",
 		placement: "bottom",
 	},
@@ -411,7 +411,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		targetId: "table-header-job_rating.overall_score",
 		title: "AI Score",
 		content:
-			"JAM rates each alert against your profile — skills, experience, and preferences. " +
+			"JAM rates each alert against your profile - skills, experience, and preferences. " +
 			"Higher scores mean a stronger match. Set up your profile in User Settings to tune the ratings.",
 		route: "/scraped-jobs",
 		placement: "bottom",
@@ -421,7 +421,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		targetId: "scraping-filters-button",
 		title: "Scraping Filters",
 		content:
-			"Click here to configure what gets scraped — include or exclude keywords, locations, and platforms. " +
+			"Click here to configure what gets scraped - include or exclude keywords, locations, and platforms. " +
 			"Only alerts matching your active filters will appear in the table.",
 		route: "/scraped-jobs",
 		placement: "bottom",
@@ -441,7 +441,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		targetId: "modal-import-scrapedJob",
 		title: "Review the Import Form",
 		content:
-			"The scraped data is pre-filled — title, company, salary, location, and more. " +
+			"The scraped data is pre-filled - title, company, salary, location, and more. " +
 			"Edit any field before importing. When you're happy, click Import.",
 		placement: "left",
 	},
@@ -451,7 +451,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		title: "Check Company & Location",
 		content:
 			"JAM automatically tries to match the scraped company to one you've already created. " +
-			"The field is highlighted when a match is found — always verify it's correct before importing.",
+			"The field is highlighted when a match is found - always verify it's correct before importing.",
 		placement: "right",
 	},
 	{
@@ -470,7 +470,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		targetId: null,
 		title: "All Done!",
 		content:
-			"The job is now in your job list. JAM will keep pulling in new alerts automatically — " +
+			"The job is now in your job list. JAM will keep pulling in new alerts automatically -" +
 			"just visit Job Alerts whenever you want to review and import the latest matches.",
 		placement: "center",
 	},
@@ -531,7 +531,7 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 		targetId: "type-form-group",
 		title: "Filter Type",
 		content:
-			"Choose what part of the job alert to match against — for example Title, Company, or Location. " +
+			"Choose what part of the job alert to match against - for example Title, Company, or Location. " +
 			"Selecting Title will check the job title of every incoming alert.",
 		placement: "right",
 		waitForInput: "#type-form-group .jam-select__input",
@@ -560,7 +560,7 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 		title: "Test the Filter",
 		content:
 			"Before saving, click Test to preview which existing job alerts this filter would match. " +
-			"A table of matching alerts appears below — if it looks right, go ahead and save.",
+			"A table of matching alerts appears below - if it looks right, go ahead and save.",
 		placement: "top",
 	},
 	{
@@ -592,13 +592,113 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 	},
 ];
 
+const LOG_APPLICATION_STEPS: TourStep[] = [
+	{
+		id: "log-application-intro",
+		targetId: null,
+		title: "Logging a Job Application",
+		content:
+			"Once you've applied for a job, JAM lets you record the details - when you applied, the status, and how you submitted. We've added a demo job so you can try it now.",
+		route: "/jam/jobs",
+		placement: "center",
+	},
+	{
+		id: "log-application-open-job",
+		targetId: "[demo-job-row]",
+		title: "Open the Job",
+		content: "Click this job row to open the details.",
+		route: "/jam/jobs",
+		placement: "top",
+		waitForSelector: "#application-tab",
+		hideNextButton: true,
+	},
+	{
+		id: "log-application-tab",
+		targetId: "application-tab",
+		title: "Switch to the Job Application Tab",
+		content: "Click here to see the application section for this job.",
+		placement: "bottom",
+		waitForSelector: "#add-interview-button",
+		hideNextButton: true,
+	},
+	{
+		id: "log-application-edit",
+		targetId: "modal-view-job-edit-button",
+		title: "Edit the Job",
+		content: "Click Edit to fill in your application details.",
+		placement: "top",
+		waitForSelector: "#application_date-form-group",
+		hideNextButton: true,
+	},
+	{
+		id: "log-application-date",
+		targetId: "application_date-form-group",
+		title: "Application Date",
+		content:
+			"Record when you submitted the application. JAM uses this for your dashboard timeline and to calculate days since last activity.",
+		placement: "right",
+		waitForInput: '.modal.show input[name="application_date"]',
+	},
+	{
+		id: "log-application-status",
+		targetId: "application_status-form-group",
+		title: "Application Status",
+		content:
+			"Set the current status - Applied, Under Review, Rejected, Offer Received, and more. This feeds your dashboard stats and highlights stalled applications.",
+		placement: "right",
+		waitForInput: "#application_status-form-group .jam-select__input",
+	},
+	{
+		id: "log-application-via",
+		targetId: "applied_via-form-group",
+		title: "How Did You Apply?",
+		content:
+			"Log how you submitted - directly on the company site, via a job board, LinkedIn, or through a recruiter. Tracking this helps you see which channels get the best results.",
+		placement: "right",
+	},
+	{
+		id: "log-application-url",
+		targetId: "application_url-form-group",
+		title: "Application URL",
+		content:
+			"Paste the link to your application confirmation or the original job listing. Useful if you need to refer back to it later.",
+		placement: "right",
+	},
+	{
+		id: "log-application-note",
+		targetId: "application_note-form-group",
+		title: "Application Notes",
+		content:
+			"Add anything worth remembering - cover letter highlights, the recruiter's name, or a reminder to follow up.",
+		placement: "right",
+	},
+	{
+		id: "log-application-save",
+		targetId: "modal-edit-job-confirm-button",
+		title: "Save the Application",
+		content:
+			"Click Update to save your application details. The Job Application tab will show the status badge once saved.",
+		placement: "top",
+		waitForSelectorGone: '.modal.show input[name="application_date"]',
+		hideNextButton: true,
+	},
+	{
+		id: "log-application-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"You've logged your application details. Keep updating the status as things progress - your dashboard will always reflect where you really stand. The demo job will be removed when you click Done.",
+		placement: "center",
+	},
+];
+
 const LOG_INTERVIEW_STEPS: TourStep[] = [
 	{
 		id: "interview-intro",
 		targetId: null,
 		title: "Logging an Interview",
 		content:
-			"Once you've heard back about an interview, JAM lets you record every detail — type, date, location, and who you spoke with. We've added a demo application so you can try it now.",
+			"Once you've heard back about an interview, JAM lets you record every detail - type, date, location, and who you spoke with. We've added a demo application so you can try it now.",
 		route: "/jam/jobs",
 		placement: "center",
 	},
@@ -643,7 +743,7 @@ const LOG_INTERVIEW_STEPS: TourStep[] = [
 		targetId: "type-form-group",
 		title: "Interview Type",
 		content:
-			"Record the format — phone screen, video call, technical, or on-site. Tracking types helps you spot patterns across your applications.",
+			"Record the format - phone screen, video call, technical, or on-site. Tracking types helps you spot patterns across your applications.",
 		placement: "right",
 		waitForInput: "#type-form-group .jam-select__input",
 	},
@@ -659,14 +759,14 @@ const LOG_INTERVIEW_STEPS: TourStep[] = [
 		targetId: "interviewers-form-group",
 		title: "Interviewers",
 		content:
-			"Link the people who interviewed you. Contacts already in JAM appear here — or add someone new on the fly.",
+			"Link the people who interviewed you. Contacts already in JAM appear here - or add someone new on the fly.",
 		placement: "right",
 	},
 	{
 		id: "interview-note",
 		targetId: "note-form-group",
 		title: "Notes",
-		content: "Capture anything worth remembering — questions asked, impressions, or things to follow up on.",
+		content: "Capture anything worth remembering - questions asked, impressions, or things to follow up on.",
 		placement: "right",
 	},
 	{
@@ -702,7 +802,7 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 		targetId: null,
 		title: "Logging an Application Update",
 		content:
-			"Heard back from a company? JAM lets you log any status change — rejection, offer, under review — so your application history stays complete. We've added a demo application to try it on.",
+			"Heard back from a company? JAM lets you log any status change - rejection, offer, under review - so your application history stays complete. We've added a demo application to try it on.",
 		route: "/jam/jobs",
 		placement: "center",
 	},
@@ -748,7 +848,7 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 		targetId: "type-form-group",
 		title: "Update Type",
 		content:
-			"Choose the status — Rejected, Offer Received, Under Review, and more. This feeds your dashboard stats and helps you spot where applications are stalling.",
+			"Choose the status - Rejected, Offer Received, Under Review, and more. This feeds your dashboard stats and helps you spot where applications are stalling.",
 		placement: "right",
 		waitForInput: "#type-form-group .jam-select__input",
 	},
@@ -756,7 +856,7 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 		id: "update-note",
 		targetId: "note-form-group",
 		title: "Notes",
-		content: "Add any details — feedback received, next steps, or a reminder for yourself.",
+		content: "Add any details - feedback received, next steps, or a reminder for yourself.",
 		placement: "right",
 	},
 	{
@@ -786,13 +886,380 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 	},
 ];
 
+const SETUP_PROFILE_STEPS: TourStep[] = [
+	{
+		id: "profile-intro",
+		targetId: null,
+		title: "Setting Up Your Profile",
+		content:
+			"Your profile tells the AI what to look for when rating jobs. Fill in your experience, skills, and qualifications and JAM will score every scraped alert against them.",
+		route: "/settings/qualifications",
+		placement: "center",
+	},
+	{
+		id: "profile-nav",
+		targetId: "nav-user-settings",
+		title: "User Settings",
+		content: "Your profile lives in User Settings - you can get back here any time from the sidebar.",
+		route: "/settings/qualifications",
+		placement: "right",
+	},
+	{
+		id: "profile-tab",
+		targetId: "qualifications-tab",
+		title: "Qualifications Tab",
+		content: "The Qualifications tab is where you describe yourself to the AI.",
+		route: "/settings/qualifications",
+		placement: "bottom",
+	},
+	{
+		id: "profile-experience",
+		targetId: "experience-form-group",
+		title: "Experience",
+		content:
+			"Write a summary of your work history - roles, industries, and years of experience. The AI uses this to judge how well your background matches a job's requirements.",
+		placement: "right",
+	},
+	{
+		id: "profile-skills",
+		targetId: "skills-form-group",
+		title: "Skills",
+		content:
+			"List your technical and professional skills - tools, languages, frameworks, and methodologies relevant to the roles you're targeting.",
+		placement: "right",
+	},
+	{
+		id: "profile-qualities",
+		targetId: "qualities-form-group",
+		title: "Qualities",
+		content:
+			"Describe your personal qualities - things like attention to detail, communication style, or leadership. These help the AI match culture-fit signals in job descriptions.",
+		placement: "right",
+	},
+	{
+		id: "profile-education",
+		targetId: "education-form-group",
+		title: "Education",
+		content: "Add your academic background - degrees, certifications, and any relevant courses.",
+		placement: "right",
+	},
+	{
+		id: "profile-interests",
+		targetId: "interests-form-group",
+		title: "Interests",
+		content:
+			"Optional but useful - note professional interests or side projects that signal alignment with certain roles or companies.",
+		placement: "right",
+	},
+	{
+		id: "profile-save",
+		targetId: "confirm-button",
+		title: "Save Your Profile",
+		content:
+			"Click Save Qualifications when you're done. JAM will generate an AI system prompt from your input and use it to rate every job in your alerts.",
+		placement: "top",
+	},
+	{
+		id: "profile-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"Your profile is set up. Head to Job Alerts to see your scraped jobs rated against it - higher scores mean a stronger match.",
+		placement: "center",
+	},
+];
+
+const ADD_CONTACT_STEPS: TourStep[] = [
+	{
+		id: "contact-intro",
+		targetId: null,
+		title: "Adding a Contact",
+		content:
+			"Contacts in JAM are the people behind your job search - hiring managers, recruiters, and anyone you've spoken to. Linking them to jobs makes it easy to track relationships and generate follow-up emails. We'll clean up any test data when you're done.",
+		route: "/persons",
+		placement: "center",
+	},
+	{
+		id: "contact-add-btn",
+		targetId: "add-person-button",
+		title: "Add a Contact",
+		content: "Click this button to open the contact form.",
+		route: "/persons",
+		placement: "bottom",
+		waitForSelector: "#modal-edit-person",
+		hideNextButton: true,
+	},
+	{
+		id: "contact-first-name",
+		targetId: "first_name-form-group",
+		title: "First Name",
+		content: "Enter the contact's first name.",
+		placement: "bottom",
+		waitForInput: '.modal.show input[name="first_name"]',
+	},
+	{
+		id: "contact-last-name",
+		targetId: "last_name-form-group",
+		title: "Last Name",
+		content: "Enter the contact's last name.",
+		placement: "bottom",
+		waitForInput: '.modal.show input[name="last_name"]',
+	},
+	{
+		id: "contact-role",
+		targetId: "role-form-group",
+		title: "Role",
+		content: "Add their job title - Hiring Manager, Recruiter, Engineering Lead, or whatever fits.",
+		placement: "right",
+	},
+	{
+		id: "contact-email",
+		targetId: "email-form-group",
+		title: "Email Address",
+		content:
+			"If you have their email, add it here. JAM uses it to pre-fill the recipient in the follow-up email generator.",
+		placement: "right",
+	},
+	{
+		id: "contact-company",
+		targetId: "company_id-form-group",
+		title: "Company",
+		content:
+			"Link the contact to a company you've already created. This helps JAM suggest them when you're adding jobs for that company.",
+		placement: "right",
+	},
+	{
+		id: "contact-save",
+		targetId: "modal-edit-person-confirm-button",
+		title: "Save the Contact",
+		content: "Click Confirm to save. The contact is now available to link to any job.",
+		placement: "top",
+		waitForSelectorGone: '.modal.show input[name="first_name"]',
+		hideNextButton: true,
+	},
+	{
+		id: "contact-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"Your contact is saved. Open any job, go to the Tags & Contacts section, and add them - they'll appear as a badge you can right-click for quick actions. The contact created during this tour will be removed when you click Done.",
+		placement: "center",
+	},
+];
+
+const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
+	{
+		id: "speculative-intro",
+		targetId: null,
+		title: "Speculative Applications",
+		content:
+			"A speculative application is a proactive outreach to a company that hasn't posted a specific vacancy. JAM tracks these separately so you can follow up and stay organised. We'll clean up any test data when you're done.",
+		route: "/speculative-applications",
+		placement: "center",
+	},
+	{
+		id: "speculative-table",
+		targetId: "speculativeApplication-data-table",
+		title: "Your Speculative Applications",
+		content:
+			"Every company you've reached out to speculatively appears here. Use it to track when you contacted them and what was discussed.",
+		route: "/speculative-applications",
+		placement: "center",
+	},
+	{
+		id: "speculative-add",
+		targetId: "add-speculativeApplication-button",
+		title: "Log an Application",
+		content: "Click this button to log a new speculative outreach.",
+		placement: "bottom",
+		waitForSelector: "#modal-edit-speculativeApplication",
+		hideNextButton: true,
+	},
+	{
+		id: "speculative-company",
+		targetId: "company_id-form-group",
+		title: "Company",
+		content: "Select the company you're reaching out to. This is the only required field.",
+		placement: "right",
+		waitForInput: "#company_id-form-group .jam-select__input",
+	},
+	{
+		id: "speculative-date",
+		targetId: "date-form-group",
+		title: "Date",
+		content:
+			"Log when you sent the application or made contact. JAM uses this to order your list and flag overdue follow-ups.",
+		placement: "right",
+	},
+	{
+		id: "speculative-email",
+		targetId: "contact_email-form-group",
+		title: "Contact Email",
+		content: "If you contacted a specific person, add their email here to track who you spoke to.",
+		placement: "right",
+	},
+	{
+		id: "speculative-note",
+		targetId: "note-form-group",
+		title: "Notes",
+		content: "Record what you sent, who you addressed it to, or any response you received.",
+		placement: "right",
+	},
+	{
+		id: "speculative-save",
+		targetId: "modal-edit-speculativeApplication-confirm-button",
+		title: "Save",
+		content: "Click Confirm to log the speculative application.",
+		placement: "top",
+		waitForSelectorGone: "#modal-edit-speculativeApplication",
+		hideNextButton: true,
+	},
+	{
+		id: "speculative-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"The application is logged. Right-click any row to edit or delete entries. The record created during this tour will be removed when you click Done.",
+		placement: "center",
+	},
+];
+
+const DASHBOARD_WIDGETS_STEPS: TourStep[] = [
+	{
+		id: "dashboard-widgets-intro",
+		targetId: null,
+		title: "Customising Your Dashboard",
+		content:
+			"JAM's dashboard is fully customisable - add, remove, and rearrange widgets to build a view that shows what matters most to you.",
+		route: "/dashboard",
+		placement: "center",
+	},
+	{
+		id: "dashboard-widgets-overview",
+		targetId: "dashboard-main",
+		title: "Your Dashboard",
+		content: "Every card you see is a widget. You decide which ones appear, how big they are, and where they sit.",
+		route: "/dashboard",
+		placement: "center",
+	},
+	{
+		id: "dashboard-widgets-edit",
+		targetId: "dashboard-edit-btn",
+		title: "Enter Edit Mode",
+		content:
+			"Click the pencil icon to enter edit mode. Widgets become draggable and resizable, and the toolbar expands.",
+		route: "/dashboard",
+		placement: "left",
+		waitForSelector: "#dashboard-save-btn",
+		hideNextButton: true,
+	},
+	{
+		id: "dashboard-widgets-drag",
+		targetId: null,
+		title: "Drag and Resize",
+		content:
+			"In edit mode, grab any widget by its header to move it. Drag the bottom-right corner to resize. Changes are not saved until you click the save button.",
+		placement: "center",
+	},
+	{
+		id: "dashboard-widgets-add",
+		targetId: "dashboard-add-widget-btn",
+		title: "Add a Widget",
+		content:
+			"Click the + button to browse the widget library. Choose from stat counters, tables, charts, timelines, and maps.",
+		placement: "left",
+	},
+	{
+		id: "dashboard-widgets-save",
+		targetId: "dashboard-save-btn",
+		title: "Save Your Layout",
+		content: "Click the checkmark to save your layout. It persists across sessions and devices.",
+		placement: "left",
+	},
+	{
+		id: "dashboard-widgets-reset",
+		targetId: "dashboard-reset-btn",
+		title: "Reset to Default",
+		content: "If things get messy, click the reset button to restore the original layout.",
+		placement: "left",
+	},
+	{
+		id: "dashboard-widgets-done",
+		targetId: null,
+		title: "All Done!",
+		content: "You know how to customise your dashboard. Try rearranging your widgets or adding something new.",
+		placement: "center",
+	},
+];
+
+const COMMAND_PALETTE_STEPS: TourStep[] = [
+	{
+		id: "cp-intro",
+		targetId: null,
+		title: "The Command Palette",
+		content:
+			"The command palette lets you navigate to any page or trigger any action without touching the mouse. It's the fastest way to get around JAM.",
+		route: "/dashboard",
+		placement: "center",
+	},
+	{
+		id: "cp-open",
+		targetId: null,
+		title: "Open the Palette",
+		content:
+			"Press Ctrl+K (or Cmd+K on Mac) to open the command palette. The tour will continue automatically once it's open.",
+		placement: "center",
+		waitForSelector: "#cp-backdrop",
+		hideNextButton: true,
+	},
+	{
+		id: "cp-search",
+		targetId: "cp-input",
+		title: "Search",
+		content:
+			"Start typing to filter the list in real time. Type a page name or action - results narrow as you type.",
+		placement: "bottom",
+	},
+	{
+		id: "cp-actions",
+		targetId: "cp-group-actions",
+		title: "Actions",
+		content:
+			"The Actions group contains shortcuts for common tasks - add a job, log an interview, open settings, and more.",
+		placement: "bottom",
+	},
+	{
+		id: "cp-pages",
+		targetId: "cp-group-pages",
+		title: "Pages",
+		content: "The Pages group lists every section of JAM. Click any item to navigate there instantly.",
+		placement: "bottom",
+	},
+	{
+		id: "cp-keyboard",
+		targetId: null,
+		title: "Keyboard Navigation",
+		content:
+			"Use the arrow keys to move through items and press Enter to run the highlighted action. Press Esc to close the palette.",
+		placement: "center",
+	},
+	{
+		id: "cp-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"You can open the command palette from anywhere in JAM at any time. It also has a 'Take a Tour' option so you can revisit any of these guides.",
+		placement: "center",
+	},
+];
+
 // ── Tour registry ─────────────────────────────────────────────────────────────
 
 export const TOUR_STRUCTURE: TourStructureItem[] = [
 	{
 		id: "app-overview",
 		title: "App Overview",
-		description: "Get a quick tour of JAM's main features — the sidebar, dashboard, and command palette.",
+		description: "Get a quick tour of JAM's main features - the sidebar, dashboard, and command palette.",
 		icon: "compass",
 		steps: APP_OVERVIEW_STEPS,
 	},
@@ -804,9 +1271,17 @@ export const TOUR_STRUCTURE: TourStructureItem[] = [
 		steps: FIRST_JOB_STEPS,
 	},
 	{
+		id: "log-application",
+		title: "Logging a Job Application",
+		description:
+			"Walk through filling in your application details - when you applied, the status, and how you submitted.",
+		icon: "send",
+		steps: LOG_APPLICATION_STEPS,
+	},
+	{
 		id: "log-interview",
 		title: "Logging an Interview",
-		description: "Walk through recording an interview — type, date, location, and who you spoke with.",
+		description: "Walk through recording an interview - type, date, location, and who you spoke with.",
 		icon: "camera-video",
 		steps: LOG_INTERVIEW_STEPS,
 	},
@@ -814,7 +1289,7 @@ export const TOUR_STRUCTURE: TourStructureItem[] = [
 		id: "log-update",
 		title: "Logging an Application Update",
 		description:
-			"Learn how to log a status change — rejection, offer, under review — to keep your application history complete.",
+			"Learn how to log a status change - rejection, offer, under review - to keep your application history complete.",
 		icon: "arrow-repeat",
 		steps: LOG_UPDATE_STEPS,
 	},
@@ -824,6 +1299,37 @@ export const TOUR_STRUCTURE: TourStructureItem[] = [
 		description: "Learn how to generate and send a personalised follow-up email for a job application.",
 		icon: "envelope",
 		steps: FOLLOW_UP_EMAIL_STEPS,
+	},
+	{
+		id: "setup-profile",
+		title: "Setting Up Your Profile",
+		description:
+			"Fill in your experience, skills, and qualifications so the AI can rate scraped jobs against your background.",
+		icon: "person-fill-gear",
+		steps: SETUP_PROFILE_STEPS,
+	},
+	{
+		id: "add-contact",
+		title: "Adding a Contact",
+		description:
+			"Walk through creating a contact - hiring manager, recruiter, or anyone you've spoken to - and linking them to a job.",
+		icon: "person-plus",
+		steps: ADD_CONTACT_STEPS,
+	},
+	{
+		id: "speculative-applications",
+		title: "Speculative Applications",
+		description:
+			"Learn how to log and track proactive outreach to companies that haven't posted a specific vacancy.",
+		icon: "megaphone",
+		steps: SPECULATIVE_APPLICATIONS_STEPS,
+	},
+	{
+		id: "command-palette",
+		title: "Using the Command Palette",
+		description: "Discover how to navigate JAM and trigger actions at full speed with the Ctrl+K command palette.",
+		icon: "keyboard",
+		steps: COMMAND_PALETTE_STEPS,
 	},
 	{
 		type: "group",
@@ -868,8 +1374,7 @@ export const TOUR_STRUCTURE: TourStructureItem[] = [
 				title: "Adding Widgets & Customising",
 				description: "Learn how to add, remove, and rearrange widgets to build your perfect dashboard.",
 				icon: "layout-wtf",
-				steps: [],
-				comingSoon: true,
+				steps: DASHBOARD_WIDGETS_STEPS,
 			},
 		],
 	},
