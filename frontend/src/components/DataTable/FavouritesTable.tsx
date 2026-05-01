@@ -38,5 +38,3 @@ const FavouritesTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: 
 		/>
 	);
 };
-
-export default FavouritesTable;

@@ -4,7 +4,7 @@ import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { PersonModal } from "./PersonModal";
-import { InterviewData, InterviewDataTransform, JobData } from "../../services/schemas/DataTables";
+import { InterviewData, InterviewDataTransform } from "../../services/schemas/DataTables";
 
 export interface InterviewModalProps extends JamDataModalProps {
 	jobId?: number;

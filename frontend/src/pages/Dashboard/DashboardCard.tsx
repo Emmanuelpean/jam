@@ -113,5 +113,3 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 		</Card>
 	);
 };
-
-export default DashboardCard;

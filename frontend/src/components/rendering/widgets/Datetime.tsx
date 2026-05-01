@@ -4,7 +4,7 @@ import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
 import "./Datetime.scss";
 import { toKey } from "../../../utils/StringUtils";
 
-export const formatDateTime = (datetime?: string | Date): string => {
+export const formatDateTime = (datetime?: string | Date, dateOnly: boolean = false): string => {
 	if (!datetime) {
 		datetime = new Date();
 	} else {
@@ -13,21 +13,13 @@ export const formatDateTime = (datetime?: string | Date): string => {
 	const year = datetime.getFullYear();
 	const month = String(datetime.getMonth() + 1).padStart(2, "0");
 	const day = String(datetime.getDate()).padStart(2, "0");
-	const hours = String(datetime.getHours()).padStart(2, "0");
-	const minutes = String(datetime.getMinutes()).padStart(2, "0");
-	return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
-
-export const formatDate = (datetime?: string | Date): string => {
-	if (!datetime) {
-		datetime = new Date();
+	if (dateOnly) {
+		return `${year}-${month}-${day}`;
 	} else {
-		datetime = new Date(datetime);
+		const hours = String(datetime.getHours()).padStart(2, "0");
+		const minutes = String(datetime.getMinutes()).padStart(2, "0");
+		return `${year}-${month}-${day}T${hours}:${minutes}`;
 	}
-	const year = datetime.getFullYear();
-	const month = String(datetime.getMonth() + 1).padStart(2, "0");
-	const day = String(datetime.getDate()).padStart(2, "0");
-	return `${year}-${month}-${day}`;
 };
 
 type LocalInputType = "datetime-local" | "date";
@@ -49,7 +41,7 @@ export const LocalDatetimeInput = ({
 		const syntheticEvent: SyntheticEvent = {
 			target: {
 				name: toKey(field.name),
-				value: inputType === "datetime-local" ? formatDateTime() : formatDate(new Date()),
+				value: inputType === "datetime-local" ? formatDateTime() : formatDateTime(new Date(), true),
 			},
 		};
 		handleChange(syntheticEvent);
@@ -57,7 +49,7 @@ export const LocalDatetimeInput = ({
 
 	let formattedValue: string = "";
 	if (value) {
-		formattedValue = inputType === "datetime-local" ? formatDateTime(value) : formatDate(value);
+		formattedValue = inputType === "datetime-local" ? formatDateTime(value) : formatDateTime(value, true);
 	}
 
 	return (
