@@ -284,7 +284,7 @@ export const renderFunctions = {
 						</Button>
 					)}
 					<Button
-						variant={"primary"}
+						variant={"outline-primary"}
 						onClick={(): Promise<void> => filesApi.download(file.id, file.filename, param.token || "")}
 						title="Download"
 						id={"download-file-btn"}

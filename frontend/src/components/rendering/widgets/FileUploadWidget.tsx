@@ -94,10 +94,13 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 
 	const hasFile: boolean = !!value && !!fileMetadata;
 
+	const fieldId = field.name as string;
+
 	return (
 		<div>
-			<input ref={fileInputRef} type="file" className="d-none" onChange={handleInputChange} />
+			<input id={`${fieldId}-file-input`} ref={fileInputRef} type="file" className="d-none" onChange={handleInputChange} />
 			<div
+				id={`${fieldId}-drop-zone`}
 				className={`file-drop-zone${dragOver ? " drag-over" : ""}${uploading ? " uploading" : ""}${hasFile ? " has-file" : ""}`}
 				onClick={() => !uploading && !hasFile && fileInputRef.current?.click()}
 				onDrop={handleDrop}
@@ -128,6 +131,7 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 						<div className="file-drop-actions" onClick={(e) => e.stopPropagation()}>
 							{canPreviewFile(fileMetadata!.type) ? (
 								<Button
+									id={`${fieldId}-preview-btn`}
 									variant={"outline-secondary"}
 									className="file-drop-action-btn"
 									onClick={handlePreview}
@@ -143,6 +147,7 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 									style={{ cursor: "not-allowed" }}
 								>
 									<Button
+										id={`${fieldId}-preview-btn`}
 										variant={"outline-secondary"}
 										className="file-drop-action-btn"
 										disabled
@@ -153,6 +158,7 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 								</div>
 							)}
 							<Button
+								id={`${fieldId}-download-btn`}
 								variant={"outline-primary"}
 								className="file-drop-action-btn"
 								onClick={handleDownload}
@@ -161,6 +167,7 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 								<i className="bi bi-download" />
 							</Button>
 							<Button
+								id={`${fieldId}-remove-btn`}
 								variant={"outline-danger"}
 								className="file-drop-action-btn"
 								onClick={handleRemove}

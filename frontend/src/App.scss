@@ -656,7 +656,7 @@ textarea.form-control {
 .btn-outline-primary:first-child:active,
 :not(.btn-check) + .btn-outline-primary:active {
     background: var(--primary-gradient);
-    border: none;
+    border: none;  //  2px var(--primary-mid) solid
 }
 
 // Primary button (e.g. submit)

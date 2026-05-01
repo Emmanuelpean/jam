@@ -1,4 +1,13 @@
-import React, { forwardRef, JSX, ReactNode, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, {
+	forwardRef,
+	JSX,
+	ReactNode,
+	useCallback,
+	useEffect,
+	useImperativeHandle,
+	useRef,
+	useState,
+} from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
 import JamModal from "../JamModal/JamModal";
 import { ModalHeader } from "../ModalHeader/ModalHeader";
@@ -509,7 +518,7 @@ function DataModalComponent<T extends JamData>(
 
 	// ------------------------------------------------- MODAL CONTENT -------------------------------------------------
 
-	const renderFieldGroup = (item: Field | Field[], index: number, totalItems = 0): JSX.Element => {
+	const renderFieldGroup = (item: Field | Field[], index: number): JSX.Element => {
 		const itemList: Field[] = normaliseArray(item);
 
 		// Handle title fields in view mode
@@ -517,21 +526,17 @@ function DataModalComponent<T extends JamData>(
 			const firstItem: Field | undefined = itemList[0];
 			if (firstItem && "isTitle" in firstItem && firstItem.isTitle) {
 				return (
-					<div className={totalItems !== 1 ? "mb-3" : ""} key={index}>
+					<div key={index}>
 						{renderModalViewField(firstItem as ModalViewField, effectiveData, getModalId())}
 					</div>
 				);
 			}
 		}
 
-		const columnClass = getColumnClass(itemList.length);
+		const columnClass: string = getColumnClass(itemList.length);
 
 		return (
-			<div
-				key={index}
-				className={`row${totalItems !== 1 ? " mb-3" : ""}`}
-				style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}
-			>
+			<div key={index} className={`row`} style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}>
 				{itemList.map((field: Field, fieldIndex: number): JSX.Element => {
 					const fieldKey: string | string[] =
 						("key" in field ? field.key : null) ||
@@ -542,7 +547,14 @@ function DataModalComponent<T extends JamData>(
 						<div key={toKey(fieldKey)} className={columnClass}>
 							{isViewField(field)
 								? renderModalViewField(field as ModalViewField, effectiveData, getModalId())
-								: renderFormField(field as ModalFormField, formData, handleChange, errors, currentUser, handleUploadingChange)}
+								: renderFormField(
+										field as ModalFormField,
+										formData,
+										handleChange,
+										errors,
+										currentUser,
+										handleUploadingChange
+									)}
 						</div>
 					);
 				})}
@@ -561,8 +573,7 @@ function DataModalComponent<T extends JamData>(
 				onToggle={handleSectionToggle}
 			>
 				{section.fields.map(
-					(item: Field | Field[], fieldIndex: number): JSX.Element =>
-						renderFieldGroup(item, fieldIndex, section.fields.length)
+					(item: Field | Field[], fieldIndex: number): JSX.Element => renderFieldGroup(item, fieldIndex)
 				)}
 			</ModalSection>
 		);
@@ -572,7 +583,7 @@ function DataModalComponent<T extends JamData>(
 		if (isSectionConfig(item)) {
 			return renderSection(item, index);
 		}
-		return renderFieldGroup(item as Field | Field[], index, totalItems);
+		return renderFieldGroup(item as Field | Field[], index);
 	};
 
 	// ----------------------------------------------------- DELETE ----------------------------------------------------
