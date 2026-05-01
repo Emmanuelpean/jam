@@ -223,6 +223,13 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 			} as SectionConfig,
 			{
 				type: "section",
+				key: "application-documents",
+				title: "Documents",
+				icon: "bi-paperclip",
+				fields: [[formFields.cvUpload(), formFields.coverLetterUpload()]],
+			} as SectionConfig,
+			{
+				type: "section",
 				key: "application-notes",
 				title: "Notes",
 				icon: "bi-journal-text",
@@ -249,6 +256,13 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 					[modalViewFields.appliedViaBadge()],
 					[modalViewFields.applicationUrl()],
 				],
+			} as SectionConfig,
+			{
+				type: "section",
+				key: "application-documents",
+				title: "Documents",
+				icon: "bi-paperclip",
+				fields: [[modalViewFields.applicationCv(), modalViewFields.applicationCoverLetter()]],
 			} as SectionConfig,
 			{
 				type: "section",
@@ -289,6 +303,8 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				application_aggregator_id: jobData.application_aggregator_id || null,
 				application_note: jobData.application_note?.trim() || null,
 				attendance_type: jobData.attendance_type?.trim() || null,
+				cv_id: jobData.cv_id || null,
+				cover_letter_id: jobData.cover_letter_id || null,
 			};
 		};
 

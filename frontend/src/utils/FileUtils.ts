@@ -1,3 +1,14 @@
+const UNPREVIEWABLE_MIME_TYPES = new Set([
+	"application/msword",
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+	"application/vnd.ms-excel",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+	"application/vnd.ms-powerpoint",
+	"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+]);
+
+export const canPreviewFile = (mimeType: string): boolean => !UNPREVIEWABLE_MIME_TYPES.has(mimeType);
+
 export const formatFileSize = (bytes: number): string => {
 	if (!bytes || bytes === 0) return "";
 	if (bytes < 1024) return `${bytes} B`;

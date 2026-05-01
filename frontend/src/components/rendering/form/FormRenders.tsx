@@ -48,6 +48,7 @@ export interface ModalFormField {
 	highlight?: boolean;
 	autoHeight?: boolean;
 	maxChars?: number;
+	fileType?: string;
 }
 
 interface FormFieldOverride extends Partial<ModalFormField> {}
@@ -429,6 +430,22 @@ export const formFields = {
 		label: "Application Via",
 		type: "select",
 		options: appliedViaOptions,
+		...overrides,
+	}),
+
+	cvUpload: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "cv_id",
+		label: "CV",
+		type: "file_upload",
+		fileType: "cv",
+		...overrides,
+	}),
+
+	coverLetterUpload: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "cover_letter_id",
+		label: "Cover Letter",
+		type: "file_upload",
+		fileType: "cover_letter",
 		...overrides,
 	}),
 

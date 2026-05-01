@@ -1,0 +1,100 @@
+.file-drop-zone {
+    border: 2px dashed var(--bs-border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+    background-color: var(--bs-body-bg);
+    user-select: none;
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    &:hover:not(.has-file) {
+        border-color: var(--primary-mid);
+        background-color: var(--bs-tertiary-bg);
+    }
+
+    &.drag-over {
+        border-color: var(--primary-mid);
+        border-style: solid;
+        background-color: color-mix(in srgb, var(--primary-mid) 8%, var(--bs-body-bg));
+
+        .file-drop-icon {
+            color: var(--primary-mid);
+            animation: bounce-down 0.6s ease infinite alternate;
+        }
+
+        .file-drop-text {
+            color: var(--primary-mid);
+            font-weight: 500;
+        }
+    }
+
+    @keyframes bounce-down {
+        from { transform: translateY(-3px); }
+        to   { transform: translateY(3px); }
+    }
+
+    &.uploading {
+        cursor: default;
+        opacity: 0.7;
+        pointer-events: none;
+    }
+
+    &.has-file {
+        cursor: default;
+        border-style: solid;
+        border-color: var(--bs-border-color);
+    }
+
+    .file-drop-icon {
+        font-size: 1.5rem;
+        color: var(--bs-secondary-color);
+        margin-bottom: 0.25rem;
+    }
+
+    .file-drop-text {
+        font-size: 0.875rem;
+        color: var(--bs-secondary-color);
+
+        .file-drop-link {
+            color: var(--primary-mid);
+            text-decoration: underline;
+        }
+    }
+
+    .file-drop-filename {
+        font-size: 0.875rem;
+        font-weight: 500;
+        word-break: break-all;
+        margin-bottom: 0.125rem;
+    }
+
+    .file-drop-filesize {
+        font-size: 0.8rem;
+        margin-bottom: 0.625rem;
+    }
+
+    .file-drop-actions {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .file-drop-action-btn {
+        width: 2rem;
+        height: 2rem;
+        padding: 0;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transform: none;
+
+    }
+
+}

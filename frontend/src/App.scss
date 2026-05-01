@@ -694,6 +694,11 @@ textarea.form-control {
     border-color: var(--danger-color);
 }
 
+.btn-outline-secondary {
+    color: var(--bs-btn-active-bg);
+    border: var(--bs-btn-active-bg) solid 2px;
+}
+
 .btn-outline-primary:hover,
 .btn-outline-primary:focus-visible,
 .dropdown-toggle.btn-outline-primary.show{

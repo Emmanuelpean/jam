@@ -13,6 +13,7 @@ import { UrlInput } from "./UrlInput";
 import { CurrentUser } from "../../../contexts/AuthContext";
 import { Toggle } from "./Toggle";
 import { FavouriteStar } from "./FavouriteStar";
+import { FileUploadWidget } from "./FileUploadWidget";
 import get from "lodash/get";
 import { toKey } from "../../../utils/StringUtils";
 
@@ -38,6 +39,7 @@ export interface WidgetProps {
 	currentUser?: CurrentUser | null;
 	previewConfig?: SelectWidgetPreviewConfig | null;
 	data?: any;
+	onUploadingChange?: (uploading: boolean) => void;
 }
 
 export const displayError = (errorMessage: string | null): JSX.Element[] | null => {
@@ -70,7 +72,8 @@ export const renderFormField = (
 	formData: any,
 	handleChange: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,
 	errors: Errors,
-	currentUser?: CurrentUser | null
+	currentUser?: CurrentUser | null,
+	onUploadingChange?: (uploading: boolean) => void
 ) => {
 	const value: any = get(formData, field.name);
 	const secondaryValue: any = field.secondaryName ? get(formData, field.secondaryName) : null;
@@ -86,6 +89,7 @@ export const renderFormField = (
 		currentUser,
 		previewConfig,
 		data: formData,
+		onUploadingChange,
 	};
 
 	if (field.type === "checkbox") {
@@ -152,6 +156,9 @@ export const renderFormField = (
 
 					case "star_toggle":
 						return <FavouriteStar {...widgetProps} />;
+
+					case "file_upload":
+						return <FileUploadWidget {...widgetProps} />;
 
 					default:
 						return <DefaultInput {...widgetProps} />;

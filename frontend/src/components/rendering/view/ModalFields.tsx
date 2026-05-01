@@ -213,6 +213,22 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	applicationCv: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "cv_id",
+		label: "CV",
+		icon: "bi-file-earmark-person",
+		render: (params: RenderParams) => renderFunctions.applicationCv({ ...params, view: true }),
+		...overrides,
+	}),
+
+	applicationCoverLetter: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "cover_letter_id",
+		label: "Cover Letter",
+		icon: "bi-file-earmark-text",
+		render: (params: RenderParams) => renderFunctions.applicationCoverLetter({ ...params, view: true }),
+		...overrides,
+	}),
+
 	email: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "email",
 		label: "Email",

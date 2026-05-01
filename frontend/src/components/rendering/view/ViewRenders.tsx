@@ -37,7 +37,9 @@ import {
 	sourceTypeOptions,
 	updateTypeOptions,
 } from "../form/FormOptions";
+import { filesApi } from "../../../services/api/DataTables";
 import { jobEmailApi, scrapedJobApi } from "../../../services/api/Services";
+import { canPreviewFile, formatFileSize } from "../../../utils/FileUtils";
 import { useAuth } from "../../../contexts/AuthContext";
 import ScrapedJobsTableReadOnly from "../../DataTable/ScrapedJobTableReadOnly";
 import JobEmailTableReadOnly from "../../DataTable/JobEmailTableReadOnly";
@@ -58,6 +60,7 @@ import EmailBody from "./EmailBody";
 import { Currency } from "../../../services/schemas/Others";
 import { Accordion } from "../../Accordion/Accordion";
 import { HelpBubble } from "../../HelpBubble/HelpBubble";
+import { Button } from "react-bootstrap";
 
 // Parameters passed to the view render functions
 export interface RenderParams {
@@ -257,6 +260,50 @@ export const renderFunctions = {
 		return renderFunctions._url(param, "application_url");
 	},
 
+	_applicationFile: (param: RenderParams, metadataKey: "application_cv" | "application_cover_letter"): ReactNode => {
+		const file = param.item?.[metadataKey];
+		if (!file) return null;
+		return (
+			<div className="d-flex align-items-center gap-3 p-2 rounded border">
+				<i className="bi bi-file-earmark fs-3 text-secondary flex-shrink-0" />
+				<div className="flex-grow-1" style={{ minWidth: 0 }}>
+					<div className="fw-medium text-truncate small">{file.filename}</div>
+					<div className="text-muted" style={{ fontSize: "0.75rem" }}>
+						{formatFileSize(file.size)}
+					</div>
+				</div>
+				<div className="d-flex gap-1 flex-shrink-0">
+					{canPreviewFile(file.type) && (
+						<Button
+							variant={"outline-secondary"}
+							onClick={(): Promise<void> => filesApi.preview(file.id, param.token || "")}
+							title="Preview"
+							id={"preview-file-btn"}
+						>
+							<i className="bi bi-eye" />
+						</Button>
+					)}
+					<Button
+						variant={"primary"}
+						onClick={(): Promise<void> => filesApi.download(file.id, file.filename, param.token || "")}
+						title="Download"
+						id={"download-file-btn"}
+					>
+						<i className="bi bi-download" />
+					</Button>
+				</div>
+			</div>
+		);
+	},
+
+	applicationCv: (param: RenderParams): ReactNode => {
+		return renderFunctions._applicationFile(param, "application_cv");
+	},
+
+	applicationCoverLetter: (param: RenderParams): ReactNode => {
+		return renderFunctions._applicationFile(param, "application_cover_letter");
+	},
+
 	_email: (param: RenderParams, key: string): ReactNode => {
 		const email: string | undefined = param.item?.[key];
 		if (email)
@@ -438,7 +485,12 @@ export const renderFunctions = {
 			attendanceTypeOptions.find((o: SelectOption): boolean => o.value === param.item.attendance_type)?.label ??
 			null;
 		if (!attendanceLabel) return param.item.location ?? null;
-		return <>{param.item.location}<br />({attendanceLabel})</>;
+		return (
+			<>
+				{param.item.location}
+				<br />({attendanceLabel})
+			</>
+		);
 	},
 
 	lastUpdateDays: (params: RenderParams): ReactNode => {

@@ -106,6 +106,16 @@ class FileCreate(BaseModel):
     type: str
     content: str
     size: int
+    file_type: str | None = None
+
+
+class FileMetadataOut(OwnedOut):
+    """File metadata output schema — excludes file content for use in related entities"""
+
+    filename: str
+    type: str
+    size: int
+    file_type: str | None = None
 
 
 class FileOut(FileCreate, OwnedOut):
@@ -208,6 +218,8 @@ class JobOut(JobCreate, OwnedOut):
     has_active_application: bool = False
     has_open_application: bool = False
     geolocation: GeolocationOut | None = None
+    application_cv: FileMetadataOut | None = None
+    application_cover_letter: FileMetadataOut | None = None
 
     @field_validator("keywords", "contacts", mode="before")
     @classmethod

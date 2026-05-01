@@ -1,6 +1,7 @@
 """Module for generating CRUD routers for the JAM data tables"""
 
 import base64
+import hashlib
 
 from fastapi import Depends, status, HTTPException, Response
 from sqlalchemy.orm import Session
@@ -44,7 +45,7 @@ company_router = generate_data_table_crud_router(
 )
 
 
-# File router
+# File router — POST is handled manually below for deduplication
 file_router = generate_data_table_crud_router(
     table_model=models.File,
     create_schema=schemas.FileCreate,
@@ -52,7 +53,36 @@ file_router = generate_data_table_crud_router(
     out_schema=schemas.FileOut,
     endpoint="files",
     not_found_msg="File not found",
+    allowed_actions=["get", "put", "delete"],
 )
+
+
+@file_router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.FileOut)
+def create_file(
+    item: schemas.FileCreate,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    """Create a file, reusing an existing record if the same content was already uploaded."""
+
+    content = item.content
+    # Strip data URL prefix for hashing (e.g. "data:application/pdf;base64,...")
+    raw_content = content.split(",", 1)[1] if content.startswith("data:") else content
+    content_hash = hashlib.sha256(raw_content.encode()).hexdigest()
+
+    existing = (
+        db.query(models.File)
+        .filter(models.File.owner_id == current_user.id, models.File.content_hash == content_hash)
+        .first()
+    )
+    if existing:
+        return existing
+
+    new_file = models.File(**item.model_dump(), owner_id=current_user.id, content_hash=content_hash)
+    db.add(new_file)
+    db.commit()
+    db.refresh(new_file)
+    return new_file
 
 
 @file_router.get("/{file_id}/download")

@@ -1,4 +1,4 @@
-import React, { forwardRef, JSX, ReactNode, useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, { forwardRef, JSX, ReactNode, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
 import JamModal from "../JamModal/JamModal";
 import { ModalHeader } from "../ModalHeader/ModalHeader";
@@ -192,6 +192,13 @@ function DataModalComponent<T extends JamData>(
 	const [originalFormData, setOriginalFormData] = useState<GenericFormData>({});
 	const [submitting, setSubmitting] = useState<boolean>(false);
 	const [activeLoading, setActiveLoading] = useState<boolean>(false);
+	const uploadingCount = useRef<number>(0);
+	const [uploading, setUploading] = useState<boolean>(false);
+
+	const handleUploadingChange = useCallback((isUploading: boolean) => {
+		uploadingCount.current += isUploading ? 1 : -1;
+		setUploading(uploadingCount.current > 0);
+	}, []);
 	const [inputDataLoading, setInputDataLoading] = useState<boolean>(false);
 	const [errors, setErrors] = useState<Errors>({});
 	const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -535,7 +542,7 @@ function DataModalComponent<T extends JamData>(
 						<div key={toKey(fieldKey)} className={columnClass}>
 							{isViewField(field)
 								? renderModalViewField(field as ModalViewField, effectiveData, getModalId())
-								: renderFormField(field as ModalFormField, formData, handleChange, errors, currentUser)}
+								: renderFormField(field as ModalFormField, formData, handleChange, errors, currentUser, handleUploadingChange)}
 						</div>
 					);
 				})}
@@ -961,7 +968,7 @@ function DataModalComponent<T extends JamData>(
 								<ActionButton
 									id={getModalId() + "-confirm-button"}
 									type="submit"
-									disabled={submitting}
+									disabled={submitting || uploading}
 									loading={submitting}
 									loadingText="Submitting..."
 									defaultText="Confirm"
@@ -991,7 +998,7 @@ function DataModalComponent<T extends JamData>(
 								<ActionButton
 									id={getModalId() + "-import-button"}
 									type="submit"
-									disabled={submitting}
+									disabled={submitting || uploading}
 									loading={submitting}
 									loadingText="Importing..."
 									defaultText="Import"
@@ -1031,7 +1038,7 @@ function DataModalComponent<T extends JamData>(
 								<ActionButton
 									id={getModalId() + "-confirm-button"}
 									type="submit"
-									disabled={submitting}
+									disabled={submitting || uploading}
 									loading={submitting}
 									loadingText="Updating..."
 									defaultText="Update"
