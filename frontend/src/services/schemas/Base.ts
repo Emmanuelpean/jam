@@ -24,6 +24,7 @@ export interface Config {
 	min_password_length: number;
 	app_demo_username: string;
 	scrape_max_retry: number;
+	max_file_size_mb: number;
 }
 
 export interface Status {

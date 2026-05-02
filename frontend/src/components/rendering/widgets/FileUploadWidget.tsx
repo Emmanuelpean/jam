@@ -1,6 +1,7 @@
 import React, { useRef, useState, JSX } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useConfig } from "../../../contexts/ConfigContext";
 import { filesApi } from "../../../services/api/DataTables";
 import { FileData, FileMetadataData } from "../../../services/schemas/DataTables";
 import { canPreviewFile, fileToBase64, formatFileSize } from "../../../utils/FileUtils";
@@ -11,6 +12,7 @@ import { Button } from "react-bootstrap";
 
 export const FileUploadWidget = ({ field, value, handleChange, data, onUploadingChange }: WidgetProps): JSX.Element => {
 	const { token } = useAuth();
+	const { config } = useConfig();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const tooltipRef = useRef<HTMLDivElement>(null);
 	const [uploading, setUploading] = useState<boolean>(false);
@@ -24,6 +26,14 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 
 	const uploadFile = async (file: File): Promise<void> => {
 		if (!token) return;
+		if (config?.max_file_size_mb) {
+			const maxBytes = config.max_file_size_mb * 1024 * 1024;
+			if (file.size > maxBytes) {
+				setUploadError(`File exceeds the maximum allowed size of ${config.max_file_size_mb} MB.`);
+				if (fileInputRef.current) fileInputRef.current.value = "";
+				return;
+			}
+		}
 		setUploading(true);
 		onUploadingChange?.(true);
 		setUploadError(null);

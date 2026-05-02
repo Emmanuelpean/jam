@@ -579,7 +579,7 @@ function DataModalComponent<T extends JamData>(
 		);
 	};
 
-	const renderFieldItem = (item: FieldItem, index: number, totalItems = 0): JSX.Element => {
+	const renderFieldItem = (item: FieldItem, index: number): JSX.Element => {
 		if (isSectionConfig(item)) {
 			return renderSection(item, index);
 		}
@@ -882,9 +882,7 @@ function DataModalComponent<T extends JamData>(
 						<div>
 							{currentFields.form.map(
 								(item: FieldItem, index: number): JSX.Element => (
-									<div key={`form-field-${index}`}>
-										{renderFieldItem(item, index, currentFields.form.length)}
-									</div>
+									<div key={`form-field-${index}`}>{renderFieldItem(item, index)}</div>
 								)
 							)}
 						</div>
@@ -899,9 +897,7 @@ function DataModalComponent<T extends JamData>(
 									<div>
 										{currentFields.view.map(
 											(item: FieldItem, index: number): JSX.Element => (
-												<div key={`view-field-${index}`}>
-													{renderFieldItem(item, index, currentFields.view.length)}
-												</div>
+												<div key={`view-field-${index}`}>{renderFieldItem(item, index)}</div>
 											)
 										)}
 									</div>

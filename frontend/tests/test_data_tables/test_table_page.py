@@ -611,65 +611,6 @@ class TestJobPage(BaseTablePage):
         # Verify the update view modal displays the updated information
         self.jobApplicationUpdate_modal_utils.check_update_view_modal(update, False)
 
-    #
-    # def test_location_badge_location_only(self) -> None:
-    #     """Test clicking a location badge for a job that has a location but no attendance type"""
-    #
-    #     job = self._make_job(location="London, UK")
-    #     self.driver.refresh()
-    #     self.table_utils.set_page_item_select("100")
-    #
-    #     badge = self.get_element(f"table-row-{job.id}-locationBadge")
-    #     assert badge.text == "LONDON, UK"
-    #     badge.click()
-    #
-    #     modal = self.get_element("modal-view-geolocation")
-    #     assert "London, UK" in modal.text
-    #
-    # def test_location_badge_attendance_only(self) -> None:
-    #     """Test clicking a location badge for a job that has an attendance type but no location"""
-    #
-    #     job = self._make_job(attendance_type="on-site")
-    #     self.driver.refresh()
-    #     self.table_utils.set_page_item_select("100")
-    #
-    #     badge = self.get_element(f"table-row-{job.id}-locationBadge")
-    #     assert badge.text == "ON-SITE"
-    #     badge.click()
-    #
-    #     modal = self.get_element("modal-view-geolocation")
-    #     assert "On-site" in modal.text
-    #
-    # def test_location_badge_remote(self) -> None:
-    #     """Test clicking a location badge for a job with remote attendance type and no location"""
-    #
-    #     job = self._make_job(attendance_type="remote")
-    #     self.driver.refresh()
-    #     self.table_utils.set_page_item_select("100")
-    #
-    #     badge = self.get_element(f"table-row-{job.id}-locationBadge")
-    #     assert badge.text == "REMOTE"
-    #     badge.click()
-    #
-    #     modal = self.get_element("modal-view-geolocation")
-    #     assert "Remote" in modal.text
-    #     assert "This job is fully remote" in modal.text
-    #
-    # def test_location_badge_location_and_attendance(self) -> None:
-    #     """Test clicking a location badge for a job that has both a location and a non-remote attendance type"""
-    #
-    #     job = self._make_job(location="Berlin, Germany", attendance_type="hybrid")
-    #     self.driver.refresh()
-    #     self.table_utils.set_page_item_select("100")
-    #
-    #     badge = self.get_element(f"table-row-{job.id}-locationBadge")
-    #     assert badge.text == "BERLIN, GERMANY (HYBRID)"
-    #     badge.click()
-    #
-    #     modal = self.get_element("modal-view-geolocation")
-    #     assert "Berlin, Germany" in modal.text
-    #     assert "Hybrid" in modal.text
-
 
 class TestSpeculativeApplicationPage(BaseTablePage):
     """Test class for Job Application Update Page functionalities"""

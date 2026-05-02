@@ -744,6 +744,8 @@ class DataModalUtils(BaseUtilsClass):
         """Helper method to test the view modal for a job application update entry"""
 
         modal = self.wait_for_view_modal()
+
+        # Job tab
         expected = "Job Details\nJob Details\nJob Application\n"
         if entry.application_status:
             expected += f"{entry.application_status.upper()}\n"
@@ -830,6 +832,19 @@ class DataModalUtils(BaseUtilsClass):
 
         app_url = entry.application_url.replace("https://", "") if entry.application_url else None
         expected += format_field("Application URL", app_url)
+
+        expected += "Documents\n"
+        if entry.cv_id or entry.cover_letter_id:
+            if entry.cv_id:
+                cv = entry.application_cv
+                expected += f"CV\n{cv.filename}\n{format_file_size(cv.size)}\n"
+            else:
+                expected += "CV\n"
+            if entry.cover_letter_id:
+                cl = entry.application_cover_letter
+                expected += f"Cover Letter\n{cl.filename}\n{format_file_size(cl.size)}\n"
+            else:
+                expected += "Cover Letter\n"
 
         expected += "Notes\n"
         expected += format_field(None, entry.application_note if entry.note else None)
@@ -2133,6 +2148,17 @@ class BaseTest(BaseUtils):
         self.db.commit()
         self.db.refresh(rating)
         return rating
+
+
+def format_file_size(size: int | None) -> str:
+    """Python equivalent of the frontend formatFileSize utility."""
+    if not size:
+        return ""
+    if size < 1024:
+        return f"{size} B"
+    if size < 1024 * 1024:
+        return f"{size / 1024:.1f} KB"
+    return f"{size / (1024 * 1024):.1f} MB"
 
 
 def contiguous_subdicts(dictionary: dict) -> list[dict]:

@@ -7,6 +7,7 @@ from fastapi import Depends, status, HTTPException, Response
 from sqlalchemy.orm import Session
 
 from app import models, database
+from app.config import settings
 from app.core import oauth2
 from app.data_tables import schemas
 from app.geolocation.geolocation import geocode_location
@@ -64,6 +65,13 @@ def create_file(
     current_user: models.User = Depends(oauth2.get_current_user),
 ):
     """Create a file, reusing an existing record if the same content was already uploaded."""
+
+    max_bytes = settings.max_file_size_mb * 1024 * 1024
+    if item.size > max_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File exceeds the maximum allowed size of {settings.max_file_size_mb} MB.",
+        )
 
     content = item.content
     # Strip data URL prefix for hashing (e.g. "data:application/pdf;base64,...")

@@ -51,6 +51,7 @@ def get_config(
         "min_password_length": settings.min_password_length,
         "app_demo_username": get_demo_credentials(db),
         "scrape_max_retry": settings.scrape_max_retry,
+        "max_file_size_mb": settings.max_file_size_mb,
     }
 
 

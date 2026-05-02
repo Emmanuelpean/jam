@@ -4,9 +4,11 @@ import os
 import shutil
 import tempfile
 
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
 
+from app.config import settings
 from base_test import BaseTest, models
 
 
@@ -157,6 +159,40 @@ class TestFileUpload(BaseTest):
         ), "A duplicate File record was inserted instead of reusing the existing one"
         job_b_refreshed = self.db.query(models.Job).filter_by(id=job_b.id).first()
         assert job_b_refreshed.cv_id == first_file_id, "Second job should reference the same File record as the first"
+
+    def test_oversized_file_rejected_frontend(self) -> None:
+        """Uploading a file exceeding max_file_size_mb shows an error and does not create a DB record."""
+        initial_count = self.db.query(models.File).count()
+        oversized_content = b"x" * (settings.max_file_size_mb * 1024 * 1024 + 1)
+
+        self._open_job_edit_application_tab(self.test_job.id)
+        self._upload_file("cv_id", oversized_content, "huge_cv.pdf")
+
+        error_el = WebDriverWait(self.driver, 5).until(
+            lambda d: d.find_element(By.CSS_SELECTOR, ".text-danger.small")
+        )
+        assert f"{settings.max_file_size_mb} MB" in error_el.text
+
+        drop_zone = self.get_element("cv_id-drop-zone", enabled=False)
+        assert "has-file" not in drop_zone.get_attribute("class")
+
+        self.db.expire_all()
+        assert self.db.query(models.File).count() == initial_count
+
+    def test_oversized_file_rejected_backend(self) -> None:
+        """The API returns 413 when the reported file size exceeds max_file_size_mb."""
+        response = self.client.post(
+            "/files/",
+            json={
+                "filename": "large_cv.pdf",
+                "content": "data:application/pdf;base64,dGVzdA==",
+                "type": "application/pdf",
+                "size": settings.max_file_size_mb * 1024 * 1024 + 1,
+                "file_type": "cv",
+            },
+        )
+        assert response.status_code == 413
+        assert f"{settings.max_file_size_mb} MB" in response.json()["detail"]
 
     def test_remove_file_clears_drop_zone(self) -> None:
         """Clicking the remove button clears the file from the drop zone before saving."""

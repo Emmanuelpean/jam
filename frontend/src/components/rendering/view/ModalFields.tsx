@@ -37,7 +37,7 @@ export const renderModalViewField = (field: ModalViewField, item: any, id: strin
 			</>
 		);
 	} else {
-		return output;
+		return <div className="mb-3">{output}</div>;
 	}
 };
 
@@ -216,7 +216,6 @@ export const modalViewFields = {
 	applicationCv: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "cv_id",
 		label: "CV",
-		icon: "bi-file-earmark-person",
 		render: (params: RenderParams) => renderFunctions.applicationCv({ ...params, view: true }),
 		...overrides,
 	}),
@@ -224,7 +223,6 @@ export const modalViewFields = {
 	applicationCoverLetter: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "cover_letter_id",
 		label: "Cover Letter",
-		icon: "bi-file-earmark-text",
 		render: (params: RenderParams) => renderFunctions.applicationCoverLetter({ ...params, view: true }),
 		...overrides,
 	}),
