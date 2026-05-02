@@ -33,7 +33,7 @@ const ExtensionBanner: React.FC = () => {
 					</a>
 				</div>
 				<div className="extension-banner-subtitle">
-					Import jobs from LinkedIn, Indeed, NHS Jobs & VeganJobs directly into JAM — no copy-pasting needed.
+					Import jobs from LinkedIn, Indeed, NHS Jobs & VeganJobs directly into JAM - no copy-pasting needed.
 				</div>
 			</div>
 			<button className="extension-banner-close" onClick={handleDismiss} aria-label="Dismiss">

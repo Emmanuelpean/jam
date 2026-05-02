@@ -54,7 +54,7 @@ const AboutPage = (): JSX.Element => {
 
 	return (
 		<>
-			<div className="gradient-bg" style={{ borderRadius: "18px", overflow: "hidden" }}>
+			<div className="gradient-bg" style={{ borderRadius: "18px" }}>
 				{/* Hero Section */}
 				<div className="hero-overlay">
 					<Container className="py-5">

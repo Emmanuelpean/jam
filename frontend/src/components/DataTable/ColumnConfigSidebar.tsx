@@ -237,7 +237,7 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 						/>
 						<Button
 							id="column-config-sort-direction-btn"
-							variant="primary"
+							variant="outline-primary"
 							className="column-config-sort-btn"
 							onClick={() => handleSortDirectionChange(sortDirection === "asc" ? "desc" : "asc")}
 							title={sortDirection === "asc" ? "Ascending" : "Descending"}

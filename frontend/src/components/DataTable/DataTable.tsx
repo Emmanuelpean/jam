@@ -243,8 +243,12 @@ function DataTableComponent<T extends JamData>(
 	useEffect(() => {
 		const prev = prevSavedSortRef.current;
 		const next = columnConfig.savedSort;
-		if (enableColumnConfig && next && (prev?.key !== next.key || prev?.direction !== next.direction)) {
-			setSortConfig(next);
+		if (enableColumnConfig) {
+			if (next && (prev?.key !== next.key || prev?.direction !== next.direction)) {
+				setSortConfig(next);
+			} else if (!next && prev) {
+				setSortConfig((initialSortConfig as SortConfig) || { key: "created_at", direction: "desc" });
+			}
 		}
 		prevSavedSortRef.current = next;
 	}, [columnConfig.savedSort, enableColumnConfig]);

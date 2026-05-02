@@ -14,6 +14,7 @@ import { CurrentUser } from "../../../contexts/AuthContext";
 import { Toggle } from "./Toggle";
 import { FavouriteStar } from "./FavouriteStar";
 import { FileUploadWidget } from "./FileUploadWidget";
+import { CoverLetterWidget } from "./CoverLetterWidget";
 import get from "lodash/get";
 import { toKey } from "../../../utils/StringUtils";
 
@@ -156,6 +157,9 @@ export const renderFormField = (
 
 					case "star_toggle":
 						return <FavouriteStar {...widgetProps} />;
+
+					case "cover_letter":
+						return <CoverLetterWidget {...widgetProps} />;
 
 					case "file_upload":
 						return <FileUploadWidget {...widgetProps} />;

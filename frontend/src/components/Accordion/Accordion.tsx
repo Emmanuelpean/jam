@@ -19,15 +19,15 @@ export const Accordion = ({
 	className,
 }: BaseAccordionProps): JSX.Element => {
 	const [internalIsOpen, setInternalIsOpen] = useState(defaultOpen);
-	const isControlled = controlledIsOpen !== undefined;
-	const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
+	const isControlled: boolean = controlledIsOpen !== undefined;
+	const isOpen: boolean = isControlled ? !!controlledIsOpen : internalIsOpen;
 
-	const handleToggle = () => {
+	const handleToggle = (): void => {
 		if (onToggle) {
 			onToggle();
 		}
 		if (!isControlled) {
-			setInternalIsOpen((prev) => !prev);
+			setInternalIsOpen((prev: boolean): boolean => !prev);
 		}
 	};
 
@@ -36,7 +36,7 @@ export const Accordion = ({
 			<div
 				className="simple-accordion-header d-flex align-items-center justify-content-between py-2"
 				onClick={handleToggle}
-				style={{ cursor: "pointer" }}
+				style={{ cursor: "pointer", userSelect: "none" }}
 			>
 				<div className="d-flex align-items-center">{header}</div>
 				<i

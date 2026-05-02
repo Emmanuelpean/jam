@@ -1,4 +1,4 @@
-import React, { useRef, useState, JSX } from "react";
+import React, { useRef, useState, JSX, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useConfig } from "../../../contexts/ConfigContext";
@@ -10,7 +10,11 @@ import "./FileUploadWidget.scss";
 import { ApiResponse } from "../../../services/api/Base";
 import { Button } from "react-bootstrap";
 
-export const FileUploadWidget = ({ field, value, handleChange, data, onUploadingChange }: WidgetProps): JSX.Element => {
+export interface FileUploadWidgetProps extends WidgetProps {
+	extraActions?: ReactNode;
+}
+
+export const FileUploadWidget = ({ field, value, handleChange, data, onUploadingChange, extraActions }: FileUploadWidgetProps): JSX.Element => {
 	const { token } = useAuth();
 	const { config } = useConfig();
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -185,6 +189,7 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 							>
 								<i className="bi bi-x-lg" />
 							</Button>
+							{extraActions}
 						</div>
 						{tooltipCoords &&
 							createPortal(
@@ -205,6 +210,11 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 						<div className="file-drop-text">
 							Drag & drop or <span className="file-drop-link">click to select</span>
 						</div>
+						{extraActions && (
+							<div className="file-drop-actions" onClick={(e) => e.stopPropagation()}>
+								{extraActions}
+							</div>
+						)}
 					</>
 				)}
 			</div>

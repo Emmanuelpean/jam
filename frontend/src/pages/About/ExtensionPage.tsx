@@ -13,7 +13,7 @@ const extensionFeatures: Feature[] = [
 	{
 		icon: "bi-cursor-fill",
 		title: "One-Click Import",
-		description: "Save any supported job listing to JAM in a single click — no manual data entry required",
+		description: "Save any supported job listing to JAM in a single click - no manual data entry required",
 	},
 	{
 		icon: "bi-magic",
@@ -28,19 +28,33 @@ const extensionFeatures: Feature[] = [
 	{
 		icon: "bi-grid",
 		title: "Multi-Platform Support",
-		description: "Works across LinkedIn, Indeed, NHS Jobs, and VeganJobs — with more platforms planned",
+		description: "Works across LinkedIn, Indeed, NHS Jobs, and VeganJobs - with more platforms planned",
 	},
 ];
 
 const ExtensionPage = (): JSX.Element => {
 	return (
-		<div className="gradient-bg d-flex flex-column align-items-center justify-content-center" style={{ borderRadius: "18px", overflow: "hidden", minHeight: "100%" }}>
+		<div
+			className="d-flex flex-column align-items-center justify-content-center"
+			style={{
+				borderRadius: "18px",
+				overflow: "hidden",
+				minHeight: "100%",
+				backgroundColor: "var(--bg-primary)",
+			}}
+		>
 			<Container className="py-5">
 				<div className="text-center mb-4">
 					<div className="extension-about-icon">
 						<i className="bi bi-puzzle-fill" />
 					</div>
 					<h2 className="display-5 fw-bold mt-3">SPREAD Chrome Extension</h2>
+					<p
+						className="about-text-muted mt-2"
+						style={{ fontSize: "1.3rem", letterSpacing: "0.06em", textTransform: "uppercase" }}
+					>
+						Smart Plugin for Recruitment Extraction &amp; Aggregation of Data
+					</p>
 					<a
 						href="https://chromewebstore.google.com/detail/spread/dnkmbfflallehleblligcokipgijnbhe"
 						target="_blank"
@@ -48,15 +62,9 @@ const ExtensionPage = (): JSX.Element => {
 						className="extension-about-badge m-1"
 						style={{ textDecoration: "none" }}
 					>
-						<i className="bi bi-download me-1" />
+						<i className="bi bi-download me-2" />
 						Install from Chrome Web Store
 					</a>
-					<p
-						className="about-text-muted mt-2"
-						style={{ fontSize: "1.3rem", letterSpacing: "0.06em", textTransform: "uppercase" }}
-					>
-						Smart Plugin for Recruitment Extraction &amp; Aggregation of Data
-					</p>
 				</div>
 
 				<Row className="justify-content-center mb-4">
@@ -66,7 +74,7 @@ const ExtensionPage = (): JSX.Element => {
 								<p className="fs-5 about-text-muted mb-0" style={{ lineHeight: "1.625" }}>
 									SPREAD is a Chrome extension that connects your browser directly to JAM. Browse job
 									listings on LinkedIn, Indeed, NHS Jobs or VeganJobs, click one button, and the full
-									job details are instantly imported — no copy-pasting, no manual entry.
+									job details are instantly imported - no copy-pasting, no manual entry.
 								</p>
 							</Card.Body>
 						</Card>

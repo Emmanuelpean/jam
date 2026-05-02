@@ -444,7 +444,7 @@ export const formFields = {
 	coverLetterUpload: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "cover_letter_id",
 		label: "Cover Letter",
-		type: "file_upload",
+		type: "cover_letter",
 		fileType: "cover_letter",
 		...overrides,
 	}),
