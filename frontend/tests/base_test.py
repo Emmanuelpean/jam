@@ -17,7 +17,6 @@ import requests
 from selenium import webdriver
 from selenium.common import StaleElementReferenceException, TimeoutException
 from selenium.webdriver import ActionChains, Keys
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
@@ -1852,8 +1851,6 @@ class BaseTest(BaseUtils):
     @pytest.fixture(autouse=True)
     def setup_method(
         self,
-        test_frontend_server,
-        test_backend_server,
         request,
         test_users,
         authorised_clients,
@@ -1863,42 +1860,19 @@ class BaseTest(BaseUtils):
 
         self._test_name = request.node.name
         try:
-
-            # Configure Chrome options to disable password prompts
-            chrome_options = Options()
-            prefs = {
-                "profile.password_manager_leak_detection": False,
-                "credentials_enable_service": False,
-                "password_manager_enabled": False,
-                "profile.password_manager_enabled": False,
-                "protocol_handler": {"excluded_schemes": {"mailto": True}},
-                "intl.accept_languages": "en-GB",
-            }
-            chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
-            chrome_options.add_argument("--window-size=1960,1080")
-            chrome_options.add_argument("--disable-gpu")
-            chrome_options.add_argument("--no-sandbox")
-            chrome_options.add_argument("--ignore-certificate-errors")
-            chrome_options.add_argument("--disable-dev-shm-usage")
-            chrome_options.add_argument("--lang=en-GB")
-
-            # Enable verbose logging
-            chrome_options.add_argument("--enable-logging")
-            chrome_options.add_argument("--v=1")
-            chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
-
-            self.driver = webdriver.Chrome(options=chrome_options)
+            # Re-use the class-scoped Chrome driver (created once per test class by class_browser fixture)
+            self.driver = self._shared_driver
             self.wait = WebDriverWait(self.driver, 10)
+            self.frontend_base_url = self._shared_frontend_url
+            self.backend_base_url = self._shared_backend_url
 
-            # Set timezone using CDP
-            self.driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
-            # Set locale using CDP
-            self.driver.execute_cdp_cmd("Emulation.setLocaleOverride", {"locale": "en-GB"})
-
-            # Frontend/Backend
-            self.frontend_base_url = test_frontend_server
-            self.backend_base_url = test_backend_server
+            # Clear browser state left over from the previous test
+            try:
+                self.driver.get("about:blank")
+                self.driver.execute_script("window.localStorage.clear(); window.sessionStorage.clear();")
+                self.driver.delete_all_cookies()
+            except Exception:
+                pass
 
             # Client/User
             self.user = test_users[self.user_index]
@@ -1947,8 +1921,7 @@ class BaseTest(BaseUtils):
             if hasattr(self, "driver"):
                 try:
                     self._save_browser_logs(failed=True)
-                    self.driver.quit()
-                except:
+                except Exception:
                     pass
             raise
         yield  # This allows the test to run
@@ -1963,7 +1936,6 @@ class BaseTest(BaseUtils):
                 if test_failed or os.getenv("CI"):
                     self._save_browser_logs(failed=test_failed)
                     self._save_page_screenshot(failed=test_failed)
-                self.driver.quit()
         except Exception as e:
             print(f"Error during teardown: {e}")
 
