@@ -53,8 +53,18 @@ const AboutPage = (): JSX.Element => {
 	];
 
 	return (
-		<>
-			<div className="gradient-bg" style={{ borderRadius: "18px" }}>
+		<div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+			<div
+				className="d-flex flex-column align-items-center justify-content-center"
+				style={{
+					borderRadius: "18px",
+					backgroundColor: "var(--bs-body-bg)",
+					border: "1px solid var(--bs-card-border-color)",
+					maxWidth: "1000px",
+					width: "100%",
+					margin: "0 auto",
+				}}
+			>
 				{/* Hero Section */}
 				<div className="hero-overlay">
 					<Container className="py-5">
@@ -62,7 +72,7 @@ const AboutPage = (): JSX.Element => {
 							<Col lg={8}>
 								<div className="auth-logo">
 									<div className="logo-container logo-container-vertical">
-										<JamLogo style={{ height: "157.5px", width: "auto" }} />
+										<JamLogo style={{ height: "157.5px" }} />
 										<div
 											className="logo-text-below text-gradient-primary"
 											style={{ fontSize: "45px", fontWeight: "bold" }}
@@ -157,7 +167,7 @@ const AboutPage = (): JSX.Element => {
 					</div>
 				</Container>
 			</div>
-		</>
+		</div>
 	);
 };
 

@@ -12,13 +12,14 @@ body {
     --danger-color: #e74c3c;
     --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     --logo-font-family: "Quicksand", sans-serif;
+    --bs-form-control-bg: var(--input-background-color);
 }
 
 body[data-mode="light"] {
     /* Backgrounds */
-    --bs-body-bg: rgb(255 255 255);
+    --bs-body-bg: #ffffff;
     --bs-secondary-bg: #f5f5f5;
-    --bs-tertiary-bg: #eee;
+    --bs-tertiary-bg: #eeeeee;
 
     /* Text */
     --bs-body-color: #2c3e50;
@@ -27,7 +28,7 @@ body[data-mode="light"] {
     --placeholder-text-color: #bdbdbd;
 
     /* Borders */
-    --bs-border-color: rgb(237 237 237);
+    --bs-border-color: #ededed;
     --bs-border-color-translucent: rgb(0 0 0 / 10%);
 
     /* Links */
@@ -35,35 +36,34 @@ body[data-mode="light"] {
     --bs-link-hover-color: #0a58ca;
 
     /* Cards */
-    --bs-card-bg: rgb(255 255 255);
+    --bs-card-bg: #ffffff;
     --bs-card-border-color: #dee2e6;
 
     /* Forms */
-    --bs-form-control-bg: #fff;
-    --bs-form-control-color: #2c3e50;
     --bs-form-control-border-color: #ced4da;
 
     /* Custom app variables */
-    --bg-primary: rgb(250, 250, 250);
-    --bg-secondary: rgb(245, 245, 245);
-    --bg-tertiary: rgb(255, 255, 255);
-    --input-background-color: rgb(255, 255, 255);
+    --bg-primary: #f8f9fa;
+    --bg-secondary: #f0f2f4;
+    --bg-tertiary: #f8f9fa;
+    --input-background-color: #ffffff;
+    --btn-disabled-bg: #9e9e9e;
 }
 
 body[data-mode="dark"] {
     /* Backgrounds */
     --bs-body-bg: #1e293b;
-    --bs-secondary-bg: #1e293b;
+    --bs-secondary-bg: #253550;
     --bs-tertiary-bg: var(--bs-border-color);
 
     /* Text */
-    --bs-body-color: rgb(234, 237, 241);
+    --bs-body-color: #eaedf1;
     --bs-secondary-color: #cbd5e1;
     --bs-muted-color: #94a3b8;
     --placeholder-text-color: #9f9f9f;
 
     /* Borders */
-    --bs-border-color: rgb(76, 80, 90);
+    --bs-border-color: #4c505a;
     --bs-border-color-translucent: rgb(255 255 255 / 15%);
 
     /* Links */
@@ -71,20 +71,18 @@ body[data-mode="dark"] {
     --bs-link-hover-color: #93c5fd;
 
     /* Cards */
-    --bs-card-bg: #1e293b;
+    --bs-card-bg: #233044;
     --bs-card-border-color: #465470;
 
     /* Forms */
-    --bs-form-control-bg: #0f172a;
-    --bs-form-control-color: #e5e7eb;
     --bs-form-control-border-color: #334155;
 
     /* Custom app variables */
-    --bg-primary: rgb(15, 23, 42);
-    --bg-secondary: rgb(20, 28, 40);
-    --bg-tertiary: rgb(15, 15, 15);
-    --input-background-color: rgb(23, 36, 55);
-    --btn-disabled-bg: rgb(117, 117, 117);
+    --bg-primary: #0d1520;
+    --bg-secondary: #142030;
+    --bg-tertiary: #233044;
+    --input-background-color: #0f1a2e;
+    --btn-disabled-bg: #757575;
 }
 
 body {

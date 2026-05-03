@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import { Card, Col, Container, Row } from "react-bootstrap";
+import { Col, Container, Row } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.scss";
 
@@ -40,7 +40,9 @@ const ExtensionPage = (): JSX.Element => {
 				borderRadius: "18px",
 				overflow: "hidden",
 				minHeight: "100%",
-				backgroundColor: "var(--bg-primary)",
+				backgroundColor: "var(--bs-body-bg)",
+				border: "1px solid var(--bs-card-border-color)",
+				boxShadow: "0 4px 24px rgb(0 0 0 / 10%)",
 			}}
 		>
 			<Container className="py-5">
@@ -69,15 +71,11 @@ const ExtensionPage = (): JSX.Element => {
 
 				<Row className="justify-content-center mb-4">
 					<Col lg={10}>
-						<Card className="glass-card border-0 p-4">
-							<Card.Body className="text-center">
-								<p className="fs-5 about-text-muted mb-0" style={{ lineHeight: "1.625" }}>
-									SPREAD is a Chrome extension that connects your browser directly to JAM. Browse job
-									listings on LinkedIn, Indeed, NHS Jobs or VeganJobs, click one button, and the full
-									job details are instantly imported - no copy-pasting, no manual entry.
-								</p>
-							</Card.Body>
-						</Card>
+						<p className="fs-5 about-text-muted mb-0" style={{ lineHeight: "1.625", textAlign: "center" }}>
+							SPREAD is a Chrome extension that connects your browser directly to JAM. Browse job listings
+							on aggregator websites such as LinkedIn and Indeed, click one button, and the full job
+							details are instantly imported - no copy-pasting, no manual entry.
+						</p>
 					</Col>
 				</Row>
 
@@ -100,9 +98,7 @@ const ExtensionPage = (): JSX.Element => {
 				</div>
 
 				<div className="text-center">
-					<p className="about-text-muted mb-3" style={{ fontSize: "0.85rem" }}>
-						Supported platforms
-					</p>
+					<p className="about-text-muted mb-3">Supported platforms</p>
 					<div className="d-flex justify-content-center gap-2 flex-wrap">
 						{[
 							{ label: "LinkedIn", color: "#0a66c2" },
