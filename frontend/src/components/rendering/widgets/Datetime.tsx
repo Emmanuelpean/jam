@@ -61,7 +61,7 @@ export const LocalDatetimeInput = ({
 				value={formattedValue}
 				onChange={handleChange}
 				isInvalid={!!error}
-				className="datetime-input-with-icon"
+				className={`datetime-input-with-icon${!formattedValue ? " datetime-empty" : ""}`}
 				disabled={field.isDisabled}
 			/>
 			<i
