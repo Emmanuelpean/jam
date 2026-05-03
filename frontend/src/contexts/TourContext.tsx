@@ -15,6 +15,7 @@ interface TourContextType {
 	isTourSelectOpen: boolean;
 	openTourSelect: () => void;
 	closeTourSelect: () => void;
+	toggleTourSelect: () => void;
 	/** ID of the demo job created for the follow-up-email tour, null otherwise */
 	demoJobId: number | null;
 	/** ID of the demo scraped job created for the import-scraped-job tour, null otherwise */
@@ -411,6 +412,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 
 	const openTourSelect = useCallback((): void => setIsTourSelectOpen(true), []);
 	const closeTourSelect = useCallback((): void => setIsTourSelectOpen(false), []);
+	const toggleTourSelect = useCallback((): void => setIsTourSelectOpen((prev) => !prev), []);
 
 	return (
 		<TourContext.Provider
@@ -424,6 +426,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				isTourSelectOpen,
 				openTourSelect,
 				closeTourSelect,
+				toggleTourSelect,
 				demoJobId,
 				demoScrapedJobId,
 				demoScrapingFilterId,

@@ -1,8 +1,8 @@
 import React, { JSX, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTour } from "../../contexts/TourContext";
-
-import { getTourById, TourStep } from "./tourSteps";
+import { useAuth } from "../../contexts/AuthContext";
+import { getTourById, TOURS, TourStep } from "./tourSteps";
 import "./GuidedTour.scss";
 
 const SPOTLIGHT_PAD = 8;
@@ -131,7 +131,14 @@ function setNativeInputValue(el: HTMLInputElement, value: string): void {
 }
 
 export function GuidedTour(): JSX.Element | null {
-	const { isTourActive, activeTourId, endTour, isCleaningUp, demoJobId, demoScrapedJobId, demoScrapingFilterId } = useTour();
+	const { isTourActive, activeTourId, endTour, startTour, isCleaningUp, demoJobId, demoScrapedJobId, demoScrapingFilterId } = useTour();
+	const { currentUser } = useAuth();
+	const isPremium = currentUser?.premium.is_active ?? false;
+	const visibleTours = TOURS.filter(
+		(t) => !t.comingSoon && (isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id))
+	);
+	const currentTourIndex = visibleTours.findIndex((t) => t.id === activeTourId);
+	const nextTour = currentTourIndex !== -1 ? visibleTours[currentTourIndex + 1] : undefined;
 	const navigate = useNavigate();
 	const location = useLocation();
 
@@ -542,31 +549,42 @@ export function GuidedTour(): JSX.Element | null {
 									</button>
 								)}
 								{showNext && (
-									<button
-										id="tour-next-btn"
-										className="tour-btn-primary"
-										disabled={nextDisabled}
-										onClick={() => (isLast ? void endTour(true) : advanceFromCurrentStep())}
-									>
-										{isLast ? (
-											isCleaningUp ? (
-												<>
-													<span
-														className="spinner-border spinner-border-sm me-2"
-														role="status"
-														aria-hidden="true"
-													/>
-													Cleaning up…
-												</>
-											) : (
-												"Done"
-											)
-										) : (
-											<>
-												Next <i className="bi bi-arrow-right"></i>
-											</>
+									<>
+										{isLast && !isCleaningUp && nextTour && (
+											<button
+												id="tour-start-next-btn"
+												className="tour-btn-secondary"
+												onClick={() => void endTour(true).then(() => startTour(nextTour.id))}
+											>
+												{nextTour.title} <i className="bi bi-arrow-right ms-1"></i>
+											</button>
 										)}
-									</button>
+										<button
+											id="tour-next-btn"
+											className="tour-btn-primary"
+											disabled={nextDisabled}
+											onClick={() => (isLast ? void endTour(true) : advanceFromCurrentStep())}
+										>
+											{isLast ? (
+												isCleaningUp ? (
+													<>
+														<span
+															className="spinner-border spinner-border-sm me-2"
+															role="status"
+															aria-hidden="true"
+														/>
+														Cleaning up…
+													</>
+												) : (
+													"Done"
+												)
+											) : (
+												<>
+													Next <i className="bi bi-arrow-right"></i>
+												</>
+											)}
+										</button>
+									</>
 								)}
 							</div>
 						)}

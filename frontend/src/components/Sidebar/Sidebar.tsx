@@ -4,6 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTour } from "../../contexts/TourContext";
 import JamLogo from "../../assets/Logo.svg?react";
 import { getTableIcon } from "../rendering/view/Icons";
+import { TOURS } from "../GuidedTour/tourSteps";
 import { ThemeSelector } from "./ThemeSelector";
 import "./Sidebar.scss";
 import { DEFAULT_THEME } from "../../utils/Theme";
@@ -37,8 +38,13 @@ export const Sidebar = (): JSX.Element => {
 	const location = useLocation();
 	const { logout, currentUser } = useAuth();
 	const { isMobile } = useViewport();
-	const { openTourSelect, isTourSelectOpen, isTourActive } = useTour();
+	const { toggleTourSelect, closeTourSelect, isTourSelectOpen, isTourActive, completedTourIds } = useTour();
 	const { showLogout } = useAlert();
+	const isPremium = currentUser?.premium.is_active ?? false;
+	const implementedTours = TOURS.filter(
+		(t) => !t.comingSoon && (isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id))
+	);
+	const allToursCompleted = implementedTours.length > 0 && implementedTours.every((t) => completedTourIds.has(t.id));
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
 	const [dropdownTop, setDropdownTop] = useState<number>(72);
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -138,7 +144,6 @@ export const Sidebar = (): JSX.Element => {
 				{ path: "/about", text: "About JAM" },
 				{ path: "/browser-extension", text: "Browser Extension" },
 				{ path: "/release-notes", text: "Release Notes" },
-				{ text: "Take a Tour", icon: "map", onClick: openTourSelect, id: "take-a-tour-btn" },
 			],
 		},
 		{
@@ -154,6 +159,17 @@ export const Sidebar = (): JSX.Element => {
 				},
 			],
 		},
+		...(!allToursCompleted
+			? [
+					{
+						icon: "map",
+						text: "Take a Tour",
+						position: "bottom" as const,
+						id: "take-a-tour-btn",
+						onClick: toggleTourSelect,
+					},
+				]
+			: []),
 		{
 			icon: "box-arrow-right",
 			text: "Logout",
@@ -421,9 +437,19 @@ export const Sidebar = (): JSX.Element => {
 					</div>
 				</div>
 
-				<nav className="sidebar-nav sidebar-nav-top">{renderNavigationItems(topNavigationItems)}</nav>
+				<nav
+					className="sidebar-nav sidebar-nav-top"
+					onClick={(e) => { if (!(e.target as HTMLElement).closest("#take-a-tour-btn")) closeTourSelect(); }}
+				>
+					{renderNavigationItems(topNavigationItems)}
+				</nav>
 
-				<nav className="sidebar-nav sidebar-nav-bottom">{renderNavigationItems(bottomNavigationItems)}</nav>
+				<nav
+					className="sidebar-nav sidebar-nav-bottom"
+					onClick={(e) => { if (!(e.target as HTMLElement).closest("#take-a-tour-btn")) closeTourSelect(); }}
+				>
+					{renderNavigationItems(bottomNavigationItems)}
+				</nav>
 			</div>
 		</>
 	);

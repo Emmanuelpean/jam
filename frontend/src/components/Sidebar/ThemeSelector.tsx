@@ -58,7 +58,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 			style={dropdownTop !== undefined ? { top: dropdownTop } : undefined}
 			onAnimationEnd={handleAnimationEnd}
 		>
-			<div className="fw-medium text-muted small mb-2 px-2">Themes</div>
+			<div className="theme-dropdown-label">Theme</div>
 			{THEMES.map(
 				(theme: Theme): JSX.Element => (
 					<ThemeItem
@@ -73,7 +73,10 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 					/>
 				)
 			)}
-			<DarkModeToggle />
+			<hr className="my-2" />
+			<div className={"pt-2"}>
+				<DarkModeToggle />
+			</div>
 		</div>
 	);
 };

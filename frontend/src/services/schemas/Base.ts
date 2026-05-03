@@ -25,6 +25,7 @@ export interface Config {
 	app_demo_username: string;
 	scrape_max_retry: number;
 	max_file_size_mb: number;
+	monthly_scrape_quota: number;
 }
 
 export interface Status {

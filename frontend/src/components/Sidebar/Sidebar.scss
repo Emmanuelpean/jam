@@ -129,6 +129,17 @@
     }
 }
 
+.theme-dropdown * {
+    user-select: none;
+}
+
+.theme-dropdown-label {
+    font-weight: 600;
+    color: var(--bs-secondary-color);
+    text-transform: uppercase;
+    padding: 0.25rem 0.25rem 0;
+}
+
 /* Navigation sections */
 .sidebar-nav {
     overflow: hidden auto;
@@ -163,6 +174,7 @@
 
 /* Navigation items */
 .nav-item {
+	user-select: none;
     display: flex;
     margin: 0.1rem 0.2rem;
     padding: 9px 15.5px;

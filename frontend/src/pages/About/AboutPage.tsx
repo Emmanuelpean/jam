@@ -8,10 +8,20 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.scss";
 import packageJson from "../../../package.json";
 import { useWhatsNew } from "../../contexts/WhatsNewContext";
+import { useTour } from "../../contexts/TourContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { TOURS } from "../../components/GuidedTour/tourSteps";
 import AppFeaturesList, { Feature } from "./AppFeaturesList";
 
 const AboutPage = (): JSX.Element => {
 	const { showWelcome } = useWhatsNew();
+	const { openTourSelect, completedTourIds } = useTour();
+	const { currentUser } = useAuth();
+	const isPremium = currentUser?.premium.is_active ?? false;
+	const implementedTours = TOURS.filter(
+		(t) => !t.comingSoon && (isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id))
+	);
+	const allToursCompleted = implementedTours.length > 0 && implementedTours.every((t) => completedTourIds.has(t.id));
 
 	const features: Feature[] = [
 		{
@@ -139,6 +149,12 @@ const AboutPage = (): JSX.Element => {
 								<i className="bi bi-stars me-2" />
 								Discover JAM
 							</Button>
+							{allToursCompleted && (
+								<Button id="take-a-tour-btn" variant="outline-secondary" onClick={openTourSelect}>
+									<i className="bi bi-map me-2" />
+									Take a Tour
+								</Button>
+							)}
 						</div>
 					</Row>
 					<AppFeaturesList features={features} className="mb-5" />

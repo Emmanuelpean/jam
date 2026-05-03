@@ -17,8 +17,8 @@ export function TourSelectPanel(): JSX.Element | null {
 		if (!anchorRect || !panelRef.current) return;
 		const panelHeight = panelRef.current.offsetHeight;
 		const margin = 6;
-		const clamped = Math.min(anchorRect.top, window.innerHeight - panelHeight - margin);
-		setPanelTop(Math.max(clamped, margin));
+		const ideal = anchorRect.bottom - panelHeight;
+		setPanelTop(Math.max(ideal, margin));
 	}, [anchorRect]);
 
 	useEffect(() => {

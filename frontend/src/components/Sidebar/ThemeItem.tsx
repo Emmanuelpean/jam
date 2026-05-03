@@ -56,6 +56,7 @@ export const ThemeItem: React.FC<ThemeItemProps> = ({
 			transition: "background-color 0.2s ease, border-color 0.2s ease",
 			backgroundColor: "transparent",
 			border: "3px solid transparent",
+			userSelect: "none",
 		};
 
 		if (isActive) {

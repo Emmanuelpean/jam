@@ -1,4 +1,5 @@
 import React, { JSX, ReactNode, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { Alert, Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
@@ -392,7 +393,7 @@ export const PremiumTab = (): JSX.Element => {
 							</div>
 
 							<p>
-								Automatically scrape and import jobs from job aggregator platforms (<i>e.g.</i> Linkedin
+								Automatically scrape and import jobs from job aggregator platforms (<i>e.g.</i> LinkedIn
 								and Indeed) job alert emails.
 							</p>
 
@@ -405,21 +406,21 @@ export const PremiumTab = (): JSX.Element => {
 							<p className="mb-4">
 								<strong>Stage 2 - Deep Scraping</strong>: JAM then visits the corresponding job board
 								page to collect richer information like the full job description. This deeper scraping
-								is limited to XX jobs per month per user. After this limit is reached, new job alert
-								emails are still parsed, but their job pages are not scraped further.
+								is limited to {config?.monthly_scrape_quota} jobs per month per user. After this limit
+								is reached, new job alert emails are still parsed, but their job pages are not scraped
+								further.
 							</p>
 							<p>
-								Each scraped job appears in your dashboard, where you can review, import, or remove it.
-								The location and company fields are automatically suggested based on your existing
-								entries. You can also apply scraping filters to refine the results. For example, you can
-								exclude jobs posted by specific companies or filter by location, salary range, or
-								keywords.
+								Scraped jobs appear in the <Link to="/scraped-jobs">scraped job table</Link>, where you
+								can review, import, or delete them. You can also apply scraping filters to refine the
+								results. For example, you can exclude jobs posted by specific companies or filter by
+								location, salary range, or keywords.
 							</p>
 
 							<h6 className="premium-feature-section-title">Supported job boards:</h6>
 							<div className="job-board-badges">
-								{jobBoards.map((board) => {
-									const email = config?.platform_sender_emails?.[board.emailKey];
+								{jobBoards.map((board: JobBoard): JSX.Element => {
+									const email: string = config?.platform_sender_emails?.[board.emailKey];
 									return (
 										<OverlayTrigger
 											key={board.name}
