@@ -291,16 +291,16 @@ export const PremiumTab = (): JSX.Element => {
 			<Card className="mb-4">
 				<Card.Body className={"premium-card"}>
 					{/* Subscription Status Section */}
-					<div className="text-center mb-4">
+					<div className="text-center pt-2 pb-1">
 						<div className="premium-status-icon mx-auto mb-3">
 							<i className={statusDisplay.icon}></i>
 						</div>
 						<h3 className="mb-2" id="status-title">
 							{statusDisplay.title}
 						</h3>
-						<p className="text-muted mb-4" style={{ fontSize: "1rem" }} id={"status-message"}>
+						<div className="text-muted" style={{ fontSize: "1rem" }} id={"status-message"}>
 							{statusDisplay.message}
-						</p>
+						</div>
 
 						{/* Action Buttons */}
 						{statusDisplay.showSubscribeButton ? (
@@ -496,13 +496,13 @@ export const PremiumTab = (): JSX.Element => {
 							</div>
 
 							<p>
-								Our AI analyses every job opportunity against your qualifications, delivering
+								Claude is used to analyse every job opportunity against your qualifications, delivering
 								personalised match scores so you can focus on roles that truly matter.
 							</p>
 
 							<h6 className="premium-feature-section-title">How It Works</h6>
 							<p className="small">
-								When jobs are collected, AI automatically evaluates each one against your experience,
+								Once jobs are scraped, Claude automatically evaluates each one against your experience,
 								education, skills, and interests - no manual work required.
 							</p>
 
@@ -510,27 +510,27 @@ export const PremiumTab = (): JSX.Element => {
 							<ul className="scoring-dimensions">
 								<li>
 									<span>
-										<strong>Overall Match</strong> — Holistic assessment of profile fit
+										<strong>Overall Match</strong> - Holistic assessment of profile fit
 									</span>
 								</li>
 								<li>
 									<span>
-										<strong>Technical Fit</strong> — Skills and methodology alignment
+										<strong>Technical Fit</strong> - Skills and methodology alignment
 									</span>
 								</li>
 								<li>
 									<span>
-										<strong>Experience</strong> — Background and career level match
+										<strong>Experience</strong> - Background and career level match
 									</span>
 								</li>
 								<li>
 									<span>
-										<strong>Education</strong> — Academic credential compatibility
+										<strong>Education</strong> - Academic credential compatibility
 									</span>
 								</li>
 								<li>
 									<span>
-										<strong>Interest</strong> — Career goals and passion alignment
+										<strong>Interest</strong> - Career goals and passion alignment
 									</span>
 								</li>
 							</ul>
