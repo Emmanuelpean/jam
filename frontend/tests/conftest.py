@@ -11,8 +11,6 @@ from typing import Generator, Any
 import psutil
 import pytest
 import requests
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 
 from app.config import settings
 
@@ -376,56 +374,6 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
         print(f"Found and killed additional process on port {port}")
     print("✅ Frontend server cleanup completed.")
     print(f"Frontend logs saved in: {settings.log_directory}")
-
-
-@pytest.fixture(scope="class", autouse=True)
-def class_browser(request, test_frontend_server, test_backend_server) -> Generator[None, None, None]:
-    """Create one Chrome driver per test class, shared across all tests in that class.
-
-    Uses _shared_driver as a discriminator so non-BaseTest classes are skipped.
-    """
-    cls = request.cls
-    if cls is None or not hasattr(cls, "_shared_driver"):
-        yield
-        return
-
-    chrome_options = Options()
-    prefs = {
-        "profile.password_manager_leak_detection": False,
-        "credentials_enable_service": False,
-        "password_manager_enabled": False,
-        "profile.password_manager_enabled": False,
-        "protocol_handler": {"excluded_schemes": {"mailto": True}},
-        "intl.accept_languages": "en-GB",
-    }
-    chrome_options.add_experimental_option("prefs", prefs)
-    chrome_options.add_argument("--headless=new")
-    chrome_options.add_argument("--window-size=1960,1080")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--ignore-certificate-errors")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--lang=en-GB")
-    chrome_options.add_argument("--enable-logging")
-    chrome_options.add_argument("--v=1")
-    chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
-
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
-    driver.execute_cdp_cmd("Emulation.setLocaleOverride", {"locale": "en-GB"})
-
-    cls._shared_driver = driver
-    cls._shared_frontend_url = test_frontend_server
-    cls._shared_backend_url = test_backend_server
-
-    yield
-
-    try:
-        driver.quit()
-    except Exception:
-        pass
-    finally:
-        cls._shared_driver = None
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
