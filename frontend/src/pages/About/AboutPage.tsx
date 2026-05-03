@@ -3,18 +3,12 @@ import JamLogo from "../../assets/Logo.svg?react";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.scss";
 import packageJson from "../../../package.json";
 import { useWhatsNew } from "../../contexts/WhatsNewContext";
-
-interface Feature {
-	icon: string;
-	title: string;
-	description: string;
-}
+import AppFeaturesList, { Feature } from "./AppFeaturesList";
 
 const AboutPage = (): JSX.Element => {
 	const { showWelcome } = useWhatsNew();
@@ -60,7 +54,6 @@ const AboutPage = (): JSX.Element => {
 					borderRadius: "18px",
 					backgroundColor: "var(--bs-body-bg)",
 					border: "1px solid var(--bs-card-border-color)",
-					maxWidth: "1000px",
 					width: "100%",
 					margin: "0 auto",
 				}}
@@ -120,19 +113,19 @@ const AboutPage = (): JSX.Element => {
 					{/* About Section */}
 					<Row className="justify-content-center mb-5">
 						<Col lg={10}>
-							<Card className="glass-card border-0 p-4">
-								<Card.Body className="text-center">
-									<h2 className="display-5 fw-bold mb-4">Streamline Your Job Search Journey</h2>
-									<p className="fs-5 about-text-muted mb-4" style={{ lineHeight: "1.625" }}>
-										Job searching is overwhelming. Between tracking applications, following up with
-										contacts, and preparing for interviews, it's easy to lose sight of opportunities
-										that could change your career.{" "}
-										<strong style={{ color: "var(--primary-mid)" }}>JAM</strong> brings everything
-										together in one place—applications - interviews, contacts, and notes - so you
-										can stay organised and focused on landing your dream job.
-									</p>
-								</Card.Body>
-							</Card>
+							<h2 className="display-5 fw-bold mb-4" style={{ textAlign: "center" }}>
+								Streamline Your Job Search Journey
+							</h2>
+							<p
+								className="fs-5 about-text-muted mb-4"
+								style={{ lineHeight: "1.625", textAlign: "center" }}
+							>
+								Job searching is overwhelming. Between tracking applications, following up with
+								contacts, and preparing for interviews, it's easy to lose sight of opportunities that
+								could change your career. <strong style={{ color: "var(--primary-mid)" }}>JAM</strong>{" "}
+								brings everything together in one place - applications, interviews, contacts, and notes
+								- so you can stay organised and focused on landing your dream job.
+							</p>
 						</Col>
 					</Row>
 
@@ -148,23 +141,7 @@ const AboutPage = (): JSX.Element => {
 							</Button>
 						</div>
 					</Row>
-					<div className="features-grid mb-5">
-						{features.map(
-							(feature: Feature, index: number): JSX.Element => (
-								<div className="feature-card p-4" key={index}>
-									<div className="d-flex align-items-start align-items-center">
-										<div className="feature-icon me-3">
-											<i className={`bi ${feature.icon}`} style={{ fontSize: "2rem" }}></i>
-										</div>
-										<div>
-											<h5 className="fw-bold mb-2">{feature.title}</h5>
-											<p className="about-text-muted mb-0">{feature.description}</p>
-										</div>
-									</div>
-								</div>
-							)
-						)}
-					</div>
+					<AppFeaturesList features={features} className="mb-5" />
 				</Container>
 			</div>
 		</div>

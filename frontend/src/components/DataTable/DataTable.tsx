@@ -900,7 +900,11 @@ function DataTableComponent<T extends JamData>(
 				) : (
 					<>
 						<div style={{ display: "flex", minHeight: 0, flex: 1 }}>
-							<div className="table-responsive" id={`${entityType}-data-table`} style={{ minWidth: 0, width: "100%" }}>
+							<div
+								className="table-responsive"
+								id={`${entityType}-data-table`}
+								style={{ minWidth: 0, width: "100%" }}
+							>
 								<table
 									className={`table table-striped table-hover ${compact ? "table-sm rounded-3 overflow-hidden" : ""}`}
 									style={{
@@ -1115,7 +1119,9 @@ function DataTableComponent<T extends JamData>(
 										onClose={() => setFilterSidebarOpen(false)}
 										columns={columnConfig.allColumns.map((col) => {
 											const propCol = columns.find((c) => c.key === col.key);
-											return propCol?.sidebarExtra ? { ...col, sidebarExtra: propCol.sidebarExtra } : col;
+											return propCol?.sidebarExtra
+												? { ...col, sidebarExtra: propCol.sidebarExtra }
+												: col;
 										})}
 										filters={filters}
 										onFiltersChange={setFilters}
@@ -1159,7 +1165,7 @@ function DataTableComponent<T extends JamData>(
 												key={label}
 												variant="outline-secondary"
 												size="sm"
-												className={compact ? "py-0 px-1" : "py-0 px-2"}
+												className={compact ? "py-0 px-1 chevron-btn" : "py-0 px-2 chevron-btn"}
 												onClick={action}
 												disabled={disabled}
 												aria-label={label}
