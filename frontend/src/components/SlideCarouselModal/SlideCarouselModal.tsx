@@ -1,4 +1,5 @@
 import React, { forwardRef, JSX, useCallback, useImperativeHandle, useRef, useState } from "react";
+import { useArrowKeyNavigation } from "../../hooks/useArrowKeyNavigation";
 import { Modal } from "react-bootstrap";
 import JamModal from "../JamModal/JamModal";
 import { ActionButton } from "../rendering/form/ActionButton";
@@ -81,6 +82,8 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 			setDirection("prev");
 			setCurrentStep((prev: number): number => prev - 1);
 		};
+
+		useArrowKeyNavigation({ active: show, onNext: handleNext, onPrev: handleBack, canGoPrev: !isFirstStep, nextOnEnter: true });
 
 		if (!slide) return <></>;
 

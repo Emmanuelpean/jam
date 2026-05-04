@@ -58,16 +58,7 @@ const AboutPage = (): JSX.Element => {
 
 	return (
 		<div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-			<div
-				className="d-flex flex-column align-items-center justify-content-center"
-				style={{
-					borderRadius: "18px",
-					backgroundColor: "var(--bs-body-bg)",
-					border: "1px solid var(--bs-card-border-color)",
-					width: "100%",
-					margin: "0 auto",
-				}}
-			>
+			<div className="about-container d-flex flex-column align-items-center justify-content-center">
 				{/* Hero Section */}
 				<div className="hero-overlay">
 					<Container className="py-5">

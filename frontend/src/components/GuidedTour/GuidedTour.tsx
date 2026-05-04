@@ -1,4 +1,5 @@
 import React, { JSX, useCallback, useEffect, useRef, useState } from "react";
+import { useArrowKeyNavigation } from "../../hooks/useArrowKeyNavigation";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTour } from "../../contexts/TourContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -386,37 +387,21 @@ export function GuidedTour(): JSX.Element | null {
 	}, [step, isTourActive, stopWait, advanceFromCurrentStep]);
 
 	// ── Keyboard navigation ──────────────────────────────────────────────────
-	useEffect(() => {
-		if (!isTourActive) return;
-		const onKey = (e: KeyboardEvent) => {
-			// Don't hijack keys while the user is typing in an input/textarea
-			const tag = (e.target as HTMLElement)?.tagName;
-			const isTyping = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
-
-			if (e.key === "Escape") {
-				void endTour(false);
-				return;
-			}
-
-			if (isTyping) return;
-
-			const steps = tourStepsRef.current;
-			const s = stepRef.current;
-			const showNext = !steps[s]?.hideNextButton;
-			const inputBlocked = !!steps[s]?.waitForInput && !inputValidRef.current;
-
-			if ((e.key === "ArrowRight" || e.key === "Enter") && showNext && !isCleaningUp && !inputBlocked) {
-				e.preventDefault();
-				if (s >= steps.length - 1) void endTour(true);
-				else advanceFromCurrentStep();
-			} else if (e.key === "ArrowLeft" && s > 0 && showNext && !steps[s - 1]?.hideNextButton) {
-				e.preventDefault();
-				advanceToStep(s - 1);
-			}
-		};
-		window.addEventListener("keydown", onKey);
-		return () => window.removeEventListener("keydown", onKey);
-	}, [isTourActive, endTour, advanceToStep, advanceFromCurrentStep, isCleaningUp]);
+	const _stepDef = TOUR_STEPS[step];
+	const _showNext = !_stepDef?.hideNextButton;
+	const _isLast = step === TOUR_STEPS.length - 1;
+	const _nextDisabled = isCleaningUp || (!!_stepDef?.waitForInput && !inputValid);
+	const _canGoBack = step > 0 && _showNext && !TOUR_STEPS[step - 1]?.hideNextButton;
+	useArrowKeyNavigation({
+		active: isTourActive,
+		onNext: () => (_isLast ? void endTour(true) : advanceFromCurrentStep()),
+		onPrev: () => advanceToStep(step - 1),
+		canGoPrev: _canGoBack,
+		canGoNext: _showNext && !isCleaningUp && !_nextDisabled,
+		skipWhenTyping: true,
+		onEscape: () => void endTour(false),
+		nextOnEnter: true,
+	});
 
 	// ── Reset on tour start ──────────────────────────────────────────────────
 	useEffect(() => {

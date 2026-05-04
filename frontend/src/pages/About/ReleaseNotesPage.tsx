@@ -12,15 +12,7 @@ const ReleaseNotesPage = (): JSX.Element => {
 	const { showWhatsNew } = useWhatsNew();
 
 	return (
-		<div
-			className="d-flex flex-column align-items-center justify-content-center"
-			style={{
-				borderRadius: "18px",
-				backgroundColor: "var(--bs-body-bg)",
-				border: "1px solid var(--bs-card-border-color)",
-				boxShadow: "0 4px 24px rgb(0 0 0 / 10%)",
-			}}
-		>
+		<div className="about-container d-flex flex-column align-items-center justify-content-center">
 			<Container className="py-5">
 				<Row className="justify-content-center mb-4">
 					<Col lg={8} className="text-center">

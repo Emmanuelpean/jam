@@ -29,17 +29,7 @@ const extensionFeatures: Feature[] = [
 
 const ExtensionPage = (): JSX.Element => {
 	return (
-		<div
-			className="d-flex flex-column align-items-center justify-content-center"
-			style={{
-				borderRadius: "18px",
-				overflow: "hidden",
-				minHeight: "100%",
-				backgroundColor: "var(--bs-body-bg)",
-				border: "1px solid var(--bs-card-border-color)",
-				boxShadow: "0 4px 24px rgb(0 0 0 / 10%)",
-			}}
-		>
+		<div className="about-container d-flex flex-column align-items-center justify-content-center">
 			<Container className="py-5">
 				<div className="text-center mb-4">
 					<div className="extension-about-icon">
