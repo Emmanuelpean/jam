@@ -132,7 +132,7 @@ function setNativeInputValue(el: HTMLInputElement, value: string): void {
 }
 
 export function GuidedTour(): JSX.Element | null {
-	const { isTourActive, activeTourId, endTour, startTour, isCleaningUp, demoJobId, demoScrapedJobId, demoScrapingFilterId } = useTour();
+	const { isTourActive, activeTourId, endTour, endTourAndContinue, isCleaningUp, demoJobId, demoScrapedJobId, demoScrapingFilterId } = useTour();
 	const { currentUser } = useAuth();
 	const isPremium = currentUser?.premium.is_active ?? false;
 	const visibleTours = TOURS.filter(
@@ -539,7 +539,7 @@ export function GuidedTour(): JSX.Element | null {
 											<button
 												id="tour-start-next-btn"
 												className="tour-btn-secondary"
-												onClick={() => void endTour(true).then(() => startTour(nextTour.id))}
+												onClick={() => endTourAndContinue(nextTour.id)}
 											>
 												{nextTour.title} <i className="bi bi-arrow-right ms-1"></i>
 											</button>

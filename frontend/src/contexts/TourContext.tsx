@@ -8,6 +8,7 @@ import { useGlobalToast } from "../hooks/useNotificationToast";
 interface TourContextType {
 	startTour: (tourId: string) => Promise<void>;
 	endTour: (completed: boolean) => Promise<void>;
+	endTourAndContinue: (nextTourId: string) => void;
 	activeTourId: string | null;
 	isTourActive: boolean;
 	isCleaningUp: boolean;
@@ -60,6 +61,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	const [demoJobId, setDemoJobId] = useState<number | null>(null);
 	const [demoScrapedJobId, setDemoScrapedJobId] = useState<number | null>(null);
 	const [demoScrapingFilterId, setDemoScrapingFilterId] = useState<number | null>(null);
+	const [pendingNextTourId, setPendingNextTourId] = useState<string | null>(null);
 	const { currentUser, updateCurrentUser, token } = useAuth();
 	const {
 		jobs,
@@ -410,6 +412,28 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 		]
 	);
 
+	// Always points to the latest startTour so the pending-next-tour effect uses fresh state.
+	const startTourRef = useRef(startTour);
+	startTourRef.current = startTour;
+
+	// After endTour cleanup completes, start the next tour with fresh entity state.
+	// Using an effect (rather than Promise chaining) ensures startTour reads the correct
+	// post-cleanup visibleData snapshot instead of stale filtered data from Tour A.
+	useEffect((): void => {
+		if (!isTourActive && !isCleaningUp && pendingNextTourId !== null) {
+			const nextId = pendingNextTourId;
+			setPendingNextTourId(null);
+			void startTourRef.current(nextId);
+		}
+	}, [isTourActive, isCleaningUp, pendingNextTourId]);
+
+	const endTourAndContinue = useCallback((nextTourId: string): void => {
+		// Clear origin path so endTour doesn't navigate away before Tour B starts.
+		originPathRef.current = null;
+		setPendingNextTourId(nextTourId);
+		void endTour(true);
+	}, [endTour]);
+
 	const openTourSelect = useCallback((): void => setIsTourSelectOpen(true), []);
 	const closeTourSelect = useCallback((): void => setIsTourSelectOpen(false), []);
 	const toggleTourSelect = useCallback((): void => setIsTourSelectOpen((prev) => !prev), []);
@@ -419,6 +443,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			value={{
 				startTour,
 				endTour,
+				endTourAndContinue,
 				activeTourId,
 				isTourActive,
 				isCleaningUp,

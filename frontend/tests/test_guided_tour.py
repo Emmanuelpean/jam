@@ -8,6 +8,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from app import models
 from base_test import BaseTest
+from react_select import ReactSelect
 
 # Tour element IDs
 TOUR_POPOVER = "tour-popover"
@@ -359,4 +360,82 @@ class TestAppOverviewTour(BaseTest):
 
         # Both the job (if partially saved) and the company must be removed
         self._poll_db_count(models.Company, owner_id, initial_companies)
+        self._poll_db_count(models.Job, owner_id, initial_jobs)
+
+    def test_continue_to_next_tour_preserves_preexisting_data(self) -> None:
+        """Clicking 'Continue to next tour' must not delete pre-existing user data.
+
+        Regression: during an isolated tour (Tour A), visibleData filters out pre-existing
+        entities. The stale startTour() closure used to capture an empty/wrong snapshot for
+        Tour B, causing endTour() to diff against it and delete all pre-existing entities.
+
+        Test sequence: log-application (Tour A) → log-interview (Tour B).
+        Both are isolated tours that auto-seed a demo job. A pre-existing job is created
+        before either tour runs and must still exist after both tours complete.
+        """
+        owner_id = self.user.id
+
+        # Create a pre-existing job that must survive the entire tour A → tour B sequence.
+        self._make_job(title="Pre-existing Job — Must Survive Tours")
+
+        self.db.expire_all()
+        self.db.rollback()
+        initial_jobs = self.db.query(models.Job).filter_by(owner_id=owner_id).count()
+
+        # ── Tour A: log-application ──────────────────────────────────────────
+        # startTour() auto-seeds a demo job; use a longer timeout for the seeding API calls.
+        self._start_tour("log-application", popover_timeout=30.0)
+        self.wait_for_page("jobs")
+
+        # Intro step: purely informational — click Next.
+        self._click_next()
+
+        # "Open the Job": click the demo job row. During the isolated tour the pre-existing
+        # job is hidden by the snapshot filter, so only the demo job row is visible.
+        # waitForSelector=#application-tab → tour auto-advances when the view modal opens.
+        self._wait_for_popover()
+        self.get_element("[id^='table-row-job-']", By.CSS_SELECTOR).click()
+
+        # "Switch to the Application Tab": click the tab.
+        # waitForSelector=#add-interview-button → auto-advances.
+        self._wait_for_popover()
+        self.get_element("application-tab").click()
+
+        # "Edit the Job": click Edit.
+        # waitForSelector=#application_date-form-group → auto-advances.
+        self._wait_for_popover()
+        self.get_element("modal-view-job-edit-button").click()
+
+        # "Application Date": set current date to satisfy waitForInput, then click Next.
+        self._wait_for_popover()
+        self.get_element("application_date_set_current").click()
+        self._click_next()
+
+        # "Application Status": select a value to satisfy waitForInput, then click Next.
+        self._wait_for_popover()
+        ReactSelect(self.get_element("application_status")).select_by_visible_text("Applied")
+        self._click_next()
+
+        # "Applied Via", "Application URL", "Application Notes": informational — Next each.
+        self._advance_steps(3)
+
+        # "Save the Application": click Confirm — waitForSelectorGone auto-advances to Done.
+        self._wait_for_popover()
+        self.get_element("modal-edit-job-confirm-button").click()
+
+        # Done step: click "Continue to next tour" instead of "Done".
+        # This starts Tour B (log-interview) after Tour A's cleanup completes.
+        self._wait_for_popover()
+        self.get_element("tour-start-next-btn").click()
+
+        # ── Tour B: log-interview ────────────────────────────────────────────
+        # startTour() seeds another demo job; give it time to complete seeding.
+        self._wait_for_popover(timeout=30.0)
+
+        # Skip Tour B immediately — endTour() must not delete the pre-existing job.
+        self._click_skip()
+        self._wait_for_popover_gone()
+
+        # Both demo jobs (Tour A's and Tour B's) must be deleted; the pre-existing job
+        # must remain. Poll until the DB count matches the value before either tour ran.
         self._poll_db_count(models.Job, owner_id, initial_jobs)

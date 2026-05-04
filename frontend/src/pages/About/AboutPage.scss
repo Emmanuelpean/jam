@@ -9,14 +9,6 @@
     margin: 0 auto;
 }
 
-.gradient-bg {
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bs-tertiary-bg) 100%);
-    min-height: 100%;
-    border-radius: 1.8px;
-    border-width: 1.8px;
-    border-color: var(--bs-border-color);
-}
-
 .hero-overlay {
     width: 100%;
     background: linear-gradient(135deg, rgb(59 130 246 / 10%) 0%, rgb(147 51 234 / 10%) 100%);
