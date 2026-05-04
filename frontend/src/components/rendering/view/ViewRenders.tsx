@@ -39,6 +39,7 @@ import {
 } from "../form/FormOptions";
 import { filesApi } from "../../../services/api/DataTables";
 import { jobEmailApi, scrapedJobApi } from "../../../services/api/Services";
+import { useDelayedLoading } from "../../../hooks/useDelayedLoading";
 import { canPreviewFile, formatFileSize } from "../../../utils/FileUtils";
 import { useAuth } from "../../../contexts/AuthContext";
 import ScrapedJobsTableReadOnly from "../../DataTable/ScrapedJobTableReadOnly";
@@ -590,7 +591,7 @@ export const renderFunctions = {
 	},
 
 	locationBadge: (param: RenderParams): ReactNode => {
-		const locationString: string | null = param.item.location;
+		const locationString: string | null = param.item?.location;
 		if (!locationString && !param.item?.attendance_type) return null;
 		const attendanceLabel: string | null =
 			attendanceTypeOptions.find((o: SelectOption): boolean => o.value === param.item.attendance_type)?.label ??
@@ -930,6 +931,7 @@ export const AccordionTable = <T,>({
 const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 	const [data, setData] = useState<ScrapedJobData[] | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
+	const visibleLoading = useDelayedLoading(loading);
 
 	useEffect(() => {
 		const fetchData = async (): Promise<void> => {
@@ -949,7 +951,7 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 		fetchData().then();
 	}, [param.item.id, param.token]);
 
-	if (loading) {
+	if (visibleLoading) {
 		return <LoadingSpinner size={"sm"} />;
 	}
 
@@ -972,6 +974,7 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 const EmailScrapedJobTable: React.FC<{ param: RenderParams; viewOnly?: boolean }> = ({ param, viewOnly = false }) => {
 	const [data, setData] = useState<ScrapedJobData[] | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
+	const visibleLoading = useDelayedLoading(loading);
 	const [reloadTick, setReloadTick] = useState<number>(0);
 
 	useEffect(() => {
@@ -992,7 +995,7 @@ const EmailScrapedJobTable: React.FC<{ param: RenderParams; viewOnly?: boolean }
 		fetchData().then();
 	}, [param.item.id, param.token, reloadTick]);
 
-	if (loading) return <LoadingSpinner size={"sm"} />;
+	if (visibleLoading) return <LoadingSpinner size={"sm"} />;
 	if (!data?.length) return null;
 
 	return (
@@ -1008,6 +1011,7 @@ const EmailScrapedJobTable: React.FC<{ param: RenderParams; viewOnly?: boolean }
 const ScrapedJobEmailTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 	const [data, setData] = useState<JobEmailData[] | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
+	const visibleLoading: boolean = useDelayedLoading(loading);
 
 	useEffect(() => {
 		const fetchData = async (): Promise<void> => {
@@ -1027,7 +1031,7 @@ const ScrapedJobEmailTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 		fetchData().then();
 	}, [param.item.id, param.token]);
 
-	if (loading) return <LoadingSpinner size={"sm"} />;
+	if (visibleLoading) return <LoadingSpinner size={"sm"} />;
 	if (!data?.length) return null;
 	return <JobEmailTableReadOnly data={data} modalProps={{ scrapedJobsReadOnly: true }} />;
 };

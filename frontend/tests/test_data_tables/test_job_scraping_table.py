@@ -519,7 +519,7 @@ class TestDismissExpiredBulkAction(BaseTest):
     def test_delete_expired_opens_modal_with_expired_jobs(self) -> None:
         """When there are expired jobs, clicking Delete Expired opens the confirmation modal with the jobs listed."""
 
-        expired_job = self._make_scraped_job(title="Expired Closed Job", is_closed=True)
+        self._make_scraped_job(title="Expired Closed Job", is_closed=True)
         self._make_scraped_job(
             title="Past Deadline Job",
             deadline=dt.datetime(2024, 1, 1, tzinfo=dt.timezone.utc),

@@ -2,6 +2,7 @@ import React, { JSX, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button, Spinner } from "react-bootstrap";
 import "./ActionButton.scss";
+import { useDelayedLoading } from "../../../hooks/useDelayedLoading";
 
 export type ButtonVariant =
 	| "primary"
@@ -70,6 +71,7 @@ export const ActionButton = ({
 	style,
 	...otherProps
 }: ActionButtonProps): JSX.Element => {
+	const visibleLoading: boolean = useDelayedLoading(loading);
 	const wrapperRef = useRef<HTMLDivElement>(null);
 	const [tooltipCoords, setTooltipCoords] = useState<{ top: number; left: number } | null>(null);
 
@@ -111,7 +113,7 @@ export const ActionButton = ({
 				{/* Default text + icon */}
 				<span
 					className={
-						loading
+						visibleLoading
 							? "invisible d-flex align-items-center justify-content-center"
 							: "d-flex align-items-center justify-content-center"
 					}
@@ -122,7 +124,7 @@ export const ActionButton = ({
 				</span>
 
 				{/* Loading overlay */}
-				{loading && (
+				{visibleLoading && (
 					<span
 						className="position-absolute d-flex align-items-center justify-content-center"
 						style={{ inset: 0, gap: "0.5rem" }}

@@ -18,6 +18,8 @@ import { AggregatorModal } from "./AggregatorModal";
 import { KeywordModal } from "./KeywordModal";
 import { JobData, JobDataTransform } from "../../services/schemas/DataTables";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
+import { GeoLocationData } from "../../services/schemas/Base";
+import { geolocationApi } from "../../services/api/Others";
 
 export interface ExtensionJobData {
 	title: string;
@@ -36,6 +38,7 @@ export interface ExtensionJobData {
 
 export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataModalProps>(
 	({ size = "xl" }: JamDataModalProps, ref): JSX.Element => {
+		const { token } = useAuth();
 		const personModalRef = useRef<DataModalHandle>(null);
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const aggregatorModalRef = useRef<DataModalHandle>(null);
@@ -53,11 +56,18 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 
 		const transformInputData = async (data: ExtensionJobData) => {
 			if (!data) return data;
+			let geolocation: GeoLocationData | null;
+			if (data.location && token) {
+				geolocation = await geolocationApi.get(data.location, token);
+			} else {
+				geolocation = null;
+			}
 			return {
 				...data,
 				company_id: data.company ? findClosestOption(companies, data.company) : null,
 				source_aggregator_id: data.platform ? findExactOption(aggregators, data.platform) : null,
 				source_type: "aggregator",
+				geolocation: geolocation,
 			};
 		};
 
@@ -85,7 +95,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				key: "location",
 				title: "Location",
 				icon: "bi-geo-alt",
-				fields: [formFields.location(), formFields.attendanceType()],
+				fields: [[formFields.attendanceType(), formFields.location()], modalViewFields.geolocationMap()],
 			} as SectionConfig,
 			{
 				type: "section",

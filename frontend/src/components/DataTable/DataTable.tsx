@@ -264,11 +264,6 @@ function DataTableComponent<T extends JamData>(
 	const [showSpinner, setShowSpinner] = useState<boolean>(false);
 
 	useEffect(() => {
-		onTotalCountChange?.(totalCount);
-	}, [totalCount, onTotalCountChange]);
-	const followUpModalRef = useRef<FollowUpModalHandle>(null);
-
-	useEffect(() => {
 		if (!isLoading) {
 			setShowSpinner(false);
 			return;
@@ -276,6 +271,11 @@ function DataTableComponent<T extends JamData>(
 		const timer = setTimeout(() => setShowSpinner(true), 200);
 		return () => clearTimeout(timer);
 	}, [isLoading]);
+
+	useEffect(() => {
+		onTotalCountChange?.(totalCount);
+	}, [totalCount, onTotalCountChange]);
+	const followUpModalRef = useRef<FollowUpModalHandle>(null);
 
 	const isServerPagination: boolean = !!endpoint && !providedData;
 

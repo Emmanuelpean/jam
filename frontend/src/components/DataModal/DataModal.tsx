@@ -11,6 +11,7 @@ import React, {
 import { Alert, Card, Form, Modal } from "react-bootstrap";
 import JamModal from "../JamModal/JamModal";
 import LoadingSpinner from "../Spinner/Spinner";
+import { useDelayedLoading } from "../../hooks/useDelayedLoading";
 import { useAuth } from "../../contexts/AuthContext";
 import {
 	DataContextValue,
@@ -208,6 +209,7 @@ function DataModalComponent<T extends JamData>(
 		setUploading(uploadingCount.current > 0);
 	}, []);
 	const [inputDataLoading, setInputDataLoading] = useState<boolean>(false);
+	const visibleInputDataLoading = useDelayedLoading(inputDataLoading);
 	const [errors, setErrors] = useState<Errors>({});
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const { currentUser } = useAuth();
@@ -854,7 +856,7 @@ function DataModalComponent<T extends JamData>(
 	};
 
 	const renderBodyContent = (): JSX.Element => {
-		if (inputDataLoading) {
+		if (visibleInputDataLoading) {
 			return <LoadingSpinner text="Loading..." />;
 		}
 

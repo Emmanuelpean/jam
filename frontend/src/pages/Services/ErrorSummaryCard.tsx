@@ -1,5 +1,6 @@
 import React, { JSX, useState } from "react";
 import { ServiceLog } from "../../services/schemas/Services";
+import { useDelayedLoading } from "../../hooks/useDelayedLoading";
 
 export type ErrorView = "current" | "last";
 
@@ -16,6 +17,7 @@ export const ErrorSummaryCard = ({
 	loading = false,
 	children,
 }: SharedErrorSummaryCardProps): JSX.Element => {
+	const visibleLoading = useDelayedLoading(loading);
 	const [errorView, setErrorView] = useState<ErrorView>("current");
 
 	const criticalErrorLogs: ServiceLog[] = latestServiceLogs || [];
@@ -44,7 +46,7 @@ export const ErrorSummaryCard = ({
 				</label>
 			</div>
 
-			{loading ? (
+			{visibleLoading ? (
 				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "270px" }}>
 					<div className="spinner-border text-primary" role="status">
 						<span className="visually-hidden">Loading...</span>

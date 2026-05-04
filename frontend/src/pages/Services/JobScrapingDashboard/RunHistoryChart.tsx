@@ -5,6 +5,7 @@ import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
 import { createSeries } from "../ServiceUtils";
 import { ModalFormField } from "../../../components/rendering/form/FormRenders";
 import { SelectInput } from "../../../components/rendering/widgets/SelectWidget";
+import { useDelayedLoading } from "../../../hooks/useDelayedLoading";
 
 interface RunHistoryChartProps {
 	serviceLogData: JobScrapingServiceLogData[] | null;
@@ -45,6 +46,7 @@ export const RunHistoryChart = ({
 	isRunning,
 	loading = false,
 }: RunHistoryChartProps): JSX.Element => {
+	const visibleLoading = useDelayedLoading(loading);
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
 
 	useEffect(() => {
@@ -136,7 +138,7 @@ export const RunHistoryChart = ({
 					/>
 				</div>
 			</div>
-			{loading ? (
+			{visibleLoading ? (
 				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "270px" }}>
 					<div className="spinner-border text-primary" role="status">
 						<span className="visually-hidden">Loading...</span>

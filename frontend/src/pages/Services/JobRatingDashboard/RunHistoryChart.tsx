@@ -2,6 +2,7 @@ import React, { JSX, useEffect, useState } from "react";
 import { JobRatingServiceLogData } from "../../../services/schemas/Services";
 import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
 import { createSeries, failureColor, infoColor, successColor } from "../ServiceUtils";
+import { useDelayedLoading } from "../../../hooks/useDelayedLoading";
 
 interface RunHistoryChartProps {
 	serviceLogData: JobRatingServiceLogData[] | null;
@@ -10,6 +11,7 @@ interface RunHistoryChartProps {
 }
 
 export const RunHistoryChart = ({ serviceLogData, isRunning, loading = false }: RunHistoryChartProps): JSX.Element => {
+	const visibleLoading: boolean = useDelayedLoading(loading);
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
 
 	useEffect(() => {
@@ -51,7 +53,7 @@ export const RunHistoryChart = ({ serviceLogData, isRunning, loading = false }: 
 				Run History
 				{isRunning && <span className="live-indicator ms-2"></span>}
 			</h2>
-			{loading ? (
+			{visibleLoading ? (
 				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "270px" }}>
 					<div className="spinner-border text-primary" role="status">
 						<span className="visually-hidden">Loading...</span>
