@@ -75,7 +75,7 @@ const AboutPage = (): JSX.Element => {
 							<Col lg={8}>
 								<div className="auth-logo">
 									<div className="logo-container logo-container-vertical">
-										<JamLogo style={{ height: "157.5px" }} />
+										<JamLogo style={{ height: "158px" }} />
 										<div
 											className="logo-text-below text-gradient-primary"
 											style={{ fontSize: "45px", fontWeight: "bold" }}

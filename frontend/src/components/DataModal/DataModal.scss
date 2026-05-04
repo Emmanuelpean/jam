@@ -39,19 +39,6 @@
     background: var(--primary-gradient);
 }
 
-/* Close button */
-.modal-header .btn-close {
-    transition: all 0.2s ease;
-    opacity: 0.8;
-    background-size: 1.2em;
-    filter: invert(1);
-}
-
-.modal-header .btn-close:hover {
-    transform: scale(1.1);
-    opacity: 1;
-}
-
 /* Handle form wrapper in edit mode */
 .modal-content form {
     display: flex;

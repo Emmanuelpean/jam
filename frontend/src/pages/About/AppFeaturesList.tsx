@@ -21,7 +21,7 @@ const AppFeaturesList = ({ features, className }: AppFeaturesListProps): JSX.Ele
 							<i className={`bi ${feature.icon}`} style={{ fontSize: "2rem" }} />
 						</div>
 						<div>
-							<h5 className="fw-bold mb-2">{feature.title}</h5>
+							<h5 className="fw-bold mb-1">{feature.title}</h5>
 							<p className="about-text-muted mb-0">{feature.description}</p>
 						</div>
 					</div>

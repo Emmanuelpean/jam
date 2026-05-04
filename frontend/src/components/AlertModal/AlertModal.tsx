@@ -2,7 +2,6 @@ import React, { JSX, ReactNode, useState } from "react";
 import { Modal } from "react-bootstrap";
 import JamModal from "../JamModal/JamModal";
 import { ActionButton, ButtonVariant } from "../rendering/form/ActionButton";
-import { ModalHeader } from "../ModalHeader/ModalHeader";
 
 export type AlertType = "success" | "warning" | "error" | "info" | "danger" | "primary";
 export type BootstrapModalSize = "sm" | "lg" | "xl" | undefined;
@@ -81,10 +80,10 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 		<JamModal show={alertState.show} onHide={hideAlert} centered size={getModalSize(alertState.size)} id={modalId}>
 			{/* Transparent sentinel that fills .modal-content — used by the guided tour to spotlight this dialog */}
 			<div id={`${modalId}-dialog`} style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
-			<ModalHeader onClose={hideAlert}>
+			<JamModal.Header onClose={hideAlert}>
 				{iconClass && <i className={`bi ${iconClass} me-2`} />}
 				<Modal.Title>{alertState.title}</Modal.Title>
-			</ModalHeader>
+			</JamModal.Header>
 			<Modal.Body>
 				{typeof alertState.message === "string" ? (
 					<p className="mb-0">{alertState.message}</p>

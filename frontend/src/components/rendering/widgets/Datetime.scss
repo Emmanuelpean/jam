@@ -5,7 +5,7 @@
 }
 
 .form-control.datetime-input-with-icon {
-    padding-right: 2.5rem;
+    padding-right: 4rem;
     font: inherit;
     color: var(--bs-body-color);
 
@@ -51,4 +51,9 @@
 
 .datetime-embedded-icon:hover {
     color: var(--primary-mid) !important;
+}
+
+.datetime-clear-icon {
+    right: 2.5rem;
+    font-size: 1.25rem;
 }

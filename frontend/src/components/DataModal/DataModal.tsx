@@ -10,7 +10,6 @@ import React, {
 } from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
 import JamModal from "../JamModal/JamModal";
-import { ModalHeader } from "../ModalHeader/ModalHeader";
 import LoadingSpinner from "../Spinner/Spinner";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -843,14 +842,14 @@ function DataModalComponent<T extends JamData>(
 			text = `${entityName} Details`;
 		}
 		return (
-			<ModalHeader onClose={handleCloseWithConfirmation}>
+			<JamModal.Header onClose={handleCloseWithConfirmation}>
 				<Modal.Title>
 					<span style={{ display: "flex", alignItems: "center" }}>
 						{icon && <i className={`${icon} me-2`} style={{ fontSize: "1.05em" }} />}
 						<span>{text}</span>
 					</span>
 				</Modal.Title>
-			</ModalHeader>
+			</JamModal.Header>
 		);
 	};
 

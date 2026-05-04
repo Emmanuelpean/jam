@@ -1,7 +1,6 @@
 import React, { JSX } from "react";
 import { Modal } from "react-bootstrap";
 import JamModal from "../JamModal/JamModal";
-import { ModalHeader } from "../ModalHeader/ModalHeader";
 import { DataTable } from "./DataTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../DataModal/ScrapedJobModal";
@@ -39,11 +38,11 @@ const DismissExpiredModal: React.FC<DismissExpiredModalProps> = ({
 			className="data-modal"
 			id="dismiss-expired-modal"
 		>
-			<ModalHeader onClose={onHide}>
+			<JamModal.Header onClose={onHide}>
 				<Modal.Title>
 					Delete {jobs.length} Expired Job Alert{jobs.length !== 1 ? "s" : ""}
 				</Modal.Title>
-			</ModalHeader>
+			</JamModal.Header>
 			<Modal.Body>
 				<DataTable
 					entityType="scrapedJob"

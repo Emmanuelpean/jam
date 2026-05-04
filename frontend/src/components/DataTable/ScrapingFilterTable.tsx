@@ -1,7 +1,6 @@
 import React, { JSX, useLayoutEffect, useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
 import JamModal from "../JamModal/JamModal";
-import { ModalHeader } from "../ModalHeader/ModalHeader";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapingFilterModal } from "../DataModal/ScrapingFilterModal";
@@ -144,9 +143,9 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 			className="data-modal"
 		>
 			<div id={isExclusion ? "scraping-filters-modal" : "favourite-filters-modal"}>
-				<ModalHeader onClose={onHide}>
+				<JamModal.Header onClose={onHide}>
 					<Modal.Title>{isExclusion ? "Scraped Job Filters" : "Favourite Filters"}</Modal.Title>
-				</ModalHeader>
+				</JamModal.Header>
 
 				<Modal.Body>
 					<i style={{ margin: "0 9px 9px 9px", display: "block" }}>

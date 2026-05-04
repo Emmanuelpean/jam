@@ -47,6 +47,12 @@ export const LocalDatetimeInput = ({
 		handleChange(syntheticEvent);
 	};
 
+	const clearValue = (e: React.MouseEvent<HTMLElement>): void => {
+		e.preventDefault();
+		e.stopPropagation();
+		handleChange({ target: { name: toKey(field.name), value: "" } });
+	};
+
 	let formattedValue: string = "";
 	if (value) {
 		formattedValue = inputType === "datetime-local" ? formatDateTime(value) : formatDateTime(value, true);
@@ -64,8 +70,16 @@ export const LocalDatetimeInput = ({
 				className={`datetime-input-with-icon${!formattedValue ? " datetime-empty" : ""}`}
 				disabled={field.isDisabled}
 			/>
+			{formattedValue && !field.isDisabled && (
+				<i
+					className="bi bi-x datetime-embedded-icon datetime-clear-icon"
+					onClick={clearValue}
+					id={field.name + "_clear"}
+					title="Clear"
+				></i>
+			)}
 			<i
-				className={`bi bi-clock datetime-embedded-icon`}
+				className="bi bi-clock datetime-embedded-icon"
 				onClick={setCurrentValue}
 				id={field.name + "_set_current"}
 				title={inputType === "datetime-local" ? "Set to current date and time" : "Set to current date"}

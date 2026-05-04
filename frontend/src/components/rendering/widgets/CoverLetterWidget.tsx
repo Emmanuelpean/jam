@@ -11,7 +11,6 @@ import { ModalFormField } from "../form/FormRenders";
 import { ActionButton } from "../form/ActionButton";
 import "./CoverLetterWidget.scss";
 import JamModal from "../../JamModal/JamModal";
-import { ModalHeader } from "../../ModalHeader/ModalHeader";
 
 export const CoverLetterWidget = (props: WidgetProps): JSX.Element => {
 	const { field, value, handleChange, data, onUploadingChange } = props;
@@ -119,9 +118,9 @@ export const CoverLetterWidget = (props: WidgetProps): JSX.Element => {
 			<FileUploadWidget {...fileUploadProps} />
 
 			<JamModal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
-				<ModalHeader onClose={() => setShowModal(false)}>
+				<JamModal.Header onClose={() => setShowModal(false)}>
 					<Modal.Title>Cover Letter Text</Modal.Title>
-				</ModalHeader>
+				</JamModal.Header>
 				<JamModal.Body>
 					<Textarea
 						field={

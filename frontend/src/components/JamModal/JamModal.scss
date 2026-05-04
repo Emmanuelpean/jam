@@ -1,0 +1,13 @@
+.modal-header .btn-close {
+    transition: all 0.2s ease;
+    opacity: 0.8;
+    background-size: 1.2em;
+    filter: invert(1);
+    transform: scale(1);
+    will-change: transform;
+}
+
+.modal-header .btn-close:hover {
+    transform: scale(1.1);
+    opacity: 1;
+}

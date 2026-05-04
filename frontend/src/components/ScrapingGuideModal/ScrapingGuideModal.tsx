@@ -4,7 +4,6 @@ import JamModal from "../JamModal/JamModal";
 import { Accordion } from "../Accordion/Accordion";
 import { useConfig } from "../../contexts/ConfigContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
-import { ModalHeader } from "../ModalHeader/ModalHeader";
 
 export interface ScrapingGuideModalHandle {
 	show: () => void;
@@ -34,12 +33,12 @@ export const ScrapingGuideModal = forwardRef<ScrapingGuideModalHandle>((_, ref):
 
 	return (
 		<JamModal show={visible} onHide={() => setVisible(false)} centered size="lg">
-			<ModalHeader onClose={() => setVisible(false)}>
+			<JamModal.Header onClose={() => setVisible(false)}>
 				<Modal.Title>
 					<i className="bi bi-envelope-paper me-2" />
 					Job Scraping Setup Guide
 				</Modal.Title>
-			</ModalHeader>
+			</JamModal.Header>
 			<Modal.Body>
 				<p>
 					To enable job scraping, you need to set up an email forwarding rule in your email client. For each
