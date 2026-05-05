@@ -115,3 +115,9 @@ def test_user_qualifications(session, test_users) -> list[models.UserQualificati
 def test_stripe_user(session, test_users) -> models.User:
     """Create test user data with stripe data"""
     return test_users[td.STRIPE_USER_INDEX]
+
+
+@pytest.fixture
+def test_non_premium_user(session, test_users) -> models.User:
+    """Create test user data with stripe data"""
+    return test_users[td.NON_PREMIUM_USER_INDEX]

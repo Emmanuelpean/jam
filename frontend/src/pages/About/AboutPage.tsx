@@ -15,7 +15,7 @@ import AppFeaturesList, { Feature } from "./AppFeaturesList";
 
 const AboutPage = (): JSX.Element => {
 	const { showWelcome } = useWhatsNew();
-	const { openTourSelect, completedTourIds } = useTour();
+	const { toggleTourSelect, completedTourIds } = useTour();
 	const { currentUser } = useAuth();
 	const isPremium = currentUser?.premium.is_active ?? false;
 	const implementedTours = TOURS.filter(
@@ -133,7 +133,7 @@ const AboutPage = (): JSX.Element => {
 					{/* Features Section */}
 					<Row className="justify-content-center mb-5">
 						<Col lg={8} className="text-center mb-2">
-							<h2 className="display-5 fw-bold">What Jam Can Do For You</h2>
+							<h2 className="display-5 fw-bold">What JAM Can Do For You</h2>
 						</Col>
 						<div className="d-flex justify-content-center gap-2 mt-3">
 							<Button variant="outline-primary" onClick={showWelcome}>
@@ -141,7 +141,7 @@ const AboutPage = (): JSX.Element => {
 								Discover JAM
 							</Button>
 							{allToursCompleted && (
-								<Button id="take-a-tour-btn" variant="outline-secondary" onClick={openTourSelect}>
+								<Button id="take-a-tour-btn" variant="outline-secondary" onClick={toggleTourSelect}>
 									<i className="bi bi-map me-2" />
 									Take a Tour
 								</Button>

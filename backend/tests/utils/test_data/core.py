@@ -71,6 +71,13 @@ USER_DATA = [
         "stripe_details": {"customer_id": "cus_test_123", "subscription_id": "sub_id"},
         "app_version": "10.0.0",
     },
+    # Non premium user
+    {
+        "email": "non-premium_user@example.com",
+        "password": "password7",
+        "is_verified": True,
+        "app_version": "10.0.0",
+    },
 ]
 
 # Regular user
@@ -109,6 +116,11 @@ assert USER_DATA[TOAST_USER_INDEX_2]["premium"]
 STRIPE_USER_INDEX = 7
 assert USER_DATA[STRIPE_USER_INDEX]["stripe_details"], "STRIPE_USER_INDEX does not point to a stripe_details user"
 
+# Non premium used
+NON_PREMIUM_USER_INDEX = 8
+assert not USER_DATA[NON_PREMIUM_USER_INDEX].get(
+    "premium"
+), "NON_PREMIUM_USER_INDEX does not point to a non premium user"
 
 # ------------------------------------------------------ SETTINGS ------------------------------------------------------
 

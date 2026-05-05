@@ -9,6 +9,10 @@
 	min-width: 270px;
 	box-shadow: 0 20px 60px rgb(0 0 0 / 25%);
 	animation: tsp-pop-in 0.15s ease forwards;
+
+	&--closing {
+		animation: tsp-pop-out 0.15s ease forwards;
+	}
 }
 
 @keyframes tsp-pop-in {
@@ -20,6 +24,18 @@
 	to {
 		opacity: 1;
 		transform: scale(1) translateY(0);
+	}
+}
+
+@keyframes tsp-pop-out {
+	from {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+
+	to {
+		opacity: 0;
+		transform: scale(0.96) translateY(6px);
 	}
 }
 

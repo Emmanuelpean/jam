@@ -1124,73 +1124,6 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 	},
 ];
 
-const DASHBOARD_WIDGETS_STEPS: TourStep[] = [
-	{
-		id: "dashboard-widgets-intro",
-		targetId: null,
-		title: "Customising Your Dashboard",
-		content:
-			"JAM's dashboard is fully customisable - add, remove, and rearrange widgets to build a view that shows what matters most to you.",
-		route: "/dashboard",
-		placement: "center",
-	},
-	{
-		id: "dashboard-widgets-overview",
-		targetId: "dashboard-main",
-		title: "Your Dashboard",
-		content: "Every card you see is a widget. You decide which ones appear, how big they are, and where they sit.",
-		route: "/dashboard",
-		placement: "center",
-	},
-	{
-		id: "dashboard-widgets-edit",
-		targetId: "dashboard-edit-btn",
-		title: "Enter Edit Mode",
-		content:
-			"Click the pencil icon to enter edit mode. Widgets become draggable and resizable, and the toolbar expands.",
-		route: "/dashboard",
-		placement: "left",
-		waitForSelector: "#dashboard-save-btn",
-		hideNextButton: true,
-	},
-	{
-		id: "dashboard-widgets-drag",
-		targetId: null,
-		title: "Drag and Resize",
-		content:
-			"In edit mode, grab any widget by its header to move it. Drag the bottom-right corner to resize. Changes are not saved until you click the save button.",
-		placement: "center",
-	},
-	{
-		id: "dashboard-widgets-add",
-		targetId: "dashboard-add-widget-btn",
-		title: "Add a Widget",
-		content:
-			"Click the + button to browse the widget library. Choose from stat counters, tables, charts, timelines, and maps.",
-		placement: "left",
-	},
-	{
-		id: "dashboard-widgets-save",
-		targetId: "dashboard-save-btn",
-		title: "Save Your Layout",
-		content: "Click the checkmark to save your layout. It persists across sessions and devices.",
-		placement: "left",
-	},
-	{
-		id: "dashboard-widgets-reset",
-		targetId: "dashboard-reset-btn",
-		title: "Reset to Default",
-		content: "If things get messy, click the reset button to restore the original layout.",
-		placement: "left",
-	},
-	{
-		id: "dashboard-widgets-done",
-		targetId: null,
-		title: "All Done!",
-		content: "You know how to customise your dashboard. Try rearranging your widgets or adding something new.",
-		placement: "center",
-	},
-];
 
 const COMMAND_PALETTE_STEPS: TourStep[] = [
 	{
@@ -1352,29 +1285,6 @@ export const TOUR_STRUCTURE: TourStructureItem[] = [
 				description: "Learn how to set up filters to control which job alerts get scraped into JAM.",
 				icon: "funnel",
 				steps: SCRAPING_FILTER_STEPS,
-			},
-		],
-	},
-	{
-		type: "group",
-		id: "dashboard",
-		title: "Dashboard",
-		icon: "speedometer2",
-		tours: [
-			{
-				id: "dashboard-overview",
-				title: "Overview",
-				description: "Get an overview of the JAM dashboard and its main widgets.",
-				icon: "grid",
-				steps: [],
-				comingSoon: true,
-			},
-			{
-				id: "dashboard-widgets",
-				title: "Adding Widgets & Customising",
-				description: "Learn how to add, remove, and rearrange widgets to build your perfect dashboard.",
-				icon: "layout-wtf",
-				steps: DASHBOARD_WIDGETS_STEPS,
 			},
 		],
 	},

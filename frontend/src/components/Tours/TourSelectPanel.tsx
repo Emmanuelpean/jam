@@ -4,14 +4,18 @@ import { useAuth } from "../../contexts/AuthContext";
 import { isTourGroup, TOUR_STRUCTURE, TOURS, TourDefinition } from "../GuidedTour/tourSteps";
 import "./TourSelectPanel.scss";
 
+const CLOSE_ANIMATION_MS = 150;
+
 export function TourSelectPanel(): JSX.Element | null {
 	const { isTourSelectOpen, closeTourSelect, startTour, completedTourIds, isTourActive } = useTour();
 	const { currentUser } = useAuth();
 	const isPremium = currentUser?.premium.is_active ?? false;
 	const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
 	const [panelTop, setPanelTop] = useState<number>(0);
+	const [isClosing, setIsClosing] = useState<boolean>(false);
 	const panelRef = useRef<HTMLDivElement>(null);
 	const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useLayoutEffect(() => {
 		if (!anchorRect || !panelRef.current) return;
@@ -23,9 +27,19 @@ export function TourSelectPanel(): JSX.Element | null {
 
 	useEffect(() => {
 		if (!isTourSelectOpen) {
-			setAnchorRect(null);
-			return;
+			if (anchorRect) {
+				setIsClosing(true);
+				exitTimerRef.current = setTimeout(() => {
+					setIsClosing(false);
+					setAnchorRect(null);
+				}, CLOSE_ANIMATION_MS);
+			}
+			return () => {
+				if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+			};
 		}
+		setIsClosing(false);
+		if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
 		const btn = document.getElementById("take-a-tour-btn");
 		if (btn) setAnchorRect(btn.getBoundingClientRect());
 	}, [isTourSelectOpen]);
@@ -93,13 +107,13 @@ export function TourSelectPanel(): JSX.Element | null {
 		);
 	};
 
-	if (!isTourSelectOpen || !anchorRect) return null;
+	if (!anchorRect) return null;
 
 	return (
 		<div
 			ref={panelRef}
 			id="tsp-panel"
-			className="tsp-panel"
+			className={`tsp-panel${isClosing ? " tsp-panel--closing" : ""}`}
 			style={{ top: panelTop || anchorRect.top, left: anchorRect.right + 12 }}
 			role="dialog"
 			aria-label="Guided Tours"

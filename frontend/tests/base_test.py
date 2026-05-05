@@ -1780,6 +1780,119 @@ class PremiumSettingsUtils(BaseUtilsClass):
         time.sleep(3)
 
 
+class TourUtils(BaseUtilsClass):
+
+    NON_PREMIUM_TOUR_IDS = [
+        "app-overview",
+        "first-job",
+        "log-application",
+        "log-interview",
+        "log-update",
+        "follow-up-email",
+        "setup-profile",
+        "add-contact",
+        "speculative-applications",
+        "command-palette",
+    ]
+    PREMIUM_TOUR_IDS = NON_PREMIUM_TOUR_IDS + ["import-scraped-job", "scraping-filters"]
+
+    # Tour element IDs
+    TOUR_POPOVER = "tour-popover"
+    TOUR_TITLE = "tour-popover-title"
+    TOUR_COUNTER = "tour-step-counter"
+    TOUR_SKIP = "tour-skip-btn"
+    TOUR_NEXT = "tour-next-btn"
+    TOUR_BACK = "tour-back-btn"
+    TOUR_BACKDROP = "tour-backdrop"
+
+    # Tour select panel
+    TAKE_A_TOUR_BTN = "take-a-tour-btn"
+    TSP_PANEL = "tsp-panel"
+    TSP_PROGRESS = "tsp-progress"
+
+    TOTAL_STEPS = 6  # intro, dashboard-overview, dashboard-customise, sidebar, premium, command-palette
+    TOUR_NAME = "App Overview"
+    TOUR_ID = "app-overview"
+
+    def open_tour_select(self) -> None:
+        """Click 'Take a Tour' to open the tour select panel.
+
+        Uses a JS click to bypass sidebar animation / clickability edge cases:
+        the button is always in the sidebar DOM and its React onClick fires regardless
+        of whether the About submenu is visually open or the sidebar is mid-transition.
+        """
+        self.get_element(self.TAKE_A_TOUR_BTN, enabled=False)  # wait for element to exist
+        self.driver.execute_script(f"document.getElementById('{self.TAKE_A_TOUR_BTN}').click();")
+        self.get_element(self.TSP_PANEL, enabled=False, timeout=5)
+
+    def start_tour(self, tour_id: str = TOUR_ID, popover_timeout: float = 10.0) -> None:
+        """Open the tour select panel and start the given tour."""
+        self.open_tour_select()
+        self.get_element(f"tsp-item-{tour_id}").click()
+        self.wait_for_popover(timeout=popover_timeout)
+
+    def wait_for_popover(self, timeout: float = 10.0) -> None:
+        """Wait for the tour popover to appear in the DOM."""
+        self.get_element(self.TOUR_POPOVER, timeout=timeout, enabled=False)
+
+    def wait_for_popover_gone(self, timeout: float = 10.0) -> None:
+        """Wait for the tour popover to disappear."""
+        self.wait_for_disappear(self.TOUR_POPOVER, timeout=timeout)
+
+    def popover_title(self) -> str:
+        return self.get_element(self.TOUR_TITLE, enabled=False).text
+
+    def step_counter_text(self) -> str:
+        return self.get_element(self.TOUR_COUNTER, enabled=False).text
+
+    def click_next(self) -> None:
+        self.get_element(self.TOUR_NEXT).click()
+
+    def click_back(self) -> None:
+        self.get_element(self.TOUR_BACK).click()
+
+    def click_skip(self) -> None:
+        self.get_element(self.TOUR_SKIP).click()
+
+    def advance_steps(self, n: int) -> None:
+        """Click Next n times, waiting for the popover between each click."""
+        for _ in range(n):
+            self.wait_for_popover()
+            self.click_next()
+
+    def advance_to_last_step(self) -> None:
+        """Click through steps until the Done button is visible."""
+        for _ in range(self.TOTAL_STEPS):
+            self.wait_for_popover()
+            next_btn = self.get_element(self.TOUR_NEXT)
+            if "Done" in next_btn.text:
+                return
+            next_btn.click()
+
+    def wait_for_step(self, n: int, timeout: float = 10.0) -> None:
+        """Wait until the step counter shows Step N (case-insensitive, CSS may uppercase the text)."""
+        WebDriverWait(self.driver, timeout).until(
+            lambda d: f"STEP {n} OF" in d.find_element(By.ID, self.TOUR_COUNTER).text.upper()
+        )
+
+    def poll_db_count(self, model_class, owner_id: int, expected: int, timeout: float = 10.0) -> None:
+        """Poll the DB until the row count for owner_id equals expected, or raise."""
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            # rollback() ends the current transaction so the next query gets a fresh
+            # READ COMMITTED snapshot and can see rows committed by the backend API process.
+            self.db.expire_all()
+            self.db.rollback()
+            count = self.db.query(model_class).filter_by(owner_id=owner_id).count()
+            if count == expected:
+                return
+            time.sleep(0.5)
+        self.db.expire_all()
+        self.db.rollback()
+        actual = self.db.query(model_class).filter_by(owner_id=owner_id).count()
+        assert actual == expected, f"{model_class.__name__}: expected {expected}, got {actual} after {timeout}s"
+
+
 class BaseTest(BaseUtils):
     """Base class for selenium tests"""
 
@@ -1797,57 +1910,58 @@ class BaseTest(BaseUtils):
     _test_name = ""
 
     # Company
-    company_modal_utils: DataModalUtils = None
-    company_table_utils: DataTableUtils = None
+    company_modal_utils: DataModalUtils | None = None
+    company_table_utils: DataTableUtils | None = None
 
     # Aggregator
-    aggregator_modal_utils: DataModalUtils = None
-    aggregator_table_utils: DataTableUtils = None
+    aggregator_modal_utils: DataModalUtils | None = None
+    aggregator_table_utils: DataTableUtils | None = None
 
     # Keyword
-    keyword_modal_utils: DataModalUtils = None
-    keyword_table_utils: DataTableUtils = None
+    keyword_modal_utils: DataModalUtils | None = None
+    keyword_table_utils: DataTableUtils | None = None
 
     # Person
-    person_modal_utils: DataModalUtils = None
-    person_table_utils: DataTableUtils = None
+    person_modal_utils: DataModalUtils | None = None
+    person_table_utils: DataTableUtils | None = None
 
     # Job
-    job_modal_utils: DataModalUtils = None
-    job_table_utils: DataTableUtils = None
+    job_modal_utils: DataModalUtils | None = None
+    job_table_utils: DataTableUtils | None = None
 
     # Interview
-    interview_modal_utils: DataModalUtils = None
-    interview_table_utils: DataTableUtils = None
+    interview_modal_utils: DataModalUtils | None = None
+    interview_table_utils: DataTableUtils | None = None
 
     # Job Application Update
-    jobApplicationUpdate_modal_utils: DataModalUtils = None
-    jobApplicationUpdate_table_utils: DataTableUtils = None
+    jobApplicationUpdate_modal_utils: DataModalUtils | None = None
+    jobApplicationUpdate_table_utils: DataTableUtils | None = None
 
     # Speculative Application
-    speculativeApplication_modal_utils: DataModalUtils = None
-    speculativeApplication_table_utils: DataTableUtils = None
+    speculativeApplication_modal_utils: DataModalUtils | None = None
+    speculativeApplication_table_utils: DataTableUtils | None = None
 
     # Scraped Job
-    scrapedJob_modal_utils: DataModalUtils = None
-    scrapedJob_table_utils: DataTableUtils = None
+    scrapedJob_modal_utils: DataModalUtils | None = None
+    scrapedJob_table_utils: DataTableUtils | None = None
 
     # Scraping Filter
-    scrapingFilter_modal_utils: DataModalUtils = None
-    scrapingFilter_table_utils: DataTableUtils = None
+    scrapingFilter_modal_utils: DataModalUtils | None = None
+    scrapingFilter_table_utils: DataTableUtils | None = None
 
     # Settings
-    setting_modal_utils: DataModalUtils = None
-    setting_table_utils: DataTableUtils = None
+    setting_modal_utils: DataModalUtils | None = None
+    setting_table_utils: DataTableUtils | None = None
 
     # Others
-    auth_utils: AuthentificationUtils = None
-    user_settings_utils: UserSettingsUtils = None
-    followup_modal: FollowUpEmailModalUtils = None
-    confirm_modal: ConfirmModalUtils = None
-    delete_modal: DeleteModalUtils = None
-    logout_modal: LogoutModalUtils = None
-    premium_settings_utils: PremiumSettingsUtils = None
+    auth_utils: AuthentificationUtils | None = None
+    user_settings_utils: UserSettingsUtils | None = None
+    followup_modal: FollowUpEmailModalUtils | None = None
+    confirm_modal: ConfirmModalUtils | None = None
+    delete_modal: DeleteModalUtils | None = None
+    logout_modal: LogoutModalUtils | None = None
+    premium_settings_utils: PremiumSettingsUtils | None = None
+    tour_utils: TourUtils | None = None
 
     @pytest.fixture(autouse=True)
     def setup_method(
@@ -1875,7 +1989,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -1939,6 +2053,7 @@ class BaseTest(BaseUtils):
             self.delete_modal = DeleteModalUtils(**shared_kwargs)
             self.logout_modal = LogoutModalUtils(**shared_kwargs)
             self.premium_settings_utils = PremiumSettingsUtils(**shared_kwargs)
+            self.tour_utils = TourUtils(**shared_kwargs)
 
             self.driver.get(self.frontend_base_url)
             self.setup_function(request)
@@ -2030,13 +2145,16 @@ class BaseTest(BaseUtils):
         except Exception as e:
             print(f"⚠️ Could not save screenshot: {e}")
 
-    def login(self) -> None:
+    def login(self, user: models.User | None = None) -> None:
         """Log in by generating a JWT token directly and injecting it into localStorage."""
+
+        if not user:
+            user = self.user
 
         # Generate JWT directly — no HTTP call, no bcrypt verification
         token = create_access_token(
-            data={"user_id": self.user.id},
-            token_version=self.user.token_version,
+            data={"user_id": user.id},
+            token_version=user.token_version,
         )
 
         # Inject token into localStorage — browser is already on the same origin from setup_method

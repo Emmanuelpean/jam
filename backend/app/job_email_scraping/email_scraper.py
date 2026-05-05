@@ -206,7 +206,7 @@ class JobEmailScraper(EmailService):
         user: models.User,
         service_log_id: int,
         forwarded: bool = False,
-    ) -> tuple[JobEmail, bool]:
+    ) -> tuple[JobEmail | None, bool]:
         """Read and save an email to the database
         :param email_id: Email ID
         :param user: User entry associated with this email
@@ -234,7 +234,8 @@ class JobEmailScraper(EmailService):
                         platform = PLATFORM_SENDER_EMAILS[plat]
                         break
             if not platform:
-                raise ValueError("Email body does not contain a valid platform identifier.")
+                self.logger.info(f"Email with ID {email_id} does not have a valid platform.")
+                return None, True
             alert_name = ALERT_NAME_EXTRACTORS[platform](message["subject"], message["body"])
             sender = message["from"] if forwarded else message["to"]
             # Create a new email record
@@ -396,7 +397,6 @@ class JobEmailScraper(EmailService):
             "is_closed",
             "raw_location",
             "location",
-
             "attendance_type",
         ]
         for key in columns:
@@ -492,6 +492,9 @@ class JobEmailScraper(EmailService):
                 try:
                     email_record, is_new = self.get_and_save_email_to_db(email_id, user, service_log.id, forwarded)
 
+                    if not email_record:
+                        continue
+
                     # Extract jobs if this is a new email
                     if is_new:
                         self.upsert_platform_stat(service_log, email_record.platform, email_saved_ids=email_record.id)
@@ -503,7 +506,7 @@ class JobEmailScraper(EmailService):
                 except Exception as exception:
                     self.log_service_error(service_log, exception)
                     self.logger.exception(
-                        f"Failed to get and save email data due to error: {exception}. Skipping email."
+                        f"Failed to get and save email with ID {email_id} due to error: {exception}. Skipping email."
                     )
                     continue  # next email
 
