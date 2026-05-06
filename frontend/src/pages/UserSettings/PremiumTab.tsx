@@ -12,7 +12,8 @@ import { paymentsApi, PortalSessionResponse } from "../../services/api/Payments"
 import { ScrapingGuideModal, ScrapingGuideModalHandle } from "../../components/ScrapingGuideModal/ScrapingGuideModal";
 import { forwardingConfirmationApi } from "../../services/api/Services";
 import { ForwardingConfirmationLinkData } from "../../services/schemas/Services";
-import { PremiumDetails } from "../../services/schemas/Core";
+import { PremiumDetails, UserQualification } from "../../services/schemas/Core";
+import { userQualificationApi } from "../../services/api/Users";
 
 export const PREMIUM_PRICE = "£8";
 
@@ -111,6 +112,7 @@ export const PremiumTab = (): JSX.Element => {
 	const [jobRatingLoading, setJobRatingLoading] = useState<boolean>(false);
 	const [jobScrapingLoading, setJobScrapingLoading] = useState<boolean>(false);
 	const [confirmationLink, setConfirmationLink] = useState<ForwardingConfirmationLinkData | null>(null);
+	const [qualifications, setQualifications] = useState<UserQualification | null>(null);
 
 	// Poll user data every 5 seconds while tab is active
 	useEffect(() => {
@@ -125,6 +127,20 @@ export const PremiumTab = (): JSX.Element => {
 			void clearInterval(intervalId);
 		};
 	}, [token, fetchUserInfo]);
+
+	// Fetch qualifications to check completeness for premium users
+	useEffect((): void => {
+		if (!token || !currentUser?.premium.is_active) return;
+		const fetch = async (): Promise<void> => {
+			try {
+				const response: ApiResponse<UserQualification> = await userQualificationApi.getLatest(token);
+				setQualifications(response.data ?? null);
+			} catch {
+				setQualifications(null);
+			}
+		};
+		void fetch();
+	}, [token, currentUser?.premium.is_active]);
 
 	// Fetch pending forwarding confirmation links
 	useEffect((): void => {
@@ -223,6 +239,21 @@ export const PremiumTab = (): JSX.Element => {
 	const hasActiveSubscription: boolean = ["active", "trialing", "paused"].includes(
 		currentUser?.stripe_details.subscription_status || ""
 	);
+
+	const QUALIFICATION_FIELDS: {
+		key: "experience" | "skills" | "qualities" | "education" | "interests";
+		label: string;
+	}[] = [
+		{ key: "experience", label: "Experience" },
+		{ key: "skills", label: "Skills" },
+		{ key: "qualities", label: "Qualities" },
+		{ key: "education", label: "Education" },
+		{ key: "interests", label: "Interests" },
+	];
+	const missingQualificationFields =
+		currentUser?.premium.is_active && currentUser?.premium.job_rating_active
+			? QUALIFICATION_FIELDS.filter((f) => !qualifications?.[f.key]?.trim())
+			: [];
 
 	const jobBoards: JobBoard[] = [
 		{ name: "LinkedIn", url: "https://linkedin.com", icon: "linkedin", emailKey: "linkedin" },
@@ -495,6 +526,21 @@ export const PremiumTab = (): JSX.Element => {
 								)}
 							</div>
 
+							{missingQualificationFields.length > 0 && (
+								<Alert id="incomplete-qualifications-alert" variant="warning" className="mt-3 mb-3">
+									<p className="mb-1 small fw-semibold">
+										<i className="bi bi-exclamation-triangle me-2" />
+										Incomplete profile — scoring may be less accurate
+									</p>
+									<p className="mb-2 small">
+										Missing:{" "}
+										<strong>{missingQualificationFields.map((f) => f.label).join(", ")}</strong>
+									</p>
+									<Link to="/settings/qualifications" className="small alert-link">
+										Complete your profile <i className="bi bi-arrow-right ms-1" />
+									</Link>
+								</Alert>
+							)}
 							<p>
 								Claude is used to analyse every job opportunity against your qualifications, delivering
 								personalised match scores so you can focus on roles that truly matter.

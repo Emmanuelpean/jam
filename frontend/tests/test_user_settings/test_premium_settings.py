@@ -262,3 +262,67 @@ class TestForwardingConfirmationLinks(BaseTest):
 
         # Verify no alert exists
         assert not self.check_element_exists("confirmation-link-alert")
+
+
+class TestIncompleteQualificationsWarning(BaseTest):
+    """Tests for the incomplete qualifications warning on the Premium tab."""
+
+    user_index = TOAST_USER_1_INDEX
+    page_url = "settings/premium"
+
+    def setup_function(self, request) -> None:
+        self.login()
+
+    def test_alert_shown_when_no_qualifications(self) -> None:
+        """Alert is visible for a premium user with AI scoring on and no qualifications set."""
+
+        qualifications = self.db.query(models.UserQualification).filter_by(owner_id=self.user.id).all()
+        assert not qualifications
+        assert self.premium_settings_utils.incomplete_qualifications_alert.is_displayed()
+
+    def test_alert_not_shown_when_qualifications_incomplete(self) -> None:
+        """Alert is shown when at least one qualification field is populated, but not all five fields."""
+
+        create_db_entries(
+            self.db,
+            models.UserQualification,
+            [
+                {
+                    "owner_id": self.user.id,
+                    "experience": "5 years Python",
+                    "skills": "Python, FastAPI",
+                }
+            ],
+        )
+        self.driver.refresh()
+        time.sleep(0.5)
+        assert self.check_element_exists("incomplete-qualifications-alert")
+
+    def test_alert_not_shown_when_all_qualifications_filled(self) -> None:
+        """Alert is hidden once all five qualification fields are populated."""
+
+        create_db_entries(
+            self.db,
+            models.UserQualification,
+            [
+                {
+                    "owner_id": self.user.id,
+                    "experience": "5 years Python",
+                    "skills": "Python, FastAPI",
+                    "qualities": "Analytical, detail-oriented",
+                    "education": "BSc Computer Science",
+                    "interests": "Backend development",
+                }
+            ],
+        )
+        self.driver.refresh()
+        time.sleep(0.5)
+        assert not self.check_element_exists("incomplete-qualifications-alert")
+
+    def test_alert_not_shown_when_ai_scoring_off(self) -> None:
+        """Alert is hidden when AI Job Matching is disabled, even with no qualifications."""
+
+        self.db.query(models.PremiumSettings).filter_by(owner_id=self.user.id).update({"job_rating_active": False})
+        self.db.commit()
+        self.driver.refresh()
+        assert not self.check_element_exists("incomplete-qualifications-alert")

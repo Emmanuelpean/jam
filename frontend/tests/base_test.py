@@ -1665,6 +1665,12 @@ class LogoutModalUtils(AlertModalUtils):
 class PremiumSettingsUtils(BaseUtilsClass):
 
     @property
+    def incomplete_qualifications_alert(self) -> WebElement:
+        """Get the incomplete qualifications warning alert element."""
+
+        return self.get_element("incomplete-qualifications-alert")
+
+    @property
     def confirmation_link_alert(self) -> WebElement:
         """Get the confirmation link alert element."""
 
@@ -1792,7 +1798,6 @@ class TourUtils(BaseUtilsClass):
         "setup-profile",
         "add-contact",
         "speculative-applications",
-        "command-palette",
     ]
     PREMIUM_TOUR_IDS = NON_PREMIUM_TOUR_IDS + ["import-scraped-job", "scraping-filters"]
 
