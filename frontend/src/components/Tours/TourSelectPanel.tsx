@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTour } from "../../contexts/TourContext";
 import { useAuth } from "../../contexts/AuthContext";
-import { isTourGroup, TOUR_STRUCTURE, TOURS, TourDefinition } from "../GuidedTour/tourSteps";
+import { TOURS, TourDefinition } from "../GuidedTour/tourSteps";
 import "./TourSelectPanel.scss";
 
 const CLOSE_ANIMATION_MS = 150;
@@ -14,14 +14,14 @@ export function TourSelectPanel(): JSX.Element | null {
 	const [panelTop, setPanelTop] = useState<number>(0);
 	const [isClosing, setIsClosing] = useState<boolean>(false);
 	const panelRef = useRef<HTMLDivElement>(null);
-	const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useLayoutEffect(() => {
 		if (!anchorRect || !panelRef.current) return;
 		const panelHeight = panelRef.current.offsetHeight;
 		const margin = 6;
-		const ideal = anchorRect.bottom - panelHeight;
+		const bottomGap = 12;
+		const ideal = anchorRect.bottom - panelHeight - bottomGap;
 		setPanelTop(Math.max(ideal, margin));
 	}, [anchorRect]);
 
@@ -40,59 +40,29 @@ export function TourSelectPanel(): JSX.Element | null {
 		}
 		setIsClosing(false);
 		if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
-		const btn = document.getElementById("take-a-tour-btn");
-		if (btn) setAnchorRect(btn.getBoundingClientRect());
+
+		const sidebar = document.querySelector(".custom-sidebar");
+		if (!sidebar) return;
+
+		const updateRect = (): void => setAnchorRect(sidebar.getBoundingClientRect());
+		updateRect();
+
+		const observer = new ResizeObserver(updateRect);
+		observer.observe(sidebar);
+		return () => observer.disconnect();
 	}, [isTourSelectOpen]);
 
-	// Close when mouse leaves both the panel and the sidebar
-	useEffect(() => {
-		if (!isTourSelectOpen || !anchorRect) return;
-
-		const scheduleClose = (): void => {
-			if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-			closeTimerRef.current = setTimeout(() => {
-				const panel = document.getElementById("tsp-panel");
-				const sidebar = document.querySelector(".custom-sidebar");
-				if (!panel?.matches(":hover") && !sidebar?.matches(":hover")) closeTourSelect();
-			}, 200);
-		};
-
-		const cancelClose = (): void => {
-			if (closeTimerRef.current) {
-				clearTimeout(closeTimerRef.current);
-				closeTimerRef.current = null;
-			}
-		};
-
-		const panel = document.getElementById("tsp-panel");
-		const sidebar = document.querySelector<HTMLElement>(".custom-sidebar");
-
-		panel?.addEventListener("mouseleave", scheduleClose);
-		panel?.addEventListener("mouseenter", cancelClose);
-		sidebar?.addEventListener("mouseleave", scheduleClose);
-		sidebar?.addEventListener("mouseenter", cancelClose);
-
-		return () => {
-			cancelClose();
-			panel?.removeEventListener("mouseleave", scheduleClose);
-			panel?.removeEventListener("mouseenter", cancelClose);
-			sidebar?.removeEventListener("mouseleave", scheduleClose);
-			sidebar?.removeEventListener("mouseenter", cancelClose);
-		};
-	}, [isTourSelectOpen, anchorRect, closeTourSelect]);
-
-	const visibleStructure = TOUR_STRUCTURE.filter((item) => !isTourGroup(item) || isPremium || item.id !== "premium");
-	const visibleTours = TOURS.filter((t) => isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id));
+	const visibleTours = TOURS.filter((t) => isPremium || !t.premium);
 	const implementedTours = visibleTours.filter((t) => !t.comingSoon);
 	const completedCount = implementedTours.filter((t) => completedTourIds.has(t.id)).length;
 
-	const renderTourItem = (tour: TourDefinition, indented: boolean): JSX.Element => {
+	const renderTourItem = (tour: TourDefinition): JSX.Element => {
 		const completed = completedTourIds.has(tour.id);
 		return (
 			<li key={tour.id}>
 				<button
 					id={`tsp-item-${tour.id}`}
-					className={`tsp-item${indented ? " tsp-item--indented" : ""}`}
+					className="tsp-item"
 					disabled={isTourActive || !!tour.comingSoon}
 					onClick={tour.comingSoon ? undefined : (): void => void startTour(tour.id)}
 				>
@@ -101,6 +71,7 @@ export function TourSelectPanel(): JSX.Element | null {
 						className={`bi bi-check-circle ${completed ? "tsp-icon--done" : "tsp-icon"}`}
 					/>
 					<span className="tsp-item-title">{tour.title}</span>
+					{tour.premium && <span className="tsp-badge tsp-badge--premium">Premium</span>}
 					{tour.comingSoon && <span className="tsp-badge tsp-badge--soon">Soon</span>}
 				</button>
 			</li>
@@ -110,6 +81,11 @@ export function TourSelectPanel(): JSX.Element | null {
 	if (!anchorRect) return null;
 
 	return (
+		<>
+		<div
+			className={`tsp-backdrop${isClosing ? " tsp-backdrop--closing" : ""}`}
+			onClick={closeTourSelect}
+		/>
 		<div
 			ref={panelRef}
 			id="tsp-panel"
@@ -119,30 +95,21 @@ export function TourSelectPanel(): JSX.Element | null {
 			aria-label="Guided Tours"
 		>
 			<div className="tsp-header">
-				<p className="tsp-heading">Guided Tours</p>
-				<span id="tsp-progress" className="tsp-progress">
-					{completedCount} / {implementedTours.length}
-				</span>
+				<p className="tsp-heading">
+					Guided Tours
+					<span id="tsp-progress" className="tsp-progress">{completedCount}/{implementedTours.length}</span>
+				</p>
+				<button id="tsp-close-btn" className="tsp-close-btn" onClick={closeTourSelect} aria-label="Close">
+					<i className="bi bi-x" />
+				</button>
 			</div>
-			<ul className="tsp-list">
-				{visibleStructure.map((item) => {
-					if (isTourGroup(item)) {
-						return (
-							<li key={item.id} className="tsp-group">
-								<div className="tsp-group-header">
-									<i className={`bi bi-${item.icon} tsp-group-icon`} />
-									<span className="tsp-group-title">{item.title}</span>
-									{item.badge && <span className="tsp-badge tsp-badge--section">{item.badge}</span>}
-								</div>
-								<ul className="tsp-sublist">
-									{item.tours.map((tour) => renderTourItem(tour, true))}
-								</ul>
-							</li>
-						);
-					}
-					return renderTourItem(item, false);
-				})}
+			<ul
+				className="tsp-list"
+				style={{ gridTemplateRows: `repeat(${Math.ceil(implementedTours.length / 2)}, auto)` }}
+			>
+				{implementedTours.map((tour) => renderTourItem(tour))}
 			</ul>
 		</div>
+		</>
 	);
 }

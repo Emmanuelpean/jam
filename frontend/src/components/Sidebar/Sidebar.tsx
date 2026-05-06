@@ -201,18 +201,7 @@ export const Sidebar = (): JSX.Element => {
 		setShowDropdown(false);
 	};
 
-	// Keep sidebar expanded during an active tour so target rects are measured at full width
-	useEffect(() => {
-		if (isTourActive) setIsExpanded(true);
-	}, [isTourActive]);
 
-	// Collapse when the tour panel closes and the mouse is no longer over the sidebar
-	useEffect(() => {
-		if (!isTourSelectOpen && !isHovered) {
-			setIsExpanded(false);
-			setShowDropdown(false);
-		}
-	}, [isTourSelectOpen, isHovered]);
 
 	const handleMouseEnter = () => {
 		if (collapseTimeoutRef.current) {
@@ -225,10 +214,7 @@ export const Sidebar = (): JSX.Element => {
 
 	const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
 		setIsHovered(false);
-		// Don't collapse during an active tour or while the tour select panel is open
-		if (isTourActive || isTourSelectOpen) return;
-		const relatedTarget = e.relatedTarget as Node | null;
-		if (document.getElementById("tsp-panel")?.contains(relatedTarget)) return;
+		if (isTourActive) return;
 		collapseTimeoutRef.current = setTimeout(() => {
 			setIsExpanded(false);
 			setShowDropdown(false);

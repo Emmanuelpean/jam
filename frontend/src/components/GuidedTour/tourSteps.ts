@@ -33,6 +33,8 @@ export interface TourDefinition {
 	steps: TourStep[];
 	/** Not yet implemented - shown in the panel as disabled with a "Soon" badge */
 	comingSoon?: boolean;
+	/** Premium-only tour — hidden for non-premium users and shown with a badge */
+	premium?: boolean;
 }
 
 export interface TourGroup {
@@ -886,88 +888,6 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 	},
 ];
 
-const SETUP_PROFILE_STEPS: TourStep[] = [
-	{
-		id: "profile-intro",
-		targetId: null,
-		title: "Setting Up Your Profile",
-		content:
-			"Your profile tells the AI what to look for when rating jobs. Fill in your experience, skills, and qualifications and JAM will score every scraped alert against them.",
-		route: "/settings/qualifications",
-		placement: "center",
-	},
-	{
-		id: "profile-nav",
-		targetId: "nav-user-settings",
-		title: "User Settings",
-		content: "Your profile lives in User Settings - you can get back here any time from the sidebar.",
-		route: "/settings/qualifications",
-		placement: "right",
-	},
-	{
-		id: "profile-tab",
-		targetId: "qualifications-tab",
-		title: "Qualifications Tab",
-		content: "The Qualifications tab is where you describe yourself to the AI.",
-		route: "/settings/qualifications",
-		placement: "bottom",
-	},
-	{
-		id: "profile-experience",
-		targetId: "experience-form-group",
-		title: "Experience",
-		content:
-			"Write a summary of your work history - roles, industries, and years of experience. The AI uses this to judge how well your background matches a job's requirements.",
-		placement: "right",
-	},
-	{
-		id: "profile-skills",
-		targetId: "skills-form-group",
-		title: "Skills",
-		content:
-			"List your technical and professional skills - tools, languages, frameworks, and methodologies relevant to the roles you're targeting.",
-		placement: "right",
-	},
-	{
-		id: "profile-qualities",
-		targetId: "qualities-form-group",
-		title: "Qualities",
-		content:
-			"Describe your personal qualities - things like attention to detail, communication style, or leadership. These help the AI match culture-fit signals in job descriptions.",
-		placement: "right",
-	},
-	{
-		id: "profile-education",
-		targetId: "education-form-group",
-		title: "Education",
-		content: "Add your academic background - degrees, certifications, and any relevant courses.",
-		placement: "right",
-	},
-	{
-		id: "profile-interests",
-		targetId: "interests-form-group",
-		title: "Interests",
-		content:
-			"Optional but useful - note professional interests or side projects that signal alignment with certain roles or companies.",
-		placement: "right",
-	},
-	{
-		id: "profile-save",
-		targetId: "confirm-button",
-		title: "Save Your Profile",
-		content:
-			"Click Save Qualifications when you're done. JAM will generate an AI system prompt from your input and use it to rate every job in your alerts.",
-		placement: "top",
-	},
-	{
-		id: "profile-done",
-		targetId: null,
-		title: "All Done!",
-		content:
-			"Your profile is set up. Head to Job Alerts to see your scraped jobs rated against it - higher scores mean a stronger match.",
-		placement: "center",
-	},
-];
 
 const ADD_CONTACT_STEPS: TourStep[] = [
 	{
@@ -1125,70 +1045,9 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 ];
 
 
-const COMMAND_PALETTE_STEPS: TourStep[] = [
-	{
-		id: "cp-intro",
-		targetId: null,
-		title: "The Command Palette",
-		content:
-			"The command palette lets you navigate to any page or trigger any action without touching the mouse. It's the fastest way to get around JAM.",
-		route: "/dashboard",
-		placement: "center",
-	},
-	{
-		id: "cp-open",
-		targetId: null,
-		title: "Open the Palette",
-		content:
-			"Press Ctrl+K (or Cmd+K on Mac) to open the command palette. The tour will continue automatically once it's open.",
-		placement: "center",
-		waitForSelector: "#cp-backdrop",
-		hideNextButton: true,
-	},
-	{
-		id: "cp-search",
-		targetId: "cp-input",
-		title: "Search",
-		content:
-			"Start typing to filter the list in real time. Type a page name or action - results narrow as you type.",
-		placement: "bottom",
-	},
-	{
-		id: "cp-actions",
-		targetId: "cp-group-actions",
-		title: "Actions",
-		content:
-			"The Actions group contains shortcuts for common tasks - add a job, log an interview, open settings, and more.",
-		placement: "bottom",
-	},
-	{
-		id: "cp-pages",
-		targetId: "cp-group-pages",
-		title: "Pages",
-		content: "The Pages group lists every section of JAM. Click any item to navigate there instantly.",
-		placement: "bottom",
-	},
-	{
-		id: "cp-keyboard",
-		targetId: null,
-		title: "Keyboard Navigation",
-		content:
-			"Use the arrow keys to move through items and press Enter to run the highlighted action. Press Esc to close the palette.",
-		placement: "center",
-	},
-	{
-		id: "cp-done",
-		targetId: null,
-		title: "All Done!",
-		content:
-			"You can open the command palette from anywhere in JAM at any time. It also has a 'Take a Tour' option so you can revisit any of these guides.",
-		placement: "center",
-	},
-];
-
 // ── Tour registry ─────────────────────────────────────────────────────────────
 
-export const TOUR_STRUCTURE: TourStructureItem[] = [
+export const TOUR_STRUCTURE: TourDefinition[] = [
 	{
 		id: "app-overview",
 		title: "App Overview",
@@ -1234,14 +1093,6 @@ export const TOUR_STRUCTURE: TourStructureItem[] = [
 		steps: FOLLOW_UP_EMAIL_STEPS,
 	},
 	{
-		id: "setup-profile",
-		title: "Setting Up Your Profile",
-		description:
-			"Fill in your experience, skills, and qualifications so the AI can rate scraped jobs against your background.",
-		icon: "person-fill-gear",
-		steps: SETUP_PROFILE_STEPS,
-	},
-	{
 		id: "add-contact",
 		title: "Adding a Contact",
 		description:
@@ -1258,42 +1109,26 @@ export const TOUR_STRUCTURE: TourStructureItem[] = [
 		steps: SPECULATIVE_APPLICATIONS_STEPS,
 	},
 	{
-		id: "command-palette",
-		title: "Using the Command Palette",
-		description: "Discover how to navigate JAM and trigger actions at full speed with the Ctrl+K command palette.",
-		icon: "keyboard",
-		steps: COMMAND_PALETTE_STEPS,
+		id: "import-scraped-job",
+		title: "Overview & Importing Job Alerts",
+		description:
+			"See how JAM scrapes job alerts from your emails, rates them with AI, and lets you import them in one click.",
+		icon: "envelope-arrow-down",
+		steps: IMPORT_SCRAPED_JOB_STEPS,
+		premium: true,
 	},
 	{
-		type: "group",
-		id: "premium",
-		title: "JAM Premium",
-		icon: "stars",
-		badge: "Premium",
-		tours: [
-			{
-				id: "import-scraped-job",
-				title: "Overview & Importing Job Alerts",
-				description:
-					"See how JAM scrapes job alerts from your emails, rates them with AI, and lets you import them in one click.",
-				icon: "envelope-arrow-down",
-				steps: IMPORT_SCRAPED_JOB_STEPS,
-			},
-			{
-				id: "scraping-filters",
-				title: "Creating & Managing Scraping Filters",
-				description: "Learn how to set up filters to control which job alerts get scraped into JAM.",
-				icon: "funnel",
-				steps: SCRAPING_FILTER_STEPS,
-			},
-		],
+		id: "scraping-filters",
+		title: "Creating & Managing Scraping Filters",
+		description: "Learn how to set up filters to control which job alerts get scraped into JAM.",
+		icon: "funnel",
+		steps: SCRAPING_FILTER_STEPS,
+		premium: true,
 	},
 ];
 
 /** Flat list of every tour (including coming-soon). Used by getTourById. */
-export const TOURS: TourDefinition[] = TOUR_STRUCTURE.flatMap((item: TourStructureItem): TourDefinition[] =>
-	isTourGroup(item) ? item.tours : [item]
-);
+export const TOURS: TourDefinition[] = TOUR_STRUCTURE;
 
 export function getTourById(id: string): TourDefinition | undefined {
 	return TOURS.find((t: TourDefinition): boolean => t.id === id);

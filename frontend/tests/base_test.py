@@ -1795,7 +1795,6 @@ class TourUtils(BaseUtilsClass):
         "log-interview",
         "log-update",
         "follow-up-email",
-        "setup-profile",
         "add-contact",
         "speculative-applications",
     ]
@@ -1845,18 +1844,23 @@ class TourUtils(BaseUtilsClass):
         self.wait_for_disappear(self.TOUR_POPOVER, timeout=timeout)
 
     def popover_title(self) -> str:
+        """Tour popover title"""
         return self.get_element(self.TOUR_TITLE, enabled=False).text
 
     def step_counter_text(self) -> str:
+        """Tour step counter text"""
         return self.get_element(self.TOUR_COUNTER, enabled=False).text
 
     def click_next(self) -> None:
+        """Click the next tour step button."""
         self.get_element(self.TOUR_NEXT).click()
 
     def click_back(self) -> None:
+        """Click the back tour step button."""
         self.get_element(self.TOUR_BACK).click()
 
     def click_skip(self) -> None:
+        """Click the skip tour button."""
         self.get_element(self.TOUR_SKIP).click()
 
     def advance_steps(self, n: int) -> None:
@@ -1994,7 +1998,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            # chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
