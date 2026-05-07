@@ -4,132 +4,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTour } from "../../contexts/TourContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { getTourById, TOURS, TourStep } from "./tourSteps";
+import { computePopoverStyle, POP_W, SPOTLIGHT_PAD } from "./tourPositioning";
+import { useTrackTarget } from "./useTrackTarget";
+import { useStepConditions } from "./useStepConditions";
 import "./GuidedTour.scss";
-
-const SPOTLIGHT_PAD = 8;
-const GAP = 14; // gap between spotlight edge and popover edge
-const POP_W = 450;
-const POP_MIN_H = 120;
-const MARGIN = 16; // min distance from viewport edge
-
-type Side = "top" | "bottom" | "left" | "right";
-const OPPOSITE: Record<Side, Side> = { bottom: "top", top: "bottom", left: "right", right: "left" };
-const ALL_SIDES: Side[] = ["bottom", "top", "right", "left"];
-
-function bestSide(rect: DOMRect, preferred: Side): Side {
-	const vw = window.innerWidth;
-	const vh = window.innerHeight;
-	const space: Record<Side, number> = {
-		bottom: vh - rect.bottom - SPOTLIGHT_PAD - GAP,
-		top: rect.top - SPOTLIGHT_PAD - GAP,
-		right: vw - rect.right - SPOTLIGHT_PAD - GAP,
-		left: rect.left - SPOTLIGHT_PAD - GAP,
-	};
-	const fits: Record<Side, boolean> = {
-		bottom: space.bottom >= POP_MIN_H + MARGIN,
-		top: space.top >= POP_MIN_H + MARGIN,
-		right: space.right >= POP_W + MARGIN,
-		left: space.left >= POP_W + MARGIN,
-	};
-
-	if (fits[preferred]) return preferred;
-	if (fits[OPPOSITE[preferred]]) return OPPOSITE[preferred];
-
-	// Try remaining sides sorted by available space
-	const others = ALL_SIDES.filter((s) => s !== preferred && s !== OPPOSITE[preferred]);
-	others.sort((a, b) => space[b] - space[a]);
-	for (const s of others) {
-		if (fits[s]) return s;
-	}
-
-	// Nothing fits — pick the side with the most space
-	return ALL_SIDES.reduce((a, b) => (space[a] >= space[b] ? a : b));
-}
-
-function computePopoverStyle(rect: DOMRect, preferred: TourStep["placement"]): React.CSSProperties {
-	if (preferred === "center") return {};
-
-	const vw = window.innerWidth;
-	const vh = window.innerHeight;
-	const side = bestSide(rect, preferred as Side);
-
-	// Center the popover on the target's relevant axis, clamped to viewport
-	const leftCentered = Math.max(MARGIN, Math.min(rect.left + rect.width / 2 - POP_W / 2, vw - POP_W - MARGIN));
-	const topCentered = Math.max(MARGIN, Math.min(rect.top + rect.height / 2 - POP_MIN_H / 2, vh - POP_MIN_H - MARGIN));
-
-	switch (side) {
-		case "bottom": {
-			const top = rect.bottom + SPOTLIGHT_PAD + GAP;
-			return { top, left: leftCentered, maxHeight: Math.max(vh - top - MARGIN, POP_MIN_H) };
-		}
-		case "top": {
-			const cssBottom = vh - (rect.top - SPOTLIGHT_PAD - GAP);
-			return {
-				bottom: cssBottom,
-				left: leftCentered,
-				maxHeight: Math.max(rect.top - SPOTLIGHT_PAD - GAP - MARGIN, POP_MIN_H),
-			};
-		}
-		case "right": {
-			const left = Math.min(rect.right + SPOTLIGHT_PAD + GAP, vw - POP_W - MARGIN);
-			return { left, top: topCentered, maxHeight: Math.max(vh - topCentered - MARGIN, POP_MIN_H) };
-		}
-		case "left": {
-			const left = Math.max(MARGIN, rect.left - SPOTLIGHT_PAD - GAP - POP_W);
-			return { left, top: topCentered, maxHeight: Math.max(vh - topCentered - MARGIN, POP_MIN_H) };
-		}
-	}
-}
-
-/** Expand step-definition placeholders to real DOM ids */
-function expandTargetId(targetId: string, demoJobId: number | null, demoScrapedJobId: number | null, demoScrapingFilterId: number | null): string {
-	if (targetId === "[demo-job-row]") return demoJobId !== null ? `table-row-job-${demoJobId}` : targetId;
-	if (targetId === "[demo-scraped-job-row]")
-		return demoScrapedJobId !== null ? `table-row-scrapedJob-${demoScrapedJobId}` : targetId;
-	if (targetId === "[demo-scraping-filter-row]")
-		return demoScrapingFilterId !== null ? `table-row-scrapingFilter-${demoScrapingFilterId}` : targetId;
-	return targetId;
-}
-
-/** Resolve a targetId to a DOM element — supports plain IDs and CSS selectors */
-function resolveTarget(targetId: string): Element | null {
-	return targetId.startsWith("#") || targetId.startsWith(".") || targetId.includes(" ")
-		? document.querySelector(targetId)
-		: document.getElementById(targetId);
-}
-
-/**
- * Returns true if the element is hidden by any scrollable ancestor (including the window).
- * A plain viewport check misses elements clipped inside a scrollable modal body.
- */
-function isClippedByScroll(el: Element): boolean {
-	const r = el.getBoundingClientRect();
-	// Outside the window
-	if (r.bottom < 0 || r.top > window.innerHeight || r.right < 0 || r.left > window.innerWidth) {
-		return true;
-	}
-	// Walk up scrollable ancestors
-	let parent = el.parentElement;
-	while (parent && parent !== document.documentElement) {
-		const { overflowY, overflow } = window.getComputedStyle(parent);
-		if (/(auto|scroll)/.test(overflowY + overflow)) {
-			const pr = parent.getBoundingClientRect();
-			if (r.top < pr.top || r.bottom > pr.bottom) return true;
-		}
-		parent = parent.parentElement;
-	}
-	return false;
-}
-
-/** Force a value into a React-controlled input */
-function setNativeInputValue(el: HTMLInputElement, value: string): void {
-	const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
-	if (nativeSetter) {
-		nativeSetter.call(el, value);
-		el.dispatchEvent(new Event("input", { bubbles: true }));
-		el.dispatchEvent(new Event("change", { bubbles: true }));
-	}
-}
 
 export function GuidedTour(): JSX.Element | null {
 	const { isTourActive, activeTourId, endTour, endTourAndContinue, isCleaningUp, demoJobId, demoScrapedJobId, demoScrapingFilterId } = useTour();
@@ -143,307 +21,116 @@ export function GuidedTour(): JSX.Element | null {
 	const navigate = useNavigate();
 	const location = useLocation();
 
-	const TOUR_STEPS = activeTourId ? (getTourById(activeTourId)?.steps ?? []) : [];
-
-	const [step, setStep] = useState<number>(0);
-	const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
-	const [inputValid, setInputValid] = useState<boolean>(false);
-	// Separate from targetRect — never cleared on step advance so the spotlight
-	// glides directly from the old element to the new one with no jump.
-	const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
-
-	const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-	const rafRef = useRef<number | null>(null);
-	const waitPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-	const autoFillCleanupRef = useRef<(() => void) | null>(null);
-	const locationRef = useRef(location.pathname);
-	const directionRef = useRef<1 | -1>(1);
-	const stepRef = useRef(step);
-	stepRef.current = step;
+	const TOUR_STEPS: TourStep[] = activeTourId ? (getTourById(activeTourId)?.steps ?? []) : [];
 	const tourStepsRef = useRef(TOUR_STEPS);
 	tourStepsRef.current = TOUR_STEPS;
-	const inputValidRef = useRef(inputValid);
-	inputValidRef.current = inputValid;
 
-	locationRef.current = location.pathname;
+	const [step, setStep] = useState(0);
+	const stepRef = useRef(step);
+	stepRef.current = step;
 
-	const stopPoll = useCallback(() => {
-		if (pollRef.current) {
-			clearInterval(pollRef.current);
-			pollRef.current = null;
-		}
-	}, []);
+	const directionRef = useRef<1 | -1>(1);
 
-	const stopRaf = useCallback(() => {
-		if (rafRef.current) {
-			cancelAnimationFrame(rafRef.current);
-			rafRef.current = null;
-		}
-	}, []);
+	// Stable refs so advanceToStep can call stop without depending on hook return values
+	const stopTrackRef = useRef<() => void>(() => {});
+	const stopConditionsRef = useRef<() => void>(() => {});
 
-	const stopWait = useCallback(() => {
-		if (waitPollRef.current) {
-			clearInterval(waitPollRef.current);
-			waitPollRef.current = null;
-		}
-		autoFillCleanupRef.current?.();
-		autoFillCleanupRef.current = null;
-	}, []);
-
+	// ── Step navigation ─────────────────────────────────────────────────────────
 	const advanceToStep = useCallback(
 		(targetStep: number): void => {
-			stopPoll();
-			stopRaf();
-			stopWait();
-			setTargetRect(null);
-			if (targetStep >= tourStepsRef.current.length) {
-				void endTour(true);
-				return;
-			}
+			stopTrackRef.current();
+			stopConditionsRef.current();
+			if (targetStep >= tourStepsRef.current.length) { void endTour(true); return; }
 			directionRef.current = targetStep >= stepRef.current ? 1 : -1;
 			setStep(targetStep);
 		},
-		[stopPoll, stopRaf, stopWait, endTour]
+		[endTour]
 	);
+
+	const advanceFromCurrentStep = useCallback((): void => {
+		const steps = tourStepsRef.current;
+		const nextId = steps[stepRef.current]?.nextStepId;
+		if (nextId) {
+			const idx = steps.findIndex((s) => s.id === nextId);
+			if (idx !== -1) { advanceToStep(idx); return; }
+		}
+		advanceToStep(stepRef.current + 1);
+	}, [advanceToStep]);
 
 	const advanceToStepById = useCallback(
 		(stepId: string): void => {
 			const idx = TOUR_STEPS.findIndex((s) => s.id === stepId);
 			if (idx !== -1) advanceToStep(idx);
 		},
-		[advanceToStep]
+		[advanceToStep, TOUR_STEPS]
 	);
 
-	const advanceFromCurrentStep = useCallback((): void => {
-		const s = stepRef.current;
-		const steps = tourStepsRef.current;
-		const nextId = steps[s]?.nextStepId;
-		if (nextId) {
-			const idx = steps.findIndex((t) => t.id === nextId);
-			if (idx !== -1) {
-				advanceToStep(idx);
-				return;
-			}
-		}
-		advanceToStep(s + 1);
-	}, [advanceToStep]);
+	// ── Target tracking ─────────────────────────────────────────────────────────
+	const stepDef = TOUR_STEPS[step];
 
-	// ── Find target element, then track it with RAF ─────────────────────────
+	const { targetRect, spotlightRect, stop: stopTrack } = useTrackTarget(
+		step,
+		isTourActive,
+		stepDef?.targetId,
+		demoJobId,
+		demoScrapedJobId,
+		demoScrapingFilterId,
+		directionRef,
+		() => setStep((s) => s + directionRef.current),
+	);
+	stopTrackRef.current = stopTrack;
+
+	// ── Condition watching ───────────────────────────────────────────────────────
+	const { inputValid, stop: stopConditions } = useStepConditions(
+		step,
+		isTourActive,
+		stepDef,
+		advanceFromCurrentStep,
+	);
+	stopConditionsRef.current = stopConditions;
+
+	// ── Route navigation ─────────────────────────────────────────────────────────
 	useEffect(() => {
-		if (!isTourActive) return;
-		const stepDef = TOUR_STEPS[step];
-		if (!stepDef) return;
+		if (!isTourActive || !stepDef?.route) return;
+		const path = stepDef.route.replace("/jam", "");
+		if (location.pathname !== path) navigate(path);
+	}, [step, isTourActive, stepDef?.route, location.pathname, navigate]);
 
-		if (stepDef.route) {
-			const path = stepDef.route.replace("/jam", "");
-			if (locationRef.current !== path) navigate(path);
-		}
+	// ── Keyboard navigation ──────────────────────────────────────────────────────
+	const isLast = step === TOUR_STEPS.length - 1;
+	const showNext = !stepDef?.hideNextButton;
+	const nextDisabled = isCleaningUp || (!!stepDef?.waitForInput && !inputValid);
+	const canGoBack = step > 0 && showNext && !TOUR_STEPS[step - 1]?.hideNextButton;
 
-		if (!stepDef.targetId) {
-			setTargetRect(null);
-			return;
-		}
-
-		// Poll until the element appears (with non-zero dimensions)
-		const resolvedTargetId = expandTargetId(stepDef.targetId!, demoJobId, demoScrapedJobId, demoScrapingFilterId);
-		let elapsed = 0;
-		pollRef.current = setInterval(() => {
-			const el = resolveTarget(resolvedTargetId);
-			const r = el?.getBoundingClientRect();
-			if (r && r.width > 0 && r.height > 0) {
-				stopPoll();
-
-				// Scroll into view if clipped by the window or any scrollable ancestor (e.g. modal body)
-				if (el && isClippedByScroll(el)) {
-					el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-				}
-
-				const initialRect = r;
-				setTargetRect(initialRect);
-				setSpotlightRect(initialRect);
-
-				// RAF loop keeps rect in sync with any ongoing animation / scroll
-				const trackRect = () => {
-					const el2 = resolveTarget(resolvedTargetId);
-					if (!el2) return;
-					const newR = el2.getBoundingClientRect();
-					setTargetRect((prev) => {
-						if (
-							prev &&
-							prev.top === newR.top &&
-							prev.left === newR.left &&
-							prev.width === newR.width &&
-							prev.height === newR.height
-						)
-							return prev;
-						return newR;
-					});
-					setSpotlightRect((prev) => {
-						if (
-							prev &&
-							prev.top === newR.top &&
-							prev.left === newR.left &&
-							prev.width === newR.width &&
-							prev.height === newR.height
-						)
-							return prev;
-						return newR;
-					});
-					rafRef.current = requestAnimationFrame(trackRect);
-				};
-				rafRef.current = requestAnimationFrame(trackRect);
-			} else {
-				elapsed += 50;
-				if (elapsed >= 3000) {
-					stopPoll();
-					setStep((s) => s + directionRef.current);
-				}
-			}
-		}, 50);
-
-		return () => {
-			stopPoll();
-			stopRaf();
-		};
-	}, [step, isTourActive, demoJobId, demoScrapedJobId, demoScrapingFilterId, navigate, stopPoll, stopRaf]);
-
-	// ── Interactive: waitForSelector / waitForSelectorGone / waitForInput ───
-	useEffect(() => {
-		if (!isTourActive) return;
-		const stepDef = TOUR_STEPS[step];
-		if (!stepDef) return;
-		const { waitForSelector, waitForSelectorGone, waitForInput, autoFill } = stepDef;
-		if (!waitForSelector && !waitForSelectorGone && !waitForInput && !autoFill) return;
-
-		// Auto-fill watcher
-		if (autoFill) {
-			let filled = false;
-			let cleanup: (() => void) | null = null;
-			let retryTimer: ReturnType<typeof setInterval>;
-
-			const attach = (): boolean => {
-				const watchEl = document.querySelector<HTMLInputElement>(autoFill.watchSelector);
-				if (!watchEl) return false;
-				const handler = () => {
-					if (filled || !watchEl.value.trim()) return;
-					const fillEl = document.querySelector<HTMLInputElement>(autoFill.fillSelector);
-					if (fillEl && !fillEl.value.trim()) {
-						filled = true;
-						setNativeInputValue(fillEl, autoFill.fillValue);
-					}
-				};
-				watchEl.addEventListener("input", handler);
-				cleanup = () => watchEl.removeEventListener("input", handler);
-				return true;
-			};
-
-			if (!attach()) {
-				retryTimer = setInterval(() => {
-					if (attach()) clearInterval(retryTimer);
-				}, 50);
-				const timeout = setTimeout(() => clearInterval(retryTimer), 5000);
-				autoFillCleanupRef.current = () => {
-					clearInterval(retryTimer);
-					clearTimeout(timeout);
-					cleanup?.();
-				};
-			} else {
-				autoFillCleanupRef.current = () => cleanup?.();
-			}
-		}
-
-		// Condition polling
-		waitPollRef.current = setInterval(() => {
-			if (waitForInput) {
-				// Don't auto-advance — just keep the Next button enabled/disabled
-				const el = document.querySelector<HTMLInputElement>(waitForInput);
-				if (!el) {
-					setInputValid(false);
-				} else if (el.classList.contains("jam-select__input")) {
-					// CustomSelect: the matched element is the search box, not the value.
-					// Check for an actual selected value in the parent select container.
-					const container = el.closest(".jam-select");
-					setInputValid(
-						!!container?.querySelector(".jam-select__single-value, .jam-select__tag")
-					);
-				} else {
-					setInputValid(el.value.trim().length > 0);
-				}
-				return;
-			}
-			let met = false;
-			if (waitForSelector) {
-				met = !!document.querySelector(waitForSelector);
-			} else if (waitForSelectorGone) {
-				met = !document.querySelector(waitForSelectorGone);
-			}
-			if (met) {
-				stopWait();
-				advanceFromCurrentStep();
-			}
-		}, 50);
-
-		return stopWait;
-	}, [step, isTourActive, stopWait, advanceFromCurrentStep]);
-
-	// ── Keyboard navigation ──────────────────────────────────────────────────
-	const _stepDef = TOUR_STEPS[step];
-	const _showNext = !_stepDef?.hideNextButton;
-	const _isLast = step === TOUR_STEPS.length - 1;
-	const _nextDisabled = isCleaningUp || (!!_stepDef?.waitForInput && !inputValid);
-	const _canGoBack = step > 0 && _showNext && !TOUR_STEPS[step - 1]?.hideNextButton;
 	useArrowKeyNavigation({
 		active: isTourActive,
-		onNext: () => (_isLast ? void endTour(true) : advanceFromCurrentStep()),
+		onNext: () => (isLast ? void endTour(true) : advanceFromCurrentStep()),
 		onPrev: () => advanceToStep(step - 1),
-		canGoPrev: _canGoBack,
-		canGoNext: _showNext && !isCleaningUp && !_nextDisabled,
+		canGoPrev: canGoBack,
+		canGoNext: showNext && !isCleaningUp && !nextDisabled,
 		skipWhenTyping: true,
 		onEscape: () => void endTour(false),
 		nextOnEnter: true,
 	});
 
-	// ── Reset on tour start ──────────────────────────────────────────────────
+	// ── Reset on tour start ──────────────────────────────────────────────────────
 	useEffect(() => {
-		if (isTourActive) {
-			setStep(0);
-			setSpotlightRect(null);
-			setInputValid(false);
-		}
+		if (isTourActive) setStep(0);
 	}, [isTourActive]);
 
-	useEffect(() => {
-		setInputValid(false);
-	}, [step]);
+	// ── Render ───────────────────────────────────────────────────────────────────
+	if (!isTourActive || !stepDef) return null;
 
-	if (!isTourActive) return null;
-	const currentStep = TOUR_STEPS[step];
-	if (!currentStep) return null;
-
-	// Hide the popover (but keep the spotlight) while waiting for the target element.
-	// Returning null here would unmount the spotlight and cause the backdrop to flicker.
-	const waitingForTarget = currentStep.targetId != null && targetRect === null;
-
-	const showNext = !currentStep.hideNextButton;
-	const isFirst = step === 0;
-	const isLast = step === TOUR_STEPS.length - 1;
-	const nextDisabled = isCleaningUp || (!!currentStep.waitForInput && !inputValid);
-	const canGoBack = !isFirst && showNext && !TOUR_STEPS[step - 1]?.hideNextButton;
-	const popoverStyle = targetRect ? computePopoverStyle(targetRect, currentStep.placement) : {};
+	const waitingForTarget = stepDef.targetId != null && targetRect === null;
+	const popoverStyle = targetRect ? computePopoverStyle(targetRect, stepDef.placement) : {};
 
 	return (
 		<>
 			{/* Blocking overlays — prevent interaction outside the targeted element */}
-			{currentStep.targetId != null && spotlightRect ? (
+			{stepDef.targetId != null && spotlightRect ? (
 				<>
-					<div
-						className="tour-block"
-						style={{ top: 0, left: 0, right: 0, height: spotlightRect.top - SPOTLIGHT_PAD }}
-					/>
-					<div
-						className="tour-block"
-						style={{ top: spotlightRect.bottom + SPOTLIGHT_PAD, left: 0, right: 0, bottom: 0 }}
-					/>
+					<div className="tour-block" style={{ top: 0, left: 0, right: 0, height: spotlightRect.top - SPOTLIGHT_PAD }} />
+					<div className="tour-block" style={{ top: spotlightRect.bottom + SPOTLIGHT_PAD, left: 0, right: 0, bottom: 0 }} />
 					<div
 						className="tour-block"
 						style={{
@@ -463,13 +150,14 @@ export function GuidedTour(): JSX.Element | null {
 						}}
 					/>
 				</>
-			) : currentStep.targetId == null ? (
+			) : stepDef.targetId == null ? (
 				<div className="tour-block" style={{ top: 0, left: 0, right: 0, bottom: 0 }} />
 			) : null}
+
 			<div
 				className="tour-spotlight"
 				style={{
-					opacity: currentStep.targetId != null && spotlightRect ? 1 : 0,
+					opacity: stepDef.targetId != null && spotlightRect ? 1 : 0,
 					...(spotlightRect
 						? {
 								top: spotlightRect.top - SPOTLIGHT_PAD,
@@ -480,19 +168,16 @@ export function GuidedTour(): JSX.Element | null {
 						: { top: "50vh", left: "50vw", width: 0, height: 0 }),
 				}}
 			/>
-			<div
-				id="tour-backdrop"
-				className="tour-backdrop"
-				style={{ opacity: currentStep.targetId == null ? 1 : 0 }}
-			/>
+			<div id="tour-backdrop" className="tour-backdrop" style={{ opacity: stepDef.targetId == null ? 1 : 0 }} />
+
 			{!waitingForTarget && (
 				<div
 					key={step}
 					id="tour-popover"
-					className={`tour-popover${currentStep.placement === "center" ? " tour-popover-center" : ""}`}
+					className={`tour-popover${stepDef.placement === "center" ? " tour-popover-center" : ""}`}
 					style={{ width: POP_W, ...popoverStyle }}
 					role="dialog"
-					aria-label={`Tour step ${step + 1} of ${TOUR_STEPS.length}: ${currentStep.title}`}
+					aria-label={`Tour step ${step + 1} of ${TOUR_STEPS.length}: ${stepDef.title}`}
 				>
 					<div className="tour-popover-body">
 						<div className="tour-popover-header">
@@ -503,13 +188,12 @@ export function GuidedTour(): JSX.Element | null {
 								Skip tour
 							</button>
 						</div>
-						<h5 id="tour-popover-title" className="tour-popover-title">
-							{currentStep.title}
-						</h5>
-						<p className="tour-popover-content">{currentStep.content}</p>
-						{currentStep.choices && (
+						<h5 id="tour-popover-title" className="tour-popover-title">{stepDef.title}</h5>
+						<p className="tour-popover-content">{stepDef.content}</p>
+
+						{stepDef.choices && (
 							<div className="tour-choices">
-								{currentStep.choices.map((choice) => (
+								{stepDef.choices.map((choice) => (
 									<button
 										key={choice.targetStepId}
 										id={`tour-choice-${choice.targetStepId}`}
@@ -522,14 +206,11 @@ export function GuidedTour(): JSX.Element | null {
 								))}
 							</div>
 						)}
+
 						{(showNext || canGoBack) && (
 							<div className="tour-popover-footer">
 								{canGoBack && (
-									<button
-										id="tour-back-btn"
-										className="tour-btn-secondary"
-										onClick={() => advanceToStep(step - 1)}
-									>
+									<button id="tour-back-btn" className="tour-btn-secondary" onClick={() => advanceToStep(step - 1)}>
 										<i className="bi bi-arrow-left me-1"></i>Back
 									</button>
 								)}
@@ -553,20 +234,14 @@ export function GuidedTour(): JSX.Element | null {
 											{isLast ? (
 												isCleaningUp ? (
 													<>
-														<span
-															className="spinner-border spinner-border-sm me-2"
-															role="status"
-															aria-hidden="true"
-														/>
+														<span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
 														Cleaning up…
 													</>
 												) : (
 													"Done"
 												)
 											) : (
-												<>
-													Next <i className="bi bi-arrow-right"></i>
-												</>
+												<>Next <i className="bi bi-arrow-right"></i></>
 											)}
 										</button>
 									</>
