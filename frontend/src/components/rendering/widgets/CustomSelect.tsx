@@ -361,8 +361,8 @@ export const CustomSelect = ({
 			: !Array.isArray(value) && (value as SelectOption | null)?.value === opt.value;
 
 		let optClassName = "jam-select__option";
-		if (isFocusedOpt) optClassName += " jam-select__option--focused";
-		if (isSelected) optClassName += " jam-select__option--selected";
+		if (!isClosing && isFocusedOpt) optClassName += " jam-select__option--focused";
+		if (!isClosing && isSelected) optClassName += " jam-select__option--selected";
 
 		return (
 			<div
