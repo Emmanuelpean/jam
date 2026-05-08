@@ -27,7 +27,7 @@ def call_geocoding_api(query: str) -> tuple[float, float, dict]:
 
     print("Calling Nominatim API for query:", query)
     base_url = "https://nominatim.openstreetmap.org/search"
-    params = {"format": "json", "limit": 1, "addressdetails": 1, "q": query}
+    params = {"format": "json", "limit": 1, "addressdetails": 1, "q": query, "accept-language": "en"}
     headers = {"User-Agent": f"JAM/{settings.app_version} ({settings.main_email_username})"}
 
     try:
@@ -50,7 +50,7 @@ def call_geocoding_api(query: str) -> tuple[float, float, dict]:
 
 
 def geocode_location(
-    query: str | dict,
+    query: str,
     db: Session,
     logger: logging.Logger | None = None,
 ) -> Geolocation | None:
@@ -62,11 +62,7 @@ def geocode_location(
     :return: The geolocation ID if successful, else None."""
 
     # Decode HTML entities and normalise whitespace
-    if isinstance(query, dict):
-        sanitised_query = {k: html.unescape(v).strip() if isinstance(v, str) else v for k, v in query.items() if v}
-        sanitised_query = ", ".join(sanitised_query.values())
-    else:
-        sanitised_query = html.unescape(query).strip()
+    sanitised_query = html.unescape(query).strip()
 
     # Check cache first
     cached = db.query(Geolocation).filter_by(query=sanitised_query).first()
@@ -92,7 +88,7 @@ def geocode_location(
                 longitude=lon,
                 data=address_dict,
                 postcode=address_dict.get("postcode"),
-                city=address_dict.get("town") or address_dict.get("city"),
+                city=address_dict.get("town") or address_dict.get("city") or address_dict.get("province"),
                 country=matched_country,
             )
             db.add(new_geo)

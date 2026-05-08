@@ -59,10 +59,18 @@ const Dashboard: React.FC = () => {
 	const { showConfirm, showDelete } = useAlert();
 	const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
 	const [debouncedWidth, setDebouncedWidth] = useState(width);
+	const initialSyncDone = useRef(false);
 	useEffect(() => {
+		// First real measurement replaces the 1280 default — apply immediately, no debounce
+		if (mounted && !initialSyncDone.current) {
+			initialSyncDone.current = true;
+			setDebouncedWidth(width);
+			return;
+		}
+		if (!mounted) return;
 		const timer = setTimeout(() => setDebouncedWidth(width), 50);
 		return () => clearTimeout(timer);
-	}, [width]);
+	}, [width, mounted]);
 	const [isEditMode, setIsEditMode] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [showWidgetPicker, setShowWidgetPicker] = useState(false);
@@ -492,7 +500,12 @@ const Dashboard: React.FC = () => {
 					/>
 				);
 			case "map":
-				return <MapWidget config={config as MapConfig} />;
+				return (
+					<MapWidget
+						config={config as MapConfig}
+						onConfigChange={(updated: MapConfig): void => handleUpdateWidgetConfig(widgetId, updated)}
+					/>
+				);
 		}
 	};
 

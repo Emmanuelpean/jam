@@ -141,12 +141,12 @@ body[data-mode="dark"] .link-gradient-purple:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 63px;
-    height: 63px;
+    height: 80px;
+    aspect-ratio: 1/1;
     border-radius: 16px;
     background: var(--primary-gradient);
     color: white;
-    font-size: 2.1rem;
+    font-size: 3.2rem;
     box-shadow: 0 7.2px 21.6px rgb(0 0 0 / 15%);
 }
 

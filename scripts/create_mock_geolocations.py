@@ -1,9 +1,12 @@
 """Create real mock geolocations for testing using the Nominatim API."""
 
+import time
+
 import requests
 
 from app.config import settings
-from tests.utils.test_data import SCRAPED_JOB_DATA, LOCATION_DATA
+from app.resources import COUNTRIES
+from tests.utils.test_data import JOB_DATA, SCRAPED_JOB_DATA
 from tests.utils.test_data.geolocation import MOCK_GEOCODING_RESPONSES
 
 
@@ -15,29 +18,18 @@ def call_geocoding_api(query: str):
 
     print("Calling Nominatim API for query:", query)
     base_url = "https://nominatim.openstreetmap.org/search"
-    params = {"format": "json", "limit": 1, "addressdetails": 1, "q": query}
-    headers = {"User-Agent": f"JAM/{settings.app_version} ({settings.main_email_username})"}
+    params = {"format": "json", "limit": 1, "addressdetails": 1, "q": query, "accept-language": "en"}
+    headers = {"User-Agent": f"JAM/1.4 ({settings.main_email_username})"}
     return requests.get(base_url, params=params, headers=headers, timeout=5)
 
 
-def geocode_test_locations() -> None:
-    """Run this to generate the mock geocoding responses for test locations"""
+def geocode_test_jobs() -> None:
+    """Run this to generate the mock geocoding responses for test locations. Then copy the results to MOCK_GEOCODING_RESPONSES in test_data/geolocation.py"""
 
     data = {}
-    for location in LOCATION_DATA:
-        query = [location.get("postcode"), location.get("city"), location.get("country")]
-        query = ", ".join(filter(None, query))
-        data[query] = call_geocoding_api(query).json()
-
-    print(data)
-
-
-def geocode_test_scraped_jobs() -> None:
-    """Run this to generate the mock geocoding responses for test scraped jobs"""
-
-    data = {}
-    for scraped_job in SCRAPED_JOB_DATA:
-        query = scraped_job.get("location")
+    for job in JOB_DATA + SCRAPED_JOB_DATA:
+        time.sleep(1)
+        query = job.get("location")
         if query:
             data[query] = call_geocoding_api(query).json()
     print(data)
@@ -49,12 +41,24 @@ def create_geolocation_entries_from_mock_api_results() -> None:
     data = []
     for query, response in MOCK_GEOCODING_RESPONSES.items():
         if response:
+            address = response[0]["address"]
+            oms_country = address.get("country")
+            matched_country = None
+            if oms_country:
+                for country in COUNTRIES:
+                    if oms_country.lower() == country["name"].lower():
+                        matched_country = country["name"]
+                        break
+
             data.append(
                 {
                     "query": query,
                     "latitude": response[0]["lat"],
                     "longitude": response[0]["lon"],
                     "data": response[0]["address"],
+                    "country": matched_country,
+                    "postcode": address.get("postcode"),
+                    "city": address.get("town") or address.get("city") or address.get("province"),
                 }
             )
         else:

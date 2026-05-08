@@ -84,9 +84,11 @@ export interface GraphConfig {
 	groupBy?: "platform" | "alert_name" | "platform_and_alert";
 }
 export type MapMetric = "job_count" | "avg_salary" | "keywords";
+export type MapGranularity = "city" | "country";
 export interface MapConfig {
 	type: "map";
 	metric: MapMetric;
+	granularity?: MapGranularity;
 }
 export type WidgetConfig = MetricConfig | TableConfig | TimelineConfig | GraphConfig | MapConfig;
 

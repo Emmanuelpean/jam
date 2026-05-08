@@ -72,25 +72,11 @@ class TestGeocodeLocation:
         assert result.latitude == 51.5074456
         assert result.longitude == -0.1277653
 
-    def test_creates_geolocation_from_dict_query(self, session, mock_nominatim_get) -> None:
-        """Creates geolocation with a stable sorted cache key when given a dict query."""
-
-        result = geocode_location({"postcode": "10001", "city": "New York", "country": "United States"}, session)
-        assert result is not None
-        cached = session.query(Geolocation).filter_by(query="10001, New York, United States").first()
-        assert cached is not None
-
     def test_decodes_html_entities_in_string_query(self, session, mock_nominatim_get) -> None:
         """Decodes HTML entities in string queries before calling the API."""
 
         geocode_location("London UK &amp;", session)
         assert mock_nominatim_get.call_args[1]["params"]["q"] == "London UK &"
-
-    def test_decodes_html_entities_in_dict_query(self, session, mock_nominatim_get) -> None:
-        """Decodes HTML entities in dict query values before calling the API."""
-
-        geocode_location({"city": "Caf&eacute; City", "country": "UK"}, session)
-        assert mock_nominatim_get.call_args[1]["params"]["q"] == "Café City, UK"
 
     def test_returns_empty_geolocation_when_no_results(self, session) -> None:
         """Returns an empty Geolocation record when the API finds no results, to avoid repeat API calls."""
@@ -108,22 +94,6 @@ class TestGeocodeLocation:
         result = geocode_location("SomePlace", session)
         assert result is None
         assert session.query(Geolocation).filter_by(query="SomePlace").first() is None
-
-    def test_none_in_dict(self, session) -> None:
-        """Check that the sanitation works even if None is in the dictionary"""
-
-        result = geocode_location({"postcode": None, "city": "London", "country": None}, session)
-        assert result is not None
-        assert result.latitude is not None
-        assert result.longitude is not None
-
-    def test_all_none_in_dict(self, session) -> None:
-        """Check that the sanitation works even if None is in the dictionary"""
-
-        result = geocode_location({"postcode": None, "city": None, "country": None}, session)
-        assert result is not None
-        assert result.latitude is None
-        assert result.longitude is None
 
 
 class TestRateLimiting:

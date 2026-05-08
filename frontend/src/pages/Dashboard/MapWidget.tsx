@@ -1,19 +1,23 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { MapContainer, TileLayer, CircleMarker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useDataContext } from "../../contexts/DataContext";
-import { MapConfig, MapMetric } from "./widgetRegistry";
+import { MapConfig, MapGranularity, MapMetric } from "./widgetRegistry";
 import { DashboardCard } from "./DashboardCard";
+import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
+import { JobModal } from "../../components/DataModal/JobModal";
+import { DataModalHandle } from "../../components/DataModal/DataModal";
 
 interface MapDataPoint {
-	locationId: number;
+	key: string;
 	lat: number;
 	lng: number;
 	label: string;
 	value: number;
 	jobCount: number;
 	topKeywords: string[];
+	jobs: EnrichedJobData[];
 }
 
 const MAP_TILES = {
@@ -68,15 +72,27 @@ const METRIC_META: Record<MapMetric, { icon: string; title: string }> = {
 	keywords: { icon: "tags", title: "Keywords by Location" },
 };
 
+const STATUS_COLORS: Record<string, string> = {
+	Applied: "primary",
+	Interviewing: "info",
+	Offered: "success",
+	Rejected: "danger",
+	Withdrawn: "secondary",
+	Ghosted: "warning",
+};
+
 interface MapWidgetProps {
 	config: MapConfig;
+	onConfigChange?: (config: MapConfig) => void;
 }
 
-const MapWidget: React.FC<MapWidgetProps> = ({ config }) => {
+const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange }) => {
 	const ctx = useDataContext();
+	const jobModalRef = useRef<DataModalHandle<JobData>>(null);
 	const [isDarkMode, setIsDarkMode] = useState<boolean>(
 		document.documentElement.getAttribute("data-mode") === "dark"
 	);
+	const [selectedPoint, setSelectedPoint] = useState<MapDataPoint | null>(null);
 
 	useEffect(() => {
 		const observer = new MutationObserver(() => {
@@ -86,33 +102,48 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config }) => {
 		return () => observer.disconnect();
 	}, []);
 
+	const granularity: MapGranularity = config.granularity ?? "city";
+
+	const companyLookup = useMemo(() => {
+		const map = new Map<number, string>();
+		for (const c of ctx.companies) map.set(c.id, c.name);
+		return map;
+	}, [ctx.companies]);
+
 	const points = useMemo((): MapDataPoint[] => {
 		const keywordLookup = new Map<number, string>();
 		for (const kw of ctx.keywords) {
 			keywordLookup.set(kw.id, kw.name);
 		}
 
-		const jobsByGeoKey = new Map<string, typeof ctx.jobs>();
+		const jobsByKey = new Map<string, EnrichedJobData[]>();
 		for (const job of ctx.jobs) {
 			const geo = job.geolocation;
-			if (geo?.latitude == null || geo?.longitude == null) continue;
-			const key = `${geo.latitude},${geo.longitude}`;
-			const arr = jobsByGeoKey.get(key) ?? [];
+			if (!geo) continue;
+			const key = granularity === "city" ? geo.city : geo.country;
+			if (!key) continue;
+			const arr = jobsByKey.get(key) ?? [];
 			arr.push(job);
-			jobsByGeoKey.set(key, arr);
+			jobsByKey.set(key, arr);
 		}
 
-		return Array.from(jobsByGeoKey.entries()).map(([, jobs]) => {
-			const firstJob = jobs[0]!;
-			const geo = firstJob.geolocation!;
-			const label = firstJob.location || geo.city || geo.country || "Unknown";
-			const jobCount = jobs.length;
+		return Array.from(jobsByKey.entries()).flatMap(([key, jobs]) => {
+			const jobsWithGeo = jobs.filter(
+				(j) => j.geolocation?.latitude != null && j.geolocation?.longitude != null
+			);
+			if (jobsWithGeo.length === 0) return [];
 
-			let value = jobCount;
+			const lat =
+				jobsWithGeo.reduce((s, j) => s + j.geolocation!.latitude!, 0) / jobsWithGeo.length;
+			const lng =
+				jobsWithGeo.reduce((s, j) => s + j.geolocation!.longitude!, 0) / jobsWithGeo.length;
+
+			let value = jobs.length;
 			if (config.metric === "avg_salary") {
 				const salaries = jobs
 					.map((j) => {
-						if (j.salary_min != null && j.salary_max != null) return (j.salary_min + j.salary_max) / 2;
+						if (j.salary_min != null && j.salary_max != null)
+							return (j.salary_min + j.salary_max) / 2;
 						return j.salary_min ?? j.salary_max ?? null;
 					})
 					.filter((s): s is number => s != null);
@@ -131,9 +162,9 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config }) => {
 				.slice(0, 5)
 				.map(([name]) => name);
 
-			return { locationId: jobs[0]!.id, lat: geo.latitude!, lng: geo.longitude!, label, value, jobCount, topKeywords };
+			return [{ key, lat, lng, label: key, value, jobCount: jobs.length, topKeywords, jobs }];
 		});
-	}, [ctx.jobs, ctx.keywords, config.metric]);
+	}, [ctx.jobs, ctx.keywords, config.metric, granularity]);
 
 	const maxValue = Math.max(...points.map((p) => p.value), 1);
 	const minValue = Math.min(...points.map((p) => p.value), 0);
@@ -158,67 +189,134 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config }) => {
 	const meta = METRIC_META[config.metric];
 	const tileUrl = isDarkMode ? MAP_TILES.dark : MAP_TILES.light;
 
-	return (
-		<DashboardCard
-			icon={meta.icon}
-			title={meta.title}
-			isEmpty={points.length === 0}
-			emptyState={{
-				icon: "geo-alt",
-				title: "No location data",
-				description: "Add locations to your jobs to see them on the map",
-			}}
-			bodyPadding={false}
-		>
-			<MapContainer
-				center={[20, 0]}
-				zoom={2}
-				style={{ height: "100%", width: "100%", flex: 1 }}
-				scrollWheelZoom={false}
+	const granularityToggle = onConfigChange ? (
+		<div className="btn-group btn-group-sm map-granularity-toggle" role="group">
+			<button
+				type="button"
+				className={`btn btn-sm ${granularity === "city" ? "btn-primary" : "btn-outline-secondary"}`}
+				style={{ fontSize: "0.75rem", padding: "0.2rem 0.7rem" }}
+				onClick={() => onConfigChange({ ...config, granularity: "city" })}
 			>
-				<TileLayer attribution={ATTRIBUTION} url={tileUrl} />
-				<MapFitter points={points} />
-				{points.map((point) => (
-					<CircleMarker
-						key={point.locationId}
-						center={[point.lat, point.lng]}
-						radius={getRadius(point.value)}
-						pathOptions={{
-							fillColor: getColor(point.value),
-							color: "white",
-							weight: 1.5,
-							opacity: 0.9,
-							fillOpacity: 0.75,
-						}}
+				City
+			</button>
+			<button
+				type="button"
+				className={`btn btn-sm ${granularity === "country" ? "btn-primary" : "btn-outline-secondary"}`}
+				style={{ fontSize: "0.75rem", padding: "0.2rem 0.7rem" }}
+				onClick={() => onConfigChange({ ...config, granularity: "country" })}
+			>
+				Country
+			</button>
+		</div>
+	) : undefined;
+
+	return (
+		<>
+			<DashboardCard
+				icon={meta.icon}
+				title={meta.title}
+				isEmpty={points.length === 0}
+				emptyState={{
+					icon: "geo-alt",
+					title: "No location data",
+					description: "Add locations to your jobs to see them on the map",
+				}}
+				bodyPadding={false}
+				headerAction={granularityToggle}
+			>
+				<div style={{ position: "relative", flex: 1, minHeight: 0, overflow: "hidden", display: "flex" }}>
+					<MapContainer
+						center={[20, 0]}
+						zoom={2}
+						style={{ height: "100%", width: "100%", flex: 1 }}
+						scrollWheelZoom={false}
 					>
-						<Popup>
-							<div style={{ minWidth: 140 }}>
-								<strong>{point.label}</strong>
-								<div style={{ marginTop: 4 }}>{formatValue(point)}</div>
-								{config.metric === "keywords" && point.topKeywords.length > 0 && (
-									<div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 4 }}>
-										{point.topKeywords.map((kw) => (
-											<span
-												key={kw}
-												style={{
-													background: "#6366f120",
-													border: "1px solid #6366f140",
-													borderRadius: 4,
-													padding: "1px 6px",
-													fontSize: 11,
-												}}
-											>
-												{kw}
-											</span>
-										))}
+						<TileLayer attribution={ATTRIBUTION} url={tileUrl} />
+						<MapFitter points={points} />
+						{points.map((point) => {
+							const isSelected = selectedPoint?.key === point.key;
+							return (
+								<CircleMarker
+									key={point.key}
+									center={[point.lat, point.lng]}
+									radius={isSelected ? getRadius(point.value) + 4 : getRadius(point.value)}
+									pathOptions={{
+										fillColor: getColor(point.value),
+										color: isSelected ? "#f59e0b" : "white",
+										weight: isSelected ? 3 : 1.5,
+										opacity: 1,
+										fillOpacity: isSelected ? 1 : 0.75,
+									}}
+									eventHandlers={{ click: () => setSelectedPoint(point) }}
+								/>
+							);
+						})}
+					</MapContainer>
+
+					{selectedPoint && (
+						<div className="map-jobs-panel">
+							<div className="map-jobs-panel-header">
+								<div className="map-jobs-panel-location">
+									<i className={`bi bi-${granularity === "city" ? "geo-alt-fill" : "globe2"} map-jobs-panel-location-icon`} />
+									<div>
+										<div className="map-jobs-panel-location-name">{selectedPoint.label}</div>
+										<div className="map-jobs-panel-location-count">{formatValue(selectedPoint)}</div>
 									</div>
-								)}
+								</div>
+								<button
+									className="btn-close"
+									style={{ fontSize: "0.7rem" }}
+									onClick={() => setSelectedPoint(null)}
+									aria-label="Close"
+								/>
 							</div>
-						</Popup>
-					</CircleMarker>
-				))}
-			</MapContainer>
-		</DashboardCard>
+							{config.metric === "keywords" && selectedPoint.topKeywords.length > 0 && (
+								<div className="map-jobs-panel-keywords">
+									{selectedPoint.topKeywords.map((kw) => (
+										<span key={kw} className="map-keyword-badge">
+											{kw}
+										</span>
+									))}
+								</div>
+							)}
+							<div className="map-jobs-panel-list">
+								{selectedPoint.jobs.map((job) => {
+									const company = job.company_id != null ? companyLookup.get(job.company_id) : null;
+									const statusColor = job.application_status
+										? (STATUS_COLORS[job.application_status] ?? "secondary")
+										: null;
+									return (
+										<button
+											key={job.id}
+											className="map-job-item"
+											onClick={() => jobModalRef.current?.showView(job)}
+										>
+											<div className="map-job-title" title={job.title}>
+												{job.title}
+											</div>
+											<div className="map-job-meta">
+												{company && (
+													<span className="map-job-company">
+														<i className="bi bi-building" />
+														{company}
+													</span>
+												)}
+												{statusColor && (
+													<span className={`map-job-status map-job-status--${statusColor}`}>
+														{job.application_status}
+													</span>
+												)}
+											</div>
+										</button>
+									);
+								})}
+							</div>
+						</div>
+					)}
+				</div>
+			</DashboardCard>
+			<JobModal ref={jobModalRef} />
+		</>
 	);
 };
 

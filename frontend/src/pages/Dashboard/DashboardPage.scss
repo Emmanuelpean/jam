@@ -301,3 +301,185 @@
 .min-width-0 {
     min-width: 0;
 }
+
+/* Map widget — granularity toggle: suppress global hover translate */
+.map-granularity-toggle .btn:hover {
+    transform: none;
+}
+
+/* Map widget jobs panel */
+.map-jobs-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    width: 290px;
+    background: var(--bs-card-bg);
+    border-left: 1px solid var(--bs-border-color);
+    box-shadow: -6px 0 24px rgba(0, 0, 0, 0.1);
+    animation: panel-slide-in 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    &-header {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.9rem 1rem 0.85rem;
+        border-bottom: 1px solid var(--bs-border-color);
+        background: var(--bs-body-bg);
+
+        // Gradient accent line at bottom of header (matches DashboardCard header)
+        &::after {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            height: 1.8px;
+            content: "";
+            background: var(--primary-gradient);
+            opacity: 0.6;
+        }
+
+        position: relative;
+    }
+
+    &-location {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+        min-width: 0;
+    }
+
+    &-location-icon {
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    &-location-name {
+        font-size: 0.9rem;
+        font-weight: 700;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        color: var(--bs-body-color);
+    }
+
+    &-location-count {
+        font-size: 0.75rem;
+        color: var(--bs-secondary-color);
+        margin-top: 1px;
+    }
+
+    &-keywords {
+        display: flex;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 0.6rem 0.85rem;
+        border-bottom: 1px solid var(--bs-border-color);
+        background: color-mix(in srgb, var(--primary-mid) 4%, var(--bs-body-bg));
+    }
+
+    &-list {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+    }
+}
+
+.map-keyword-badge {
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    border: 1px solid color-mix(in srgb, var(--primary-mid) 35%, transparent);
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--primary-mid) 10%, transparent);
+    color: var(--primary-mid);
+}
+
+.map-job-item {
+    display: block;
+    width: 100%;
+    padding: 0.65rem 1rem;
+    cursor: pointer;
+    text-align: left;
+    border: none;
+    border-bottom: 1px solid var(--bs-border-color);
+    background: transparent;
+    transition: background 0.12s;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background: color-mix(in srgb, var(--primary-mid) 6%, var(--bs-body-bg));
+
+        .map-job-title {
+            color: var(--primary-mid);
+        }
+    }
+}
+
+.map-job-title {
+    overflow: hidden;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--bs-body-color);
+    transition: color 0.12s;
+}
+
+.map-job-meta {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 3px;
+    font-size: 0.75rem;
+}
+
+.map-job-company {
+    display: flex;
+    gap: 0.3rem;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--bs-secondary-color);
+
+    i { font-size: 0.7rem; }
+}
+
+.map-job-status {
+    flex-shrink: 0;
+    padding: 1px 7px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    border-radius: 20px;
+
+    &--primary   { background: color-mix(in srgb, var(--bs-primary) 15%, transparent);   color: var(--bs-primary); }
+    &--info      { background: color-mix(in srgb, var(--bs-info) 15%, transparent);      color: var(--bs-info); }
+    &--success   { background: color-mix(in srgb, var(--bs-success) 15%, transparent);   color: var(--bs-success); }
+    &--danger    { background: color-mix(in srgb, var(--bs-danger) 15%, transparent);    color: var(--bs-danger); }
+    &--secondary { background: color-mix(in srgb, var(--bs-secondary) 15%, transparent); color: var(--bs-secondary-color); }
+    &--warning   { background: color-mix(in srgb, var(--bs-warning) 15%, transparent);   color: var(--bs-warning); }
+}
+
+@keyframes panel-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
