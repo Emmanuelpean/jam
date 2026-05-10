@@ -42,10 +42,21 @@ const salaryColor = (value: number, min: number, max: number): string => {
 
 const MapResizer: React.FC<{ trigger: unknown }> = ({ trigger }) => {
 	const map = useMap();
+
+	// Invalidate whenever the container is resized (handles grid layout changes)
 	useEffect(() => {
-		const id = setTimeout(() => map.invalidateSize(), 200);
+		const container = map.getContainer();
+		const ro = new ResizeObserver(() => map.invalidateSize({ animate: false }));
+		ro.observe(container);
+		return () => ro.disconnect();
+	}, [map]);
+
+	// Also invalidate when the sidebar opens/closes (flex sibling changes map width)
+	useEffect(() => {
+		const id = setTimeout(() => map.invalidateSize({ animate: false }), 50);
 		return () => clearTimeout(id);
 	}, [trigger, map]);
+
 	return null;
 };
 
@@ -108,10 +119,25 @@ interface MapWidgetProps {
 const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange, isEditMode }) => {
 	const ctx = useDataContext();
 	const jobModalRef = useRef<DataModalHandle<JobData>>(null);
+	const mapWrapperRef = useRef<HTMLDivElement>(null);
+	const [mapSize, setMapSize] = useState<{ width: number; height: number } | null>(null);
 	const [isDarkMode, setIsDarkMode] = useState<boolean>(
 		document.documentElement.getAttribute("data-mode") === "dark"
 	);
 	const [selectedPoint, setSelectedPoint] = useState<MapDataPoint | null>(null);
+
+	useEffect(() => {
+		const el = mapWrapperRef.current;
+		if (!el) return;
+		const ro = new ResizeObserver(() => {
+			const { clientWidth, clientHeight } = el;
+			if (clientWidth > 0 && clientHeight > 0) {
+				setMapSize({ width: clientWidth, height: clientHeight });
+			}
+		});
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, []);
 
 	useEffect(() => {
 		const observer = new MutationObserver(() => {
@@ -243,11 +269,12 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange, isEditMod
 				bodyPadding={false}
 				headerAction={granularityToggle}
 			>
-				<div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "row" }}>
-					<MapContainer
+				<div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "row", position: "relative" }}>
+					<div ref={mapWrapperRef} style={{ position: "relative", flex: 1, minWidth: 0 }}>
+					{mapSize && <MapContainer
 						center={[20, 0]}
 						zoom={2}
-						style={{ height: "100%", flex: 1, minWidth: 0 }}
+						style={{ width: mapSize.width, height: mapSize.height }}
 						scrollWheelZoom={false}
 					>
 						<TileLayer attribution={ATTRIBUTION} url={tileUrl} />
@@ -272,7 +299,8 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange, isEditMod
 								/>
 							);
 						})}
-					</MapContainer>
+					</MapContainer>}
+					</div>
 
 					{selectedPoint && (
 						<div className="map-jobs-panel">

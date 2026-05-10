@@ -550,20 +550,41 @@ const Dashboard: React.FC = () => {
 
 	const makePackedLayout = (layout: LayoutItem[], cols: number): LayoutItem[] => {
 		const sorted = [...layout].sort((a, b) => (a.y !== b.y ? a.y - b.y : a.x - b.x));
+
+		// Step 1: greedy row packing
+		const rows: LayoutItem[][] = [];
+		let curRow: LayoutItem[] = [];
 		let curX = 0;
 		let curY = 0;
 		let rowH = 0;
-		return sorted.map((item) => {
+		for (const item of sorted) {
 			const w = Math.min(Math.max(item.minW ?? 1, item.w), cols);
 			if (curX + w > cols) {
+				rows.push(curRow);
+				curRow = [];
 				curY += rowH;
 				curX = 0;
 				rowH = 0;
 			}
-			const newItem = { ...item, x: curX, y: curY, w };
+			curRow.push({ ...item, x: curX, y: curY, w });
 			curX += w;
 			rowH = Math.max(rowH, item.h);
-			return newItem;
+		}
+		if (curRow.length) rows.push(curRow);
+
+		// Step 2: expand each row to fill cols exactly
+		return rows.flatMap((row) => {
+			const used = row.reduce((s, it) => s + it.w, 0);
+			const remaining = cols - used;
+			const extra = Math.floor(remaining / row.length);
+			const leftover = remaining - extra * row.length;
+			let x = 0;
+			return row.map((item, i) => {
+				const w = item.w + extra + (i === row.length - 1 ? leftover : 0);
+				const out = { ...item, x, w };
+				x += w;
+				return out;
+			});
 		});
 	};
 
@@ -587,7 +608,7 @@ const Dashboard: React.FC = () => {
 							width={debouncedWidth}
 							layouts={{
 								lg: currentLayout,
-								sm: makePackedLayout(currentLayout, 7),
+								sm: makePackedLayout(currentLayout, 6),
 								xs: makeFullWidthLayout(currentLayout, 2),
 							}}
 							breakpoints={{ lg: TABLET_BREAKPOINT, sm: MOBILE_BREAKPOINT, xs: 0 }}
