@@ -328,20 +328,11 @@ export const modalViewFields = {
 
 	// ----------------------------------------------------- OTHER -----------------------------------------------------
 
-	geolocationMap: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	geolocationMap: (scrollWheelZoom = true, overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location_map",
 		label: "Location on Map",
 		type: "custom",
-		render: renderFunctions.locationMap,
-		displayCondition: (item): boolean => !!item.location && item.attendance_type !== "remote",
-		...overrides,
-	}),
-
-	geolocationMapNonScrollable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "location_map",
-		label: "Location on Map",
-		type: "custom",
-		render: renderFunctions.locationMapNonScrollable,
+		render: (param) => renderFunctions.locationMap(param, scrollWheelZoom),
 		displayCondition: (item): boolean => !!item.location && item.attendance_type !== "remote",
 		...overrides,
 	}),

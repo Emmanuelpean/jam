@@ -477,12 +477,8 @@ export const renderFunctions = {
 		}
 	},
 
-	locationMap: (param: RenderParams): ReactNode => {
-		return <LocationMap geolocatedEntry={[param.item]} />;
-	},
-
-	locationMapNonScrollable: (param: RenderParams): ReactNode => {
-		return <LocationMap geolocatedEntry={[param.item]} scrollWheelZoom={false} />;
+	locationMap: (param: RenderParams, scrollWheelZoom = true): ReactNode => {
+		return <LocationMap geolocatedEntry={[param.item]} scrollWheelZoom={scrollWheelZoom} />;
 	},
 
 	locationAttendance: (param: RenderParams): ReactNode => {

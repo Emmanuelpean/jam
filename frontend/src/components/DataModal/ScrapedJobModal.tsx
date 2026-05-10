@@ -20,7 +20,6 @@ import { ScrapedJobData, ScrapedJobUpdate } from "../../services/schemas/Service
 import { useConfig } from "../../contexts/ConfigContext";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
 import { ApiResponse } from "../../services/api/Base";
-import LocationMap from "../Maps/LocationMap";
 
 export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDataModalProps>(
 	({ size = "xl", onDelete, onSuccess: parentOnSuccess, canEdit = true }: JamDataModalProps, ref): JSX.Element => {
@@ -88,7 +87,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				key: "location",
 				title: "Location",
 				icon: "bi-geo-alt",
-				fields: [[formFields.attendanceType(), formFields.location()], modalViewFields.geolocationMapNonScrollable()],
+				fields: [[formFields.attendanceType(), formFields.location()], modalViewFields.geolocationMap(false)],
 			} as SectionConfig,
 
 			{
@@ -168,7 +167,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 			modalViewFields.description(),
 			[modalViewFields.company(), modalViewFields.locationBadge()],
 			[modalViewFields.platform(), modalViewFields.url()],
-			modalViewFields.geolocationMapNonScrollable(),
+			modalViewFields.geolocationMap(false),
 		];
 
 		const warningMessage = (data: ScrapedJobData): WarningMessageConfig[] | null => {
