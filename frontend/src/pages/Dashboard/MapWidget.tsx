@@ -102,9 +102,10 @@ const STATUS_COLORS: Record<string, string> = {
 interface MapWidgetProps {
 	config: MapConfig;
 	onConfigChange?: (config: MapConfig) => void;
+	isEditMode?: boolean;
 }
 
-const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange }) => {
+const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange, isEditMode }) => {
 	const ctx = useDataContext();
 	const jobModalRef = useRef<DataModalHandle<JobData>>(null);
 	const [isDarkMode, setIsDarkMode] = useState<boolean>(
@@ -207,7 +208,7 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange }) => {
 	const meta = METRIC_META[config.metric];
 	const tileUrl = isDarkMode ? MAP_TILES.dark : MAP_TILES.light;
 
-	const granularityToggle = onConfigChange ? (
+	const granularityToggle = onConfigChange && isEditMode ? (
 		<div className="btn-group btn-group-sm map-granularity-toggle" role="group">
 			<button
 				type="button"

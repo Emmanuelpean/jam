@@ -72,6 +72,23 @@ const Dashboard: React.FC = () => {
 		return () => clearTimeout(timer);
 	}, [width, mounted]);
 	const [isEditMode, setIsEditMode] = useState(false);
+	const [minEditHeight, setMinEditHeight] = useState(0);
+	const gridWrapperRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!isEditMode) {
+			setMinEditHeight(0);
+			return;
+		}
+		const el = gridWrapperRef.current;
+		if (!el) return;
+		const ro = new ResizeObserver(() => {
+			setMinEditHeight((prev) => Math.max(prev, el.scrollHeight));
+		});
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, [isEditMode]);
+
 	const [isSaving, setIsSaving] = useState(false);
 	const [showWidgetPicker, setShowWidgetPicker] = useState(false);
 	const [scrapedJobCount, setScrapedJobCount] = useState<number>(0);
@@ -504,6 +521,7 @@ const Dashboard: React.FC = () => {
 					<MapWidget
 						config={config as MapConfig}
 						onConfigChange={(updated: MapConfig): void => handleUpdateWidgetConfig(widgetId, updated)}
+						isEditMode={isEditMode}
 					/>
 				);
 		}
@@ -520,6 +538,35 @@ const Dashboard: React.FC = () => {
 	const widgetIds = new Set(layoutData.widgets.map((w: WidgetInstance): string => w.id));
 	const currentLayout: LayoutItem[] = layoutData.layout.filter((l: LayoutItem): boolean => widgetIds.has(l.i));
 
+	const makeFullWidthLayout = (layout: LayoutItem[], cols: number): LayoutItem[] => {
+		const sorted = [...layout].sort((a, b) => (a.y !== b.y ? a.y - b.y : a.x - b.x));
+		let y = 0;
+		return sorted.map((item) => {
+			const newItem = { ...item, x: 0, w: cols, y };
+			y += item.h;
+			return newItem;
+		});
+	};
+
+	const makePackedLayout = (layout: LayoutItem[], cols: number): LayoutItem[] => {
+		const sorted = [...layout].sort((a, b) => (a.y !== b.y ? a.y - b.y : a.x - b.x));
+		let curX = 0;
+		let curY = 0;
+		let rowH = 0;
+		return sorted.map((item) => {
+			const w = Math.min(Math.max(item.minW ?? 1, item.w), cols);
+			if (curX + w > cols) {
+				curY += rowH;
+				curX = 0;
+				rowH = 0;
+			}
+			const newItem = { ...item, x: curX, y: curY, w };
+			curX += w;
+			rowH = Math.max(rowH, item.h);
+			return newItem;
+		});
+	};
+
 	return (
 		<div className="dashboard-wrapper" data-loaded="true">
 			<div
@@ -529,14 +576,22 @@ const Dashboard: React.FC = () => {
 				ref={containerRef as React.RefObject<HTMLDivElement>}
 			>
 				<ExtensionBanner />
-				<div className={isEditMode ? "dashboard-edit-mode" : ""}>
+				<div
+					ref={gridWrapperRef}
+					className={isEditMode ? "dashboard-edit-mode" : ""}
+					style={isEditMode && minEditHeight > 0 ? { minHeight: minEditHeight } : undefined}
+				>
 					{mounted && (
 						<ResponsiveGridLayout
 							className="dashboard-grid"
 							width={debouncedWidth}
-							layouts={{ lg: currentLayout }}
+							layouts={{
+								lg: currentLayout,
+								sm: makePackedLayout(currentLayout, 7),
+								xs: makeFullWidthLayout(currentLayout, 2),
+							}}
 							breakpoints={{ lg: TABLET_BREAKPOINT, sm: MOBILE_BREAKPOINT, xs: 0 }}
-							cols={{ lg: 12, sm: 7, xs: 2 }}
+							cols={{ lg: 12, sm: 6, xs: 2 }}
 							rowHeight={30}
 							containerPadding={[0, 0]}
 							dragConfig={{ enabled: isEditMode, handle: ".drag-handle" }}
