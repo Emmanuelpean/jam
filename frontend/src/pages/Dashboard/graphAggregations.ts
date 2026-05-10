@@ -25,6 +25,7 @@ export interface GraphFieldMeta {
 	supportedChartTypes: ChartType[];
 	defaultChartType: ChartType;
 	supportsGranularity: boolean;
+	yLabel: string;
 }
 
 export interface GraphSourceMeta {
@@ -45,6 +46,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["line", "bar"],
 				defaultChartType: "line",
 				supportsGranularity: true,
+				yLabel: "Applications",
 			},
 			{
 				key: "application_status",
@@ -53,6 +55,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["pie", "bar"],
 				defaultChartType: "pie",
 				supportsGranularity: false,
+				yLabel: "Jobs",
 			},
 			{
 				key: "source_aggregator",
@@ -61,6 +64,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar", "pie"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Jobs",
 			},
 			{
 				key: "salary",
@@ -69,6 +73,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Jobs",
 			},
 			{
 				key: "attendance_type",
@@ -77,6 +82,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["pie", "bar"],
 				defaultChartType: "pie",
 				supportsGranularity: false,
+				yLabel: "Jobs",
 			},
 			{
 				key: "personal_rating",
@@ -85,6 +91,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Jobs",
 			},
 			{
 				key: "city",
@@ -93,6 +100,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Jobs",
 			},
 			{
 				key: "country",
@@ -101,6 +109,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar", "pie"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Jobs",
 			},
 			{
 				key: "applied_via",
@@ -109,6 +118,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar", "pie"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Applications",
 			},
 			{
 				key: "application_funnel",
@@ -117,6 +127,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Applications",
 			},
 		],
 	},
@@ -131,6 +142,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["line", "bar"],
 				defaultChartType: "line",
 				supportsGranularity: true,
+				yLabel: "Interviews",
 			},
 			{
 				key: "interview_type",
@@ -139,6 +151,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar", "pie"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Interviews",
 			},
 			{
 				key: "interview_attendance",
@@ -147,6 +160,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["pie", "bar"],
 				defaultChartType: "pie",
 				supportsGranularity: false,
+				yLabel: "Interviews",
 			},
 		],
 	},
@@ -161,6 +175,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["line", "bar"],
 				defaultChartType: "line",
 				supportsGranularity: true,
+				yLabel: "Updates",
 			},
 			{
 				key: "update_type",
@@ -169,6 +184,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar", "pie"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Updates",
 			},
 		],
 	},
@@ -183,6 +199,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar", "pie"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Jobs",
 			},
 			{
 				key: "imported_count",
@@ -191,6 +208,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar", "pie"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Jobs",
 			},
 			{
 				key: "applied_count",
@@ -199,6 +217,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar", "pie"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Jobs",
 			},
 			{
 				key: "import_rate",
@@ -207,6 +226,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar", "pie"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Rate (%)",
 			},
 			{
 				key: "applied_rate",
@@ -215,6 +235,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 				supportedChartTypes: ["bar", "pie"],
 				defaultChartType: "bar",
 				supportsGranularity: false,
+				yLabel: "Rate (%)",
 			},
 		],
 	},

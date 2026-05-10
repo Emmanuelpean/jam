@@ -1,4 +1,14 @@
 @use "../../variables" as *;
+.widget-picker-group-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--bs-secondary-color);
+    margin-bottom: 0.45rem;
+    padding-left: 0.1rem;
+}
+
 .widget-picker-card:not(:disabled):hover {
     border-color: var(--primary-mid) !important;
     background: color-mix(in srgb, var(--primary-mid) 8%, transparent) !important;
@@ -171,6 +181,7 @@
 
 /* Edit mode styles */
 .dashboard-edit-mode {
+    padding-bottom: 120px;
 
     .dashboard-grid-item {
         border: 2px dashed var(--bs-border-color);

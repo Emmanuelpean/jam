@@ -69,21 +69,25 @@ const CustomTooltip = ({ active, payload, label, suffix = "" }: any) => {
 	);
 };
 
-const renderLineChart = (data: ChartDataPoint[], suffix = "") => (
+const AXIS_LABEL_STYLE = { fill: "var(--bs-secondary-color)", fontSize: 11 };
+
+const renderLineChart = (data: ChartDataPoint[], suffix = "", xLabel?: string, yLabel?: string) => (
 	<ResponsiveContainer width="100%" height="100%">
-		<LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+		<LineChart data={data} margin={{ top: 5, right: 20, left: yLabel ? 10 : 0, bottom: xLabel ? 20 : 5 }}>
 			<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
 			<XAxis
 				dataKey="name"
 				tick={{ fontSize: 13, fill: "var(--bs-body-color)" }}
 				stroke="var(--bs-border-color)"
 				interval="preserveStartEnd"
+				label={xLabel ? { value: xLabel, position: "insideBottom", offset: -10, style: AXIS_LABEL_STYLE } : undefined}
 			/>
 			<YAxis
 				tick={{ fontSize: 13, fill: "var(--bs-body-color)" }}
 				stroke="var(--bs-border-color)"
 				allowDecimals={false}
 				tickFormatter={(v) => `${v}${suffix}`}
+				label={yLabel ? { value: yLabel, angle: -90, position: "insideLeft", offset: 15, style: { ...AXIS_LABEL_STYLE, textAnchor: "middle" } } : undefined}
 			/>
 			<Tooltip content={<CustomTooltip suffix={suffix} />} />
 			<Line
@@ -98,9 +102,9 @@ const renderLineChart = (data: ChartDataPoint[], suffix = "") => (
 	</ResponsiveContainer>
 );
 
-const renderBarChart = (data: ChartDataPoint[], suffix = "") => (
+const renderBarChart = (data: ChartDataPoint[], suffix = "", xLabel?: string, yLabel?: string) => (
 	<ResponsiveContainer width="100%" height="100%">
-		<BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+		<BarChart data={data} margin={{ top: 5, right: 20, left: yLabel ? 10 : 0, bottom: data.length > 8 ? 60 : xLabel ? 20 : 5 }}>
 			<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
 			<XAxis
 				dataKey="name"
@@ -109,13 +113,15 @@ const renderBarChart = (data: ChartDataPoint[], suffix = "") => (
 				interval={0}
 				angle={data.length > 8 ? -45 : 0}
 				textAnchor={data.length > 8 ? "end" : "middle"}
-				height={data.length > 8 ? 60 : 30}
+				height={data.length > 8 ? 60 : xLabel ? 40 : 30}
+				label={xLabel && data.length <= 8 ? { value: xLabel, position: "insideBottom", offset: -10, style: AXIS_LABEL_STYLE } : undefined}
 			/>
 			<YAxis
 				tick={{ fontSize: 13, fill: "var(--bs-body-color)" }}
 				stroke="var(--bs-border-color)"
 				allowDecimals={false}
 				tickFormatter={(v) => `${v}${suffix}`}
+				label={yLabel ? { value: yLabel, angle: -90, position: "insideLeft", offset: 15, style: { ...AXIS_LABEL_STYLE, textAnchor: "middle" } } : undefined}
 			/>
 			<Tooltip content={<CustomTooltip suffix={suffix} />} />
 			<Bar
@@ -235,12 +241,17 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 
 	const suffix = config.field === "import_rate" || config.field === "applied_rate" ? "%" : "";
 
+	const xLabel = fieldMeta?.supportsGranularity
+		? effectiveGranularity === "week" ? "Week" : "Month"
+		: undefined;
+	const yLabel = fieldMeta?.yLabel;
+
 	const renderChart = () => {
 		switch (effectiveChartType) {
 			case "line":
-				return renderLineChart(data, suffix);
+				return renderLineChart(data, suffix, xLabel, yLabel);
 			case "bar":
-				return renderBarChart(data, suffix);
+				return renderBarChart(data, suffix, xLabel, yLabel);
 			case "pie":
 				return <PieChart data={data} colors={CHART_COLORS} suffix={suffix} />;
 		}

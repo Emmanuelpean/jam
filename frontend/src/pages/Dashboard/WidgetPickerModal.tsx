@@ -130,9 +130,48 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 		? WIDGET_TYPE_DEFS.find((t: WidgetTypeDef): boolean => t.type === selectedType)
 		: null;
 
-	const squareGrid = (count: number): React.CSSProperties => {
-		const cols: number = Math.ceil(Math.sqrt(count));
-		return { display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: "0.5rem" };
+	const grid3: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem" };
+
+	const renderVariantsGrouped = (typeDef: WidgetTypeDef, extraCards?: JSX.Element[]): JSX.Element => {
+		const hasGroups = typeDef.variants.some((v) => v.group);
+		const extraSection = extraCards?.length ? (
+			<div key="__extra">
+				<div className="widget-picker-group-label">Custom</div>
+				<div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+					{extraCards.map((card, i) => <div key={i} style={{ width: "100%" }}>{card}</div>)}
+				</div>
+			</div>
+		) : null;
+
+		if (!hasGroups) {
+			return (
+				<div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+					<div style={grid3}>
+						{typeDef.variants.map((v) => renderVariantCard(v, typeDef))}
+					</div>
+					{extraSection}
+				</div>
+			);
+		}
+		const groupMap = new Map<string, VariantDef[]>();
+		for (const v of typeDef.variants) {
+			const g = v.group ?? "";
+			if (!groupMap.has(g)) groupMap.set(g, []);
+			groupMap.get(g)!.push(v);
+		}
+		return (
+			<div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+				{Array.from(groupMap.entries()).map(([groupName, variants]) => (
+					<div key={groupName}>
+						{groupName && <div className="widget-picker-group-label">{groupName}</div>}
+						<div style={grid3}>
+							{variants.map((v) => renderVariantCard(v, typeDef))}
+						</div>
+					</div>
+				))}
+				{extraSection}
+			</div>
+		);
 	};
 
 	const cardBase: React.CSSProperties = {
@@ -277,7 +316,7 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 					<div ref={contentRef} className="p-3">
 						{!selectedType ? (
 							// Level 1: widget type picker
-							<div style={squareGrid(WIDGET_TYPE_DEFS.length)}>
+							<div style={grid3}>
 								{WIDGET_TYPE_DEFS.map((typeDef: WidgetTypeDef): JSX.Element => {
 									const allPremium: boolean =
 										!isPremium && typeDef.variants.every((v: VariantDef): boolean => v.premiumOnly);
@@ -507,46 +546,35 @@ const WidgetPickerModal: React.FC<WidgetPickerModalProps> = ({
 									Add Widget
 								</Button>
 							</div>
-						) : selectedType === "graph" ? (
-							// Level 2 (graph): featured presets + Custom card
-							<div
-								style={squareGrid(
-									(currentTypeDef?.variants.filter((v: VariantDef): boolean | undefined => v.featured)
-										.length ?? 0) + 1
-								)}
-							>
-								{currentTypeDef?.variants
-									.filter((v: VariantDef): boolean | undefined => v.featured)
-									.map(
-										(variant: VariantDef): JSX.Element =>
-											renderVariantCard(variant, currentTypeDef!)
-									)}
-								{/* Custom graph card */}
-								<button
-									id="widget-picker-variant-custom-graph"
-									style={cardBase}
-									className="widget-picker-card"
-									onClick={(): void => setShowCustomGraph(true)}
-								>
-									<i
-										className="bi bi-sliders"
-										style={{ fontSize: "1.4rem", color: "var(--primary-mid)" }}
-									></i>
-									<div className="fw-semibold" style={{ fontSize: "0.85rem" }}>
-										Custom
-									</div>
-									<small className="text-muted" style={{ fontSize: "0.72rem", lineHeight: 1.3 }}>
-										Build your own chart
-									</small>
-								</button>
-							</div>
 						) : (
-							// Level 2 (other types): show all variants
-							<div style={squareGrid(currentTypeDef?.variants.length ?? 0)}>
-								{currentTypeDef?.variants.map(
-									(variant: VariantDef): JSX.Element => renderVariantCard(variant, currentTypeDef!)
-								)}
-							</div>
+							// Level 2: show variants grouped; graphs show only featured ones + Custom card
+							renderVariantsGrouped(
+								selectedType === "graph"
+									? { ...currentTypeDef!, variants: currentTypeDef!.variants.filter((v) => v.featured) }
+									: currentTypeDef!,
+								selectedType === "graph"
+									? [
+											<button
+												key="custom-graph"
+												id="widget-picker-variant-custom-graph"
+												style={cardBase}
+												className="widget-picker-card"
+												onClick={(): void => setShowCustomGraph(true)}
+											>
+												<i
+													className="bi bi-sliders"
+													style={{ fontSize: "1.4rem", color: "var(--primary-mid)" }}
+												></i>
+												<div className="fw-semibold" style={{ fontSize: "0.85rem" }}>
+													Custom
+												</div>
+												<small className="text-muted" style={{ fontSize: "0.72rem", lineHeight: 1.3 }}>
+													Build your own chart
+												</small>
+											</button>,
+										]
+									: undefined
+							)
 						)}
 					</div>
 				</div>
