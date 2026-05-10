@@ -25,7 +25,7 @@ class TestCommandPalette(BaseTest):
         """Open the command palette."""
 
         self.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.CONTROL + "k")
-        self.get_element("cp-backdrop", enabled=False, timeout=5)
+        self.get_element("cp-input", timeout=5)
 
     @property
     def palette_input(self) -> WebElement:
