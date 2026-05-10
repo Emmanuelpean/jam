@@ -97,6 +97,10 @@
     transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
+.data-modal .accordion-button:focus {
+    box-shadow: inset 0 0 0 2px var(--jam-glow);
+}
+
 /* Specific fixes for tabbed modals */
 .modal-body .tab-content .modal-content-animated {
     overflow: visible !important;

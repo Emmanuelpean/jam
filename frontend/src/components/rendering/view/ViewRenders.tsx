@@ -481,6 +481,10 @@ export const renderFunctions = {
 		return <LocationMap geolocatedEntry={[param.item]} />;
 	},
 
+	locationMapNonScrollable: (param: RenderParams): ReactNode => {
+		return <LocationMap geolocatedEntry={[param.item]} scrollWheelZoom={false} />;
+	},
+
 	locationAttendance: (param: RenderParams): ReactNode => {
 		const attendanceLabel: string | null =
 			attendanceTypeOptions.find((o: SelectOption): boolean => o.value === param.item.attendance_type)?.label ??

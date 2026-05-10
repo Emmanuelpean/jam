@@ -52,7 +52,7 @@ export const LocalDatetimeInput = ({
 	const clearValue = (e: React.MouseEvent<HTMLElement>): void => {
 		e.preventDefault();
 		e.stopPropagation();
-		handleChange({ target: { name: toKey(field.name), value: "" } });
+		handleChange({ target: { name: toKey(field.name), value: null } });
 	};
 
 	const openPicker = (e: React.MouseEvent<HTMLElement>): void => {
