@@ -13,13 +13,21 @@
     height: 100%;
     max-height: 90vh;
     border-radius: 14px !important;
+    will-change: height;
 }
 
 .modal-body {
+    position: relative;
     overflow: hidden auto;
     flex: 1 1 auto;
     min-height: 0;
     padding: 1.5rem;
+}
+
+.modal-body-blurring {
+    filter: blur(4px);
+    pointer-events: none;
+    user-select: none;
 }
 
 .modal-header .modal-title {

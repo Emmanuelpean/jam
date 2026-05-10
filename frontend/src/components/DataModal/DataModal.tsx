@@ -5,6 +5,7 @@ import React, {
 	useCallback,
 	useEffect,
 	useImperativeHandle,
+	useLayoutEffect,
 	useRef,
 	useState,
 } from "react";
@@ -221,6 +222,9 @@ function DataModalComponent<T extends JamData>(
 		return null;
 	});
 	const contentRef = useRef<HTMLDivElement>(null);
+	const modalHeightRef = useRef<number | null>(null);
+	const animationCleanupRef = useRef<(() => void) | null>(null);
+	const [isAnimating, setIsAnimating] = useState(false);
 	const { showDelete } = useAlert();
 	const entityName: string = entityTypeToGenericName(entityType);
 	const [expandedSections, setExpandedSections] = useState<ExpandedStates>({});
@@ -482,6 +486,65 @@ function DataModalComponent<T extends JamData>(
 
 	// ---------------------------------------------------- EDITING ----------------------------------------------------
 
+	const captureModalHeight = (): void => {
+		const modalContent = contentRef.current?.closest(".modal-content") as HTMLElement | null;
+		if (modalContent) {
+			modalHeightRef.current = modalContent.offsetHeight;
+			setIsAnimating(true);
+		}
+	};
+
+	useLayoutEffect((): void => {
+		const fromHeight = modalHeightRef.current;
+		if (fromHeight === null) return;
+		modalHeightRef.current = null;
+
+		const modalContent = contentRef.current?.closest(".modal-content") as HTMLElement | null;
+		if (!modalContent) {
+			setIsAnimating(false);
+			return;
+		}
+
+		const toHeight = modalContent.offsetHeight;
+		if (fromHeight === toHeight) {
+			setIsAnimating(false);
+			return;
+		}
+
+		// Cancel any in-progress animation
+		animationCleanupRef.current?.();
+
+		const modalBody = modalContent.querySelector(".modal-body") as HTMLElement | null;
+
+		modalContent.style.height = `${fromHeight}px`;
+		modalContent.style.overflow = "hidden";
+		if (modalBody) modalBody.style.overflow = "hidden";
+
+		const rafId = requestAnimationFrame(() => {
+			modalContent.style.transition = "height 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
+			modalContent.style.height = `${toHeight}px`;
+
+			const cleanup = (): void => {
+				modalContent.style.height = "";
+				modalContent.style.overflow = "";
+				modalContent.style.transition = "";
+				if (modalBody) modalBody.style.overflow = "";
+				animationCleanupRef.current = null;
+				setIsAnimating(false);
+			};
+			modalContent.addEventListener("transitionend", cleanup, { once: true });
+			animationCleanupRef.current = (): void => {
+				modalContent.removeEventListener("transitionend", cleanup);
+				cleanup();
+			};
+		});
+
+		animationCleanupRef.current = (): void => {
+			cancelAnimationFrame(rafId);
+			setIsAnimating(false);
+		};
+	}, [isEditing]);
+
 	const getEditDisabledState = (): ButtonState => {
 		if (typeof canEdit === "function") {
 			const message = canEdit(formData);
@@ -499,6 +562,7 @@ function DataModalComponent<T extends JamData>(
 	};
 
 	const handleEditToView = (): void => {
+		captureModalHeight();
 		setIsEditing(false);
 		setFormData({ ...effectiveData });
 		setOriginalFormData({ ...effectiveData });
@@ -508,6 +572,7 @@ function DataModalComponent<T extends JamData>(
 	};
 
 	const handleEdit = (): void => {
+		captureModalHeight();
 		setIsEditing(true);
 		setFormData({ ...effectiveData });
 		setOriginalFormData({ ...effectiveData });
@@ -865,7 +930,7 @@ function DataModalComponent<T extends JamData>(
 		const warnings: WarningMessageConfig[] | null = warningMessage ? warningMessage(effectiveData) : null;
 
 		const renderContentInner = (): JSX.Element => (
-			<div className={`modal-content-visible`}>
+			<div className={`modal-content-visible${isAnimating ? " modal-body-blurring" : ""}`}>
 				{warnings && warnings.length > 0 && (
 					<>
 						{warnings.map(
