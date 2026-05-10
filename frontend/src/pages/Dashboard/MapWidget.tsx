@@ -40,6 +40,24 @@ const salaryColor = (value: number, min: number, max: number): string => {
 	return `rgb(${lerp(34, 249, tt)},${lerp(197, 115, tt)},${lerp(94, 22, tt)})`;
 };
 
+const MapResizer: React.FC<{ trigger: unknown }> = ({ trigger }) => {
+	const map = useMap();
+	useEffect(() => {
+		const id = setTimeout(() => map.invalidateSize(), 200);
+		return () => clearTimeout(id);
+	}, [trigger, map]);
+	return null;
+};
+
+const MapCenterer: React.FC<{ point: MapDataPoint | null }> = ({ point }) => {
+	const map = useMap();
+	useEffect(() => {
+		if (!point || !map) return;
+		map.panTo([point.lat, point.lng], { animate: true });
+	}, [point, map]);
+	return null;
+};
+
 const MapFitter: React.FC<{ points: MapDataPoint[] }> = ({ points }) => {
 	const map = useMap();
 	useEffect(() => {
@@ -224,15 +242,17 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange }) => {
 				bodyPadding={false}
 				headerAction={granularityToggle}
 			>
-				<div style={{ position: "relative", flex: 1, minHeight: 0, overflow: "hidden", display: "flex" }}>
+				<div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "row" }}>
 					<MapContainer
 						center={[20, 0]}
 						zoom={2}
-						style={{ height: "100%", width: "100%", flex: 1 }}
+						style={{ height: "100%", flex: 1, minWidth: 0 }}
 						scrollWheelZoom={false}
 					>
 						<TileLayer attribution={ATTRIBUTION} url={tileUrl} />
 						<MapFitter points={points} />
+						<MapCenterer point={selectedPoint} />
+						<MapResizer trigger={selectedPoint?.key} />
 						{points.map((point) => {
 							const isSelected = selectedPoint?.key === point.key;
 							return (
@@ -257,15 +277,16 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange }) => {
 						<div className="map-jobs-panel">
 							<div className="map-jobs-panel-header">
 								<div className="map-jobs-panel-location">
-									<i className={`bi bi-${granularity === "city" ? "geo-alt-fill" : "globe2"} map-jobs-panel-location-icon`} />
-									<div>
+									<div className="map-jobs-panel-location-icon-wrapper">
+										<i className={`bi bi-${granularity === "city" ? "geo-alt-fill" : "globe2"}`} />
+									</div>
+									<div className="map-jobs-panel-location-text">
 										<div className="map-jobs-panel-location-name">{selectedPoint.label}</div>
 										<div className="map-jobs-panel-location-count">{formatValue(selectedPoint)}</div>
 									</div>
 								</div>
 								<button
-									className="btn-close"
-									style={{ fontSize: "0.7rem" }}
+									className="btn-close map-jobs-panel-close"
 									onClick={() => setSelectedPoint(null)}
 									aria-label="Close"
 								/>
@@ -291,22 +312,25 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange }) => {
 											className="map-job-item"
 											onClick={() => jobModalRef.current?.showView(job)}
 										>
-											<div className="map-job-title" title={job.title}>
-												{job.title}
+											<div className="map-job-item-body">
+												<div className="map-job-title" title={job.title}>
+													{job.title}
+												</div>
+												<div className="map-job-meta">
+													{company && (
+														<span className="map-job-company">
+															<i className="bi bi-building" />
+															{company}
+														</span>
+													)}
+													{statusColor && (
+														<span className={`map-job-status map-job-status--${statusColor}`}>
+															{job.application_status}
+														</span>
+													)}
+												</div>
 											</div>
-											<div className="map-job-meta">
-												{company && (
-													<span className="map-job-company">
-														<i className="bi bi-building" />
-														{company}
-													</span>
-												)}
-												{statusColor && (
-													<span className={`map-job-status map-job-status--${statusColor}`}>
-														{job.application_status}
-													</span>
-												)}
-											</div>
+											<i className="bi bi-chevron-right map-job-chevron" />
 										</button>
 									);
 								})}
