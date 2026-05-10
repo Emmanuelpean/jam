@@ -2141,7 +2141,7 @@ class BaseTest(BaseUtils):
             print(f"⚠️ Could not save browser logs: {e}")
 
     def _save_page_screenshot(self, failed: bool = False) -> None:
-        """Save screenshot of current page"""
+        """Save screenshot and page HTML of current page"""
         try:
             timestamp = time.strftime("%Y%m%d_%H%M%S")
             status_string = "FAILED" if failed else "PASSED"
@@ -2151,8 +2151,13 @@ class BaseTest(BaseUtils):
             self.driver.save_screenshot(str(screenshot_file))
             print(f"✅ Saved screenshot to {screenshot_file}")
 
+            html_file = settings.log_directory + f"/{safe_test_name}_{status_string}_{timestamp}.html"
+            with open(html_file, "w", encoding="utf-8") as f:
+                f.write(self.driver.page_source)
+            print(f"✅ Saved page source to {html_file}")
+
         except Exception as e:
-            print(f"⚠️ Could not save screenshot: {e}")
+            print(f"⚠️ Could not save screenshot/page source: {e}")
 
     def login(self, user: models.User | None = None) -> None:
         """Log in by generating a JWT token directly and injecting it into localStorage."""
@@ -2314,25 +2319,3 @@ def format_field(label: str | None, value: str | None) -> str:
         return f"{label}\n{value if value else 'Not Provided'}\n"
     else:
         return f"{value if value else 'Not Provided'}\n"
-
-
-def _save_page_screenshot(self, failed: bool = False) -> None:
-    """Save screenshot and page source of current page"""
-    try:
-        timestamp = time.strftime("%Y%m%d_%H%M%S")
-        status_string = "FAILED" if failed else "PASSED"
-        safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
-
-        # Save screenshot
-        screenshot_file = settings.log_directory + f"/{safe_test_name}_{status_string}_{timestamp}.png"
-        self.driver.save_screenshot(str(screenshot_file))
-        print(f"✅ Saved screenshot to {screenshot_file}")
-
-        # Save page HTML source
-        html_file = settings.log_directory + f"/{safe_test_name}_{status_string}_{timestamp}.html"
-        with open(html_file, "w", encoding="utf-8") as f:
-            f.write(self.driver.page_source)
-        print(f"✅ Saved page source to {html_file}")
-
-    except Exception as e:
-        print(f"⚠️ Could not save screenshot/page source: {e}")
