@@ -1,4 +1,4 @@
-import React, { JSX } from "react";
+import React, { JSX, useRef } from "react";
 import { Form } from "react-bootstrap";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
 import "./Datetime.scss";
@@ -35,6 +35,8 @@ export const LocalDatetimeInput = ({
 	error,
 	inputType = "datetime-local",
 }: LocalInputProps): JSX.Element => {
+	const inputRef = useRef<HTMLInputElement>(null);
+
 	const setCurrentValue = (e: React.MouseEvent<HTMLElement>): void => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -53,6 +55,12 @@ export const LocalDatetimeInput = ({
 		handleChange({ target: { name: toKey(field.name), value: "" } });
 	};
 
+	const openPicker = (e: React.MouseEvent<HTMLElement>): void => {
+		e.preventDefault();
+		e.stopPropagation();
+		inputRef.current?.showPicker();
+	};
+
 	let formattedValue: string = "";
 	if (value) {
 		formattedValue = inputType === "datetime-local" ? formatDateTime(value) : formatDateTime(value, true);
@@ -61,6 +69,7 @@ export const LocalDatetimeInput = ({
 	return (
 		<div className="datetime-input-wrapper">
 			<Form.Control
+				ref={inputRef}
 				id={toKey(field.name)}
 				type={inputType}
 				name={toKey(field.name)}
@@ -78,6 +87,12 @@ export const LocalDatetimeInput = ({
 					title="Clear"
 				></i>
 			)}
+			<i
+				className="bi bi-calendar datetime-embedded-icon datetime-calendar-icon"
+				onClick={openPicker}
+				id={field.name + "_open_picker"}
+				title="Open picker"
+			></i>
 			<i
 				className="bi bi-clock datetime-embedded-icon"
 				onClick={setCurrentValue}

@@ -5,7 +5,10 @@
 }
 
 .form-control.datetime-input-with-icon {
-    padding-right: 4rem;
+
+    &::-webkit-calendar-picker-indicator {
+        display: none;
+    }
     font: inherit;
     color: var(--bs-body-color);
 
@@ -53,7 +56,15 @@
     color: var(--primary-mid) !important;
 }
 
+.datetime-input-wrapper:has(.datetime-embedded-icon:hover) .form-control {
+    border-color: var(--primary-mid);
+}
+
+.datetime-calendar-icon {
+    right: 2.6rem;
+}
+
 .datetime-clear-icon {
-    right: 2.5rem;
+    right: 3.94rem;
     font-size: 1.25rem;
 }
