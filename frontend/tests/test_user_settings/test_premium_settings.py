@@ -315,9 +315,8 @@ class TestIncompleteQualificationsWarning(BaseTest):
                 }
             ],
         )
-        self.driver.refresh()
-        time.sleep(0.5)
-        assert not self.check_element_exists("incomplete-qualifications-alert")
+        self.refresh()
+        self.wait_for_disappear("incomplete-qualifications-alert")
 
     def test_alert_not_shown_when_ai_scoring_off(self) -> None:
         """Alert is hidden when AI Job Matching is disabled, even with no qualifications."""
