@@ -119,8 +119,6 @@ def update_scraping_filter(
 
     # Get the update fields
     update_dict = update_data.model_dump(exclude_unset=True)
-    print(filter_obj.filtered_jobs)
-    print(filter_obj.id)
 
     # If the filter previously filtered jobs, only allow is_active updates
     if filter_obj.filtered_jobs:

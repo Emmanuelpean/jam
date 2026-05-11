@@ -62,7 +62,7 @@ async def demo_schema_middleware(request: Request, call_next):
             payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
             if payload.get("is_demo"):
                 database.demo_mode.set(True)
-        except Exception:
+        except jwt.PyJWTError:
             pass
     response = await call_next(request)
     database.demo_mode.set(False)

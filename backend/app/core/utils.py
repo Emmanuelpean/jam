@@ -7,13 +7,14 @@ from sqlalchemy.orm import Session
 from starlette import status
 
 from app import utils, models, base_schemas
+from app.core.models import TokenType
 from app.config import settings
 from app.emails.email_service import email_service
 
 
 def get_token(
     token: str,
-    token_type: str,
+    token_type: TokenType,
     db: Session,
 ) -> models.UserToken | None:
     """Retrieve a user token by token string and token type.
@@ -34,7 +35,7 @@ def get_token(
 
 def generate_token(
     user_id: int,
-    token_type: str,
+    token_type: TokenType,
     db: Session,
     pending_email: str | None = None,
 ) -> tuple[str, models.UserToken]:
@@ -70,7 +71,7 @@ def generate_token(
 
 
 def send_verification_with_rate_limit(
-    token_type: str,
+    token_type: TokenType,
     user: models.User,
     db: Session,
     send_email_function: Callable,
@@ -136,7 +137,7 @@ def send_email_verification_email(
     :return: Dictionary with success status, message and error code"""
 
     return send_verification_with_rate_limit(
-        token_type="verification",
+        token_type=TokenType.VERIFICATION,
         user=user,
         db=db,
         send_email_function=email_service.send_verification_email,
@@ -155,7 +156,7 @@ def send_password_reset_email(
     :return: Dictionary with success status, message and error code"""
 
     return send_verification_with_rate_limit(
-        token_type="password_reset",
+        token_type=TokenType.PASSWORD_RESET,
         user=user,
         db=db,
         send_email_function=email_service.send_password_reset_email,
@@ -176,7 +177,7 @@ def send_email_change_email(
     :return: Dictionary with success status, message and error code"""
 
     return send_verification_with_rate_limit(
-        token_type="email_change",
+        token_type=TokenType.EMAIL_CHANGE,
         user=user,
         db=db,
         send_email_function=lambda _, url, name: email_service.send_email_change_verification(new_email, url, name),

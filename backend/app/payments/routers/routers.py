@@ -69,7 +69,6 @@ async def stripe_webhook(
     if settings.test_mode:
         # Just parse JSON directly in dev/test mode
         event = json.loads(payload)
-        print("[Stripe Event]", event)
     else:
         # Production verification
         try:

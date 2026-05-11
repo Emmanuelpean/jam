@@ -10,10 +10,11 @@ from sqlalchemy.orm import Session
 from app import utils, models, database, base_schemas
 from app.config import settings
 from app.core import schemas, oauth2
-from app.core.models import get_setting_value
+from app.core.models import get_setting_value, TokenType
 from app.core.utils import send_email_verification_email, send_password_reset_email, get_token
 from app.demo.seed import seed_demo_data
 from app.emails.email_service import email_service
+
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
 
@@ -219,7 +220,7 @@ def verify_email(
     _assert_not_maintenance(db)
 
     verification_code = utils.hash_token(token)
-    token_entry = get_token(verification_code, "verification", db)
+    token_entry = get_token(verification_code, TokenType.VERIFICATION, db)
 
     if not token_entry:
         raise HTTPException(status_code=403, detail="Invalid or expired token. Please request a new one by logging in.")
@@ -309,7 +310,7 @@ def reset_password(
     password_reset_code = utils.hash_token(reset_data.token)
 
     # Find token entry with matching hash
-    token_entry = get_token(password_reset_code, "password_reset", db)
+    token_entry = get_token(password_reset_code, TokenType.PASSWORD_RESET, db)
 
     if not token_entry or not token_entry.is_valid:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired password reset token")
@@ -332,7 +333,7 @@ def reset_password(
         user.password = hashed_password
         db.delete(token_entry)
         db.commit()
-    except:
+    except Exception:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error resetting password")
 

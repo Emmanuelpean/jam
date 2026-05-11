@@ -9,6 +9,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
+from enum import Enum
+
 from app.base_models import CommonBase, Owned
 from app.config import settings
 from app.database import Base
@@ -142,7 +144,7 @@ class User(CommonBase, Base):
         """Check if there is a pending email change token"""
 
         for token in self.tokens:
-            if token.token_type == "email_change":
+            if token.token_type == TokenType.EMAIL_CHANGE:
                 return token.pending_email
         return None
 
@@ -202,13 +204,21 @@ class PremiumSettings(Owned, Base):
     job_rating_active = Column(Boolean, nullable=False, server_default=expression.true())
 
 
+class TokenType(str, Enum):
+    """User token type enum."""
+
+    VERIFICATION = "verification"
+    PASSWORD_RESET = "password_reset"
+    EMAIL_CHANGE = "email_change"
+
+
 class UserToken(Owned, Base):
     """Authentication and verification tokens.
 
     Attributes:
     -----------
     - `token` (str, unique): The actual token string.
-    - `token_type` (str): Type of token (verification, password_reset, email_change).
+    - `token_type` (str): Type of token (TokenType enum).
     - `pending_email` (str, optional): For email_change tokens, the new email address.
     - `is_valid` (bool): Computed property to check if the token is valid."""
 
@@ -222,9 +232,9 @@ class UserToken(Owned, Base):
 
         # Define expiration times based on the token type
         expiration_minutes = {
-            "verification": settings.verification_token_expiration_minutes,
-            "password_reset": settings.password_reset_token_expiration_minutes,
-            "email_change": settings.email_change_token_expiration_minutes,
+            TokenType.VERIFICATION: settings.verification_token_expiration_minutes,
+            TokenType.PASSWORD_RESET: settings.password_reset_token_expiration_minutes,
+            TokenType.EMAIL_CHANGE: settings.email_change_token_expiration_minutes,
         }
 
         # noinspection PyTypeChecker

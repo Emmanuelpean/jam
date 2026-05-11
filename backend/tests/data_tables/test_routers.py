@@ -8,7 +8,8 @@ from CRUDTestBase to ensure consistent testing of standard CRUD operations, incl
 validation, and error handling. Additional custom endpoint tests are included where applicable.
 """
 
-from app.data_tables import models
+import base64
+
 from app.data_tables import schemas
 from app.data_tables.models import Geolocation
 from tests.conftest import CRUDTestBase
@@ -164,6 +165,47 @@ class TestFileCRUD(CRUDTestBase):
         assert download_response.status_code == 404
         error_data = download_response.json()
         assert "File not found" in error_data["detail"]
+
+    def _create_and_download_file(self, client, filename: str):
+        """Helper: create a file with the given filename and return the download response."""
+
+        content = base64.b64encode(b"test content").decode()
+        file_data = {"filename": filename, "content": content, "type": "text/plain", "size": 12}
+        create_response = client.post(f"{self.endpoint}/", json=file_data)
+        assert create_response.status_code == 201
+        file_id = create_response.json()["id"]
+        return client.get(f"{self.endpoint}/{file_id}/download")
+
+    def test_file_download_filename_crlf_injection_stripped(self, authorised_clients) -> None:
+        """CRLF characters in filenames must not appear in Content-Disposition header."""
+
+        malicious = "evil.pdf\r\nX-Injected: header"
+        response = self._create_and_download_file(authorised_clients[0], malicious)
+        assert response.status_code == 200
+        content_disposition = response.headers["content-disposition"]
+        assert "\r" not in content_disposition
+        assert "\n" not in content_disposition
+
+    def test_file_download_filename_path_traversal_stripped(self, authorised_clients) -> None:
+        """Path traversal components must be stripped from the Content-Disposition filename."""
+
+        malicious = "../../etc/passwd"
+        response = self._create_and_download_file(authorised_clients[0], malicious)
+        assert response.status_code == 200
+        content_disposition = response.headers["content-disposition"]
+        assert 'filename="passwd"' in content_disposition
+
+    def test_file_download_filename_quote_injection_stripped(self, authorised_clients) -> None:
+        """Embedded double-quotes must be removed so they cannot break the header value."""
+
+        malicious = 'file"name.pdf'
+        response = self._create_and_download_file(authorised_clients[0], malicious)
+        assert response.status_code == 200
+        content_disposition = response.headers["content-disposition"]
+        # The header value must remain a single well-formed token — no unescaped quotes inside it
+        # e.g. 'attachment; filename="filename.pdf"'
+        inner = content_disposition.split('filename="')[1].rstrip('"')
+        assert '"' not in inner
 
     def test_file_download_empty_content(self, authorised_clients) -> None:
         """Test file download with empty/null content"""

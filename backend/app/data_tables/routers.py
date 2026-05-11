@@ -2,6 +2,7 @@
 
 import base64
 import hashlib
+import os
 
 from fastapi import Depends, status, HTTPException, Response
 from sqlalchemy.orm import Session
@@ -131,11 +132,13 @@ def download_file(
 
     content_type = file_record.type if file_record.type else "application/octet-stream"
 
+    safe_filename = os.path.basename(file_record.filename).replace('"', "").replace("\r", "").replace("\n", "")
+
     return Response(
         content=file_content,
         media_type=content_type,
         headers={
-            "Content-Disposition": f'attachment; filename="{file_record.filename}"',
+            "Content-Disposition": f'attachment; filename="{safe_filename}"',
             "Content-Length": str(len(file_content)),
         },
     )

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app import base_schemas
 from app import utils, models, database
 from app.core import oauth2, schemas
+from app.core.models import TokenType
 from app.core.utils import send_email_change_email
 from app.emails.email_service import email_service
 from app.emails.release_data import get_release_slides
@@ -315,7 +316,7 @@ def verify_email_change(
         db.query(models.UserToken)
         .filter(
             models.UserToken.token == hashed_token,
-            models.UserToken.token_type == "email_change",
+            models.UserToken.token_type == TokenType.EMAIL_CHANGE,
         )
         .first()
     )
@@ -388,7 +389,7 @@ def check_email_pending(
         db.query(models.UserToken)
         .filter(
             models.UserToken.owner_id == current_user.id,
-            models.UserToken.token_type == "email_change",
+            models.UserToken.token_type == TokenType.EMAIL_CHANGE,
         )
         .first()
     )
