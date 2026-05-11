@@ -42,6 +42,7 @@ class TestLogIn(BaseTest):
         """Test login with invalid credentials"""
 
         test_email, test_password = test_inactive_user.email, test_inactive_user.plain_password
+        assert not test_inactive_user.is_active
 
         # Fill in login form with invalid credentials
         self.auth_utils.set_email(test_email)

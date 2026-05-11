@@ -34,7 +34,7 @@ class TestWhatsNewModal(BaseTest):
         # Navigate through all slides and close (slide count varies by current version)
         for _ in range(50):
             try:
-                self.get_element("whats-new-modal-next-button").click()
+                self.get_element("whats-new-modal-next-button", timeout=1).click()
             except:
                 break
         self.wait_for_disappear("whats-new-modal")
