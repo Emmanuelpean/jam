@@ -1,4 +1,5 @@
-from test_maintenance import MaintenanceTestBase
+from admin.test_maintenance import MaintenanceTestBase
+
 
 class TestMaintenanceModeAuthEndpoints(MaintenanceTestBase):
     """Auth endpoints (login, register, verify-email, password reset) are blocked during maintenance."""

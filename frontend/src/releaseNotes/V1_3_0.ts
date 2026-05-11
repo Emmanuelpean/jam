@@ -1,4 +1,5 @@
 import dashboardPng from "../assets/screenshots/dashboard.png";
+import tableCustomisationPng from "../assets/screenshots/table_customisation.png";
 
 export default `<h4>Version 1.3.0</h4>
 
@@ -16,11 +17,13 @@ export default `<h4>Version 1.3.0</h4>
 </ul>
 <img src="${dashboardPng}" alt="Customisable dashboard" width="100%" style="padding: 0 5rem;" />
 
-<h5>Customisable Table Columns</h5>
+<h5>Customisable Tables & Advanced Filtering</h5>
 <ul>
-    <li>All data tables now support column customisation. You can show or hide individual columns to focus on the information that matters most to you.</li>
-    <li>Column configuration is accessible via the settings icon in the table toolbar. Your column preferences are saved per table.</li>
+    <li>All data tables now support column customisation. Click the settings icon in the table toolbar to show or hide individual columns — your preferences are saved per table.</li>
+    <li>Table data can now be filtered using the filter sidebar. Access it via the filter icon in the table toolbar to narrow results by any available field. For example, on the Scraped Jobs table you can filter by AI rating to show only jobs with rating higher than 8.</li>
+    <li>Scraped jobs now support multi-select. Use the checkboxes to select multiple jobs at once and perform bulk actions such as deleting them or deleting expired jobs.</li>
 </ul>
+<img src="${tableCustomisationPng}" alt="Customisable table" width="70%" style="padding: 0 5rem;" />
 
 <h5>Favourite Filters for Scraped Jobs</h5>
 <ul>
@@ -31,5 +34,6 @@ export default `<h4>Version 1.3.0</h4>
 <h5>Quality of Life Improvements</h5>
 <ul>
     <li>Hovering over an option in a company, location, contact, or aggregator dropdown now shows a floating preview card with key details, so you can identify the right entry without opening it.</li>
+    <li>~Locations are now stored as plain text instead of being linked to a separate location record. This simplifies data entry and removes the need to manage a separate locations table.</li>
 </ul>
 `;
