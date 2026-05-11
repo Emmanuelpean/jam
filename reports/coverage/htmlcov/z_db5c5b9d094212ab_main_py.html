@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_db5c5b9d094212ab_models_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.14.0">coverage.py v7.14.0</a>,
-            created at 2026-05-10 19:12 +0100
+            created at 2026-05-11 22:14 +0100
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -144,7 +144,7 @@
     <p class="run"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">            <span class="nam">payload</span> <span class="op">=</span> <span class="nam">jwt</span><span class="op">.</span><span class="nam">decode</span><span class="op">(</span><span class="nam">token</span><span class="op">,</span> <span class="nam">settings</span><span class="op">.</span><span class="nam">secret_key</span><span class="op">,</span> <span class="nam">algorithms</span><span class="op">=</span><span class="op">[</span><span class="nam">settings</span><span class="op">.</span><span class="nam">algorithm</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t">            <span class="key">if</span> <span class="nam">payload</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"is_demo"</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t">                <span class="nam">database</span><span class="op">.</span><span class="nam">demo_mode</span><span class="op">.</span><span class="nam">set</span><span class="op">(</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t">        <span class="key">except</span> <span class="nam">Exception</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t">        <span class="key">except</span> <span class="nam">jwt</span><span class="op">.</span><span class="nam">PyJWTError</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t">            <span class="key">pass</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">    <span class="nam">response</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">call_next</span><span class="op">(</span><span class="nam">request</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">    <span class="nam">database</span><span class="op">.</span><span class="nam">demo_mode</span><span class="op">.</span><span class="nam">set</span><span class="op">(</span><span class="key">False</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -237,7 +237,7 @@
             <a class="nav" href="z_db5c5b9d094212ab_models_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.14.0">coverage.py v7.14.0</a>,
-            created at 2026-05-10 19:12 +0100
+            created at 2026-05-11 22:14 +0100
         </p>
     </div>
 </footer>
