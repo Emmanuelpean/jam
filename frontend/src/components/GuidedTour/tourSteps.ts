@@ -25,6 +25,10 @@ export interface TourStep {
 	};
 	/** Hide the Next button - step advances automatically or by user action */
 	hideNextButton?: boolean;
+	/** Show a Back button even when hideNextButton is true */
+	showBack?: boolean;
+	/** When Back is clicked, jump to this step id instead of step - 1 */
+	backStepId?: string;
 	/** Render choice buttons that jump to a specific step by id */
 	choices?: Array<{ label: string; icon: string; targetStepId: string }>;
 	/** After Next is clicked, jump to this step id instead of the next index */
@@ -972,6 +976,8 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		placement: "top",
 		waitForSelectorGone: '.modal.show input[name="first_name"]',
 		hideNextButton: true,
+		showBack: true,
+		backStepId: "contact-company",
 	},
 	{
 		id: "contact-done",

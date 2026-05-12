@@ -535,8 +535,9 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			aggregators: s ? aggregators.filter((a) => !s.aggregatorIds.has(a.id)) : aggregators,
 			keywords: s ? keywords.filter((k) => !s.keywordIds.has(k.id)) : keywords,
 			scrapingFilters: s ? scrapingFilters.filter((f) => !s.scrapingFilterIds.has(f.id)) : scrapingFilters,
+			speculativeApplications: s ? speculativeApplications.filter((sa) => !s.speculativeApplicationIds.has(sa.id)) : speculativeApplications,
 		};
-	}, [tourSnapshot, jobs, companies, persons, interviews, jobApplicationUpdates, aggregators, keywords, scrapingFilters]);
+	}, [tourSnapshot, jobs, companies, persons, interviews, jobApplicationUpdates, aggregators, keywords, scrapingFilters, speculativeApplications]);
 
 	const getEntityData = useCallback(
 		<T extends EntityType>(entityType: T): JamData[] => {
@@ -552,11 +553,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				setting: settings,
 				user: users,
 				scrapingFavouriteFilter: scrapingFavouriteFilters,
-				speculativeApplication: speculativeApplications,
+				speculativeApplication: visibleData.speculativeApplications,
 			};
 			return dataMap[entityType] ?? [];
 		},
-		[visibleData, settings, users, scrapingFavouriteFilters, speculativeApplications]
+		[visibleData, settings, users, scrapingFavouriteFilters]
 	);
 
 	// Show loading immediately on mount — DataProvider only renders when !!token,
@@ -578,7 +579,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				countries,
 				currencies,
 				aiSystemPrompts,
-				speculativeApplications,
 				settings,
 				users,
 				error,

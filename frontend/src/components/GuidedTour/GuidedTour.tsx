@@ -110,7 +110,14 @@ export function GuidedTour(): JSX.Element | null {
 	const isLast = step === TOUR_STEPS.length - 1;
 	const showNext = !stepDef?.hideNextButton;
 	const nextDisabled = isCleaningUp || ((!!stepDef?.waitForInput || !!stepDef?.waitForValidEmailIfFilled) && !inputValid);
-	const canGoBack = step > 0 && showNext && !TOUR_STEPS[step - 1]?.hideNextButton;
+	const canGoBack = step > 0 && (showNext || !!stepDef?.showBack) && (!!stepDef?.showBack || !TOUR_STEPS[step - 1]?.hideNextButton);
+
+	const isLastRef = useRef(isLast);
+	isLastRef.current = isLast;
+	const showNextRef = useRef(showNext);
+	showNextRef.current = showNext;
+	const nextDisabledRef = useRef(nextDisabled);
+	nextDisabledRef.current = nextDisabled;
 
 	useArrowKeyNavigation({
 		active: isTourActive,
@@ -120,8 +127,22 @@ export function GuidedTour(): JSX.Element | null {
 		canGoNext: showNext && !isCleaningUp && !nextDisabled,
 		skipWhenTyping: true,
 		onEscape: () => void endTour(false),
-		nextOnEnter: true,
 	});
+
+	// ── Block Tab; bind Enter to the Next button ─────────────────────────────────
+	useEffect(() => {
+		if (!isTourActive) return;
+		const handler = (e: KeyboardEvent): void => {
+			if (e.key === "Tab") { e.preventDefault(); return; }
+			if (e.key === "Enter") {
+				e.preventDefault();
+				if (!showNextRef.current || nextDisabledRef.current) return;
+				isLastRef.current ? void endTour(true) : advanceFromCurrentStep();
+			}
+		};
+		document.addEventListener("keydown", handler, true);
+		return () => document.removeEventListener("keydown", handler, true);
+	}, [isTourActive, endTour, advanceFromCurrentStep]);
 
 	// ── Reset on tour start ──────────────────────────────────────────────────────
 	useEffect(() => {
@@ -220,7 +241,7 @@ export function GuidedTour(): JSX.Element | null {
 						{(showNext || canGoBack) && (
 							<div className="tour-popover-footer">
 								{canGoBack && (
-									<button id="tour-back-btn" className="tour-btn-secondary" onClick={() => advanceToStep(step - 1)}>
+									<button id="tour-back-btn" className="tour-btn-secondary" onClick={() => stepDef.backStepId ? advanceToStepById(stepDef.backStepId) : advanceToStep(step - 1)}>
 										<i className="bi bi-arrow-left me-1"></i>Back
 									</button>
 								)}

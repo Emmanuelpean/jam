@@ -38,7 +38,7 @@ export const Sidebar = (): JSX.Element => {
 	const location = useLocation();
 	const { logout, currentUser } = useAuth();
 	const { isMobile } = useViewport();
-	const { toggleTourSelect, closeTourSelect, isTourSelectOpen, isTourActive, completedTourIds } = useTour();
+	const { toggleTourSelect, closeTourSelect, isTourActive, completedTourIds } = useTour();
 	const { showLogout } = useAlert();
 	const isPremium = currentUser?.premium.is_active ?? false;
 	const implementedTours = TOURS.filter(
@@ -48,7 +48,6 @@ export const Sidebar = (): JSX.Element => {
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
 	const [dropdownTop, setDropdownTop] = useState<number>(72);
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
-	const [isHovered, setIsHovered] = useState<boolean>(false);
 	const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
 
 	const handleLogoutClick = async (): Promise<void> => {
@@ -201,19 +200,15 @@ export const Sidebar = (): JSX.Element => {
 		setShowDropdown(false);
 	};
 
-
-
 	const handleMouseEnter = () => {
 		if (collapseTimeoutRef.current) {
 			clearTimeout(collapseTimeoutRef.current);
 			collapseTimeoutRef.current = null;
 		}
-		setIsHovered(true);
 		setIsExpanded(true);
 	};
 
-	const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
-		setIsHovered(false);
+	const handleMouseLeave = () => {
 		if (isTourActive) return;
 		collapseTimeoutRef.current = setTimeout(() => {
 			setIsExpanded(false);
@@ -425,14 +420,18 @@ export const Sidebar = (): JSX.Element => {
 
 				<nav
 					className="sidebar-nav sidebar-nav-top"
-					onClick={(e) => { if (!(e.target as HTMLElement).closest("#take-a-tour-btn")) closeTourSelect(); }}
+					onClick={(e) => {
+						if (!(e.target as HTMLElement).closest("#take-a-tour-btn")) closeTourSelect();
+					}}
 				>
 					{renderNavigationItems(topNavigationItems)}
 				</nav>
 
 				<nav
 					className="sidebar-nav sidebar-nav-bottom"
-					onClick={(e) => { if (!(e.target as HTMLElement).closest("#take-a-tour-btn")) closeTourSelect(); }}
+					onClick={(e) => {
+						if (!(e.target as HTMLElement).closest("#take-a-tour-btn")) closeTourSelect();
+					}}
 				>
 					{renderNavigationItems(bottomNavigationItems)}
 				</nav>
