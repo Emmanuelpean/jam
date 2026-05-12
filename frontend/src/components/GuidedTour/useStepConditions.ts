@@ -102,6 +102,7 @@ export function useStepConditions(
 				} else {
 					setInputValid(el.value.trim().length > 0);
 				}
+				if (waitForSelector && document.querySelector(waitForSelector)) { stop(); onConditionMetRef.current(); }
 				return;
 			}
 			let met = false;

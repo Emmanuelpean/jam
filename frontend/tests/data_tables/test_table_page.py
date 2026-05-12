@@ -348,6 +348,30 @@ class TestCompaniesPage(BaseTablePage):
     columns = ["name", "url", "description", "created_at"]
     model = models.Company
 
+    def test_delete_company_with_linked_speculative_applications_shows_warning(self) -> None:
+        """Warning appears when the company has linked speculative applications."""
+
+        company = self._make_company(name="Acme Corp")
+        self._make_speculative_application(company)
+        self._make_speculative_application(company)
+        self.refresh()
+        self.company_table_utils.wait_for_table_load()
+
+        self.company_table_utils.table_context_menu(company.id, "delete")
+        modal = self.delete_modal.wait_for_modal()
+        assert "This will also permanently delete 2 speculative applications linked to this company." in modal.text
+
+    def test_delete_company_without_speculative_applications_no_warning(self) -> None:
+        """No warning appears when the company has no linked speculative applications."""
+
+        company = self._make_company(name="Empty Corp")
+        self.refresh()
+        self.company_table_utils.wait_for_table_load()
+
+        self.company_table_utils.table_context_menu(company.id, "delete")
+        modal = self.delete_modal.wait_for_modal()
+        assert "speculative application" not in modal.text.lower()
+
 
 class TestPersonsPage(BaseTablePage):
     """Test class for Aggregators Page functionality including:

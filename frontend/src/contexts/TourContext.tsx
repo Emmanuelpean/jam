@@ -236,6 +236,13 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					setDemoJobId(jobResult.data.id);
 				}
 
+				if (tourId === "speculative-applications") {
+					await Promise.all([
+						addEntity("company", { name: "Anthropic", website: null, note: null, location: null }),
+						addEntity("company", { name: "DeepMind", website: null, note: null, location: null }),
+					]);
+				}
+
 				if (tourId === "log-application") {
 					const jobResult = await addEntity("job", {
 						title: "Software Engineer",
@@ -362,12 +369,13 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					]);
 					// Round 2: delete jobs (depend on companies, locations, persons)
 					await Promise.all(newJobIds.map((id) => deleteEntity("job", id)));
-					// Round 3: delete base entities in parallel
+					// Round 3: delete speculative applications before companies (company_id FK has CASCADE)
+					await Promise.all(newSpeculativeApplicationIds.map((id) => deleteEntity("speculativeApplication", id)));
+					// Round 4: delete base entities in parallel
 					await Promise.all([
 						...newCompanyIds.map((id) => deleteEntity("company", id)),
 						...newPersonIds.map((id) => deleteEntity("person", id)),
 						...newScrapingFilterIds.map((id) => deleteEntity("scrapingFilter", id)),
-						...newSpeculativeApplicationIds.map((id) => deleteEntity("speculativeApplication", id)),
 					]);
 				} finally {
 					setIsCleaningUp(false);

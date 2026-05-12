@@ -6,6 +6,7 @@ import {
 	JamData,
 	useDataContext,
 } from "../contexts/DataContext";
+import { SpeculativeApplicationData } from "../services/schemas/DataTables";
 import { useGlobalToast } from "../hooks/useNotificationToast";
 import { useAlert } from "../contexts/AlertContext";
 import { ApiResponsePromise } from "../services/api/Base";
@@ -18,6 +19,8 @@ interface EntityOperationConfig {
 	confirmationConfig?: {
 		title: (entityTypeName: string) => string;
 		message: (entityName: string) => string;
+		/** Optional extra warning appended to the message, computed per item */
+		itemMessage?: (item: JamData) => string;
 	};
 }
 
@@ -32,9 +35,11 @@ const useEntityOperation = (config: EntityOperationConfig): ((item: JamData) => 
 		const entityName: string = entityTypeToName(entityType, dataContext)(item);
 
 		if (confirmationConfig) {
+			const extra = confirmationConfig.itemMessage?.(item);
+			const message = extra ? `${confirmationConfig.message(entityName)}\n\n${extra}` : confirmationConfig.message(entityName);
 			return await showDelete({
 				title: confirmationConfig.title(entityTypeName),
-				message: confirmationConfig.message(entityName),
+				message,
 				confirmText: "Delete",
 				cancelText: "Cancel",
 				onSuccess: async (): Promise<void> => {
@@ -61,7 +66,7 @@ const useEntityOperation = (config: EntityOperationConfig): ((item: JamData) => 
 };
 
 export const useDeleteEntityConfirm = (entityType: EntityType): ((item: JamData) => Promise<boolean>) => {
-	const { deleteEntity } = useDataContext();
+	const { deleteEntity, speculativeApplications } = useDataContext();
 	return useEntityOperation({
 		entityType: entityType,
 		operation: (type: EntityType, id: number): Promise<any> => deleteEntity(type, id),
@@ -72,6 +77,14 @@ export const useDeleteEntityConfirm = (entityType: EntityType): ((item: JamData)
 			title: (typeName: string): string => `Delete ${typeName}`,
 			message: (name: string): string =>
 				`Are you sure you want to delete "${name}"? This will delete it for all the entries it is associated with. This action cannot be undone.`,
+			itemMessage: entityType === "company"
+				? (item: JamData): string => {
+					const count = speculativeApplications.filter((sa: SpeculativeApplicationData) => sa.company_id === item.id).length;
+					return count > 0
+						? `This will also permanently delete ${count} speculative application${count === 1 ? "" : "s"} linked to this company.`
+						: "";
+				}
+				: undefined,
 		},
 	});
 };

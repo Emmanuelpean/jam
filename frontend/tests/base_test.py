@@ -1998,7 +1998,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -2240,6 +2240,20 @@ class BaseTest(BaseUtils):
         self.db.commit()
         self.db.refresh(job)
         return job
+
+    def _make_speculative_application(self, company: models.Company, **kwargs) -> models.SpeculativeApplication:
+        """Create and persist a SpeculativeApplication owned by the current test user."""
+
+        defaults = {
+            "company_id": company.id,
+            "owner_id": self.db_user.id,
+        }
+        defaults.update(kwargs)
+        application = models.SpeculativeApplication(**defaults)
+        self.db.add(application)
+        self.db.commit()
+        self.db.refresh(application)
+        return application
 
     def _make_scraped_job(self, **kwargs) -> models.ScrapedJob:
         """Create and persist a ScrapedJob owned by the current test user."""
