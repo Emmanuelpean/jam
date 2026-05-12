@@ -11,6 +11,12 @@ export interface TourStep {
 	waitForSelectorGone?: string;
 	/** Auto-advance when this input has a non-empty value */
 	waitForInput?: string;
+	/** Disable Next while the matched input has content that is not a valid email (empty = allowed) */
+	waitForValidEmailIfFilled?: string;
+	/** Auto-focus this selector when the step activates (no effect on Next button) */
+	autoFocusSelector?: string;
+	/** Tour goes completely silent — no overlay, no popover. Use when the user needs free access to a modal. */
+	freeInteraction?: boolean;
 	/** When watchSelector gets input, fill fillSelector with fillValue via React's native setter */
 	autoFill?: {
 		watchSelector: string;
@@ -21,8 +27,10 @@ export interface TourStep {
 	hideNextButton?: boolean;
 	/** Render choice buttons that jump to a specific step by id */
 	choices?: Array<{ label: string; icon: string; targetStepId: string }>;
-	/** After this step auto-advances (or Next is clicked), jump to this step id instead of the next index */
+	/** After Next is clicked, jump to this step id instead of the next index */
 	nextStepId?: string;
+	/** When the waitForSelector/waitForSelectorGone condition fires (auto-advance), jump to this step id instead of nextStepId */
+	autoAdvanceStepId?: string;
 }
 
 export interface TourDefinition {
@@ -139,26 +147,19 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		id: "add-company",
 		targetId: "add-button-company",
 		title: "Add a Company",
-		content: "Click the + button next to the Company field to create your first company.",
+		content: "Click the + button to create a new company, or select one you've already added from the dropdown. Click Next to skip.",
 		placement: "right",
-		waitForSelector: '.modal.show input[name="name"]',
-		hideNextButton: true,
+		waitForSelector: "#modal-edit-company",
+		autoAdvanceStepId: "company-filling",
+		nextStepId: "job-location",
 	},
 	{
-		id: "company-name",
-		targetId: "name",
-		title: "Name the Company",
-		content: "Type a company name to continue.",
-		placement: "bottom",
-		waitForInput: '.modal.show input[name="name"]',
-	},
-	{
-		id: "save-company",
-		targetId: "modal-edit-company-confirm-button",
-		title: "Save the Company",
-		content: "Click to save. The company will be available to reuse on future job applications.",
-		placement: "top",
-		waitForSelectorGone: '.modal.show input[name="name"]',
+		id: "company-filling",
+		targetId: "#modal-edit-company .modal-content",
+		title: "Fill in the Company Details",
+		content: "Enter a name and any other details, then click Confirm to save. The company will be available to reuse on future applications.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-company",
 		hideNextButton: true,
 	},
 	{
@@ -931,6 +932,7 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		title: "Role",
 		content: "Add their job title - Hiring Manager, Recruiter, Engineering Lead, or whatever fits.",
 		placement: "right",
+		autoFocusSelector: '.modal.show input[name="role"]',
 	},
 	{
 		id: "contact-email",
@@ -939,14 +941,28 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		content:
 			"If you have their email, add it here. JAM uses it to pre-fill the recipient in the follow-up email generator.",
 		placement: "right",
+		waitForValidEmailIfFilled: '.modal.show input[name="email"]',
 	},
 	{
 		id: "contact-company",
 		targetId: "company_id-form-group",
 		title: "Company",
 		content:
-			"Link the contact to a company you've already created. This helps JAM suggest them when you're adding jobs for that company.",
+			"Link the contact to a company you've already created. Click + to add a new company on the fly, or click Next to skip.",
 		placement: "right",
+		waitForSelector: "#modal-edit-company",
+		autoAdvanceStepId: "contact-company-filling",
+		nextStepId: "contact-save",
+	},
+	{
+		id: "contact-company-filling",
+		targetId: "#modal-edit-company .modal-content",
+		title: "Fill in the Company Details",
+		content: "Enter a name and any other details, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-company",
+		hideNextButton: true,
+		nextStepId: "contact-save",
 	},
 	{
 		id: "contact-save",

@@ -16,6 +16,7 @@ export function useStepConditions(
 	const [inputValid, setInputValid] = useState(false);
 	const waitPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 	const autoFillCleanupRef = useRef<(() => void) | null>(null);
+	const autoFocusedRef = useRef(false);
 	const onConditionMetRef = useRef(onConditionMet);
 	onConditionMetRef.current = onConditionMet;
 
@@ -26,13 +27,25 @@ export function useStepConditions(
 	}, []);
 
 	useEffect(() => {
-		setInputValid(false);
-	}, [step]);
+		setInputValid(!!stepDef?.waitForValidEmailIfFilled);
+		autoFocusedRef.current = false;
+	}, [step, stepDef?.waitForValidEmailIfFilled]);
+
+	useEffect(() => {
+		if (!isTourActive || !stepDef?.autoFocusSelector) return;
+		const selector = stepDef.autoFocusSelector;
+		const timer = setInterval(() => {
+			const el = document.querySelector<HTMLInputElement>(selector);
+			if (el) { clearInterval(timer); el.focus(); }
+		}, 50);
+		const timeout = setTimeout(() => clearInterval(timer), 3000);
+		return () => { clearInterval(timer); clearTimeout(timeout); };
+	}, [step, isTourActive, stepDef?.autoFocusSelector]);
 
 	useEffect(() => {
 		if (!isTourActive || !stepDef) return stop;
-		const { waitForSelector, waitForSelectorGone, waitForInput, autoFill } = stepDef;
-		if (!waitForSelector && !waitForSelectorGone && !waitForInput && !autoFill) return stop;
+		const { waitForSelector, waitForSelectorGone, waitForInput, waitForValidEmailIfFilled, autoFill } = stepDef;
+		if (!waitForSelector && !waitForSelectorGone && !waitForInput && !waitForValidEmailIfFilled && !autoFill) return stop;
 
 		if (autoFill) {
 			let filled = false;
@@ -64,9 +77,23 @@ export function useStepConditions(
 			}
 		}
 
+		const tryAutoFocus = (el: HTMLInputElement | null): void => {
+			if (!el || autoFocusedRef.current || el.classList.contains("jam-select__input")) return;
+			autoFocusedRef.current = true;
+			el.focus();
+		};
+
 		waitPollRef.current = setInterval(() => {
+			if (waitForValidEmailIfFilled) {
+				const el = document.querySelector<HTMLInputElement>(waitForValidEmailIfFilled);
+				tryAutoFocus(el);
+				const value = el?.value.trim() ?? "";
+				setInputValid(value === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
+				return;
+			}
 			if (waitForInput) {
 				const el = document.querySelector<HTMLInputElement>(waitForInput);
+				tryAutoFocus(el);
 				if (!el) {
 					setInputValid(false);
 				} else if (el.classList.contains("jam-select__input")) {

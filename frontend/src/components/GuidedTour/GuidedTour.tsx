@@ -81,11 +81,21 @@ export function GuidedTour(): JSX.Element | null {
 	stopTrackRef.current = stopTrack;
 
 	// ── Condition watching ───────────────────────────────────────────────────────
+	const onConditionMet = useCallback((): void => {
+		const steps = tourStepsRef.current;
+		const autoStepId = steps[stepRef.current]?.autoAdvanceStepId;
+		if (autoStepId) {
+			const idx = steps.findIndex((s) => s.id === autoStepId);
+			if (idx !== -1) { advanceToStep(idx); return; }
+		}
+		advanceFromCurrentStep();
+	}, [advanceToStep, advanceFromCurrentStep]);
+
 	const { inputValid, stop: stopConditions } = useStepConditions(
 		step,
 		isTourActive,
 		stepDef,
-		advanceFromCurrentStep,
+		onConditionMet,
 	);
 	stopConditionsRef.current = stopConditions;
 
@@ -99,7 +109,7 @@ export function GuidedTour(): JSX.Element | null {
 	// ── Keyboard navigation ──────────────────────────────────────────────────────
 	const isLast = step === TOUR_STEPS.length - 1;
 	const showNext = !stepDef?.hideNextButton;
-	const nextDisabled = isCleaningUp || (!!stepDef?.waitForInput && !inputValid);
+	const nextDisabled = isCleaningUp || ((!!stepDef?.waitForInput || !!stepDef?.waitForValidEmailIfFilled) && !inputValid);
 	const canGoBack = step > 0 && showNext && !TOUR_STEPS[step - 1]?.hideNextButton;
 
 	useArrowKeyNavigation({

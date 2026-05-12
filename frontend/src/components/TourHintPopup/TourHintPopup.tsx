@@ -11,7 +11,7 @@ export function TourHintPopup({ onClose }: Props): JSX.Element | null {
 
 	useEffect(() => {
 		const track = (): void => {
-			const el = document.getElementById("nav-about");
+			const el = document.getElementById("take-a-tour-btn");
 			if (el) {
 				const rect = el.getBoundingClientRect();
 				const top = rect.top + rect.height / 2;
@@ -33,7 +33,7 @@ export function TourHintPopup({ onClose }: Props): JSX.Element | null {
 			<div className="tour-hint-arrow" />
 			<div className="tour-hint-bubble">
 				<p>
-					Take a tour anytime from the <strong>About</strong> section.
+					Take a tour anytime from the <strong>Take a Tour</strong> panel.
 				</p>
 				<button className="tour-hint-close" onClick={onClose} aria-label="Dismiss">
 					<i className="bi bi-x" />

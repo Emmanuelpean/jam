@@ -31,9 +31,28 @@ export default `<h4>Version 1.3.0</h4>
     <li>A dedicated <strong>Favourite Job Alerts</strong> dashboard widget displays jobs that match your saved favourite filters at a glance.</li>
 </ul>
 
+<h5>CV & Cover Letter Attachments</h5>
+<ul>
+    <li>You can now attach a CV and cover letter directly to a job application. Files can be uploaded by clicking the upload area or dragging and dropping them in.</li>
+    <li>PDFs and images can be previewed inline without leaving the modal. Other file types such as Word documents can be downloaded directly.</li>
+    <li>Cover letters stored as plain text can be written and edited directly in the modal using the built-in text editor.</li>
+</ul>
+
+<h5>Command Palette</h5>
+<ul>
+    <li>A command palette is now available to quickly navigate to any page or trigger actions without leaving the keyboard. Open it with <strong>Ctrl+K</strong> (or <strong>⌘K</strong> on Mac), type to filter, and press Enter to execute.</li>
+</ul>
+
+<h5>Guided Tour</h5>
+<ul>
+    <li>A guided tour is now available to help you get familiar with JAM. Start it from the sidebar under <strong>Take a Tour</strong>. The tour walks you through the key features step by step and can be paused and resumed at any time.</li>
+</ul>
+
 <h5>Quality of Life Improvements</h5>
 <ul>
     <li>Hovering over an option in a company, location, contact, or aggregator dropdown now shows a floating preview card with key details, so you can identify the right entry without opening it.</li>
-    <li>~Locations are now stored as plain text instead of being linked to a separate location record. This simplifies data entry and removes the need to manage a separate locations table.</li>
+    <li>Locations are now stored as plain text instead of being linked to a separate location record. This simplifies data entry and removes the need to manage a separate locations table.</li>
+    <li>The Jobs table now has a <strong>Hide rejected / withdrawn</strong> toggle inside the application status filter, letting you quickly exclude closed applications from view.</li>
+    <li>The Premium settings page now shows a warning when job rating is active but your qualifications profile is incomplete, with a direct link to fill in the missing fields.</li>
 </ul>
 `;

@@ -34,7 +34,7 @@
 	height: 0;
 	border-top: 8px solid transparent;
 	border-bottom: 8px solid transparent;
-	border-right: 9px solid var(--bs-body-bg);
+	border-right: 9px solid var(--primary-mid);
 	flex-shrink: 0;
 	animation: tour-hint-arrow-nudge 2s ease-in-out 0.4s infinite;
 }
@@ -50,7 +50,7 @@
 }
 
 .tour-hint-bubble {
-	background: var(--bs-body-bg);
+	background: var(--primary-gradient);
 	border-radius: 8px;
 	padding: 10px 14px;
 	display: flex;
@@ -59,7 +59,7 @@
 	font-size: 0.82rem;
 	max-width: 230px;
 	position: relative;
-	color: var(--bs-body-color);
+	color: white;
 	overflow: hidden;
 
 	p {
@@ -71,7 +71,7 @@
 .tour-hint-close {
 	background: none;
 	border: none;
-	color: var(--bs-secondary-color);
+	color: rgb(255 255 255 / 75%);
 	cursor: pointer;
 	padding: 2px;
 	font-size: 1.1rem;
@@ -82,7 +82,7 @@
 	border-radius: 4px;
 
 	&:hover {
-		color: var(--bs-body-color);
-		background: var(--bs-secondary-bg);
+		color: white;
+		background: rgb(255 255 255 / 20%);
 	}
 }
