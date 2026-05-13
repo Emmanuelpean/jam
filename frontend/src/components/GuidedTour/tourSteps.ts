@@ -992,21 +992,12 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 	{
 		id: "speculative-intro",
-		targetId: null,
+		targetId: "nav-speculative-applications",
 		title: "Speculative Applications",
 		content:
 			"A speculative application is a proactive outreach to a company that hasn't posted a specific vacancy. JAM tracks these separately so you can follow up and stay organised. We'll clean up any test data when you're done.",
 		route: "/speculative-applications",
-		placement: "center",
-	},
-	{
-		id: "speculative-table",
-		targetId: "speculativeApplication-data-table",
-		title: "Your Speculative Applications",
-		content:
-			"Every company you've reached out to speculatively appears here. Use it to track when you contacted them and what was discussed.",
-		route: "/speculative-applications",
-		placement: "center",
+		placement: "right",
 	},
 	{
 		id: "speculative-add",
@@ -1052,6 +1043,26 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 		title: "Contact Email",
 		content: "If you contacted a specific person, add their email here to track who you spoke to.",
 		placement: "right",
+	},
+	{
+		id: "speculative-contacts",
+		targetId: "contacts-form-group",
+		title: "Contacts",
+		content: "Link a person to this application — select an existing contact or click + to add a new one on the fly. Click Next to skip.",
+		placement: "right",
+		waitForSelector: "#modal-edit-person",
+		autoAdvanceStepId: "speculative-contact-filling",
+		nextStepId: "speculative-note",
+	},
+	{
+		id: "speculative-contact-filling",
+		targetId: "#modal-edit-person .modal-content",
+		title: "Fill in the Contact Details",
+		content: "Enter a name and any other details, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-person",
+		hideNextButton: true,
+		autoAdvanceStepId: "speculative-contacts",
 	},
 	{
 		id: "speculative-note",

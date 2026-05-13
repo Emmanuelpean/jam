@@ -121,7 +121,7 @@ export const Sidebar = (): JSX.Element => {
 			position: "top",
 			condition: (user: UserData): boolean => user.premium.is_active,
 		},
-		{ path: "/speculative-applications", text: "Speculative Applications", position: "top" },
+		{ path: "/speculative-applications", text: "Speculative Applications", position: "top", id: "nav-speculative-applications", tourId: "nav-speculative-applications" },
 		{ path: "/persons", text: "People", position: "top" },
 		{ path: "/companies", text: "Companies", position: "top" },
 		{
