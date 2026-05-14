@@ -13,12 +13,12 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle<Speculativ
 		const personModalRef = useRef<DataModalHandle>(null);
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const dataContext: DataContextValue = useDataContext();
-		const { companies, persons } = useFormOptions();
+		const { companies, persons, getCompanyPreviewConfig } = useFormOptions();
 
 		const jobFormFields: Fields = [
 			[
+				formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig, { required: true }),
 				formFields.datetime({ required: false }),
-				formFields.company(companies, companyModalRef, null, null, { required: true }),
 			],
 			[formFields.email({ name: "contact_email" }), formFields.contacts(persons, personModalRef)],
 			formFields.note(),

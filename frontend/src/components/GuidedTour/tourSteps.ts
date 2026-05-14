@@ -15,8 +15,6 @@ export interface TourStep {
 	waitForValidEmailIfFilled?: string;
 	/** Auto-focus this selector when the step activates (no effect on Next button) */
 	autoFocusSelector?: string;
-	/** Tour goes completely silent — no overlay, no popover. Use when the user needs free access to a modal. */
-	freeInteraction?: boolean;
 	/** When watchSelector gets input, fill fillSelector with fillValue via React's native setter */
 	autoFill?: {
 		watchSelector: string;
@@ -29,6 +27,8 @@ export interface TourStep {
 	showBack?: boolean;
 	/** When Back is clicked, jump to this step id instead of step - 1 */
 	backStepId?: string;
+	/** When Back is clicked, click this selector before navigating (e.g. close an open modal) */
+	backActionSelector?: string;
 	/** Render choice buttons that jump to a specific step by id */
 	choices?: Array<{ label: string; icon: string; targetStepId: string }>;
 	/** After Next is clicked, jump to this step id instead of the next index */
@@ -47,22 +47,6 @@ export interface TourDefinition {
 	comingSoon?: boolean;
 	/** Premium-only tour — hidden for non-premium users and shown with a badge */
 	premium?: boolean;
-}
-
-export interface TourGroup {
-	type: "group";
-	id: string;
-	title: string;
-	icon: string;
-	/** Optional badge label shown next to the group heading (e.g. "Premium") */
-	badge?: string;
-	tours: TourDefinition[];
-}
-
-export type TourStructureItem = TourDefinition | TourGroup;
-
-export function isTourGroup(item: TourStructureItem): item is TourGroup {
-	return (item as TourGroup).type === "group";
 }
 
 const APP_OVERVIEW_STEPS: TourStep[] = [
@@ -151,7 +135,8 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		id: "add-company",
 		targetId: "add-button-company",
 		title: "Add a Company",
-		content: "Click the + button to create a new company, or select one you've already added from the dropdown. Click Next to skip.",
+		content:
+			"Click the + button to create a new company, or select one you've already added from the dropdown. Click Next to skip.",
 		placement: "right",
 		waitForSelector: "#modal-edit-company",
 		autoAdvanceStepId: "company-filling",
@@ -161,7 +146,8 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		id: "company-filling",
 		targetId: "#modal-edit-company .modal-content",
 		title: "Fill in the Company Details",
-		content: "Enter a name and any other details, then click Confirm to save. The company will be available to reuse on future applications.",
+		content:
+			"Enter a name and any other details, then click Confirm to save. The company will be available to reuse on future applications.",
 		placement: "left",
 		waitForSelectorGone: "#modal-edit-company",
 		hideNextButton: true,
@@ -228,7 +214,7 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		targetId: null,
 		title: "You're All Set!",
 		content:
-			"You've added your first job application - great work! The job and company you just created will be removed when you click Done, so your data stays clean.",
+			"You've added your first job application - great work! Choose below whether to keep it or delete it along with any other data created during this tour.",
 		route: null,
 		placement: "center",
 	},
@@ -893,7 +879,6 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 	},
 ];
 
-
 const ADD_CONTACT_STEPS: TourStep[] = [
 	{
 		id: "contact-intro",
@@ -931,23 +916,6 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		waitForInput: '.modal.show input[name="last_name"]',
 	},
 	{
-		id: "contact-role",
-		targetId: "role-form-group",
-		title: "Role",
-		content: "Add their job title - Hiring Manager, Recruiter, Engineering Lead, or whatever fits.",
-		placement: "right",
-		autoFocusSelector: '.modal.show input[name="role"]',
-	},
-	{
-		id: "contact-email",
-		targetId: "email-form-group",
-		title: "Email Address",
-		content:
-			"If you have their email, add it here. JAM uses it to pre-fill the recipient in the follow-up email generator.",
-		placement: "right",
-		waitForValidEmailIfFilled: '.modal.show input[name="email"]',
-	},
-	{
 		id: "contact-company",
 		targetId: "company_id-form-group",
 		title: "Company",
@@ -956,7 +924,7 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		placement: "right",
 		waitForSelector: "#modal-edit-company",
 		autoAdvanceStepId: "contact-company-filling",
-		nextStepId: "contact-save",
+		nextStepId: "contact-role",
 	},
 	{
 		id: "contact-company-filling",
@@ -966,7 +934,54 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		placement: "left",
 		waitForSelectorGone: "#modal-edit-company",
 		hideNextButton: true,
-		nextStepId: "contact-save",
+		nextStepId: "contact-role",
+		showBack: true,
+		backStepId: "contact-company",
+		backActionSelector: "#modal-edit-company-cancel-button",
+	},
+	{
+		id: "contact-role",
+		targetId: "role-form-group",
+		title: "Role",
+		content: "Add their job title - Hiring Manager, Recruiter, Engineering Lead, or whatever fits.",
+		placement: "right",
+		autoFocusSelector: '.modal.show input[name="role"]',
+		showBack: true,
+	},
+	{
+		id: "contact-email",
+		targetId: "email-form-group",
+		title: "Email Address",
+		content:
+			"If you have their email, add it here. JAM uses it to pre-fill the recipient in the follow-up email generator.",
+		placement: "right",
+		waitForValidEmailIfFilled: '.modal.show input[name="email"]',
+		showBack: true,
+	},
+	{
+		id: "contact-phone",
+		targetId: "phone-form-group",
+		title: "Phone Number",
+		content: "Add a phone number if you have one.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "contact-linkedin",
+		targetId: "linkedin_url-form-group",
+		title: "LinkedIn Profile",
+		content: "Paste their LinkedIn profile URL to keep it close at hand.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "contact-recruiter",
+		targetId: "is_recruiter-form-group",
+		title: "Is Recruiter",
+		content:
+			"Check this if the contact is a recruiter. JAM uses this to filter and identify your recruiter relationships.",
+		placement: "right",
+		showBack: true,
 	},
 	{
 		id: "contact-save",
@@ -977,14 +992,14 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		waitForSelectorGone: '.modal.show input[name="first_name"]',
 		hideNextButton: true,
 		showBack: true,
-		backStepId: "contact-company",
+		backStepId: "contact-recruiter",
 	},
 	{
 		id: "contact-done",
 		targetId: null,
 		title: "All Done!",
 		content:
-			"Your contact is saved. Open any job, go to the Tags & Contacts section, and add them - they'll appear as a badge you can right-click for quick actions. The contact created during this tour will be removed when you click Done.",
+			"Your contact is saved. Open any job, go to the Tags & Contacts section, and add them - they'll appear as a badge you can right-click for quick actions. Choose below whether to keep the contact or delete it.",
 		placement: "center",
 	},
 ];
@@ -1012,8 +1027,9 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 		id: "speculative-company",
 		targetId: "company_id-form-group",
 		title: "Company",
-		content: "Select the company you're reaching out to — this is the only required field. Click + to create a new company on the fly.",
-		placement: "right",
+		content:
+			"Select the company you're reaching out to — this is the only required field. Click + to create a new company on the fly.",
+		placement: "left",
 		waitForInput: "#company_id-form-group .jam-select__input",
 		waitForSelector: "#modal-edit-company",
 		autoAdvanceStepId: "speculative-company-filling",
@@ -1028,6 +1044,9 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 		waitForSelectorGone: "#modal-edit-company",
 		hideNextButton: true,
 		autoAdvanceStepId: "speculative-company",
+		showBack: true,
+		backStepId: "speculative-company",
+		backActionSelector: "#modal-edit-company-cancel-button",
 	},
 	{
 		id: "speculative-date",
@@ -1036,6 +1055,7 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 		content:
 			"Log when you sent the application or made contact. JAM uses this to order your list and flag overdue follow-ups.",
 		placement: "right",
+		showBack: true,
 	},
 	{
 		id: "speculative-email",
@@ -1043,16 +1063,19 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 		title: "Contact Email",
 		content: "If you contacted a specific person, add their email here to track who you spoke to.",
 		placement: "right",
+		showBack: true,
 	},
 	{
 		id: "speculative-contacts",
 		targetId: "contacts-form-group",
 		title: "Contacts",
-		content: "Link a person to this application — select an existing contact or click + to add a new one on the fly. Click Next to skip.",
+		content:
+			"Link a person to this application — select an existing contact or click + to add a new one on the fly. Click Next to skip.",
 		placement: "right",
 		waitForSelector: "#modal-edit-person",
 		autoAdvanceStepId: "speculative-contact-filling",
 		nextStepId: "speculative-note",
+		showBack: true,
 	},
 	{
 		id: "speculative-contact-filling",
@@ -1063,6 +1086,9 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 		waitForSelectorGone: "#modal-edit-person",
 		hideNextButton: true,
 		autoAdvanceStepId: "speculative-contacts",
+		showBack: true,
+		backStepId: "speculative-contacts",
+		backActionSelector: "#modal-edit-person-cancel-button",
 	},
 	{
 		id: "speculative-note",
@@ -1070,6 +1096,7 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 		title: "Notes",
 		content: "Record what you sent, who you addressed it to, or any response you received.",
 		placement: "right",
+		showBack: true,
 	},
 	{
 		id: "speculative-save",
@@ -1079,17 +1106,17 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 		placement: "top",
 		waitForSelectorGone: "#modal-edit-speculativeApplication",
 		hideNextButton: true,
+		showBack: true,
 	},
 	{
 		id: "speculative-done",
 		targetId: null,
 		title: "All Done!",
 		content:
-			"The application is logged. Right-click any row to edit or delete entries. The record created during this tour will be removed when you click Done.",
+			"The application is logged. Right-click any row to edit or delete entries. Choose below whether to keep it or delete it along with any other data created during this tour.",
 		placement: "center",
 	},
 ];
-
 
 // ── Tour registry ─────────────────────────────────────────────────────────────
 

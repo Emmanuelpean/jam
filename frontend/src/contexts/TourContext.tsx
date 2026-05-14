@@ -1,4 +1,4 @@
-import React, { createContext, JSX, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, JSX, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { TourSnapshot, useDataContext } from "./DataContext";
@@ -7,8 +7,8 @@ import { useGlobalToast } from "../hooks/useNotificationToast";
 
 interface TourContextType {
 	startTour: (tourId: string) => Promise<void>;
-	endTour: (completed: boolean) => Promise<void>;
-	endTourAndContinue: (nextTourId: string) => void;
+	endTour: (completed: boolean, keepUserData?: boolean) => Promise<void>;
+	endTourAndContinue: (nextTourId: string, keepUserData?: boolean) => void;
 	activeTourId: string | null;
 	isTourActive: boolean;
 	isCleaningUp: boolean;
@@ -17,6 +17,8 @@ interface TourContextType {
 	openTourSelect: () => void;
 	closeTourSelect: () => void;
 	toggleTourSelect: () => void;
+	/** True when the user has created entities during the tour that can meaningfully be kept */
+	hasUserCreatedData: boolean;
 	/** ID of the demo job created for the follow-up-email tour, null otherwise */
 	demoJobId: number | null;
 	/** ID of the demo scraped job created for the import-scraped-job tour, null otherwise */
@@ -89,6 +91,10 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	// At cleanup time we diff against this to find (and delete) everything created during the tour.
 	const preInteractiveSnapshot = useRef<TourSnapshot>(emptySnapshot());
 
+	// IDs of entities JAM created automatically during tour setup — always cleaned up regardless
+	// of whether the user chooses to keep their own data.
+	const jamCreatedIds = useRef<TourSnapshot>(emptySnapshot());
+
 	// Seed completed tours from preferences
 	useEffect((): void => {
 		if (!currentUser) return;
@@ -113,6 +119,26 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 		if (newJob) setDemoJobId(newJob.id);
 	}, [activeTourId, jobs, demoJobId]);
 
+	// True whenever the user has created at least one top-level entity during the tour
+	// that can meaningfully be kept (not a child of a JAM-created entity that will be deleted).
+	const hasUserCreatedData = useMemo((): boolean => {
+		if (!isTourActive) return false;
+		const snapshot = preInteractiveSnapshot.current;
+		const jamIds = jamCreatedIds.current;
+		return (
+			jobs.some((j) => !snapshot.jobIds.has(j.id) && !jamIds.jobIds.has(j.id)) ||
+			companies.some((c) => !snapshot.companyIds.has(c.id) && !jamIds.companyIds.has(c.id)) ||
+			persons.some((p) => !snapshot.personIds.has(p.id) && !jamIds.personIds.has(p.id)) ||
+			scrapingFilters.some((f) => !snapshot.scrapingFilterIds.has(f.id) && !jamIds.scrapingFilterIds.has(f.id)) ||
+			speculativeApplications.some(
+				(s) =>
+					!snapshot.speculativeApplicationIds.has(s.id) &&
+					!jamIds.speculativeApplicationIds.has(s.id) &&
+					!jamIds.companyIds.has(s.company_id),
+			)
+		);
+	}, [isTourActive, jobs, companies, persons, scrapingFilters, speculativeApplications]);
+
 	const startTour = useCallback(
 		async (tourId: string): Promise<void> => {
 			try {
@@ -131,6 +157,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					keywordIds: new Set(keywords.map((k) => k.id)),
 					speculativeApplicationIds: new Set(speculativeApplications.map((s) => s.id)),
 				};
+				jamCreatedIds.current = emptySnapshot();
 
 				if (tourId === "follow-up-email") {
 					const [personResult, interviewerResult] = await Promise.all([
@@ -189,7 +216,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 
 					const jobId: number = jobResult.data.id;
 					setDemoJobId(jobId);
-					await addEntity("interview", {
+					const interviewResult = await addEntity("interview", {
 						job_id: jobId,
 						type: "video",
 						date: new Date().toISOString(),
@@ -198,6 +225,11 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 						attendance_type: "remote",
 						interviewers: [interviewerId],
 					});
+
+					jamCreatedIds.current.personIds.add(personId);
+					jamCreatedIds.current.personIds.add(interviewerId);
+					jamCreatedIds.current.jobIds.add(jobId);
+					jamCreatedIds.current.interviewIds.add(interviewResult.data.id);
 				}
 
 				if (tourId === "import-scraped-job") {
@@ -234,13 +266,16 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 						contacts: [],
 					});
 					setDemoJobId(jobResult.data.id);
+					jamCreatedIds.current.jobIds.add(jobResult.data.id);
 				}
 
 				if (tourId === "speculative-applications") {
-					await Promise.all([
+					const [companyResult1, companyResult2] = await Promise.all([
 						addEntity("company", { name: "Anthropic", website: null, note: null, location: null }),
 						addEntity("company", { name: "DeepMind", website: null, note: null, location: null }),
 					]);
+					jamCreatedIds.current.companyIds.add(companyResult1.data.id);
+					jamCreatedIds.current.companyIds.add(companyResult2.data.id);
 				}
 
 				if (tourId === "log-application") {
@@ -272,6 +307,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 						contacts: [],
 					});
 					setDemoJobId(jobResult.data.id);
+					jamCreatedIds.current.jobIds.add(jobResult.data.id);
 				}
 
 				const ISOLATED_TOURS = new Set([
@@ -310,12 +346,15 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	);
 
 	const endTour = useCallback(
-		async (completed: boolean): Promise<void> => {
+		async (completed: boolean, keepUserData?: boolean): Promise<void> => {
 			const tourId = activeTourId;
 			setActiveTourId(null);
 			setTourSnapshot(null);
 
-			document.querySelectorAll<HTMLElement>('.modal.show .btn-close').forEach(btn => btn.click());
+			document.querySelectorAll<HTMLElement>('.modal.show').forEach((modal) => {
+				const cancelBtn = modal.querySelector<HTMLElement>('[id$="-cancel-button"]');
+				(cancelBtn ?? modal.querySelector<HTMLElement>('.btn-close'))?.click();
+			});
 
 			if (tourId === "follow-up-email" || tourId === "first-job" || tourId === "log-interview" || tourId === "log-update" || tourId === "log-application") {
 				setDemoJobId(null);
@@ -331,10 +370,10 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				void updateCurrentUser({ preferences: { completed_tours: newIds } });
 			}
 
-			// Generic cleanup: delete every entity created after the tour started.
-			// Diff the current arrays against the pre-tour snapshot to find new IDs,
-			// then delete in dependency order so foreign-key constraints are not violated.
 			const snapshot = preInteractiveSnapshot.current;
+			const jamIds = jamCreatedIds.current;
+
+			// Compute all new IDs created since the tour started
 			const newInterviewIds = interviews.map((i) => i.id).filter((id) => !snapshot.interviewIds.has(id));
 			const newJobApplicationUpdateIds = jobApplicationUpdates
 				.map((u) => u.id)
@@ -349,6 +388,16 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				.map((s) => s.id)
 				.filter((id) => !snapshot.speculativeApplicationIds.has(id));
 
+			// User-created speculative applications whose company is also user-created can be kept.
+			// Those whose company is JAM-created will be cascade-deleted when that company is removed,
+			// so they are always cleaned up to keep frontend state consistent.
+			const userSAIds = newSpeculativeApplicationIds.filter((id) => !jamIds.speculativeApplicationIds.has(id));
+			const keepableSAIds = userSAIds.filter((id) => {
+				const sa = speculativeApplications.find((s) => s.id === id);
+				return !sa || !jamIds.companyIds.has(sa.company_id);
+			});
+			const cascadedSAIds = userSAIds.filter((id) => !keepableSAIds.includes(id));
+
 			const hasNewEntities = [
 				newInterviewIds,
 				newJobApplicationUpdateIds,
@@ -362,24 +411,43 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			if (hasNewEntities) {
 				setIsCleaningUp(true);
 				try {
-					// Round 1: delete child entities first (interviews, updates depend on jobs)
+					// Round 1: delete child entities (interviews, job app updates) — always cleaned up
+					// regardless of keep/delete choice, since they depend on jobs that may be removed.
 					await Promise.all([
 						...newInterviewIds.map((id) => deleteEntity("interview", id)),
 						...newJobApplicationUpdateIds.map((id) => deleteEntity("jobApplicationUpdate", id)),
 					]);
-					// Round 2: delete jobs (depend on companies, locations, persons)
-					await Promise.all(newJobIds.map((id) => deleteEntity("job", id)));
+					// Round 2: delete jobs — only JAM-created ones when user chose to keep their data
+					const jobsToDelete = keepUserData
+						? newJobIds.filter((id) => jamIds.jobIds.has(id))
+						: newJobIds;
+					await Promise.all(jobsToDelete.map((id) => deleteEntity("job", id)));
 					// Round 3: delete speculative applications before companies (company_id FK has CASCADE)
-					await Promise.all(newSpeculativeApplicationIds.map((id) => deleteEntity("speculativeApplication", id)));
-					// Round 4: delete base entities in parallel
+					const sAsToDelete = [
+						...newSpeculativeApplicationIds.filter((id) => jamIds.speculativeApplicationIds.has(id)),
+						...cascadedSAIds,
+						...(keepUserData ? [] : keepableSAIds),
+					];
+					await Promise.all(sAsToDelete.map((id) => deleteEntity("speculativeApplication", id)));
+					// Round 4: delete base entities — only JAM-created ones when user chose to keep their data
+					const companiesToDelete = keepUserData
+						? newCompanyIds.filter((id) => jamIds.companyIds.has(id))
+						: newCompanyIds;
+					const personsToDelete = keepUserData
+						? newPersonIds.filter((id) => jamIds.personIds.has(id))
+						: newPersonIds;
+					const filtersToDelete = keepUserData
+						? newScrapingFilterIds.filter((id) => jamIds.scrapingFilterIds.has(id))
+						: newScrapingFilterIds;
 					await Promise.all([
-						...newCompanyIds.map((id) => deleteEntity("company", id)),
-						...newPersonIds.map((id) => deleteEntity("person", id)),
-						...newScrapingFilterIds.map((id) => deleteEntity("scrapingFilter", id)),
+						...companiesToDelete.map((id) => deleteEntity("company", id)),
+						...personsToDelete.map((id) => deleteEntity("person", id)),
+						...filtersToDelete.map((id) => deleteEntity("scrapingFilter", id)),
 					]);
 				} finally {
 					setIsCleaningUp(false);
 					preInteractiveSnapshot.current = emptySnapshot();
+					jamCreatedIds.current = emptySnapshot();
 				}
 			}
 
@@ -435,11 +503,11 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 		}
 	}, [isTourActive, isCleaningUp, pendingNextTourId]);
 
-	const endTourAndContinue = useCallback((nextTourId: string): void => {
+	const endTourAndContinue = useCallback((nextTourId: string, keepUserData?: boolean): void => {
 		// Clear origin path so endTour doesn't navigate away before Tour B starts.
 		originPathRef.current = null;
 		setPendingNextTourId(nextTourId);
-		void endTour(true);
+		void endTour(true, keepUserData ?? false);
 	}, [endTour]);
 
 	const openTourSelect = useCallback((): void => setIsTourSelectOpen(true), []);
@@ -460,6 +528,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				openTourSelect,
 				closeTourSelect,
 				toggleTourSelect,
+				hasUserCreatedData,
 				demoJobId,
 				demoScrapedJobId,
 				demoScrapingFilterId,

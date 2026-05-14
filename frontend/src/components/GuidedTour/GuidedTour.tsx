@@ -10,7 +10,7 @@ import { useStepConditions } from "./useStepConditions";
 import "./GuidedTour.scss";
 
 export function GuidedTour(): JSX.Element | null {
-	const { isTourActive, activeTourId, endTour, endTourAndContinue, isCleaningUp, demoJobId, demoScrapedJobId, demoScrapingFilterId } = useTour();
+	const { isTourActive, activeTourId, endTour, endTourAndContinue, isCleaningUp, hasUserCreatedData, demoJobId, demoScrapedJobId, demoScrapingFilterId } = useTour();
 	const { currentUser } = useAuth();
 	const isPremium = currentUser?.premium.is_active ?? false;
 	const visibleTours = TOURS.filter(
@@ -28,6 +28,8 @@ export function GuidedTour(): JSX.Element | null {
 	const [step, setStep] = useState(0);
 	const stepRef = useRef(step);
 	stepRef.current = step;
+
+	const [keepData, setKeepData] = useState(true);
 
 	const directionRef = useRef<1 | -1>(1);
 
@@ -118,10 +120,14 @@ export function GuidedTour(): JSX.Element | null {
 	showNextRef.current = showNext;
 	const nextDisabledRef = useRef(nextDisabled);
 	nextDisabledRef.current = nextDisabled;
+	const keepDataRef = useRef(keepData);
+	keepDataRef.current = keepData;
+	const hasUserCreatedDataRef = useRef(hasUserCreatedData);
+	hasUserCreatedDataRef.current = hasUserCreatedData;
 
 	useArrowKeyNavigation({
 		active: isTourActive,
-		onNext: () => (isLast ? void endTour(true) : advanceFromCurrentStep()),
+		onNext: () => (isLast ? void endTour(true, hasUserCreatedData ? keepData : undefined) : advanceFromCurrentStep()),
 		onPrev: () => advanceToStep(step - 1),
 		canGoPrev: canGoBack,
 		canGoNext: showNext && !isCleaningUp && !nextDisabled,
@@ -137,7 +143,9 @@ export function GuidedTour(): JSX.Element | null {
 			if (e.key === "Enter") {
 				e.preventDefault();
 				if (!showNextRef.current || nextDisabledRef.current) return;
-				isLastRef.current ? void endTour(true) : advanceFromCurrentStep();
+				isLastRef.current
+					? void endTour(true, hasUserCreatedDataRef.current ? keepDataRef.current : undefined)
+					: advanceFromCurrentStep();
 			}
 		};
 		document.addEventListener("keydown", handler, true);
@@ -240,8 +248,22 @@ export function GuidedTour(): JSX.Element | null {
 
 						{(showNext || canGoBack) && (
 							<div className="tour-popover-footer">
+								{isLast && hasUserCreatedData && (
+									<div className="form-check form-switch mb-0">
+										<input
+											className="form-check-input"
+											type="checkbox"
+											id="tour-keep-data"
+											checked={keepData}
+											onChange={(e) => setKeepData(e.target.checked)}
+										/>
+										<label className="form-check-label" htmlFor="tour-keep-data">
+											Keep my data
+										</label>
+									</div>
+								)}
 								{canGoBack && (
-									<button id="tour-back-btn" className="tour-btn-secondary" onClick={() => stepDef.backStepId ? advanceToStepById(stepDef.backStepId) : advanceToStep(step - 1)}>
+									<button id="tour-back-btn" className="tour-btn-secondary" onClick={() => { if (stepDef.backActionSelector) { const el = document.querySelector(stepDef.backActionSelector); if (el instanceof HTMLElement) el.click(); } stepDef.backStepId ? advanceToStepById(stepDef.backStepId) : advanceToStep(step - 1); }}>
 										<i className="bi bi-arrow-left me-1"></i>Back
 									</button>
 								)}
@@ -251,7 +273,7 @@ export function GuidedTour(): JSX.Element | null {
 											<button
 												id="tour-start-next-btn"
 												className="tour-btn-secondary"
-												onClick={() => endTourAndContinue(nextTour.id)}
+												onClick={() => endTourAndContinue(nextTour.id, hasUserCreatedData ? keepData : undefined)}
 											>
 												{nextTour.title} <i className="bi bi-arrow-right ms-1"></i>
 											</button>
@@ -260,7 +282,7 @@ export function GuidedTour(): JSX.Element | null {
 											id="tour-next-btn"
 											className="tour-btn-primary"
 											disabled={nextDisabled}
-											onClick={() => (isLast ? void endTour(true) : advanceFromCurrentStep())}
+											onClick={() => (isLast ? void endTour(true, hasUserCreatedData ? keepData : undefined) : advanceFromCurrentStep())}
 										>
 											{isLast ? (
 												isCleaningUp ? (

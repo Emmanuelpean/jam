@@ -423,7 +423,6 @@ class BaseUtils(object):
 
         self.get_element("modal-close-btn").click()
 
-
 class BaseUtilsClass(BaseUtils):
 
     def __init__(self, driver: WebDriver, frontend_base_url, backend_base_url, db, client):
@@ -451,6 +450,23 @@ class DataModalUtils(BaseUtilsClass):
 
         BaseUtilsClass.__init__(self, **kwargs)
         self.entry_type = entry_type
+
+    # -------------------------------------------- INLINE ADD BUTTONS --------------------------------------------
+
+    @property
+    def add_company_button(self) -> WebElement:
+        """+ button that opens the inline company form inside this modal."""
+        return self.get_element("add-button-company")
+
+    @property
+    def add_contact_button(self) -> WebElement:
+        """+ button that opens the inline person/contact form inside this modal."""
+        return self.get_element("add-button-contact")
+
+    @property
+    def add_keyword_button(self) -> WebElement:
+        """+ button that opens the inline keyword form inside this modal."""
+        return self.get_element("add-button-keyword")
 
     # ------------------------------------------------ HELPER FUNCTIONS ------------------------------------------------
 
