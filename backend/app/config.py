@@ -1,6 +1,6 @@
 """JAM configuration"""
 
-import tomllib
+from importlib.metadata import version, PackageNotFoundError
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -9,9 +9,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 def get_app_version() -> str:
     """Get the current version of the app"""
 
-    pyproject_path = Path(__file__).parent.parent / "pyproject.toml"
-    with open(pyproject_path, "rb") as f:
-        return tomllib.load(f)["project"]["version"]
+    try:
+        return version("jam")
+    except PackageNotFoundError:
+        return "0.0.0"
 
 
 class Settings(BaseSettings):
