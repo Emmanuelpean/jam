@@ -886,7 +886,7 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		title: "Adding a Contact",
 		content:
 			"Contacts in JAM are the people behind your job search - hiring managers, recruiters, and anyone you've spoken to. Linking them to jobs makes it easy to track relationships and generate follow-up emails. We'll clean up any test data when you're done.",
-		route: "/persons",
+		route: "/contacts",
 		placement: "center",
 	},
 	{
@@ -894,7 +894,7 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		targetId: "add-person-button",
 		title: "Add a Contact",
 		content: "Click this button to open the contact form.",
-		route: "/persons",
+		route: "/contacts",
 		placement: "bottom",
 		waitForSelector: "#modal-edit-person",
 		hideNextButton: true,

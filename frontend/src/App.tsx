@@ -209,7 +209,7 @@ const routeConfigs: RouteConfig[] = [
 		element: <SpeculativeApplicationsPage />,
 		protected: true,
 	},
-	{ path: "/persons", element: <PersonPage />, protected: true },
+	{ path: "/contacts", element: <PersonPage />, protected: true },
 	{ path: "/keywords", element: <KeywordsPage />, protected: true },
 	{ path: "/interviews", element: <InterviewsPage />, protected: true },
 	{ path: "/aggregators", element: <AggregatorsPage />, protected: true },

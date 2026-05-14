@@ -26,7 +26,7 @@ TOUR_ID = "add-contact"
 
 class TestAddContactTour(BaseTest):
     user_index = 0
-    page_url = "persons"
+    page_url = "contacts"
 
     def setup_function(self, request) -> None:
         self.login()
@@ -34,13 +34,13 @@ class TestAddContactTour(BaseTest):
     # ------------------------------------------------------------------ helpers
 
     def _start_tour_and_open_form(self) -> None:
-        """Start the tour, wait for the persons page, advance past the intro, and open the add form.
+        """Start the tour, wait for the contacts page, advance past the intro, and open the add form.
 
         Returns with the tour popover on step 2 (contact-first-name) and the
         person modal already open.
         """
         self.tour_utils.start_tour(TOUR_ID)
-        self.wait_for_page("persons")
+        self.wait_for_page("contacts")
 
         # Step 0 (contact-intro): informational — click Next
         self.tour_utils.click_next()

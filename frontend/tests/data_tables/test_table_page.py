@@ -382,7 +382,7 @@ class TestPersonsPage(BaseTablePage):
     - Deleting entries"""
 
     endpoint = "persons"
-    page_url = "persons"
+    page_url = "contacts"
     entry_type = "person"
     test_fixture = ["test_persons", "test_companies"]
     test_data = {

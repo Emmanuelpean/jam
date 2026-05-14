@@ -76,10 +76,10 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 			},
 			{
 				id: "goto-persons",
-				label: "People",
-				icon: getTableIcon("People"),
+				label: "Contacts",
+				icon: getTableIcon("Contacts"),
 				group: "Pages",
-				action: () => goTo("/persons"),
+				action: () => goTo("/contacts"),
 			},
 			{
 				id: "goto-companies",

@@ -30,7 +30,7 @@ export function getTableIcon(title: string): string {
 	const iconMap: Record<string, string> = {
 		Jobs: getEntityIcon("job"),
 		Companies: getEntityIcon("company"),
-		People: getEntityIcon("person"),
+		Contacts: getEntityIcon("person"),
 		Tags: getEntityIcon("keyword"),
 		"Job Application Updates": getEntityIcon("jobApplicationUpdate"),
 		Interviews: getEntityIcon("interview"),

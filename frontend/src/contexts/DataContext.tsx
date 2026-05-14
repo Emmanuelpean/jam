@@ -90,7 +90,7 @@ export const entityTypeToGenericName = (entityType: EntityType): string => {
 	const nameMap: Record<EntityType, string> = {
 		job: "Job",
 		company: "Company",
-		person: "Person",
+		person: "Contact",
 		interview: "Interview",
 		jobApplicationUpdate: "Job Application Update",
 		aggregator: "Aggregator",

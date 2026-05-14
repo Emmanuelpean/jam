@@ -38,13 +38,13 @@ export const PersonModal = forwardRef<DataModalHandle<PersonData>, JamDataModalP
 
 		const additionalFields: ModalViewField[] = [
 			modalViewFields.accordionInterviewTablePerson({
-				helpText: "Interviews attended by this person.",
+				helpText: "Interviews attended by this contact.",
 			}),
 			modalViewFields.accordionJobTablePerson({
-				helpText: "Jobs associated with this person as a contact.",
+				helpText: "Jobs associated with this contact.",
 			}),
 			modalViewFields.accordionRecruitedJobTablePerson({
-				helpText: "Jobs shared with you by this person.",
+				helpText: "Jobs shared with you by this contact.",
 			}),
 		];
 
@@ -63,7 +63,7 @@ export const PersonModal = forwardRef<DataModalHandle<PersonData>, JamDataModalP
 				errors.first_name =
 					errors.last_name =
 					errors.company_id =
-						`A person with this name and company already exists`;
+						`A contact with this name and company already exists`;
 			}
 			return errors;
 		};

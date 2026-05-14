@@ -815,9 +815,9 @@ export const renderFunctions = {
 		if (persons.length > 0) {
 			return (
 				<AccordionTable
-					title={param.label || "Persons"}
+					title={param.label || "Contacts"}
 					data={persons}
-					icon={getTableIcon("People")}
+					icon={getTableIcon("Contacts")}
 					helpText={param.helpText}
 				>
 					{(data: PersonData[]) => <PersonTable data={data} columns={param.columns} />}

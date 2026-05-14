@@ -18,7 +18,7 @@ const PersonsPage = () => {
 		<DataTable
 			entityType="person"
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
-			title="People"
+			title="Contacts"
 			columns={columns}
 			Modal={PersonModal}
 			enableColumnConfig={true}
