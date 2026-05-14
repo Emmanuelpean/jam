@@ -934,7 +934,7 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		placement: "left",
 		waitForSelectorGone: "#modal-edit-company",
 		hideNextButton: true,
-		nextStepId: "contact-role",
+		autoAdvanceStepId: "contact-company",
 		showBack: true,
 		backStepId: "contact-company",
 		backActionSelector: "#modal-edit-company-cancel-button",

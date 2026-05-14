@@ -263,7 +263,7 @@ export function GuidedTour(): JSX.Element | null {
 									</div>
 								)}
 								{canGoBack && (
-									<button id="tour-back-btn" className="tour-btn-secondary" onClick={() => { if (stepDef.backActionSelector) { const el = document.querySelector(stepDef.backActionSelector); if (el instanceof HTMLElement) el.click(); } stepDef.backStepId ? advanceToStepById(stepDef.backStepId) : advanceToStep(step - 1); }}>
+									<button id="tour-back-btn" className="tour-btn-secondary" onClick={() => { stopConditionsRef.current(); if (stepDef.backActionSelector) { const el = document.querySelector(stepDef.backActionSelector); if (el instanceof HTMLElement) el.click(); } stepDef.backStepId ? advanceToStepById(stepDef.backStepId) : advanceToStep(step - 1); }}>
 										<i className="bi bi-arrow-left me-1"></i>Back
 									</button>
 								)}
