@@ -1,4 +1,5 @@
 import React, { JSX, useEffect, useMemo, useRef, useState } from "react";
+import { useTour } from "../../contexts/TourContext";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { DataTable, DataTableHandle } from "../../components/DataTable/DataTable";
 import { JobModal } from "../../components/DataModal/JobModal";
@@ -22,6 +23,7 @@ const EXT_PARAMS: string[] = [
 ];
 
 const JobsPage = (): JSX.Element => {
+	const { allowedContextMenuActions } = useTour();
 	const [searchParams] = useSearchParams();
 	const location = useLocation();
 	const navigate = useNavigate();
@@ -112,7 +114,10 @@ const JobsPage = (): JSX.Element => {
 				columns={columns}
 				Modal={JobModal}
 				modalSize="xl"
-				menuItems={(job: JobData) => ["view", "edit", "delete", ...(job.has_application ? ["followup"] : [])]}
+				menuItems={(job: JobData) => {
+					const all = ["view", "edit", "delete", ...(job.has_application ? ["followup"] : [])];
+					return allowedContextMenuActions ? all.filter((a) => allowedContextMenuActions.includes(a)) : all;
+				}}
 				enableColumnConfig={true}
 			/>
 			<ExtensionJobModal ref={extensionModalRef} />

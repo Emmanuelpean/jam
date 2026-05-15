@@ -5,12 +5,13 @@ import { useTour } from "../../contexts/TourContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { getTourById, TOURS, TourStep } from "./tourSteps";
 import { computePopoverStyle, POP_W, SPOTLIGHT_PAD } from "./tourPositioning";
+import { expandTargetId, resolveTarget } from "./tourUtils";
 import { useTrackTarget } from "./useTrackTarget";
 import { useStepConditions } from "./useStepConditions";
 import "./GuidedTour.scss";
 
 export function GuidedTour(): JSX.Element | null {
-	const { isTourActive, activeTourId, endTour, endTourAndContinue, isCleaningUp, hasUserCreatedData, demoJobId, demoScrapedJobId, demoScrapingFilterId } = useTour();
+	const { isTourActive, activeTourId, endTour, endTourAndContinue, isCleaningUp, hasUserCreatedData, demoJobId, demoScrapedJobId, demoScrapingFilterId, setAllowedContextMenuActions } = useTour();
 	const { currentUser } = useAuth();
 	const isPremium = currentUser?.premium.is_active ?? false;
 	const visibleTours = TOURS.filter(
@@ -107,6 +108,32 @@ export function GuidedTour(): JSX.Element | null {
 		const path = stepDef.route.replace("/jam", "");
 		if (location.pathname !== path) navigate(path);
 	}, [step, isTourActive, stepDef?.route, location.pathname, navigate]);
+
+	// ── Sync allowed context menu actions to TourContext ────────────────────────
+	useEffect(() => {
+		setAllowedContextMenuActions(stepDef?.allowedContextMenuActions ?? null);
+		return () => setAllowedContextMenuActions(null);
+	}, [step, isTourActive, stepDef, setAllowedContextMenuActions]);
+
+	// ── Block left-clicks on the target (allows right-click for context menus) ──
+	useEffect(() => {
+		if (!isTourActive || !stepDef?.blockLeftClick || !stepDef.targetId) return;
+		const resolvedId = expandTargetId(stepDef.targetId, demoJobId, demoScrapedJobId, demoScrapingFilterId);
+		const handler = (e: MouseEvent): void => {
+			if (e.button !== 0) return;
+			const el = resolveTarget(resolvedId);
+			if (el && el.contains(e.target as Node)) {
+				e.preventDefault();
+				e.stopPropagation();
+			}
+		};
+		document.addEventListener("mousedown", handler, true);
+		document.addEventListener("click", handler, true);
+		return () => {
+			document.removeEventListener("mousedown", handler, true);
+			document.removeEventListener("click", handler, true);
+		};
+	}, [isTourActive, step, stepDef, demoJobId, demoScrapedJobId, demoScrapingFilterId]);
 
 	// ── Keyboard navigation ──────────────────────────────────────────────────────
 	const isLast = step === TOUR_STEPS.length - 1;

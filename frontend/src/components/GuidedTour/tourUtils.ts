@@ -15,7 +15,7 @@ export function expandTargetId(
 
 /** Resolve a targetId to a DOM element — supports plain IDs and CSS selectors */
 export function resolveTarget(targetId: string): Element | null {
-	return targetId.startsWith("#") || targetId.startsWith(".") || targetId.includes(" ")
+	return targetId.startsWith("#") || targetId.startsWith(".") || targetId.startsWith("[") || targetId.includes(" ")
 		? document.querySelector(targetId)
 		: document.getElementById(targetId);
 }

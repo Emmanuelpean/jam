@@ -25,6 +25,10 @@ export interface TourStep {
 	hideNextButton?: boolean;
 	/** Show a Back button even when hideNextButton is true */
 	showBack?: boolean;
+	/** Prevent left-clicks on the highlighted target (right-clicks still work for context menus) */
+	blockLeftClick?: boolean;
+	/** When set, the context menu on the target will only show these actions */
+	allowedContextMenuActions?: string[];
 	/** When Back is clicked, jump to this step id instead of step - 1 */
 	backStepId?: string;
 	/** When Back is clicked, click this selector before navigating (e.g. close an open modal) */
@@ -136,11 +140,11 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		targetId: "add-button-company",
 		title: "Add a Company",
 		content:
-			"Click the + button to create a new company, or select one you've already added from the dropdown. Click Next to skip.",
+			"Click the + button to create a new company, or select one from the dropdown. Click Next to skip.",
 		placement: "right",
 		waitForSelector: "#modal-edit-company",
 		autoAdvanceStepId: "company-filling",
-		nextStepId: "job-location",
+		nextStepId: "job-url",
 	},
 	{
 		id: "company-filling",
@@ -153,11 +157,19 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		hideNextButton: true,
 	},
 	{
-		id: "job-location",
-		targetId: "location-form-group",
-		title: "Location",
+		id: "job-url",
+		targetId: "url-form-group",
+		title: "Job URL",
 		content:
-			"Type a location for this job - e.g. 'London, UK'. JAM will geocode it automatically so it appears on the map.",
+			"Paste the link to the original job listing here. JAM can open it in one click so you can revisit the details any time.",
+		placement: "right",
+	},
+	{
+		id: "job-attendance-location",
+		targetId: "attendance_type-form-group",
+		title: "Attendance Type & Location",
+		content:
+			"Select whether this role is Remote, Hybrid, or On-site. If it's not Remote, a location field appears just below — enter the city or area and JAM will place it on the map.",
 		placement: "right",
 	},
 	{
@@ -165,7 +177,31 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		targetId: "salary_min-form-group",
 		title: "Salary Range",
 		content:
-			"Record the advertised salary range. The currency is taken from your preferred currency in User Settings.",
+			"Record the advertised salary range — fill in the minimum, maximum, or both. The currency follows your preferred setting in User Settings.",
+		placement: "right",
+	},
+	{
+		id: "job-personal-rating",
+		targetId: "personal_rating-form-group",
+		title: "Personal Rating",
+		content:
+			"Rate this role from 1 to 5 stars based on how excited you are about it. Use it to quickly prioritise the jobs that matter most.",
+		placement: "right",
+	},
+	{
+		id: "job-favourite",
+		targetId: "is_favourite-form-group",
+		title: "Favourite",
+		content:
+			"Star this job to mark it as a top pick. Favourited jobs are easy to filter for so you never lose sight of the roles you care about most.",
+		placement: "right",
+	},
+	{
+		id: "job-deadline",
+		targetId: "deadline-form-group",
+		title: "Application Deadline",
+		content:
+			"Set the closing date for this application. JAM will show a live countdown in the table so you always know how much time you have left.",
 		placement: "right",
 	},
 	{
@@ -173,7 +209,7 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		targetId: "source_type-form-group",
 		title: "How Did You Find It?",
 		content:
-			"Log where you found the job - a job board, recruiter, LinkedIn, or elsewhere. Tracking your sources helps you see which channels land interviews.",
+			"Log where you found the job — a job board, recruiter, LinkedIn, or elsewhere. Tracking your sources helps you see which channels land interviews.",
 		placement: "right",
 	},
 	{
@@ -181,15 +217,63 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		targetId: "keywords-form-group",
 		title: "Tags",
 		content:
-			"Add tags to categorise and filter your applications. Use them for tech stack, seniority level, or anything else that helps you stay organised.",
+			"Add tags to categorise your applications — select from existing tags or click + to create a new one on the fly. Click Next to skip.",
 		placement: "right",
+		waitForSelector: "#modal-edit-keyword",
+		autoAdvanceStepId: "job-tag-filling",
+		nextStepId: "job-contacts",
+	},
+	{
+		id: "job-tag-filling",
+		targetId: "#modal-edit-keyword .modal-content",
+		title: "Create a Tag",
+		content: "Enter a tag name and click Confirm to save. Tags help you categorise and filter your applications.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-keyword",
+		hideNextButton: true,
+		autoAdvanceStepId: "job-tags",
+		showBack: true,
+		backStepId: "job-tags",
+		backActionSelector: "#modal-edit-keyword-cancel-button",
 	},
 	{
 		id: "job-contacts",
 		targetId: "contacts-form-group",
 		title: "Contacts",
 		content:
-			"Link people to this job - hiring managers, recruiters, or anyone you've spoken to. Click the + icon to add a new contact on the fly.",
+			"Link people to this job — select from existing contacts or click + to add a new one on the fly. Click Next to skip.",
+		placement: "right",
+		waitForSelector: "#modal-edit-person",
+		autoAdvanceStepId: "job-contact-filling",
+		nextStepId: "job-description",
+	},
+	{
+		id: "job-contact-filling",
+		targetId: "#modal-edit-person .modal-content",
+		title: "Fill in the Contact Details",
+		content: "Enter a name and any other details, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-person",
+		hideNextButton: true,
+		autoAdvanceStepId: "job-contacts",
+		showBack: true,
+		backStepId: "job-contacts",
+		backActionSelector: "#modal-edit-person-cancel-button",
+	},
+	{
+		id: "job-description",
+		targetId: "description-form-group",
+		title: "Job Description",
+		content:
+			"Paste the job description here. Having it saved in JAM means you can reference it at any time — handy when preparing for interviews.",
+		placement: "right",
+	},
+	{
+		id: "job-notes",
+		targetId: "note-form-group",
+		title: "Notes",
+		content:
+			"Add any personal notes about this role — impressions from a call, questions to ask, or anything that helps you stay on top of the application.",
 		placement: "right",
 	},
 	{
@@ -231,7 +315,7 @@ const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
 		placement: "center",
 		hideNextButton: true,
 		choices: [
-			{ label: "Right-click a job row", icon: "bi-table", targetStepId: "follow-up-open-via-table" },
+			{ label: "Right-click a job entry", icon: "bi-table", targetStepId: "follow-up-open-via-table" },
 			{
 				label: "Right-click a contact badge",
 				icon: "bi-person-badge-fill",
@@ -248,14 +332,16 @@ const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
 	{
 		id: "follow-up-open-via-table",
 		targetId: "[demo-job-row]",
-		title: "Right-click the Job Row",
+		title: "Right-click the Job Entry",
 		content:
-			"Right-click this job row and select Follow-up Email. The tour will continue automatically once the generator is open.",
+			"Right-click this job entry and select Follow-up Email. The tour will continue automatically once the generator is open.",
 		route: "/jam/jobs",
 		placement: "top",
 		waitForSelector: "#follow-up-modal",
 		hideNextButton: true,
 		nextStepId: "follow-up-contact",
+		blockLeftClick: true,
+		allowedContextMenuActions: ["followup"],
 	},
 	// ── Method 2: right-click contact badge ──────────────────────────────────
 	{
@@ -268,6 +354,7 @@ const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
 		waitForSelector: "#job-tab",
 		hideNextButton: true,
 		nextStepId: "follow-up-open-via-badge-2",
+		allowedContextMenuActions: ["view"],
 	},
 	{
 		id: "follow-up-open-via-badge-2",
@@ -279,6 +366,7 @@ const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
 		waitForSelector: "#follow-up-modal",
 		hideNextButton: true,
 		nextStepId: "follow-up-contact",
+		allowedContextMenuActions: ["followup"],
 	},
 	// ── Method 3: button in Application tab ──────────────────────────────────
 	{
@@ -291,6 +379,7 @@ const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
 		waitForSelector: "#application-tab",
 		hideNextButton: true,
 		nextStepId: "follow-up-open-via-button-2",
+		allowedContextMenuActions: ["view"],
 	},
 	{
 		id: "follow-up-open-via-button-2",

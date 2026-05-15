@@ -25,6 +25,9 @@ interface TourContextType {
 	demoScrapedJobId: number | null;
 	/** ID of the scraping filter created during the scraping-filters tour, null otherwise */
 	demoScrapingFilterId: number | null;
+	/** When set, the context menu should only show these actions on tour-targeted rows */
+	allowedContextMenuActions: string[] | null;
+	setAllowedContextMenuActions: (actions: string[] | null) => void;
 }
 
 const TourContext = createContext<TourContextType | undefined>(undefined);
@@ -64,6 +67,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	const [demoScrapedJobId, setDemoScrapedJobId] = useState<number | null>(null);
 	const [demoScrapingFilterId, setDemoScrapingFilterId] = useState<number | null>(null);
 	const [pendingNextTourId, setPendingNextTourId] = useState<string | null>(null);
+	const [allowedContextMenuActions, setAllowedContextMenuActions] = useState<string[] | null>(null);
 	const { currentUser, updateCurrentUser, token } = useAuth();
 	const {
 		jobs,
@@ -129,6 +133,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			jobs.some((j) => !snapshot.jobIds.has(j.id) && !jamIds.jobIds.has(j.id)) ||
 			companies.some((c) => !snapshot.companyIds.has(c.id) && !jamIds.companyIds.has(c.id)) ||
 			persons.some((p) => !snapshot.personIds.has(p.id) && !jamIds.personIds.has(p.id)) ||
+			keywords.some((k) => !snapshot.keywordIds.has(k.id) && !jamIds.keywordIds.has(k.id)) ||
 			scrapingFilters.some((f) => !snapshot.scrapingFilterIds.has(f.id) && !jamIds.scrapingFilterIds.has(f.id)) ||
 			speculativeApplications.some(
 				(s) =>
@@ -137,7 +142,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					!jamIds.companyIds.has(s.company_id),
 			)
 		);
-	}, [isTourActive, jobs, companies, persons, scrapingFilters, speculativeApplications]);
+	}, [isTourActive, jobs, companies, persons, keywords, scrapingFilters, speculativeApplications]);
 
 	const startTour = useCallback(
 		async (tourId: string): Promise<void> => {
@@ -269,6 +274,23 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					jamCreatedIds.current.jobIds.add(jobResult.data.id);
 				}
 
+				if (tourId === "first-job") {
+					const [c1, c2, p1, p2, k1, k2] = await Promise.all([
+						addEntity("company", { name: "Acme Corp", website: null, note: null, location: null }),
+						addEntity("company", { name: "Globex Inc", website: null, note: null, location: null }),
+						addEntity("person", { first_name: "Emma", last_name: "Williams", email: null, phone: null, role: "Recruiter", linkedin_url: null, company_id: null, is_recruiter: true }),
+						addEntity("person", { first_name: "David", last_name: "Chen", email: null, phone: null, role: "Hiring Manager", linkedin_url: null, company_id: null, is_recruiter: false }),
+						addEntity("keyword", { name: "TypeScript" }),
+						addEntity("keyword", { name: "React.js" }),
+					]);
+					jamCreatedIds.current.companyIds.add(c1.data.id);
+					jamCreatedIds.current.companyIds.add(c2.data.id);
+					jamCreatedIds.current.personIds.add(p1.data.id);
+					jamCreatedIds.current.personIds.add(p2.data.id);
+					jamCreatedIds.current.keywordIds.add(k1.data.id);
+					jamCreatedIds.current.keywordIds.add(k2.data.id);
+				}
+
 				if (tourId === "speculative-applications") {
 					const [companyResult1, companyResult2] = await Promise.all([
 						addEntity("company", { name: "Anthropic", website: null, note: null, location: null }),
@@ -381,6 +403,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			const newJobIds = jobs.map((j) => j.id).filter((id) => !snapshot.jobIds.has(id));
 			const newCompanyIds = companies.map((c) => c.id).filter((id) => !snapshot.companyIds.has(id));
 			const newPersonIds = persons.map((p) => p.id).filter((id) => !snapshot.personIds.has(id));
+			const newKeywordIds = keywords.map((k) => k.id).filter((id) => !snapshot.keywordIds.has(id));
 			const newScrapingFilterIds = scrapingFilters
 				.map((f) => f.id)
 				.filter((id) => !snapshot.scrapingFilterIds.has(id));
@@ -404,6 +427,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				newJobIds,
 				newCompanyIds,
 				newPersonIds,
+				newKeywordIds,
 				newScrapingFilterIds,
 				newSpeculativeApplicationIds,
 			].some((arr) => arr.length > 0);
@@ -436,12 +460,16 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					const personsToDelete = keepUserData
 						? newPersonIds.filter((id) => jamIds.personIds.has(id))
 						: newPersonIds;
+					const keywordsToDelete = keepUserData
+						? newKeywordIds.filter((id) => jamIds.keywordIds.has(id))
+						: newKeywordIds;
 					const filtersToDelete = keepUserData
 						? newScrapingFilterIds.filter((id) => jamIds.scrapingFilterIds.has(id))
 						: newScrapingFilterIds;
 					await Promise.all([
 						...companiesToDelete.map((id) => deleteEntity("company", id)),
 						...personsToDelete.map((id) => deleteEntity("person", id)),
+						...keywordsToDelete.map((id) => deleteEntity("keyword", id)),
 						...filtersToDelete.map((id) => deleteEntity("scrapingFilter", id)),
 					]);
 				} finally {
@@ -476,6 +504,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			jobs,
 			companies,
 			persons,
+			keywords,
 			interviews,
 			jobApplicationUpdates,
 			scrapingFilters,
@@ -532,6 +561,8 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				demoJobId,
 				demoScrapedJobId,
 				demoScrapingFilterId,
+				allowedContextMenuActions,
+				setAllowedContextMenuActions,
 			}}
 		>
 			{children}

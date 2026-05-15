@@ -16,6 +16,7 @@ import { getEntityIcon } from "./Icons";
 import { useGlobalToast } from "../../../hooks/useNotificationToast";
 import { AggregatorData, CompanyData, JobData, KeywordData, PersonData } from "../../../services/schemas/DataTables";
 import { LocationModal } from "../../DataModal/LocationModal";
+import { useTour } from "../../../contexts/TourContext";
 
 type FlexibleModalComponent = React.ForwardRefExoticComponent<any>;
 
@@ -58,6 +59,7 @@ const createDataBadge = <T extends JamData>(
 		const deleteHandler = useDeleteEntityConfirm(entityType);
 		const dataContext: DataContextValue = useDataContext();
 		const { showToastSuccess } = useGlobalToast();
+		const { allowedContextMenuActions } = useTour();
 
 		const handleRemove = (item: JamData): void => {
 			if (parentItem && parentKey) {
@@ -110,8 +112,11 @@ const createDataBadge = <T extends JamData>(
 			},
 		];
 
+		const effectiveMenuItemKeys = allowedContextMenuActions
+			? menuItemKeys.filter((k) => allowedContextMenuActions.includes(k))
+			: menuItemKeys;
 		const menuItems: MenuItem[] = availableMenuItems.filter((menuItem: MenuItem): boolean =>
-			menuItemKeys.includes(menuItem.action)
+			effectiveMenuItemKeys.includes(menuItem.action)
 		);
 
 		const handleContextMenu = (e: MouseEvent<HTMLSpanElement>) => {
