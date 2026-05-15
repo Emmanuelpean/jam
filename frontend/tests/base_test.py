@@ -673,7 +673,7 @@ class DataModalUtils(BaseUtilsClass):
 
         modal = self.wait_for_view_modal()
         expected = (
-            f"Person Details\n{entry.name}\n"
+            f"Contact Details\n{entry.name}\n"
             f"Company\n{entry.company.name.upper()}\nRole\n{entry.role}\n"
             f"Email\n{entry.email}\nPhone\n{entry.phone}\nLinkedIn Profile\nProfile\nRecruiter\n"
         )
