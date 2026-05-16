@@ -19,6 +19,7 @@ class KeywordCreate(BaseModel):
     """Keyword create schema"""
 
     name: str
+    is_tour: bool = False
 
 
 class KeywordOut(KeywordCreate, OwnedOut):
@@ -41,6 +42,7 @@ class AggregatorCreate(BaseModel):
 
     name: str
     url: str | None = None
+    is_tour: bool = False
 
 
 class AggregatorOut(AggregatorCreate, OwnedOut):
@@ -65,6 +67,7 @@ class CompanyCreate(BaseModel):
     name: str
     description: str | None = None
     url: str | None = None
+    is_tour: bool = False
 
 
 class CompanyOut(CompanyCreate, OwnedOut):
@@ -146,6 +149,7 @@ class PersonCreate(BaseModel):
     linkedin_url: str | None = None
     role: str | None = None
     is_recruiter: bool = False
+    is_tour: bool = False
 
     # Foreign keys
     company_id: int | None = None
@@ -175,6 +179,7 @@ class JobCreate(BaseModel):
 
     title: str
     is_favourite: bool = False
+    is_tour: bool = False
     description: str | None = None
     salary_min: float | None = None
     salary_max: float | None = None
@@ -247,6 +252,7 @@ class InterviewCreate(BaseModel):
     location: str | None = None
     note: str | None = None
     interviewers: list[int] | None = None
+    is_tour: bool = False
 
 
 class InterviewOut(InterviewCreate, OwnedOut):

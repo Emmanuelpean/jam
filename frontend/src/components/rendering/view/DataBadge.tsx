@@ -18,6 +18,7 @@ import { AggregatorData, CompanyData, JobData, KeywordData, PersonData } from ".
 import { LocationModal } from "../../DataModal/LocationModal";
 import { useTour } from "../../../contexts/TourContext";
 
+
 type FlexibleModalComponent = React.ForwardRefExoticComponent<any>;
 
 export interface DataBadgeProps<T extends JamData> {

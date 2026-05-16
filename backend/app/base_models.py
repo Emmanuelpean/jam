@@ -4,7 +4,7 @@ to provide a shared structure for all models, including common attributes like `
 
 import re
 
-from sqlalchemy import Column, Integer, ForeignKey, TIMESTAMP, text, func
+from sqlalchemy import Boolean, Column, Integer, ForeignKey, TIMESTAMP, text, func
 from sqlalchemy.ext.declarative import declared_attr
 
 
@@ -43,3 +43,4 @@ class Owned(CommonBase):
     - `owner_id` (int): Foreign key linking the record to the user table."""
 
     owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    is_tour = Column(Boolean, nullable=False, server_default=text("false"))

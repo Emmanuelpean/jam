@@ -1,4 +1,5 @@
 import { findItemById } from "../../../utils/Utils";
+
 import { useMemo } from "react";
 import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
@@ -60,10 +61,13 @@ export const toSelectOptions = <T extends Record<string, any>>(
 	});
 
 	return sorted.map(
-		(item: T): SelectOption => ({
-			value: typeof valueKey === "function" ? valueKey(item) : item[valueKey],
-			label: typeof labelKey === "function" ? labelKey(item) : item[labelKey],
-		})
+		(item: T): SelectOption => {
+			const rawLabel = typeof labelKey === "function" ? labelKey(item) : item[labelKey];
+			return {
+				value: typeof valueKey === "function" ? valueKey(item) : item[valueKey],
+				label: rawLabel,
+			};
+		}
 	);
 };
 

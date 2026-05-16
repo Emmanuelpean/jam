@@ -13,6 +13,10 @@ export interface TourStep {
 	waitForInput?: string;
 	/** Disable Next while the matched input has content that is not a valid email (empty = allowed) */
 	waitForValidEmailIfFilled?: string;
+	/** Disable Next while the matched input has content that is not a valid URL (empty = allowed) */
+	waitForValidUrlIfFilled?: string;
+	/** If this selector is absent from the DOM when the step activates, skip the step (forward or backward) */
+	skipIfSelectorAbsent?: string;
 	/** Auto-focus this selector when the step activates (no effect on Next button) */
 	autoFocusSelector?: string;
 	/** When watchSelector gets input, fill fillSelector with fillValue via React's native setter */
@@ -137,48 +141,71 @@ const FIRST_JOB_STEPS: TourStep[] = [
 	},
 	{
 		id: "add-company",
-		targetId: "add-button-company",
-		title: "Add a Company",
-		content:
-			"Click the + button to create a new company, or select one from the dropdown. Click Next to skip.",
+		targetId: "company_id-form-group",
+		title: "Company",
+		content: "Select the company this job is at, or click + to add a new one on the fly. Click Next to skip.",
 		placement: "right",
 		waitForSelector: "#modal-edit-company",
 		autoAdvanceStepId: "company-filling",
 		nextStepId: "job-url",
+		showBack: true,
 	},
 	{
 		id: "company-filling",
 		targetId: "#modal-edit-company .modal-content",
 		title: "Fill in the Company Details",
-		content:
-			"Enter a name and any other details, then click Confirm to save. The company will be available to reuse on future applications.",
+		content: "Enter a name and any other details, then click Confirm to save.",
 		placement: "left",
 		waitForSelectorGone: "#modal-edit-company",
 		hideNextButton: true,
+		autoAdvanceStepId: "add-company",
+		showBack: true,
+		backStepId: "add-company",
+		backActionSelector: "#modal-edit-company-cancel-button",
 	},
 	{
 		id: "job-url",
 		targetId: "url-form-group",
 		title: "Job URL",
 		content:
-			"Paste the link to the original job listing here. JAM can open it in one click so you can revisit the details any time.",
+			"Paste the link to the original job listing here. JAM can open it in one click so you can revisit the details any time. Must be a valid URL starting with https://.",
 		placement: "right",
+		showBack: true,
+		waitForValidUrlIfFilled: '.modal.show input[name="url"]',
 	},
 	{
-		id: "job-attendance-location",
+		id: "job-attendance",
 		targetId: "attendance_type-form-group",
-		title: "Attendance Type & Location",
-		content:
-			"Select whether this role is Remote, Hybrid, or On-site. If it's not Remote, a location field appears just below — enter the city or area and JAM will place it on the map.",
+		title: "Attendance Type",
+		content: "Select whether this role is Remote, Hybrid, or On-site. Click Next to skip.",
 		placement: "right",
+		showBack: true,
 	},
 	{
-		id: "job-salary",
-		targetId: "salary_min-form-group",
-		title: "Salary Range",
-		content:
-			"Record the advertised salary range — fill in the minimum, maximum, or both. The currency follows your preferred setting in User Settings.",
+		id: "job-location",
+		targetId: "location-form-group",
+		title: "Location",
+		content: "Enter the city or area where this role is based. JAM will place it on the map.",
 		placement: "right",
+		showBack: true,
+		skipIfSelectorAbsent: "#location-form-group",
+	},
+	{
+		id: "job-salary-min",
+		targetId: "salary_min-form-group",
+		title: "Minimum Salary",
+		content:
+			"Enter the minimum advertised salary. The currency follows your preferred setting in User Settings. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "job-salary-max",
+		targetId: "salary_max-form-group",
+		title: "Maximum Salary",
+		content: "Enter the maximum advertised salary. Click Next to skip.",
+		placement: "right",
+		showBack: true,
 	},
 	{
 		id: "job-personal-rating",
@@ -187,6 +214,7 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		content:
 			"Rate this role from 1 to 5 stars based on how excited you are about it. Use it to quickly prioritise the jobs that matter most.",
 		placement: "right",
+		showBack: true,
 	},
 	{
 		id: "job-favourite",
@@ -195,6 +223,7 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		content:
 			"Star this job to mark it as a top pick. Favourited jobs are easy to filter for so you never lose sight of the roles you care about most.",
 		placement: "right",
+		showBack: true,
 	},
 	{
 		id: "job-deadline",
@@ -203,14 +232,97 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		content:
 			"Set the closing date for this application. JAM will show a live countdown in the table so you always know how much time you have left.",
 		placement: "right",
+		showBack: true,
 	},
 	{
 		id: "job-source",
 		targetId: "source_type-form-group",
 		title: "How Did You Find It?",
 		content:
-			"Log where you found the job — a job board, recruiter, LinkedIn, or elsewhere. Tracking your sources helps you see which channels land interviews.",
+			"Log where you found the job — a job board, recruiter, LinkedIn, or elsewhere. Tracking your sources helps you see which channels land interviews. Click Next to skip.",
 		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "job-source-aggregator",
+		targetId: "source_aggregator_id-form-group",
+		title: "Job Board / Aggregator",
+		content:
+			"Select the job board or aggregator where you found this listing, or click + to add a new one on the fly. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+		skipIfSelectorAbsent: "#source_aggregator_id-form-group",
+		waitForSelector: "#modal-edit-aggregator",
+		autoAdvanceStepId: "job-source-aggregator-filling",
+		nextStepId: "job-source-recruiter",
+	},
+	{
+		id: "job-source-aggregator-filling",
+		targetId: "#modal-edit-aggregator .modal-content",
+		title: "Add a Job Board",
+		content: "Enter the name and URL of the job board, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-aggregator",
+		hideNextButton: true,
+		autoAdvanceStepId: "job-source-aggregator",
+		showBack: true,
+		backStepId: "job-source-aggregator",
+		backActionSelector: "#modal-edit-aggregator-cancel-button",
+		skipIfSelectorAbsent: "#modal-edit-aggregator",
+	},
+	{
+		id: "job-source-recruiter",
+		targetId: "recruiter_id-form-group",
+		title: "Recruiter",
+		content:
+			"Link the recruiter who shared this opportunity with you, or click + to add a new contact on the fly. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+		skipIfSelectorAbsent: "#recruiter_id-form-group",
+		waitForSelector: "#modal-edit-person",
+		autoAdvanceStepId: "job-source-recruiter-filling",
+		nextStepId: "job-source-company",
+	},
+	{
+		id: "job-source-recruiter-filling",
+		targetId: "#modal-edit-person .modal-content",
+		title: "Add the Recruiter",
+		content: "Enter the recruiter's details, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-person",
+		hideNextButton: true,
+		autoAdvanceStepId: "job-source-recruiter",
+		showBack: true,
+		backStepId: "job-source-recruiter",
+		backActionSelector: "#modal-edit-person-cancel-button",
+		skipIfSelectorAbsent: "#modal-edit-person",
+	},
+	{
+		id: "job-source-company",
+		targetId: "recruitment_company_id-form-group",
+		title: "Recruitment Company",
+		content:
+			"Select the recruitment company that put you forward for this role, or click + to add a new one on the fly. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+		skipIfSelectorAbsent: "#recruitment_company_id-form-group",
+		waitForSelector: "#modal-edit-company",
+		autoAdvanceStepId: "job-source-company-filling",
+		nextStepId: "job-tags",
+	},
+	{
+		id: "job-source-company-filling",
+		targetId: "#modal-edit-company .modal-content",
+		title: "Add the Recruitment Company",
+		content: "Enter the company's details, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-company",
+		hideNextButton: true,
+		autoAdvanceStepId: "job-source-company",
+		showBack: true,
+		backStepId: "job-source-company",
+		backActionSelector: "#modal-edit-company-cancel-button",
+		skipIfSelectorAbsent: "#modal-edit-company",
 	},
 	{
 		id: "job-tags",
@@ -222,6 +334,7 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		waitForSelector: "#modal-edit-keyword",
 		autoAdvanceStepId: "job-tag-filling",
 		nextStepId: "job-contacts",
+		showBack: true,
 	},
 	{
 		id: "job-tag-filling",
@@ -246,6 +359,7 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		waitForSelector: "#modal-edit-person",
 		autoAdvanceStepId: "job-contact-filling",
 		nextStepId: "job-description",
+		showBack: true,
 	},
 	{
 		id: "job-contact-filling",
@@ -267,6 +381,7 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		content:
 			"Paste the job description here. Having it saved in JAM means you can reference it at any time — handy when preparing for interviews.",
 		placement: "right",
+		showBack: true,
 	},
 	{
 		id: "job-notes",
@@ -275,15 +390,17 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		content:
 			"Add any personal notes about this role — impressions from a call, questions to ask, or anything that helps you stay on top of the application.",
 		placement: "right",
+		showBack: true,
 	},
 	{
 		id: "save-job",
 		targetId: "modal-edit-job-confirm-button",
 		title: "Save the Job",
-		content: "Everything looks great! Click to save your job application.",
+		content: "Everything looks great! Click to save the job details.",
 		placement: "top",
 		waitForSelectorGone: '.modal.show input[name="title"]',
 		hideNextButton: true,
+		showBack: true,
 	},
 	{
 		id: "show-job-in-table",

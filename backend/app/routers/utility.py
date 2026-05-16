@@ -390,9 +390,10 @@ def generate_data_table_crud_router(
 
             # Handle many-to-many relationships
             if m2m_data:
-                upsert_many_to_many(db, new_entry.id, m2m_data, current_user.id)
+                new_entry_id = new_entry.id
+                upsert_many_to_many(db, new_entry_id, m2m_data, current_user.id)
                 db.commit()
-                db.refresh(new_entry)
+                new_entry = db.query(table_model).filter(table_model.id == new_entry_id).first()
 
             if current_user.is_admin:
                 return new_entry

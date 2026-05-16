@@ -32,6 +32,7 @@ class OwnedOut(Out):
     """Base model for all output schemas owned by a user"""
 
     owner_id: int
+    is_tour: bool = False
 
 
 class GenericResponse(BaseModel):

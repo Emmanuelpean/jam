@@ -1,7 +1,18 @@
-import React, { createContext, JSX, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+	createContext,
+	JSX,
+	ReactNode,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { TourSnapshot, useDataContext } from "./DataContext";
+import { useLoading } from "./LoadingContext";
 import { scrapedJobApi } from "../services/api/Services";
 import { useGlobalToast } from "../hooks/useNotificationToast";
 
@@ -84,6 +95,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 		setTourSnapshot,
 	} = useDataContext();
 	const { showToastError } = useGlobalToast();
+	const { showLoading, hideLoading } = useLoading();
 
 	const navigate = useNavigate();
 	const location = useLocation();
@@ -139,7 +151,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				(s) =>
 					!snapshot.speculativeApplicationIds.has(s.id) &&
 					!jamIds.speculativeApplicationIds.has(s.id) &&
-					!jamIds.companyIds.has(s.company_id),
+					!jamIds.companyIds.has(s.company_id)
 			)
 		);
 	}, [isTourActive, jobs, companies, persons, keywords, scrapingFilters, speculativeApplications]);
@@ -164,174 +176,8 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				};
 				jamCreatedIds.current = emptySnapshot();
 
-				if (tourId === "follow-up-email") {
-					const [personResult, interviewerResult] = await Promise.all([
-						addEntity("person", {
-							first_name: "Alex",
-							last_name: "Johnson",
-							email: "alex.johnson@example.com",
-							phone: null,
-							role: "Hiring Manager",
-							linkedin_url: null,
-							company_id: null,
-							is_recruiter: false,
-						}),
-						addEntity("person", {
-							first_name: "Sarah",
-							last_name: "Mitchell",
-							email: "sarah.mitchell@example.com",
-							phone: null,
-							role: "Engineering Manager",
-							linkedin_url: null,
-							company_id: null,
-							is_recruiter: false,
-						}),
-					]);
-
-					const personId: number = personResult.data.id;
-					const interviewerId: number = interviewerResult.data.id;
-
-					const jobResult = await addEntity("job", {
-						title: "Software Engineer",
-						is_favourite: false,
-						description: null,
-						note: null,
-						url: null,
-						salary_min: null,
-						salary_max: null,
-						salary_currency: null,
-						personal_rating: null,
-						deadline: null,
-						company_id: null,
-						source_aggregator_id: null,
-						source_type: null,
-						recruiter_id: null,
-						recruitment_company_id: null,
-						location: null,
-						application_date: new Date().toISOString(),
-						application_status: "applied",
-						applied_via: null,
-						application_note: null,
-						application_aggregator_id: null,
-						application_url: null,
-						attendance_type: null,
-						keywords: [],
-						contacts: [personId],
-					});
-
-					const jobId: number = jobResult.data.id;
-					setDemoJobId(jobId);
-					const interviewResult = await addEntity("interview", {
-						job_id: jobId,
-						type: "video",
-						date: new Date().toISOString(),
-						location: null,
-						note: null,
-						attendance_type: "remote",
-						interviewers: [interviewerId],
-					});
-
-					jamCreatedIds.current.personIds.add(personId);
-					jamCreatedIds.current.personIds.add(interviewerId);
-					jamCreatedIds.current.jobIds.add(jobId);
-					jamCreatedIds.current.interviewIds.add(interviewResult.data.id);
-				}
-
-				if (tourId === "import-scraped-job") {
-					const result = await scrapedJobApi.createTourDemo(token!);
-					setDemoScrapedJobId(result.data.id);
-				}
-
-				if (tourId === "log-interview" || tourId === "log-update") {
-					const jobResult = await addEntity("job", {
-						title: "Software Engineer",
-						is_favourite: false,
-						description: null,
-						note: null,
-						url: null,
-						salary_min: null,
-						salary_max: null,
-						salary_currency: null,
-						personal_rating: null,
-						deadline: null,
-						company_id: null,
-						source_aggregator_id: null,
-						source_type: null,
-						recruiter_id: null,
-						recruitment_company_id: null,
-						location: null,
-						application_date: new Date().toISOString(),
-						application_status: "applied",
-						applied_via: null,
-						application_note: null,
-						application_aggregator_id: null,
-						application_url: null,
-						attendance_type: null,
-						keywords: [],
-						contacts: [],
-					});
-					setDemoJobId(jobResult.data.id);
-					jamCreatedIds.current.jobIds.add(jobResult.data.id);
-				}
-
-				if (tourId === "first-job") {
-					const [c1, c2, p1, p2, k1, k2] = await Promise.all([
-						addEntity("company", { name: "Acme Corp", website: null, note: null, location: null }),
-						addEntity("company", { name: "Globex Inc", website: null, note: null, location: null }),
-						addEntity("person", { first_name: "Emma", last_name: "Williams", email: null, phone: null, role: "Recruiter", linkedin_url: null, company_id: null, is_recruiter: true }),
-						addEntity("person", { first_name: "David", last_name: "Chen", email: null, phone: null, role: "Hiring Manager", linkedin_url: null, company_id: null, is_recruiter: false }),
-						addEntity("keyword", { name: "TypeScript" }),
-						addEntity("keyword", { name: "React.js" }),
-					]);
-					jamCreatedIds.current.companyIds.add(c1.data.id);
-					jamCreatedIds.current.companyIds.add(c2.data.id);
-					jamCreatedIds.current.personIds.add(p1.data.id);
-					jamCreatedIds.current.personIds.add(p2.data.id);
-					jamCreatedIds.current.keywordIds.add(k1.data.id);
-					jamCreatedIds.current.keywordIds.add(k2.data.id);
-				}
-
-				if (tourId === "speculative-applications") {
-					const [companyResult1, companyResult2] = await Promise.all([
-						addEntity("company", { name: "Anthropic", website: null, note: null, location: null }),
-						addEntity("company", { name: "DeepMind", website: null, note: null, location: null }),
-					]);
-					jamCreatedIds.current.companyIds.add(companyResult1.data.id);
-					jamCreatedIds.current.companyIds.add(companyResult2.data.id);
-				}
-
-				if (tourId === "log-application") {
-					const jobResult = await addEntity("job", {
-						title: "Software Engineer",
-						is_favourite: false,
-						description: null,
-						note: null,
-						url: null,
-						salary_min: null,
-						salary_max: null,
-						salary_currency: null,
-						personal_rating: null,
-						deadline: null,
-						company_id: null,
-						source_aggregator_id: null,
-						source_type: null,
-						recruiter_id: null,
-						recruitment_company_id: null,
-						location: null,
-						application_date: null,
-						application_status: null,
-						applied_via: null,
-						application_note: null,
-						application_aggregator_id: null,
-						application_url: null,
-						attendance_type: null,
-						keywords: [],
-						contacts: [],
-					});
-					setDemoJobId(jobResult.data.id);
-					jamCreatedIds.current.jobIds.add(jobResult.data.id);
-				}
-
+				// Set the snapshot before any async entity creation so the stale cleanup
+				// guard in DataContext sees tourSnapshot !== null during the awaits below.
 				const ISOLATED_TOURS = new Set([
 					"first-job",
 					"follow-up-email",
@@ -343,6 +189,239 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					"speculative-applications",
 				]);
 				if (ISOLATED_TOURS.has(tourId)) setTourSnapshot(preInteractiveSnapshot.current);
+
+				showLoading("Setting up tour...");
+				try {
+					if (tourId === "follow-up-email") {
+						const [personResult, interviewerResult] = await Promise.all([
+							addEntity("person", {
+								first_name: "Alex",
+								last_name: "Johnson",
+								email: "alex.johnson@novatech.io",
+								phone: "+44 7911 123456",
+								role: "Hiring Manager",
+								linkedin_url: "https://www.linkedin.com/in/alex-johnson",
+								is_tour: true,
+							}),
+							addEntity("person", {
+								first_name: "Sarah",
+								last_name: "Mitchell",
+								email: "sarah.mitchell@novatech.io",
+								phone: "+44 7911 234567",
+								role: "Engineering Manager",
+								linkedin_url: "https://www.linkedin.com/in/sarah-mitchell",
+								is_tour: true,
+							}),
+						]);
+
+						const personId: number = personResult.data.id;
+						const interviewerId: number = interviewerResult.data.id;
+
+						const jobResult = await addEntity("job", {
+							title: "Software Engineer",
+							url: "https://www.novatech.io/careers/software-engineer",
+							application_date: new Date().toISOString(),
+							application_status: "applied",
+							is_tour: true,
+							contacts: [personId],
+						});
+
+						const jobId: number = jobResult.data.id;
+						setDemoJobId(jobId);
+						const interviewResult = await addEntity("interview", {
+							job_id: jobId,
+							type: "video",
+							date: new Date().toISOString(),
+							location: null,
+							note: null,
+							attendance_type: "remote",
+							interviewers: [interviewerId],
+							is_tour: true,
+						});
+
+						jamCreatedIds.current.personIds.add(personId);
+						jamCreatedIds.current.personIds.add(interviewerId);
+						jamCreatedIds.current.jobIds.add(jobId);
+						jamCreatedIds.current.interviewIds.add(interviewResult.data.id);
+					}
+
+					if (tourId === "import-scraped-job") {
+						const result = await scrapedJobApi.createTourDemo(token!);
+						setDemoScrapedJobId(result.data.id);
+					}
+
+					if (tourId === "log-interview" || tourId === "log-update") {
+						const companyResult = await addEntity("company", {
+							name: "Meridian Labs",
+							website: "https://www.meridianlabs.com",
+							note: "Product-led growth startup specialising in data analytics. ~80 employees.",
+							location: null,
+							is_tour: true,
+						});
+						const companyId: number = companyResult.data.id;
+						jamCreatedIds.current.companyIds.add(companyId);
+
+						const jobResult = await addEntity("job", {
+							title: "Software Engineer",
+							is_favourite: false,
+							is_tour: true,
+							description: null,
+							note: null,
+							url: "https://www.meridianlabs.com/jobs/software-engineer",
+							salary_min: 65000,
+							salary_max: 85000,
+							salary_currency: null,
+							personal_rating: null,
+							deadline: null,
+							company_id: companyId,
+							source_aggregator_id: null,
+							source_type: null,
+							recruiter_id: null,
+							recruitment_company_id: null,
+							location: "London, UK",
+							application_date: new Date().toISOString(),
+							application_status: "applied",
+							applied_via: null,
+							application_note: null,
+							application_aggregator_id: null,
+							application_url: null,
+							attendance_type: "hybrid",
+							keywords: [],
+							contacts: [],
+						});
+						setDemoJobId(jobResult.data.id);
+						jamCreatedIds.current.jobIds.add(jobResult.data.id);
+					}
+
+					if (tourId === "first-job") {
+						const [c1, c2] = await Promise.all([
+							addEntity("company", {
+								name: "Acme Corp",
+								website: "https://www.acmecorp.com",
+								note: "B2B SaaS company building HR tooling. Series B, ~200 employees, offices in London and Manchester.",
+								is_tour: true,
+							}),
+							addEntity("company", {
+								name: "Globex Inc",
+								website: "https://www.globexinc.com",
+								note: "Enterprise software solutions provider. Clients across finance and logistics in the UK and Europe.",
+								is_tour: true,
+							}),
+						]);
+						jamCreatedIds.current.companyIds.add(c1.data.id);
+						jamCreatedIds.current.companyIds.add(c2.data.id);
+
+						const [p1, p2, k1, k2, a1, a2] = await Promise.all([
+							addEntity("person", {
+								first_name: "Emma",
+								last_name: "Williams",
+								email: "emma.williams@acmecorp.com",
+								phone: "+44 7700 900123",
+								role: "Recruiter",
+								linkedin_url: "https://www.linkedin.com/in/emma-williams",
+								company_id: c1.data.id,
+								is_recruiter: true,
+								is_tour: true,
+							}),
+							addEntity("person", {
+								first_name: "David",
+								last_name: "Chen",
+								email: "david.chen@acmecorp.com",
+								phone: "+44 7700 900456",
+								role: "Hiring Manager",
+								linkedin_url: "https://www.linkedin.com/in/david-chen",
+								company_id: c1.data.id,
+								is_recruiter: false,
+								is_tour: true,
+							}),
+							addEntity("keyword", { name: "TypeScript", is_tour: true }),
+							addEntity("keyword", { name: "React.js", is_tour: true }),
+							addEntity("aggregator", {
+								name: "LinkedIn Jobs",
+								url: "https://www.linkedin.com/jobs/jam-tour",
+								is_tour: true,
+							}),
+							addEntity("aggregator", {
+								name: "Indeed",
+								url: "https://www.indeed.com/jam-tour",
+								is_tour: true,
+							}),
+						]);
+						jamCreatedIds.current.personIds.add(p1.data.id);
+						jamCreatedIds.current.personIds.add(p2.data.id);
+						jamCreatedIds.current.keywordIds.add(k1.data.id);
+						jamCreatedIds.current.keywordIds.add(k2.data.id);
+						jamCreatedIds.current.aggregatorIds.add(a1.data.id);
+						jamCreatedIds.current.aggregatorIds.add(a2.data.id);
+					}
+
+					if (tourId === "speculative-applications") {
+						const [companyResult1, companyResult2] = await Promise.all([
+							addEntity("company", {
+								name: "Anthropic",
+								website: "https://www.anthropic.com",
+								note: "AI safety company. Builds Claude. Based in San Francisco — remote-friendly for UK applicants.",
+								location: null,
+								is_tour: true,
+							}),
+							addEntity("company", {
+								name: "DeepMind",
+								website: "https://www.deepmind.com",
+								note: "AI research lab, part of Google. Main office in London (King's Cross). World-class research team.",
+								location: null,
+								is_tour: true,
+							}),
+						]);
+						jamCreatedIds.current.companyIds.add(companyResult1.data.id);
+						jamCreatedIds.current.companyIds.add(companyResult2.data.id);
+					}
+
+					if (tourId === "log-application") {
+						const companyResult = await addEntity("company", {
+							name: "Meridian Labs",
+							website: "https://www.meridianlabs.com",
+							note: "Product-led growth startup specialising in data analytics. ~80 employees.",
+							location: null,
+							is_tour: true,
+						});
+						const companyId: number = companyResult.data.id;
+						jamCreatedIds.current.companyIds.add(companyId);
+
+						const jobResult = await addEntity("job", {
+							title: "Software Engineer",
+							is_favourite: false,
+							is_tour: true,
+							description: null,
+							note: null,
+							url: "https://www.meridianlabs.com/jobs/software-engineer",
+							salary_min: 65000,
+							salary_max: 85000,
+							salary_currency: null,
+							personal_rating: null,
+							deadline: null,
+							company_id: companyId,
+							source_aggregator_id: null,
+							source_type: null,
+							recruiter_id: null,
+							recruitment_company_id: null,
+							location: "London, UK",
+							application_date: null,
+							application_status: null,
+							applied_via: null,
+							application_note: null,
+							application_aggregator_id: null,
+							application_url: null,
+							attendance_type: "hybrid",
+							keywords: [],
+							contacts: [],
+						});
+						setDemoJobId(jobResult.data.id);
+						jamCreatedIds.current.jobIds.add(jobResult.data.id);
+					}
+				} finally {
+					hideLoading();
+				}
+
 				setIsTourSelectOpen(false);
 				setActiveTourId(tourId);
 			} catch (err: any) {
@@ -364,6 +443,8 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			token,
 			location.pathname,
 			showToastError,
+			showLoading,
+			hideLoading,
 		]
 	);
 
@@ -373,12 +454,18 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			setActiveTourId(null);
 			setTourSnapshot(null);
 
-			document.querySelectorAll<HTMLElement>('.modal.show').forEach((modal) => {
+			document.querySelectorAll<HTMLElement>(".modal.show").forEach((modal) => {
 				const cancelBtn = modal.querySelector<HTMLElement>('[id$="-cancel-button"]');
-				(cancelBtn ?? modal.querySelector<HTMLElement>('.btn-close'))?.click();
+				(cancelBtn ?? modal.querySelector<HTMLElement>(".btn-close"))?.click();
 			});
 
-			if (tourId === "follow-up-email" || tourId === "first-job" || tourId === "log-interview" || tourId === "log-update" || tourId === "log-application") {
+			if (
+				tourId === "follow-up-email" ||
+				tourId === "first-job" ||
+				tourId === "log-interview" ||
+				tourId === "log-update" ||
+				tourId === "log-application"
+			) {
 				setDemoJobId(null);
 			}
 
@@ -442,9 +529,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 						...newJobApplicationUpdateIds.map((id) => deleteEntity("jobApplicationUpdate", id)),
 					]);
 					// Round 2: delete jobs — only JAM-created ones when user chose to keep their data
-					const jobsToDelete = keepUserData
-						? newJobIds.filter((id) => jamIds.jobIds.has(id))
-						: newJobIds;
+					const jobsToDelete = keepUserData ? newJobIds.filter((id) => jamIds.jobIds.has(id)) : newJobIds;
 					await Promise.all(jobsToDelete.map((id) => deleteEntity("job", id)));
 					// Round 3: delete speculative applications before companies (company_id FK has CASCADE)
 					const sAsToDelete = [
@@ -532,12 +617,15 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 		}
 	}, [isTourActive, isCleaningUp, pendingNextTourId]);
 
-	const endTourAndContinue = useCallback((nextTourId: string, keepUserData?: boolean): void => {
-		// Clear origin path so endTour doesn't navigate away before Tour B starts.
-		originPathRef.current = null;
-		setPendingNextTourId(nextTourId);
-		void endTour(true, keepUserData ?? false);
-	}, [endTour]);
+	const endTourAndContinue = useCallback(
+		(nextTourId: string, keepUserData?: boolean): void => {
+			// Clear origin path so endTour doesn't navigate away before Tour B starts.
+			originPathRef.current = null;
+			setPendingNextTourId(nextTourId);
+			void endTour(true, keepUserData ?? false);
+		},
+		[endTour]
+	);
 
 	const openTourSelect = useCallback((): void => setIsTourSelectOpen(true), []);
 	const closeTourSelect = useCallback((): void => setIsTourSelectOpen(false), []);

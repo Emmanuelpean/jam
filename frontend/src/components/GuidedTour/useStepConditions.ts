@@ -27,9 +27,9 @@ export function useStepConditions(
 	}, []);
 
 	useEffect(() => {
-		setInputValid(!!stepDef?.waitForValidEmailIfFilled);
+		setInputValid(!!(stepDef?.waitForValidEmailIfFilled || stepDef?.waitForValidUrlIfFilled));
 		autoFocusedRef.current = false;
-	}, [step, stepDef?.waitForValidEmailIfFilled]);
+	}, [step, stepDef?.waitForValidEmailIfFilled, stepDef?.waitForValidUrlIfFilled]);
 
 	useEffect(() => {
 		if (!isTourActive || !stepDef?.autoFocusSelector) return;
@@ -44,8 +44,8 @@ export function useStepConditions(
 
 	useEffect(() => {
 		if (!isTourActive || !stepDef) return stop;
-		const { waitForSelector, waitForSelectorGone, waitForInput, waitForValidEmailIfFilled, autoFill } = stepDef;
-		if (!waitForSelector && !waitForSelectorGone && !waitForInput && !waitForValidEmailIfFilled && !autoFill) return stop;
+		const { waitForSelector, waitForSelectorGone, waitForInput, waitForValidEmailIfFilled, waitForValidUrlIfFilled, autoFill } = stepDef;
+		if (!waitForSelector && !waitForSelectorGone && !waitForInput && !waitForValidEmailIfFilled && !waitForValidUrlIfFilled && !autoFill) return stop;
 
 		if (autoFill) {
 			let filled = false;
@@ -89,6 +89,13 @@ export function useStepConditions(
 				tryAutoFocus(el);
 				const value = el?.value.trim() ?? "";
 				setInputValid(value === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
+				return;
+			}
+			if (waitForValidUrlIfFilled) {
+				const el = document.querySelector<HTMLInputElement>(waitForValidUrlIfFilled);
+				tryAutoFocus(el);
+				const value = el?.value.trim() ?? "";
+				setInputValid(value === "" || value.includes("."));
 				return;
 			}
 			if (waitForInput) {

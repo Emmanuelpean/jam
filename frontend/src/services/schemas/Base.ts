@@ -6,6 +6,7 @@ export interface BaseOut {
 
 export interface OwnedOut extends BaseOut {
 	owner_id: number;
+	is_tour: boolean;
 }
 
 export interface GeoLocationData extends BaseOut {

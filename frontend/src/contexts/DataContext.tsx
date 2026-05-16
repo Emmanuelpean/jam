@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
 	aggregatorsApi,
 	companiesApi,
@@ -22,6 +22,7 @@ import { useLoading } from "./LoadingContext";
 import { findItemById, sortByKey } from "../utils/Utils";
 import { CrudApi } from "../services/api/Crud";
 import { getScrapingFilterName } from "../components/rendering/view/ViewRenders";
+
 import {
 	AggregatorData,
 	CompanyData,
@@ -211,6 +212,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [aggregators, setAggregators] = useState<AggregatorData[]>([]);
 	const [keywords, setKeywords] = useState<KeywordData[]>([]);
 	const [speculativeApplications, setSpeculativeApplications] = useState<SpeculativeApplicationData[]>([]);
+	const staleCleanupRanRef = useRef(false);
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [scrapingFilters, setScrapingFilters] = useState<ScrapingFilterData[]>([]);
 	const [scrapingFavouriteFilters, setScrapingFavouriteFilters] = useState<ScrapingFilterData[]>([]);
@@ -570,6 +572,39 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		if (!token || !currentUser) return;
 		fetchAllData().then((): void => {});
 	}, [token, currentUser?.is_admin]);
+
+	useEffect((): void => {
+		if (staleCleanupRanRef.current) return;
+		if (tourSnapshot !== null) return;
+		const hasData = companies.length > 0 || persons.length > 0 || keywords.length > 0 || aggregators.length > 0;
+		if (!hasData) return;
+		staleCleanupRanRef.current = true;
+		const staleInterviewIds = interviews.filter((i) => i.is_tour).map((i) => i.id);
+		const staleJobIds = jobs.filter((j) => j.is_tour).map((j) => j.id);
+		const stalePersonIds = persons.filter((p) => p.is_tour).map((p) => p.id);
+		const staleKeywordIds = keywords.filter((k) => k.is_tour).map((k) => k.id);
+		const staleAggregatorIds = aggregators.filter((a) => a.is_tour).map((a) => a.id);
+		const staleCompanyIds = companies.filter((c) => c.is_tour).map((c) => c.id);
+		if (
+			!staleInterviewIds.length &&
+			!staleJobIds.length &&
+			!stalePersonIds.length &&
+			!staleKeywordIds.length &&
+			!staleAggregatorIds.length &&
+			!staleCompanyIds.length
+		)
+			return;
+		void (async () => {
+			await Promise.all(staleInterviewIds.map((id) => deleteEntity("interview", id)));
+			await Promise.all(staleJobIds.map((id) => deleteEntity("job", id)));
+			await Promise.all([
+				...stalePersonIds.map((id) => deleteEntity("person", id)),
+				...staleKeywordIds.map((id) => deleteEntity("keyword", id)),
+				...staleAggregatorIds.map((id) => deleteEntity("aggregator", id)),
+				...staleCompanyIds.map((id) => deleteEntity("company", id)),
+			]);
+		})();
+	}, [persons, keywords, aggregators, companies, jobs, interviews, tourSnapshot]);
 
 	return (
 		<DataContext.Provider

@@ -109,6 +109,15 @@ export function GuidedTour(): JSX.Element | null {
 		if (location.pathname !== path) navigate(path);
 	}, [step, isTourActive, stepDef?.route, location.pathname, navigate]);
 
+	// ── Skip step when its target element is absent (e.g. conditional form fields) ─
+	useEffect(() => {
+		if (!isTourActive || !stepDef?.skipIfSelectorAbsent) return;
+		if (!document.querySelector(stepDef.skipIfSelectorAbsent)) {
+			if (directionRef.current === 1) advanceFromCurrentStep();
+			else advanceToStep(step - 1);
+		}
+	}, [step, isTourActive, stepDef?.skipIfSelectorAbsent, advanceFromCurrentStep, advanceToStep]);
+
 	// ── Sync allowed context menu actions to TourContext ────────────────────────
 	useEffect(() => {
 		setAllowedContextMenuActions(stepDef?.allowedContextMenuActions ?? null);
@@ -138,7 +147,7 @@ export function GuidedTour(): JSX.Element | null {
 	// ── Keyboard navigation ──────────────────────────────────────────────────────
 	const isLast = step === TOUR_STEPS.length - 1;
 	const showNext = !stepDef?.hideNextButton;
-	const nextDisabled = isCleaningUp || ((!!stepDef?.waitForInput || !!stepDef?.waitForValidEmailIfFilled) && !inputValid);
+	const nextDisabled = isCleaningUp || ((!!stepDef?.waitForInput || !!stepDef?.waitForValidEmailIfFilled || !!stepDef?.waitForValidUrlIfFilled) && !inputValid);
 	const canGoBack = step > 0 && (showNext || !!stepDef?.showBack) && (!!stepDef?.showBack || !TOUR_STEPS[step - 1]?.hideNextButton);
 
 	const isLastRef = useRef(isLast);
