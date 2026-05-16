@@ -3,6 +3,7 @@ import { TourStep } from "./tourSteps";
 
 export const SPOTLIGHT_PAD = 8;
 export const POP_W = 450;
+export const POP_W_LAST = 550;
 
 const GAP = 14;
 const POP_MIN_H = 120;

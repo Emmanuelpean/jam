@@ -1901,6 +1901,11 @@ class TourUtils(BaseUtilsClass):
             lambda d: f"STEP {n} OF" in d.find_element(By.ID, self.TOUR_COUNTER).text.upper()
         )
 
+    @property
+    def keep_data_toggle(self) -> WebElement:
+        """Keep my data toggle on the done step."""
+        return self.get_element("tour-keep-data")
+
     def poll_db_count(self, model_class, owner_id: int, expected: int, timeout: float = 10.0) -> None:
         """Poll the DB until the row count for owner_id equals expected, or raise."""
         deadline = time.time() + timeout

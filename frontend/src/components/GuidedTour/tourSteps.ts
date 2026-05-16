@@ -408,7 +408,9 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		title: "Job Saved!",
 		content:
 			"Your new job application now appears in the table. Use the columns to track status, deadline, and last activity at a glance.",
-		placement: "top",
+		placement: "bottom",
+		blockLeftClick: true,
+		allowedContextMenuActions: [],
 	},
 	{
 		id: "done",
@@ -418,6 +420,7 @@ const FIRST_JOB_STEPS: TourStep[] = [
 			"You've added your first job application - great work! Choose below whether to keep it or delete it along with any other data created during this tour.",
 		route: null,
 		placement: "center",
+		showBack: false,
 	},
 ];
 

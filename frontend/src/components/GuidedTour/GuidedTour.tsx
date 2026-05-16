@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTour } from "../../contexts/TourContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { getTourById, TOURS, TourStep } from "./tourSteps";
-import { computePopoverStyle, POP_W, SPOTLIGHT_PAD } from "./tourPositioning";
+import { computePopoverStyle, POP_W, POP_W_LAST, SPOTLIGHT_PAD } from "./tourPositioning";
 import { expandTargetId, resolveTarget } from "./tourUtils";
 import { useTrackTarget } from "./useTrackTarget";
 import { useStepConditions } from "./useStepConditions";
@@ -148,7 +148,7 @@ export function GuidedTour(): JSX.Element | null {
 	const isLast = step === TOUR_STEPS.length - 1;
 	const showNext = !stepDef?.hideNextButton;
 	const nextDisabled = isCleaningUp || ((!!stepDef?.waitForInput || !!stepDef?.waitForValidEmailIfFilled || !!stepDef?.waitForValidUrlIfFilled) && !inputValid);
-	const canGoBack = step > 0 && (showNext || !!stepDef?.showBack) && (!!stepDef?.showBack || !TOUR_STEPS[step - 1]?.hideNextButton);
+	const canGoBack = !isLast && step > 0 && (showNext || !!stepDef?.showBack) && (!!stepDef?.showBack || !TOUR_STEPS[step - 1]?.hideNextButton);
 
 	const isLastRef = useRef(isLast);
 	isLastRef.current = isLast;
@@ -250,7 +250,7 @@ export function GuidedTour(): JSX.Element | null {
 					key={step}
 					id="tour-popover"
 					className={`tour-popover${stepDef.placement === "center" ? " tour-popover-center" : ""}`}
-					style={{ width: POP_W, ...popoverStyle }}
+					style={{ width: isLast ? POP_W_LAST : POP_W, ...popoverStyle }}
 					role="dialog"
 					aria-label={`Tour step ${step + 1} of ${TOUR_STEPS.length}: ${stepDef.title}`}
 				>

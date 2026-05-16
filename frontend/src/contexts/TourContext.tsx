@@ -12,7 +12,7 @@ import React, {
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { TourSnapshot, useDataContext } from "./DataContext";
-import { useLoading } from "./LoadingContext";
+import { useProgressOverlay } from "./useProgressOverlayContext";
 import { scrapedJobApi } from "../services/api/Services";
 import { useGlobalToast } from "../hooks/useNotificationToast";
 
@@ -95,7 +95,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 		setTourSnapshot,
 	} = useDataContext();
 	const { showToastError } = useGlobalToast();
-	const { showLoading, hideLoading } = useLoading();
+	const { showProgress, hideProgress } = useProgressOverlay();
 
 	const navigate = useNavigate();
 	const location = useLocation();
@@ -190,7 +190,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				]);
 				if (ISOLATED_TOURS.has(tourId)) setTourSnapshot(preInteractiveSnapshot.current);
 
-				showLoading("Setting up tour...");
+				showProgress("Setting up tour...");
 				try {
 					if (tourId === "follow-up-email") {
 						const [personResult, interviewerResult] = await Promise.all([
@@ -297,14 +297,16 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 						const [c1, c2] = await Promise.all([
 							addEntity("company", {
 								name: "Acme Corp",
-								website: "https://www.acmecorp.com",
-								note: "B2B SaaS company building HR tooling. Series B, ~200 employees, offices in London and Manchester.",
+								url: "https://www.acmecorp.com",
+								description:
+									"B2B SaaS company building HR tooling. Series B, ~200 employees, offices in London and Manchester.",
 								is_tour: true,
 							}),
 							addEntity("company", {
 								name: "Globex Inc",
-								website: "https://www.globexinc.com",
-								note: "Enterprise software solutions provider. Clients across finance and logistics in the UK and Europe.",
+								url: "https://www.globexinc.com",
+								description:
+									"Enterprise software solutions provider. Clients across finance and logistics in the UK and Europe.",
 								is_tour: true,
 							}),
 						]);
@@ -419,7 +421,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 						jamCreatedIds.current.jobIds.add(jobResult.data.id);
 					}
 				} finally {
-					hideLoading();
+					hideProgress();
 				}
 
 				setIsTourSelectOpen(false);
@@ -443,8 +445,8 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			token,
 			location.pathname,
 			showToastError,
-			showLoading,
-			hideLoading,
+			showProgress,
+			hideProgress,
 		]
 	);
 
@@ -490,6 +492,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			const newJobIds = jobs.map((j) => j.id).filter((id) => !snapshot.jobIds.has(id));
 			const newCompanyIds = companies.map((c) => c.id).filter((id) => !snapshot.companyIds.has(id));
 			const newPersonIds = persons.map((p) => p.id).filter((id) => !snapshot.personIds.has(id));
+			const newAggregatorIds = aggregators.map((a) => a.id).filter((id) => !snapshot.aggregatorIds.has(id));
 			const newKeywordIds = keywords.map((k) => k.id).filter((id) => !snapshot.keywordIds.has(id));
 			const newScrapingFilterIds = scrapingFilters
 				.map((f) => f.id)
@@ -514,6 +517,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				newJobIds,
 				newCompanyIds,
 				newPersonIds,
+				newAggregatorIds,
 				newKeywordIds,
 				newScrapingFilterIds,
 				newSpeculativeApplicationIds,
@@ -545,6 +549,9 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					const personsToDelete = keepUserData
 						? newPersonIds.filter((id) => jamIds.personIds.has(id))
 						: newPersonIds;
+					const aggregatorsToDelete = keepUserData
+						? newAggregatorIds.filter((id) => jamIds.aggregatorIds.has(id))
+						: newAggregatorIds;
 					const keywordsToDelete = keepUserData
 						? newKeywordIds.filter((id) => jamIds.keywordIds.has(id))
 						: newKeywordIds;
@@ -554,6 +561,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					await Promise.all([
 						...companiesToDelete.map((id) => deleteEntity("company", id)),
 						...personsToDelete.map((id) => deleteEntity("person", id)),
+						...aggregatorsToDelete.map((id) => deleteEntity("aggregator", id)),
 						...keywordsToDelete.map((id) => deleteEntity("keyword", id)),
 						...filtersToDelete.map((id) => deleteEntity("scrapingFilter", id)),
 					]);
@@ -589,6 +597,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			jobs,
 			companies,
 			persons,
+			aggregators,
 			keywords,
 			interviews,
 			jobApplicationUpdates,

@@ -85,7 +85,7 @@ class Keyword(Owned, Base):
     jobs = relationship("Job", secondary=job_keyword_mapping, back_populates="keywords")
 
     # Constraints
-    __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_owner_keyword_name"),)
+    __table_args__ = (UniqueConstraint("owner_id", "name", "is_tour", name="uq_owner_keyword_name"),)
 
 
 class Aggregator(Owned, Base):
@@ -115,7 +115,7 @@ class Aggregator(Owned, Base):
     )
 
     # Constraints
-    __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_owner_aggregator_name"),)
+    __table_args__ = (UniqueConstraint("owner_id", "name", "is_tour", name="uq_owner_aggregator_name"),)
 
 
 class Company(Owned, Base):
@@ -149,7 +149,7 @@ class Company(Owned, Base):
     )
 
     # Constraints
-    __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_owner_company_name"),)
+    __table_args__ = (UniqueConstraint("owner_id", "name", "is_tour", name="uq_owner_company_name"),)
 
 
 class Geolocation(Base, CommonBase):

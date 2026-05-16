@@ -29,7 +29,7 @@
 .tour-popover {
 	position: fixed;
 	z-index: 1402;
-	width: 450px; /* kept in sync with POP_W constant in GuidedTour.tsx */
+	width: 450px; /* default; last step overrides to POP_W_LAST (550px) via inline style */
 	overflow: hidden;
 	background: var(--bs-body-bg);
 	border: 1px solid var(--bs-card-border-color);
