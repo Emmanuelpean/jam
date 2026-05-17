@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_361c51a8d17ee2a1_routers_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.14.0">coverage.py v7.14.0</a>,
-            created at 2026-05-15 17:43 +0100
+            created at 2026-05-16 23:44 +0100
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -167,7 +167,7 @@
     <p class="run"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">    <span class="nam">jobs</span> <span class="op">=</span> <span class="nam">relationship</span><span class="op">(</span><span class="str">"Job"</span><span class="op">,</span> <span class="nam">secondary</span><span class="op">=</span><span class="nam">job_keyword_mapping</span><span class="op">,</span> <span class="nam">back_populates</span><span class="op">=</span><span class="str">"keywords"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">    <span class="com"># Constraints</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">    <span class="nam">__table_args__</span> <span class="op">=</span> <span class="op">(</span><span class="nam">UniqueConstraint</span><span class="op">(</span><span class="str">"owner_id"</span><span class="op">,</span> <span class="str">"name"</span><span class="op">,</span> <span class="nam">name</span><span class="op">=</span><span class="str">"uq_owner_keyword_name"</span><span class="op">)</span><span class="op">,</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">    <span class="nam">__table_args__</span> <span class="op">=</span> <span class="op">(</span><span class="nam">UniqueConstraint</span><span class="op">(</span><span class="str">"owner_id"</span><span class="op">,</span> <span class="str">"name"</span><span class="op">,</span> <span class="str">"is_tour"</span><span class="op">,</span> <span class="nam">name</span><span class="op">=</span><span class="str">"uq_owner_keyword_name"</span><span class="op">)</span><span class="op">,</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t"><span class="key">class</span> <span class="nam">Aggregator</span><span class="op">(</span><span class="nam">Owned</span><span class="op">,</span> <span class="nam">Base</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -197,7 +197,7 @@
     <p class="run run2"><span class="n"><a id="t115" href="#t115">115</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t116" href="#t116">116</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t117" href="#t117">117</a></span><span class="t">    <span class="com"># Constraints</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t">    <span class="nam">__table_args__</span> <span class="op">=</span> <span class="op">(</span><span class="nam">UniqueConstraint</span><span class="op">(</span><span class="str">"owner_id"</span><span class="op">,</span> <span class="str">"name"</span><span class="op">,</span> <span class="nam">name</span><span class="op">=</span><span class="str">"uq_owner_aggregator_name"</span><span class="op">)</span><span class="op">,</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t118" href="#t118">118</a></span><span class="t">    <span class="nam">__table_args__</span> <span class="op">=</span> <span class="op">(</span><span class="nam">UniqueConstraint</span><span class="op">(</span><span class="str">"owner_id"</span><span class="op">,</span> <span class="str">"name"</span><span class="op">,</span> <span class="str">"is_tour"</span><span class="op">,</span> <span class="nam">name</span><span class="op">=</span><span class="str">"uq_owner_aggregator_name"</span><span class="op">)</span><span class="op">,</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t119" href="#t119">119</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t120" href="#t120">120</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t"><span class="key">class</span> <span class="nam">Company</span><span class="op">(</span><span class="nam">Owned</span><span class="op">,</span> <span class="nam">Base</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -231,7 +231,7 @@
     <p class="run run2"><span class="n"><a id="t149" href="#t149">149</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t150" href="#t150">150</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t151" href="#t151">151</a></span><span class="t">    <span class="com"># Constraints</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t152" href="#t152">152</a></span><span class="t">    <span class="nam">__table_args__</span> <span class="op">=</span> <span class="op">(</span><span class="nam">UniqueConstraint</span><span class="op">(</span><span class="str">"owner_id"</span><span class="op">,</span> <span class="str">"name"</span><span class="op">,</span> <span class="nam">name</span><span class="op">=</span><span class="str">"uq_owner_company_name"</span><span class="op">)</span><span class="op">,</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t152" href="#t152">152</a></span><span class="t">    <span class="nam">__table_args__</span> <span class="op">=</span> <span class="op">(</span><span class="nam">UniqueConstraint</span><span class="op">(</span><span class="str">"owner_id"</span><span class="op">,</span> <span class="str">"name"</span><span class="op">,</span> <span class="str">"is_tour"</span><span class="op">,</span> <span class="nam">name</span><span class="op">=</span><span class="str">"uq_owner_company_name"</span><span class="op">)</span><span class="op">,</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t153" href="#t153">153</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t154" href="#t154">154</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t155" href="#t155">155</a></span><span class="t"><span class="key">class</span> <span class="nam">Geolocation</span><span class="op">(</span><span class="nam">Base</span><span class="op">,</span> <span class="nam">CommonBase</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -605,7 +605,7 @@
             <a class="nav" href="z_361c51a8d17ee2a1_routers_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.14.0">coverage.py v7.14.0</a>,
-            created at 2026-05-15 17:43 +0100
+            created at 2026-05-16 23:44 +0100
         </p>
     </div>
 </footer>
