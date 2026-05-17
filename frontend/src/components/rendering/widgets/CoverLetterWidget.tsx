@@ -101,6 +101,7 @@ export const CoverLetterWidget = (props: WidgetProps): JSX.Element => {
 
 	const pencilButton = (
 		<Button
+			id="cover-letter-write-btn"
 			variant={"outline-primary"}
 			className="rounded-circle p-0 d-flex align-items-center justify-content-center file-drop-action-btn cover-letter-pencil-btn"
 			style={{ width: 32, height: 32 }}
@@ -117,7 +118,7 @@ export const CoverLetterWidget = (props: WidgetProps): JSX.Element => {
 		<>
 			<FileUploadWidget {...fileUploadProps} />
 
-			<JamModal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
+			<JamModal id="cover-letter-text-modal" show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
 				<JamModal.Header onClose={() => setShowModal(false)}>
 					<Modal.Title>Cover Letter Text</Modal.Title>
 				</JamModal.Header>
@@ -141,12 +142,14 @@ export const CoverLetterWidget = (props: WidgetProps): JSX.Element => {
 					<div className="d-flex flex-column w-100 gap-2">
 						<div className="modal-buttons-container">
 							<ActionButton
+								id="cover-letter-text-modal-cancel-button"
 								variant="secondary"
 								defaultText="Cancel"
 								onClick={() => setShowModal(false)}
 								disabled={uploading}
 							/>
 							<ActionButton
+								id="cover-letter-text-modal-save-button"
 								variant="primary"
 								defaultText="Save"
 								loadingText="Saving..."

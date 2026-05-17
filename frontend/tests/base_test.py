@@ -131,12 +131,18 @@ class BaseUtils(object):
                 def find_within(_d):
                     """Find element within a parent element"""
                     try:
-                        matches = within.find_elements(selector, element_id)
-                        return matches[0] if matches else None
+                        if within:
+                            matches = within.find_elements(selector, element_id)
+                            return matches[0] if matches else None
+                        else:
+                            return None
                     except StaleElementReferenceException:
                         return None
 
                 element = wait.until(find_within)
+                if not element:
+                    all_ids = self.get_all_element_ids()
+                    raise AssertionError(f"Could not find element {element_id}\n" f"Possible IDs: {all_ids}")
                 if enabled:
                     ActionChains(self.driver).move_to_element(element).perform()
                 return element
@@ -282,7 +288,7 @@ class BaseUtils(object):
         expected_text: str,
         selector: str = By.ID,
         timeout: float = 10.0,
-    ) -> WebElement:
+    ) -> bool:
         """Wait for an element's text to become the expected value.
         :param element_id: ID of the element to check
         :param expected_text: The text value to wait for
@@ -1930,7 +1936,7 @@ class BaseTest(BaseUtils):
     _shared_backend_url = None
     _shared_frontend_url = None
     _shared_driver = None
-    user = None  # user to use
+    user: models.User  # user to use
     client = None  # authorised client
     base_utils = None  # base utils
 
@@ -1941,58 +1947,58 @@ class BaseTest(BaseUtils):
     _test_name = ""
 
     # Company
-    company_modal_utils: DataModalUtils | None = None
-    company_table_utils: DataTableUtils | None = None
+    company_modal_utils: DataModalUtils
+    company_table_utils: DataTableUtils
 
     # Aggregator
-    aggregator_modal_utils: DataModalUtils | None = None
-    aggregator_table_utils: DataTableUtils | None = None
+    aggregator_modal_utils: DataModalUtils
+    aggregator_table_utils: DataTableUtils
 
     # Keyword
-    keyword_modal_utils: DataModalUtils | None = None
-    keyword_table_utils: DataTableUtils | None = None
+    keyword_modal_utils: DataModalUtils
+    keyword_table_utils: DataTableUtils
 
     # Person
-    person_modal_utils: DataModalUtils | None = None
-    person_table_utils: DataTableUtils | None = None
+    person_modal_utils: DataModalUtils
+    person_table_utils: DataTableUtils
 
     # Job
-    job_modal_utils: DataModalUtils | None = None
-    job_table_utils: DataTableUtils | None = None
+    job_modal_utils: DataModalUtils
+    job_table_utils: DataTableUtils
 
     # Interview
-    interview_modal_utils: DataModalUtils | None = None
-    interview_table_utils: DataTableUtils | None = None
+    interview_modal_utils: DataModalUtils
+    interview_table_utils: DataTableUtils
 
     # Job Application Update
-    jobApplicationUpdate_modal_utils: DataModalUtils | None = None
-    jobApplicationUpdate_table_utils: DataTableUtils | None = None
+    jobApplicationUpdate_modal_utils: DataModalUtils
+    jobApplicationUpdate_table_utils: DataTableUtils
 
     # Speculative Application
-    speculativeApplication_modal_utils: DataModalUtils | None = None
-    speculativeApplication_table_utils: DataTableUtils | None = None
+    speculativeApplication_modal_utils: DataModalUtils
+    speculativeApplication_table_utils: DataTableUtils
 
     # Scraped Job
-    scrapedJob_modal_utils: DataModalUtils | None = None
-    scrapedJob_table_utils: DataTableUtils | None = None
+    scrapedJob_modal_utils: DataModalUtils
+    scrapedJob_table_utils: DataTableUtils
 
     # Scraping Filter
-    scrapingFilter_modal_utils: DataModalUtils | None = None
-    scrapingFilter_table_utils: DataTableUtils | None = None
+    scrapingFilter_modal_utils: DataModalUtils
+    scrapingFilter_table_utils: DataTableUtils
 
     # Settings
-    setting_modal_utils: DataModalUtils | None = None
-    setting_table_utils: DataTableUtils | None = None
+    setting_modal_utils: DataModalUtils
+    setting_table_utils: DataTableUtils
 
     # Others
-    auth_utils: AuthentificationUtils | None = None
-    user_settings_utils: UserSettingsUtils | None = None
-    followup_modal: FollowUpEmailModalUtils | None = None
-    confirm_modal: ConfirmModalUtils | None = None
-    delete_modal: DeleteModalUtils | None = None
-    logout_modal: LogoutModalUtils | None = None
-    premium_settings_utils: PremiumSettingsUtils | None = None
-    tour_utils: TourUtils | None = None
+    auth_utils: AuthentificationUtils
+    user_settings_utils: UserSettingsUtils
+    followup_modal: FollowUpEmailModalUtils
+    confirm_modal: ConfirmModalUtils
+    delete_modal: DeleteModalUtils
+    logout_modal: LogoutModalUtils
+    premium_settings_utils: PremiumSettingsUtils
+    tour_utils: TourUtils
 
     @pytest.fixture(autouse=True)
     def setup_method(
@@ -2020,7 +2026,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -2209,7 +2215,7 @@ class BaseTest(BaseUtils):
     # ---------------------------------------------------- DATABASE ----------------------------------------------------
 
     @property
-    def db_user(self) -> models.User:
+    def db_user(self) -> models.User | None:
         """Get the user from the database"""
 
         self.db.expire_all()
@@ -2225,7 +2231,7 @@ class BaseTest(BaseUtils):
 
         defaults = {
             "name": "Test Company",
-            "owner_id": self.db_user.id,
+            "owner_id": self.user.id,
         }
         defaults.update(kwargs)
         company = models.Company(**defaults)
@@ -2240,7 +2246,7 @@ class BaseTest(BaseUtils):
         defaults = {
             "first_name": "Test",
             "last_name": "Person",
-            "owner_id": self.db_user.id,
+            "owner_id": self.user.id,
         }
         defaults.update(kwargs)
         person = models.Person(**defaults)
@@ -2254,7 +2260,7 @@ class BaseTest(BaseUtils):
 
         defaults = {
             "title": "Test Job",
-            "owner_id": self.db_user.id,
+            "owner_id": self.user.id,
         }
         defaults.update(kwargs)
         job = models.Job(**defaults)
@@ -2268,7 +2274,7 @@ class BaseTest(BaseUtils):
 
         defaults = {
             "company_id": company.id,
-            "owner_id": self.db_user.id,
+            "owner_id": self.user.id,
         }
         defaults.update(kwargs)
         application = models.SpeculativeApplication(**defaults)
@@ -2277,6 +2283,21 @@ class BaseTest(BaseUtils):
         self.db.refresh(application)
         return application
 
+    def _make_aggregator(self, **kwargs) -> models.Aggregator:
+        """Create and persist an Aggregator owned by the current test user."""
+
+        defaults = {
+            "name": "Test Aggregator",
+            "url": "https://www.test-aggregator.com",
+            "owner_id": self.user.id,
+        }
+        defaults.update(kwargs)
+        aggregator = models.Aggregator(**defaults)
+        self.db.add(aggregator)
+        self.db.commit()
+        self.db.refresh(aggregator)
+        return aggregator
+
     def _make_scraped_job(self, **kwargs) -> models.ScrapedJob:
         """Create and persist a ScrapedJob owned by the current test user."""
 
@@ -2284,7 +2305,7 @@ class BaseTest(BaseUtils):
         defaults = {
             "external_job_id": str(uuid.uuid4()),
             "platform": "linkedin",
-            "owner_id": self.db_user.id,
+            "owner_id": self.user.id,
             "is_processed": True,
             "is_scraped": True,
             "title": "Test Job",

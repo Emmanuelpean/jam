@@ -214,7 +214,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 						formFields.aggregator(aggregators, aggregatorModalRef, null, getAggregatorPreviewConfig, {
 							name: "application_aggregator_id",
 							displayCondition: (formData: JobDataTransform): boolean => {
-								return formData.applied_via ? formData.applied_via === "aggregator" : true;
+								return formData.applied_via ? formData.applied_via === "aggregator" : false;
 							},
 						}),
 					],
