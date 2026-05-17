@@ -1106,6 +1106,7 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 		placement: "top",
 		waitForSelector: "#application-tab",
 		hideNextButton: true,
+		allowedContextMenuActions: ["view"],
 	},
 	{
 		id: "update-application-tab",
@@ -1164,8 +1165,10 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 		id: "update-show-in-table",
 		targetId: "jobApplicationUpdate-data-table",
 		title: "Update Logged!",
-		content: "Your update now appears in the application timeline. Right-click any row to edit or delete it.",
+		content: "Your update now appears in the application timeline.",
 		placement: "top",
+		blockLeftClick: true,
+		allowedContextMenuActions: [],
 	},
 	{
 		id: "update-done",

@@ -2,6 +2,7 @@ import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobApplicationUpdateModal } from "../DataModal/JobApplicationUpdateModal";
+import { useTour } from "../../contexts/TourContext";
 
 interface JobApplicationUpdatesTableProps extends DataTableProps {
 	jobId: number;
@@ -17,6 +18,8 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 			? columns
 			: [tableColumns.dateColumn(), tableColumns.updateTypeColumn(), tableColumns.noteColumn()];
 
+	const { allowedContextMenuActions } = useTour();
+
 	return (
 		<DataTable
 			entityType="jobApplicationUpdate"
@@ -28,6 +31,10 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 			modalSize="lg"
 			showAllEntries={true}
 			compact={true}
+			menuItems={(item) => {
+				const all = ["view", "edit", "delete"];
+				return allowedContextMenuActions ? all.filter((a) => allowedContextMenuActions.includes(a)) : all;
+			}}
 		/>
 	);
 };

@@ -683,6 +683,7 @@ function DataTableComponent<T extends JamData>(
 		event.stopPropagation();
 
 		const items: MenuItem[] = getContextMenuItems(item);
+		if (items.length === 0) return;
 		openContextMenu(
 			event as any, // Cast to satisfy MouseEvent<HTMLElement>
 			items,

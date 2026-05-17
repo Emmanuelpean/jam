@@ -2,6 +2,7 @@ import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { InterviewModal } from "../DataModal/InterviewModal";
+import { useTour } from "../../contexts/TourContext";
 
 interface InterviewsTableProps extends DataTableProps {
 	jobId?: number;
@@ -23,6 +24,8 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 					tableColumns.noteColumn(),
 				];
 
+	const { allowedContextMenuActions } = useTour();
+
 	return (
 		<DataTable
 			entityType="interview"
@@ -35,6 +38,10 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 			showAllEntries={true}
 			compact={true}
 			showAdd={showAdd}
+			menuItems={(item) => {
+				const all = ["view", "edit", "delete"];
+				return allowedContextMenuActions ? all.filter((a) => allowedContextMenuActions.includes(a)) : all;
+			}}
 		/>
 	);
 };
