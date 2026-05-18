@@ -152,8 +152,8 @@ class TestImportScrapedJobTour(BaseTest):
         self.tour_utils.wait_for_popover_gone()
         self.wait_for_page(self.page_url)
 
-        # Demo ScrapedJob cleaned up; imported Job persists
-        self.tour_utils.poll_db_count(models.ScrapedJob, self.user.id, initial_scraped - 1)
+        # Demo ScrapedJob cleaned up (returns to initial count); imported Job persists
+        self.tour_utils.poll_db_count(models.ScrapedJob, self.user.id, initial_scraped)
         self.tour_utils.poll_db_count(models.Job, self.user.id, initial_jobs + 1)
 
     def test_filters_hint_step(self) -> None:
@@ -245,8 +245,8 @@ class TestImportScrapedJobTour(BaseTest):
         self.tour_utils.wait_for_popover_gone()
         self.wait_for_page(self.page_url)
 
-        # Verify cleanup: demo scraped job gone, imported job kept
-        self.tour_utils.poll_db_count(models.ScrapedJob, self.user.id, initial_scraped - 1)
+        # Verify cleanup: demo scraped job gone (returns to initial count), imported job kept
+        self.tour_utils.poll_db_count(models.ScrapedJob, self.user.id, initial_scraped)
         self.tour_utils.poll_db_count(models.Job, self.user.id, initial_jobs + 1)
 
     def test_skip_tour(self) -> None:
@@ -272,8 +272,8 @@ class TestImportScrapedJobTour(BaseTest):
         self.tour_utils.wait_for_popover_gone()
         self.wait_for_page(self.page_url)
 
-        # Demo ScrapedJob cleaned up; no new Job created
-        self.tour_utils.poll_db_count(models.ScrapedJob, self.user.id, initial_scraped - 1)
+        # Demo ScrapedJob cleaned up (returns to initial count); no new Job created
+        self.tour_utils.poll_db_count(models.ScrapedJob, self.user.id, initial_scraped)
         self.tour_utils.poll_db_count(models.Job, self.user.id, initial_jobs)
 
     def test_email_modal_back_closes_and_returns(self) -> None:
@@ -293,9 +293,9 @@ class TestImportScrapedJobTour(BaseTest):
         # Click Back — backActionSelector closes the modal, returns to scraped-open-email
         self.tour_utils.click_back()
 
-        # Back on step 6 (scraped-open-email): modal should be closed
-        self.tour_utils.wait_for_popover()
-        assert self.tour_utils.popover_title() == "Open the Demo Email"
+        # Wait for the modal to close (confirms backActionSelector fired), then check popover title
+        self.wait_for_disappear("modal-view-jobEmail")
+        self.wait_for_element_text(self.tour_utils.TOUR_TITLE, "Open the Demo Email")
         assert not self.check_element_exists("modal-view-jobEmail", timeout=2), (
             "Email modal must be closed after clicking Back on scraped-email-modal-content"
         )

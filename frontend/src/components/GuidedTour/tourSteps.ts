@@ -857,6 +857,8 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 			"Your new filter now appears in the table. Right-click any row to edit, deactivate, or delete a filter. " +
 			"The filter created during this tour will be removed automatically when you click Done.",
 		placement: "top",
+		blockLeftClick: true,
+		allowedContextMenuActions: [],
 	},
 	{
 		id: "sf-done",

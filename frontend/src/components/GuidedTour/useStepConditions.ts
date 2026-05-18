@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { TourStep } from "./tourSteps";
 import { setNativeInputValue } from "./tourUtils";
 
@@ -12,6 +12,7 @@ export function useStepConditions(
 	isTourActive: boolean,
 	stepDef: TourStep | undefined,
 	onConditionMet: () => void,
+	directionRef?: React.RefObject<1 | -1>,
 ): UseStepConditionsResult {
 	const [inputValid, setInputValid] = useState(false);
 	const waitPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -83,6 +84,10 @@ export function useStepConditions(
 			el.focus();
 		};
 
+		// When navigating backward, delay polling start to allow Bootstrap modal animations
+		// (~300ms) to finish before checking waitForSelector/waitForSelectorGone conditions.
+		const startDelay = directionRef?.current === -1 ? 400 : 0;
+		const startTimer = setTimeout(() => {
 		waitPollRef.current = setInterval(() => {
 			if (waitForValidEmailIfFilled) {
 				const el = document.querySelector<HTMLInputElement>(waitForValidEmailIfFilled);
@@ -117,8 +122,9 @@ export function useStepConditions(
 			else if (waitForSelectorGone) met = !document.querySelector(waitForSelectorGone);
 			if (met) { stop(); onConditionMetRef.current(); }
 		}, 50);
+		}, startDelay); // close startTimer setTimeout
 
-		return stop;
+		return () => { clearTimeout(startTimer); stop(); };
 	}, [step, isTourActive, stepDef, stop]);
 
 	return { inputValid, stop };

@@ -121,7 +121,7 @@ export function GuidedTour(): JSX.Element | null {
 		advanceFromCurrentStep();
 	}, [advanceToStep, advanceFromCurrentStep]);
 
-	const { inputValid, stop: stopConditions } = useStepConditions(step, isTourActive, stepDef, onConditionMet);
+	const { inputValid, stop: stopConditions } = useStepConditions(step, isTourActive, stepDef, onConditionMet, directionRef);
 	stopConditionsRef.current = stopConditions;
 
 	// ── Route navigation — fires on step entry only, not on every pathname change ──
@@ -207,7 +207,7 @@ export function GuidedTour(): JSX.Element | null {
 		active: isTourActive,
 		onNext: () =>
 			isLast
-				? void endTour(true, noKeepData ? false : hasUserCreatedData ? keepData : undefined)
+				? void endTour(true, noKeepData ? true : hasUserCreatedData ? keepData : undefined)
 				: advanceFromCurrentStep(),
 		onPrev: () => advanceToStep(step - 1),
 		canGoPrev: canGoBack,
@@ -235,7 +235,7 @@ export function GuidedTour(): JSX.Element | null {
 				isLastRef.current
 					? void endTour(
 							true,
-							noKeepData ? false : hasUserCreatedDataRef.current ? keepDataRef.current : undefined
+							noKeepData ? true : hasUserCreatedDataRef.current ? keepDataRef.current : undefined
 						)
 					: advanceFromCurrentStep();
 			}
@@ -368,13 +368,20 @@ export function GuidedTour(): JSX.Element | null {
 										className="tour-btn-secondary"
 										onClick={() => {
 											stopConditionsRef.current();
+											const doNav = () => {
+												stepDef.backStepId
+													? advanceToStepById(stepDef.backStepId)
+													: advanceToStep(step - 1);
+											};
 											if (stepDef.backActionSelector) {
 												const el = document.querySelector(stepDef.backActionSelector);
 												if (el instanceof HTMLElement) el.click();
+												// Defer navigation so React finishes processing the DOM change
+												// (e.g. modal close) before the new step's conditions start.
+												setTimeout(doNav, 0);
+											} else {
+												doNav();
 											}
-											stepDef.backStepId
-												? advanceToStepById(stepDef.backStepId)
-												: advanceToStep(step - 1);
 										}}
 									>
 										<i className="bi bi-arrow-left me-1"></i>Back
@@ -389,7 +396,7 @@ export function GuidedTour(): JSX.Element | null {
 												onClick={() =>
 													endTourAndContinue(
 														nextTour.id,
-														noKeepData ? false : hasUserCreatedData ? keepData : undefined
+														noKeepData ? true : hasUserCreatedData ? keepData : undefined
 													)
 												}
 											>
@@ -409,7 +416,7 @@ export function GuidedTour(): JSX.Element | null {
 													? void endTour(
 															true,
 															noKeepData
-																? false
+																? true
 																: hasUserCreatedData
 																	? keepData
 																	: undefined
