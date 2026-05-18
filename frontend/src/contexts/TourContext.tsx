@@ -164,6 +164,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 		async (tourId: string): Promise<void> => {
 			try {
 				originPathRef.current = location.pathname;
+				await tourApi.clearAll(token!);
 
 				// Capture a snapshot of every tracked entity that exists right now.
 				// endTour will delete anything created after this point.

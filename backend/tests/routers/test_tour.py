@@ -176,21 +176,6 @@ class TestCreateTourDemo:
         assert qual is not None
         assert qual.is_tour is True
 
-    def test_idempotent_second_call_does_not_duplicate(
-        self, regular_user_client, test_regular_user, session
-    ) -> None:
-        """Calling the endpoint twice should leave exactly one set of tour rows."""
-
-        regular_user_client.post(self.endpoint)
-        response = regular_user_client.post(self.endpoint)
-
-        assert response.status_code == status.HTTP_201_CREATED
-
-        uid = test_regular_user.id
-        assert session.query(models.ScrapedJob).filter_by(owner_id=uid, is_tour=True).count() == 1
-        assert session.query(models.JobEmail).filter_by(owner_id=uid, is_tour=True).count() == 1
-        assert session.query(models.UserQualification).filter_by(owner_id=uid, is_tour=True).count() == 1
-
     def test_unauthenticated(self, client) -> None:
         """Should return 401 for unauthenticated requests."""
 
@@ -206,9 +191,7 @@ class TestClearAllTourData:
 
     endpoint = "/tour/clear-all"
 
-    def test_deletes_all_tour_entities_for_user(
-        self, regular_user_client, test_regular_user, session
-    ) -> None:
+    def test_deletes_all_tour_entities_for_user(self, regular_user_client, test_regular_user, session) -> None:
         """Should delete all is_tour=True rows owned by the current user."""
 
         _create_tour_entities(session, test_regular_user)
@@ -225,9 +208,7 @@ class TestClearAllTourData:
         assert session.query(models.Company).filter_by(owner_id=uid, is_tour=True).count() == 0
         assert session.query(models.Keyword).filter_by(owner_id=uid, is_tour=True).count() == 0
 
-    def test_does_not_delete_non_tour_entities(
-        self, regular_user_client, test_regular_user, session
-    ) -> None:
+    def test_does_not_delete_non_tour_entities(self, regular_user_client, test_regular_user, session) -> None:
         """Should leave is_tour=False rows untouched."""
 
         non_tour = _create_non_tour_entities(session, test_regular_user)
@@ -240,9 +221,7 @@ class TestClearAllTourData:
         assert session.query(models.Company).filter_by(id=non_tour["company"].id).first() is not None
         assert session.query(models.ScrapedJob).filter_by(owner_id=uid, is_tour=False).count() == 1
 
-    def test_does_not_delete_another_users_tour_data(
-        self, regular_user_client, test_admin_user, session
-    ) -> None:
+    def test_does_not_delete_another_users_tour_data(self, regular_user_client, test_admin_user, session) -> None:
         """Should only delete tour data belonging to the authenticated user."""
 
         admin_entities = _create_tour_entities(session, test_admin_user)

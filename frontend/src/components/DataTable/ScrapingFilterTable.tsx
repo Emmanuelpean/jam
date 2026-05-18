@@ -7,6 +7,7 @@ import { ScrapingFilterModal } from "../DataModal/ScrapingFilterModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { FilterVariant, ScrapingFilterData } from "../../services/schemas/Services";
 import { ActionButton } from "../rendering/form/ActionButton";
+import { useTour } from "../../contexts/TourContext";
 
 interface ScrapingFilterTableProps extends DataTableProps {
 	show: boolean;
@@ -23,6 +24,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	variant = "exclusion",
 }: ScrapingFilterTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
+	const { allowedContextMenuActions } = useTour();
 	const [activeTab, setActiveTab] = useState<tabKeys>("active");
 	const [containerHeight, setContainerHeight] = useState("auto");
 	const contentRef = useRef<HTMLDivElement>(null);
@@ -49,10 +51,13 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	];
 
 	const menuItems = (item: ScrapingFilterData): string[] => {
+		let all: string[];
 		if (isExclusion && item.filtered_jobs.length > 0) {
-			return item.is_active ? ["view", "deactivate"] : ["view", "activate"];
+			all = item.is_active ? ["view", "deactivate"] : ["view", "activate"];
+		} else {
+			all = item.is_active ? ["view", "edit", "deactivate", "delete"] : ["view", "edit", "activate", "delete"];
 		}
-		return item.is_active ? ["view", "edit", "deactivate", "delete"] : ["view", "edit", "activate", "delete"];
+		return allowedContextMenuActions ? all.filter((a) => allowedContextMenuActions.includes(a)) : all;
 	};
 
 	const renderBodyContent = (): JSX.Element => {
