@@ -117,6 +117,7 @@ app.include_router(email_routers.email_template_router)
 # Others
 app.include_router(app_routers.other_router)
 app.include_router(app_routers.config_router)
+app.include_router(app_routers.tour_router)
 app.include_router(geolocation_routers.router)
 
 # Demo

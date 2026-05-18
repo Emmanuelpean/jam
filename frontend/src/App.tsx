@@ -46,6 +46,7 @@ import { CommandPaletteProvider } from "./contexts/CommandPaletteContext";
 import { TourProvider } from "./contexts/TourContext";
 import { GuidedTour } from "./components/GuidedTour/GuidedTour";
 import { TourSelectPanel } from "./components/Tours/TourSelectPanel";
+import { StaticDataProvider } from "./contexts/StaticDataContext";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -214,7 +215,8 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/interviews", element: <InterviewsPage />, protected: true },
 	{ path: "/aggregators", element: <AggregatorsPage />, protected: true },
 	{ path: "/job-application-updates", element: <JobApplicationUpdatesPage />, protected: true },
-	{ path: "/scraped-jobs", element: <ScrapedJobsPage />, protected: true },
+	{ path: "/job-alerts/jobs", element: <ScrapedJobsPage />, protected: true },
+	{ path: "/job-alerts/emails", element: <ScrapedJobsPage />, protected: true },
 	{ path: "/dashboard", element: <Dashboard />, protected: true },
 	{ path: "/settings/:tab", element: <UserSettingsPage />, protected: true },
 	{ path: "/settings", element: <Navigate to="/settings/account" replace />, protected: true },
@@ -253,6 +255,7 @@ function AppContent(): JSX.Element {
 
 	return (
 		<BrowserRouter basename="/jam">
+			<StaticDataProvider>
 			<AuthProvider>
 				<LoadingProvider>
 				<ViewportProvider>
@@ -281,6 +284,7 @@ function AppContent(): JSX.Element {
 				</ViewportProvider>
 			</LoadingProvider>
 			</AuthProvider>
+			</StaticDataProvider>
 		</BrowserRouter>
 	);
 }

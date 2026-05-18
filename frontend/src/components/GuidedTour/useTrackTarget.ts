@@ -14,6 +14,7 @@ export function useTrackTarget(
 	demoJobId: number | null,
 	demoScrapedJobId: number | null,
 	demoScrapingFilterId: number | null,
+	demoJobEmailId: number | null,
 	directionRef: MutableRefObject<1 | -1>,
 	onTargetNotFound: () => void,
 ): UseTrackTargetResult {
@@ -35,7 +36,7 @@ export function useTrackTarget(
 			return stop;
 		}
 
-		const resolvedId = expandTargetId(targetId, demoJobId, demoScrapedJobId, demoScrapingFilterId);
+		const resolvedId = expandTargetId(targetId, demoJobId, demoScrapedJobId, demoScrapingFilterId, demoJobEmailId);
 		let elapsed = 0;
 
 		pollRef.current = setInterval(() => {
@@ -63,7 +64,7 @@ export function useTrackTarget(
 		}, 50);
 
 		return stop;
-	}, [step, isTourActive, targetId, demoJobId, demoScrapedJobId, demoScrapingFilterId, stop]);
+	}, [step, isTourActive, targetId, demoJobId, demoScrapedJobId, demoScrapingFilterId, demoJobEmailId, stop]);
 
 	return { targetRect, spotlightRect, stop };
 }

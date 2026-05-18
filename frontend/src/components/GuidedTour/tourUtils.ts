@@ -4,12 +4,15 @@ export function expandTargetId(
 	demoJobId: number | null,
 	demoScrapedJobId: number | null,
 	demoScrapingFilterId: number | null,
+	demoJobEmailId: number | null = null,
 ): string {
 	if (targetId === "[demo-job-row]") return demoJobId !== null ? `table-row-job-${demoJobId}` : targetId;
 	if (targetId === "[demo-scraped-job-row]")
 		return demoScrapedJobId !== null ? `table-row-scrapedJob-${demoScrapedJobId}` : targetId;
 	if (targetId === "[demo-scraping-filter-row]")
 		return demoScrapingFilterId !== null ? `table-row-scrapingFilter-${demoScrapingFilterId}` : targetId;
+	if (targetId === "[demo-job-email-row]")
+		return demoJobEmailId !== null ? `table-row-jobEmail-${demoJobEmailId}` : targetId;
 	return targetId;
 }
 

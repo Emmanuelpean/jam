@@ -316,17 +316,6 @@ export const formFields = {
 		...overrides,
 	}),
 
-	country: (countries: SelectOption[] = [], overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "country",
-		label: "Country",
-		type: "select",
-		options: countries,
-		placeholder: "Search and select a country...",
-		isSearchable: true,
-		isClearable: true,
-		...overrides,
-	}),
-
 	// ------------------------------------------------- JOB FIELDS --------------------------------------------------
 
 	isFavourite: (overrides: FormFieldOverride = {}): ModalFormField => ({

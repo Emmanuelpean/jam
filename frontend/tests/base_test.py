@@ -1982,6 +1982,10 @@ class BaseTest(BaseUtils):
     scrapedJob_modal_utils: DataModalUtils
     scrapedJob_table_utils: DataTableUtils
 
+    # Job Email
+    jobEmail_modal_utils: DataModalUtils
+    jobEmail_table_utils: DataTableUtils
+
     # Scraping Filter
     scrapingFilter_modal_utils: DataModalUtils
     scrapingFilter_table_utils: DataTableUtils
@@ -2066,6 +2070,7 @@ class BaseTest(BaseUtils):
                 "jobApplicationUpdate",
                 "speculativeApplication",
                 "scrapedJob",
+                "jobEmail",
                 "scrapingFilter",
                 "scrapingFavouriteFilter",
                 "setting",

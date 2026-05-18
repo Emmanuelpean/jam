@@ -25,7 +25,6 @@ export interface ScrapedJobCrudApi extends CrudApi<ScrapedJobData> {
 	platformStats: (token: string) => ApiResponsePromise<ScrapedJobPlatformStat[]>;
 	getExpired: (token: string) => ApiResponsePromise<ScrapedJobData[]>;
 	createTourDemo: (token: string) => ApiResponsePromise<ScrapedJobData>;
-	deleteTourDemo: (id: number, token: string) => Promise<void>;
 }
 
 export const scrapedJobApi: ScrapedJobCrudApi = {
@@ -39,9 +38,6 @@ export const scrapedJobApi: ScrapedJobCrudApi = {
 	getExpired: (token: string): ApiResponsePromise<ScrapedJobData[]> => baseApi.get("scraped-jobs/expired", token),
 	createTourDemo: (token: string): ApiResponsePromise<ScrapedJobData> =>
 		baseApi.post("scraped-jobs/tour-demo", {}, token),
-	deleteTourDemo: async (id: number, token: string): Promise<void> => {
-		await baseApi.delete(`scraped-jobs/${id}`, token);
-	},
 };
 
 // Job Rating APIs

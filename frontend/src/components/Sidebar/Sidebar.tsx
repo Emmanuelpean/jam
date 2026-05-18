@@ -116,12 +116,20 @@ export const Sidebar = (): JSX.Element => {
 		{ path: "/dashboard", text: "Dashboard", position: "top" },
 		{ path: "/jobs", text: "Jobs", position: "top", id: "nav-jobs", tourId: "nav-jobs" },
 		{
-			path: "/scraped-jobs",
+			path: "/job-alerts/jobs",
 			text: "Job Alerts",
 			position: "top",
+			id: "nav-scraped-jobs",
+			tourId: "nav-scraped-jobs",
 			condition: (user: UserData): boolean => user.premium.is_active,
 		},
-		{ path: "/speculative-applications", text: "Speculative Applications", position: "top", id: "nav-speculative-applications", tourId: "nav-speculative-applications" },
+		{
+			path: "/speculative-applications",
+			text: "Speculative Applications",
+			position: "top",
+			id: "nav-speculative-applications",
+			tourId: "nav-speculative-applications",
+		},
 		{ path: "/contacts", text: "Contacts", position: "top" },
 		{ path: "/companies", text: "Companies", position: "top" },
 		{
@@ -229,7 +237,13 @@ export const Sidebar = (): JSX.Element => {
 	};
 
 	const isMenuActive = (path: string): boolean => {
-		return location.pathname.startsWith(path);
+		if (location.pathname.startsWith(path)) return true;
+		const parts = path.split("/").filter(Boolean);
+		if (parts.length > 1) {
+			const parent = "/" + parts.slice(0, -1).join("/") + "/";
+			return location.pathname.startsWith(parent);
+		}
+		return false;
 	};
 
 	const isGroupMenuActive = (submenu: NavigationSubItem[]): boolean => {

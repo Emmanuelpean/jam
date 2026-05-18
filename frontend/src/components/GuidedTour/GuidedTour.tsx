@@ -11,7 +11,19 @@ import { useStepConditions } from "./useStepConditions";
 import "./GuidedTour.scss";
 
 export function GuidedTour(): JSX.Element | null {
-	const { isTourActive, activeTourId, endTour, endTourAndContinue, isCleaningUp, hasUserCreatedData, demoJobId, demoScrapedJobId, demoScrapingFilterId, setAllowedContextMenuActions } = useTour();
+	const {
+		isTourActive,
+		activeTourId,
+		endTour,
+		endTourAndContinue,
+		isCleaningUp,
+		hasUserCreatedData,
+		demoJobId,
+		demoScrapedJobId,
+		demoJobEmailId,
+		demoScrapingFilterId,
+		setAllowedContextMenuActions,
+	} = useTour();
 	const { currentUser } = useAuth();
 	const isPremium = currentUser?.premium.is_active ?? false;
 	const visibleTours = TOURS.filter(
@@ -19,6 +31,7 @@ export function GuidedTour(): JSX.Element | null {
 	);
 	const currentTourIndex = visibleTours.findIndex((t) => t.id === activeTourId);
 	const nextTour = currentTourIndex !== -1 ? visibleTours[currentTourIndex + 1] : undefined;
+	const noKeepData = activeTourId ? (getTourById(activeTourId)?.noKeepData ?? false) : false;
 	const navigate = useNavigate();
 	const location = useLocation();
 
@@ -43,7 +56,10 @@ export function GuidedTour(): JSX.Element | null {
 		(targetStep: number): void => {
 			stopTrackRef.current();
 			stopConditionsRef.current();
-			if (targetStep >= tourStepsRef.current.length) { void endTour(true); return; }
+			if (targetStep >= tourStepsRef.current.length) {
+				void endTour(true);
+				return;
+			}
 			directionRef.current = targetStep >= stepRef.current ? 1 : -1;
 			setStep(targetStep);
 		},
@@ -55,7 +71,10 @@ export function GuidedTour(): JSX.Element | null {
 		const nextId = steps[stepRef.current]?.nextStepId;
 		if (nextId) {
 			const idx = steps.findIndex((s) => s.id === nextId);
-			if (idx !== -1) { advanceToStep(idx); return; }
+			if (idx !== -1) {
+				advanceToStep(idx);
+				return;
+			}
 		}
 		advanceToStep(stepRef.current + 1);
 	}, [advanceToStep]);
@@ -71,15 +90,20 @@ export function GuidedTour(): JSX.Element | null {
 	// ── Target tracking ─────────────────────────────────────────────────────────
 	const stepDef = TOUR_STEPS[step];
 
-	const { targetRect, spotlightRect, stop: stopTrack } = useTrackTarget(
+	const {
+		targetRect,
+		spotlightRect,
+		stop: stopTrack,
+	} = useTrackTarget(
 		step,
 		isTourActive,
 		stepDef?.targetId,
 		demoJobId,
 		demoScrapedJobId,
 		demoScrapingFilterId,
+		demoJobEmailId,
 		directionRef,
-		() => setStep((s) => s + directionRef.current),
+		() => setStep((s) => s + directionRef.current)
 	);
 	stopTrackRef.current = stopTrack;
 
@@ -89,25 +113,30 @@ export function GuidedTour(): JSX.Element | null {
 		const autoStepId = steps[stepRef.current]?.autoAdvanceStepId;
 		if (autoStepId) {
 			const idx = steps.findIndex((s) => s.id === autoStepId);
-			if (idx !== -1) { advanceToStep(idx); return; }
+			if (idx !== -1) {
+				advanceToStep(idx);
+				return;
+			}
 		}
 		advanceFromCurrentStep();
 	}, [advanceToStep, advanceFromCurrentStep]);
 
-	const { inputValid, stop: stopConditions } = useStepConditions(
-		step,
-		isTourActive,
-		stepDef,
-		onConditionMet,
-	);
+	const { inputValid, stop: stopConditions } = useStepConditions(step, isTourActive, stepDef, onConditionMet);
 	stopConditionsRef.current = stopConditions;
 
-	// ── Route navigation ─────────────────────────────────────────────────────────
+	// ── Route navigation — fires on step entry only, not on every pathname change ──
 	useEffect(() => {
 		if (!isTourActive || !stepDef?.route) return;
 		const path = stepDef.route.replace("/jam", "");
 		if (location.pathname !== path) navigate(path);
-	}, [step, isTourActive, stepDef?.route, location.pathname, navigate]);
+	}, [step, isTourActive]);
+
+	// ── Auto-click (e.g. switch a tab) when a step becomes active ────────────────
+	useEffect(() => {
+		if (!isTourActive || !stepDef?.clickSelector) return;
+		const el = resolveTarget(stepDef.clickSelector);
+		(el as HTMLElement)?.click();
+	}, [step, isTourActive, stepDef?.clickSelector]);
 
 	// ── Skip step when its target element is absent (e.g. conditional form fields) ─
 	useEffect(() => {
@@ -127,7 +156,13 @@ export function GuidedTour(): JSX.Element | null {
 	// ── Block left-clicks on the target (allows right-click for context menus) ──
 	useEffect(() => {
 		if (!isTourActive || !stepDef?.blockLeftClick || !stepDef.targetId) return;
-		const resolvedId = expandTargetId(stepDef.targetId, demoJobId, demoScrapedJobId, demoScrapingFilterId);
+		const resolvedId = expandTargetId(
+			stepDef.targetId,
+			demoJobId,
+			demoScrapedJobId,
+			demoScrapingFilterId,
+			demoJobEmailId
+		);
 		const handler = (e: MouseEvent): void => {
 			if (e.button !== 0) return;
 			const el = resolveTarget(resolvedId);
@@ -142,13 +177,20 @@ export function GuidedTour(): JSX.Element | null {
 			document.removeEventListener("mousedown", handler, true);
 			document.removeEventListener("click", handler, true);
 		};
-	}, [isTourActive, step, stepDef, demoJobId, demoScrapedJobId, demoScrapingFilterId]);
+	}, [isTourActive, step, stepDef, demoJobId, demoScrapedJobId, demoJobEmailId, demoScrapingFilterId]);
 
 	// ── Keyboard navigation ──────────────────────────────────────────────────────
 	const isLast = step === TOUR_STEPS.length - 1;
 	const showNext = !stepDef?.hideNextButton;
-	const nextDisabled = isCleaningUp || ((!!stepDef?.waitForInput || !!stepDef?.waitForValidEmailIfFilled || !!stepDef?.waitForValidUrlIfFilled) && !inputValid);
-	const canGoBack = !isLast && step > 0 && (showNext || !!stepDef?.showBack) && (!!stepDef?.showBack || !TOUR_STEPS[step - 1]?.hideNextButton);
+	const nextDisabled =
+		isCleaningUp ||
+		((!!stepDef?.waitForInput || !!stepDef?.waitForValidEmailIfFilled || !!stepDef?.waitForValidUrlIfFilled) &&
+			!inputValid);
+	const canGoBack =
+		!isLast &&
+		step > 0 &&
+		(showNext || !!stepDef?.showBack) &&
+		(!!stepDef?.showBack || !TOUR_STEPS[step - 1]?.hideNextButton);
 
 	const isLastRef = useRef(isLast);
 	isLastRef.current = isLast;
@@ -163,7 +205,10 @@ export function GuidedTour(): JSX.Element | null {
 
 	useArrowKeyNavigation({
 		active: isTourActive,
-		onNext: () => (isLast ? void endTour(true, hasUserCreatedData ? keepData : undefined) : advanceFromCurrentStep()),
+		onNext: () =>
+			isLast
+				? void endTour(true, noKeepData ? false : hasUserCreatedData ? keepData : undefined)
+				: advanceFromCurrentStep(),
 		onPrev: () => advanceToStep(step - 1),
 		canGoPrev: canGoBack,
 		canGoNext: showNext && !isCleaningUp && !nextDisabled,
@@ -175,12 +220,23 @@ export function GuidedTour(): JSX.Element | null {
 	useEffect(() => {
 		if (!isTourActive) return;
 		const handler = (e: KeyboardEvent): void => {
-			if (e.key === "Tab") { e.preventDefault(); return; }
+			if (e.key === "Tab") {
+				e.preventDefault();
+				return;
+			}
 			if (e.key === "Enter") {
 				e.preventDefault();
 				if (!showNextRef.current || nextDisabledRef.current) return;
+				const def = tourStepsRef.current[stepRef.current];
+				if (def?.nextActionSelector) {
+					const el = document.querySelector(def.nextActionSelector);
+					if (el instanceof HTMLElement) el.click();
+				}
 				isLastRef.current
-					? void endTour(true, hasUserCreatedDataRef.current ? keepDataRef.current : undefined)
+					? void endTour(
+							true,
+							noKeepData ? false : hasUserCreatedDataRef.current ? keepDataRef.current : undefined
+						)
 					: advanceFromCurrentStep();
 			}
 		};
@@ -204,8 +260,14 @@ export function GuidedTour(): JSX.Element | null {
 			{/* Blocking overlays — prevent interaction outside the targeted element */}
 			{stepDef.targetId != null && spotlightRect ? (
 				<>
-					<div className="tour-block" style={{ top: 0, left: 0, right: 0, height: spotlightRect.top - SPOTLIGHT_PAD }} />
-					<div className="tour-block" style={{ top: spotlightRect.bottom + SPOTLIGHT_PAD, left: 0, right: 0, bottom: 0 }} />
+					<div
+						className="tour-block"
+						style={{ top: 0, left: 0, right: 0, height: spotlightRect.top - SPOTLIGHT_PAD }}
+					/>
+					<div
+						className="tour-block"
+						style={{ top: spotlightRect.bottom + SPOTLIGHT_PAD, left: 0, right: 0, bottom: 0 }}
+					/>
 					<div
 						className="tour-block"
 						style={{
@@ -263,7 +325,9 @@ export function GuidedTour(): JSX.Element | null {
 								Skip tour
 							</button>
 						</div>
-						<h5 id="tour-popover-title" className="tour-popover-title">{stepDef.title}</h5>
+						<h5 id="tour-popover-title" className="tour-popover-title">
+							{stepDef.title}
+						</h5>
 						<p className="tour-popover-content">{stepDef.content}</p>
 
 						{stepDef.choices && (
@@ -284,8 +348,8 @@ export function GuidedTour(): JSX.Element | null {
 
 						{(showNext || canGoBack) && (
 							<div className="tour-popover-footer">
-								{isLast && hasUserCreatedData && (
-									<div className="form-check form-switch mb-0">
+								{isLast && hasUserCreatedData && !noKeepData && (
+									<div className="form-check form-switch mb-0 me-auto">
 										<input
 											className="form-check-input"
 											type="checkbox"
@@ -299,7 +363,20 @@ export function GuidedTour(): JSX.Element | null {
 									</div>
 								)}
 								{canGoBack && (
-									<button id="tour-back-btn" className="tour-btn-secondary" onClick={() => { stopConditionsRef.current(); if (stepDef.backActionSelector) { const el = document.querySelector(stepDef.backActionSelector); if (el instanceof HTMLElement) el.click(); } stepDef.backStepId ? advanceToStepById(stepDef.backStepId) : advanceToStep(step - 1); }}>
+									<button
+										id="tour-back-btn"
+										className="tour-btn-secondary"
+										onClick={() => {
+											stopConditionsRef.current();
+											if (stepDef.backActionSelector) {
+												const el = document.querySelector(stepDef.backActionSelector);
+												if (el instanceof HTMLElement) el.click();
+											}
+											stepDef.backStepId
+												? advanceToStepById(stepDef.backStepId)
+												: advanceToStep(step - 1);
+										}}
+									>
 										<i className="bi bi-arrow-left me-1"></i>Back
 									</button>
 								)}
@@ -309,7 +386,12 @@ export function GuidedTour(): JSX.Element | null {
 											<button
 												id="tour-start-next-btn"
 												className="tour-btn-secondary"
-												onClick={() => endTourAndContinue(nextTour.id, hasUserCreatedData ? keepData : undefined)}
+												onClick={() =>
+													endTourAndContinue(
+														nextTour.id,
+														noKeepData ? false : hasUserCreatedData ? keepData : undefined
+													)
+												}
 											>
 												{nextTour.title} <i className="bi bi-arrow-right ms-1"></i>
 											</button>
@@ -318,19 +400,40 @@ export function GuidedTour(): JSX.Element | null {
 											id="tour-next-btn"
 											className="tour-btn-primary"
 											disabled={nextDisabled}
-											onClick={() => (isLast ? void endTour(true, hasUserCreatedData ? keepData : undefined) : advanceFromCurrentStep())}
+											onClick={() => {
+												if (stepDef.nextActionSelector) {
+													const el = document.querySelector(stepDef.nextActionSelector);
+													if (el instanceof HTMLElement) el.click();
+												}
+												isLast
+													? void endTour(
+															true,
+															noKeepData
+																? false
+																: hasUserCreatedData
+																	? keepData
+																	: undefined
+														)
+													: advanceFromCurrentStep();
+											}}
 										>
 											{isLast ? (
 												isCleaningUp ? (
 													<>
-														<span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+														<span
+															className="spinner-border spinner-border-sm me-2"
+															role="status"
+															aria-hidden="true"
+														/>
 														Cleaning up…
 													</>
 												) : (
 													"Done"
 												)
 											) : (
-												<>Next <i className="bi bi-arrow-right"></i></>
+												<>
+													Next <i className="bi bi-arrow-right"></i>
+												</>
 											)}
 										</button>
 									</>

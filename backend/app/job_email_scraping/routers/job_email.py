@@ -15,6 +15,7 @@ from app import models
 from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.job_email_scraping import schemas
+from app.routers.utility import parse_column_filters
 
 job_alert_email_router = APIRouter(
     prefix="/job-alert-emails",
@@ -30,7 +31,9 @@ def get_job_emails_paged(
     page_size: int = 10,
     sort_by: str = "date_received",
     sort_direction: Literal["asc", "desc"] = "desc",
+    tour_only: bool = False,
     search: str | None = None,
+    filters: str | None = None,
 ) -> dict:
     """Retrieve paginated job alert emails for the current user.
     :param db: Database session
@@ -39,9 +42,14 @@ def get_job_emails_paged(
     :param page_size: Page size
     :param sort_by: Sort key
     :param sort_direction: Sort direction
-    :param search: Search term"""
+    :param tour_only: Only show tour demo entries
+    :param search: Search term
+    :param filters: JSON-encoded filter object"""
 
     query = db.query(models.JobEmail).filter(models.JobEmail.owner_id == current_user.id)
+
+    if tour_only:
+        query = query.filter(models.JobEmail.is_tour.is_(True))
 
     total = query.count()
 
@@ -55,6 +63,10 @@ def get_job_emails_paged(
                 models.JobEmail.alert_name.ilike(search_term),
             )
         )
+
+    filter_conditions, _ = parse_column_filters(filters, models.JobEmail)
+    for cond in filter_conditions:
+        query = query.filter(cond)
 
     if hasattr(models.JobEmail, sort_by):
         sort_column = getattr(models.JobEmail, sort_by)

@@ -2,6 +2,7 @@ import { findItemById } from "../../../utils/Utils";
 
 import { useMemo } from "react";
 import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
+import { useStaticData } from "../../../contexts/StaticDataContext";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 import { modalViewFields } from "../view/ModalFields";
 import { AggregatorData, CompanyData, InterviewData, JobData, PersonData } from "../../../services/schemas/DataTables";
@@ -40,7 +41,6 @@ interface UseFormOptionsReturn {
 	persons: SelectOption[];
 	aggregators: SelectOption[];
 	jobs: SelectOption[];
-	countries: SelectOption[];
 	currencies: SelectOption[];
 	currencyNames: SelectOption[];
 	getCompanyPreviewConfig: SelectWidgetPreviewConfig;
@@ -73,6 +73,7 @@ export const toSelectOptions = <T extends Record<string, any>>(
 
 export const useFormOptions = (): UseFormOptionsReturn => {
 	const dataContext: DataContextValue = useDataContext();
+	const { currencies } = useStaticData();
 
 	const getCompanyPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
@@ -151,17 +152,13 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 		(): SelectOption[] => toSelectOptions(dataContext.jobs, "id", "name"),
 		[dataContext.jobs]
 	);
-	const countryOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(dataContext.countries, "name", "name"),
-		[dataContext.countries]
-	);
 	const currencyOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(dataContext.currencies, "code", "symbol"),
-		[dataContext.currencies]
+		(): SelectOption[] => toSelectOptions(currencies, "code", "symbol"),
+		[currencies]
 	);
 	const currencyNameOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(dataContext.currencies, "code", "name"),
-		[dataContext.currencies]
+		(): SelectOption[] => toSelectOptions(currencies, "code", "name"),
+		[currencies]
 	);
 
 	return {
@@ -170,7 +167,6 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 		persons: personOptions,
 		aggregators: aggregatorOptions,
 		jobs: jobOptions,
-		countries: countryOptions,
 		currencies: currencyOptions,
 		currencyNames: currencyNameOptions,
 		getCompanyPreviewConfig,

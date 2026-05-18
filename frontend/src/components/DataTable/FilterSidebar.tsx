@@ -7,6 +7,7 @@ import {
 	FilterValue,
 	countActiveFilters,
 	isFilterActive,
+	isFilterSelected,
 	FilterConfig,
 	TextFilterValue,
 	SelectFilterValue,
@@ -102,7 +103,7 @@ const FilterSidebar = ({ isOpen, onClose, columns, filters, onFiltersChange }: F
 
 	const handleChange = (key: string, val: FilterValue): void => {
 		const updated = { ...filters };
-		if (isFilterActive(val)) {
+		if (isFilterSelected(val)) {
 			updated[key] = val;
 		} else {
 			delete updated[key];

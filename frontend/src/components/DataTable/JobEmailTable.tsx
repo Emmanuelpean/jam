@@ -3,12 +3,17 @@ import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobEmailModal } from "../DataModal/JobEmailModal";
 
-const JobEmailTable: React.FC<DataTableProps> = ({
+interface JobEmailTableProps extends DataTableProps {
+	queryParams?: Record<string, string>;
+}
+
+const JobEmailTable: React.FC<JobEmailTableProps> = ({
 	columns = [],
 	title = undefined,
 	onTotalCountChange,
 	reloadTrigger,
-}: DataTableProps): JSX.Element => {
+	queryParams,
+}: JobEmailTableProps): JSX.Element => {
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns
@@ -36,6 +41,7 @@ const JobEmailTable: React.FC<DataTableProps> = ({
 			enableColumnConfig={true}
 			menuItems={["view"]}
 			reloadTrigger={reloadTrigger}
+			queryParams={queryParams}
 		/>
 	);
 };

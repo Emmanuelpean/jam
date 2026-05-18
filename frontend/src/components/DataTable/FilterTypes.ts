@@ -91,6 +91,7 @@ export type FilterValue =
 
 export type ActiveFilters = Record<string, FilterValue>;
 
+/** True when the filter actually narrows results — drives the dot indicator and active count. */
 export function isFilterActive(filter: FilterValue): boolean {
 	switch (filter.type) {
 		case "text":
@@ -98,12 +99,18 @@ export function isFilterActive(filter: FilterValue): boolean {
 		case "select":
 			return filter.selected.length > 0;
 		case "date":
-			return filter.preset !== null || filter.from !== null || filter.to !== null;
+			return (filter.preset !== null && filter.preset !== "custom") || filter.from !== null || filter.to !== null;
 		case "number":
 			return filter.min !== null || filter.max !== null || (!!filter.nullFilter && filter.nullFilter !== "all");
 		case "reference":
 			return filter.selectedIds.length > 0;
 	}
+}
+
+/** True when the user has made any selection — drives whether the value is kept in state. */
+export function isFilterSelected(filter: FilterValue): boolean {
+	if (filter.type === "date") return filter.preset !== null || filter.from !== null || filter.to !== null;
+	return isFilterActive(filter);
 }
 
 export function countActiveFilters(filters: ActiveFilters): number {

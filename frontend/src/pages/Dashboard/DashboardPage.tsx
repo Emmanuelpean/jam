@@ -332,7 +332,7 @@ const Dashboard: React.FC = () => {
 						title="Job Alerts"
 						subtitle="Jobs that you received from job boards"
 						badgeValue={scrapedJobCount}
-						path="/scraped-jobs"
+						path="/job-alerts/jobs"
 						isEmpty={scrapedJobCount === 0}
 						emptyState={{
 							icon: "bell-slash",

@@ -15,6 +15,7 @@ import { TourSnapshot, useDataContext } from "./DataContext";
 import { useProgressOverlay } from "./useProgressOverlayContext";
 import { scrapedJobApi } from "../services/api/Services";
 import { useGlobalToast } from "../hooks/useNotificationToast";
+import { tourApi } from "../services/api/Others";
 
 interface TourContextType {
 	startTour: (tourId: string) => Promise<void>;
@@ -34,6 +35,8 @@ interface TourContextType {
 	demoJobId: number | null;
 	/** ID of the demo scraped job created for the import-scraped-job tour, null otherwise */
 	demoScrapedJobId: number | null;
+	/** ID of the demo job email for the import-scraped-job tour, null otherwise */
+	demoJobEmailId: number | null;
 	/** ID of the scraping filter created during the scraping-filters tour, null otherwise */
 	demoScrapingFilterId: number | null;
 	/** When set, the context menu should only show these actions on tour-targeted rows */
@@ -76,6 +79,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	const [completedTourIds, setCompletedTourIds] = useState<Set<string>>(new Set());
 	const [demoJobId, setDemoJobId] = useState<number | null>(null);
 	const [demoScrapedJobId, setDemoScrapedJobId] = useState<number | null>(null);
+	const [demoJobEmailId, setDemoJobEmailId] = useState<number | null>(null);
 	const [demoScrapingFilterId, setDemoScrapingFilterId] = useState<number | null>(null);
 	const [pendingNextTourId, setPendingNextTourId] = useState<string | null>(null);
 	const [allowedContextMenuActions, setAllowedContextMenuActions] = useState<string[] | null>(null);
@@ -246,8 +250,9 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					}
 
 					if (tourId === "import-scraped-job") {
-						const result = await scrapedJobApi.createTourDemo(token!);
-						setDemoScrapedJobId(result.data.id);
+						const scrapedResult = await scrapedJobApi.createTourDemo(token!);
+						setDemoScrapedJobId(scrapedResult.data.id);
+						setDemoJobEmailId(scrapedResult.data.emails[0] ?? null);
 					}
 
 					if (tourId === "log-interview" || tourId === "log-update") {
@@ -471,6 +476,10 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				setDemoJobId(null);
 			}
 
+			if (tourId === "import-scraped-job") {
+				setDemoJobEmailId(null);
+			}
+
 			if (tourId === "scraping-filters") {
 				setDemoScrapingFilterId(null);
 			}
@@ -572,16 +581,14 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				}
 			}
 
-			// Delete the demo scraped job — not tracked in DataContext so handled separately
+			// Delete all demo scraped job data — not tracked in DataContext so handled separately
 			if (tourId === "import-scraped-job") {
-				const scrapedId = demoScrapedJobId;
 				setDemoScrapedJobId(null);
-				if (scrapedId !== null) {
-					try {
-						await scrapedJobApi.deleteTourDemo(scrapedId, token!);
-					} catch {
-						// Best-effort: the record may have already been deleted
-					}
+				setDemoJobEmailId(null);
+				try {
+					await tourApi.clearAll(token!);
+				} catch {
+					// Best-effort
 				}
 			}
 
@@ -657,6 +664,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				hasUserCreatedData,
 				demoJobId,
 				demoScrapedJobId,
+				demoJobEmailId,
 				demoScrapingFilterId,
 				allowedContextMenuActions,
 				setAllowedContextMenuActions,

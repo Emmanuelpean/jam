@@ -78,7 +78,7 @@ class JobEmail(Owned, Base):
     jobs = relationship("ScrapedJob", secondary=jobemail_scrapedjob_mapping, back_populates="emails")
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="emails")
 
-    __table_args__ = (UniqueConstraint("external_email_id", "owner_id", name="unique_email_per_owner"),)
+    __table_args__ = (UniqueConstraint("external_email_id", "is_tour", "owner_id", name="unique_email_per_owner"),)
 
 
 class ScrapedJob(Owned, Base):
@@ -184,6 +184,7 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
 
     Attributes:
     -----------
+    - `is_tour` (bool, false): whether the entry is for tours
     - `user_found_ids` (list of int): List of user IDs found during the service run.
     - `user_processed_ids` (list of int): List of user IDs processed during the service run.
     - `email_found_n` (int): Number of emails found during the service run.
@@ -204,6 +205,8 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
     - `job_found_n` (int): Total jobs found (copied + skipped) across all platforms.
     - `email_saved_n` (int): Total emails saved across all platforms.
     - `email_skipped_n` (int): Total emails skipped across all platforms."""
+
+    is_tour = Column(Boolean, nullable=False, server_default=expression.false())
 
     # Users
     user_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)

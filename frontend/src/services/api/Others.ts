@@ -25,3 +25,9 @@ export const configApi = {
 		return response.data;
 	},
 };
+
+export const tourApi = {
+	clearAll: async (token: string): Promise<void> => {
+		await baseApi.post("tour/clear-all", {}, token);
+	},
+};

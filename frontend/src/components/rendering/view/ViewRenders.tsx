@@ -59,6 +59,7 @@ import { JobEmailData, ScrapedJobData, ScrapingFilterData } from "../../../servi
 import JobRatingSection from "./JobRatingSection";
 import EmailBody from "./EmailBody";
 import { Currency } from "../../../services/schemas/Others";
+import { useStaticData } from "../../../contexts/StaticDataContext";
 import { Accordion } from "../../Accordion/Accordion";
 import { HelpBubble } from "../../HelpBubble/HelpBubble";
 import { Button } from "react-bootstrap";
@@ -71,6 +72,7 @@ export interface RenderParams {
 	columns?: TableColumn[]; // columns for rendered tables
 	helpText?: string; // help text
 	dataContext: DataContextValue; // data context
+	currencies: Currency[];
 	token: string | null;
 	label?: string;
 }
@@ -417,7 +419,7 @@ export const renderFunctions = {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
 		const salaryCurrency: string | undefined | null =
-			param.dataContext.currencies.find((currency: Currency) => currency.code === param.item?.salary_currency)
+			param.currencies.find((currency: Currency) => currency.code === param.item?.salary_currency)
 				?.symbol || "";
 		if (!salary_min && !salary_max) {
 			return null;
@@ -844,6 +846,7 @@ export const RenderViewFieldWithContext: React.FC<{
 }> = ({ field, item, id }) => {
 	const context: DataContextValue = useDataContext();
 	const { token } = useAuth();
+	const { currencies } = useStaticData();
 
 	let rendered: ReactNode;
 	if (field.render) {
@@ -854,6 +857,7 @@ export const RenderViewFieldWithContext: React.FC<{
 			columns: field.columns,
 			helpText: field.helpText,
 			dataContext: context,
+			currencies,
 			token: token,
 		};
 		rendered = field.render(renderParams);
@@ -884,6 +888,7 @@ export const IsViewNull = (
 			columns: field.columns,
 			helpText: field.helpText,
 			dataContext: dataContext,
+			currencies: [],
 			token: token,
 		};
 		rendered = field.render(renderParams);

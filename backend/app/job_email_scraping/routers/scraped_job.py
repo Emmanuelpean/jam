@@ -4,7 +4,6 @@ Provides REST API endpoints for managing job alert emails, scraped job postings,
 and service execution logs with CRUD operations and admin access controls."""
 
 import datetime as dt
-import json
 from typing import Literal
 
 from fastapi import Depends, HTTPException
@@ -17,7 +16,7 @@ from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.job_email_scraping import schemas
 from app.job_email_scraping.filtering import rule_to_sql_predicate
-from app.routers.utility import generate_data_table_crud_router
+from app.routers.utility import generate_data_table_crud_router, parse_column_filters
 
 # GET endpoint for admin user to get all scraped jobs
 scraped_job_router = generate_data_table_crud_router(
@@ -44,6 +43,7 @@ def get_all(
     since_last_login: bool = False,
     favourites_only: bool = False,
     errors_only: bool = False,
+    tour_only: bool = False,
     search: str | None = None,
     filters: str | None = None,
     ids_only: bool = False,
@@ -59,6 +59,7 @@ def get_all(
     :param since_last_login: Only show jobs created since last login
     :param favourites_only: Only show jobs that are in the user's favourites
     :param errors_only: Only show jobs that failed to be scraped or rated
+    :param tour_only: Only show tour demo entries
     :param search: Search term
     :param filters: JSON-encoded filter object
     :param ids_only: Return only IDs instead of full objects"""
@@ -74,6 +75,9 @@ def get_all(
         .filter(models.ScrapedJob.is_active.is_(True))
         .filter(models.ScrapedJob.exclusion_filter_id == None)
     )
+
+    if tour_only:
+        query = query.filter(models.ScrapedJob.is_tour.is_(True))
 
     if favourites_only:
         fav_filters = (
@@ -127,67 +131,11 @@ def get_all(
 
     # Determine if we need a JobRating join (for filters or sorting)
     needs_rating_join = sort_by.startswith("job_rating.") and not errors_only
-    filter_conditions = []
-
-    # Parse JSON column filters
-    if filters:
-        filter_dict = json.loads(filters)
-        for key, fval in filter_dict.items():
-            ftype = fval.get("type")
-
-            # Resolve the SQLAlchemy column
-            if key.startswith("job_rating."):
-                attr_name = key.split(".", 1)[1]
-                if not hasattr(models.JobRating, attr_name):
-                    continue
-                col = getattr(models.JobRating, attr_name)
-                needs_rating_join = True
-            elif hasattr(models.ScrapedJob, key):
-                col = getattr(models.ScrapedJob, key)
-            else:
-                continue
-
-            if ftype == "text":
-                value = (fval.get("value") or "").strip()
-                if value:
-                    filter_conditions.append(col.ilike(f"%{value}%"))
-
-            elif ftype == "select":
-                selected = fval.get("selected", [])
-                if selected:
-                    filter_conditions.append(col.in_(selected))
-
-            elif ftype == "number":
-                min_val = fval.get("min")
-                max_val = fval.get("max")
-                null_filter = fval.get("nullFilter")
-
-                if null_filter == "null":
-                    filter_conditions.append(col.is_(None))
-                elif null_filter == "not_null":
-                    filter_conditions.append(col.isnot(None))
-                    if min_val is not None:
-                        filter_conditions.append(col >= min_val)
-                    if max_val is not None:
-                        filter_conditions.append(col <= max_val)
-                else:
-                    if min_val is not None:
-                        filter_conditions.append(col >= min_val)
-                    if max_val is not None:
-                        filter_conditions.append(col <= max_val)
-
-            elif ftype == "date":
-                from_val = fval.get("from")
-                to_val = fval.get("to")
-                if from_val:
-                    filter_conditions.append(col >= from_val)
-                if to_val:
-                    filter_conditions.append(col <= to_val + "T23:59:59")
-
-            elif ftype == "reference":
-                selected_ids = fval.get("selectedIds", [])
-                if selected_ids:
-                    filter_conditions.append(col.in_([int(sid) for sid in selected_ids]))
+    filter_conditions, joined_models = parse_column_filters(
+        filters, models.ScrapedJob, prefixed_models={"job_rating": models.JobRating}
+    )
+    if models.JobRating in joined_models:
+        needs_rating_join = True
 
     # Apply the join once if needed
     if needs_rating_join:
@@ -394,41 +342,32 @@ def create_tour_demo(
     current_user: models.User = Depends(get_current_user),
 ):
     """Create a demo scraped job for the guided tour. Idempotent: deletes any existing demo first."""
+
     now = dt.datetime.now(dt.timezone.utc)
 
-    # Remove any leftover demo job from a previous tour run so the unique constraint never fires
-    existing = (
-        db.query(models.ScrapedJob)
-        .filter(
-            models.ScrapedJob.owner_id == current_user.id,
-            models.ScrapedJob.external_job_id == f"tour-demo-{current_user.id}",
-        )
-        .first()
-    )
-    if existing:
-        old_log_id = existing.service_log_id
-        db.delete(existing)
+    # Create the tour service log as needed
+    service_log = db.query(models.JobEmailScrapingServiceLog).filter_by(is_tour=True).first()
+    if not service_log:
+        service_log = models.JobEmailScrapingServiceLog(run_datetime=now, is_tour=True)
+        db.add(service_log)
         db.flush()
-        if old_log_id is not None:
-            old_log = (
-                db.query(models.JobEmailScrapingServiceLog)
-                .filter(models.JobEmailScrapingServiceLog.id == old_log_id)
-                .first()
-            )
-            if old_log:
-                db.delete(old_log)
-                db.flush()
 
-    service_log = models.JobEmailScrapingServiceLog(
-        run_datetime=now,
-        is_success=True,
-        user_found_ids=[],
-        user_processed_ids=[],
-        email_found_n=0,
+    # Create the job email
+    email = models.JobEmail(
+        owner_id=current_user.id,
+        service_log_id=service_log.id,
+        external_email_id="000000",
+        subject="20 Jobs found for your search",
+        body="We have found 20 jobs for your search 'R&D Engineer'",
+        platform="linkedin",
+        sender="test@test.com",
+        date_received=now,
+        is_tour=True,
     )
-    db.add(service_log)
-    db.flush()
+    db.add(email)
+    db.commit()
 
+    # Create the scraped job
     scraped_job = models.ScrapedJob(
         owner_id=current_user.id,
         service_log_id=service_log.id,
@@ -438,6 +377,7 @@ def create_tour_demo(
         is_scraped=True,
         scrape_datetime=now,
         is_active=True,
+        is_tour=True,
         title="Senior Python Developer",
         company="Acme Corp",
         attendance_type="hybrid",
@@ -450,8 +390,35 @@ def create_tour_demo(
         url="https://www.linkedin.com/jobs/view/tour-demo",
     )
     db.add(scraped_job)
+
+    # Create the user qualification
+    user_qualification = models.UserQualification(owner_id=current_user.id, is_tour=True, experience="some experience")
+    db.add(user_qualification)
+    db.commit()
+
+    # Create the job rating
+    job_rating = models.JobRating(
+        owner_id=current_user.id,
+        scraped_job_id=scraped_job.id,
+        user_qualification_id=user_qualification.id,
+        llm_model="tour-demo",
+        is_success=True,
+        overall_score=8,
+        technical_score=8,
+        experience_score=7,
+        educational_score=8,
+        interest_score=9,
+        feedback="Strong match for your Python backend experience. The hybrid attendance and salary range align well with your preferences.",
+        is_tour=True,
+    )
+    db.add(job_rating)
+    db.commit()
+
+    # Link the email to the scraped job via the association table
+    email.jobs.append(scraped_job)
     db.commit()
     db.refresh(scraped_job)
+
     return scraped_job
 
 

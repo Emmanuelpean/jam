@@ -43,6 +43,10 @@ export interface TourStep {
 	nextStepId?: string;
 	/** When the waitForSelector/waitForSelectorGone condition fires (auto-advance), jump to this step id instead of nextStepId */
 	autoAdvanceStepId?: string;
+	/** Click this selector automatically when the step becomes active (e.g. switch a tab) */
+	clickSelector?: string;
+	/** Click this selector when the Next button is clicked (before advancing), e.g. to close a modal */
+	nextActionSelector?: string;
 }
 
 export interface TourDefinition {
@@ -55,6 +59,8 @@ export interface TourDefinition {
 	comingSoon?: boolean;
 	/** Premium-only tour — hidden for non-premium users and shown with a badge */
 	premium?: boolean;
+	/** Skip the keep-data toggle on the last step — tour always ends without cleanup prompt */
+	noKeepData?: boolean;
 }
 
 const APP_OVERVIEW_STEPS: TourStep[] = [
@@ -584,8 +590,17 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 			"JAM automatically scans your email alert subscriptions from LinkedIn, Indeed, and similar platforms -" +
 			"pulling matching jobs straight into JAM so you never miss an opportunity. " +
 			"We've added a demo alert so you can try the full import flow.",
-		route: "/scraped-jobs",
+		route: "/job-alerts/jobs",
 		placement: "center",
+	},
+	{
+		id: "scraped-nav",
+		targetId: "nav-scraped-jobs",
+		title: "Job Alerts Menu",
+		content:
+			"The Job Alerts page is always one click away from the sidebar. It shows every job pulled from your alert emails.",
+		route: "/job-alerts/jobs",
+		placement: "right",
 	},
 	{
 		id: "scraped-table",
@@ -595,18 +610,10 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 			"Every job found in your alert emails appears here. " +
 			"New alerts since your last login are highlighted. " +
 			"Use the search bar and column headers to sort and filter.",
-		route: "/scraped-jobs",
+		route: "/job-alerts/jobs",
 		placement: "center",
-	},
-	{
-		id: "scraped-emails-tab",
-		targetId: "job-emails-header",
-		title: "Job Emails",
-		content:
-			"The Job Emails tab shows the raw alert emails that triggered each scraping run. " +
-			"Open an email to see exactly which alerts came from it - useful for tracing the source of a job or diagnosing why an alert wasn't picked up.",
-		route: "/scraped-jobs",
-		placement: "bottom",
+		blockLeftClick: true,
+		allowedContextMenuActions: [],
 	},
 	{
 		id: "scraped-ai-score",
@@ -615,7 +622,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		content:
 			"JAM rates each alert against your profile - skills, experience, and preferences. " +
 			"Higher scores mean a stronger match. Set up your profile in User Settings to tune the ratings.",
-		route: "/scraped-jobs",
+		route: "/job-alerts/jobs",
 		placement: "bottom",
 	},
 	{
@@ -625,22 +632,89 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		content:
 			"Click here to configure what gets scraped - include or exclude keywords, locations, and platforms. " +
 			"Only alerts matching your active filters will appear in the table.",
-		route: "/scraped-jobs",
+		route: "/job-alerts/jobs",
 		placement: "bottom",
+		waitForSelector: "#scraping-filters-modal",
+		autoAdvanceStepId: "scraped-filters-tour-hint",
+		nextStepId: "scraped-emails-tab",
+	},
+	{
+		id: "scraped-filters-tour-hint",
+		targetId: "scraping-filters-modal",
+		title: "There's a Tour for This!",
+		content:
+			'Scraping Filters have their own dedicated tour — "Creating & Managing Scraping Filters" — ' +
+			"that walks you through building and testing a filter step by step. " +
+			"Click Next to close this panel and continue the current tour.",
+		route: "/job-alerts/jobs",
+		placement: "center",
+		showBack: true,
+		backStepId: "scraped-filters",
+		backActionSelector: "#scraping-filter-modal-close-btn",
+		nextActionSelector: "#scraping-filter-modal-close-btn",
+		nextStepId: "scraped-emails-tab",
+	},
+	{
+		id: "scraped-emails-tab",
+		targetId: "job-emails-header",
+		title: "Job Emails",
+		content:
+			"There is also a Job Emails tab that shows the raw alert emails behind each scraping run. " +
+			"Click it to explore them.",
+		route: "/job-alerts/jobs",
+		placement: "bottom",
+		hideNextButton: true,
+		waitForSelector: "#job-emails-header.page-header-active",
+	},
+	{
+		id: "scraped-open-email",
+		targetId: "[demo-job-email-row]",
+		title: "Open the Demo Email",
+		content: "Click this email to see the jobs that were scraped from it.",
+		route: "/job-alerts/emails",
+		placement: "top",
+		hideNextButton: true,
+		waitForSelector: "#modal-view-jobEmail",
+	},
+	{
+		id: "scraped-email-modal-content",
+		targetId: "#modal-view-jobEmail .modal-content",
+		title: "Inside the Job Email",
+		content:
+			"This view shows the raw alert email: sender, platform, alert name, and how many jobs were found. " +
+			"Expand the Scraped Jobs section to see every job that was pulled from this email — " +
+			"and the Email Content section to read the original message.",
+		route: "/job-alerts/emails",
+		placement: "center",
+		showBack: true,
+		backStepId: "scraped-open-email",
+		backActionSelector: "#modal-view-jobEmail-cancel-button",
+		nextActionSelector: "#modal-view-jobEmail-cancel-button",
+	},
+	{
+		id: "scraped-back-to-alerts",
+		targetId: "scraped-jobs-header",
+		title: "Back to Job Alerts",
+		content: "Now click Job Alerts to return to the scraped jobs table — we'll import the demo alert next.",
+		route: "/job-alerts/emails",
+		placement: "bottom",
+		hideNextButton: true,
+		waitForSelector: "#scraped-jobs-header.page-header-active",
 	},
 	{
 		id: "scraped-open-row",
 		targetId: "[demo-scraped-job-row]",
 		title: "Open the Demo Alert",
 		content: "Click this demo job alert to open the import form.",
-		route: "/scraped-jobs",
+		route: "/job-alerts/jobs",
 		placement: "top",
 		waitForSelector: "#modal-import-scrapedJob",
 		hideNextButton: true,
+		allowedContextMenuActions: ["import"],
 	},
 	{
 		id: "scraped-review-form",
-		targetId: "modal-import-scrapedJob",
+		targetId: "#modal-import-scrapedJob .modal-content",
 		title: "Review the Import Form",
 		content:
 			"The scraped data is pre-filled - title, company, salary, location, and more. " +
@@ -666,6 +740,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		placement: "top",
 		waitForSelectorGone: "#modal-import-scrapedJob",
 		hideNextButton: true,
+		showBack: true,
 	},
 	{
 		id: "scraped-done",
@@ -687,7 +762,7 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 			"Scraping filters let you control exactly which job alerts get pulled into JAM. " +
 			"Exclusion filters silently drop alerts that match - keeping your table free of irrelevant results. " +
 			"This tour walks you through creating and testing one.",
-		route: "/scraped-jobs",
+		route: "/job-alerts/jobs",
 		placement: "center",
 	},
 	{
@@ -695,7 +770,7 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 		targetId: "scraping-filters-button",
 		title: "Open the Filter Panel",
 		content: "Click the Scraping Filters button to open the filter manager.",
-		route: "/scraped-jobs",
+		route: "/job-alerts/jobs",
 		placement: "bottom",
 		waitForSelector: "#scraping-filters-modal",
 		hideNextButton: true,
@@ -1490,6 +1565,7 @@ export const TOUR_STRUCTURE: TourDefinition[] = [
 		icon: "envelope-arrow-down",
 		steps: IMPORT_SCRAPED_JOB_STEPS,
 		premium: true,
+		noKeepData: true,
 	},
 	{
 		id: "scraping-filters",

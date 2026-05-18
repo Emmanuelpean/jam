@@ -1,9 +1,7 @@
-import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
 	aggregatorsApi,
 	companiesApi,
-	countriesApi,
-	currenciesApi,
 	interviewsApi,
 	jobApplicationUpdatesApi,
 	jobsApi,
@@ -38,9 +36,9 @@ import {
 } from "../services/schemas/DataTables";
 import { SettingData, UserData } from "../services/schemas/Core";
 import { AiSystemPromptData, JobEmailData, ScrapedJobData, ScrapingFilterData } from "../services/schemas/Services";
-import { Country, Currency } from "../services/schemas/Others";
 import { ApiError } from "../services/api/ApiError";
 import { GeoLocationData } from "../services/schemas/Base";
+import { tourApi } from "../services/api/Others";
 
 export interface TourSnapshot {
 	jobIds: Set<number>;
@@ -184,8 +182,6 @@ export interface DataContextValue {
 	scrapingFilters: ScrapingFilterData[];
 	scrapingFavouriteFilters: ScrapingFilterData[];
 	users: UserData[];
-	countries: Country[];
-	currencies: Currency[];
 	aiSystemPrompts: AiSystemPromptData[];
 
 	error: ApiError | null;
@@ -212,13 +208,10 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [aggregators, setAggregators] = useState<AggregatorData[]>([]);
 	const [keywords, setKeywords] = useState<KeywordData[]>([]);
 	const [speculativeApplications, setSpeculativeApplications] = useState<SpeculativeApplicationData[]>([]);
-	const staleCleanupRanRef = useRef(false);
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [scrapingFilters, setScrapingFilters] = useState<ScrapingFilterData[]>([]);
 	const [scrapingFavouriteFilters, setScrapingFavouriteFilters] = useState<ScrapingFilterData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
-	const [currencies, setCurrencies] = useState<Currency[]>([]);
-	const [countries, setCountries] = useState<Country[]>([]);
 	const [aiSystemPrompts, setAiSystemPrompts] = useState<AiSystemPromptData[]>([]);
 	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
@@ -371,8 +364,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				promise: scrapingFavouriteFilterApi.getAll(token),
 				label: "Scraping Filters",
 			} as TypedFetchOperation<ScrapingFilterData[]>,
-			{ promise: currenciesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<Currency[]>,
-			{ promise: countriesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<Country[]>,
 			{
 				promise: aiSystemPromptsApi.getAll(token),
 				label: "Miscellaneous",
@@ -393,16 +384,12 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		try {
 			// Track progress for each promise
 			const trackedPromises = fetchOperations.map(({ promise, label }) =>
-				promise.then(
-					(
-						result: ApiResponse<(JamData | Country | Currency)[]>
-					): ApiResponse<(JamData | Country | Currency)[]> => {
-						completedOperations++;
-						const progressPercentage: number = Math.round((completedOperations / totalOperations) * 100);
-						updateProgress(progressPercentage, `Loading ${label}...`);
-						return result;
-					}
-				)
+				promise.then((result: ApiResponse<JamData[]>): ApiResponse<JamData[]> => {
+					completedOperations++;
+					const progressPercentage: number = Math.round((completedOperations / totalOperations) * 100);
+					updateProgress(progressPercentage, `Loading ${label}...`);
+					return result;
+				})
 			);
 
 			const results = await Promise.all(trackedPromises);
@@ -419,8 +406,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				keywordsData,
 				scrapingFiltersData,
 				scrapingFavouriteFiltersData,
-				currenciesData,
-				countriesData,
 				aiSystemPromptsData,
 				...adminData
 			] = results;
@@ -435,8 +420,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			setKeywords(keywordsData.data || []);
 			setScrapingFilters(scrapingFiltersData.data || []);
 			setScrapingFavouriteFilters(scrapingFavouriteFiltersData.data || []);
-			setCurrencies(currenciesData.data || []);
-			setCountries(countriesData.data || []);
 			setAiSystemPrompts(aiSystemPromptsData.data || []);
 			if (currentUser?.is_admin) {
 				setSettings(adminData[0].data || []);
@@ -533,13 +516,28 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			companies: s ? companies.filter((c) => !s.companyIds.has(c.id)) : companies,
 			persons: s ? persons.filter((p) => !s.personIds.has(p.id)) : persons,
 			interviews: s ? interviews.filter((i) => !s.interviewIds.has(i.id)) : interviews,
-			jobApplicationUpdates: s ? jobApplicationUpdates.filter((u) => !s.jobApplicationUpdateIds.has(u.id)) : jobApplicationUpdates,
+			jobApplicationUpdates: s
+				? jobApplicationUpdates.filter((u) => !s.jobApplicationUpdateIds.has(u.id))
+				: jobApplicationUpdates,
 			aggregators: s ? aggregators.filter((a) => !s.aggregatorIds.has(a.id)) : aggregators,
 			keywords: s ? keywords.filter((k) => !s.keywordIds.has(k.id)) : keywords,
 			scrapingFilters: s ? scrapingFilters.filter((f) => !s.scrapingFilterIds.has(f.id)) : scrapingFilters,
-			speculativeApplications: s ? speculativeApplications.filter((sa) => !s.speculativeApplicationIds.has(sa.id)) : speculativeApplications,
+			speculativeApplications: s
+				? speculativeApplications.filter((sa) => !s.speculativeApplicationIds.has(sa.id))
+				: speculativeApplications,
 		};
-	}, [tourSnapshot, jobs, companies, persons, interviews, jobApplicationUpdates, aggregators, keywords, scrapingFilters, speculativeApplications]);
+	}, [
+		tourSnapshot,
+		jobs,
+		companies,
+		persons,
+		interviews,
+		jobApplicationUpdates,
+		aggregators,
+		keywords,
+		scrapingFilters,
+		speculativeApplications,
+	]);
 
 	const getEntityData = useCallback(
 		<T extends EntityType>(entityType: T): JamData[] => {
@@ -570,49 +568,17 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 	useEffect((): void => {
 		if (!token || !currentUser) return;
-		fetchAllData().then((): void => {});
+		void tourApi
+			.clearAll(token)
+			.catch(() => {})
+			.then(() => fetchAllData());
 	}, [token, currentUser?.is_admin]);
-
-	useEffect((): void => {
-		if (staleCleanupRanRef.current) return;
-		if (tourSnapshot !== null) return;
-		const hasData = companies.length > 0 || persons.length > 0 || keywords.length > 0 || aggregators.length > 0;
-		if (!hasData) return;
-		staleCleanupRanRef.current = true;
-		const staleInterviewIds = interviews.filter((i) => i.is_tour).map((i) => i.id);
-		const staleJobIds = jobs.filter((j) => j.is_tour).map((j) => j.id);
-		const stalePersonIds = persons.filter((p) => p.is_tour).map((p) => p.id);
-		const staleKeywordIds = keywords.filter((k) => k.is_tour).map((k) => k.id);
-		const staleAggregatorIds = aggregators.filter((a) => a.is_tour).map((a) => a.id);
-		const staleCompanyIds = companies.filter((c) => c.is_tour).map((c) => c.id);
-		if (
-			!staleInterviewIds.length &&
-			!staleJobIds.length &&
-			!stalePersonIds.length &&
-			!staleKeywordIds.length &&
-			!staleAggregatorIds.length &&
-			!staleCompanyIds.length
-		)
-			return;
-		void (async () => {
-			await Promise.all(staleInterviewIds.map((id) => deleteEntity("interview", id)));
-			await Promise.all(staleJobIds.map((id) => deleteEntity("job", id)));
-			await Promise.all([
-				...stalePersonIds.map((id) => deleteEntity("person", id)),
-				...staleKeywordIds.map((id) => deleteEntity("keyword", id)),
-				...staleAggregatorIds.map((id) => deleteEntity("aggregator", id)),
-				...staleCompanyIds.map((id) => deleteEntity("company", id)),
-			]);
-		})();
-	}, [persons, keywords, aggregators, companies, jobs, interviews, tourSnapshot]);
 
 	return (
 		<DataContext.Provider
 			value={{
 				...visibleData,
 				scrapingFavouriteFilters,
-				countries,
-				currencies,
 				aiSystemPrompts,
 				settings,
 				users,

@@ -15,6 +15,7 @@ import { useProgressOverlay } from "../../contexts/useProgressOverlayContext";
 import { ApiResponse, ApiResponsePromise } from "../../services/api/Base";
 import { useViewport } from "../../contexts/ViewportContext";
 import { scrapedJobApi } from "../../services/api/Services";
+import { useTour } from "../../contexts/TourContext";
 
 interface ScrapedJobTableProps extends DataTableProps {
 	favouritesOnly?: boolean;
@@ -34,6 +35,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 	queryParamsOverride,
 }: ScrapedJobTableProps): JSX.Element => {
 	const isPreviewMode: boolean = !!endpoint;
+	const { allowedContextMenuActions } = useTour();
 	const dataContext: DataContextValue = useDataContext();
 	const { updateEntity } = dataContext;
 	const { currentUser, token } = useAuth();
@@ -188,6 +190,14 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 				showSearch={!isPreviewMode}
 				smallSearch={dashboardMode}
 				queryParams={queryParamsOverride ?? queryParams}
+				menuItems={
+					allowedContextMenuActions
+						? (_item: ScrapedJobData): string[] =>
+								["import", "delete"].filter((a: string): boolean =>
+									allowedContextMenuActions.includes(a)
+								)
+						: undefined
+				}
 				enableColumnConfig={!dashboardMode && !isPreviewMode}
 				defaultPageSize={isPreviewMode ? 10 : 20}
 				pageSizeOptions={isPreviewMode ? [10, 20, 30] : [20, 30, 40, 50, 100]}

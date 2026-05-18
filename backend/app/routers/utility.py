@@ -3,6 +3,7 @@
 Provides a factory function to generate FastAPI routers with standard CRUD endpoints,
 including user ownership validation, query filtering, and many-to-many relationship handling."""
 
+import json
 from typing import Any, Callable
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -24,7 +25,7 @@ NOT_ALLOWED_EXCEPTION = HTTPException(
 def filter_out_non_owned(
     entry: Any,
     current_user_id: int,
-    processed_objects: set = None,
+    processed_objects: set | None = None,
 ) -> Any:
     """Recursively filter out related objects that don't belong to the current user.
     :param entry: The SQLAlchemy model instance to filter
@@ -142,6 +143,88 @@ def filter_query(
                 query = query.filter(col == converted_value)
 
     return query
+
+
+def parse_column_filters(
+    filters_json: str | None,
+    model,
+    prefixed_models: dict | None = None,
+) -> tuple[list, set]:
+    """Parse a JSON column-filter string into SQLAlchemy conditions.
+    :param filters_json: JSON-encoded filter object (or None)
+    :param model: Primary SQLAlchemy model to resolve column names against
+    :param prefixed_models: Optional mapping of dot-prefix to model, e.g. {"job_rating": JobRating}
+    :return: (conditions, models_needing_join) — apply conditions with query.filter(); join the returned models"""
+
+    if not filters_json:
+        return [], set()
+
+    conditions: list = []
+    models_needing_join: set = set()
+
+    for key, fval in json.loads(filters_json).items():
+        col = None
+
+        if prefixed_models:
+            for prefix, prefixed_model in prefixed_models.items():
+                if key.startswith(prefix + "."):
+                    attr_name = key.split(".", 1)[1]
+                    if hasattr(prefixed_model, attr_name):
+                        col = getattr(prefixed_model, attr_name)
+                        models_needing_join.add(prefixed_model)
+                    break
+
+        if col is None:
+            if hasattr(model, key):
+                col = getattr(model, key)
+            else:
+                continue
+
+        ftype = fval.get("type")
+
+        if ftype == "text":
+            value = (fval.get("value") or "").strip()
+            if value:
+                conditions.append(col.ilike(f"%{value}%"))
+
+        elif ftype == "select":
+            selected = fval.get("selected", [])
+            if selected:
+                conditions.append(col.in_(selected))
+
+        elif ftype == "number":
+            min_val = fval.get("min")
+            max_val = fval.get("max")
+            null_filter = fval.get("nullFilter")
+
+            if null_filter == "null":
+                conditions.append(col.is_(None))
+            elif null_filter == "not_null":
+                conditions.append(col.isnot(None))
+                if min_val is not None:
+                    conditions.append(col >= min_val)
+                if max_val is not None:
+                    conditions.append(col <= max_val)
+            else:
+                if min_val is not None:
+                    conditions.append(col >= min_val)
+                if max_val is not None:
+                    conditions.append(col <= max_val)
+
+        elif ftype == "date":
+            from_val = fval.get("from")
+            to_val = fval.get("to")
+            if from_val:
+                conditions.append(col >= from_val)
+            if to_val:
+                conditions.append(col <= to_val + "T23:59:59")
+
+        elif ftype == "reference":
+            selected_ids = fval.get("selectedIds", [])
+            if selected_ids:
+                conditions.append(col.in_([int(sid) for sid in selected_ids]))
+
+    return conditions, models_needing_join
 
 
 def assert_admin(user: models.User) -> None:

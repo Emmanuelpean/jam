@@ -442,7 +442,7 @@ export const PremiumTab = (): JSX.Element => {
 								further.
 							</p>
 							<p>
-								Scraped jobs appear in the <Link to="/scraped-jobs">scraped job table</Link>, where you
+								Scraped jobs appear in the <Link to="/job-alerts/jobs">scraped job table</Link>, where you
 								can review, import, or delete them. You can also apply scraping filters to refine the
 								results. For example, you can exclude jobs posted by specific companies or filter by
 								location, salary range, or keywords.
