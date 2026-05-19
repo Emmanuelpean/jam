@@ -10,7 +10,7 @@ from base_test import BaseTest, models
 class TestJobScrapingTable(BaseTest):
 
     user_index = 0
-    page_url = "scraped-jobs"
+    page_url = "job-alerts/jobs"
 
     def setup_function(self, request) -> None:
         """Setup for each test function."""
@@ -422,7 +422,7 @@ class TestJobScrapingTable(BaseTest):
 class TestScrapingFilters(BaseTest):
 
     user_index = 0
-    page_url = "scraped-jobs"
+    page_url = "job-alerts/jobs"
     test_data = dict(type="Attendance Type", operator="Contains", value="In Person")
     filtered_index = 1
     no_filtered_index = 3
@@ -470,7 +470,7 @@ class TestScrapingFilters(BaseTest):
         )
         self.scrapingFilter_table_utils.table_row(self.no_filtered_index).click()
         assert self.scrapingFilter_modal_utils.deactivate_button().is_enabled()
-        assert not self.scrapingFilter_modal_utils.edit_button("view", enabled=False).click()
+        self.scrapingFilter_modal_utils.edit_button("view", enabled=False).click()
         self.scrapingFilter_modal_utils._fill_modal(value="Virtual")
         self.scrapingFilter_modal_utils.confirm_button("edit").click()
         self.scrapingFilter_modal_utils.wait_for_view_modal_close()
@@ -487,7 +487,7 @@ class TestScrapingFilters(BaseTest):
 class TestDismissExpiredBulkAction(BaseTest):
 
     user_index = 0
-    page_url = "scraped-jobs"
+    page_url = "job-alerts/jobs"
 
     def setup_function(self, request) -> None:
         """Setup for each test function."""

@@ -36,7 +36,7 @@ class ScrapingFilterBuilder(DemoBuilder):
 
         # Navigate to scraped jobs page
         print("  - Navigating to scraped jobs page...")
-        self.driver.get(f"{self.frontend_url}/scraped-jobs")
+        self.driver.get(f"{self.frontend_url}/job-alerts/jobs")
         time.sleep(2)
         self.inject_highlighting()
 

@@ -6,7 +6,7 @@ from demo_creator import DemoBuilder
 
 DEFAULT_PAGES = [
     "dashboard",
-    "scraped-jobs",
+    "job-alerts/jobs",
 ]
 
 
