@@ -14,7 +14,7 @@ export type ModalViewFields = (ModalViewField | ModalViewField[])[];
 interface ModalViewFieldOverride extends Partial<ModalViewField> {}
 
 export const renderModalViewField = (field: ModalViewField, item: any, id: string): ReactNode => {
-	const output = <RenderViewFieldWithContext field={field} item={item} id={id} />;
+	const output = <RenderViewFieldWithContext field={field} item={item} id={id} view={true} />;
 
 	if (field.isTitle) {
 		return (
@@ -80,27 +80,27 @@ export const modalViewFields = {
 	value: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "value",
 		label: "Value",
-		render: (params: RenderParams) => renderFunctions.value({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.value({ ...params }),
 		...overrides,
 	}),
 
 	description: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "description",
 		label: "Description",
-		render: (params: RenderParams) => renderFunctions.description({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.description({ ...params }),
 		...overrides,
 	}),
 
 	note: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "note",
 		label: "Notes",
-		render: (params: RenderParams) => renderFunctions.note({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.note({ ...params }),
 		...overrides,
 	}),
 
 	applicationNote: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_note",
-		render: (params: RenderParams) => renderFunctions.applicationNote({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.applicationNote({ ...params }),
 		...overrides,
 	}),
 
@@ -195,56 +195,56 @@ export const modalViewFields = {
 	url: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "url",
 		label: "Website",
-		render: (params: RenderParams) => renderFunctions.url({ ...params, view: true }),
+		render: renderFunctions.url,
 		...overrides,
 	}),
 
 	jobUrl: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job_url",
 		label: "Job URL",
-		render: (params: RenderParams) => renderFunctions.url({ ...params, view: true }),
+		render: renderFunctions.url,
 		...overrides,
 	}),
 
 	applicationUrl: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_url",
 		label: "Application URL",
-		render: (params: RenderParams) => renderFunctions.applicationUrl({ ...params, view: true }),
+		render: renderFunctions.applicationUrl,
 		...overrides,
 	}),
 
 	applicationCv: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "cv_id",
 		label: "CV",
-		render: (params: RenderParams) => renderFunctions.applicationCv({ ...params, view: true }),
+		render: renderFunctions.applicationCv,
 		...overrides,
 	}),
 
 	applicationCoverLetter: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "cover_letter_id",
 		label: "Cover Letter",
-		render: (params: RenderParams) => renderFunctions.applicationCoverLetter({ ...params, view: true }),
+		render: renderFunctions.applicationCoverLetter,
 		...overrides,
 	}),
 
 	email: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "email",
 		label: "Email",
-		render: (params: RenderParams) => renderFunctions.email({ ...params, view: true }),
+		render: renderFunctions.email,
 		...overrides,
 	}),
 
 	contactEmail: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "contact_email",
 		label: "Contact Email",
-		render: (params: RenderParams) => renderFunctions.contactEmail({ ...params, view: true }),
+		render: renderFunctions.contactEmail,
 		...overrides,
 	}),
 
 	linkedinUrl: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "linkedin_url",
 		label: "LinkedIn Profile",
-		render: (params: RenderParams) => renderFunctions.linkedinUrl({ ...params, view: true }),
+		render: renderFunctions.linkedinUrl,
 		...overrides,
 	}),
 
@@ -259,7 +259,7 @@ export const modalViewFields = {
 	locationBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location",
 		label: "Location",
-		render: (params: RenderParams) => renderFunctions.locationBadge({ ...params, view: true }),
+		render: renderFunctions.locationBadge,
 		...overrides,
 	}),
 
@@ -273,7 +273,7 @@ export const modalViewFields = {
 	keywordBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "keywords",
 		label: "Tags",
-		render: (params: RenderParams) => renderFunctions.KeywordBadges({ ...params, view: true }),
+		render: renderFunctions.KeywordBadges,
 		...overrides,
 	}),
 
@@ -294,14 +294,14 @@ export const modalViewFields = {
 	interviewerBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "person",
 		label: "Interviewers",
-		render: (params: RenderParams) => renderFunctions.InterviewerBadges({ ...params, view: true }),
+		render: renderFunctions.InterviewerBadges,
 		...overrides,
 	}),
 
 	appliedViaBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "applied_via",
 		label: "Applied Via",
-		render: (params: RenderParams) => renderFunctions.AppliedViaBadge({ ...params, view: true }),
+		render: renderFunctions.AppliedViaBadge,
 		...overrides,
 	}),
 
@@ -340,21 +340,21 @@ export const modalViewFields = {
 	phone: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "phone",
 		label: "Phone",
-		render: (params: RenderParams) => renderFunctions.phone({ ...params, view: true }),
+		render: renderFunctions.phone,
 		...overrides,
 	}),
 
 	salaryRange: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "salary_range",
 		label: "Salary Range",
-		render: (params: RenderParams) => renderFunctions.salaryRange({ ...params, view: true }),
+		render: renderFunctions.salaryRange,
 		...overrides,
 	}),
 
 	personalRating: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "personal_rating",
 		label: "Personal Rating",
-		render: (params: RenderParams) => renderFunctions.personalRating({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.personalRating({ ...params }),
 		...overrides,
 	}),
 
@@ -368,14 +368,14 @@ export const modalViewFields = {
 	applicationStatus: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_status",
 		label: "Status",
-		render: (params: RenderParams) => renderFunctions.applicationStatus({ ...params, view: true }),
+		render: renderFunctions.applicationStatus,
 		...overrides,
 	}),
 
 	isActive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "is_active",
 		label: "Active",
-		render: (params: RenderParams) => renderFunctions.isActive({ ...params, view: true }),
+		render: renderFunctions.isActive,
 		...overrides,
 	}),
 
@@ -389,7 +389,7 @@ export const modalViewFields = {
 	caseSensitive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "case_sensitive",
 		label: "Case Sensitive",
-		render: (params: RenderParams) => renderFunctions.caseSensitive({ ...params, view: true }),
+		render: renderFunctions.caseSensitive,
 		...overrides,
 	}),
 

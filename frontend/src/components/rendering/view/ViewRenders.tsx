@@ -134,9 +134,9 @@ export const renderFunctions = {
 			if (param.view) {
 				return <p style={{ whiteSpace: "pre-line" }}>{text}</p>;
 			} else {
-				const words = text.split(" ");
-				const truncated = words.slice(0, 12).join(" ");
-				const needsEllipsis = words.length > 12;
+				const words: string[] = text.split(" ");
+				const truncated: string = words.slice(0, 12).join(" ");
+				const needsEllipsis: boolean = words.length > 12;
 
 				return (
 					<div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -177,7 +177,7 @@ export const renderFunctions = {
 			updateTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]?.label ||
 			null;
 		if (updateType) {
-			const icon = getUpdateTypeIcon(updateType);
+			const icon: string = getUpdateTypeIcon(updateType);
 			return (
 				<span>
 					{icon && <i className={`${icon} me-1`}></i>}
@@ -419,8 +419,7 @@ export const renderFunctions = {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
 		const salaryCurrency: string | undefined | null =
-			param.currencies.find((currency: Currency) => currency.code === param.item?.salary_currency)
-				?.symbol || "";
+			param.currencies.find((currency: Currency) => currency.code === param.item?.salary_currency)?.symbol || "";
 		if (!salary_min && !salary_max) {
 			return null;
 		}
@@ -442,8 +441,8 @@ export const renderFunctions = {
 
 			return (
 				<div className="star-rating-container" style={{ height: "auto" }}>
-					{[...Array(5)].map((_, index) => {
-						const starNumber = index + 1;
+					{[...Array(5)].map((_, index: number): JSX.Element => {
+						const starNumber: number = index + 1;
 						const starClass = starNumber <= rating ? "bi-star-fill" : "bi-star";
 
 						return (
@@ -843,7 +842,8 @@ export const RenderViewFieldWithContext: React.FC<{
 	field: ViewField;
 	item: any;
 	id: string;
-}> = ({ field, item, id }) => {
+	view?: boolean;
+}> = ({ field, item, id, view = false }) => {
 	const context: DataContextValue = useDataContext();
 	const { token } = useAuth();
 	const { currencies } = useStaticData();
@@ -852,7 +852,7 @@ export const RenderViewFieldWithContext: React.FC<{
 	if (field.render) {
 		const renderParams: RenderParams = {
 			item: item,
-			view: false,
+			view,
 			id: `${id}-${field.key}`,
 			columns: field.columns,
 			helpText: field.helpText,
