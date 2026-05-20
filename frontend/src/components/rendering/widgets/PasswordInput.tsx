@@ -12,8 +12,8 @@ export const PasswordInput = ({ field, value, handleChange, error }: WidgetProps
 			<div className="position-relative">
 				<Form.Control
 					type={showPassword ? "text" : "password"}
-					id={toKey(field.name)}
-					name={toKey(field.name)}
+					id={toKey(field.key)}
+					name={toKey(field.key)}
 					placeholder={field.placeholder || "Enter your password"}
 					value={value || ""}
 					onChange={handleChange}

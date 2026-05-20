@@ -79,7 +79,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 	};
 
 	const timeUnitField: ModalFormField = {
-		name: "timeUnit",
+		key: "timeUnit",
 		type: "select",
 		label: "Unit",
 		options: timeUnitOptions,

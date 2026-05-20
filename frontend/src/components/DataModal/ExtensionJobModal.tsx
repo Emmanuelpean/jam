@@ -161,7 +161,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 					[
 						formFields.applicationVia(),
 						formFields.aggregator(aggregators, aggregatorModalRef, null, getAggregatorPreviewConfig, {
-							name: "application_aggregator_id",
+							key: "application_aggregator_id",
 							displayCondition: (formData: JobDataTransform): boolean =>
 								formData.applied_via ? formData.applied_via === "aggregator" : true,
 						}),
@@ -184,7 +184,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				fields: [
 					formFields.note({
 						placeholder: "Notes about the application process...",
-						name: "application_note",
+						key: "application_note",
 						label: "",
 					}),
 				],

@@ -42,7 +42,7 @@ export const LocalDatetimeInput = ({
 		e.stopPropagation();
 		const syntheticEvent: SyntheticEvent = {
 			target: {
-				name: toKey(field.name),
+				name: toKey(field.key),
 				value: inputType === "datetime-local" ? formatDateTime() : formatDateTime(new Date(), true),
 			},
 		};
@@ -52,7 +52,7 @@ export const LocalDatetimeInput = ({
 	const clearValue = (e: React.MouseEvent<HTMLElement>): void => {
 		e.preventDefault();
 		e.stopPropagation();
-		handleChange({ target: { name: toKey(field.name), value: null } });
+		handleChange({ target: { name: toKey(field.key), value: null } });
 	};
 
 	const openPicker = (e: React.MouseEvent<HTMLElement>): void => {
@@ -70,9 +70,9 @@ export const LocalDatetimeInput = ({
 		<div className="datetime-input-wrapper">
 			<Form.Control
 				ref={inputRef}
-				id={toKey(field.name)}
+				id={toKey(field.key)}
 				type={inputType}
-				name={toKey(field.name)}
+				name={toKey(field.key)}
 				value={formattedValue}
 				onChange={handleChange}
 				isInvalid={!!error}
@@ -83,20 +83,20 @@ export const LocalDatetimeInput = ({
 				<i
 					className="bi bi-x datetime-embedded-icon datetime-clear-icon"
 					onClick={clearValue}
-					id={field.name + "_clear"}
+					id={toKey(field.key) + "_clear"}
 					title="Clear"
 				></i>
 			)}
 			<i
 				className="bi bi-calendar datetime-embedded-icon datetime-calendar-icon"
 				onClick={openPicker}
-				id={field.name + "_open_picker"}
+				id={toKey(field.key) + "_open_picker"}
 				title="Open picker"
 			></i>
 			<i
 				className="bi bi-clock datetime-embedded-icon"
 				onClick={setCurrentValue}
-				id={field.name + "_set_current"}
+				id={toKey(field.key) + "_set_current"}
 				title={inputType === "datetime-local" ? "Set to current date and time" : "Set to current date"}
 			></i>
 		</div>

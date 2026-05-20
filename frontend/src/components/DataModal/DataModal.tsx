@@ -306,17 +306,17 @@ function DataModalComponent<T extends JamData>(
 	};
 
 	const isViewField = (field: Field): field is ModalViewField => {
-		return !("name" in field) || "render" in field || "isTitle" in field;
+		return !("type" in field) || "render" in field || "isTitle" in field;
 	};
 
 	const isSectionConfig = (item: FieldItem): item is SectionConfig => {
 		return typeof item === "object" && !Array.isArray(item) && "type" in item && item.type === "section";
 	};
 
-	// Helper to get field name as string (handles string[] case)
+	// Helper to get field key as string (handles string[] case)
 	const getFieldName = (field: Field): string | null => {
-		if (!("name" in field)) return null;
-		return Array.isArray(field.name) ? (field.name[0] ?? null) : field.name;
+		if (!field.key) return null;
+		return Array.isArray(field.key) ? (field.key[0] ?? null) : field.key;
 	};
 
 	// Flatten all fields including those inside sections for validation
@@ -605,9 +605,7 @@ function DataModalComponent<T extends JamData>(
 			<div key={index} className={`row`} style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}>
 				{itemList.map((field: Field, fieldIndex: number): JSX.Element => {
 					const fieldKey: string | string[] =
-						("key" in field ? field.key : null) ||
-						("name" in field ? field.name : null) ||
-						`field_${index}_${fieldIndex}`;
+						field.key || `field_${index}_${fieldIndex}`;
 
 					return (
 						<div key={toKey(fieldKey)} className={columnClass}>

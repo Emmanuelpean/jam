@@ -20,7 +20,7 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle<Speculativ
 				formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig, { required: true }),
 				formFields.datetime({ required: false }),
 			],
-			[formFields.email({ name: "contact_email" }), formFields.contacts(persons, personModalRef)],
+			[formFields.email({ key: "contact_email" }), formFields.contacts(persons, personModalRef)],
 			formFields.note(),
 		];
 

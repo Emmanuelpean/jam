@@ -23,9 +23,9 @@ export const Textarea = ({ field, value, handleChange, error }: WidgetProps): JS
 			<Form.Control
 				as="textarea"
 				ref={ref}
-				id={toKey(field.name)}
+				id={toKey(field.key)}
 				rows={field.rows || 3}
-				name={toKey(field.name)}
+				name={toKey(field.key)}
 				value={value || ""}
 				onChange={handleChange}
 				placeholder={field.placeholder}

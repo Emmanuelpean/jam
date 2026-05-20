@@ -101,7 +101,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 	const OTHER_CHAR_LIMIT = 3500;
 
 	const experienceField: ModalFormField = {
-		name: "experience",
+		key: "experience",
 		type: "textarea",
 		label: "Experience",
 		placeholder: "Describe your work experience...",
@@ -111,7 +111,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 	};
 
 	const skillsField: ModalFormField = {
-		name: "skills",
+		key: "skills",
 		type: "textarea",
 		label: "Skills",
 		placeholder: "List your skills...",
@@ -121,7 +121,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 	};
 
 	const qualitiesField: ModalFormField = {
-		name: "qualities",
+		key: "qualities",
 		type: "textarea",
 		label: "Qualities",
 		placeholder: "Describe your qualities...",
@@ -131,7 +131,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 	};
 
 	const educationField: ModalFormField = {
-		name: "education",
+		key: "education",
 		type: "textarea",
 		label: "Education",
 		placeholder: "Describe your education...",
@@ -141,7 +141,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 	};
 
 	const interestsField: ModalFormField = {
-		name: "interests",
+		key: "interests",
 		type: "textarea",
 		label: "Interests",
 		placeholder: "Describe your interests...",

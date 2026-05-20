@@ -112,7 +112,7 @@ export const RunHistoryChart = ({
 	}, [serviceLogData, selectedPlatform]);
 
 	const platformField: ModalFormField = {
-		name: "platform",
+		key: "platform",
 		type: "select",
 		label: "Platform",
 		options: platformOptions,

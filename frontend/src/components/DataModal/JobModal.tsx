@@ -212,7 +212,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 					[
 						formFields.applicationVia(),
 						formFields.aggregator(aggregators, aggregatorModalRef, null, getAggregatorPreviewConfig, {
-							name: "application_aggregator_id",
+							key: "application_aggregator_id",
 							displayCondition: (formData: JobDataTransform): boolean => {
 								return formData.applied_via ? formData.applied_via === "aggregator" : false;
 							},
@@ -238,7 +238,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 						placeholder:
 							"The application process involves submitting an online application, followed by technical " +
 							"assessments and interviews to evaluate coding skills, problem-solving ability, and cultural fit.",
-						name: "application_note",
+						key: "application_note",
 						label: "",
 					}),
 				],

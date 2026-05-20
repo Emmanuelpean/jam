@@ -19,8 +19,8 @@ export const UrlInput = ({ field, value, handleChange, error }: WidgetProps): JS
 	return (
 		<div className="url-input-wrapper">
 			<Form.Control
-				id={toKey(field.name)}
-				name={toKey(field.name)}
+				id={toKey(field.key)}
+				name={toKey(field.key)}
 				value={value || ""}
 				onChange={handleChange}
 				placeholder={field.placeholder || "Enter URL"}

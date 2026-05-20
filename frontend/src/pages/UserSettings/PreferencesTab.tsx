@@ -21,7 +21,7 @@ interface PreferencesFormData {
 }
 
 export const PreferencesTab: React.FC = () => {
-	const { currentUser, updateCurrentUser, token, fetchUserInfo } = useAuth();
+	const { currentUser, updateCurrentUser, token } = useAuth();
 	const { currencyNames } = useFormOptions();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [formData, setFormData] = useState<PreferencesFormData>(() => ({
@@ -115,7 +115,7 @@ export const PreferencesTab: React.FC = () => {
 	};
 
 	const chaseThresholdField: ModalFormField = {
-		name: "chase_threshold",
+		key: "chase_threshold",
 		type: "number",
 		label: "Chase Threshold (days)",
 		placeholder: "10",
@@ -123,7 +123,7 @@ export const PreferencesTab: React.FC = () => {
 	};
 
 	const deadlineThresholdField: ModalFormField = {
-		name: "deadline_threshold",
+		key: "deadline_threshold",
 		type: "number",
 		label: "Deadline Threshold (days)",
 		placeholder: "3",
@@ -131,7 +131,7 @@ export const PreferencesTab: React.FC = () => {
 	};
 
 	const updateLimitField: ModalFormField = {
-		name: "update_limit",
+		key: "update_limit",
 		type: "number",
 		label: "Update Display Limit",
 		placeholder: "50",
@@ -139,7 +139,7 @@ export const PreferencesTab: React.FC = () => {
 	};
 
 	const currencyField: ModalFormField = {
-		name: "default_currency",
+		key: "default_currency",
 		type: "select",
 		label: "Preferred Currency",
 		options: currencyNames,

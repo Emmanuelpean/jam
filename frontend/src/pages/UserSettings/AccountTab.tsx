@@ -229,7 +229,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 	};
 
 	const emailField: ModalFormField = {
-		name: "email",
+		key: "email",
 		label: "Email Address",
 		type: "text",
 		placeholder: "Enter your email address",
@@ -243,7 +243,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 	};
 
 	const currentPasswordField: ModalFormField = {
-		name: "current_password",
+		key: "current_password",
 		type: "password",
 		label: "Current Password",
 		placeholder: "Enter your current password",
@@ -254,7 +254,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 	};
 
 	const newPasswordField: ModalFormField = {
-		name: "new_password",
+		key: "new_password",
 		type: "password",
 		label: "New Password",
 		placeholder: "Enter new password",
@@ -264,7 +264,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 	};
 
 	const confirmPasswordField: ModalFormField = {
-		name: "confirm_password",
+		key: "confirm_password",
 		type: "password",
 		label: "Confirm New Password",
 		placeholder: "Confirm new password",
@@ -274,21 +274,21 @@ export const AccountTab: React.FC = (): JSX.Element => {
 	};
 
 	const firstNameField: ModalFormField = {
-		name: "first_name",
+		key: "first_name",
 		type: "text",
 		label: "First Name",
 		placeholder: "Enter your first name",
 	};
 
 	const lastNameField: ModalFormField = {
-		name: "last_name",
+		key: "last_name",
 		type: "text",
 		label: "Last Name",
 		placeholder: "Enter your last name",
 	};
 
 	const deletePasswordField: ModalFormField = {
-		name: "delete_password",
+		key: "delete_password",
 		type: "password",
 		label: "Password",
 	};

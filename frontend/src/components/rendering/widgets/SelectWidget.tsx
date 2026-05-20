@@ -65,7 +65,7 @@ export const SelectInput = ({
 				const currentIds = Array.isArray(value) ? value : [];
 				const syntheticEvent: SyntheticEvent = {
 					target: {
-						name: toKey(field.name),
+						name: toKey(field.key),
 						value: [...currentIds, newId],
 					},
 				};
@@ -74,14 +74,14 @@ export const SelectInput = ({
 				// For single select, replace value
 				const syntheticEvent: SyntheticEvent = {
 					target: {
-						name: toKey(field.name),
+						name: toKey(field.key),
 						value: newId,
 					},
 				};
 				handleChange(syntheticEvent);
 			}
 		},
-		[field.name, handleChange, isMulti, value]
+		[field.key, handleChange, isMulti, value]
 	);
 
 	const handleHover = useCallback(
@@ -132,19 +132,19 @@ export const SelectInput = ({
 	const selectElement = (
 		<>
 			<CustomSelect
-				id={toKey(field.name)}
-				name={toKey(field.name)}
+				id={toKey(field.key)}
+				name={toKey(field.key)}
 				value={selectedValue}
 				onChange={(selected) => {
 					if (isMulti) {
 						const ids: string[] = Array.isArray(selected)
 							? (selected as SelectOption[]).map((option) => option.value)
 							: [];
-						handleChange({ target: { name: toKey(field.name), value: ids } });
+						handleChange({ target: { name: toKey(field.key), value: ids } });
 					} else {
 						handleChange({
 							target: {
-								name: toKey(field.name),
+								name: toKey(field.key),
 								value: selected ? (selected as SelectOption).value : null,
 							},
 						});

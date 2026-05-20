@@ -27,9 +27,9 @@ export const SalaryInput = ({
 			<InputGroup style={{ minWidth: "250px" }}>
 				<InputGroup.Text>{currentSymbol}</InputGroup.Text>
 				<Form.Control
-					id={toKey(field.name)}
+					id={toKey(field.key)}
 					type="text"
-					name={toKey(field.name)}
+					name={toKey(field.key)}
 					value={value || ""}
 					onChange={handleChange}
 					placeholder={field.placeholder}

@@ -165,14 +165,14 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 
 	const selectField: ModalFormField = {
 		type: "select",
-		name: "contactId",
+		key: "contactId",
 		label: "Contact",
 		options: contactOptions,
 	};
 
 	const bodyField: ModalFormField = {
 		type: "textarea",
-		name: "body",
+		key: "body",
 		label: "Email Body",
 		placeholder: "Enter your follow up email here...",
 		rows: 10,
@@ -180,7 +180,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 
 	const subjectField: ModalFormField = {
 		type: "text",
-		name: "subject",
+		key: "subject",
 		label: "Email Subject",
 		placeholder: "Enter the email subject here...",
 	};

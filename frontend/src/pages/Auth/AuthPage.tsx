@@ -455,7 +455,7 @@ function AuthForm(): JSX.Element {
 	};
 
 	const emailField: ModalFormField = {
-		name: "email",
+		key: "email",
 		type: "text",
 		label: "Email Address",
 		icon: "bi bi-envelope-fill",
@@ -464,7 +464,7 @@ function AuthForm(): JSX.Element {
 	};
 
 	const passwordField: ModalFormField = {
-		name: "password",
+		key: "password",
 		type: "password",
 		label: displayedMode === "resetPassword" ? "New Password" : "Password",
 		icon: "bi bi-lock-fill",
@@ -476,7 +476,7 @@ function AuthForm(): JSX.Element {
 	};
 
 	const confirmPasswordField: ModalFormField = {
-		name: "confirmPassword",
+		key: "confirmPassword",
 		type: "password",
 		label: "Confirm Password",
 		icon: "bi bi-lock-fill",
@@ -485,7 +485,7 @@ function AuthForm(): JSX.Element {
 	};
 
 	const firstNameField: ModalFormField = {
-		name: "firstName",
+		key: "firstName",
 		type: "text",
 		label: "First Name",
 		icon: "bi bi-person-fill",
@@ -493,7 +493,7 @@ function AuthForm(): JSX.Element {
 	};
 
 	const lastNameField: ModalFormField = {
-		name: "lastName",
+		key: "lastName",
 		type: "text",
 		label: "Last Name",
 		icon: "bi bi-person-fill",
@@ -512,7 +512,7 @@ function AuthForm(): JSX.Element {
 						: "Tell Us About Yourself";
 
 	const termsField: ModalFormField = {
-		name: "terms",
+		key: "terms",
 		type: "checkbox",
 		label: (
 			<span>

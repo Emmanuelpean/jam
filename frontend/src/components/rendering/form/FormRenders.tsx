@@ -18,8 +18,8 @@ import { EnrichedJobData, JobData } from "../../../services/schemas/DataTables";
 import { DataContextValue } from "../../../contexts/DataContext";
 
 export interface ModalFormField {
-	name: string | string[];
-	secondaryName?: string;
+	key: string | string[];
+	secondaryKey?: string;
 	label?: string | JSX.Element | null;
 	icon?: string;
 	type: string;
@@ -57,7 +57,7 @@ export const formFields = {
 	// ------------------------------------------------- BASIC FIELDS -------------------------------------------------
 
 	title: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "title",
+		key: "title",
 		label: "Title",
 		type: "text",
 		required: true,
@@ -66,7 +66,7 @@ export const formFields = {
 	}),
 
 	value: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "value",
+		key: "value",
 		label: "Value",
 		type: "textarea",
 		required: true,
@@ -74,7 +74,7 @@ export const formFields = {
 	}),
 
 	name: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "name",
+		key: "name",
 		label: "Name",
 		type: "text",
 		required: true,
@@ -83,7 +83,7 @@ export const formFields = {
 	}),
 
 	description: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "description",
+		key: "description",
 		label: "Description",
 		type: "textarea",
 		rows: 4,
@@ -92,7 +92,7 @@ export const formFields = {
 	}),
 
 	note: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "note",
+		key: "note",
 		label: "Notes",
 		type: "textarea",
 		rows: 4,
@@ -101,7 +101,7 @@ export const formFields = {
 	}),
 
 	url: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "url",
+		key: "url",
 		label: "URL",
 		type: "url",
 		placeholder: "https://...",
@@ -116,7 +116,7 @@ export const formFields = {
 	}),
 
 	jobURl: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "url",
+		key: "url",
 		label: "Job URL",
 		type: "url",
 		placeholder: "https://linkedin.com/jobs/123456",
@@ -139,7 +139,7 @@ export const formFields = {
 	}),
 
 	location: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "location",
+		key: "location",
 		label: "Location",
 		type: "text",
 		placeholder: "e.g. London, UK",
@@ -151,7 +151,7 @@ export const formFields = {
 	}),
 
 	datetime: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "date",
+		key: "date",
 		label: "Date & Time",
 		type: "datetime-local",
 		required: true,
@@ -159,14 +159,14 @@ export const formFields = {
 	}),
 
 	deadline: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "deadline",
+		key: "deadline",
 		label: "Application Deadline",
 		type: "date",
 		...overrides,
 	}),
 
 	updateType: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "type",
+		key: "type",
 		label: "Update Type",
 		type: "select",
 		required: true,
@@ -175,21 +175,21 @@ export const formFields = {
 	}),
 
 	isActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "is_active",
+		key: "is_active",
 		label: "Active",
 		type: "checkbox",
 		...overrides,
 	}),
 
 	caseSensitive: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "case_sensitive",
+		key: "case_sensitive",
 		label: "Case Sensitive",
 		type: "checkbox",
 		...overrides,
 	}),
 
 	isRecruiter: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "is_recruiter",
+		key: "is_recruiter",
 		label: "Is Recruiter",
 		type: "checkbox",
 		...overrides,
@@ -198,35 +198,35 @@ export const formFields = {
 	// ------------------------------------------------- USERS ------------------------------------------------
 
 	isAdmin: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "is_admin",
+		key: "is_admin",
 		label: "Admin",
 		type: "checkbox",
 		...overrides,
 	}),
 
 	premiumActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: ["premium", "is_active"],
+		key: ["premium", "is_active"],
 		label: "Premium Active",
 		type: "toggle",
 		...overrides,
 	}),
 
 	jobScrapingActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: ["premium", "job_scraping_active"],
+		key: ["premium", "job_scraping_active"],
 		label: "Job Scraping Active",
 		type: "toggle",
 		...overrides,
 	}),
 
 	jobRatingActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: ["premium", "job_rating_active"],
+		key: ["premium", "job_rating_active"],
 		label: "Job Rating Active",
 		type: "toggle",
 		...overrides,
 	}),
 
 	password: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "password",
+		key: "password",
 		label: "Password",
 		type: "password",
 		required: true,
@@ -236,7 +236,7 @@ export const formFields = {
 	// ------------------------------------------------- PERSON FIELDS ------------------------------------------------
 
 	firstName: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "first_name",
+		key: "first_name",
 		label: "First Name",
 		type: "text",
 		required: true,
@@ -245,7 +245,7 @@ export const formFields = {
 	}),
 
 	lastName: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "last_name",
+		key: "last_name",
 		label: "Last Name",
 		type: "text",
 		required: true,
@@ -254,7 +254,7 @@ export const formFields = {
 	}),
 
 	email: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "email",
+		key: "email",
 		label: "Email",
 		type: "text",
 		placeholder: "person@company.com",
@@ -269,7 +269,7 @@ export const formFields = {
 	}),
 
 	phone: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "phone",
+		key: "phone",
 		label: "Phone",
 		type: "tel",
 		placeholder: "+44 20 7946 0958",
@@ -277,7 +277,7 @@ export const formFields = {
 	}),
 
 	linkedinUrl: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "linkedin_url",
+		key: "linkedin_url",
 		label: "LinkedIn Profile",
 		type: "text",
 		placeholder: "https://linkedin.com/in/username",
@@ -292,7 +292,7 @@ export const formFields = {
 	}),
 
 	role: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "role",
+		key: "role",
 		label: "Role",
 		type: "text",
 		...overrides,
@@ -301,7 +301,7 @@ export const formFields = {
 	// ------------------------------------------------- LOCATION FIELDS -----------------------------------------------
 
 	city: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "city",
+		key: "city",
 		label: "City",
 		type: "text",
 		placeholder: "Enter city name",
@@ -309,7 +309,7 @@ export const formFields = {
 	}),
 
 	postcode: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "postcode",
+		key: "postcode",
 		label: "Post Code",
 		type: "text",
 		placeholder: "Enter post code",
@@ -319,14 +319,14 @@ export const formFields = {
 	// ------------------------------------------------- JOB FIELDS --------------------------------------------------
 
 	isFavourite: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "is_favourite",
+		key: "is_favourite",
 		label: "Favourite",
 		type: "star_toggle",
 		...overrides,
 	}),
 
 	jobTitle: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "title",
+		key: "title",
 		label: "Job Title",
 		type: "text",
 		required: true,
@@ -335,7 +335,7 @@ export const formFields = {
 	}),
 
 	salaryMin: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "salary_min",
+		key: "salary_min",
 		label: "Minimum Salary",
 		type: "salary",
 		placeholder: "35000",
@@ -344,7 +344,7 @@ export const formFields = {
 	}),
 
 	salaryMax: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "salary_max",
+		key: "salary_max",
 		label: "Maximum Salary",
 		type: "salary",
 		placeholder: "45000",
@@ -353,7 +353,7 @@ export const formFields = {
 	}),
 
 	personalRating: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "personal_rating",
+		key: "personal_rating",
 		label: "Personal Rating",
 		type: "rating",
 		maxRating: 5,
@@ -361,7 +361,7 @@ export const formFields = {
 	}),
 
 	attendanceType: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "attendance_type",
+		key: "attendance_type",
 		label: "Attendance Type",
 		type: "select",
 		options: attendanceTypeOptions,
@@ -369,7 +369,7 @@ export const formFields = {
 	}),
 
 	interviewAttendanceType: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "attendance_type",
+		key: "attendance_type",
 		label: "Attendance Type",
 		type: "select",
 		options: interviewAttendanceOptions,
@@ -379,7 +379,7 @@ export const formFields = {
 	// ------------------------------------------------- INTERVIEW FIELDS --------------------------------------------
 
 	interviewType: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "type",
+		key: "type",
 		label: "Interview Type",
 		type: "select",
 		required: true,
@@ -392,14 +392,14 @@ export const formFields = {
 
 	applicationDate: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		...formFields.datetime(),
-		name: "application_date",
+		key: "application_date",
 		label: "Application Date",
 		required: false,
 		...overrides,
 	}),
 
 	applicationStatus: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "application_status",
+		key: "application_status",
 		label: "Application Status",
 		type: "select",
 		options: applicationStatusOptions,
@@ -407,7 +407,7 @@ export const formFields = {
 	}),
 
 	applicationUrl: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "application_url",
+		key: "application_url",
 		label: "Application URL",
 		type: "text",
 		placeholder: "https://...",
@@ -415,7 +415,7 @@ export const formFields = {
 	}),
 
 	applicationVia: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "applied_via",
+		key: "applied_via",
 		label: "Application Via",
 		type: "select",
 		options: appliedViaOptions,
@@ -423,7 +423,7 @@ export const formFields = {
 	}),
 
 	cvUpload: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "cv_id",
+		key: "cv_id",
 		label: "CV",
 		type: "file_upload",
 		fileType: "cv",
@@ -431,7 +431,7 @@ export const formFields = {
 	}),
 
 	coverLetterUpload: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "cover_letter_id",
+		key: "cover_letter_id",
 		label: "Cover Letter",
 		type: "cover_letter",
 		fileType: "cover_letter",
@@ -447,7 +447,7 @@ export const formFields = {
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "company_id",
+		key: "company_id",
 		label: "Company",
 		type: "select",
 		placeholder: "Select or search company...",
@@ -466,8 +466,8 @@ export const formFields = {
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "company_id",
-		secondaryName: "company",
+		key: "company_id",
+		secondaryKey: "company",
 		label: "Company",
 		type: "select",
 		placeholder: "Select or search company...",
@@ -486,7 +486,7 @@ export const formFields = {
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "keywords",
+		key: "keywords",
 		label: "Tags",
 		type: "multiselect",
 		placeholder: "Select or search tags...",
@@ -504,7 +504,7 @@ export const formFields = {
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "contacts",
+		key: "contacts",
 		label: "Contacts",
 		type: "multiselect",
 		placeholder: "Select or search contacts...",
@@ -522,7 +522,7 @@ export const formFields = {
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "interviewers",
+		key: "interviewers",
 		label: "Interviewers",
 		type: "multiselect",
 		isSearchable: true,
@@ -539,7 +539,7 @@ export const formFields = {
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "recruiter_id",
+		key: "recruiter_id",
 		label: "Recruiter",
 		type: "select",
 		isSearchable: true,
@@ -550,7 +550,7 @@ export const formFields = {
 	}),
 
 	job: (options: SelectOption[] = [], overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "job_id",
+		key: "job_id",
 		label: "Job",
 		type: "select",
 		required: true,
@@ -568,7 +568,7 @@ export const formFields = {
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "aggregator_id",
+		key: "aggregator_id",
 		label: "Aggregator",
 		type: "select",
 		placeholder: "Select an aggregator",
@@ -582,7 +582,7 @@ export const formFields = {
 
 	sourceType: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		options: sourceTypeOptions,
-		name: "source_type",
+		key: "source_type",
 		label: "Source",
 		type: "select",
 		placeholder: "Select source",
@@ -610,7 +610,7 @@ export const formFields = {
 			aggregatorTransformParentData,
 			getAggregatorPreviewConfig,
 			{
-				name: "source_aggregator_id",
+				key: "source_aggregator_id",
 				displayCondition: (formData: any): boolean =>
 					["aggregator", "aggregator_email"].includes(formData.source_type || ""),
 			}
@@ -619,13 +619,13 @@ export const formFields = {
 			displayCondition: (formData: any): boolean => formData.source_type === "recruiter",
 		}),
 		formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig, {
-			name: "recruitment_company_id",
+			key: "recruitment_company_id",
 			displayCondition: (formData: any): boolean => formData.source_type === "recruitment_company",
 		}),
 	],
 
 	scrapingFilterType: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "type",
+		key: "type",
 		label: "Filter Type",
 		type: "select",
 		required: true,
@@ -637,7 +637,7 @@ export const formFields = {
 	}),
 
 	scrapingFilterOperator: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "operator",
+		key: "operator",
 		label: "Operator",
 		type: "select",
 		required: true,

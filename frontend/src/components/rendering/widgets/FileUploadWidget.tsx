@@ -24,7 +24,7 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 	const [dragOver, setDragOver] = useState<boolean>(false);
 	const [tooltipCoords, setTooltipCoords] = useState<{ top: number; left: number } | null>(null);
 
-	const metadataKey = field.name === "cv_id" ? "application_cv" : "application_cover_letter";
+	const metadataKey = field.key === "cv_id" ? "application_cv" : "application_cover_letter";
 	const fileType = field.fileType ?? null;
 	const fileMetadata: FileMetadataData | null = value ? (data?.[metadataKey] ?? null) : null;
 
@@ -53,7 +53,7 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 				},
 				token
 			);
-			handleChange({ target: { name: field.name as string, value: result.data.id } });
+			handleChange({ target: { name: field.key as string, value: result.data.id } });
 			handleChange({ target: { name: metadataKey, value: result.data } });
 		} catch (err: any) {
 			setUploadError(err.message || "Upload failed");
@@ -84,7 +84,7 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 	const handleDragLeave = (): void => setDragOver(false);
 
 	const handleRemove = (): void => {
-		handleChange({ target: { name: field.name as string, value: null } });
+		handleChange({ target: { name: field.key as string, value: null } });
 		handleChange({ target: { name: metadataKey, value: null } });
 	};
 
@@ -108,7 +108,7 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 
 	const hasFile: boolean = !!value && !!fileMetadata;
 
-	const fieldId = field.name as string;
+	const fieldId = field.key as string;
 
 	return (
 		<div>

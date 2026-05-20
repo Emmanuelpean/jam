@@ -52,10 +52,10 @@ export const DefaultInput = ({ field, value, handleChange, error }: WidgetProps)
 	return (
 		<>
 			<Form.Control
-				id={toKey(field.name)}
+				id={toKey(field.key)}
 				type={field.type || "text"}
-				name={toKey(field.name)}
-				key={toKey(field.name)}
+				name={toKey(field.key)}
+				key={toKey(field.key)}
 				value={value || ""}
 				onChange={handleChange}
 				placeholder={field.placeholder}
@@ -76,9 +76,9 @@ export const renderFormField = (
 	currentUser?: CurrentUser | null,
 	onUploadingChange?: (uploading: boolean) => void
 ) => {
-	const value: any = get(formData, field.name);
-	const secondaryValue: any = field.secondaryName ? get(formData, field.secondaryName) : null;
-	const error: string | null | undefined = get(errors, field.name);
+	const value: any = get(formData, field.key);
+	const secondaryValue: any = field.secondaryKey ? get(formData, field.secondaryKey) : null;
+	const error: string | null | undefined = get(errors, field.key);
 	const previewConfig = field.previewConfig;
 
 	const widgetProps: WidgetProps = {
@@ -117,7 +117,7 @@ export const renderFormField = (
 	};
 
 	return (
-		<Form.Group className={`mb-3${field.highlight ? " field-highlight" : ""}`} id={`${field.name}-form-group`}>
+		<Form.Group className={`mb-3${field.highlight ? " field-highlight" : ""}`} id={`${toKey(field.key)}-form-group`}>
 			{field.label && !hasOwnLabel && (
 				<Form.Label>
 					{field.icon && <i className={`${field.icon} me-2 text-muted`} aria-hidden="true" />}
@@ -128,7 +128,7 @@ export const renderFormField = (
 			)}
 			{renderWidget()}
 			{error && (
-				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
+				<div className="invalid-feedback d-block" id={`${toKey(field.key)}-error-message`}>
 					{displayError(error)}
 				</div>
 			)}

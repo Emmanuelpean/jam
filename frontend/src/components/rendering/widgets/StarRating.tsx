@@ -11,7 +11,7 @@ export const StarRating = ({ field, value, handleChange }: WidgetProps): JSX.Ele
 	const handleStarClick = (rating: number): void => {
 		const syntheticEvent: SyntheticEvent = {
 			target: {
-				name: toKey(field.name),
+				name: toKey(field.key),
 				value: rating === currentRating ? 0 : rating,
 			},
 		};

@@ -56,7 +56,7 @@ export const CoverLetterWidget = (props: WidgetProps): JSX.Element => {
 
 		if (!draftText.trim()) {
 			if (isTextFile) {
-				handleChange({ target: { name: field.name as string, value: null } });
+				handleChange({ target: { name: field.key as string, value: null } });
 				handleChange({ target: { name: "application_cover_letter", value: null } });
 				setSavedText("");
 			}
@@ -88,7 +88,7 @@ export const CoverLetterWidget = (props: WidgetProps): JSX.Element => {
 			);
 			setSavedText(draftText);
 			lastValueRef.current = result.data.id;
-			handleChange({ target: { name: field.name as string, value: result.data.id } });
+			handleChange({ target: { name: field.key as string, value: result.data.id } });
 			handleChange({ target: { name: "application_cover_letter", value: result.data } });
 			setShowModal(false);
 		} catch (err: any) {
@@ -126,7 +126,7 @@ export const CoverLetterWidget = (props: WidgetProps): JSX.Element => {
 					<Textarea
 						field={
 							{
-								name: "cover_letter_text",
+								key: "cover_letter_text",
 								type: "textarea",
 								rows: 16,
 								placeholder: "Write or paste your cover letter here...",

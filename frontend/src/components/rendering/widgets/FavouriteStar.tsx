@@ -9,7 +9,7 @@ export const FavouriteStar = ({ field, value, handleChange }: WidgetProps): JSX.
 	const handleClick = (): void => {
 		const syntheticEvent: SyntheticEvent = {
 			target: {
-				name: toKey(field.name),
+				name: toKey(field.key),
 				value: !isFavourite,
 				type: "checkbox",
 				checked: !isFavourite,
