@@ -13,20 +13,19 @@ export type ModalViewFields = (ModalViewField | ModalViewField[])[];
 
 interface ModalViewFieldOverride extends Partial<ModalViewField> {}
 
-export const renderModalViewField = (field: ModalViewField, item: any, id: string): ReactNode => {
+export const ModalViewFieldRenderer = ({ field, item, id }: { field: ModalViewField; item: any; id: string }): ReactNode => {
 	const output = <RenderViewFieldWithContext field={field} item={item} id={id} view={true} />;
 
 	if (field.isTitle) {
 		return (
-			<>
-				<div className="text-center p-1">
-					<h2 className="display-6 fw-bold mt-4 mb-4" style={{ color: "var(--primary-mid)" }}>
-						{output}
-					</h2>
-				</div>
-			</>
+			<div className="text-center p-1">
+				<h2 className="display-6 fw-bold mt-4 mb-4" style={{ color: "var(--primary-mid)" }}>
+					{output}
+				</h2>
+			</div>
 		);
-	} else if (field.label) {
+	}
+	if (field.label) {
 		return (
 			<>
 				<h6 className="mb-2 fw-bold">
@@ -36,9 +35,8 @@ export const renderModalViewField = (field: ModalViewField, item: any, id: strin
 				<div className="mb-3">{output}</div>
 			</>
 		);
-	} else {
-		return <div className="mb-3">{output}</div>;
 	}
+	return <div className="mb-3">{output}</div>;
 };
 
 export const modalViewFields = {

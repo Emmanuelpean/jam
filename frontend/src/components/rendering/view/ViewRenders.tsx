@@ -838,6 +838,31 @@ export const renderFunctions = {
 	scrapedJobEmailTable: (param: RenderParams) => <ScrapedJobEmailTable param={param} />,
 };
 
+function buildRenderParams(
+	item: any,
+	id: string,
+	field: ViewField,
+	dataContext: DataContextValue,
+	currencies: Currency[],
+	token: string | null,
+	view: boolean = false
+): RenderParams {
+	return {
+		item,
+		view,
+		id: `${id}-${field.key}`,
+		columns: field.columns,
+		helpText: field.helpText,
+		dataContext,
+		currencies,
+		token,
+	};
+}
+
+function renderFieldValue(field: ViewField, item: any, params: RenderParams): ReactNode {
+	return field.render ? field.render(params) : item?.[field.key];
+}
+
 export const RenderViewFieldWithContext: React.FC<{
 	field: ViewField;
 	item: any;
@@ -848,28 +873,12 @@ export const RenderViewFieldWithContext: React.FC<{
 	const { token } = useAuth();
 	const { currencies } = useStaticData();
 
-	let rendered: ReactNode;
-	if (field.render) {
-		const renderParams: RenderParams = {
-			item: item,
-			view,
-			id: `${id}-${field.key}`,
-			columns: field.columns,
-			helpText: field.helpText,
-			dataContext: context,
-			currencies,
-			token: token,
-		};
-		rendered = field.render(renderParams);
-	} else {
-		rendered = item?.[field.key];
-	}
-
-	if (rendered !== null && rendered !== undefined) {
-		return <>{rendered}</>;
-	} else {
-		return <span className="text-muted">Not Provided</span>;
-	}
+	const rendered = renderFieldValue(
+		field,
+		item,
+		buildRenderParams(item, id, field, context, currencies, token, view)
+	);
+	return rendered != null ? <>{rendered}</> : <span className="text-muted">Not Provided</span>;
 };
 
 export const IsViewNull = (
@@ -879,23 +888,7 @@ export const IsViewNull = (
 	item: any,
 	id: string
 ): boolean => {
-	let rendered: ReactNode;
-	if (field.render) {
-		const renderParams: RenderParams = {
-			item: item,
-			view: false,
-			id: `${id}-${field.key}`,
-			columns: field.columns,
-			helpText: field.helpText,
-			dataContext: dataContext,
-			currencies: [],
-			token: token,
-		};
-		rendered = field.render(renderParams);
-	} else {
-		rendered = item?.[field.key];
-	}
-
+	const rendered = renderFieldValue(field, item, buildRenderParams(item, id, field, dataContext, [], token));
 	return rendered == null;
 };
 

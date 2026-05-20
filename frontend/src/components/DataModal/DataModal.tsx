@@ -24,7 +24,7 @@ import {
 import { Errors, renderFormField, SyntheticEvent } from "../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../rendering/form/ActionButton";
 import { areDifferent, findItemByKey, getColumnClass, normaliseArray } from "../../utils/Utils";
-import { ModalViewField, renderModalViewField } from "../rendering/view/ModalFields";
+import { ModalViewField, ModalViewFieldRenderer } from "../rendering/view/ModalFields";
 import { ModalFormField } from "../rendering/form/FormRenders";
 import {
 	useActivateEntity,
@@ -593,7 +593,7 @@ function DataModalComponent<T extends JamData>(
 			if (firstItem && "isTitle" in firstItem && firstItem.isTitle) {
 				return (
 					<div key={index}>
-						{renderModalViewField(firstItem as ModalViewField, effectiveData, getModalId())}
+						<ModalViewFieldRenderer field={firstItem as ModalViewField} item={effectiveData} id={getModalId()} />
 					</div>
 				);
 			}
@@ -612,7 +612,7 @@ function DataModalComponent<T extends JamData>(
 					return (
 						<div key={toKey(fieldKey)} className={columnClass}>
 							{isViewField(field)
-								? renderModalViewField(field as ModalViewField, effectiveData, getModalId())
+								? <ModalViewFieldRenderer field={field as ModalViewField} item={effectiveData} id={getModalId()} />
 								: renderFormField(
 										field as ModalFormField,
 										formData,
@@ -976,7 +976,7 @@ function DataModalComponent<T extends JamData>(
 								{currentAdditionalFields.map(
 									(item: ModalViewField, index: number): JSX.Element => (
 										<div key={`outside-field-${index}`} className="mb-3">
-											{renderModalViewField(item, effectiveData, getModalId())}
+											<ModalViewFieldRenderer field={item} item={effectiveData} id={getModalId()} />
 										</div>
 									)
 								)}

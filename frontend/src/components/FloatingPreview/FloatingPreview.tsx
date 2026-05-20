@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Card } from "react-bootstrap";
-import { ModalViewField, ModalViewFields, renderModalViewField } from "../rendering/view/ModalFields";
+import { ModalViewField, ModalViewFields, ModalViewFieldRenderer } from "../rendering/view/ModalFields";
 import "./FloatingPreview.scss";
 import { getColumnClass, normaliseArray } from "../../utils/Utils";
 
@@ -66,7 +66,7 @@ export const FloatingPreview = ({ data, fields, position, show }: FloatingPrevie
 				{itemList.map((field: ModalViewField): JSX.Element => {
 					return (
 						<div key={field.key} className={columnClass}>
-							{renderModalViewField(field as ModalViewField, data, `floating-preview-${data.id}`)}
+							<ModalViewFieldRenderer field={field as ModalViewField} item={data} id={`floating-preview-${data.id}`} />
 						</div>
 					);
 				})}

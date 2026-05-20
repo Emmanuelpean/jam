@@ -1,5 +1,5 @@
 import React, { JSX, useState } from "react";
-import { Button, Collapse } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import { JobRatingData } from "../../../services/schemas/Services";
 
 interface JobRatingCardProps {
@@ -16,7 +16,26 @@ const JobRatingCard = ({ jobRating }: JobRatingCardProps): JSX.Element => {
 	};
 
 	return (
-		<div className="card shadow-sm">
+		<div className="card shadow-sm position-relative">
+			{jobRating.job_prompt && (
+				<Button
+					variant="outline-secondary"
+					size="sm"
+					className="p-1 lh-1 position-absolute top-0 end-0 m-2"
+					onClick={handleTogglePrompt}
+					title={showPrompt ? "Hide AI Prompt" : "Show AI Prompt"}
+				>
+					<i className="bi bi-robot me-1" />
+					<i
+						className="bi bi-chevron-down"
+						style={{
+							display: "inline-block",
+							transition: "transform 0.3s ease-in-out",
+							transform: showPrompt ? "rotate(0deg)" : "rotate(-90deg)",
+						}}
+					/>
+				</Button>
+			)}
 			<div className="card-body p-3">
 				<table className="table table-sm table-striped table-hover mb-2">
 					<thead>
@@ -42,27 +61,22 @@ const JobRatingCard = ({ jobRating }: JobRatingCardProps): JSX.Element => {
 				{jobRating.feedback && <div className="small mb-2">{jobRating.feedback}</div>}
 
 				{jobRating.job_prompt && (
-					<>
-						<Button
-							variant="link"
-							size="sm"
-							className="p-0 text-muted text-decoration-none"
-							onClick={handleTogglePrompt}
-						>
-							<i className={`bi ${showPrompt ? "bi-chevron-up" : "bi-chevron-down"} me-1`} />
-							{showPrompt ? "Hide" : "Show"} AI Prompt
-						</Button>
-						<Collapse in={showPrompt}>
-							<div>
-								<div
-									className="mt-2 p-2 rounded small"
-									style={{ whiteSpace: "pre-wrap", backgroundColor: "var(--bs-tertiary-bg)" }}
-								>
-									{jobRating.job_prompt}
-								</div>
+					<div
+						style={{
+							display: "grid",
+							gridTemplateRows: showPrompt ? "1fr" : "0fr",
+							transition: "grid-template-rows 0.3s ease-in-out",
+						}}
+					>
+						<div style={{ overflow: "hidden" }}>
+							<div
+								className="mt-2 p-2 rounded small"
+								style={{ whiteSpace: "pre-wrap", backgroundColor: "var(--bs-tertiary-bg)" }}
+							>
+								{jobRating.job_prompt}
 							</div>
-						</Collapse>
-					</>
+						</div>
+					</div>
 				)}
 			</div>
 		</div>

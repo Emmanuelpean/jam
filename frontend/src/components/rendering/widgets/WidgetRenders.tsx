@@ -93,34 +93,32 @@ export const renderFormField = (
 		onUploadingChange,
 	};
 
-	if (field.type === "checkbox") {
-		return (
-			<Form.Group className={`mb-3${field.highlight ? " field-highlight" : ""}`} id={`${field.name}-form-group`}>
-				<Checkbox {...widgetProps} />
-				{error && (
-					<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
-						{displayError(error)}
-					</div>
-				)}
-			</Form.Group>
-		);
-	}
-	if (field.type === "toggle") {
-		return (
-			<Form.Group className={`mb-3${field.highlight ? " field-highlight" : ""}`} id={`${field.name}-form-group`}>
-				<Toggle {...widgetProps} />
-				{error && (
-					<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
-						{displayError(error)}
-					</div>
-				)}
-			</Form.Group>
-		);
-	}
+	// Checkbox and toggle render their own label internally
+	const hasOwnLabel = field.type === "checkbox" || field.type === "toggle";
+
+	const renderWidget = (): JSX.Element => {
+		switch (field.type) {
+			case "checkbox":      return <Checkbox {...widgetProps} />;
+			case "toggle":        return <Toggle {...widgetProps} />;
+			case "textarea":      return <Textarea {...widgetProps} />;
+			case "select":
+			case "multiselect":   return <SelectInput {...widgetProps} />;
+			case "datetime-local": return <LocalDatetimeInput {...widgetProps} inputType="datetime-local" />;
+			case "date":          return <LocalDatetimeInput {...widgetProps} inputType="date" />;
+			case "password":      return <PasswordInput {...widgetProps} />;
+			case "salary":        return <SalaryInput {...widgetProps} />;
+			case "rating":        return <StarRating {...widgetProps} />;
+			case "url":           return <UrlInput {...widgetProps} />;
+			case "star_toggle":   return <FavouriteStar {...widgetProps} />;
+			case "cover_letter":  return <CoverLetterWidget {...widgetProps} />;
+			case "file_upload":   return <FileUploadWidget {...widgetProps} />;
+			default:              return <DefaultInput {...widgetProps} />;
+		}
+	};
 
 	return (
 		<Form.Group className={`mb-3${field.highlight ? " field-highlight" : ""}`} id={`${field.name}-form-group`}>
-			{field.label && (
+			{field.label && !hasOwnLabel && (
 				<Form.Label>
 					{field.icon && <i className={`${field.icon} me-2 text-muted`} aria-hidden="true" />}
 					{field.label}
@@ -128,46 +126,7 @@ export const renderFormField = (
 					{field.helpText && <HelpBubble helpText={field.helpText} />}
 				</Form.Label>
 			)}
-			{(() => {
-				switch (field.type) {
-					case "textarea":
-						return <Textarea {...widgetProps} />;
-
-					case "select":
-					case "multiselect":
-						return <SelectInput {...widgetProps} />;
-
-					case "datetime-local":
-						return <LocalDatetimeInput {...widgetProps} inputType="datetime-local" />;
-
-					case "date":
-						return <LocalDatetimeInput {...widgetProps} inputType="date" />;
-
-					case "password":
-						return <PasswordInput {...widgetProps} />;
-
-					case "salary":
-						return <SalaryInput {...widgetProps} />;
-
-					case "rating":
-						return <StarRating {...widgetProps} />;
-
-					case "url":
-						return <UrlInput {...widgetProps} />;
-
-					case "star_toggle":
-						return <FavouriteStar {...widgetProps} />;
-
-					case "cover_letter":
-						return <CoverLetterWidget {...widgetProps} />;
-
-					case "file_upload":
-						return <FileUploadWidget {...widgetProps} />;
-
-					default:
-						return <DefaultInput {...widgetProps} />;
-				}
-			})()}
+			{renderWidget()}
 			{error && (
 				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
 					{displayError(error)}
