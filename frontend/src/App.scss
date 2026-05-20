@@ -105,6 +105,44 @@ html {
     scroll-behavior: smooth;
 }
 
+.screen-too-small {
+    display: none;
+}
+
+@media (max-width: 299px) {
+    .screen-too-small {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        background: var(--bg-primary);
+        color: var(--bs-body-color);
+    }
+
+    .screen-too-small-icon {
+        font-size: 3rem;
+        color: var(--primary-mid);
+    }
+
+    .screen-too-small-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .screen-too-small-message {
+        font-size: 0.85rem;
+        color: var(--bs-secondary-color);
+        margin: 0;
+    }
+}
+
 .form-control.is-invalid {
     background-image: none !important;
 }
@@ -148,6 +186,7 @@ html {
 .jam-select .jam-select__control {
     font-size: 0.95rem;
     min-height: 50px;
+    min-width: 250px;
     padding: 0.875rem 1.25rem;
     transition: all var(--transition);
     border: 3px solid;
@@ -799,6 +838,9 @@ textarea.form-control {
 
 .clickable-badge {
     cursor: pointer !important;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .clickable-badge:hover {

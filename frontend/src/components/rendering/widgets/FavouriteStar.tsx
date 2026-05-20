@@ -21,7 +21,7 @@ export const FavouriteStar = ({ field, value, handleChange }: WidgetProps): JSX.
 	const active: boolean = isFavourite || hovered;
 
 	return (
-		<div style={{ display: "flex", height: "50px" }}>
+		<div style={{ display: "flex", height: "50px", minWidth: "250px" }}>
 			<button
 				type="button"
 				onClick={handleClick}

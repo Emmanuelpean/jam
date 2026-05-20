@@ -14,7 +14,7 @@ const ServiceDashboards = (): JSX.Element => {
 
 	return (
 		<div className="scraped-jobs-page">
-			<div className="d-flex gap-3">
+			<div className="d-flex gap-3 page-headers-row">
 				<PageHeader
 					className="flex-fill"
 					id="tab-scraping"

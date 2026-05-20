@@ -21,6 +21,14 @@
     border: 2px solid transparent !important;
 }
 
+.page-headers-row {
+    flex-wrap: wrap;
+
+    > * {
+        min-width: min-content;
+    }
+}
+
 .page-header-clickable {
     cursor: pointer;
 

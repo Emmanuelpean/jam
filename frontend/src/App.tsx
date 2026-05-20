@@ -250,10 +250,22 @@ function AppRoutes(): JSX.Element {
 	);
 }
 
+function ScreenTooSmall(): JSX.Element {
+	return (
+		<div className="screen-too-small">
+			<i className="bi bi-phone screen-too-small-icon" />
+			<p className="screen-too-small-title">Screen too small</p>
+			<p className="screen-too-small-message">JAM requires a minimum screen width of 300px.</p>
+		</div>
+	);
+}
+
 function AppContent(): JSX.Element {
 	const toastMethods: UseToastReturn = useToast();
 
 	return (
+		<>
+		<ScreenTooSmall />
 		<BrowserRouter basename="/jam">
 			<StaticDataProvider>
 			<AuthProvider>
@@ -286,6 +298,7 @@ function AppContent(): JSX.Element {
 			</AuthProvider>
 			</StaticDataProvider>
 		</BrowserRouter>
+		</>
 	);
 }
 

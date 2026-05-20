@@ -24,7 +24,7 @@ export const SalaryInput = ({
 
 	return (
 		<>
-			<InputGroup>
+			<InputGroup style={{ minWidth: "250px" }}>
 				<InputGroup.Text>{currentSymbol}</InputGroup.Text>
 				<Form.Control
 					id={toKey(field.name)}

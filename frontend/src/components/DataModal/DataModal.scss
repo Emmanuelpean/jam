@@ -25,9 +25,9 @@
 }
 
 .modal-body-blurring {
-    filter: blur(4px);
-    pointer-events: none;
     user-select: none;
+    pointer-events: none;
+    filter: blur(4px);
 }
 
 .modal-header .modal-title {
@@ -158,10 +158,18 @@
 
 /* Above mobile: smooth width per size class, bypassing Bootstrap's breakpoint snapping */
 @media (width > $mobile-breakpoint) {
-    .data-modal .modal-dialog { max-width: min(90vw, 500px); }
-    .data-modal .modal-dialog.modal-sm { max-width: min(90vw, 300px); }
-    .data-modal .modal-dialog.modal-lg { max-width: min(90vw, 800px); }
-    .data-modal .modal-dialog.modal-xl { max-width: min(90vw, 1140px); }
+    .data-modal .modal-dialog {
+        max-width: min(90vw, 500px);
+    }
+    .data-modal .modal-dialog.modal-sm {
+        max-width: min(90vw, 300px);
+    }
+    .data-modal .modal-dialog.modal-lg {
+        max-width: min(90vw, 800px);
+    }
+    .data-modal .modal-dialog.modal-xl {
+        max-width: min(90vw, 1140px);
+    }
 }
 
 /* Mobile fullscreen slide-in from right */
@@ -204,14 +212,32 @@
 }
 
 @keyframes field-highlight-pulse {
-    0%, 100% { box-shadow: 0 0 0 2px rgba(var(--bs-warning-rgb), 0.4); }
-    50% { box-shadow: 0 0 0 4px rgba(var(--bs-warning-rgb), 0.7); }
+    0%, 100% {
+        box-shadow: 0 0 0 2px rgba(var(--bs-warning-rgb), 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(var(--bs-warning-rgb), 0.7);
+    }
+}
+
+/* View mode: cols wrap below ~500px (2×250px basis) and badge text truncates within them */
+.data-modal .row > [class*="col-"] {
+    flex: 1 1 250px;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+/* Edit mode: cols wrap when inputs no longer fit side by side */
+.data-modal form .row > [class*="col-"] {
+    min-width: min-content;
+    overflow: visible;
 }
 
 .field-highlight {
     padding: 0.75rem;
-    border-radius: 8px;
-    border: 1.5px solid rgba(var(--bs-warning-rgb), 0.6);
-    background-color: rgba(var(--bs-warning-rgb), 0.06);
     animation: field-highlight-pulse 2s ease-in-out infinite;
+    border: 1.5px solid rgba(var(--bs-warning-rgb), 0.6);
+    border-radius: 8px;
+    background-color: rgba(var(--bs-warning-rgb), 0.06);
 }

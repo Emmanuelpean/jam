@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { FormData, useAuth } from "../../contexts/AuthContext";
 import "./AuthPage.scss";
 import JamLogo from "../../assets/Logo.svg?react";
-import { Alert, Card, Form, Spinner } from "react-bootstrap";
+import { Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
 import { PrivacyPolicyModal } from "./PrivacyPolicyPage";
 import { Errors, renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
@@ -16,12 +16,11 @@ import { useLoading } from "../../contexts/LoadingContext";
 import { DEFAULT_THEME } from "../../utils/Theme";
 import { ApiError } from "../../services/api/ApiError";
 import { useConfig } from "../../contexts/ConfigContext";
+import { useViewport } from "../../contexts/ViewportContext";
 
 type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "verifyEmail" | "verifyNewEmail";
 
 let isVerifying: boolean = false;
-
-const TABLET_BREAKPOINT = 993;
 
 const determineAuthMode = (pathname: string, token: string | null): AuthMode => {
 	const normalizedPath: string = pathname.endsWith("/") && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
@@ -57,7 +56,6 @@ function AuthForm(): JSX.Element {
 	const [registrationStep, setRegistrationStep] = useState<number>(1);
 	const [formData, setFormData] = useState<FormData>(defaultFormData);
 	const [resetToken, setResetToken] = useState<string>("");
-	const [showMobileWarning, setShowMobileWarning] = useState<boolean>(false);
 	const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 	const [showTerms, setShowTerms] = useState<boolean>(false);
 	const [showPrivacy, setShowPrivacy] = useState<boolean>(false);
@@ -75,7 +73,7 @@ function AuthForm(): JSX.Element {
 	const [displayedMode, setDisplayedMode] = useState<AuthMode>(mode);
 	const [displayedStep, setDisplayedStep] = useState<number>(registrationStep);
 	const prevModeRef = useRef<string | null>(null);
-	const [isLargeScreen, setIsLargeScreen] = useState<boolean>(window.innerWidth > TABLET_BREAKPOINT);
+	const { isTablet } = useViewport();
 
 	useEffect(() => {
 		const el = contentRef.current;
@@ -176,18 +174,6 @@ function AuthForm(): JSX.Element {
 			});
 	}, [mode, location.pathname, searchParams, navigate]);
 
-	useEffect(() => {
-		const checkScreenSize = () => {
-			const isLarge = window.innerWidth > TABLET_BREAKPOINT;
-			setIsLargeScreen(isLarge);
-			setShowMobileWarning(window.innerWidth < 768);
-		};
-
-		checkScreenSize();
-		window.addEventListener("resize", checkScreenSize);
-		return () => window.removeEventListener("resize", checkScreenSize);
-	}, []);
-
 	const handleInputChange = (e: SyntheticEvent): void => {
 		const { name, value } = e.target;
 		setFormData(
@@ -261,7 +247,6 @@ function AuthForm(): JSX.Element {
 				if (!acceptedTerms) {
 					errors.terms = "You must accept the Terms and Conditions and Privacy Policy to register.";
 				}
-
 			} else if (step === 2) {
 				if (!formData.firstName || formData.firstName.trim().length === 0) {
 					errors.firstName = "First name is required.";
@@ -459,7 +444,6 @@ function AuthForm(): JSX.Element {
 		setAcceptedTerms(e.target.checked);
 	};
 
-
 	const handleShowTerms = (e: React.MouseEvent<HTMLButtonElement>): void => {
 		e.preventDefault();
 		setShowTerms(true);
@@ -602,38 +586,37 @@ function AuthForm(): JSX.Element {
 	return (
 		<div className="auth-page-wrapper">
 			{/* Left branding panel - conditionally rendered based on screen size */}
-			{isLargeScreen && (
-				<div className="auth-branding-panel">
-					<div className="branding-content">
-						<div className="branding-logo">
-							<JamLogo />
-						</div>
-						<h1 className="branding-title">Job Application Manager</h1>
-						<p className="branding-tagline">
-							Streamline your job search. Track applications, manage deadlines, and land your dream job.
-						</p>
-						<ul className="feature-list">
-							{featureItems.map(
-								(feature: Feature, index: number): JSX.Element => (
-									<li key={index} className="feature-item">
-										<div className="feature-icon">
-											<i className={feature.icon}></i>
-										</div>
-										<span className="feature-text">{feature.text}</span>
-										<div className="feature-tooltip">{feature.description}</div>
-									</li>
-								)
-							)}
-						</ul>
+			{!isTablet && (
+			<div className="auth-branding-panel">
+				<div className="branding-content">
+					<div className="branding-logo">
+						<JamLogo />
 					</div>
+					<h1 className="branding-title">Job Application Manager</h1>
+					<p className="branding-tagline">
+						Streamline your job search. Track applications, manage deadlines, and land your dream job.
+					</p>
+					<ul className="feature-list">
+						{featureItems.map(
+							(feature: Feature, index: number): JSX.Element => (
+								<li key={index} className="feature-item">
+									<div className="feature-icon">
+										<i className={feature.icon}></i>
+									</div>
+									<span className="feature-text">{feature.text}</span>
+									<div className="feature-tooltip">{feature.description}</div>
+								</li>
+							)
+						)}
+					</ul>
 				</div>
+			</div>
 			)}
 
 			{/* Right form panel */}
 			<div className="auth-form-panel">
 				<div className="auth-container">
-					{/* Mobile logo - conditionally rendered based on screen size */}
-					{!isLargeScreen && (
+					{isTablet && (
 						<div className="auth-logo">
 							<div className="logo-container logo-container-vertical">
 								<div className="branding-logo" style={{ marginBottom: 0 }}>
@@ -642,25 +625,6 @@ function AuthForm(): JSX.Element {
 								<div className="logo-text-below text-gradient-primary">Job Application Manager</div>
 							</div>
 						</div>
-					)}
-
-					{showMobileWarning && (
-						<Alert
-							variant="warning"
-							dismissible
-							onClose={() => setShowMobileWarning(false)}
-							className="mb-3"
-							style={{ maxWidth: "450px" }}
-						>
-							<Alert.Heading className="h6 d-flex align-items-center mb-2">
-								<i className="bi bi-exclamation-triangle-fill me-2"></i>
-								Limited Mobile Support
-							</Alert.Heading>
-							<p className="mb-0 small">
-								JAM is not fully optimised for small screens yet. For the best experience, please use a
-								tablet or desktop device.
-							</p>
-						</Alert>
 					)}
 
 					<Card

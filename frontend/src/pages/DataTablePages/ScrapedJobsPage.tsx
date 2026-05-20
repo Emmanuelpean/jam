@@ -5,6 +5,7 @@ import JobEmailTable from "../../components/DataTable/JobEmailTable";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
 import PageHeader from "../PageHeader/PageHeader";
 import { useTour } from "../../contexts/TourContext";
+import { useViewport } from "../../contexts/ViewportContext";
 
 type ActiveTab = "alerts" | "emails";
 
@@ -13,6 +14,7 @@ export const ScrapedJobsPage = (): JSX.Element => {
 	const location = useLocation();
 	const activeTab: ActiveTab = location.pathname === "/job-alerts/emails" ? "emails" : "alerts";
 	const { activeTourId } = useTour();
+	const { isMobile } = useViewport();
 	const tourOnly = activeTourId === "import-scraped-job";
 	const tourQueryParams = tourOnly ? { tour_only: "true" } : undefined;
 	const [alertsCount, setAlertsCount] = useState<number>(0);
@@ -32,7 +34,7 @@ export const ScrapedJobsPage = (): JSX.Element => {
 
 	return (
 		<>
-			<div className="d-flex gap-3">
+			<div className="d-flex gap-3 page-headers-row">
 				<PageHeader
 					id="scraped-jobs-header"
 					className="flex-fill"
@@ -53,12 +55,19 @@ export const ScrapedJobsPage = (): JSX.Element => {
 				/>
 			</div>
 
-
 			<div style={{ display: activeTab === "alerts" ? "contents" : "none" }}>
-				<ScrapedJobsTable onTotalCountChange={setAlertsCount} reloadTrigger={alertsReload} queryParamsOverride={tourQueryParams} />
+				<ScrapedJobsTable
+					onTotalCountChange={setAlertsCount}
+					reloadTrigger={alertsReload}
+					queryParamsOverride={tourQueryParams}
+				/>
 			</div>
 			<div style={{ display: activeTab === "emails" ? "contents" : "none" }}>
-				<JobEmailTable onTotalCountChange={setEmailsCount} reloadTrigger={emailsReload} queryParams={tourQueryParams} />
+				<JobEmailTable
+					onTotalCountChange={setEmailsCount}
+					reloadTrigger={emailsReload}
+					queryParams={tourQueryParams}
+				/>
 			</div>
 		</>
 	);

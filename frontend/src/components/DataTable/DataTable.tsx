@@ -181,7 +181,7 @@ function DataTableComponent<T extends JamData>(
 	ref: React.Ref<DataTableHandle>
 ): JSX.Element {
 	const { token } = useAuth();
-	const { isTablet } = useViewport();
+	const { isTablet, isMobile } = useViewport();
 	const columnConfig: ColumnConfig = useColumnConfig(entityType, enableColumnConfig ? columns : undefined);
 	const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
 	const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -1178,14 +1178,16 @@ function DataTableComponent<T extends JamData>(
 									)}
 								</div>
 								<div className="d-flex align-items-center gap-2">
-									<span
-										className={`small text-muted text-nowrap`}
-										style={compact ? { fontSize: "0.75rem" } : {}}
-									>
-										{currentPage * pageSize + 1} to{" "}
-										{Math.min((currentPage + 1) * pageSize, totalFilteredCount)} of{" "}
-										{totalFilteredCount}
-									</span>
+									{!isMobile && (
+										<span
+											className={`small text-muted text-nowrap`}
+											style={compact ? { fontSize: "0.75rem" } : {}}
+										>
+											{currentPage * pageSize + 1} to{" "}
+											{Math.min((currentPage + 1) * pageSize, totalFilteredCount)} of{" "}
+											{totalFilteredCount}
+										</span>
+									)}
 
 									<span
 										className={`small text-muted text-nowrap`}

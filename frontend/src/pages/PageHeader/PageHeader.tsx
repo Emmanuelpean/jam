@@ -32,11 +32,11 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 			<Card className="h-100 shadow-sm border-0 rounded-3">
 				<div className="d-flex align-items-center justify-content-between" style={{ padding: "1rem 1.5rem" }}>
 					<div className="d-flex align-items-center">
-						<div className="header-icon-wrapper me-3">
+						<div className="header-icon-wrapper me-2">
 							<i className={`bi bi-${icon}`}></i>
 						</div>
 						<div>
-							<h4 className="mb-0 fw-bold">{title}</h4>
+							<h4 className="mb-0 fw-bold mx-2 me-3">{title}</h4>
 							{subtitle && <small className="text-muted">{subtitle}</small>}
 						</div>
 					</div>
