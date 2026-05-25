@@ -1,25 +1,22 @@
 """Schemas for the JAM database
 Create schemas should be used to create entries in the database.
 Out schemas should be used to return data to the user.
-Min schemas should be used to return minimal data to the user (enough to display the entry as a badge) and should not
-contain reference to other tables.
 Update schemas should be used to update existing entries in the database."""
 
 from datetime import datetime
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
-from app.base_schemas import OwnedOut, EmailField, serialise_relationships
+from app.base_schemas import OwnedOut, EmailField, serialise_relationships, OwnedCreate
 
 
 # ------------------------------------------------------- KEYWORD ------------------------------------------------------
 
 
-class KeywordCreate(BaseModel):
+class KeywordCreate(OwnedCreate):
     """Keyword create schema"""
 
-    name: str
-    is_tour: bool = False
+    name: str = Field(max_length=255, description="Keyword name")
 
 
 class KeywordOut(KeywordCreate, OwnedOut):
@@ -37,12 +34,11 @@ class KeywordUpdate(KeywordCreate):
 # ----------------------------------------------------- AGGREGATOR -----------------------------------------------------
 
 
-class AggregatorCreate(BaseModel):
+class AggregatorCreate(OwnedCreate):
     """Aggregator create schema"""
 
-    name: str
-    url: str | None = None
-    is_tour: bool = False
+    name: str = Field(max_length=255)
+    url: str | None = Field(default=None, max_length=2048)
 
 
 class AggregatorOut(AggregatorCreate, OwnedOut):
@@ -61,13 +57,12 @@ class AggregatorUpdate(AggregatorCreate):
 # ------------------------------------------------------- COMPANY ------------------------------------------------------
 
 
-class CompanyCreate(BaseModel):
+class CompanyCreate(OwnedCreate):
     """Company create schema"""
 
-    name: str
-    description: str | None = None
-    url: str | None = None
-    is_tour: bool = False
+    name: str = Field(max_length=255)
+    description: str | None = Field(default=None, max_length=5000)
+    url: str | None = Field(default=None, max_length=2048)
 
 
 class CompanyOut(CompanyCreate, OwnedOut):
@@ -102,14 +97,14 @@ class GeolocationOut(BaseModel):
 # -------------------------------------------------------- FILES -------------------------------------------------------
 
 
-class FileCreate(BaseModel):
+class FileCreate(OwnedCreate):
     """File create schema"""
 
-    filename: str
-    type: str
+    filename: str = Field(max_length=500)
+    type: str = Field(max_length=100)
     content: str
     size: int
-    file_type: str | None = None
+    file_type: str | None = Field(default=None, max_length=50)
 
 
 class FileMetadataOut(OwnedOut):
@@ -139,17 +134,16 @@ class FileUpdate(FileCreate):
 # ------------------------------------------------------- PERSON -------------------------------------------------------
 
 
-class PersonCreate(BaseModel):
+class PersonCreate(OwnedCreate):
     """Person create schema"""
 
-    first_name: str
-    last_name: str
+    first_name: str = Field(max_length=100)
+    last_name: str = Field(max_length=100)
     email: EmailField | None = None
-    phone: str | None = None
-    linkedin_url: str | None = None
-    role: str | None = None
+    phone: str | None = Field(default=None, max_length=30)
+    linkedin_url: str | None = Field(default=None, max_length=2048)
+    role: str | None = Field(default=None, max_length=255)
     is_recruiter: bool = False
-    is_tour: bool = False
 
     # Foreign keys
     company_id: int | None = None
@@ -174,29 +168,28 @@ class PersonUpdate(PersonCreate):
 # --------------------------------------------------------- JOB --------------------------------------------------------
 
 
-class JobCreate(BaseModel):
+class JobCreate(OwnedCreate):
     """Job create schema"""
 
-    title: str
+    title: str = Field(max_length=255)
     is_favourite: bool = False
-    is_tour: bool = False
-    description: str | None = None
+    description: str | None = Field(default=None, max_length=50000)
     salary_min: float | None = None
     salary_max: float | None = None
-    salary_currency: str | None = None
+    salary_currency: str | None = Field(default=None, max_length=10)
     personal_rating: int | None = None
-    url: str | None = None
+    url: str | None = Field(default=None, max_length=2048)
     deadline: datetime | None = None
-    note: str | None = None
-    attendance_type: str | None = None
+    note: str | None = Field(default=None, max_length=10000)
+    attendance_type: str | None = Field(default=None, max_length=100)
     application_date: datetime | None = None
-    application_url: str | None = None
-    application_status: str | None = None
-    application_note: str | None = None
-    applied_via: str | None = None
-    source_type: str | None = None
+    application_url: str | None = Field(default=None, max_length=2048)
+    application_status: str | None = Field(default=None, max_length=100)
+    application_note: str | None = Field(default=None, max_length=10000)
+    applied_via: str | None = Field(default=None, max_length=255)
+    source_type: str | None = Field(default=None, max_length=100)
     followup_snooze_datetime: datetime | None = None
-    location: str | None = None
+    location: str | None = Field(default=None, max_length=500)
 
     # Foreign keys
     company_id: int | None = None
@@ -242,17 +235,16 @@ class JobUpdate(JobCreate):
 # ------------------------------------------------------ INTERVIEW -----------------------------------------------------
 
 
-class InterviewCreate(BaseModel):
+class InterviewCreate(OwnedCreate):
     """Interview create schema"""
 
     date: datetime
-    type: str
+    type: str = Field(max_length=100)
     job_id: int
-    attendance_type: str | None = None
-    location: str | None = None
-    note: str | None = None
+    attendance_type: str | None = Field(default=None, max_length=100)
+    location: str | None = Field(default=None, max_length=500)
+    note: str | None = Field(default=None, max_length=10000)
     interviewers: list[int] | None = None
-    is_tour: bool = False
 
 
 class InterviewOut(InterviewCreate, OwnedOut):
@@ -279,13 +271,13 @@ class InterviewUpdate(InterviewCreate):
 # ----------------------------------------------- JOB APPLICATION UPDATE -----------------------------------------------
 
 
-class JobApplicationUpdateCreate(BaseModel):
+class JobApplicationUpdateCreate(OwnedCreate):
     """Job Application Update create schema"""
 
     date: datetime
-    type: str
+    type: str = Field(max_length=100)
     job_id: int
-    note: str | None = None
+    note: str | None = Field(default=None, max_length=10000)
 
 
 class JobApplicationUpdateOut(JobApplicationUpdateCreate, OwnedOut):
@@ -305,12 +297,12 @@ class JobApplicationUpdateUpdate(JobApplicationUpdateCreate):
 # ----------------------------------------------- SPECULATIVE APPLICATION ----------------------------------------------
 
 
-class SpeculativeApplicationCreate(BaseModel):
+class SpeculativeApplicationCreate(OwnedCreate):
     """Speculative application create schema"""
 
     date: datetime | None = None
-    note: str | None = None
-    contact_email: str | None = None
+    note: str | None = Field(default=None, max_length=10000)
+    contact_email: str | None = Field(default=None, max_length=254)
 
     # Foreign keys
     company_id: int

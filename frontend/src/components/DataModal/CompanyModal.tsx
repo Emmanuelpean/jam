@@ -18,6 +18,7 @@ export const CompanyModal = forwardRef<DataModalHandle<CompanyData>, JamDataModa
 					formFields.description({
 						placeholder:
 							"Google is a global technology company best known for its search engine, which organises and provides access to information across the internet, alongside a wide range of digital services and products.",
+						maxChars: 5000,
 					}),
 				],
 			],

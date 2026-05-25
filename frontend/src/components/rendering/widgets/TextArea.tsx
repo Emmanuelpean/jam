@@ -5,34 +5,50 @@ import "./TextArea.scss";
 import { toKey } from "../../../utils/StringUtils";
 
 export const Textarea = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
-	const ref = useRef<HTMLTextAreaElement | null>(null);
+	const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+	const overlayRef = useRef<HTMLDivElement | null>(null);
 	const charCount = field.maxChars ? (value || "").length : 0;
 	const isOverLimit = field.maxChars ? charCount > field.maxChars : false;
 
 	useEffect((): void => {
 		if (field.autoHeight) {
-			const el: HTMLTextAreaElement | null = ref.current;
+			const el: HTMLTextAreaElement | null = textareaRef.current;
 			if (!el) return;
 			el.style.height = "auto";
 			el.style.height = `${el.scrollHeight + 7}px`;
 		}
 	}, [value]);
 
+	const syncScroll = (): void => {
+		if (overlayRef.current && textareaRef.current) {
+			overlayRef.current.scrollTop = textareaRef.current.scrollTop;
+		}
+	};
+
 	return (
 		<>
-			<Form.Control
-				as="textarea"
-				ref={ref}
-				id={toKey(field.key)}
-				rows={field.rows || 3}
-				name={toKey(field.key)}
-				value={value || ""}
-				onChange={handleChange}
-				placeholder={field.placeholder}
-				isInvalid={!!error || isOverLimit}
-				className="optimized-textarea"
-				disabled={field.isDisabled}
-			/>
+			<div className="textarea-overflow-wrapper">
+				{isOverLimit && field.maxChars && (
+					<div ref={overlayRef} className="textarea-highlight-overlay" aria-hidden="true">
+						<span>{(value || "").slice(0, field.maxChars)}</span>
+						<mark className="textarea-overflow-mark">{(value || "").slice(field.maxChars)}</mark>
+					</div>
+				)}
+				<Form.Control
+					as="textarea"
+					ref={textareaRef}
+					id={toKey(field.key)}
+					rows={field.rows || 3}
+					name={toKey(field.key)}
+					value={value || ""}
+					onChange={handleChange}
+					onScroll={syncScroll}
+					placeholder={field.placeholder}
+					isInvalid={!!error || isOverLimit}
+					className={`optimized-textarea${isOverLimit ? " overflow-active" : ""}`}
+					disabled={field.isDisabled}
+				/>
+			</div>
 			{field.maxChars && (
 				<Form.Text className={isOverLimit ? "text-danger" : "text-muted"}>
 					{charCount} / {field.maxChars} characters

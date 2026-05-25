@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.models import Geolocation
-from app.resources import COUNTRIES
 
 _last_call_time = 0.0
 _api_lock = threading.Lock()
@@ -50,9 +49,9 @@ def call_geocoding_api(query: str) -> tuple[float, float, dict]:
 
 
 def geocode_location(
-    query: str,
-    db: Session,
-    logger: logging.Logger | None = None,
+        query: str,
+        db: Session,
+        logger: logging.Logger | None = None,
 ) -> Geolocation | None:
     """Geocode a location or scraped job using cached results when available.
     Links the location/scraped job to a Geolocation record via foreign key.
@@ -73,15 +72,6 @@ def geocode_location(
         try:
             lat, lon, address_dict = call_geocoding_api(sanitised_query)
 
-            # Create new geolocation entry
-            oms_country = address_dict.get("country")
-            matched_country = None
-            if oms_country:
-                for country in COUNTRIES:
-                    if oms_country.lower() == country["name"].lower():
-                        matched_country = country["name"]
-                        break
-
             new_geo = Geolocation(
                 query=sanitised_query,
                 latitude=lat,
@@ -89,7 +79,7 @@ def geocode_location(
                 data=address_dict,
                 postcode=address_dict.get("postcode"),
                 city=address_dict.get("town") or address_dict.get("city") or address_dict.get("province"),
-                country=matched_country,
+                country=address_dict.get("country"),
             )
             db.add(new_geo)
             db.commit()

@@ -24,26 +24,6 @@ class TestCurrencies:
             assert "name" in item
 
 
-class TestCountries:
-
-    def test_get_countries(self, client) -> None:
-        """Test that the countries endpoint returns a non-empty list of dicts."""
-        response = client.get("/others/countries/")
-        assert response.status_code == 200
-        data = response.json()
-        assert isinstance(data, list)
-        assert len(data) > 0
-        assert all(isinstance(item, dict) for item in data)
-
-    def test_get_countries_have_expected_keys(self, client) -> None:
-        """Test that each country dict has the expected keys."""
-        response = client.get("/others/countries/")
-        data = response.json()
-        for item in data:
-            assert "code" in item
-            assert "name" in item
-
-
 class TestConfig:
 
     def test_get_config_success(self, client, test_demo_user) -> None:

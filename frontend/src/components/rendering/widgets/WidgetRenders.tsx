@@ -49,6 +49,9 @@ export const displayError = (errorMessage: string | null): JSX.Element[] | null 
 };
 
 export const DefaultInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
+	const charCount = field.maxChars ? (value || "").length : 0;
+	const isOverLimit = field.maxChars ? charCount > field.maxChars : false;
+
 	return (
 		<>
 			<Form.Control
@@ -59,11 +62,16 @@ export const DefaultInput = ({ field, value, handleChange, error }: WidgetProps)
 				value={value || ""}
 				onChange={handleChange}
 				placeholder={field.placeholder}
-				isInvalid={!!error}
+				isInvalid={!!error || isOverLimit}
 				step={field.step}
 				autoComplete={field.autoComplete}
 				disabled={field.isDisabled}
 			/>
+			{isOverLimit && field.maxChars && (
+				<Form.Text className="text-danger">
+					{charCount} / {field.maxChars} characters
+				</Form.Text>
+			)}
 		</>
 	);
 };

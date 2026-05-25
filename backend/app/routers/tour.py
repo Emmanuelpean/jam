@@ -40,6 +40,8 @@ def clear_all_tour_data(
         db.delete(obj)
     db.flush()
 
+    for obj in db.query(models.File).filter_by(owner_id=uid, is_tour=True).all():
+        db.delete(obj)
     for obj in db.query(models.Person).filter_by(owner_id=uid, is_tour=True).all():
         db.delete(obj)
     for obj in db.query(models.Company).filter_by(owner_id=uid, is_tour=True).all():

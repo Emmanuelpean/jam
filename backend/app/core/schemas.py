@@ -8,7 +8,7 @@ Update schemas should be used to update existing entries in the database."""
 import datetime as dt
 from typing import Literal
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 ThemeMode = Literal["dark", "light", "system"]
 
@@ -47,9 +47,9 @@ class UserRegister(BaseModel):
     """User create schema"""
 
     email: EmailField
-    password: str
-    first_name: str
-    last_name: str
+    password: str = Field(max_length=128)
+    first_name: str = Field(max_length=100)
+    last_name: str = Field(max_length=100)
 
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
@@ -201,11 +201,11 @@ class CurrentUserUpdate(BaseModel):
     """User account update schema"""
 
     email: EmailField | None = None
-    current_password: str | None = None
-    password: str | None = None
-    first_name: str | None = None
-    last_name: str | None = None
-    app_version: str | None = None
+    current_password: str | None = Field(default=None, max_length=128)
+    password: str | None = Field(default=None, max_length=128)
+    first_name: str | None = Field(default=None, max_length=100)
+    last_name: str | None = Field(default=None, max_length=100)
+    app_version: str | None = Field(default=None, max_length=20)
     preferences: UserPreferencesUpdate | None = None
     premium: CurrentUserPremiumDetailsUpdate | None = None
 

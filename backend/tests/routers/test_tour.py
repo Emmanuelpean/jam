@@ -89,6 +89,37 @@ def _create_tour_entities(session, user: models.User) -> dict:
         {"owner_id": user.id, "name": f"tour-keyword-{user.id}", "is_tour": True},
     )[0]
 
+    job = create_db_entries(
+        session,
+        models.Job,
+        {"owner_id": user.id, "title": "Tour Job", "company_id": company.id, "is_tour": True},
+    )[0]
+
+    job_application_update = create_db_entries(
+        session,
+        models.JobApplicationUpdate,
+        {"owner_id": user.id, "job_id": job.id, "type": "received", "is_tour": True},
+    )[0]
+
+    speculative_application = create_db_entries(
+        session,
+        models.SpeculativeApplication,
+        {"owner_id": user.id, "company_id": company.id, "is_tour": True},
+    )[0]
+
+    file = create_db_entries(
+        session,
+        models.File,
+        {
+            "owner_id": user.id,
+            "filename": "tour-cv.pdf",
+            "content": "base64content",
+            "type": "application/pdf",
+            "size": 1024,
+            "is_tour": True,
+        },
+    )[0]
+
     return {
         "service_log": service_log,
         "email": email,
@@ -97,6 +128,10 @@ def _create_tour_entities(session, user: models.User) -> dict:
         "job_rating": job_rating,
         "company": company,
         "keyword": keyword,
+        "job": job,
+        "job_application_update": job_application_update,
+        "speculative_application": speculative_application,
+        "file": file,
     }
 
 
@@ -207,6 +242,10 @@ class TestClearAllTourData:
         assert session.query(models.UserQualification).filter_by(owner_id=uid, is_tour=True).count() == 0
         assert session.query(models.Company).filter_by(owner_id=uid, is_tour=True).count() == 0
         assert session.query(models.Keyword).filter_by(owner_id=uid, is_tour=True).count() == 0
+        assert session.query(models.Job).filter_by(owner_id=uid, is_tour=True).count() == 0
+        assert session.query(models.JobApplicationUpdate).filter_by(owner_id=uid, is_tour=True).count() == 0
+        assert session.query(models.SpeculativeApplication).filter_by(owner_id=uid, is_tour=True).count() == 0
+        assert session.query(models.File).filter_by(owner_id=uid, is_tour=True).count() == 0
 
     def test_does_not_delete_non_tour_entities(self, regular_user_client, test_regular_user, session) -> None:
         """Should leave is_tour=False rows untouched."""

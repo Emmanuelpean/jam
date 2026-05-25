@@ -62,6 +62,7 @@ export const formFields = {
 		type: "text",
 		required: true,
 		placeholder: "Enter title",
+		maxChars: 255,
 		...overrides,
 	}),
 
@@ -79,6 +80,7 @@ export const formFields = {
 		type: "text",
 		required: true,
 		placeholder: "Enter name",
+		maxChars: 255,
 		...overrides,
 	}),
 
@@ -88,6 +90,7 @@ export const formFields = {
 		type: "textarea",
 		rows: 4,
 		placeholder: "Enter description...",
+		maxChars: 50000,
 		...overrides,
 	}),
 
@@ -97,6 +100,7 @@ export const formFields = {
 		type: "textarea",
 		rows: 4,
 		placeholder: "Add your notes...",
+		maxChars: 10000,
 		...overrides,
 	}),
 
@@ -105,6 +109,7 @@ export const formFields = {
 		label: "URL",
 		type: "url",
 		placeholder: "https://...",
+		maxChars: 2048,
 		validation: (value: string): string | null => {
 			if (value && !value.includes(".")) {
 				return "Please enter a valid URL";
@@ -120,6 +125,7 @@ export const formFields = {
 		label: "Job URL",
 		type: "url",
 		placeholder: "https://linkedin.com/jobs/123456",
+		maxChars: 2048,
 		validation: (value: string) => {
 			if (value && !value.includes(".")) {
 				return "Please enter a valid URL";
@@ -143,6 +149,7 @@ export const formFields = {
 		label: "Location",
 		type: "text",
 		placeholder: "e.g. London, UK",
+		maxChars: 500,
 		isClearable: true,
 		displayCondition: (formData: JobData): boolean => {
 			return formData.attendance_type !== "remote";
@@ -241,6 +248,7 @@ export const formFields = {
 		type: "text",
 		required: true,
 		placeholder: "Enter first name",
+		maxChars: 100,
 		...overrides,
 	}),
 
@@ -250,6 +258,7 @@ export const formFields = {
 		type: "text",
 		required: true,
 		placeholder: "Enter last name",
+		maxChars: 100,
 		...overrides,
 	}),
 
@@ -273,6 +282,7 @@ export const formFields = {
 		label: "Phone",
 		type: "tel",
 		placeholder: "+44 20 7946 0958",
+		maxChars: 30,
 		...overrides,
 	}),
 
@@ -281,6 +291,7 @@ export const formFields = {
 		label: "LinkedIn Profile",
 		type: "text",
 		placeholder: "https://linkedin.com/in/username",
+		maxChars: 2048,
 		validation: (value: string) => {
 			if (value && !value.includes("linkedin.com")) {
 				return "Please enter a valid LinkedIn URL";
@@ -295,6 +306,7 @@ export const formFields = {
 		key: "role",
 		label: "Role",
 		type: "text",
+		maxChars: 255,
 		...overrides,
 	}),
 
@@ -331,6 +343,7 @@ export const formFields = {
 		type: "text",
 		required: true,
 		placeholder: "Enter job title",
+		maxChars: 255,
 		...overrides,
 	}),
 
@@ -411,6 +424,7 @@ export const formFields = {
 		label: "Application URL",
 		type: "text",
 		placeholder: "https://...",
+		maxChars: 2048,
 		...overrides,
 	}),
 

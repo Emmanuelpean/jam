@@ -5,7 +5,6 @@ import time
 import requests
 
 from app.config import settings
-from app.resources import COUNTRIES
 from tests.utils.test_data import JOB_DATA, SCRAPED_JOB_DATA
 from tests.utils.test_data.geolocation import MOCK_GEOCODING_RESPONSES
 
@@ -42,21 +41,13 @@ def create_geolocation_entries_from_mock_api_results() -> None:
     for query, response in MOCK_GEOCODING_RESPONSES.items():
         if response:
             address = response[0]["address"]
-            oms_country = address.get("country")
-            matched_country = None
-            if oms_country:
-                for country in COUNTRIES:
-                    if oms_country.lower() == country["name"].lower():
-                        matched_country = country["name"]
-                        break
-
             data.append(
                 {
                     "query": query,
                     "latitude": response[0]["lat"],
                     "longitude": response[0]["lon"],
                     "data": response[0]["address"],
-                    "country": matched_country,
+                    "country": address.get("country"),
                     "postcode": address.get("postcode"),
                     "city": address.get("town") or address.get("city") or address.get("province"),
                 }

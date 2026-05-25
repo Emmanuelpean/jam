@@ -20,6 +20,12 @@ def serialise_relationships(value: list) -> list[int]:
     return [item.id for item in value]
 
 
+class OwnedCreate(BaseModel):
+    """Base model for all create schemas"""
+
+    is_tour: bool = False
+
+
 class Out(BaseModel):
     """Base model for all output schemas"""
 

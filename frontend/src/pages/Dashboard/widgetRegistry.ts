@@ -10,7 +10,7 @@ const DEFAULT_POSITIONS: Record<string, Omit<LayoutItem, "i">> = {
 	"follow-up-table": { x: 4, y: 8, w: 8, h: 12, minW: 4, minH: 8 },
 	"upcoming-deadlines": { x: 0, y: 20, w: 8, h: 12, minW: 4, minH: 8 },
 	"upcoming-interviews": { x: 8, y: 20, w: 4, h: 12, minW: 3, minH: 8 },
-	"job-alerts": { x: 0, y: 32, w: 12, h: 12, minW: 6, minH: 8 },
+	"job-alerts": { x: 0, y: 32, w: 12, h: 16, minW: 6, minH: 8 },
 };
 
 export type MetricVariant =
