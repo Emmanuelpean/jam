@@ -14,8 +14,9 @@ import { useDeleteEntityConfirm } from "../../../utils/DeleteHandler";
 import { DataContextValue, EntityType, JamData, useDataContext } from "../../../contexts/DataContext";
 import { getEntityIcon } from "./Icons";
 import { useGlobalToast } from "../../../hooks/useNotificationToast";
-import { AggregatorData, CompanyData, JobData, KeywordData, PersonData } from "../../../services/schemas/DataTables";
+import { AggregatorData, CompanyData, FileData, JobData, KeywordData, PersonData } from "../../../services/schemas/DataTables";
 import { LocationModal } from "../../DataModal/LocationModal";
+import { FileModal } from "../../DataModal/FileModal";
 import { useTour } from "../../../contexts/TourContext";
 
 
@@ -179,6 +180,13 @@ export const AggregatorBadge = createDataBadge(
 	"aggregator",
 	"bg-dark",
 	(item: AggregatorData): string => item.name
+);
+export const FileBadge = createDataBadge(
+	FileModal,
+	"file",
+	"bg-secondary",
+	(item: FileData): string => item.filename,
+	["view", "edit", "delete"]
 );
 export const JobApplicationUpdateBadge = createDataBadge(
 	JobApplicationUpdateModal,

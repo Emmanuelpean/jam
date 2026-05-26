@@ -40,6 +40,7 @@ import { MaintenanceBanner } from "./components/AppBanner/MaintenanceBanner";
 import { DemoBanner } from "./components/AppBanner/DemoBanner";
 import { WhatsNewProvider } from "./contexts/WhatsNewContext";
 import ServiceDashboards from "./pages/Services/ServiceDashboards";
+import FilesPage from "./pages/FilesPage/FilesPage";
 import CommandPalette from "./components/CommandPalette/CommandPalette";
 import { useCommandPalette } from "./components/CommandPalette/useCommandPalette";
 import { CommandPaletteProvider } from "./contexts/CommandPaletteContext";
@@ -215,6 +216,7 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/interviews", element: <InterviewsPage />, protected: true },
 	{ path: "/aggregators", element: <AggregatorsPage />, protected: true },
 	{ path: "/job-application-updates", element: <JobApplicationUpdatesPage />, protected: true },
+	{ path: "/files", element: <FilesPage />, protected: true },
 	{ path: "/job-alerts/jobs", element: <ScrapedJobsPage />, protected: true },
 	{ path: "/job-alerts/emails", element: <ScrapedJobsPage />, protected: true },
 	{ path: "/dashboard", element: <Dashboard />, protected: true },

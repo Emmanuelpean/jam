@@ -54,6 +54,7 @@ export function getTableIcon(title: string): string {
 		"About JAM": "info-circle",
 		"Service Dashboards": "stack",
 		"App Management": "terminal",
+		Files: "folder2-open",
 	};
 	return iconMap[title] || "bi-table";
 }
@@ -74,6 +75,7 @@ export function getEntityIcon(entityType: EntityType): string {
 		scrapedJob: "inboxes",
 		scrapingFilter: "funnel",
 		jobEmail: "envelope-open",
+		file: "files-alt",
 	};
 	return iconMap[entityType] || "";
 }

@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useLayoutEffe
 import {
 	aggregatorsApi,
 	companiesApi,
+	filesApi,
 	interviewsApi,
 	jobApplicationUpdatesApi,
 	jobsApi,
@@ -27,6 +28,7 @@ import {
 	EnrichedInterviewData,
 	EnrichedJobApplicationUpdateData,
 	EnrichedJobData,
+	FileData,
 	InterviewData,
 	JobApplicationUpdateData,
 	JobData,
@@ -67,7 +69,8 @@ export type EntityType =
 	| "scrapingFavouriteFilter"
 	| "speculativeApplication"
 	| "jobEmail"
-	| "geolocation";
+	| "geolocation"
+	| "file";
 
 export type JamData =
 	| KeywordData
@@ -83,7 +86,8 @@ export type JamData =
 	| ScrapingFilterData
 	| SpeculativeApplicationData
 	| JobEmailData
-	| GeoLocationData;
+	| GeoLocationData
+	| FileData;
 
 export const entityTypeToGenericName = (entityType: EntityType): string => {
 	const nameMap: Record<EntityType, string> = {
@@ -102,6 +106,7 @@ export const entityTypeToGenericName = (entityType: EntityType): string => {
 		speculativeApplication: "Speculative Application",
 		jobEmail: "Job Email",
 		geolocation: "Location",
+		file: "File",
 	};
 	return nameMap[entityType];
 };
@@ -139,6 +144,7 @@ export const entityTypeToName = (
 		scrapingFavouriteFilter: (data: JamData): string => getScrapingFilterName(data as ScrapingFilterData),
 		jobEmail: (data: JamData): string => (data as JobEmailData)?.subject || "Job Email",
 		geolocation: (data: JamData): string => (data as GeoLocationData).query || "Location",
+		file: (data: JamData): string => (data as FileData).filename,
 	};
 	return nameMap[entityType];
 };
@@ -159,6 +165,7 @@ const entityTypeToApi = (entityType: EntityType): CrudApi<JamData> | null => {
 		scrapingFavouriteFilter: scrapingFavouriteFilterApi,
 		speculativeApplication: speculativeApplicationsApi,
 		jobEmail: jobEmailApi,
+		file: filesApi,
 	};
 	return apiMap[entityType] ?? null;
 };
@@ -183,6 +190,7 @@ export interface DataContextValue {
 	scrapingFavouriteFilters: ScrapingFilterData[];
 	users: UserData[];
 	aiSystemPrompts: AiSystemPromptData[];
+	files: FileData[];
 
 	error: ApiError | null;
 
@@ -213,6 +221,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [scrapingFavouriteFilters, setScrapingFavouriteFilters] = useState<ScrapingFilterData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
 	const [aiSystemPrompts, setAiSystemPrompts] = useState<AiSystemPromptData[]>([]);
+	const [files, setFiles] = useState<FileData[]>([]);
 	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
 
@@ -368,6 +377,10 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				promise: aiSystemPromptsApi.getAll(token),
 				label: "Miscellaneous",
 			} as TypedFetchOperation<AiSystemPromptData[]>,
+			{
+				promise: filesApi.getAll(token),
+				label: "Files",
+			} as TypedFetchOperation<FileData[]>,
 		];
 
 		// Add admin-only calls if user is admin
@@ -407,6 +420,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				scrapingFiltersData,
 				scrapingFavouriteFiltersData,
 				aiSystemPromptsData,
+				filesData,
 				...adminData
 			] = results;
 
@@ -421,6 +435,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			setScrapingFilters(scrapingFiltersData.data || []);
 			setScrapingFavouriteFilters(scrapingFavouriteFiltersData.data || []);
 			setAiSystemPrompts(aiSystemPromptsData.data || []);
+			setFiles(filesData.data || []);
 			if (currentUser?.is_admin) {
 				setSettings(adminData[0].data || []);
 				setUsers(adminData[1].data || []);
@@ -447,6 +462,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			scrapingFilter: setScrapingFilters,
 			scrapingFavouriteFilter: setScrapingFavouriteFilters,
 			speculativeApplication: setSpeculativeApplications,
+			file: setFiles,
 		};
 		return setterMap[type];
 	};
@@ -501,6 +517,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 						prev.filter((update: JobApplicationUpdateData): boolean => update.job_id !== id)
 					);
 				}
+				if (entityType === "company") {
+					setSpeculativeApplications((prev: SpeculativeApplicationData[]): SpeculativeApplicationData[] =>
+						prev.filter((sa: SpeculativeApplicationData): boolean => sa.company_id !== id)
+					);
+				}
 			} catch (error) {
 				console.error(`Failed to delete ${entityType}:`, error);
 				throw error;
@@ -510,6 +531,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	);
 
 	const visibleData = useMemo(() => {
+		// TODO we could simplify this by just filtering in/out is_tour data
 		const s = tourSnapshot;
 		return {
 			jobs: s ? jobs.filter((j) => !s.jobIds.has(j.id)) : jobs,
@@ -554,10 +576,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				user: users,
 				scrapingFavouriteFilter: scrapingFavouriteFilters,
 				speculativeApplication: visibleData.speculativeApplications,
+				file: files,
 			};
 			return dataMap[entityType] ?? [];
 		},
-		[visibleData, settings, users, scrapingFavouriteFilters]
+		[visibleData, settings, users, scrapingFavouriteFilters, files]
 	);
 
 	// Show loading immediately on mount — DataProvider only renders when !!token,
@@ -580,6 +603,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				...visibleData,
 				scrapingFavouriteFilters,
 				aiSystemPrompts,
+				files,
 				settings,
 				users,
 				error,

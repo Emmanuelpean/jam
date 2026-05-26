@@ -107,7 +107,7 @@ class FileCreate(OwnedCreate):
     file_type: str | None = Field(default=None, max_length=50)
 
 
-class FileMetadataOut(OwnedOut):
+class FileOut(OwnedOut):
     """File metadata output schema — excludes file content for use in related entities"""
 
     filename: str
@@ -116,7 +116,7 @@ class FileMetadataOut(OwnedOut):
     file_type: str | None = None
 
 
-class FileOut(FileCreate, OwnedOut):
+class FileWithContentOut(FileCreate, OwnedOut):
     """File output schema"""
 
     pass
@@ -216,8 +216,6 @@ class JobOut(JobCreate, OwnedOut):
     has_active_application: bool = False
     has_open_application: bool = False
     geolocation: GeolocationOut | None = None
-    application_cv: FileMetadataOut | None = None
-    application_cover_letter: FileMetadataOut | None = None
 
     @field_validator("keywords", "contacts", mode="before")
     @classmethod

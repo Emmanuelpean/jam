@@ -1,8 +1,9 @@
 import { createCrudApi, CrudApi } from "./Crud";
+import { ApiResponsePromise, baseApi } from "./Base";
 import {
 	AggregatorData,
 	CompanyData,
-	FileData,
+	FileWithContentData,
 	InterviewData,
 	JobApplicationUpdateData,
 	JobData,
@@ -13,7 +14,6 @@ import {
 import { SettingData } from "../schemas/Core";
 import { Currency } from "../schemas/Others";
 import { ScrapingFilterData } from "../schemas/Services";
-import { baseApi } from "./Base";
 
 export const jobsApi: CrudApi<JobData> = createCrudApi("jobs");
 export const companiesApi: CrudApi<CompanyData> = createCrudApi("companies");
@@ -29,13 +29,14 @@ export const scrapingFavouriteFilterApi: CrudApi<ScrapingFilterData> = createCru
 export const speculativeApplicationsApi: CrudApi<SpeculativeApplicationData> =
 	createCrudApi("speculative-applications");
 
-interface FilesApi extends CrudApi<FileData> {
+interface FilesApi extends CrudApi<FileWithContentData> {
 	download: (id: number, filename: string, token: string) => Promise<void>;
 	preview: (id: number, token: string) => Promise<void>;
+	getContent: (id: number, token: string) => ApiResponsePromise<FileWithContentData>;
 }
 
 export const filesApi: FilesApi = {
-	...createCrudApi<FileData>("files"),
+	...createCrudApi<FileWithContentData>("files"),
 	download: (id: number, filename: string, token: string): Promise<void> =>
 		baseApi.downloadFile(`files/${id}/download`, filename, token),
 	preview: async (id: number, token: string): Promise<void> => {
@@ -43,4 +44,5 @@ export const filesApi: FilesApi = {
 		const url = window.URL.createObjectURL(response.data);
 		window.open(url, "_blank");
 	},
+	getContent: (id: number, token: string): ApiResponsePromise<FileWithContentData> => baseApi.get(`files/${id}/content`, token),
 };

@@ -59,6 +59,21 @@ file_router = generate_data_table_crud_router(
 )
 
 
+@file_router.get("/{file_id}/content", response_model=schemas.FileWithContentOut)
+def get_file_content(
+    file_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    """Get a single file including its base64 content."""
+    file_record = (
+        db.query(models.File).filter(models.File.id == file_id, models.File.owner_id == current_user.id).first()
+    )
+    if not file_record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+    return file_record
+
+
 @file_router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.FileOut)
 def create_file(
     item: schemas.FileCreate,
@@ -155,7 +170,7 @@ def geocode_entry_location(entry: dict, db: Session, entry_data: dict | None = N
     :return: Dictionary with geolocation_id set."""
 
     location = entry.get("location") or (entry_data or {}).get("location")
-    if location and location.strip():
+    if isinstance(location, str) and location.strip():
         geolocation = geocode_location(location.strip(), db)
         return {"geolocation_id": geolocation.id if geolocation else None}
     return {"geolocation_id": None}

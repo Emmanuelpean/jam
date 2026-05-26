@@ -891,4 +891,37 @@ export const tableColumns = {
 		filterConfig: { type: "date" },
 		...overrides,
 	}),
+
+	// ---------------------------------------------------- FILE COLUMNS --------------------------------------------------
+
+	filenameColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "filename",
+		label: "Filename",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		filterConfig: { type: "text" },
+		...overrides,
+	}),
+
+	fileSizeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "size",
+		label: "Size",
+		sortable: true,
+		searchable: false,
+		type: "number",
+		render: (params: RenderParams) => renderFunctions.fileSize(params),
+		...overrides,
+	}),
+
+	fileUsagesColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "fileUsages",
+		label: "Used in",
+		sortable: true,
+		searchable: false,
+		sortField: (item: JamData, ctx: DataContextValue) =>
+			ctx.jobs.filter((j) => j.cv_id === item.id || j.cover_letter_id === item.id).length,
+		render: (params: RenderParams) => renderFunctions.fileUsages(params),
+		...overrides,
+	}),
 };

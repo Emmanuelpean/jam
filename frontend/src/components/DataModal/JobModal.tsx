@@ -262,7 +262,7 @@ export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationPr
 				key: "application-documents",
 				title: "Documents",
 				icon: "bi-paperclip",
-				fields: [[modalViewFields.applicationCv(), modalViewFields.applicationCoverLetter()]],
+				fields: [[modalViewFields.applicationCvBadge(), modalViewFields.applicationCoverLetterBadge()]],
 			} as SectionConfig,
 			{
 				type: "section",

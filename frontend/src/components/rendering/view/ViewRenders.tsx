@@ -48,6 +48,7 @@ import LoadingSpinner from "../../Spinner/Spinner";
 import {
 	AggregatorBadge,
 	CompanyBadge,
+	FileBadge,
 	InterviewBadge,
 	JobApplicationUpdateBadge,
 	JobBadge,
@@ -263,48 +264,16 @@ export const renderFunctions = {
 		return renderFunctions._url(param, "application_url");
 	},
 
-	_applicationFile: (param: RenderParams, metadataKey: "application_cv" | "application_cover_letter"): ReactNode => {
-		const file = param.item?.[metadataKey];
+	cvBadge: (param: RenderParams): ReactNode => {
+		const file = param.dataContext.files.find((f) => f.id === param.item?.cv_id);
 		if (!file) return null;
-		return (
-			<div className="d-flex align-items-center gap-3 p-2 rounded border">
-				<i className="bi bi-file-earmark fs-3 text-secondary flex-shrink-0" />
-				<div className="flex-grow-1" style={{ minWidth: 0 }}>
-					<div className="fw-medium text-truncate small">{file.filename}</div>
-					<div className="text-muted" style={{ fontSize: "0.75rem" }}>
-						{formatFileSize(file.size)}
-					</div>
-				</div>
-				<div className="d-flex gap-1 flex-shrink-0">
-					{canPreviewFile(file.type) && (
-						<Button
-							variant={"outline-secondary"}
-							onClick={(): Promise<void> => filesApi.preview(file.id, param.token || "")}
-							title="Preview"
-							id={"preview-file-btn"}
-						>
-							<i className="bi bi-eye" />
-						</Button>
-					)}
-					<Button
-						variant={"outline-primary"}
-						onClick={(): Promise<void> => filesApi.download(file.id, file.filename, param.token || "")}
-						title="Download"
-						id={"download-file-btn"}
-					>
-						<i className="bi bi-download" />
-					</Button>
-				</div>
-			</div>
-		);
+		return <FileBadge item={file} badgeId={`cv-badge-${param.item?.id}`} />;
 	},
 
-	applicationCv: (param: RenderParams): ReactNode => {
-		return renderFunctions._applicationFile(param, "application_cv");
-	},
-
-	applicationCoverLetter: (param: RenderParams): ReactNode => {
-		return renderFunctions._applicationFile(param, "application_cover_letter");
+	coverLetterBadge: (param: RenderParams): ReactNode => {
+		const file = param.dataContext.files.find((f) => f.id === param.item?.cover_letter_id);
+		if (!file) return null;
+		return <FileBadge item={file} badgeId={`cover-letter-badge-${param.item?.id}`} />;
 	},
 
 	_email: (param: RenderParams, key: string): ReactNode => {
@@ -836,6 +805,57 @@ export const renderFunctions = {
 	emailScrapedJobTableReadOnly: (param: RenderParams) => <EmailScrapedJobTable param={param} viewOnly={true} />,
 
 	scrapedJobEmailTable: (param: RenderParams) => <ScrapedJobEmailTable param={param} />,
+
+	accordionJobTableFile: (param: RenderParams): ReactNode => {
+		const ctx: DataContextValue = param.dataContext;
+		const fileId: number = param.item?.id;
+		const jobs: EnrichedJobData[] = ctx.jobs.filter((j) => j.cv_id === fileId || j.cover_letter_id === fileId);
+		if (!jobs.length) return "";
+		return (
+			<AccordionTable title="Jobs" data={jobs} icon={getTableIcon("Jobs")} helpText={param.helpText}>
+				{(data: EnrichedJobData[]) => <JobsTable data={data} columns={param.columns} />}
+			</AccordionTable>
+		);
+	},
+
+	fileSize: (param: RenderParams): ReactNode => {
+		const size = param.item?.size;
+		return size != null ? <span>{formatFileSize(size)}</span> : null;
+	},
+
+	fileActions: (param: RenderParams): ReactNode => {
+		const file = param.item;
+		if (!file) return null;
+		return (
+			<div className="d-flex gap-2">
+				{canPreviewFile(file.type) && (
+					<Button
+						className="flex-fill"
+						variant="outline-secondary"
+						onClick={(): Promise<void> => filesApi.preview(file.id, param.token || "")}
+					>
+						<i className="bi bi-eye me-2" />
+						Preview
+					</Button>
+				)}
+				<Button
+					className="flex-fill"
+					variant="outline-primary"
+					onClick={(): Promise<void> => filesApi.download(file.id, file.filename, param.token || "")}
+				>
+					<i className="bi bi-download me-2" />
+					Download
+				</Button>
+			</div>
+		);
+	},
+
+	fileUsages: (param: RenderParams): ReactNode => {
+		const fileId: number = param.item?.id;
+		const count = param.dataContext.jobs.filter((j) => j.cv_id === fileId || j.cover_letter_id === fileId).length;
+		if (!count) return <span className="text-muted">—</span>;
+		return <span>{count}</span>;
+	},
 };
 
 function buildRenderParams(

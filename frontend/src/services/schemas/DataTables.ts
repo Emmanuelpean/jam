@@ -2,14 +2,14 @@ import { GeoLocationData, OwnedOut } from "./Base";
 
 // -------------------------------------------------------- FILE --------------------------------------------------------
 
-export interface FileMetadataData extends OwnedOut {
+export interface FileData extends OwnedOut {
 	filename: string;
 	type: string;
 	size: number;
 	file_type: string | null;
 }
 
-export interface FileData extends FileMetadataData {
+export interface FileWithContentData extends FileData {
 	content: string;
 }
 
@@ -161,8 +161,6 @@ export interface JobData extends OwnedOut {
 	scraped_job_id: number | null;
 	cv_id: number | null;
 	cover_letter_id: number | null;
-	application_cv: FileMetadataData | null;
-	application_cover_letter: FileMetadataData | null;
 	has_application: boolean;
 	has_active_application: boolean;
 	has_open_application: boolean;

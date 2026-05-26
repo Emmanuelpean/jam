@@ -2,12 +2,12 @@ import React, { useRef, useState, JSX, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useConfig } from "../../../contexts/ConfigContext";
+import { useDataContext } from "../../../contexts/DataContext";
 import { filesApi } from "../../../services/api/DataTables";
-import { FileData, FileMetadataData } from "../../../services/schemas/DataTables";
+import { FileData } from "../../../services/schemas/DataTables";
 import { canPreviewFile, fileToBase64, formatFileSize } from "../../../utils/FileUtils";
 import { WidgetProps } from "./WidgetRenders";
 import "./FileUploadWidget.scss";
-import { ApiResponse } from "../../../services/api/Base";
 import { Button } from "react-bootstrap";
 
 export interface FileUploadWidgetProps extends WidgetProps {
@@ -17,6 +17,7 @@ export interface FileUploadWidgetProps extends WidgetProps {
 export const FileUploadWidget = ({ field, value, handleChange, data, onUploadingChange, extraActions }: FileUploadWidgetProps): JSX.Element => {
 	const { token } = useAuth();
 	const { config } = useConfig();
+	const { addEntity, files } = useDataContext();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const tooltipRef = useRef<HTMLDivElement>(null);
 	const [uploading, setUploading] = useState<boolean>(false);
@@ -24,9 +25,8 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 	const [dragOver, setDragOver] = useState<boolean>(false);
 	const [tooltipCoords, setTooltipCoords] = useState<{ top: number; left: number } | null>(null);
 
-	const metadataKey = field.key === "cv_id" ? "application_cv" : "application_cover_letter";
 	const fileType = field.fileType ?? null;
-	const fileMetadata: FileMetadataData | null = value ? (data?.[metadataKey] ?? null) : null;
+	const fileMetadata: FileData | null = value ? (files.find((f) => f.id === value) ?? null) : null;
 
 	const uploadFile = async (file: File): Promise<void> => {
 		if (!token) return;
@@ -43,18 +43,14 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 		setUploadError(null);
 		try {
 			const content: string | ArrayBuffer | null = await fileToBase64(file);
-			const result: ApiResponse<FileData> = await filesApi.create(
-				{
-					filename: file.name,
-					content,
-					type: file.type || "application/octet-stream",
-					size: file.size,
-					file_type: fileType,
-				},
-				token
-			);
+			const result = await addEntity("file", {
+				filename: file.name,
+				content,
+				type: file.type || "application/octet-stream",
+				size: file.size,
+				file_type: fileType,
+			});
 			handleChange({ target: { name: field.key as string, value: result.data.id } });
-			handleChange({ target: { name: metadataKey, value: result.data } });
 		} catch (err: any) {
 			setUploadError(err.message || "Upload failed");
 		} finally {
@@ -85,7 +81,6 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 
 	const handleRemove = (): void => {
 		handleChange({ target: { name: field.key as string, value: null } });
-		handleChange({ target: { name: metadataKey, value: null } });
 	};
 
 	const handleDownload = async (): Promise<void> => {

@@ -140,6 +140,7 @@ export const Sidebar = (): JSX.Element => {
 				{ path: "/keywords", text: "Tags" },
 				{ path: "/interviews", text: "Interviews" },
 				{ path: "/job-application-updates", text: "Job Application Updates" },
+				{ path: "/files", text: "Files" },
 			],
 		},
 		{ path: "/settings", text: "User Settings", id: "nav-user-settings", position: "bottom" },

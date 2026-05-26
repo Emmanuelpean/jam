@@ -13,7 +13,15 @@ export type ModalViewFields = (ModalViewField | ModalViewField[])[];
 
 interface ModalViewFieldOverride extends Partial<ModalViewField> {}
 
-export const ModalViewFieldRenderer = ({ field, item, id }: { field: ModalViewField; item: any; id: string }): ReactNode => {
+export const ModalViewFieldRenderer = ({
+	field,
+	item,
+	id,
+}: {
+	field: ModalViewField;
+	item: any;
+	id: string;
+}): ReactNode => {
 	const output = <RenderViewFieldWithContext field={field} item={item} id={id} view={true} />;
 
 	if (field.isTitle) {
@@ -211,17 +219,17 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	applicationCv: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	applicationCvBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "cv_id",
 		label: "CV",
-		render: renderFunctions.applicationCv,
+		render: renderFunctions.cvBadge,
 		...overrides,
 	}),
 
-	applicationCoverLetter: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	applicationCoverLetterBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "cover_letter_id",
 		label: "Cover Letter",
-		render: renderFunctions.applicationCoverLetter,
+		render: renderFunctions.coverLetterBadge,
 		...overrides,
 	}),
 
@@ -562,6 +570,25 @@ export const modalViewFields = {
 		key: "emails",
 		render: (params: RenderParams) => renderFunctions.scrapedJobEmailTable(params),
 		displayCondition: (item) => Array.isArray(item.emails) && item.emails.length > 0,
+		...overrides,
+	}),
+
+	fileSize: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "size",
+		label: "File Size",
+		render: (params: RenderParams) => renderFunctions.fileSize(params),
+		...overrides,
+	}),
+
+	fileActions: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "file_actions",
+		render: (params: RenderParams) => renderFunctions.fileActions(params),
+		...overrides,
+	}),
+
+	accordionJobTableFile: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "jobs",
+		render: (params: RenderParams) => renderFunctions.accordionJobTableFile(params),
 		...overrides,
 	}),
 };
