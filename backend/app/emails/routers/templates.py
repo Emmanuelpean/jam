@@ -1,20 +1,16 @@
 """Router to get email templates"""
 
-from pathlib import Path
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from starlette import status
 
 from app import models
 from app.config import settings
 from app.core import oauth2
 from app.routers.utility import assert_admin
+from app.emails.templates import email_templates
 
 email_template_router = APIRouter(prefix="/email-templates", tags=["email-templates"])
-
-email_templates = Jinja2Templates(directory=str(Path(__file__).parent.parent / "templates"))
 
 _SAMPLE_DATA: dict[str, dict] = {
     "email_confirmation": {

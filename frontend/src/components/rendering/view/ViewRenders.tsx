@@ -6,6 +6,8 @@ import LocationMap from "../../Maps/LocationMap";
 import {
 	AggregatorData,
 	CompanyData,
+	EnrichedInterviewData,
+	EnrichedJobApplicationUpdateData,
 	EnrichedJobData,
 	InterviewData,
 	JobApplicationUpdateData,
@@ -522,11 +524,19 @@ export const renderFunctions = {
 	},
 
 	interviewCount: (param: RenderParams): number => {
-		return param.item?.interviews?.length || 0;
+		const ctx: DataContextValue = param.dataContext;
+		const interviews: EnrichedInterviewData[] = filterByKey(ctx.interviews, "job_id", param.item?.id);
+		return interviews.length;
 	},
 
 	jobApplicationUpdateCount: (param: RenderParams): number => {
-		return param.item?.updates?.length || 0;
+		const ctx: DataContextValue = param.dataContext;
+		const updates: EnrichedJobApplicationUpdateData[] = filterByKey(
+			ctx.jobApplicationUpdates,
+			"job_id",
+			param.item?.id
+		);
+		return updates.length;
 	},
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------

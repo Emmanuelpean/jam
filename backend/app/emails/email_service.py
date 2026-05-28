@@ -9,7 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from app.config import settings
-from app.emails.routers.templates import email_templates
+from app.emails.templates import email_templates
 from app.emails.utils import clean_email_address, build_multi_from_query
 from app.utils import AppLogger
 
