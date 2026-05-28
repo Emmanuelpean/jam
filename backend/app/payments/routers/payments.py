@@ -125,7 +125,13 @@ async def create_portal_session(
         raise
     except stripe.error.StripeError as e:
         logger.error(f"Stripe error creating portal for user {current_user.id}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=503, detail="Payment service temporarily unavailable. Please try again.")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Payment service temporarily unavailable. Please try again.",
+        )
     except Exception as e:
         logger.error(f"Unexpected error creating portal for user {current_user.id}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="An error occurred. Please try again.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred. Please try again.",
+        )

@@ -182,7 +182,8 @@ class File(Owned, Base):
     - `content` (bytes): Content of the file.
     - `type` (str): MIME type of the file.
     - `size` (int): Size of the file in bytes.
-    - `file_type` (str): Semantic category of the file (e.g. 'cv', 'cover_letter')."""
+    - `file_type` (str): Semantic category of the file (e.g. 'cv', 'cover_letter').
+    - `content_hash` (str): hashed content of the file."""
 
     filename = Column(String, nullable=False)
     content = Column(String, nullable=False)

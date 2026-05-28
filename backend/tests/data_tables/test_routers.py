@@ -94,11 +94,61 @@ class TestFileCRUD(CRUDTestBase):
     out_schema = schemas.FileOut
     test_data_ref = "test_files"
     create_data = FILE_DATA
+    actions_to_test = ["GET", "PUT", "DELETE"]
     update_data = {
         "filename": "updated_john_doe_cv_2024.pdf",
-        "size": 2560,
         "id": 1,
     }
+
+    # ------------------------------------------------------ POST ------------------------------------------------------
+
+    def test_post_success(self, authorised_clients, test_users) -> None:
+        """Authorised users can upload a new file and receive 201 with the file metadata."""
+        client = self._get_authorised_client(authorised_clients)
+        for create_data in self.get_user_data(test_users, self.create_data):
+            data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
+            response = self.post(client, data)
+            assert response.status_code == 201
+            self.check_output(data, response.json())
+
+    def test_post_unauthenticated(self, client) -> None:
+        """Unauthenticated upload attempts are rejected with 401."""
+        response = self.post(client, {})
+        assert response.status_code == 401
+
+    def test_post_duplicate_content_returns_existing_file(self, authorised_clients) -> None:
+        """Uploading a file whose content already exists for that user returns the existing record."""
+        client = self._get_authorised_client(authorised_clients)
+        content = base64.b64encode(b"unique duplicate test content").decode()
+        data = {"filename": "original.pdf", "content": content, "type": "application/pdf", "size": 28}
+
+        first = self.post(client, data)
+        assert first.status_code == 201
+        first_id = first.json()["id"]
+
+        second = self.post(client, {**data, "filename": "duplicate.pdf"})
+        assert second.status_code in (200, 201)
+        assert second.json()["id"] == first_id
+
+    def test_post_incorrect_user_cannot_see_uploaded_file(self, authorised_clients, test_users) -> None:
+        """A file uploaded by one user is not visible to another user."""
+        uploader = self._get_authorised_client(authorised_clients)
+        other = self._get_admin_unauthorised_client(authorised_clients)
+
+        data = {
+            "filename": "private_cv.pdf",
+            "content": base64.b64encode(b"private content").decode(),
+            "type": "application/pdf",
+            "size": 15,
+        }
+        create_response = uploader.post(self.endpoint, json=data)
+        assert create_response.status_code == 201
+        file_id = create_response.json()["id"]
+
+        get_response = other.get(f"{self.endpoint}/{file_id}")
+        assert get_response.status_code == 403
+
+    # ------------------------------------------------------ DOWNLOAD ---------------------------------------------------
 
     def test_file_download_data_url_format(self, authorised_clients, test_files) -> None:
         """Test file download with Base64 data URL format"""

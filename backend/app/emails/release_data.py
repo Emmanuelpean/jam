@@ -74,6 +74,27 @@ RELEASE_SLIDES: dict[str, list[dict]] = {
             "description": "Extended data export, new job source types, and improved error messages.",
         },
     ],
+    "1.3.0": [
+        {
+            "title": "Customisable Dashboard",
+            "description": "Your dashboard is now fully customisable. Add, remove, resize, and rearrange widgets in "
+            "edit mode. Choose from Metric, Table, Timeline, Graph, and Map widget types, or build a "
+            "custom graph from your own data.",
+        },
+        {
+            "title": "Customisable Table Columns",
+            "description": "All data tables now support column customisation. Show or hide columns to focus on what "
+            "matters, with preferences saved per table.",
+        },
+        {
+            "title": "Favourite Filters for Job Alerts",
+            "description": "Use filters to highlights matching jobs at a glance.",
+        },
+        {
+            "title": "CV & Cover Letter Attachments",
+            "description": "Attach a CV and cover letter directly to a job application.",
+        },
+    ],
 }
 
 

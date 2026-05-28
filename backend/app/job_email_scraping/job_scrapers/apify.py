@@ -56,6 +56,8 @@ class ApifyJobScraper(object):
         with tqdm(total=self.max_attempts, desc="Waiting for data", unit="attempt") as pbar:
             for attempt in range(self.max_attempts):
                 run_info = self.client.run(run_id).get()
+                if not run_info:
+                    raise Exception(f"No run info returned for run ID: {run_id}")
                 status = run_info.get("status")
 
                 # Update progress bar description with current status
@@ -96,9 +98,9 @@ class ApifyJobScraper(object):
         run_id = run.get("id")
         dataset_id = run.get("defaultDatasetId")
 
-        if not run_id:
+        if not isinstance(run_id, str) and not run_id:
             raise Exception(f"No run_id returned: {run}")
-        if not dataset_id:
+        if not isinstance(dataset_id, str) and not dataset_id:
             raise Exception(f"No defaultDatasetId returned: {run}")
 
         self._wait_for_data(run_id)

@@ -257,8 +257,8 @@ class JobEmailScrapingServiceErrorOut(Out):
 class JobEmailScrapingStartRequest(BaseModel):
     """Start Request schema for email scraper service"""
 
-    period_hours: float | None = 3.0
-    timedelta_days: int | None = 1
+    period_hours: float | int = 3.0
+    timedelta_days: int = 1
 
 
 # ------------------------------------------------- SCRAPED JOB FILTER -------------------------------------------------

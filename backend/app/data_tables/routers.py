@@ -47,7 +47,7 @@ company_router = generate_data_table_crud_router(
 )
 
 
-# File router - POST is handled manually below for deduplication
+# File router
 file_router = generate_data_table_crud_router(
     table_model=models.File,
     create_schema=schemas.FileCreate,

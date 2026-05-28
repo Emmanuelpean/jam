@@ -157,18 +157,16 @@ def upsert_user_qualification(
     if entry:
         # Determine if the qualification was used to rate jobs
         if len(entry.job_ratings):
-            # noinspection PyArgumentList
             entry = models.UserQualification(
-                **qualification.model_dump(exclude_unset=True, exclude=["id"]), owner_id=user.id
+                **qualification.model_dump(exclude_unset=True, exclude={"id"}), owner_id=user.id
             )
             db.add(entry)
         else:
             for field, value in qualification.model_dump(exclude_unset=True).items():
                 setattr(entry, field, value)
     else:
-        # noinspection PyArgumentList
         entry = models.UserQualification(
-            **qualification.model_dump(exclude_unset=True, exclude=["id"]), owner_id=user.id
+            **qualification.model_dump(exclude_unset=True, exclude={"id"}), owner_id=user.id
         )
         db.add(entry)
     db.commit()
@@ -274,10 +272,8 @@ def update_account(
         # Send verification email with rate limiting
         email_result = send_email_change_email(current_user, new_email, db)
         if not email_result.success:
-            raise HTTPException(
-                status_code=email_result.error_code,
-                detail=email_result.message,
-            )
+            error_code = email_result.error_code if email_result.error_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+            raise HTTPException(status_code=error_code, detail=email_result.message)
         result["message"] = email_result.message
 
     # Update other fields normally

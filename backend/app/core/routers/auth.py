@@ -114,10 +114,8 @@ def login(
                 detail=f"User account is not verified. A new verification email has been sent to {user.email}.",
             )
         else:
-            raise HTTPException(
-                status_code=result.error_code,
-                detail=result.message,
-            )
+            error_code = result.error_code if result.error_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+            raise HTTPException(status_code=error_code, detail=result.message)
 
     # Block non-admin users from logging in during maintenance
     if not user.is_admin:
@@ -180,7 +178,8 @@ def create_user(
                     f"A new verification email has been sent to {existing_user.email}.",
                 )
             else:
-                raise HTTPException(status_code=result.error_code, detail=result.message)
+                error_code = result.error_code if result.error_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+                raise HTTPException(status_code=error_code, detail=result.message)
         else:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
@@ -200,7 +199,8 @@ def create_user(
         # Rollback user creation if email fails
         db.delete(new_user)
         db.commit()
-        raise HTTPException(status_code=result.error_code, detail=result.message)
+        error_code = result.error_code if result.error_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+        raise HTTPException(status_code=error_code, detail=result.message)
 
     return result
 
@@ -223,7 +223,10 @@ def verify_email(
     token_entry = get_token(verification_code, TokenType.VERIFICATION, db)
 
     if not token_entry:
-        raise HTTPException(status_code=403, detail="Invalid or expired token. Please request a new one by logging in.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid or expired token. Please request a new one by logging in.",
+        )
 
     # Check if token is expired
     if not token_entry.is_valid:
@@ -238,7 +241,7 @@ def verify_email(
     # Get the user
     user = db.query(models.User).filter(models.User.id == token_entry.owner_id).first()
     if not user:
-        raise HTTPException(status_code=403, detail="User not found.")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not found.")
 
     # Mark user as verified and delete the token
     user.is_verified = True
@@ -286,7 +289,8 @@ def request_password_reset(
     # Send password reset email with rate limiting
     result = send_password_reset_email(user, db)
     if not result.success:
-        raise HTTPException(status_code=result.error_code, detail=result.message)
+        error_code = result.error_code if result.error_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+        raise HTTPException(status_code=error_code, detail=result.message)
     else:
         return result
 

@@ -148,7 +148,7 @@ async def advance_test_clock(
 
         if test_clock.status != "ready":
             raise HTTPException(
-                status_code=409,
+                status_code=status.HTTP_409_CONFLICT,
                 detail=f"Test clock is currently {test_clock.status}. Wait until ready.",
             )
 
@@ -196,12 +196,21 @@ async def advance_test_clock(
 
     except stripe.error.InvalidRequestError as e:
         logger.error(f"Invalid test clock request: {str(e)}")
-        raise HTTPException(status_code=404, detail="Test clock not found or invalid advancement")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Test clock not found or invalid advancement",
+        )
     except stripe.error.StripeError as e:
         logger.error(f"Stripe error advancing test clock: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=503, detail="Payment service temporarily unavailable. Please try again.")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Payment service temporarily unavailable. Please try again.",
+        )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Unexpected error advancing test clock: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="An error occurred. Please try again.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred. Please try again.",
+        )

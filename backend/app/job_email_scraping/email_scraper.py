@@ -20,7 +20,7 @@ from app.job_email_scraping.email_parsers.utils import Platform, remove_style_ta
 from app.job_email_scraping.filtering import is_job_filtered_out
 from app.job_email_scraping.gmail import extract_forwarding_confirmation_link, extract_gmail_originator
 from app.job_email_scraping.job_scrapers import SCRAPERS
-from app.job_email_scraping.location_parser import LocationParser
+from app.job_email_scraping.location_parser import parse_location
 from app.job_email_scraping.models import (
     JobEmail,
     ScrapedJob,
@@ -34,6 +34,7 @@ from app.service_runner.service_runner import ServiceRunner
 from app.utils import AppLogger
 
 SERVICE_NAME = "email_scraper_service"
+FORWARDING_EMAILS = {"gmail": "forwarding-noreply@google.com"}
 
 
 class JobEmailScraper(EmailService):
@@ -44,7 +45,7 @@ class JobEmailScraper(EmailService):
         :param db: optional database session for testing"""
 
         EmailService.__init__(self, settings.scraper_email_username, settings.scraper_email_password)
-        self.location_parser = LocationParser()
+
         self.logger = AppLogger.create_service_logger(SERVICE_NAME, "INFO")
         self.db = next(get_db()) if db is None else db
 
@@ -144,10 +145,9 @@ class JobEmailScraper(EmailService):
         """Extract and save forwarding confirmation links from emails sent by different email providers
         :param service_log: associated JobEmailScrapingServiceLog instance"""
 
-        email_platforms = {"gmail": "forwarding-noreply@google.com"}
-        for email_platform in email_platforms:
+        for email_platform in FORWARDING_EMAILS:
             try:
-                email_ids = self.get_email_ids(from_email=email_platforms[email_platform], timedelta_days=365)
+                email_ids = self.get_email_ids(from_email=FORWARDING_EMAILS[email_platform], timedelta_days=365)
             except:
                 self.log_service_error(service_log, f"Failed to get email with platform {email_platform}.")
                 continue
@@ -267,7 +267,7 @@ class JobEmailScraper(EmailService):
 
         # Location & attendance type
         result["raw_location"] = job_result.location
-        result["location"], result["attendance_type"] = self.location_parser.parse_location(result["raw_location"])
+        result["location"], result["attendance_type"] = parse_location(result["raw_location"])
 
         if result["location"]:
             geolocation = geocode_location(result["location"], self.db, self.logger)

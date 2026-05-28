@@ -14,7 +14,7 @@ from app.routers.utility import assert_admin
 
 email_template_router = APIRouter(prefix="/email-templates", tags=["email-templates"])
 
-_templates = Jinja2Templates(directory=str(Path(__file__).parent.parent / "templates"))
+email_templates = Jinja2Templates(directory=str(Path(__file__).parent.parent / "templates"))
 
 _SAMPLE_DATA: dict[str, dict] = {
     "email_confirmation": {
@@ -83,5 +83,10 @@ def preview_email_template(
     if template_name not in _SAMPLE_DATA:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Template '{template_name}' not found")
 
-    template = _templates.env.get_template(f"{template_name}.html")
-    return template.render(**_SAMPLE_DATA[template_name])
+    if email_templates.env:
+        template = email_templates.env.get_template(f"{template_name}.html")
+        return template.render(**_SAMPLE_DATA[template_name])
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Jinja2 environment not initialized"
+        )

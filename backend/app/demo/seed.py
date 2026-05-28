@@ -55,7 +55,7 @@ def _remap_with_map(
     result = []
     for entry in data:
         val = entry.get(key)
-        if val is not None:
+        if isinstance(val, int):
             if val not in index_map:
                 continue
             entry[key] = objects[index_map[val] - 1].id
@@ -287,7 +287,7 @@ def seed_demo_data(db: Session, user: models.User) -> None:
     for entry in rating_data:
         # Remap user_qualification_id (user 1's qualifications are consecutive at start)
         qual_id = entry.get("user_qualification_id")
-        if qual_id is not None and qual_id <= len(qualifications):
+        if isinstance(qual_id, int) and qual_id <= len(qualifications):
             entry["user_qualification_id"] = qualifications[qual_id - 1].id
         else:
             entry["user_qualification_id"] = qualifications[0].id if qualifications else None

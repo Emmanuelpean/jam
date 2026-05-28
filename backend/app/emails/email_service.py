@@ -7,15 +7,11 @@ from datetime import datetime, timedelta
 from email.header import decode_header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from pathlib import Path
-
-from fastapi.templating import Jinja2Templates
 
 from app.config import settings
+from app.emails.routers.templates import email_templates
 from app.emails.utils import clean_email_address, build_multi_from_query
 from app.utils import AppLogger
-
-templates = Jinja2Templates(directory="templates")
 
 
 class EmailService(object):
@@ -35,10 +31,7 @@ class EmailService(object):
         self.email_password = email_password
         self.logger = AppLogger.create_service_logger("email_service", "INFO")
         self.test_emails = []
-
-        # Setup Jinja2 templates using FastAPI's built-in class
-        current_dir = Path(__file__).parent
-        self.templates = Jinja2Templates(directory=str(current_dir / "templates"))
+        self.templates = email_templates
 
     @property
     def current_datetime(self) -> str:
@@ -100,6 +93,8 @@ class EmailService(object):
         :param verification_url: The email verification URL.
         :param recipient_name: The recipient name."""
 
+        if not self.templates.env:
+            raise AssertionError("Jinja2 environment not initialised")
         template = self.templates.env.get_template("email_confirmation.html")
         html_content = template.render(
             name=recipient_name if recipient_name else "there",
@@ -126,6 +121,8 @@ class EmailService(object):
         :param verification_url: The email change verification URL.
         :param recipient_name: The recipient name."""
 
+        if not self.templates.env:
+            raise AssertionError("Jinja2 environment not initialised")
         template = self.templates.env.get_template("email_change.html")
         html_content = template.render(
             name=recipient_name if recipient_name else "there",
@@ -152,6 +149,8 @@ class EmailService(object):
         :param reset_url: The password reset URL.
         :param recipient_name: The recipient name."""
 
+        if not self.templates.env:
+            raise AssertionError("Jinja2 environment not initialised")
         template = self.templates.env.get_template("password_reset.html")
         html_content = template.render(
             name=recipient_name if recipient_name else "there",
@@ -174,6 +173,8 @@ class EmailService(object):
         """Send an email to the specified recipient mentioning that the password was changed.
         :param recipient: The recipient's email address."""
 
+        if not self.templates.env:
+            raise AssertionError("Jinja2 environment not initialised")
         template = self.templates.env.get_template("password_changed.html")
         html_content = template.render(change_date=self.current_datetime, support_email=settings.support_email)
 
@@ -195,6 +196,8 @@ class EmailService(object):
         :param recipient: The recipient's email address.
         :param old_email: The old email address before the change."""
 
+        if not self.templates.env:
+            raise AssertionError("Jinja2 environment not initialised")
         template = self.templates.env.get_template("email_changed.html")
         html_content = template.render(
             change_date=self.current_datetime,
@@ -221,6 +224,8 @@ class EmailService(object):
         :param recipient: The recipient's email address.
         :param end_date: The trial end date."""
 
+        if not self.templates.env:
+            raise AssertionError("Jinja2 environment not initialised")
         template = self.templates.env.get_template("trial_end_reminder.html")
         html_content = template.render(
             upgrade_url=settings.frontend_url + "/settings/premium",
@@ -248,6 +253,8 @@ class EmailService(object):
         :param version: The version string (e.g. "1.2.0").
         :param features: List of feature dicts with title, description, and optional image_url."""
 
+        if not self.templates.env:
+            raise AssertionError("Jinja2 environment not initialised")
         template = self.templates.env.get_template("new_version.html")
         html_content = template.render(
             version=version,
@@ -271,7 +278,7 @@ class EmailService(object):
         mail.login(self.email_username, self.email_password)
         return mail
 
-    def get_test_emails(self, recipient: str = None) -> list[dict]:
+    def get_test_emails(self, recipient: str | None = None) -> list[dict]:
         """Get test emails for a specific recipient or all test emails."""
 
         if not settings.test_mode:
@@ -358,10 +365,7 @@ class EmailService(object):
             mail.close()
             mail.logout()
 
-    def get_email_data(
-        self,
-        email_id: str,
-    ) -> dict[str, str | datetime] | None:
+    def get_email_data(self, email_id: str) -> dict[str, str | None | datetime] | None:
         """Get the content of a specific email by ID.
         :param email_id: The email message UID (unique identifier)
         :return: Dictionary with email details (subject, from, date, body)"""
@@ -421,6 +425,10 @@ class EmailService(object):
                     payload = part.get_payload(decode=True)
                     charset = part.get_content_charset() or "utf-8"
 
+                    if not isinstance(payload, bytes):
+                        # multipart container parts return None — skip them
+                        continue
+
                     if content_type == "text/plain":
                         try:
                             body_text = payload.decode(charset)
@@ -435,7 +443,10 @@ class EmailService(object):
             else:
                 # single-part message
                 content_type = msg.get_content_type()
-                body_text = msg.get_payload(decode=True).decode()
+                payload = msg.get_payload(decode=True)
+                if not isinstance(payload, bytes):
+                    raise AssertionError("Payload is not bytes")
+                body_text = payload.decode()
                 if content_type == "text/html":
                     html_text = body_text
 
@@ -497,7 +508,7 @@ class EmailService(object):
     ) -> bool:
         """Delete an email by ID from the inbox.
         :param email_id: The email message UID to delete
-        :return: True if deletion successful, False otherwise"""
+        :return: True if deletion is successful, False otherwise"""
 
         if settings.test_mode:
             return True

@@ -237,6 +237,57 @@ class TestEmailServiceIMAP:
         assert "<html>HTML body</html>" in content["body"]
 
     @patch("imaplib.IMAP4_SSL")
+    def test_get_email_data_multipart_container_part_skipped(self, mock_imap, email_svc) -> None:
+        """The multipart/alternative container is the first node yielded by msg.walk().
+        Its get_payload(decode=True) returns None, which must be skipped so the real
+        text/plain child part is still extracted."""
+
+        mock_mail = MagicMock()
+        mock_imap.return_value = mock_mail
+
+        plain_only_multipart = (
+            b"From: sender@example.com\r\n"
+            b"To: recipient@example.com\r\n"
+            b"Subject: Plain Multipart\r\n"
+            b"Date: Mon, 16 Oct 2025 10:00:00 +0000\r\n"
+            b"Content-Type: multipart/alternative; boundary=b\r\n"
+            b"\r\n"
+            b"--b\r\n"
+            b"Content-Type: text/plain; charset=utf-8\r\n"
+            b"\r\n"
+            b"Plain text body\r\n"
+            b"--b--"
+        )
+        mock_mail.uid.return_value = ("OK", [(b"3", plain_only_multipart)])
+
+        content = email_svc.get_email_data("3")
+
+        assert content is not None
+        assert "Plain text body" in content["body"]
+
+    @patch("imaplib.IMAP4_SSL")
+    def test_get_email_data_single_part_non_bytes_payload_raises(self, mock_imap, email_svc) -> None:
+        """If get_payload(decode=True) somehow returns a non-bytes value on a single-part
+        message, an AssertionError should be raised to surface the unexpected condition."""
+
+        mock_mail = MagicMock()
+        mock_imap.return_value = mock_mail
+
+        raw_email = (
+            b"From: sender@example.com\r\n"
+            b"Subject: Weird\r\n"
+            b"Date: Mon, 16 Oct 2025 10:00:00 +0000\r\n"
+            b"\r\n"
+            b"body"
+        )
+        mock_mail.uid.return_value = ("OK", [(b"4", raw_email)])
+
+        # Patch get_payload on the parsed message to simulate a non-bytes return value
+        with patch("email.message.Message.get_payload", return_value="not bytes"):
+            with pytest.raises(AssertionError):
+                email_svc.get_email_data("4")
+
+    @patch("imaplib.IMAP4_SSL")
     def test_get_email_data_not_found(self, mock_imap, email_svc) -> None:
         """Test retrieving non-existent email."""
 

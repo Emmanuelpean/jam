@@ -5,6 +5,7 @@ import time
 from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+from starlette import status
 
 from app.config import settings
 from app.models import User
@@ -70,8 +71,14 @@ async def get_or_create_stripe_customer(
     except stripe.error.StripeError as e:
         logger.error(f"Stripe API error for user {user.id}: {str(e)}", exc_info=True)
         db.rollback()
-        raise HTTPException(status_code=503, detail="Payment service temporarily unavailable. Please try again.")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Payment service temporarily unavailable. Please try again.",
+        )
     except SQLAlchemyError as e:
         logger.error(f"Database error for user {user.id}: {str(e)}", exc_info=True)
         db.rollback()
-        raise HTTPException(status_code=500, detail="An error occurred. Please try again.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred. Please try again.",
+        )
