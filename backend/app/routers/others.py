@@ -4,8 +4,10 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
 from app import models, database
+from app.base_schemas import COLUMN_LIMITS
 from app.config import settings
 from app.core.models import get_setting_value
+from app.core.schemas import ConfigOut
 from app.job_email_scraping.email_parsers import PLATFORM_SENDER_EMAILS
 from app.resources import CURRENCIES
 
@@ -31,7 +33,7 @@ def get_demo_credentials(db) -> str:
     return user.email
 
 
-@config_router.get("/")
+@config_router.get("/", response_model=ConfigOut)
 def get_config(
     db=Depends(database.get_db),
 ) -> dict:
@@ -46,6 +48,7 @@ def get_config(
         "scrape_max_retry": settings.scrape_max_retry,
         "max_file_size_mb": settings.max_file_size_mb,
         "monthly_scrape_quota": settings.monthly_scrape_quota,
+        "column_limits": COLUMN_LIMITS,
     }
 
 

@@ -6,14 +6,11 @@ contain reference to other tables.
 Update schemas should be used to update existing entries in the database."""
 
 import datetime as dt
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
-ThemeMode = Literal["dark", "light", "system"]
-
-from app.base_schemas import Out, OwnedOut, EmailField
-
+from app.base_schemas import Out, OwnedOut, EmailField, ColumnLimits, COLUMN_LIMITS
 
 # ------------------------------------------------------- SETTINGS ------------------------------------------------------
 
@@ -47,9 +44,9 @@ class UserRegister(BaseModel):
     """User create schema"""
 
     email: EmailField
-    password: str = Field(max_length=128)
-    first_name: str = Field(max_length=100)
-    last_name: str = Field(max_length=100)
+    password: str = Field(max_length=COLUMN_LIMITS.password)
+    first_name: str = Field(max_length=COLUMN_LIMITS.first_name)
+    last_name: str = Field(max_length=COLUMN_LIMITS.last_name)
 
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
@@ -59,7 +56,7 @@ class UserLogin(BaseModel):
     """User login schema"""
 
     email: EmailField
-    password: str
+    password: str = Field(max_length=COLUMN_LIMITS.password)
 
 
 class Token(BaseModel):
@@ -76,21 +73,33 @@ class TokenData(BaseModel):
 # ------------------------------------------------- USER PREFERENCES ---------------------------------------------------
 
 
+ThemeMode = Literal["dark", "light", "system"]
+
+TourId = Annotated[str, Field(max_length=COLUMN_LIMITS.tour_id)]
+EntityType = Annotated[str, Field(max_length=COLUMN_LIMITS.table_entity_type)]
+ColumnName = Annotated[str, Field(max_length=COLUMN_LIMITS.table_column_key)]
+_ColumnList = Annotated[list[ColumnName], Field(max_length=COLUMN_LIMITS.table_columns)]
+_SortEntryValue = Annotated[str, Field(max_length=COLUMN_LIMITS.table_sort_value)]
+_SortEntry = Annotated[dict[str, _SortEntryValue], Field(max_length=COLUMN_LIMITS.table_sort_entry_keys)]
+
+
 class UserPreferencesCreate(BaseModel):
     """User preferences create schema
     Defaults are handled in the database layer."""
 
-    theme: str | None = None
-    dark_mode: ThemeMode = "system"
+    theme: str | None = Field(default=None, max_length=COLUMN_LIMITS.theme)
+    dark_mode: ThemeMode = Field(default="system", max_length=COLUMN_LIMITS.theme_mode)
     chase_threshold: int | None = None
     deadline_threshold: int | None = None
     update_limit: int | None = None
     default_currency: str | None = None
-    extension_banner_dismissed: bool | None = None
-    completed_tours: list[str] | None = None
-    dashboard_layout: str | None = None
-    table_columns: dict[str, list[str]] | None = None
-    table_sort: dict[str, dict[str, str]] | None = None
+    extension_banner_dismissed: bool = False
+    completed_tours: list[TourId] | None = Field(default=None, max_length=COLUMN_LIMITS.completed_tours)
+    dashboard_layout: str | None = Field(default=None, max_length=COLUMN_LIMITS.dashboard_layout)
+    table_columns: dict[EntityType, _ColumnList] | None = Field(
+        default=None, max_length=COLUMN_LIMITS.table_entity_types
+    )
+    table_sort: dict[EntityType, _SortEntry] | None = Field(default=None, max_length=COLUMN_LIMITS.table_entity_types)
 
 
 class UserPreferencesUpdate(UserPreferencesCreate):
@@ -152,12 +161,12 @@ class UserCreate(BaseModel):
     """User create schema for the admin endpoint"""
 
     email: EmailField
-    password: str
+    password: str = Field(max_length=COLUMN_LIMITS.password)
     is_active: bool = True
     is_admin: bool = False
     is_demo: bool = False
-    first_name: str | None = None
-    last_name: str | None = None
+    first_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.first_name)
+    last_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.last_name)
     premium: PremiumDetailsCreate | None = None
     preferences: UserPreferencesCreate | None = None
 
@@ -187,12 +196,12 @@ class UserUpdate(BaseModel):
     """User account update schema for the admin endpoint"""
 
     email: EmailField | None = None
-    password: str | None = None
+    password: str | None = Field(default=None, max_length=COLUMN_LIMITS.password)
     is_active: bool = True
     is_admin: bool = False
     is_demo: bool = False
-    first_name: str | None = None
-    last_name: str | None = None
+    first_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.first_name)
+    last_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.last_name)
     preferences: UserPreferencesUpdate | None = None
     premium: PremiumDetailsUpdate | None = None
 
@@ -201,11 +210,11 @@ class CurrentUserUpdate(BaseModel):
     """User account update schema"""
 
     email: EmailField | None = None
-    current_password: str | None = Field(default=None, max_length=128)
-    password: str | None = Field(default=None, max_length=128)
-    first_name: str | None = Field(default=None, max_length=100)
-    last_name: str | None = Field(default=None, max_length=100)
-    app_version: str | None = Field(default=None, max_length=20)
+    current_password: str | None = Field(default=None, max_length=COLUMN_LIMITS.password)
+    password: str | None = Field(default=None, max_length=COLUMN_LIMITS.password)
+    first_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.first_name)
+    last_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.last_name)
+    app_version: str | None = Field(default=None, max_length=COLUMN_LIMITS.app_version)
     preferences: UserPreferencesUpdate | None = None
     premium: CurrentUserPremiumDetailsUpdate | None = None
 
@@ -223,31 +232,11 @@ class UserQualificationUpsert(BaseModel):
     """User qualification create schema"""
 
     id: int | None = None
-    experience: str | None = None
-    skills: str | None = None
-    education: str | None = None
-    qualities: str | None = None
-    interests: str | None = None
-
-    @field_validator("experience")
-    @classmethod
-    def validate_experience(cls, v: str | None) -> str | None:
-        """Validate the experience value"""
-
-        char_limit: int = 10000
-        if v and len(v) > char_limit:
-            raise ValueError(f"Experience must not exceed {char_limit} characters")
-        return v
-
-    @field_validator("skills", "education", "qualities", "interests")
-    @classmethod
-    def validate_other_fields(cls, v: str | None) -> str | None:
-        """Validate the field values"""
-
-        char_limit: int = 3500
-        if v and len(v) > char_limit:
-            raise ValueError(f"This field must not exceed {char_limit} characters")
-        return v
+    experience: str | None = Field(default=None, max_length=COLUMN_LIMITS.experience)
+    skills: str | None = Field(default=None, max_length=COLUMN_LIMITS.skills)
+    education: str | None = Field(default=None, max_length=COLUMN_LIMITS.education)
+    qualities: str | None = Field(default=None, max_length=COLUMN_LIMITS.qualities)
+    interests: str | None = Field(default=None, max_length=COLUMN_LIMITS.interests)
 
 
 class UserQualificationOut(UserQualificationUpsert, OwnedOut):
@@ -268,8 +257,8 @@ class PasswordResetRequest(BaseModel):
 class PasswordReset(BaseModel):
     """Password reset schema"""
 
-    token: str
-    new_password: str
+    token: str = Field(max_length=COLUMN_LIMITS.token)
+    new_password: str = Field(max_length=COLUMN_LIMITS.password)
 
 
 # ---------------------------------------------------- EMAIL CHANGE ----------------------------------------------------
@@ -288,4 +277,21 @@ class CheckPendingEmailResponse(BaseModel):
 class AccountDeleteRequest(BaseModel):
     """Account deletion request schema"""
 
-    password: str
+    password: str = Field(max_length=COLUMN_LIMITS.password)
+
+
+# ---------------------------------------------------- APP CONFIG -------------------------------------------------------
+
+
+class ConfigOut(BaseModel):
+    """Application configuration output schema"""
+
+    scraper_email: str
+    support_email: str
+    platform_sender_emails: dict[str, str]
+    min_password_length: int
+    app_demo_username: str
+    scrape_max_retry: int
+    max_file_size_mb: int
+    monthly_scrape_quota: int
+    column_limits: ColumnLimits

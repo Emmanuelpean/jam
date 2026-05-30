@@ -18,7 +18,6 @@ class CommonBase(object):
     - `created_at` (datetime): The timestamp of when the record was created. Automatically populated upon creation.
     - `modified_at` (datetime): The timestamp of when the record was modified. Automatically updated upon updates."""
 
-    # noinspection PyMethodParameters
     @declared_attr
     def __tablename__(cls) -> str:
         """Return the class name as table name e.g. JobApplication -> job_application"""

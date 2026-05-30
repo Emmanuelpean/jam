@@ -8,7 +8,9 @@ from datetime import datetime, timezone, timedelta
 from unittest.mock import patch
 
 import app.job_rating.models as job_rating_models
+import pytest
 from app import models, utils
+from app.base_schemas import COLUMN_LIMITS
 from app.core import schemas, oauth2
 from app.core.utils import generate_token, send_email_change_email
 from tests.conftest import CRUDTestBase
@@ -266,6 +268,21 @@ class TestCurrentUser:
 
         response = client.post("/current-user/heartbeat")
         assert response.status_code == 401
+
+    @pytest.mark.parametrize(
+        "field, value",
+        [
+            ("first_name", "x" * (COLUMN_LIMITS.first_name + 1)),
+            ("last_name", "x" * (COLUMN_LIMITS.last_name + 1)),
+            ("password", "x" * (COLUMN_LIMITS.password + 1)),
+            ("current_password", "x" * (COLUMN_LIMITS.password + 1)),
+            ("app_version", "x" * (COLUMN_LIMITS.app_version + 1)),
+        ],
+    )
+    def test_update_field_too_long(self, field, value, regular_user_client) -> None:
+        """Test that updating current user with a field exceeding its max length returns 422."""
+        response = regular_user_client.put("/current-user", json={field: value})
+        assert response.status_code == 422
 
 
 class TestSendEmailChangeWithRateLimit:

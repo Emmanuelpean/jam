@@ -136,6 +136,7 @@ class CRUDTestBase:
     unauthorised_data_fixture = None
     admin_only: bool = False
     actions_to_test: list[str] = ["get", "post", "put", "delete"]
+    too_long_create_data: dict | None = None
 
     def check_output(
         self,
@@ -396,6 +397,15 @@ class CRUDTestBase:
                 create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
                 response = self.post(client, create_data)
                 assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    @pytest.mark.requires_actions("post")
+    def test_post_field_too_long(self, authorised_clients) -> None:
+        """Test that creating an item with a field exceeding its max length returns 422."""
+        if self.too_long_create_data is None:
+            return
+        client = self._get_authorised_client(authorised_clients)
+        response = self.post(client, self.too_long_create_data)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.requires_actions("post")
     def test_post_data_only_authorised(

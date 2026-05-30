@@ -10,6 +10,9 @@ validation, and error handling. Additional custom endpoint tests are included wh
 
 import base64
 
+from starlette import status
+
+from app.base_schemas import COLUMN_LIMITS
 from app.data_tables import schemas
 from app.data_tables.models import Geolocation
 from tests.conftest import CRUDTestBase
@@ -39,6 +42,7 @@ class TestKeywordCRUD(CRUDTestBase):
         "id": 1,
         "name": "Updated Python",
     }
+    too_long_create_data = {"name": "x" * (COLUMN_LIMITS.name + 1)}
 
 
 class TestAggregatorCRUD(CRUDTestBase):
@@ -52,6 +56,7 @@ class TestAggregatorCRUD(CRUDTestBase):
         "url": "https://updated-linkedin.com",
         "id": 1,
     }
+    too_long_create_data = {"name": "x" * (COLUMN_LIMITS.name + 1)}
 
 
 class TestCompanyCRUD(CRUDTestBase):
@@ -64,6 +69,7 @@ class TestCompanyCRUD(CRUDTestBase):
         "name": "OXPV",
         "id": 1,
     }
+    too_long_create_data = {"name": "x" * (COLUMN_LIMITS.name + 1)}
 
     def test_get_all_specific_company(self, authorised_clients, test_companies) -> None:
         response = authorised_clients[0].get(f"{self.endpoint}/?url=https://techcorp.com")
@@ -101,6 +107,18 @@ class TestFileCRUD(CRUDTestBase):
     }
 
     # ------------------------------------------------------ POST ------------------------------------------------------
+
+    def test_post_field_too_long(self, authorised_clients) -> None:
+        """Uploading a file with a filename exceeding the max length returns 422."""
+        client = self._get_authorised_client(authorised_clients)
+        data = {
+            "filename": "x" * (COLUMN_LIMITS.file_name + 1),
+            "type": "text/plain",
+            "content": base64.b64encode(b"test").decode(),
+            "size": 4,
+        }
+        response = self.post(client, data)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_post_success(self, authorised_clients, test_users) -> None:
         """Authorised users can upload a new file and receive 201 with the file metadata."""
@@ -289,6 +307,7 @@ class TestPersonCRUD(CRUDTestBase):
     }
     get_unauthorised_fixture = "test_persons_unauthorised"
     unauthorised_data_fixture = "persons_unauthorised_data"
+    too_long_create_data = {"first_name": "x" * (COLUMN_LIMITS.first_name + 1), "last_name": "Test"}
 
 
 class TestJobCRUD(CRUDTestBase):
@@ -311,6 +330,7 @@ class TestJobCRUD(CRUDTestBase):
     }
     get_unauthorised_fixture = "test_jobs_unauthorised"
     unauthorised_data_fixture = "jobs_unauthorised_data"
+    too_long_create_data = {"title": "x" * (COLUMN_LIMITS.job_title + 1)}
 
 
 class TestJobApplicationUpdateCRUD(CRUDTestBase):
@@ -326,6 +346,7 @@ class TestJobApplicationUpdateCRUD(CRUDTestBase):
     }
     get_unauthorised_fixture = "test_job_application_updates_unauthorised"
     unauthorised_data_fixture = "job_application_updates_unauthorised_data"
+    too_long_create_data = {"date": "2024-01-01T00:00:00", "job_id": 1, "type": "x" * (COLUMN_LIMITS.update_type + 1)}
 
 
 class TestInterviewCRUD(CRUDTestBase):
@@ -343,6 +364,7 @@ class TestInterviewCRUD(CRUDTestBase):
     }
     get_unauthorised_fixture = "test_interviews_unauthorised"
     unauthorised_data_fixture = "interviews_unauthorised_data"
+    too_long_create_data = {"date": "2024-01-01T00:00:00", "job_id": 1, "type": "x" * (COLUMN_LIMITS.update_type + 1)}
 
 
 class TestSpeculativeApplicationCRUD(CRUDTestBase):
@@ -356,6 +378,7 @@ class TestSpeculativeApplicationCRUD(CRUDTestBase):
         "note": "Interview went very well - positive feedback",
         "id": 1,
     }
+    too_long_create_data = {"date": "2024-01-01T00:00:00", "company_id": 1, "note": "x" * (COLUMN_LIMITS.note + 1)}
 
 
 # ------------------------------------------------- GEOLOCATION CASCADE ------------------------------------------------

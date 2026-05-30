@@ -7,7 +7,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.base_schemas import OwnedOut, EmailField, serialise_relationships, OwnedCreate
+from app.base_schemas import OwnedOut, EmailField, serialise_relationships, OwnedCreate, COLUMN_LIMITS
+from app.config import settings
 
 
 # ------------------------------------------------------- KEYWORD ------------------------------------------------------
@@ -16,19 +17,19 @@ from app.base_schemas import OwnedOut, EmailField, serialise_relationships, Owne
 class KeywordCreate(OwnedCreate):
     """Keyword create schema"""
 
-    name: str = Field(max_length=255, description="Keyword name")
+    name: str = Field(max_length=COLUMN_LIMITS.name)
 
 
 class KeywordOut(KeywordCreate, OwnedOut):
     """Keyword output schema with full job data"""
 
-    jobs: list[OwnedOut] = []
+    pass
 
 
 class KeywordUpdate(KeywordCreate):
     """Keyword update schema"""
 
-    name: str | None = None
+    name: str | None = Field(default=None, max_length=COLUMN_LIMITS.name)
 
 
 # ----------------------------------------------------- AGGREGATOR -----------------------------------------------------
@@ -37,21 +38,20 @@ class KeywordUpdate(KeywordCreate):
 class AggregatorCreate(OwnedCreate):
     """Aggregator create schema"""
 
-    name: str = Field(max_length=255)
-    url: str | None = Field(default=None, max_length=2048)
+    name: str = Field(max_length=COLUMN_LIMITS.name)
+    url: str | None = Field(default=None, max_length=COLUMN_LIMITS.url)
 
 
 class AggregatorOut(AggregatorCreate, OwnedOut):
     """Aggregator output schema with full job data and job applications"""
 
-    jobs: list[OwnedOut] = []
-    job_applications: list[OwnedOut] = []
+    pass
 
 
 class AggregatorUpdate(AggregatorCreate):
     """Aggregator update schema"""
 
-    name: str | None = None
+    name: str | None = Field(default=None, max_length=COLUMN_LIMITS.name)
 
 
 # ------------------------------------------------------- COMPANY ------------------------------------------------------
@@ -60,23 +60,21 @@ class AggregatorUpdate(AggregatorCreate):
 class CompanyCreate(OwnedCreate):
     """Company create schema"""
 
-    name: str = Field(max_length=255)
-    description: str | None = Field(default=None, max_length=5000)
-    url: str | None = Field(default=None, max_length=2048)
+    name: str = Field(max_length=COLUMN_LIMITS.name)
+    description: str | None = Field(default=None, max_length=COLUMN_LIMITS.description)
+    url: str | None = Field(default=None, max_length=COLUMN_LIMITS.url)
 
 
 class CompanyOut(CompanyCreate, OwnedOut):
     """Company output schema with job data and individuals"""
 
-    jobs: list[OwnedOut] = []
-    persons: list[OwnedOut] = []
-    recruited_jobs: list[OwnedOut] = []
+    pass
 
 
 class CompanyUpdate(CompanyCreate):
     """Company update schema"""
 
-    name: str | None = None
+    name: str | None = Field(default=None, max_length=COLUMN_LIMITS.name)
 
 
 # ------------------------------------------------------ GEOLOCATION ------------------------------------------------------
@@ -91,20 +89,22 @@ class GeolocationOut(BaseModel):
     postcode: str | None = None
     city: str | None = None
     country: str | None = None
-    formatted_address: str | None = None
 
 
 # -------------------------------------------------------- FILES -------------------------------------------------------
+
+# base64 overhead is 4/3; +200 for data URL prefix (e.g. "data:application/pdf;base64,")
+FILE_CONTENT_MAX_LENGTH = int(settings.max_file_size_mb * 1024 * 1024 * 4 / 3) + 200
 
 
 class FileCreate(OwnedCreate):
     """File create schema"""
 
-    filename: str = Field(max_length=500)
-    type: str = Field(max_length=100)
-    content: str
-    size: int
-    file_type: str | None = Field(default=None, max_length=50)
+    filename: str = Field(max_length=COLUMN_LIMITS.file_name)
+    type: str = Field(max_length=COLUMN_LIMITS.file_mimetype)
+    content: str = Field(max_length=FILE_CONTENT_MAX_LENGTH)
+    size: int = Field(ge=0)
+    file_type: str | None = Field(default=None, max_length=COLUMN_LIMITS.file_type)
 
 
 class FileOut(OwnedOut):
@@ -113,22 +113,19 @@ class FileOut(OwnedOut):
     filename: str
     type: str
     size: int
-    file_type: str | None = None
+    file_type: str | None
 
 
-class FileWithContentOut(FileCreate, OwnedOut):
+class FileWithContentOut(FileOut):
     """File output schema"""
 
-    pass
+    content: str
 
 
 class FileUpdate(FileCreate):
     """File update schema"""
 
-    filename: str | None = None
-    type: str | None = None
-    content: str | None = None
-    size: int | None = None
+    filename: str | None = Field(default=None, max_length=COLUMN_LIMITS.file_name)
 
 
 # ------------------------------------------------------- PERSON -------------------------------------------------------
@@ -137,12 +134,12 @@ class FileUpdate(FileCreate):
 class PersonCreate(OwnedCreate):
     """Person create schema"""
 
-    first_name: str = Field(max_length=100)
-    last_name: str = Field(max_length=100)
+    first_name: str = Field(max_length=COLUMN_LIMITS.first_name)
+    last_name: str = Field(max_length=COLUMN_LIMITS.last_name)
     email: EmailField | None = None
-    phone: str | None = Field(default=None, max_length=30)
-    linkedin_url: str | None = Field(default=None, max_length=2048)
-    role: str | None = Field(default=None, max_length=255)
+    phone: str | None = Field(default=None, max_length=COLUMN_LIMITS.phone)
+    linkedin_url: str | None = Field(default=None, max_length=COLUMN_LIMITS.url)
+    role: str | None = Field(default=None, max_length=COLUMN_LIMITS.role)
     is_recruiter: bool = False
 
     # Foreign keys
@@ -152,17 +149,14 @@ class PersonCreate(OwnedCreate):
 class PersonOut(PersonCreate, OwnedOut):
     """Person out schema with job data and bare interview data"""
 
-    interviews: list[OwnedOut] = []
-    jobs: list[OwnedOut] = []
-    recruited_jobs: list[OwnedOut] = []
-    name: str | None = None
+    name: str | None
 
 
 class PersonUpdate(PersonCreate):
     """Person update schema"""
 
-    first_name: str | None = None
-    last_name: str | None = None
+    first_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.first_name)
+    last_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.last_name)
 
 
 # --------------------------------------------------------- JOB --------------------------------------------------------
@@ -171,25 +165,25 @@ class PersonUpdate(PersonCreate):
 class JobCreate(OwnedCreate):
     """Job create schema"""
 
-    title: str = Field(max_length=255)
+    title: str = Field(max_length=COLUMN_LIMITS.job_title)
     is_favourite: bool = False
-    description: str | None = Field(default=None, max_length=50000)
+    description: str | None = Field(default=None, max_length=COLUMN_LIMITS.description)
     salary_min: float | None = None
     salary_max: float | None = None
-    salary_currency: str | None = Field(default=None, max_length=10)
+    salary_currency: str | None = Field(default=None, max_length=COLUMN_LIMITS.currency)
     personal_rating: int | None = None
-    url: str | None = Field(default=None, max_length=2048)
+    url: str | None = Field(default=None, max_length=COLUMN_LIMITS.url)
     deadline: datetime | None = None
-    note: str | None = Field(default=None, max_length=10000)
-    attendance_type: str | None = Field(default=None, max_length=100)
+    note: str | None = Field(default=None, max_length=COLUMN_LIMITS.note)
+    attendance_type: str | None = Field(default=None, max_length=COLUMN_LIMITS.attendance_type)
     application_date: datetime | None = None
-    application_url: str | None = Field(default=None, max_length=2048)
-    application_status: str | None = Field(default=None, max_length=100)
-    application_note: str | None = Field(default=None, max_length=10000)
-    applied_via: str | None = Field(default=None, max_length=255)
-    source_type: str | None = Field(default=None, max_length=100)
+    application_url: str | None = Field(default=None, max_length=COLUMN_LIMITS.url)
+    application_status: str | None = Field(default=None, max_length=COLUMN_LIMITS.application_status)
+    application_note: str | None = Field(default=None, max_length=COLUMN_LIMITS.note)
+    applied_via: str | None = Field(default=None, max_length=COLUMN_LIMITS.applied_via)
+    source_type: str | None = Field(default=None, max_length=COLUMN_LIMITS.source_type)
     followup_snooze_datetime: datetime | None = None
-    location: str | None = Field(default=None, max_length=500)
+    location: str | None = Field(default=None, max_length=COLUMN_LIMITS.location)
 
     # Foreign keys
     company_id: int | None = None
@@ -208,10 +202,6 @@ class JobCreate(OwnedCreate):
 class JobOut(JobCreate, OwnedOut):
     """Job output schema with IDs of related entities"""
 
-    keywords: list[int] = []
-    contacts: list[int] = []
-    interviews: list[OwnedOut] = []
-    updates: list[OwnedOut] = []
     has_application: bool = False
     has_active_application: bool = False
     has_open_application: bool = False
@@ -227,7 +217,7 @@ class JobOut(JobCreate, OwnedOut):
 class JobUpdate(JobCreate):
     """Job update schema"""
 
-    title: str | None = None
+    title: str | None = Field(default=None, max_length=COLUMN_LIMITS.job_title)
 
 
 # ------------------------------------------------------ INTERVIEW -----------------------------------------------------
@@ -237,18 +227,17 @@ class InterviewCreate(OwnedCreate):
     """Interview create schema"""
 
     date: datetime
-    type: str = Field(max_length=100)
+    type: str = Field(max_length=COLUMN_LIMITS.interview_type)
     job_id: int
-    attendance_type: str | None = Field(default=None, max_length=100)
-    location: str | None = Field(default=None, max_length=500)
-    note: str | None = Field(default=None, max_length=10000)
+    attendance_type: str | None = Field(default=None, max_length=COLUMN_LIMITS.attendance_type)
+    location: str | None = Field(default=None, max_length=COLUMN_LIMITS.location)
+    note: str | None = Field(default=None, max_length=COLUMN_LIMITS.note)
     interviewers: list[int] | None = None
 
 
 class InterviewOut(InterviewCreate, OwnedOut):
     """Interview output with bare location and person data, and job data"""
 
-    interviewers: list[int] = []
     geolocation: GeolocationOut | None = None
 
     @field_validator("interviewers", mode="before")
@@ -262,7 +251,7 @@ class InterviewUpdate(InterviewCreate):
     """Interview update schema"""
 
     date: datetime | None = None
-    type: str | None = None
+    type: str | None = Field(default=None, max_length=COLUMN_LIMITS.interview_type)
     job_id: int | None = None
 
 
@@ -273,9 +262,9 @@ class JobApplicationUpdateCreate(OwnedCreate):
     """Job Application Update create schema"""
 
     date: datetime
-    type: str = Field(max_length=100)
+    type: str = Field(max_length=COLUMN_LIMITS.update_type)
     job_id: int
-    note: str | None = Field(default=None, max_length=10000)
+    note: str | None = Field(default=None, max_length=COLUMN_LIMITS.note)
 
 
 class JobApplicationUpdateOut(JobApplicationUpdateCreate, OwnedOut):
@@ -288,7 +277,7 @@ class JobApplicationUpdateUpdate(JobApplicationUpdateCreate):
     """Job Application Update update schema"""
 
     date: datetime | None = None
-    type: str | None = None
+    type: str | None = Field(default=None, max_length=COLUMN_LIMITS.update_type)
     job_id: int | None = None
 
 
@@ -299,10 +288,8 @@ class SpeculativeApplicationCreate(OwnedCreate):
     """Speculative application create schema"""
 
     date: datetime | None = None
-    note: str | None = Field(default=None, max_length=10000)
-    contact_email: str | None = Field(default=None, max_length=254)
-
-    # Foreign keys
+    note: str | None = Field(default=None, max_length=COLUMN_LIMITS.note)
+    contact_email: EmailField | None = None
     company_id: int
     contacts: list[int] = []
 

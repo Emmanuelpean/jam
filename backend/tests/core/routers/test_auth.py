@@ -7,6 +7,7 @@ import jwt
 import pytest
 
 from app import models
+from app.base_schemas import COLUMN_LIMITS
 from app.config import settings
 from app.core import schemas
 from app.core.models import Setting
@@ -312,6 +313,26 @@ class TestRegister:
         response = client.post("/register", json=data)
         assert response.status_code == 401
         assert "maintenance" in response.json()["detail"].lower()
+
+    @pytest.mark.parametrize(
+        "field, value",
+        [
+            ("password", "x" * (COLUMN_LIMITS.password + 1)),
+            ("first_name", "x" * (COLUMN_LIMITS.first_name + 1)),
+            ("last_name", "x" * (COLUMN_LIMITS.last_name + 1)),
+        ],
+    )
+    def test_register_field_too_long(self, field, value, client) -> None:
+        """Test that registering with a field exceeding its max length returns 422."""
+        data = {
+            "email": "new_user@test.com",
+            "password": "testpassword",
+            "first_name": "Test",
+            "last_name": "User",
+            field: value,
+        }
+        response = client.post("/register", json=data)
+        assert response.status_code == 422
 
 
 class TestEmailVerification:
