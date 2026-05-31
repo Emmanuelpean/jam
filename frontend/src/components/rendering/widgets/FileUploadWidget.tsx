@@ -1,6 +1,6 @@
 import React, { useRef, useState, JSX, ReactNode, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Button, Modal } from "react-bootstrap";
+import { Button, Form, Modal } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useConfig } from "../../../contexts/ConfigContext";
 import { useDataContext } from "../../../contexts/DataContext";
@@ -41,10 +41,11 @@ export const FileUploadWidget = ({
 
 	const [savedText, setSavedText] = useState<string>("");
 	const [draftText, setDraftText] = useState<string>("");
+	const [filenameInput, setFilenameInput] = useState<string>("cover_letter.txt");
 	const [showTextModal, setShowTextModal] = useState<boolean>(false);
 	const [saving, setSaving] = useState<boolean>(false);
 	const [saveError, setSaveError] = useState<string | null>(null);
-	const lastValueRef = useRef<number | null>(value ?? null);
+	const lastValueRef = useRef<number | null | undefined>(undefined);
 
 	const fileType = field.fileType ?? null;
 	const fileMetadata: FileData | null = value ? (files.find((f) => f.id === value) ?? null) : null;
@@ -58,8 +59,9 @@ export const FileUploadWidget = ({
 		if (value && isTextFile && token) {
 			void filesApi.getContent(value, token).then((result: ApiResponse<FileWithContentData>): void => {
 				const raw = result.data.content;
+				const base64 = raw.startsWith("data:") ? (raw.split(",")[1] ?? raw) : raw;
 				try {
-					const decoded = decodeURIComponent(escape(atob(raw)));
+					const decoded = decodeURIComponent(escape(atob(base64)));
 					setSavedText(decoded);
 				} catch {
 					setSavedText(raw);
@@ -160,6 +162,7 @@ export const FileUploadWidget = ({
 
 	const openTextModal = (): void => {
 		setDraftText(savedText);
+		setFilenameInput(fileMetadata?.filename ?? "cover_letter.txt");
 		setSaveError(null);
 		setShowTextModal(true);
 	};
@@ -176,8 +179,14 @@ export const FileUploadWidget = ({
 			return;
 		}
 
-		if (draftText === savedText) {
+		if (draftText === savedText && filenameInput === (fileMetadata?.filename ?? "cover_letter.txt")) {
 			setShowTextModal(false);
+			return;
+		}
+
+		const filename = filenameInput.trim() || "cover_letter.txt";
+		if (config?.column_limits?.file_name && filename.length > config.column_limits.file_name) {
+			setSaveError(`Filename exceeds the maximum allowed length of ${config.column_limits.file_name} characters.`);
 			return;
 		}
 
@@ -189,7 +198,7 @@ export const FileUploadWidget = ({
 			const content = `data:text/plain;base64,${base64}`;
 			const size = new Blob([draftText]).size;
 			const result = await addEntity("file", {
-				filename: "cover_letter.txt",
+				filename: filename,
 				content,
 				type: "text/plain",
 				size,
@@ -211,13 +220,13 @@ export const FileUploadWidget = ({
 
 	const fieldId = field.key as string;
 
-	const pencilButton = textEditable ? (
+	const pencilButton = textEditable && (!hasFile || isTextFile) ? (
 		<Button
 			id={`${fieldId}-write-btn`}
 			variant={"outline-primary"}
 			className="rounded-circle p-0 d-flex align-items-center justify-content-center file-drop-action-btn cover-letter-pencil-btn"
 			style={{ width: 32, height: 32 }}
-			title={isTextFile ? "Edit text" : "Write text"}
+			title="Edit text"
 			onClick={openTextModal}
 		>
 			<i className="bi bi-pencil" style={{ fontSize: "0.8rem" }} />
@@ -351,7 +360,7 @@ export const FileUploadWidget = ({
 
 			{textEditable && (
 				<JamModal
-					id={`${fieldId}-text-modal`}
+					id="cover-letter-text-modal"
 					show={showTextModal}
 					onHide={() => setShowTextModal(false)}
 					size="lg"
@@ -361,10 +370,21 @@ export const FileUploadWidget = ({
 						<Modal.Title>Cover Letter Text</Modal.Title>
 					</JamModal.Header>
 					<JamModal.Body>
+						<Form.Group className="mb-2">
+							<Form.Label>Filename</Form.Label>
+							<Form.Control
+								id="cover-letter-text-modal-filename"
+								type="text"
+								value={filenameInput}
+								onChange={(e) => setFilenameInput(e.target.value)}
+								disabled={saving}
+								placeholder="cover_letter.txt"
+							/>
+						</Form.Group>
 						<Textarea
 							field={
 								{
-									key: `${fieldId}_text`,
+									key: "cover_letter_text",
 									type: "textarea",
 									rows: 16,
 									placeholder: "Write or paste your cover letter here...",
@@ -380,14 +400,14 @@ export const FileUploadWidget = ({
 						<div className="d-flex flex-column w-100 gap-2">
 							<div className="modal-buttons-container">
 								<ActionButton
-									id={`${fieldId}-text-modal-cancel-button`}
+									id="cover-letter-text-modal-cancel-button"
 									variant="secondary"
 									defaultText="Cancel"
 									onClick={() => setShowTextModal(false)}
 									disabled={saving}
 								/>
 								<ActionButton
-									id={`${fieldId}-text-modal-save-button`}
+									id="cover-letter-text-modal-save-button"
 									variant="primary"
 									defaultText="Save"
 									loadingText="Saving..."

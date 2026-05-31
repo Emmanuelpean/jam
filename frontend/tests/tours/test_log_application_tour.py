@@ -271,7 +271,7 @@ class TestLogApplicationTour(BaseTest):
         # Step 10 (log-application-cover-letter): click pencil to open writing modal;
         # tour auto-advances to step 10b when #cover-letter-text-modal appears.
         self.tour_utils.wait_for_popover()
-        self.get_element("cover-letter-write-btn").click()
+        self.get_element("cover_letter_id-write-btn").click()
 
         # Step 10b (log-application-cover-letter-writing): type text and save;
         # tour auto-advances back to step 10 when the modal closes.

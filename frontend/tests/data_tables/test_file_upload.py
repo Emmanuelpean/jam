@@ -1,5 +1,6 @@
 """Tests for CV and cover letter file upload in the job modal."""
 
+import base64
 import os
 import shutil
 import tempfile
@@ -210,3 +211,99 @@ class TestFileUpload(BaseTest):
         self.db.expire_all()
         job = self.db.query(models.Job).filter_by(id=self.test_job.id).first()
         assert job.cv_id is None
+
+    def test_cover_letter_pdf_hides_edit_button(self) -> None:
+        """Uploading a PDF as a cover letter hides the pencil edit button."""
+        self._open_job_edit_application_tab(self.test_job.id)
+        self._upload_file("cover_letter_id", b"%PDF-1.4 fake pdf content", "cover_letter.pdf")
+        self._wait_for_has_file("cover_letter_id")
+
+        assert not self.check_element_exists("cover_letter_id-write-btn"), (
+            "Edit button must not appear when the uploaded cover letter is not a plain-text file"
+        )
+
+    def test_cover_letter_write_then_edit(self) -> None:
+        """User writes a cover letter via the text editor, saves the job, then reopens and edits it."""
+        initial_count = self.db.query(models.File).count()
+
+        self._open_job_edit_application_tab(self.test_job.id)
+
+        # Pencil button is visible when there is no file
+        self.get_element("cover_letter_id-write-btn").click()
+        self.get_element("cover-letter-text-modal")
+
+        initial_text = "Dear Hiring Manager, I am applying for this role."
+        self.get_element("cover_letter_text").send_keys(initial_text)
+        self.get_element("cover-letter-text-modal-save-button").click()
+        self.wait_for_disappear("cover-letter-text-modal")
+        self._wait_for_has_file("cover_letter_id")
+
+        self.job_modal_utils.confirm_button("edit").click()
+        self.job_modal_utils.wait_for_edit_modal_close()
+
+        self.db.expire_all()
+        assert self.db.query(models.File).count() == initial_count + 1
+
+        # Reopen the modal and edit the text
+        self._open_job_edit_application_tab(self.test_job.id)
+        self.get_element("cover_letter_id-write-btn").click()
+        self.get_element("cover-letter-text-modal")
+
+        # Wait for the previously saved content to load from the API
+        WebDriverWait(self.driver, 10).until(
+            lambda d: initial_text[:20]
+            in (d.find_element(By.ID, "cover_letter_text").get_attribute("value") or "")
+        )
+
+        updated_text = "Dear Hiring Manager, Updated cover letter content."
+        self.set_text(self.get_element("cover_letter_text"), updated_text)
+        self.get_element("cover-letter-text-modal-save-button").click()
+        self.wait_for_disappear("cover-letter-text-modal")
+        self._wait_for_has_file("cover_letter_id")
+
+        self.job_modal_utils.confirm_button("edit").click()
+        self.job_modal_utils.wait_for_edit_modal_close()
+
+        self.db.expire_all()
+        job = self.db.query(models.Job).filter_by(id=self.test_job.id).first()
+        file = self.db.query(models.File).filter_by(id=job.cover_letter_id).first()
+        assert file is not None
+        decoded = base64.b64decode(file.content.split(",")[1]).decode("utf-8")
+        assert updated_text in decoded
+
+    def test_upload_text_file_then_edit(self) -> None:
+        """User uploads a plain-text cover letter file and then edits its content via the text editor."""
+        original_text = "Dear Hiring Manager,\n\nI am applying for this role.\n\nKind regards"
+
+        self._open_job_edit_application_tab(self.test_job.id)
+        self._upload_file(
+            "cover_letter_id",
+            original_text.encode("utf-8"),
+            "cover_letter.txt",
+        )
+        self._wait_for_has_file("cover_letter_id")
+
+        # Edit button is visible for text files
+        self.get_element("cover_letter_id-write-btn").click()
+        self.get_element("cover-letter-text-modal")
+
+        # Textarea is pre-filled with the uploaded file content
+        WebDriverWait(self.driver, 10).until(
+            lambda d: "applying" in (d.find_element(By.ID, "cover_letter_text").get_attribute("value") or "")
+        )
+
+        updated_text = "Dear Hiring Manager,\n\nUpdated content after upload.\n\nKind regards"
+        self.set_text(self.get_element("cover_letter_text"), updated_text)
+        self.get_element("cover-letter-text-modal-save-button").click()
+        self.wait_for_disappear("cover-letter-text-modal")
+        self._wait_for_has_file("cover_letter_id")
+
+        self.job_modal_utils.confirm_button("edit").click()
+        self.job_modal_utils.wait_for_edit_modal_close()
+
+        self.db.expire_all()
+        job = self.db.query(models.Job).filter_by(id=self.test_job.id).first()
+        file = self.db.query(models.File).filter_by(id=job.cover_letter_id).first()
+        assert file is not None
+        decoded = base64.b64decode(file.content.split(",")[1]).decode("utf-8")
+        assert "Updated content after upload." in decoded
