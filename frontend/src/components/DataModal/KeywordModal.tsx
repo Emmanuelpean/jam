@@ -31,7 +31,7 @@ export const KeywordModal = forwardRef<DataModalHandle<KeywordData>, JamDataModa
 			const errors: ValidationErrors = {};
 			const nameDuplicates: KeywordData[] = dataContext.keywords.filter(
 				(keyword: KeywordData): boolean =>
-					keyword.name.toLowerCase() === formData.name.trim().toLowerCase() && keyword.id !== formData?.id
+					keyword.name.toLowerCase() === formData.name?.trim().toLowerCase() && keyword.id !== formData?.id
 			);
 			if (nameDuplicates.length > 0) {
 				errors.name = `A tag with this name already exists`;

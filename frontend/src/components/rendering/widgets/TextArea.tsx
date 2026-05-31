@@ -49,11 +49,6 @@ export const Textarea = ({ field, value, handleChange, error }: WidgetProps): JS
 					disabled={field.isDisabled}
 				/>
 			</div>
-			{field.maxChars && (
-				<Form.Text className={isOverLimit ? "text-danger" : "text-muted"}>
-					{charCount} / {field.maxChars} characters
-				</Form.Text>
-			)}
 		</>
 	);
 };

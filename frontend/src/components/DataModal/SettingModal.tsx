@@ -40,8 +40,7 @@ export const SettingModal = forwardRef<DataModalHandle<SettingData>, JamDataModa
 			const errors: ValidationErrors = {};
 			const duplicates: SettingData[] = dataContext.settings.filter(
 				(setting: SettingData): boolean =>
-					setting.name.trim().toLowerCase() === formData.name.trim().toLowerCase() &&
-					setting.id !== formData?.id
+					setting.name.toLowerCase() === formData.name?.trim().toLowerCase() && setting.id !== formData?.id
 			);
 			if (duplicates.length > 0) {
 				errors.name = `A setting with this name already exists`;

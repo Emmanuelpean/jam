@@ -54,8 +54,8 @@ export const PersonModal = forwardRef<DataModalHandle<PersonData>, JamDataModalP
 
 			const duplicates: PersonData[] = dataContext.persons.filter(
 				(person: PersonData): boolean =>
-					person.first_name.trim().toLowerCase() === formData.first_name.trim().toLowerCase() &&
-					person.last_name.trim().toLowerCase() === formData.last_name.trim().toLowerCase() &&
+					person.first_name.toLowerCase() === formData.first_name?.trim().toLowerCase() &&
+					person.last_name.toLowerCase() === formData.last_name?.trim().toLowerCase() &&
 					person.company_id === formData.company_id &&
 					person.id !== formData?.id
 			);

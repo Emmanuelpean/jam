@@ -76,10 +76,10 @@
 
     .file-drop-filesize {
         font-size: 0.8rem;
-        margin-bottom: 0.625rem;
     }
 
     .file-drop-actions {
+        margin-top: 0.625rem;
         display: flex;
         justify-content: center;
         gap: 0.5rem;
@@ -97,4 +97,9 @@
 
     }
 
+}
+
+.cover-letter-pencil-btn.btn-primary:hover {
+    transform: none;
+    background: var(--primary-gradient);
 }

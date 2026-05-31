@@ -1,17 +1,23 @@
-import React, { useRef, useState, JSX, ReactNode } from "react";
+import React, { useRef, useState, JSX, ReactNode, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { Button, Modal } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useConfig } from "../../../contexts/ConfigContext";
 import { useDataContext } from "../../../contexts/DataContext";
 import { filesApi } from "../../../services/api/DataTables";
-import { FileData } from "../../../services/schemas/DataTables";
+import { FileData, FileWithContentData } from "../../../services/schemas/DataTables";
+import { ApiResponse } from "../../../services/api/Base";
 import { canPreviewFile, fileToBase64, formatFileSize } from "../../../utils/FileUtils";
 import { WidgetProps } from "./WidgetRenders";
+import { Textarea } from "./TextArea";
+import { ModalFormField } from "../form/FormRenders";
+import { ActionButton } from "../form/ActionButton";
+import JamModal from "../../JamModal/JamModal";
 import "./FileUploadWidget.scss";
-import { Button } from "react-bootstrap";
 
 export interface FileUploadWidgetProps extends WidgetProps {
 	extraActions?: ReactNode;
+	textEditable?: boolean;
 }
 
 export const FileUploadWidget = ({
@@ -21,6 +27,7 @@ export const FileUploadWidget = ({
 	data,
 	onUploadingChange,
 	extraActions,
+	textEditable,
 }: FileUploadWidgetProps): JSX.Element => {
 	const { token } = useAuth();
 	const { config } = useConfig();
@@ -32,8 +39,36 @@ export const FileUploadWidget = ({
 	const [dragOver, setDragOver] = useState<boolean>(false);
 	const [tooltipCoords, setTooltipCoords] = useState<{ top: number; left: number } | null>(null);
 
+	const [savedText, setSavedText] = useState<string>("");
+	const [draftText, setDraftText] = useState<string>("");
+	const [showTextModal, setShowTextModal] = useState<boolean>(false);
+	const [saving, setSaving] = useState<boolean>(false);
+	const [saveError, setSaveError] = useState<string | null>(null);
+	const lastValueRef = useRef<number | null>(value ?? null);
+
 	const fileType = field.fileType ?? null;
 	const fileMetadata: FileData | null = value ? (files.find((f) => f.id === value) ?? null) : null;
+	const isTextFile = fileMetadata?.type === "text/plain";
+
+	useEffect((): void => {
+		if (!textEditable) return;
+		if (value === lastValueRef.current) return;
+		lastValueRef.current = value ?? null;
+
+		if (value && isTextFile && token) {
+			void filesApi.getContent(value, token).then((result: ApiResponse<FileWithContentData>): void => {
+				const raw = result.data.content;
+				try {
+					const decoded = decodeURIComponent(escape(atob(raw)));
+					setSavedText(decoded);
+				} catch {
+					setSavedText(raw);
+				}
+			});
+		} else if (!value) {
+			setSavedText("");
+		}
+	}, [value]);
 
 	const uploadFile = async (file: File): Promise<void> => {
 		if (!token) return;
@@ -123,125 +158,247 @@ export const FileUploadWidget = ({
 
 	const handleTooltipLeave = (): void => setTooltipCoords(null);
 
+	const openTextModal = (): void => {
+		setDraftText(savedText);
+		setSaveError(null);
+		setShowTextModal(true);
+	};
+
+	const handleTextSave = async (): Promise<void> => {
+		if (!token) return;
+
+		if (!draftText.trim()) {
+			if (isTextFile) {
+				handleChange({ target: { name: field.key as string, value: null } });
+				setSavedText("");
+			}
+			setShowTextModal(false);
+			return;
+		}
+
+		if (draftText === savedText) {
+			setShowTextModal(false);
+			return;
+		}
+
+		setSaving(true);
+		onUploadingChange?.(true);
+		setSaveError(null);
+		try {
+			const base64 = btoa(unescape(encodeURIComponent(draftText)));
+			const content = `data:text/plain;base64,${base64}`;
+			const size = new Blob([draftText]).size;
+			const result = await addEntity("file", {
+				filename: "cover_letter.txt",
+				content,
+				type: "text/plain",
+				size,
+				file_type: fileType,
+			});
+			setSavedText(draftText);
+			lastValueRef.current = result.data.id;
+			handleChange({ target: { name: field.key as string, value: result.data.id } });
+			setShowTextModal(false);
+		} catch (err: any) {
+			setSaveError(err.message || "Failed to save text");
+		} finally {
+			setSaving(false);
+			onUploadingChange?.(false);
+		}
+	};
+
 	const hasFile: boolean = !!value && !!fileMetadata;
 
 	const fieldId = field.key as string;
 
+	const pencilButton = textEditable ? (
+		<Button
+			id={`${fieldId}-write-btn`}
+			variant={"outline-primary"}
+			className="rounded-circle p-0 d-flex align-items-center justify-content-center file-drop-action-btn cover-letter-pencil-btn"
+			style={{ width: 32, height: 32 }}
+			title={isTextFile ? "Edit text" : "Write text"}
+			onClick={openTextModal}
+		>
+			<i className="bi bi-pencil" style={{ fontSize: "0.8rem" }} />
+		</Button>
+	) : null;
+
+	const allExtraActions = (
+		<>
+			{pencilButton}
+			{extraActions}
+		</>
+	);
+
 	return (
-		<div>
-			<input
-				id={`${fieldId}-file-input`}
-				ref={fileInputRef}
-				type="file"
-				className="d-none"
-				onChange={handleInputChange}
-			/>
-			<div
-				id={`${fieldId}-drop-zone`}
-				className={`file-drop-zone${dragOver ? " drag-over" : ""}${uploading ? " uploading" : ""}${hasFile ? " has-file" : ""}`}
-				onClick={() => !uploading && !hasFile && fileInputRef.current?.click()}
-				onDrop={handleDrop}
-				onDragOver={handleDragOver}
-				onDragLeave={handleDragLeave}
-			>
-				{uploading ? (
-					<>
-						<div className="file-drop-icon">
-							<span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
-						</div>
-						<div className="file-drop-text">Uploading...</div>
-					</>
-				) : dragOver ? (
-					<>
-						<div className="file-drop-icon">
-							<i className="bi bi-box-arrow-in-down" />
-						</div>
-						<div className="file-drop-text">Drop to upload</div>
-					</>
-				) : hasFile ? (
-					<>
-						<div className="file-drop-icon">
-							<i className="bi bi-file-earmark-check" />
-						</div>
-						<div className="file-drop-filename">{fileMetadata!.filename}</div>
-						<div className="file-drop-filesize text-muted">{formatFileSize(fileMetadata!.size)}</div>
-						<div className="file-drop-actions" onClick={(e) => e.stopPropagation()}>
-							{canPreviewFile(fileMetadata!.type) ? (
-								<Button
-									id={`${fieldId}-preview-btn`}
-									variant={"outline-secondary"}
-									className="file-drop-action-btn"
-									onClick={handlePreview}
-									title="Preview"
-								>
-									<i className="bi bi-eye" />
-								</Button>
-							) : (
-								<div
-									ref={tooltipRef}
-									onMouseEnter={handleTooltipEnter}
-									onMouseLeave={handleTooltipLeave}
-									style={{ cursor: "not-allowed" }}
-								>
+		<>
+			<div>
+				<input
+					id={`${fieldId}-file-input`}
+					ref={fileInputRef}
+					type="file"
+					className="d-none"
+					onChange={handleInputChange}
+				/>
+				<div
+					id={`${fieldId}-drop-zone`}
+					className={`file-drop-zone${dragOver ? " drag-over" : ""}${uploading ? " uploading" : ""}${hasFile ? " has-file" : ""}`}
+					onClick={() => !uploading && !hasFile && fileInputRef.current?.click()}
+					onDrop={handleDrop}
+					onDragOver={handleDragOver}
+					onDragLeave={handleDragLeave}
+				>
+					{uploading ? (
+						<>
+							<div className="file-drop-icon">
+								<span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+							</div>
+							<div className="file-drop-text">Uploading...</div>
+						</>
+					) : dragOver ? (
+						<>
+							<div className="file-drop-icon">
+								<i className="bi bi-box-arrow-in-down" />
+							</div>
+							<div className="file-drop-text">Drop to upload</div>
+						</>
+					) : hasFile ? (
+						<>
+							<div className="file-drop-icon">
+								<i className="bi bi-file-earmark-check" />
+							</div>
+							<div className="file-drop-filename">{fileMetadata!.filename}</div>
+							<div className="file-drop-filesize text-muted">{formatFileSize(fileMetadata!.size)}</div>
+							<div className="file-drop-actions" onClick={(e) => e.stopPropagation()}>
+								{canPreviewFile(fileMetadata!.type) ? (
 									<Button
 										id={`${fieldId}-preview-btn`}
 										variant={"outline-secondary"}
 										className="file-drop-action-btn"
-										disabled
-										style={{ pointerEvents: "none" }}
+										onClick={handlePreview}
+										title="Preview"
 									>
 										<i className="bi bi-eye" />
 									</Button>
+								) : (
+									<div
+										ref={tooltipRef}
+										onMouseEnter={handleTooltipEnter}
+										onMouseLeave={handleTooltipLeave}
+										style={{ cursor: "not-allowed" }}
+									>
+										<Button
+											id={`${fieldId}-preview-btn`}
+											variant={"outline-secondary"}
+											className="file-drop-action-btn"
+											disabled
+											style={{ pointerEvents: "none" }}
+										>
+											<i className="bi bi-eye" />
+										</Button>
+									</div>
+								)}
+								<Button
+									id={`${fieldId}-download-btn`}
+									variant={"outline-primary"}
+									className="file-drop-action-btn"
+									onClick={handleDownload}
+									title="Download"
+								>
+									<i className="bi bi-download" />
+								</Button>
+								<Button
+									id={`${fieldId}-remove-btn`}
+									variant={"outline-danger"}
+									className="file-drop-action-btn"
+									onClick={handleRemove}
+									title="Remove"
+								>
+									<i className="bi bi-x-lg" />
+								</Button>
+								{allExtraActions}
+							</div>
+							{tooltipCoords &&
+								createPortal(
+									<div
+										className="ab-tooltip-portal ab-tooltip-portal--top"
+										style={{ top: tooltipCoords.top, left: tooltipCoords.left }}
+									>
+										Preview not available for this file type
+									</div>,
+									document.body
+								)}
+						</>
+					) : (
+						<>
+							<div className="file-drop-icon">
+								<i className="bi bi-cloud-upload" />
+							</div>
+							<div className="file-drop-text">
+								Drag & drop or <span className="file-drop-link">click to select</span>
+							</div>
+							{(textEditable || extraActions) && (
+								<div className="file-drop-actions" onClick={(e) => e.stopPropagation()}>
+									{allExtraActions}
 								</div>
 							)}
-							<Button
-								id={`${fieldId}-download-btn`}
-								variant={"outline-primary"}
-								className="file-drop-action-btn"
-								onClick={handleDownload}
-								title="Download"
-							>
-								<i className="bi bi-download" />
-							</Button>
-							<Button
-								id={`${fieldId}-remove-btn`}
-								variant={"outline-danger"}
-								className="file-drop-action-btn"
-								onClick={handleRemove}
-								title="Remove"
-							>
-								<i className="bi bi-x-lg" />
-							</Button>
-							{extraActions}
-						</div>
-						{tooltipCoords &&
-							createPortal(
-								<div
-									className="ab-tooltip-portal ab-tooltip-portal--top"
-									style={{ top: tooltipCoords.top, left: tooltipCoords.left }}
-								>
-									Preview not available for this file type
-								</div>,
-								document.body
-							)}
-					</>
-				) : (
-					<>
-						<div className="file-drop-icon">
-							<i className="bi bi-cloud-upload" />
-						</div>
-						<div className="file-drop-text">
-							Drag & drop or <span className="file-drop-link">click to select</span>
-						</div>
-						{extraActions && (
-							<div className="file-drop-actions" onClick={(e) => e.stopPropagation()}>
-								{extraActions}
-							</div>
-						)}
-					</>
-				)}
+						</>
+					)}
+				</div>
+				{uploadError && <div className="text-danger mt-1 small">{uploadError}</div>}
 			</div>
-			{uploadError && <div className="text-danger mt-1 small">{uploadError}</div>}
-		</div>
+
+			{textEditable && (
+				<JamModal
+					id={`${fieldId}-text-modal`}
+					show={showTextModal}
+					onHide={() => setShowTextModal(false)}
+					size="lg"
+					centered
+				>
+					<JamModal.Header onClose={() => setShowTextModal(false)}>
+						<Modal.Title>Cover Letter Text</Modal.Title>
+					</JamModal.Header>
+					<JamModal.Body>
+						<Textarea
+							field={
+								{
+									key: `${fieldId}_text`,
+									type: "textarea",
+									rows: 16,
+									placeholder: "Write or paste your cover letter here...",
+									isDisabled: saving,
+								} as ModalFormField
+							}
+							value={draftText}
+							handleChange={(e) => setDraftText((e as any).target.value)}
+						/>
+						{saveError && <div className="text-danger mt-2 small">{saveError}</div>}
+					</JamModal.Body>
+					<Modal.Footer>
+						<div className="d-flex flex-column w-100 gap-2">
+							<div className="modal-buttons-container">
+								<ActionButton
+									id={`${fieldId}-text-modal-cancel-button`}
+									variant="secondary"
+									defaultText="Cancel"
+									onClick={() => setShowTextModal(false)}
+									disabled={saving}
+								/>
+								<ActionButton
+									id={`${fieldId}-text-modal-save-button`}
+									variant="primary"
+									defaultText="Save"
+									loadingText="Saving..."
+									loading={saving}
+									onClick={handleTextSave}
+								/>
+							</div>
+						</div>
+					</Modal.Footer>
+				</JamModal>
+			)}
+		</>
 	);
 };

@@ -205,7 +205,6 @@ function DataModalComponent<T extends JamData>(
 	const [activeLoading, setActiveLoading] = useState<boolean>(false);
 	const uploadingCount = useRef<number>(0);
 	const [uploading, setUploading] = useState<boolean>(false);
-	const [hasVisibleErrors, setHasVisibleErrors] = useState<boolean>(false);
 	const liveCustomErrorKeysRef = useRef<Set<string>>(new Set());
 
 	const handleUploadingChange = useCallback((isUploading: boolean) => {
@@ -472,18 +471,6 @@ function DataModalComponent<T extends JamData>(
 		});
 	}, [formData, isEditing]);
 
-	// Disable submit buttons while any validation error is visible in the DOM
-	useEffect((): (() => void) => {
-		if (!isEditing) {
-			setHasVisibleErrors(false);
-			return () => {};
-		}
-		const id = setInterval(() => {
-			setHasVisibleErrors(document.querySelector(".invalid-feedback.d-block:not(:empty)") !== null);
-		}, 100);
-		return () => clearInterval(id);
-	}, [isEditing]);
-
 	// ---------------------------------------------------- CLOSING ----------------------------------------------------
 
 	const hasUnsavedChanges = (): boolean => {
@@ -613,6 +600,7 @@ function DataModalComponent<T extends JamData>(
 
 	const editState: ButtonState = getEditDisabledState();
 	const deleteState: ButtonState = getDeleteDisabledState();
+	const hasAnyErrors = Object.entries(errors).some(([key, value]) => key !== "submit" && Boolean(value));
 
 	// ------------------------------------------------- MODAL CONTENT -------------------------------------------------
 
@@ -1076,7 +1064,7 @@ function DataModalComponent<T extends JamData>(
 								<ActionButton
 									id={getModalId() + "-confirm-button"}
 									type="submit"
-									disabled={submitting || uploading || hasVisibleErrors}
+									disabled={submitting || uploading || hasAnyErrors}
 									loading={submitting}
 									loadingText="Submitting..."
 									defaultText="Confirm"
@@ -1106,7 +1094,7 @@ function DataModalComponent<T extends JamData>(
 								<ActionButton
 									id={getModalId() + "-import-button"}
 									type="submit"
-									disabled={submitting || uploading || hasVisibleErrors}
+									disabled={submitting || uploading || hasAnyErrors}
 									loading={submitting}
 									loadingText="Importing..."
 									defaultText="Import"
@@ -1146,7 +1134,7 @@ function DataModalComponent<T extends JamData>(
 								<ActionButton
 									id={getModalId() + "-confirm-button"}
 									type="submit"
-									disabled={submitting || uploading || hasVisibleErrors}
+									disabled={submitting || uploading || hasAnyErrors}
 									loading={submitting}
 									loadingText="Updating..."
 									defaultText="Update"

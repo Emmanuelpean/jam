@@ -59,7 +59,7 @@ export const CompanyModal = forwardRef<DataModalHandle<CompanyData>, JamDataModa
 			const errors: ValidationErrors = {};
 			const nameDuplicates: CompanyData[] = dataContext.companies.filter(
 				(company: CompanyData): boolean =>
-					company.name.toLowerCase() === formData.name.trim().toLowerCase() && company.id !== formData?.id
+					company.name.toLowerCase() === formData.name?.trim().toLowerCase() && company.id !== formData?.id
 			);
 
 			if (nameDuplicates.length > 0) {
