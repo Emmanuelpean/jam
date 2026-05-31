@@ -6,7 +6,6 @@ import React, {
 	useEffect,
 	useImperativeHandle,
 	useLayoutEffect,
-	useMemo,
 	useRef,
 	useState,
 } from "react";
@@ -20,6 +19,7 @@ import {
 	EntityType,
 	entityTypeToGenericName,
 	JamData,
+	RawJamData,
 	useDataContext,
 } from "../../contexts/DataContext";
 import { Errors, renderFormField, SyntheticEvent } from "../rendering/widgets/WidgetRenders";
@@ -34,7 +34,6 @@ import {
 	useDeleteEntityConfirm,
 } from "../../utils/DeleteHandler";
 import { useAlert } from "../../contexts/AlertContext";
-import { ApiResponse } from "../../services/api/Base";
 import set from "lodash/set";
 import get from "lodash/get";
 import "./DataModal.scss";
@@ -42,6 +41,7 @@ import { toKey } from "../../utils/StringUtils";
 import { getModalSize, ModalSize } from "../AlertModal/AlertModal";
 import { ModalSection } from "./ModalSection";
 import { IsViewNull, ViewField } from "../rendering/view/ViewRenders";
+import { ApiResponse } from "../../services/api/Base";
 
 export type Field = ModalViewField | ModalFormField;
 
@@ -205,7 +205,7 @@ function DataModalComponent<T extends JamData>(
 	const [activeLoading, setActiveLoading] = useState<boolean>(false);
 	const uploadingCount = useRef<number>(0);
 	const [uploading, setUploading] = useState<boolean>(false);
-	const [hasLiveCustomError, setHasLiveCustomError] = useState<boolean>(false);
+	const [hasVisibleErrors, setHasVisibleErrors] = useState<boolean>(false);
 	const liveCustomErrorKeysRef = useRef<Set<string>>(new Set());
 
 	const handleUploadingChange = useCallback((isUploading: boolean) => {
@@ -455,24 +455,10 @@ function DataModalComponent<T extends JamData>(
 		});
 	}, [formData, isEditing]);
 
-	// Run custom (modal-level) validation while the user types, but only when all required fields have values
+	// Run custom (modal-level) validation while the user types
 	useEffect((): void => {
-		if (!isEditing || !validation) {
-			setHasLiveCustomError(false);
-			return;
-		}
-		const allFields: Field[] = flattenFieldsWithSections(getAllFields().form);
-		const requiredMissing: boolean = allFields.some(
-			(field: Field): boolean =>
-				!!("required" in field && field.required && !get(formData, getFieldName(field) ?? ""))
-		);
-		if (requiredMissing) {
-			setHasLiveCustomError(false);
-			return;
-		}
+		if (!isEditing || !validation) return;
 		const result: ValidationErrors = validation(formData);
-		const hasFailed = Object.keys(result).length > 0;
-		setHasLiveCustomError(hasFailed);
 		setErrors((prev: Errors): Errors => {
 			const next = { ...prev };
 			liveCustomErrorKeysRef.current.forEach((key: string): void => {
@@ -485,6 +471,18 @@ function DataModalComponent<T extends JamData>(
 			return next;
 		});
 	}, [formData, isEditing]);
+
+	// Disable submit buttons while any validation error is visible in the DOM
+	useEffect((): (() => void) => {
+		if (!isEditing) {
+			setHasVisibleErrors(false);
+			return () => {};
+		}
+		const id = setInterval(() => {
+			setHasVisibleErrors(document.querySelector(".invalid-feedback.d-block:not(:empty)") !== null);
+		}, 100);
+		return () => clearInterval(id);
+	}, [isEditing]);
 
 	// ---------------------------------------------------- CLOSING ----------------------------------------------------
 
@@ -778,19 +776,6 @@ function DataModalComponent<T extends JamData>(
 			.filter((item: FieldItem | null): item is FieldItem => item !== null);
 	};
 
-	const isAnyFieldOverLimit = useMemo((): boolean => {
-		if (!isEditing) return false;
-		const allFields = flattenFieldsWithSections(getAllFields().form);
-		return allFields.some((field: Field): boolean => {
-			const maxChars = (field as ModalFormField).maxChars;
-			if (!maxChars) return false;
-			const fieldName = getFieldName(field);
-			if (!fieldName) return false;
-			const val: unknown = get(formData, fieldName);
-			return typeof val === "string" && val.length > maxChars;
-		});
-	}, [formData, isEditing]);
-
 	const validateFormFields = async (): Promise<Errors> => {
 		const newErrors: Errors = {};
 		const currentFields = getAllFields();
@@ -828,14 +813,6 @@ function DataModalComponent<T extends JamData>(
 					newErrors[fieldName] = error;
 				}
 			}
-		}
-
-		// 3) Custom entry validation
-		if (validation && Object.keys(newErrors).length === 0) {
-			const customErrorsResult: ValidationErrors = validation(formData);
-			Object.keys(customErrorsResult).forEach((fieldName: string): void => {
-				newErrors[fieldName] = customErrorsResult[fieldName] ?? null;
-			});
 		}
 
 		// Switch to the tab containing the first error and expand sections with errors
@@ -902,7 +879,7 @@ function DataModalComponent<T extends JamData>(
 			const dataToSubmit: any = transformFormData ? transformFormData(formData) : formData;
 
 			// Submit to API
-			const apiResult: ApiResponse<JamData> =
+			const apiResult: ApiResponse<RawJamData> =
 				mode === "add"
 					? await dataContext.addEntity(entityType, dataToSubmit)
 					: await dataContext.updateEntity(entityType, effectiveData.id, dataToSubmit);
@@ -1099,7 +1076,7 @@ function DataModalComponent<T extends JamData>(
 								<ActionButton
 									id={getModalId() + "-confirm-button"}
 									type="submit"
-									disabled={submitting || uploading || isAnyFieldOverLimit || hasLiveCustomError}
+									disabled={submitting || uploading || hasVisibleErrors}
 									loading={submitting}
 									loadingText="Submitting..."
 									defaultText="Confirm"
@@ -1129,7 +1106,7 @@ function DataModalComponent<T extends JamData>(
 								<ActionButton
 									id={getModalId() + "-import-button"}
 									type="submit"
-									disabled={submitting || uploading || isAnyFieldOverLimit || hasLiveCustomError}
+									disabled={submitting || uploading || hasVisibleErrors}
 									loading={submitting}
 									loadingText="Importing..."
 									defaultText="Import"
@@ -1169,7 +1146,7 @@ function DataModalComponent<T extends JamData>(
 								<ActionButton
 									id={getModalId() + "-confirm-button"}
 									type="submit"
-									disabled={submitting || uploading || isAnyFieldOverLimit || hasLiveCustomError}
+									disabled={submitting || uploading || hasVisibleErrors}
 									loading={submitting}
 									loadingText="Updating..."
 									defaultText="Update"

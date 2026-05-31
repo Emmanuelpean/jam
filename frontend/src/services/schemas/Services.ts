@@ -135,6 +135,14 @@ export interface ScrapingFilterData extends OwnedOut {
 	filtered_jobs: number[];
 }
 
+export interface ScrapingFilterCreate {
+	type: string;
+	operator: string;
+	value: string;
+	case_sensitive: boolean;
+	is_tour?: boolean;
+}
+
 // ----------------------------------------------------- JOB EMAIL -----------------------------------------------------
 
 export interface JobEmailData extends OwnedOut {

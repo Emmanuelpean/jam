@@ -2,7 +2,6 @@
 
 import datetime as dt
 
-import pytest
 from starlette import status
 
 from app import models

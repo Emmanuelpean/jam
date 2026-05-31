@@ -376,7 +376,7 @@ class Job(Owned, Base):
 
     @has_active_application.expression
     def has_active_application(cls):
-        """True if there is an application and it has not been rejected or withdrawn for SQL queries."""
+        """True if there is an application, and it has not been rejected or withdrawn for SQL queries."""
         return cls.has_application & cls.application_status.notin_(("rejected", "withdrawn"))
 
     @hybrid_property

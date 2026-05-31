@@ -620,7 +620,7 @@ const createFormFields = (limits: Partial<ColumnLimits>) => {
 		...aggregatorField(options, modalRef, transformParentData, previewConfig),
 		key: "application_aggregator_id",
 		displayCondition: (formData: { applied_via: string | null }): boolean =>
-			formData.applied_via ? formData.applied_via === "aggregator" : true,
+			formData.applied_via ? formData.applied_via === "aggregator" : false,
 		...overrides,
 	});
 

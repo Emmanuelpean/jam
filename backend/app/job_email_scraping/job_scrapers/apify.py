@@ -38,7 +38,7 @@ class ApifyJobScraper(object):
         self.client = ApifyClient(settings.apify_api_key)
 
     def _start_actor_run(self) -> dict:
-        """Start the Apify actor run
+        """Start the Apify actor run.
         :return: Actor run information"""
 
         run_input = {

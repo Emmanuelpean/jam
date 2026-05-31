@@ -10,7 +10,7 @@ export function expandTargetId(
 	if (targetId === "[demo-scraped-job-row]")
 		return demoScrapedJobId !== null ? `table-row-scrapedJob-${demoScrapedJobId}` : targetId;
 	if (targetId === "[demo-scraping-filter-row]")
-		return demoScrapingFilterId !== null ? `table-row-scrapingFilter-${demoScrapingFilterId}` : targetId;
+		return demoScrapingFilterId !== null ? `table-row-scrapingExclusionFilter-${demoScrapingFilterId}` : targetId;
 	if (targetId === "[demo-job-email-row]")
 		return demoJobEmailId !== null ? `table-row-jobEmail-${demoJobEmailId}` : targetId;
 	return targetId;

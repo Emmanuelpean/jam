@@ -13,6 +13,15 @@ export interface FileWithContentData extends FileData {
 	content: string;
 }
 
+export interface FileCreate {
+	filename: string;
+	type: string;
+	size: number;
+	content: string;
+	file_type?: string | null;
+	is_tour?: boolean;
+}
+
 // ------------------------------------------------------- KEYWORD ------------------------------------------------------
 
 export interface KeywordDataTransform {
@@ -21,6 +30,11 @@ export interface KeywordDataTransform {
 
 export interface KeywordData extends OwnedOut {
 	name: string;
+}
+
+export interface KeywordCreate {
+	name: string;
+	is_tour?: boolean;
 }
 
 // ----------------------------------------------------- AGGREGATOR -----------------------------------------------------
@@ -33,6 +47,12 @@ export interface AggregatorDataTransform {
 export interface AggregatorData extends OwnedOut {
 	name: string;
 	url: string;
+}
+
+export interface AggregatorCreate {
+	name: string;
+	url?: string | null;
+	is_tour?: boolean;
 }
 
 // ------------------------------------------------------- COMPANY -----------------------------------------------------
@@ -49,6 +69,13 @@ export interface CompanyData extends OwnedOut {
 	description: string | null;
 	persons: OwnedOut[];
 	jobs: OwnedOut[];
+}
+
+export interface CompanyCreate {
+	name: string;
+	url?: string | null;
+	description?: string | null;
+	is_tour?: boolean;
 }
 
 // ------------------------------------------------------- PERSON ------------------------------------------------------
@@ -76,6 +103,18 @@ export interface PersonData extends OwnedOut {
 	is_recruiter: boolean;
 }
 
+export interface PersonCreate {
+	first_name: string;
+	last_name: string;
+	email?: string | null;
+	phone?: string | null;
+	role?: string | null;
+	linkedin_url?: string | null;
+	company_id?: number | null;
+	is_recruiter?: boolean;
+	is_tour?: boolean;
+}
+
 // ----------------------------------------------- JOB APPLICATION UPDATE ----------------------------------------------
 
 export interface JobApplicationUpdateDataTransform {
@@ -90,6 +129,14 @@ export interface JobApplicationUpdateData extends OwnedOut {
 	type: string;
 	job_id: number;
 	note: string | null;
+}
+
+export interface JobApplicationUpdateCreate {
+	date: string;
+	type: string;
+	job_id: number;
+	note?: string | null;
+	is_tour?: boolean;
 }
 
 export interface EnrichedJobApplicationUpdateData extends JobApplicationUpdateData {
@@ -166,6 +213,38 @@ export interface JobData extends OwnedOut {
 	has_open_application: boolean;
 }
 
+export interface JobCreate {
+	title: string;
+	is_favourite?: boolean;
+	description?: string | null;
+	note?: string | null;
+	url?: string | null;
+	salary_min?: number | null;
+	salary_max?: number | null;
+	salary_currency?: string | null;
+	personal_rating?: number | null;
+	deadline?: string | null;
+	company_id?: number | null;
+	source_aggregator_id?: number | null;
+	source_type?: string | null;
+	location?: string | null;
+	recruiter_id?: number | null;
+	recruitment_company_id?: number | null;
+	application_date?: string | null;
+	application_status?: string | null;
+	applied_via?: string | null;
+	application_note?: string | null;
+	application_aggregator_id?: number | null;
+	application_url?: string | null;
+	attendance_type?: string | null;
+	keywords?: number[];
+	contacts?: number[];
+	scraped_job_id?: number | null;
+	cv_id?: number | null;
+	cover_letter_id?: number | null;
+	is_tour?: boolean;
+}
+
 export interface EnrichedJobData extends JobData {
 	last_update_date: Date | null;
 	last_update_type: string | null;
@@ -197,6 +276,17 @@ export interface InterviewData extends OwnedOut {
 	attendance_type: string | null;
 }
 
+export interface InterviewCreate {
+	date: string;
+	type: string;
+	job_id: number;
+	location?: string | null;
+	interviewers?: number[];
+	note?: string | null;
+	attendance_type?: string | null;
+	is_tour?: boolean;
+}
+
 export interface EnrichedInterviewData extends InterviewData {
 	number: number;
 }
@@ -217,4 +307,13 @@ export interface SpeculativeApplicationData extends OwnedOut {
 	contact_email: string | null;
 	contacts: number[];
 	company_id: number;
+}
+
+export interface SpeculativeApplicationCreate {
+	company_id: number;
+	date?: string | null;
+	note?: string | null;
+	contact_email?: string | null;
+	contacts?: number[];
+	is_tour?: boolean;
 }

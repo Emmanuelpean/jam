@@ -71,7 +71,7 @@ USER_DATA = [
         "stripe_details": {"customer_id": "cus_test_123", "subscription_id": "sub_id"},
         "app_version": "10.0.0",
     },
-    # Non premium user
+    # Non-premium user
     {
         "email": "non-premium_user@example.com",
         "password": "password7",

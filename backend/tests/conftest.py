@@ -12,10 +12,11 @@ The CRUDTestBase class is in tests/utils/crud_test_base.py
 
 import datetime as dt
 import os
-from typing import Any
+from typing import Any, Type
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pydantic import BaseModel
 from requests import Response
 from starlette import status
 from starlette.testclient import TestClient
@@ -126,8 +127,8 @@ class CRUDTestBase:
     - actions_to_test: list[str] - which CRUD actions to test (any subset of ["get", "post", "put", "delete"])"""
 
     endpoint: str = ""
-    create_schema = None
-    out_schema = None
+    create_schema: Type[BaseModel] | None = None
+    out_schema: Type[BaseModel] | None = None
     test_data_ref: str = ""
     update_data: dict[str, str | int] = None
     create_data: list[dict] = None
@@ -149,7 +150,7 @@ class CRUDTestBase:
             for d1, d2 in zip(test_data, response_data):
                 return self.check_output(d1, d2)
 
-        if isinstance(response_data, dict):
+        if isinstance(response_data, dict) and self.out_schema is not None:
             response_data = self.out_schema(**response_data)
 
         if isinstance(test_data, dict):

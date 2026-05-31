@@ -93,7 +93,7 @@ class BrightdataJobScraper(object):
                 raise TimeoutError("Snapshot data not ready after maximum attempts.")
 
     def _retrieve_data(self, snapshot_id: str) -> list[dict]:
-        """Retrieve the job data associated with the snapshot id
+        """Retrieve the job data associated with the snapshot id.
         :param snapshot_id: Snapshot ID
         :return: Job data dictionary"""
 

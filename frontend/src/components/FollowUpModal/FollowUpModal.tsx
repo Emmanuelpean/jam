@@ -219,7 +219,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 				dataContext
 					.addEntity("jobApplicationUpdate", {
 						type: "sent",
-						job_id: currentJob?.id,
+						job_id: currentJob!.id,
 						note: `Follow up email sent to ${contact?.name}\n\nSubject: ${formData.subject}\n\n${formData.body}`,
 						date: new Date().toISOString(),
 					})

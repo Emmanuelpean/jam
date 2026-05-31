@@ -15,7 +15,8 @@ import { KeywordModal } from "./KeywordModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { JamData, useDataContext } from "../../contexts/DataContext";
-import { JobData, JobDataTransform } from "../../services/schemas/DataTables";
+import { JobData } from "../../services/schemas/DataTables";
+import { JobCreate } from "../../services/schemas/DataTables";
 import { ScrapedJobData, ScrapedJobUpdate } from "../../services/schemas/Services";
 import { useConfig } from "../../contexts/ConfigContext";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
@@ -242,7 +243,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 		};
 
 		const onSuccess = async (formData: JobData): Promise<any> => {
-			const jobData: Partial<JobDataTransform> = {
+			const jobData: JobCreate = {
 				title: formData.title.trim(),
 				description: formData.description?.trim() || null,
 				note: formData.note?.trim() || null,
@@ -258,7 +259,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				source_aggregator_id: formData.source_aggregator_id || null,
 				recruiter_id: formData.recruiter_id || null,
 				recruitment_company_id: formData.recruitment_company_id || null,
-				deadline: formData.deadline ? convertToEndOfDay(formData.deadline) : null,
+				deadline: formData.deadline ? convertToEndOfDay(formData.deadline).toISOString() : null,
 				keywords: formData.keywords || [],
 				contacts: formData.contacts || [],
 				attendance_type: formData.attendance_type?.trim() || null,

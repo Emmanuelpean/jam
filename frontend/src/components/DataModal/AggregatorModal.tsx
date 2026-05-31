@@ -38,12 +38,13 @@ export const AggregatorModal = forwardRef<DataModalHandle<AggregatorData>, JamDa
 			const errors: ValidationErrors = {};
 			const nameDuplicates: AggregatorData[] = dataContext.aggregators.filter(
 				(aggregator: AggregatorData): boolean =>
-					aggregator.name.toLowerCase() === formData.name.trim().toLowerCase() &&
+					aggregator.name.toLowerCase() === formData.name?.trim().toLowerCase() &&
 					aggregator.id !== formData?.id
 			);
 			const urlDuplicates: AggregatorData[] = dataContext.aggregators.filter(
 				(aggregator: AggregatorData): boolean =>
-					aggregator.url.toLowerCase() === formData.url.trim().toLowerCase() && aggregator.id !== formData?.id
+					aggregator.url.toLowerCase() === formData.url?.trim().toLowerCase() &&
+					aggregator.id !== formData?.id
 			);
 
 			if (nameDuplicates.length > 0) {

@@ -7,7 +7,7 @@ from datetime import datetime
 
 from pydantic import field_validator, Field
 
-from app.base_schemas import BaseModel, OwnedOut, Out, serialise_relationships
+from app.base_schemas import BaseModel, OwnedOut, Out, serialise_relationships, OwnedCreate
 from app.data_tables.schemas import GeolocationOut
 from app.job_rating.schemas import JobRatingOut
 
@@ -264,7 +264,7 @@ class JobEmailScrapingStartRequest(BaseModel):
 # ------------------------------------------------- SCRAPED JOB FILTER -------------------------------------------------
 
 
-class ScrapingFilterCreate(BaseModel):
+class ScrapingFilterCreate(OwnedCreate):
     """Scraped Job Filter creation schema"""
 
     type: str

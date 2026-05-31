@@ -124,6 +124,15 @@ export function GuidedTour(): JSX.Element | null {
 	const { inputValid, stop: stopConditions } = useStepConditions(step, isTourActive, stepDef, onConditionMet, directionRef);
 	stopConditionsRef.current = stopConditions;
 
+	const [hasVisibleErrors, setHasVisibleErrors] = useState(false);
+	useEffect(() => {
+		if (!isTourActive) { setHasVisibleErrors(false); return; }
+		const id = setInterval(() => {
+			setHasVisibleErrors(document.querySelector(".invalid-feedback.d-block:not(:empty)") !== null);
+		}, 100);
+		return () => clearInterval(id);
+	}, [isTourActive]);
+
 	// ── Route navigation — fires on step entry only, not on every pathname change ──
 	useEffect(() => {
 		if (!isTourActive || !stepDef?.route) return;
@@ -184,6 +193,7 @@ export function GuidedTour(): JSX.Element | null {
 	const showNext = !stepDef?.hideNextButton;
 	const nextDisabled =
 		isCleaningUp ||
+		hasVisibleErrors ||
 		((!!stepDef?.waitForInput || !!stepDef?.waitForValidEmailIfFilled || !!stepDef?.waitForValidUrlIfFilled) &&
 			!inputValid);
 	const canGoBack =

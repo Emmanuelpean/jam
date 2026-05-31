@@ -16,6 +16,13 @@ export interface SettingData extends BaseOut {
 	is_active: boolean;
 }
 
+export interface SettingCreate {
+	name: string;
+	value: string;
+	description?: string | null;
+	is_active?: boolean;
+}
+
 // -------------------------------------------------- USER PREFERENCES -------------------------------------------------
 
 export type ThemeMode = "dark" | "light" | "system";
@@ -84,6 +91,20 @@ export interface UserDataUpdate {
 	app_version?: string | null;
 	premium?: PremiumDetailsUpdate | null;
 	preferences?: UserPreferencesUpdate | null;
+}
+
+export interface UserCreate {
+	email: string;
+	password: string;
+	first_name?: string | null;
+	last_name?: string | null;
+	is_active?: boolean;
+	is_admin?: boolean;
+	premium?: {
+		is_active?: boolean;
+		job_scraping_active?: boolean;
+		job_rating_active?: boolean;
+	};
 }
 
 export interface UserData extends OwnedOut {

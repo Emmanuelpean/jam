@@ -1,12 +1,5 @@
 import React, { forwardRef, ReactNode, useRef } from "react";
-import DataModal, {
-	DataModalHandle,
-	Fields,
-	JamDataModalProps,
-	SectionConfig,
-	TabConfig,
-	ValidationErrors,
-} from "./DataModal";
+import DataModal, { DataModalHandle, Fields, JamDataModalProps, SectionConfig, TabConfig } from "./DataModal";
 import { useFormFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { getApplicationStatusBadgeClass } from "../rendering/view/Icons";

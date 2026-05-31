@@ -50,6 +50,19 @@ import { AiSystemPromptData, JobEmailData, ScrapedJobData, ScrapingFilterData } 
 import { ApiError } from "../services/api/ApiError";
 import { GeoLocationData } from "../services/schemas/Base";
 import { tourApi } from "../services/api/Others";
+import {
+	AggregatorCreate,
+	CompanyCreate,
+	FileCreate,
+	InterviewCreate,
+	JobApplicationUpdateCreate,
+	JobCreate,
+	KeywordCreate,
+	PersonCreate,
+	SpeculativeApplicationCreate,
+} from "../services/schemas/DataTables";
+import { SettingCreate, UserCreate } from "../services/schemas/Core";
+import { ScrapingFilterCreate } from "../services/schemas/Services";
 
 export type EntityType =
 	| "job"
@@ -161,10 +174,31 @@ export const entityTypeToName = <T extends EntityType>(
 	return nameMap[entityType];
 };
 
-type EntityRawDataMap = Omit<EntityTypeDataMap, "job" | "interview" | "jobApplicationUpdate"> & {
+export type EntityRawDataMap = Omit<EntityTypeDataMap, "job" | "interview" | "jobApplicationUpdate"> & {
 	job: JobData;
 	interview: InterviewData;
 	jobApplicationUpdate: JobApplicationUpdateData;
+};
+
+export type RawJamData = EntityRawDataMap[EntityType];
+
+export type EntityCreateDataMap = {
+	keyword: KeywordCreate;
+	aggregator: AggregatorCreate;
+	company: CompanyCreate;
+	person: PersonCreate;
+	job: JobCreate;
+	interview: InterviewCreate;
+	jobApplicationUpdate: JobApplicationUpdateCreate;
+	speculativeApplication: SpeculativeApplicationCreate;
+	scrapingExclusionFilter: ScrapingFilterCreate;
+	scrapingFavouriteFilter: ScrapingFilterCreate;
+	file: FileCreate;
+	setting: SettingCreate;
+	user: UserCreate;
+	scrapedJob: Record<string, unknown>;
+	jobEmail: Record<string, unknown>;
+	geolocation: Record<string, unknown>;
 };
 
 const entityTypeToApi = <T extends EntityType>(entityType: T): CrudApi<EntityRawDataMap[T]> | null => {
@@ -215,8 +249,12 @@ export interface DataContextValue {
 	setIsInTour: (isInTour: boolean) => void;
 
 	// Generic update functions
-	addEntity: <T extends EntityType>(type: T, data: any) => ApiResponsePromise<JamData>;
-	updateEntity: <T extends EntityType>(type: T, id: number, data: Partial<JamData>) => ApiResponsePromise<JamData>;
+	addEntity: <T extends EntityType>(type: T, data: EntityCreateDataMap[T]) => ApiResponsePromise<EntityRawDataMap[T]>;
+	updateEntity: <T extends EntityType>(
+		type: T,
+		id: number,
+		data: Partial<JamData>
+	) => ApiResponsePromise<EntityRawDataMap[T]>;
 	deleteEntity: <T extends EntityType>(type: T, id: number) => Promise<void>;
 	getEntityData: <T extends EntityType>(type: T) => EntityTypeDataMap[T][];
 }
@@ -491,11 +529,14 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	};
 
 	const addEntity = useCallback(
-		async <T extends EntityType>(entityType: T, newData: any): Promise<any> => {
+		async <T extends EntityType>(
+			entityType: T,
+			newData: EntityCreateDataMap[T]
+		): Promise<ApiResponse<EntityRawDataMap[T]>> => {
+			const api: CrudApi<EntityRawDataMap[T]> | null = entityTypeToApi(entityType);
+			if (!api) throw new Error(`No API for entity type: ${entityType}`);
 			try {
-				const api = entityTypeToApi(entityType);
-				if (!api) return;
-				const payload = isInTourRef.current ? { ...newData, is_tour: true } : newData;
+				const payload: EntityCreateDataMap[T] = isInTourRef.current ? { ...newData, is_tour: true } : newData;
 				const apiResult: ApiResponse<EntityRawDataMap[T]> = await api.create(payload, token);
 				const setter = entityTypeToSetter(entityType);
 				setter?.((prev: any[]): any[] => [...prev, apiResult.data]);
@@ -509,10 +550,14 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	);
 
 	const updateEntity = useCallback(
-		async <T extends EntityType>(entityType: T, id: number, updatedData: any): Promise<any> => {
+		async <T extends EntityType>(
+			entityType: T,
+			id: number,
+			updatedData: any
+		): Promise<ApiResponse<EntityRawDataMap[T]>> => {
+			const api: CrudApi<EntityRawDataMap[T]> | null = entityTypeToApi(entityType);
+			if (!api) throw new Error(`No API for entity type: ${entityType}`);
 			try {
-				const api = entityTypeToApi(entityType);
-				if (!api) return;
 				const apiResult: ApiResponse<EntityRawDataMap[T]> = await api.update(id, updatedData, token);
 				const setter = entityTypeToSetter(entityType);
 				setter?.((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? apiResult.data : item)));
@@ -528,7 +573,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const deleteEntity = useCallback(
 		async <T extends EntityType>(entityType: T, id: number): Promise<void> => {
 			try {
-				const api = entityTypeToApi(entityType);
+				const api: CrudApi<EntityRawDataMap[T]> | null = entityTypeToApi(entityType);
 				if (!api) return;
 				await api.delete(id, token);
 				const setter = entityTypeToSetter(entityType);
@@ -623,8 +668,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		if (!token || !currentUser) return;
 		void tourApi
 			.clearAll(token)
-			.catch(() => {})
-			.then(() => fetchAllData());
+			.catch((): void => {})
+			.then((): Promise<void> => fetchAllData());
 	}, [token, currentUser?.is_admin]);
 
 	return (

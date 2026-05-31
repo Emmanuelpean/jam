@@ -11,10 +11,8 @@ import {
 	interviewTypeOptions,
 	updateTypeOptions,
 } from "../form/FormOptions";
-import { JobEmailData } from "../../../services/schemas/Services";
 
 export interface TableColumn<T extends JamData = JamData> extends ViewField {
-	_entityType?(item: T): void; // phantom — method shorthand gives bivariance needed for structural checks
 	label: string;
 	sortable?: boolean;
 	searchable?: boolean;
@@ -24,6 +22,8 @@ export interface TableColumn<T extends JamData = JamData> extends ViewField {
 	searchFields?: string | ((item: any, dataContext: DataContextValue) => string | null);
 	filterConfig?: FilterConfig;
 	sidebarExtra?: ReactNode;
+
+	_entityType?(item: T): void; // phantom — method shorthand gives bivariance needed for structural checks
 }
 
 const getCompanyText = (item: { company_id: number | null }, context: DataContextValue): string | null => {

@@ -4,6 +4,7 @@ import {
 	entityTypeToGenericName,
 	entityTypeToName,
 	JamData,
+	RawJamData,
 	useDataContext,
 } from "../contexts/DataContext";
 import { SpeculativeApplicationData } from "../services/schemas/DataTables";
@@ -13,13 +14,12 @@ import { ApiResponsePromise } from "../services/api/Base";
 
 interface EntityOperationConfig {
 	entityType: EntityType;
-	operation: (entityType: EntityType, id: number, data?: any) => Promise<null> | ApiResponsePromise<JamData>;
+	operation: (entityType: EntityType, id: number, data?: any) => Promise<void> | ApiResponsePromise<RawJamData>;
 	successMessage: (entityTypeName: string) => string;
 	errorMessage: (entityName: string) => string;
 	confirmationConfig?: {
 		title: (entityTypeName: string) => string;
 		message: (entityName: string) => string;
-		/** Optional extra warning appended to the message, computed per item */
 		itemMessage?: (item: JamData) => string;
 	};
 }
@@ -36,7 +36,9 @@ const useEntityOperation = (config: EntityOperationConfig): ((item: JamData) => 
 
 		if (confirmationConfig) {
 			const extra = confirmationConfig.itemMessage?.(item);
-			const message = extra ? `${confirmationConfig.message(entityName)}\n\n${extra}` : confirmationConfig.message(entityName);
+			const message = extra
+				? `${confirmationConfig.message(entityName)}\n\n${extra}`
+				: confirmationConfig.message(entityName);
 			return await showDelete({
 				title: confirmationConfig.title(entityTypeName),
 				message,
@@ -77,14 +79,17 @@ export const useDeleteEntityConfirm = (entityType: EntityType): ((item: JamData)
 			title: (typeName: string): string => `Delete ${typeName}`,
 			message: (name: string): string =>
 				`Are you sure you want to delete "${name}"? This will delete it for all the entries it is associated with. This action cannot be undone.`,
-			itemMessage: entityType === "company"
-				? (item: JamData): string => {
-					const count = speculativeApplications.filter((sa: SpeculativeApplicationData) => sa.company_id === item.id).length;
-					return count > 0
-						? `This will also permanently delete ${count} speculative application${count === 1 ? "" : "s"} linked to this company.`
-						: "";
-				}
-				: undefined,
+			itemMessage:
+				entityType === "company"
+					? (item: JamData): string => {
+							const count = speculativeApplications.filter(
+								(sa: SpeculativeApplicationData) => sa.company_id === item.id
+							).length;
+							return count > 0
+								? `This will also permanently delete ${count} speculative application${count === 1 ? "" : "s"} linked to this company.`
+								: "";
+						}
+					: undefined,
 		},
 	});
 };
@@ -93,7 +98,7 @@ export const useDeactivateEntityConfirm = (entityType: EntityType): ((item: JamD
 	const { updateEntity } = useDataContext();
 	return useEntityOperation({
 		entityType: entityType,
-		operation: (type: EntityType, id: number): ApiResponsePromise<JamData> =>
+		operation: (type: EntityType, id: number): ApiResponsePromise<RawJamData> =>
 			updateEntity(type, id, { is_active: false }),
 		successMessage: (typeName: string): string => `${typeName} deleted successfully.`,
 		errorMessage: (name: string): string =>
@@ -110,7 +115,7 @@ export const useActivateEntity = (entityType: EntityType): ((item: JamData) => P
 	const { updateEntity } = useDataContext();
 	return useEntityOperation({
 		entityType: entityType,
-		operation: (type: EntityType, id: number): ApiResponsePromise<JamData> =>
+		operation: (type: EntityType, id: number): ApiResponsePromise<RawJamData> =>
 			updateEntity(type, id, { is_active: true }),
 		successMessage: (typeName: string): string => `${typeName} activated successfully.`,
 		errorMessage: (name: string): string =>
@@ -122,7 +127,7 @@ export const useDeactivateEntity = (entityType: EntityType): ((item: JamData) =>
 	const { updateEntity } = useDataContext();
 	return useEntityOperation({
 		entityType: entityType,
-		operation: (type: EntityType, id: number): ApiResponsePromise<JamData> =>
+		operation: (type: EntityType, id: number): ApiResponsePromise<RawJamData> =>
 			updateEntity(type, id, { is_active: false }),
 		successMessage: (typeName: string): string => `${typeName} deactivated successfully.`,
 		errorMessage: (name: string): string =>

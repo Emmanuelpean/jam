@@ -63,10 +63,11 @@ export const FileUploadWidget = ({
 		onUploadingChange?.(true);
 		setUploadError(null);
 		try {
-			const content: string | ArrayBuffer | null = await fileToBase64(file);
+			const rawContent = await fileToBase64(file);
+			if (typeof rawContent !== "string") throw new Error("Failed to read file as base64 string");
 			const result = await addEntity("file", {
 				filename: file.name,
-				content,
+				content: rawContent,
 				type: file.type || "application/octet-stream",
 				size: file.size,
 				file_type: fileType,

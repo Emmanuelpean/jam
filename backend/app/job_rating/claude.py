@@ -45,7 +45,7 @@ def claude_query(system_prompt: str, llm_prompt: str, max_tokens: int = 1024) ->
         if not content:
             raise ClaudeError("Empty response from Claude")
 
-        # Strip markdown code fences if present (e.g. ```json ... ```)
+        # Strip Markdown code fences if present (e.g. ```json ... ```)
         stripped = re.sub(r"^```(?:json)?\s*\n?", "", content.strip())
         stripped = re.sub(r"\n?```\s*$", "", stripped).strip()
 
