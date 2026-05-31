@@ -13,7 +13,7 @@ const JobEmailTableReadOnly: React.FC<DataTableProps> = ({
 		columns.length > 0
 			? columns
 			: [
-					tableColumns.titleColumn({ key: "subject", label: "Subject" }),
+					tableColumns.subjectColumn(),
 					{ key: "sender", label: "Sender", sortable: true, searchable: true, type: "text" } as TableColumn,
 					tableColumns.platformColumn(),
 					{

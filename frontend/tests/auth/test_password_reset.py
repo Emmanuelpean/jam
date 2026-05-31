@@ -51,3 +51,38 @@ class TestPasswordReset(BaseTest):
         self.auth_utils.set_confirm_password("password")
         self.auth_utils.confirm()
         self.auth_utils.assert_toast_message("Invalid or expired password reset token")
+
+    def test_forgot_password_field_limits(self) -> None:
+        """Entering email over the limit disables Send Reset Link; reducing re-enables it."""
+
+        self.auth_utils.go_to_forgot_password()
+
+        # Email over limit (254 char limit)
+        self.auth_utils.set_email("a" * 246 + "@test.com")
+        self.auth_utils.assert_confirm_button_disabled()
+
+        # Back within limit
+        self.auth_utils.set_email("test@test.com")
+        self.auth_utils.assert_confirm_button_enabled()
+
+    def test_reset_password_field_limits(self) -> None:
+        """Entering password or confirm password over the limit disables Reset Password; reducing re-enables it."""
+
+        self.driver.get(f"{self.frontend_base_url}/reset-password?token=dummytoken123")
+        self.get_element("password")  # wait for form to render
+
+        # Password over limit (128 char limit)
+        self.auth_utils.set_password("P" * 129)
+        self.auth_utils.assert_confirm_button_disabled()
+
+        # Back within limit
+        self.auth_utils.set_password("Password123!")
+        self.auth_utils.assert_confirm_button_enabled()
+
+        # Confirm password over limit
+        self.auth_utils.set_confirm_password("P" * 129)
+        self.auth_utils.assert_confirm_button_disabled()
+
+        # Back within limit
+        self.auth_utils.set_confirm_password("Password123!")
+        self.auth_utils.assert_confirm_button_enabled()

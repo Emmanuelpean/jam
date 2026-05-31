@@ -1,6 +1,6 @@
 import React, { forwardRef, useRef } from "react";
 import DataModal, { DataModalHandle, DataModalProps, Fields, ValidationErrors } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
@@ -14,14 +14,15 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle<Speculativ
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const dataContext: DataContextValue = useDataContext();
 		const { companies, persons, getCompanyPreviewConfig } = useFormOptions();
+		const ff = useFormFields();
 
 		const jobFormFields: Fields = [
 			[
-				formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig, { required: true }),
-				formFields.datetime({ required: false }),
+				ff.companyField(companies, companyModalRef, null, getCompanyPreviewConfig, { required: true }),
+				ff.datetimeField({ required: false }),
 			],
-			[formFields.email({ key: "contact_email" }), formFields.contacts(persons, personModalRef)],
-			formFields.note(),
+			[ff.emailField({ key: "contact_email" }), ff.contactsField(persons, personModalRef)],
+			ff.noteField(),
 		];
 
 		const jobViewFields: Fields = [

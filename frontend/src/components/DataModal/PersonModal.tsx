@@ -1,6 +1,6 @@
 import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, Fields, JamDataModalProps, ValidationErrors } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
@@ -12,16 +12,17 @@ export const PersonModal = forwardRef<DataModalHandle<PersonData>, JamDataModalP
 		const companyModalRef = React.useRef<DataModalHandle>(null);
 		const { companies, getCompanyPreviewConfig } = useFormOptions();
 		const dataContext: DataContextValue = useDataContext();
+		const ff = useFormFields();
 
 		const formFieldsArray: Fields = [
-			[formFields.firstName({ placeholder: "Jane" }), formFields.lastName({ placeholder: "Doe" })],
+			[ff.firstNameField({ placeholder: "Jane" }), ff.lastNameField({ placeholder: "Doe" })],
 			[
-				formFields.company(companies, companyModalRef, null, getCompanyPreviewConfig),
-				formFields.role({ placeholder: "Team Leader" }),
+				ff.companyField(companies, companyModalRef, null, getCompanyPreviewConfig),
+				ff.roleField({ placeholder: "Team Leader" }),
 			],
-			[formFields.email({ placeholder: "jane.doe@company.com" }), formFields.phone()],
-			formFields.linkedinUrl({ placeholder: "https://linkedin.com/in/janedoe" }),
-			formFields.isRecruiter(),
+			[ff.emailField({ placeholder: "jane.doe@company.com" }), ff.phoneField()],
+			ff.linkedinUrlField({ placeholder: "https://linkedin.com/in/janedoe" }),
+			ff.isRecruiterField(),
 		];
 
 		const viewFieldsArray: Fields = [

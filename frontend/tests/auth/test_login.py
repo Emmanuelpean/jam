@@ -64,6 +64,7 @@ class TestLogIn(BaseTest):
 
         # Verify error message
         self.auth_utils.assert_email_error_message("Please provide a valid email address")
+        self.auth_utils.assert_confirm_button_disabled()
 
     def test_login_no_email(self) -> None:
         """Test login with invalid credentials"""
@@ -77,6 +78,7 @@ class TestLogIn(BaseTest):
 
         # Verify error message
         self.auth_utils.assert_email_error_message("Please provide a valid email address")
+        self.auth_utils.assert_confirm_button_disabled()
 
     def test_login_no_password(self) -> None:
         """Test login with invalid credentials"""
@@ -90,6 +92,7 @@ class TestLogIn(BaseTest):
 
         # Verify error message
         self.auth_utils.assert_password_error_message("Password is required")
+        self.auth_utils.assert_confirm_button_disabled()
 
     def test_unexpected_error(self) -> None:
         """Test login with unexpected error"""
@@ -166,3 +169,22 @@ class TestLogIn(BaseTest):
 
         assert token_in_local is not None, "Token should be in localStorage when remember me is checked"
         assert token_in_session is None, "Token should not be in sessionStorage when remember me is checked"
+
+    def test_login_field_limits(self) -> None:
+        """Entering email or password over the limit disables Sign In; reducing re-enables it."""
+
+        # Email over limit (254 char limit)
+        self.auth_utils.set_email("a" * 246 + "@test.com")
+        self.auth_utils.assert_confirm_button_disabled()
+
+        # Back within limit
+        self.auth_utils.set_email("test@test.com")
+        self.auth_utils.assert_confirm_button_enabled()
+
+        # Password over limit (128 char limit)
+        self.auth_utils.set_password("P" * 129)
+        self.auth_utils.assert_confirm_button_disabled()
+
+        # Back within limit
+        self.auth_utils.set_password("Password123!")
+        self.auth_utils.assert_confirm_button_enabled()

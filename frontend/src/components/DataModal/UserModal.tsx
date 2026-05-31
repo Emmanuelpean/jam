@@ -1,6 +1,6 @@
 import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, Fields, JamDataModalProps, ValidationErrors } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import "../../pages/Auth/AuthPage.scss";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
@@ -9,14 +9,15 @@ import { UserData, UserDataTransform } from "../../services/schemas/Core";
 export const UserModal = forwardRef<DataModalHandle<UserData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
+		const ff = useFormFields();
 
 		const createFields = (data: any, mode: string): { form: Fields; view: Fields } => {
 			const isAddMode: boolean = mode === "add" || !data?.id;
 
 			const formFieldsArray: Fields = [
-				[formFields.email({ required: true }), ...(isAddMode ? [formFields.password({ required: true })] : [])],
-				[formFields.isAdmin(), formFields.isActive()],
-				[formFields.premiumActive(), formFields.jobScrapingActive(), formFields.jobRatingActive()],
+				[ff.emailField({ required: true }), ...(isAddMode ? [ff.passwordField({ required: true })] : [])],
+				[ff.isAdminField(), ff.isActiveField()],
+				[ff.premiumActiveField(), ff.jobScrapingActiveField(), ff.jobRatingActiveField()],
 			];
 
 			const viewFieldsArray: Fields = [

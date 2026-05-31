@@ -28,7 +28,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	const [activeTab, setActiveTab] = useState<tabKeys>("active");
 	const [containerHeight, setContainerHeight] = useState("auto");
 	const contentRef = useRef<HTMLDivElement>(null);
-	const isExclusion = variant === "exclusion";
+	const isExclusion: boolean = variant === "exclusion";
 
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
@@ -36,14 +36,16 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 			: [
 					tableColumns.filterTypeColumn(),
 					tableColumns.filterOperatorColumn(),
-					tableColumns.valueColumn({ type: "text" }),
+					tableColumns.valueColumn(),
 					tableColumns.caseSensitiveColumn(),
 					...(isExclusion ? [tableColumns.filteredJobCountColumn()] : []),
 				];
 
-	const filters = isExclusion ? dataContext.scrapingFilters : dataContext.scrapingFavouriteFilters;
-	const activeFilters: ScrapingFilterData[] = filters.filter((f: ScrapingFilterData) => f.is_active);
-	const deactivatedFilters: ScrapingFilterData[] = filters.filter((f: ScrapingFilterData) => !f.is_active);
+	const filters: ScrapingFilterData[] = isExclusion
+		? dataContext.scrapingExclusionFilters
+		: dataContext.scrapingFavouriteFilters;
+	const activeFilters: ScrapingFilterData[] = filters.filter((f: ScrapingFilterData): boolean => f.is_active);
+	const deactivatedFilters: ScrapingFilterData[] = filters.filter((f: ScrapingFilterData): boolean => !f.is_active);
 
 	const tabs: { key: tabKeys; title: string }[] = [
 		{ key: "active" as const, title: `Active (${activeFilters.length})` },
@@ -69,7 +71,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 				<div className="modal-content-animated-inner">
 					<div ref={contentRef} style={{ paddingTop: "4px" }}>
 						<DataTable
-							entityType={isExclusion ? "scrapingFilter" : "scrapingFavouriteFilter"}
+							entityType={isExclusion ? "scrapingExclusionFilter" : "scrapingFavouriteFilter"}
 							data={data}
 							columns={defaultColumns}
 							initialSortConfig={{ key: "type", direction: "asc" }}

@@ -1,6 +1,6 @@
 import React, { forwardRef } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, ValidationErrors } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { AggregatorData, AggregatorDataTransform } from "../../services/schemas/DataTables";
@@ -8,11 +8,12 @@ import { AggregatorData, AggregatorDataTransform } from "../../services/schemas/
 export const AggregatorModal = forwardRef<DataModalHandle<AggregatorData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref) => {
 		const dataContext: DataContextValue = useDataContext();
+		const ff = useFormFields();
 
 		const fields = {
 			form: [
-				formFields.name({ required: true, placeholder: "LinkedIn" }),
-				formFields.url({ required: true, placeholder: "https://linkedin.com" }),
+				ff.nameField({ required: true, placeholder: "LinkedIn" }),
+				ff.urlField({ required: true, placeholder: "https://linkedin.com" }),
 			],
 			view: [modalViewFields.name({ isTitle: true }), modalViewFields.url()],
 		};

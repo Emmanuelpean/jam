@@ -512,6 +512,14 @@ class DataModalUtils(BaseUtilsClass):
 
         return self.get_element(f"modal-{mode}-{self.entry_type}-confirm-button")
 
+    def assert_confirm_button_disabled(self, mode: str) -> None:
+        """Wait until the confirm button becomes disabled."""
+
+        WebDriverWait(self.driver, 5).until(
+            lambda d: not d.find_element(By.ID, f"modal-{mode}-{self.entry_type}-confirm-button").is_enabled(),
+            "Confirm button did not become disabled",
+        )
+
     def cancel_button(self, mode: str) -> WebElement:
         """Get the cancel button on the modal"""
 
@@ -860,12 +868,12 @@ class DataModalUtils(BaseUtilsClass):
         if entry.cv_id or entry.cover_letter_id:
             if entry.cv_id:
                 cv = entry.application_cv
-                expected += f"CV\n{cv.filename}\n{format_file_size(cv.size)}\n"
+                expected += f"CV\n{cv.filename.upper()}\n"
             else:
                 expected += "CV\n"
             if entry.cover_letter_id:
                 cl = entry.application_cover_letter
-                expected += f"Cover Letter\n{cl.filename}\n{format_file_size(cl.size)}\n"
+                expected += f"Cover Letter\n{cl.filename.upper()}\n"
             else:
                 expected += "Cover Letter\n"
 
@@ -1347,6 +1355,19 @@ class AuthentificationUtils(BaseUtilsClass):
 
         self.get_element("forgot-password-link").click()
         time.sleep(0.5)
+
+    def assert_confirm_button_disabled(self) -> None:
+        """Wait until the confirm button becomes disabled."""
+
+        WebDriverWait(self.driver, 5).until(
+            lambda d: not d.find_element(By.ID, "confirm-button").is_enabled(),
+            "Confirm button did not become disabled",
+        )
+
+    def assert_confirm_button_enabled(self) -> None:
+        """Wait until the confirm button becomes enabled (clickable)."""
+
+        self.get_element("confirm-button")
 
 
 class UserSettingsUtils(BaseUtilsClass):
@@ -1987,8 +2008,8 @@ class BaseTest(BaseUtils):
     jobEmail_table_utils: DataTableUtils
 
     # Scraping Filter
-    scrapingFilter_modal_utils: DataModalUtils
-    scrapingFilter_table_utils: DataTableUtils
+    scrapingExclusionFilter_modal_utils: DataModalUtils
+    scrapingExclusionFilter_table_utils: DataTableUtils
 
     # Settings
     setting_modal_utils: DataModalUtils
@@ -2071,7 +2092,7 @@ class BaseTest(BaseUtils):
                 "speculativeApplication",
                 "scrapedJob",
                 "jobEmail",
-                "scrapingFilter",
+                "scrapingExclusionFilter",
                 "scrapingFavouriteFilter",
                 "setting",
             ]

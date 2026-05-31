@@ -1,7 +1,7 @@
 import React, { forwardRef, JSX, useImperativeHandle, useRef, useState } from "react";
 import { Button } from "react-bootstrap";
 import DataModal, { DataModalHandle, Fields, GenericFormData, JamDataModalProps, ValidationErrors } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { FilterVariant, ScrapingFilterData, ScrapingFilterTransform } from "../../services/schemas/Services";
@@ -15,6 +15,7 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle<ScrapingFilterData
 	({ size = "lg", variant = "exclusion" }: ScrapingFilterModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 		const isExclusion: boolean = variant === "exclusion";
+		const ff = useFormFields();
 
 		const internalRef = useRef<DataModalHandle<ScrapingFilterData>>(null);
 		useImperativeHandle(ref, () => ({
@@ -28,10 +29,10 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle<ScrapingFilterData
 		const [reloadTrigger, setReloadTrigger] = useState(0);
 
 		const formFieldsArray: Fields = [
-			formFields.scrapingFilterType(),
-			formFields.scrapingFilterOperator(),
-			formFields.value({ type: "input", placeholder: "Enter a value" }),
-			formFields.caseSensitive(),
+			ff.scrapingFilterTypeField(),
+			ff.scrapingFilterOperatorField(),
+			ff.valueField({ type: "input", placeholder: "Enter a value" }),
+			ff.caseSensitiveField(),
 		];
 
 		const viewFieldsArray: Fields = [
@@ -44,7 +45,7 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle<ScrapingFilterData
 		const customValidation = (formData: ScrapingFilterData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 			const filters: ScrapingFilterData[] = isExclusion
-				? dataContext.scrapingFilters
+				? dataContext.scrapingExclusionFilters
 				: dataContext.scrapingFavouriteFilters;
 			const duplicates: ScrapingFilterData[] = filters.filter(
 				(filter: ScrapingFilterData): boolean =>
@@ -86,7 +87,7 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle<ScrapingFilterData
 				ref={internalRef}
 				size={size}
 				fields={fields}
-				entityType={isExclusion ? "scrapingFilter" : "scrapingFavouriteFilter"}
+				entityType={isExclusion ? "scrapingExclusionFilter" : "scrapingFavouriteFilter"}
 				validation={customValidation}
 				transformFormData={transformFormData}
 				formExtraContent={(formData: GenericFormData): JSX.Element | null => {

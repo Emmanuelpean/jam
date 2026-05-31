@@ -11,65 +11,65 @@ import {
 	interviewTypeOptions,
 	updateTypeOptions,
 } from "../form/FormOptions";
+import { JobEmailData } from "../../../services/schemas/Services";
 
-export interface TableColumn extends ViewField {
+export interface TableColumn<T extends JamData = JamData> extends ViewField {
+	_entityType?(item: T): void; // phantom — method shorthand gives bivariance needed for structural checks
 	label: string;
 	sortable?: boolean;
 	searchable?: boolean;
 	type?: string;
 	minWidth?: string;
-	sortField?: string | ((item: JamData, dataContext: DataContextValue) => string | number | null);
-	searchFields?: string | ((item: JamData, dataContext: DataContextValue) => string | null);
+	sortField?: string | ((item: any, dataContext: DataContextValue) => string | number | null);
+	searchFields?: string | ((item: any, dataContext: DataContextValue) => string | null);
 	filterConfig?: FilterConfig;
 	sidebarExtra?: ReactNode;
 }
 
-const getCompanyText = (item: JamData, context: DataContextValue): string | null => {
-	if ("company_id" in item && item.company_id) {
+const getCompanyText = (item: { company_id: number | null }, context: DataContextValue): string | null => {
+	if (item.company_id) {
 		return findItemById(context.companies, item.company_id)?.name ?? null;
 	}
 	return null;
 };
 
-const getLocationText = (item: JamData): string | null => {
-	if ("location" in item && item.location) {
-		return (item.location as string) + ((item as any).attendance_type || "");
+const getLocationText = (item: { location: string | null; attendance_type: string | null }): string | null => {
+	if (item.location) {
+		return item.location + (item.attendance_type || "");
 	}
 	return null;
 };
 
-const getJobText = (item: JamData, context: DataContextValue): string | null => {
-	if ("job_id" in item) {
-		return findItemById(context.jobs, item.job_id)?.name ?? null;
-	}
-	return null;
+const getJobText = (item: { job_id: number }, context: DataContextValue): string | null => {
+	return findItemById(context.jobs, item.job_id)?.name ?? null;
 };
 
-const getSourceAggregatorText = (item: JamData, context: DataContextValue): string | null => {
-	if ("source_aggregator_id" in item && item.source_aggregator_id) {
+const getSourceAggregatorText = (
+	item: { source_aggregator_id: number | null },
+	context: DataContextValue
+): string | null => {
+	if (item.source_aggregator_id) {
 		return findItemById(context.aggregators, item.source_aggregator_id)?.name ?? null;
 	}
 	return null;
 };
 
-const _getPersonsText = (item: JamData, context: DataContextValue, key: string): string | null => {
-	if (!(key in item)) return null;
-	const ids: number = (item as any)[key];
-	if (!Array.isArray(ids)) return null;
-
+const getPersonsText = (ids: number[], context: DataContextValue): string | null => {
 	const names: string[] = context.persons
 		.filter((person: PersonData): boolean => ids.includes(person.id))
 		.map((person: PersonData): string => person.name);
-
 	return names.join(" ") || null;
 };
 
-const getInterviewersText = (item: JamData, context: DataContextValue): string | null => {
-	return _getPersonsText(item, context, "interviewers");
-};
+const getInterviewersText = (item: { interviewers: number[] }, context: DataContextValue): string | null =>
+	getPersonsText(item.interviewers, context);
 
-const getContactsText = (item: JamData, context: DataContextValue): string | null => {
-	return _getPersonsText(item, context, "contacts");
+const getContactsText = (item: { contacts: number[] }, context: DataContextValue): string | null =>
+	getPersonsText(item.contacts, context);
+
+const getRecruiterText = (item: { recruiter_id: number | null }, context: DataContextValue): string | null => {
+	if (!item.recruiter_id) return null;
+	return context.persons.find((p: PersonData): boolean => p.id === item.recruiter_id)?.name ?? null;
 };
 
 function maxCount<T>(items: T[], countFn: (item: T) => number): number {
@@ -77,12 +77,12 @@ function maxCount<T>(items: T[], countFn: (item: T) => number): number {
 	return Math.max(1, ...items.map(countFn));
 }
 
-interface TableColumnOverrides extends Partial<TableColumn> {}
+type ColumnOverrides<T extends JamData = JamData> = Omit<Partial<TableColumn<T>>, "_entityType">;
 
 export const tableColumns = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
-	idColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	idColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "id",
 		label: "ID",
 		sortable: true,
@@ -91,7 +91,7 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	nameColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	nameColumn: <T extends JamData & { name: string | null }>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "name",
 		label: "Name",
 		sortable: true,
@@ -101,17 +101,22 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	valueColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	valueColumn: <T extends JamData & { value: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "value",
 		label: "Value",
 		sortable: true,
 		searchable: true,
-		type: "number",
+		type: "text",
 		render: renderFunctions.value,
+		filterConfig: { type: "text" },
 		...overrides,
 	}),
 
-	titleColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	titleColumn: <T extends JamData & { title: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "title",
 		label: "Title",
 		sortable: true,
@@ -121,7 +126,21 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	descriptionColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	subjectColumn: <T extends JamData & { subject: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
+		key: "subject",
+		label: "Subject",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		filterConfig: { type: "text" },
+		...overrides,
+	}),
+
+	descriptionColumn: <T extends JamData & { description?: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "description",
 		label: "Description",
 		sortable: true,
@@ -133,7 +152,7 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	noteColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	noteColumn: <T extends JamData & { note: string | null }>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "note",
 		label: "Notes",
 		sortable: true,
@@ -145,7 +164,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	interviewTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	interviewTypeColumn: <T extends JamData & { type: string }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "type",
 		label: "Type",
 		sortable: true,
@@ -156,7 +177,7 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	updateTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	updateTypeColumn: <T extends JamData & { type: string }>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "type",
 		label: "Type",
 		sortable: true,
@@ -167,7 +188,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	scrapedCompanyColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	scrapedCompanyColumn: <T extends JamData & { company: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "company",
 		label: "Company",
 		sortable: true,
@@ -176,7 +199,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	personNameColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	personNameColumn: <T extends JamData & { name: string; last_name: string }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "name",
 		label: "Name",
 		sortable: true,
@@ -187,7 +212,7 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	roleColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	roleColumn: <T extends JamData & { role: string | null }>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "role",
 		label: "Role",
 		sortable: true,
@@ -197,7 +222,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	daysSinceLastUpdateColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	daysSinceLastUpdateColumn: <T extends JamData & { days_since_last_update: number | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "days_since_last_update",
 		label: "Since Last Update",
 		sortable: true,
@@ -206,7 +233,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	daysUntilDeadlineColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	daysUntilDeadlineColumn: <T extends JamData & { days_until_deadline: number | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "days_until_deadline",
 		label: "Time Until Deadline",
 		sortable: true,
@@ -215,7 +244,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	lastUpdateTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	lastUpdateTypeColumn: <T extends JamData & { last_update_type: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "last_update_type",
 		label: "Last Update",
 		sortable: true,
@@ -223,7 +254,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	isImportedColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	isImportedColumn: <T extends JamData & { is_imported: boolean }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "is_imported",
 		label: "Imported",
 		sortable: true,
@@ -233,7 +266,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	isActiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	isActiveColumn: <T extends JamData & { is_active: boolean }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "is_active",
 		label: "Active",
 		sortable: true,
@@ -243,7 +278,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	platformColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	platformColumn: <T extends JamData & { platform: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "platform",
 		label: "Platform",
 		sortable: true,
@@ -254,7 +291,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	overallScore: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	overallScore: <T extends JamData & { job_rating: { overall_score: number | null } | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "job_rating.overall_score",
 		label: "AI Score",
 		sortable: true,
@@ -265,7 +304,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	technicalScoreColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	technicalScoreColumn: <T extends JamData & { job_rating: { technical_score: number | null } | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "job_rating.technical_score",
 		label: "Technical Score",
 		sortable: true,
@@ -276,7 +317,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	experienceScoreColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	experienceScoreColumn: <T extends JamData & { job_rating: { experience_score: number | null } | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "job_rating.experience_score",
 		label: "Experience Score",
 		sortable: true,
@@ -287,7 +330,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	educationalScoreColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	educationalScoreColumn: <T extends JamData & { job_rating: { educational_score: number | null } | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "job_rating.educational_score",
 		label: "Education Score",
 		sortable: true,
@@ -298,7 +343,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	interestScoreColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	interestScoreColumn: <T extends JamData & { job_rating: { interest_score: number | null } | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "job_rating.interest_score",
 		label: "Interest Score",
 		sortable: true,
@@ -309,7 +356,7 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	filterTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	filterTypeColumn: <T extends JamData & { type: string }>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "type",
 		label: "Filter Type",
 		sortable: true,
@@ -319,7 +366,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	filterOperatorColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	filterOperatorColumn: <T extends JamData & { operator: string }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "operator",
 		label: "Operator",
 		sortable: true,
@@ -329,7 +378,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	attendanceTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	attendanceTypeColumn: <T extends JamData & { attendance_type: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "attendance_type",
 		label: "Attendance Type",
 		sortable: true,
@@ -342,7 +393,7 @@ export const tableColumns = {
 
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
-	urlColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	urlColumn: <T extends JamData & { url: string | null }>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "url",
 		label: "Website",
 		sortable: true,
@@ -353,7 +404,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	urlGenericColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	urlGenericColumn: <T extends JamData & { url: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "url",
 		label: "Link",
 		sortable: true,
@@ -364,7 +417,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	emailColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	emailColumn: <T extends JamData & { email: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "email",
 		label: "Email",
 		sortable: true,
@@ -375,7 +430,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	contactEmailColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	contactEmailColumn: <T extends JamData & { contact_email: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "contact_email",
 		label: "Contact Email",
 		sortable: true,
@@ -385,7 +442,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	linkedinUrlColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	linkedinUrlColumn: <T extends JamData & { linkedin_url: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "linkedin_url",
 		label: "LinkedIn",
 		sortable: true,
@@ -398,48 +457,54 @@ export const tableColumns = {
 
 	// ---------------------------------------------------- DATETIME ---------------------------------------------------
 
-	createdAtColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	createdAtColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "created_at",
 		label: "Date Added",
 		type: "date",
 		sortable: true,
 		searchable: true,
-		searchFields: (item: JamData) => toDdMmYyyy(item.created_at),
+		searchFields: (item) => toDdMmYyyy(item.created_at),
 		render: (params: RenderParams) => renderFunctions._date(params, "created_at"),
 		filterConfig: { type: "date" },
 		...overrides,
 	}),
 
-	dateColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	dateColumn: <T extends JamData & { date: Date | null | undefined }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "date",
 		label: "Date",
 		sortable: true,
 		searchable: true,
 		type: "date",
-		searchFields: (item: JamData) => ("date" in item && item.date ? toDdMmYyyy(item.date) : ""),
+		searchFields: (item) => (item.date ? toDdMmYyyy(item.date) : ""),
 		render: (params: RenderParams) => renderFunctions._date(params, "date"),
 		filterConfig: { type: "date" },
 		...overrides,
 	}),
 
-	lastLoginColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	lastLoginColumn: <T extends JamData & { last_login: Date | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "last_login",
 		label: "Last Login",
 		sortable: true,
 		searchable: true,
 		type: "date",
-		searchFields: (item: JamData) => ("last_login" in item && item.last_login ? toDdMmYyyy(item.last_login) : null),
+		searchFields: (item) => (item.last_login ? toDdMmYyyy(item.last_login) : null),
 		render: (params: RenderParams) => renderFunctions._date(params, "last_login"),
 		...overrides,
 	}),
 
-	applicationDeadline: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	applicationDeadline: <T extends JamData & { deadline: Date | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "deadline",
 		label: "Deadline",
 		sortable: true,
 		searchable: true,
 		type: "date",
-		searchFields: (item: JamData) => ("deadline" in item && item.deadline ? toDdMmYyyy(item.deadline) : ""),
+		searchFields: (item) => (item.deadline ? toDdMmYyyy(item.deadline) : ""),
 		render: (params: RenderParams) => renderFunctions._date(params, "deadline"),
 		filterConfig: {
 			type: "date",
@@ -456,7 +521,9 @@ export const tableColumns = {
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
-	locationBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	locationBadgeColumn: <T extends JamData & { location: string | null; attendance_type: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "locationBadge",
 		label: "Location",
 		sortable: true,
@@ -469,7 +536,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	companyBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	companyBadgeColumn: <T extends JamData & { company_id: number | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "companyBadge",
 		label: "Company",
 		sortable: true,
@@ -482,7 +551,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	interviewerBadgesColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	interviewerBadgesColumn: <T extends JamData & { interviewers: number[] }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "interviewerBadges",
 		label: "Interviewers",
 		sortable: false,
@@ -494,7 +565,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	contactBadgesColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	contactBadgesColumn: <T extends JamData & { contacts: number[] }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "contactBadges",
 		label: "Contacts",
 		sortable: false,
@@ -506,48 +579,53 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	jobBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	jobBadgeColumn: <T extends JamData & { job_id: number }>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "jobBadge",
 		label: "Job",
 		sortable: true,
 		searchable: true,
 		searchFields: getJobText,
 		sortField: getJobText,
-		render: (params: RenderParams) => renderFunctions.jobBadge(params),
+		render: (params: RenderParams): ReactNode => renderFunctions.jobBadge(params),
 		filterConfig: { type: "reference", entityKey: "jobs", valueField: "job_id", labelKey: "title" },
 		...overrides,
 	}),
 
-	sourceAggregatorBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	sourceAggregatorBadgeColumn: <T extends JamData & { source_aggregator_id: number | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "sourceAggregatorBadge",
 		label: "Source Aggregator",
 		sortable: true,
 		searchable: true,
 		searchFields: getSourceAggregatorText,
 		sortField: getSourceAggregatorText,
-		render: (params: RenderParams) => renderFunctions._aggregatorBadge(params, "source_aggregator_id"),
+		render: (params: RenderParams): ReactNode => renderFunctions._aggregatorBadge(params, "source_aggregator_id"),
 		filterConfig: { type: "reference", entityKey: "aggregators", valueField: "source_aggregator_id" },
 		...overrides,
 	}),
 
-	sourceContactBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	sourceContactBadgeColumn: <T extends JamData & { recruiter_id: number | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "sourceContactBadge",
 		label: "Source Contact",
 		sortable: true,
 		searchable: true,
-		searchFields: (item: JamData, dataContext: DataContextValue) =>
-			_getPersonsText(item, dataContext, "recruiter_id"),
-		render: (params: RenderParams) => renderFunctions._personBadge(params, "recruiter_id"),
+		searchFields: getRecruiterText,
+		render: (params: RenderParams): ReactNode => renderFunctions._personBadge(params, "recruiter_id"),
 		filterConfig: { type: "reference", entityKey: "persons", valueField: "recruiter_id" },
 		...overrides,
 	}),
 
-	KeywordBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	KeywordBadgeColumn: <T extends JamData & { keywords: number[] }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "keywords",
 		label: "Tags",
 		sortable: false,
 		searchable: true,
-		// searchFields: (item: JamData, dataContext: DataContextValue) => getSourceAggregatorText(),
+		searchFields: getSourceAggregatorText,
 		render: renderFunctions.KeywordBadges,
 		filterConfig: { type: "reference", entityKey: "keywords", valueField: "keywords" },
 		...overrides,
@@ -555,7 +633,7 @@ export const tableColumns = {
 
 	// ----------------------------------------------------- OTHERS ----------------------------------------------------
 
-	isAdminColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	isAdminColumn: <T extends JamData & { is_admin: boolean }>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "is_admin",
 		label: "Admin",
 		sortable: true,
@@ -565,7 +643,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	isRecruiterColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	isRecruiterColumn: <T extends JamData & { is_recruiter: boolean }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "is_recruiter",
 		label: "Recruiter",
 		sortable: true,
@@ -575,27 +655,22 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	toastActiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	toastActiveColumn: <T extends JamData & { premium: { is_active: boolean } }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "premium_active",
 		label: "Premium",
 		sortable: true,
 		searchable: false,
 		type: "text",
 		render: renderFunctions.premiumActive,
+		sortField: (item): number => (item.premium.is_active ? 1 : 0),
 		...overrides,
 	}),
 
-	isEnabledColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "is_enabled",
-		label: "Active",
-		sortable: true,
-		searchable: true,
-		type: "text",
-		render: renderFunctions.isActive,
-		...overrides,
-	}),
-
-	caseSensitiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	caseSensitiveColumn: <T extends JamData & { case_sensitive: boolean }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "case_sensitive",
 		label: "Case Sensitive",
 		sortable: true,
@@ -605,7 +680,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	phoneColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	phoneColumn: <T extends JamData & { phone: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "phone",
 		label: "Phone",
 		sortable: true,
@@ -616,7 +693,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	salaryRangeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	salaryRangeColumn: <T extends JamData & { salary_min: number | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "salary_min",
 		label: "Salary",
 		sortable: true,
@@ -628,7 +707,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	personalRatingColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	personalRatingColumn: <T extends JamData & { personal_rating: number | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "personal_rating",
 		label: "Rating",
 		sortable: true,
@@ -638,7 +719,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	isFavouriteColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	isFavouriteColumn: <T extends JamData & { is_favourite: boolean }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "is_favourite",
 		label: "Favourite",
 		sortable: true,
@@ -653,7 +736,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	applicationStatusColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	applicationStatusColumn: <T extends JamData & { application_status: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "application_status",
 		label: "Status",
 		sortable: true,
@@ -665,13 +750,12 @@ export const tableColumns = {
 
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
 
-	jobCountCompanyColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	jobCountCompanyColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "jobs",
 		label: "Jobs",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) =>
-			ctx.jobs.filter((j: any) => j.company_id === item.id).length,
+		sortField: (item, ctx) => ctx.jobs.filter((j: any) => j.company_id === item.id).length,
 		render: (param: RenderParams) => renderFunctions._jobCount(param, "company_id"),
 		filterConfig: {
 			type: "number",
@@ -684,13 +768,12 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	jobCountAggregatorColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	jobCountAggregatorColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "jobs",
 		label: "Jobs",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) =>
-			ctx.jobs.filter((j: any) => j.source_aggregator_id === item.id).length,
+		sortField: (item, ctx) => ctx.jobs.filter((j: any) => j.source_aggregator_id === item.id).length,
 		render: (param: RenderParams) => renderFunctions._jobCount(param, "source_aggregator_id"),
 		filterConfig: {
 			type: "number",
@@ -703,12 +786,12 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	jobCountKeywordColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	jobCountKeywordColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "jobs",
 		label: "Jobs",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) =>
+		sortField: (item, ctx) =>
 			ctx.jobs.filter((j: any) => Array.isArray(j.keywords) && j.keywords.includes(item.id)).length,
 		render: (param: RenderParams) => renderFunctions._jobCount(param, "keywords"),
 		filterConfig: {
@@ -725,13 +808,12 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	jobApplicationCountAggregatorColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	jobApplicationCountAggregatorColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "job_applications",
 		label: "Job Applications",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) =>
-			ctx.jobs.filter((j: any) => j.application_aggregator_id === item.id).length,
+		sortField: (item, ctx) => ctx.jobs.filter((j: any) => j.application_aggregator_id === item.id).length,
 		render: (param: RenderParams) => renderFunctions._jobApplicationCount(param, "application_aggregator_id"),
 		filterConfig: {
 			type: "number",
@@ -747,13 +829,12 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	personCountCompanyColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	personCountCompanyColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "persons",
 		label: "Individuals",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) =>
-			ctx.persons.filter((p: any) => p.company_id === item.id).length,
+		sortField: (item, ctx) => ctx.persons.filter((p: any) => p.company_id === item.id).length,
 		render: (param: RenderParams) => renderFunctions._personCount(param, "company_id"),
 		filterConfig: {
 			type: "number",
@@ -766,12 +847,12 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	recruitedJobCountCompanyColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	recruitedJobCountCompanyColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "recruiter_jobs",
 		label: "Submitted Jobs",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue): number =>
+		sortField: (item, ctx): number =>
 			ctx.jobs.filter((p: EnrichedJobData): boolean => p.recruitment_company_id === item.id).length,
 		render: (param: RenderParams): number => renderFunctions._jobCount(param, "recruitment_company_id"),
 		filterConfig: {
@@ -789,23 +870,25 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	filteredJobCountColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	filteredJobCountColumn: <T extends JamData & { filtered_jobs: number[] }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "filtered_jobs",
 		label: "Filtered Jobs",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData) => (item as any).filtered_jobs?.length || 0,
+		sortField: (item) => item.filtered_jobs.length,
 		render: renderFunctions.filteredJobCount,
 		filterConfig: { type: "number", min: 0, max: 50, step: 1, display: "slider" },
 		...overrides,
 	}),
 
-	interviewCountColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	interviewCountColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "interviews",
 		label: "Interviews",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData) => (item as any).interviews?.length || 0,
+		sortField: (item) => (item as any).interviews?.length || 0,
 		render: renderFunctions.interviewCount,
 		filterConfig: {
 			type: "number",
@@ -817,12 +900,12 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	jobApplicationUpdateCountColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	jobApplicationUpdateCountColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "updates",
 		label: "Updates",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData) => (item as any).updates?.length || 0,
+		sortField: (item) => (item as any).updates?.length || 0,
 		render: renderFunctions.jobApplicationUpdateCount,
 		filterConfig: {
 			type: "number",
@@ -834,7 +917,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	scrapingStatusColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	scrapingStatusColumn: <T extends JamData & { is_processed: boolean }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "is_processed",
 		label: "Status",
 		sortable: true,
@@ -843,7 +928,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	expiredReasonColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	expiredReasonColumn: <T extends JamData & { is_closed: boolean; deadline: Date | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "is_closed",
 		label: "Expired Reason",
 		sortable: false,
@@ -861,7 +948,9 @@ export const tableColumns = {
 
 	// -------------------------------------------------- JOB EMAIL --------------------------------------------------
 
-	alertNameColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	alertNameColumn: <T extends JamData & { alert_name: string | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "alert_name",
 		label: "Alert Name",
 		sortable: true,
@@ -871,7 +960,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	jobsFoundColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	jobsFoundColumn: <T extends JamData & { job_found_n: number }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "job_found_n",
 		label: "Jobs Found",
 		sortable: true,
@@ -880,13 +971,14 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	dateReceivedColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	dateReceivedColumn: <T extends JamData & { date_received: Date | null }>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "date_received",
 		label: "Date Received",
 		sortable: true,
 		type: "date",
-		searchFields: (item: JamData) =>
-			"date_received" in item && item.date_received ? toDdMmYyyy(item.date_received) : "",
+		searchFields: (item) => (item.date_received ? toDdMmYyyy(item.date_received) : ""),
 		render: (params: RenderParams) => renderFunctions._date(params, "date_received"),
 		filterConfig: { type: "date" },
 		...overrides,
@@ -894,7 +986,7 @@ export const tableColumns = {
 
 	// ---------------------------------------------------- FILE COLUMNS --------------------------------------------------
 
-	filenameColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	filenameColumn: <T extends JamData & { filename: string }>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "filename",
 		label: "Filename",
 		sortable: true,
@@ -904,23 +996,12 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	fileSizeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "size",
-		label: "Size",
-		sortable: true,
-		searchable: false,
-		type: "number",
-		render: (params: RenderParams) => renderFunctions.fileSize(params),
-		...overrides,
-	}),
-
-	fileUsagesColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	fileUsagesColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "fileUsages",
 		label: "Used in",
 		sortable: true,
 		searchable: false,
-		sortField: (item: JamData, ctx: DataContextValue) =>
-			ctx.jobs.filter((j) => j.cv_id === item.id || j.cover_letter_id === item.id).length,
+		sortField: (item, ctx) => ctx.jobs.filter((j) => j.cv_id === item.id || j.cover_letter_id === item.id).length,
 		render: (params: RenderParams) => renderFunctions.fileUsages(params),
 		...overrides,
 	}),

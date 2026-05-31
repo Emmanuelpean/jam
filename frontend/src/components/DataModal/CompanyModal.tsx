@@ -1,6 +1,6 @@
 import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, ValidationErrors } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
@@ -9,16 +9,18 @@ import { CompanyData, CompanyDataTransform } from "../../services/schemas/DataTa
 export const CompanyModal = forwardRef<DataModalHandle<CompanyData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
+		const ff = useFormFields();
 
 		const fields = {
 			form: [
-				formFields.name({ required: true, placeholder: "Google" }),
-				[formFields.url({ label: "Website URL", placeholder: "https://www.google.com" })],
+				ff.nameField({ required: true, placeholder: "Google" }),
+				[ff.urlField({ label: "Website URL", placeholder: "https://www.google.com" })],
 				[
-					formFields.description({
+					ff.descriptionField({
 						placeholder:
-							"Google is a global technology company best known for its search engine, which organises and provides access to information across the internet, alongside a wide range of digital services and products.",
-						maxChars: 5000,
+							"Google is a global technology company best known for its search engine, which organises " +
+							"and provides access to information across the internet, alongside a wide range of digital " +
+							"services and products.",
 					}),
 				],
 			],

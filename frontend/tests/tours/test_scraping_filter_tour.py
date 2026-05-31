@@ -5,7 +5,7 @@ Tour step order (scraping-filters):
   1   sf-open       Scraping Filters button (hideNextButton); auto-advances when #scraping-filters-modal appears
   2   sf-overview   filter panel overview; Next
   3   sf-tabs       active-tab; Next
-  4   sf-add        Add button (hideNextButton); auto-advances when #modal-edit-scrapingFilter appears
+  4   sf-add        Add button (hideNextButton); auto-advances when #modal-edit-scrapingExclusionFilter appears
   5   sf-type       type-form-group; waitForInput (ReactSelect); Next enabled when type selected
   6   sf-operator   operator-form-group; waitForInput (ReactSelect); Next enabled when operator selected
   7   sf-value      value-form-group; waitForInput (text input); Next enabled when value typed
@@ -20,11 +20,11 @@ Cleanup on Done/Skip:
   - Skip before sf-add: no filter created
 """
 
+from selenium.webdriver import ActionChains
+
 from app import models
 from base_test import BaseTest
 from react_select import ReactSelect
-from selenium.webdriver import ActionChains
-
 
 TOUR_ID = "scraping-filters"
 
@@ -62,7 +62,7 @@ class TestScrapingFilterTour(BaseTest):
     def _advance_to_filter_form(self) -> None:
         """From sf-overview, advance through tabs step and open the add form.
 
-        Returns with the popover on sf-type (step 5) and #modal-edit-scrapingFilter open.
+        Returns with the popover on sf-type (step 5) and #modal-edit-scrapingExclusionFilter open.
         """
         # Step 2 (sf-overview): click Next
         self.tour_utils.click_next()
@@ -73,10 +73,12 @@ class TestScrapingFilterTour(BaseTest):
 
         # Step 4 (sf-add): click the Add button; auto-advances to sf-type when modal appears
         self.tour_utils.wait_for_popover()
-        self.get_element("add-scrapingFilter-button").click()
+        self.get_element("add-scrapingExclusionFilter-button").click()
         self.tour_utils.wait_for_popover()
 
-    def _fill_filter_form(self, filter_type: str = "Job Title", operator: str = "Contains", value: str = "Senior") -> None:
+    def _fill_filter_form(
+        self, filter_type: str = "Job Title", operator: str = "Contains", value: str = "Senior"
+    ) -> None:
         """Fill the filter form on steps sf-type, sf-operator, sf-value.
 
         Each step's Next button is disabled until the field is filled.
@@ -107,9 +109,9 @@ class TestScrapingFilterTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.tour_utils.click_next()
 
-        # Step 9 (sf-save): click Save; auto-advances when #modal-edit-scrapingFilter closes
+        # Step 9 (sf-save): click Save; auto-advances when #modal-edit-scrapingExclusionFilter closes
         self.tour_utils.wait_for_popover()
-        self.scrapingFilter_modal_utils.confirm_button("edit").click()
+        self.scrapingExclusionFilter_modal_utils.confirm_button("edit").click()
         # Wait for sf-manage popover
         self.tour_utils.wait_for_popover()
 
@@ -213,10 +215,10 @@ class TestScrapingFilterTour(BaseTest):
         # Step 10 (sf-manage): blockLeftClick is active
         self.tour_utils.wait_for_popover()
         demo_filter = self._get_demo_filter()
-        self.scrapingFilter_table_utils.table_row_click(demo_filter.id)
-        assert not self.check_element_exists("modal-edit-scrapingFilter", timeout=2), (
-            "Edit modal must not open when blockLeftClick is active on sf-manage step"
-        )
+        self.scrapingExclusionFilter_table_utils.table_row_click(demo_filter.id)
+        assert not self.check_element_exists(
+            "modal-edit-scrapingExclusionFilter", timeout=2
+        ), "Edit modal must not open when blockLeftClick is active on sf-manage step"
 
         # Clean up
         self.tour_utils.click_skip()
@@ -236,15 +238,15 @@ class TestScrapingFilterTour(BaseTest):
         # Step 10 (sf-manage): allowedContextMenuActions: []
         self.tour_utils.wait_for_popover()
         demo_filter = self._get_demo_filter()
-        filter_row = self.scrapingFilter_table_utils.table_row(demo_filter.id)
+        filter_row = self.scrapingExclusionFilter_table_utils.table_row(demo_filter.id)
         ActionChains(self.driver).context_click(filter_row).perform()
 
-        assert not self.check_element_exists("context-menu-edit", timeout=2), (
-            "Context menu edit option must not appear on sf-manage step"
-        )
-        assert not self.check_element_exists("context-menu-delete", timeout=2), (
-            "Context menu delete option must not appear on sf-manage step"
-        )
+        assert not self.check_element_exists(
+            "context-menu-edit", timeout=2
+        ), "Context menu edit option must not appear on sf-manage step"
+        assert not self.check_element_exists(
+            "context-menu-delete", timeout=2
+        ), "Context menu delete option must not appear on sf-manage step"
 
         # Clean up
         self.tour_utils.click_skip()

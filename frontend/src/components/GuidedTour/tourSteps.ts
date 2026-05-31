@@ -796,11 +796,11 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 	},
 	{
 		id: "sf-add",
-		targetId: "add-scrapingFilter-button",
+		targetId: "add-scrapingExclusionFilter-button",
 		title: "Create a Filter",
 		content: "Click here to open the filter form and create your first filter.",
 		placement: "bottom",
-		waitForSelector: "#modal-edit-scrapingFilter",
+		waitForSelector: "#modal-edit-scrapingExclusionFilter",
 		hideNextButton: true,
 	},
 	{
@@ -829,7 +829,7 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 		title: "Filter Value",
 		content: "Type the word or phrase to match against. For example, enter 'Senior' to exclude senior-level roles.",
 		placement: "right",
-		waitForInput: "#modal-edit-scrapingFilter input[name='value']",
+		waitForInput: "#modal-edit-scrapingExclusionFilter input[name='value']",
 	},
 	{
 		id: "sf-test",
@@ -842,11 +842,11 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 	},
 	{
 		id: "sf-save",
-		targetId: "modal-edit-scrapingFilter-confirm-button",
+		targetId: "modal-edit-scrapingExclusionFilter-confirm-button",
 		title: "Save the Filter",
 		content: "Happy with the filter? Click Save to activate it. It will be applied on the next scraping run.",
 		placement: "top",
-		waitForSelectorGone: "#modal-edit-scrapingFilter",
+		waitForSelectorGone: "#modal-edit-scrapingExclusionFilter",
 		hideNextButton: true,
 	},
 	{

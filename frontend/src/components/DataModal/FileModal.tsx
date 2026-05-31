@@ -1,15 +1,16 @@
 import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { FileData } from "../../services/schemas/DataTables";
 
 export const FileModal = forwardRef<DataModalHandle<FileData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
+		const ff = useFormFields();
 		const fields = {
-			form: [formFields.name({ key: "filename", label: "Filename", required: true })],
+			form: [ff.fileNameField()],
 			view: [
-				modalViewFields.name({ key: "filename", label: "Filename", isTitle: true }),
+				modalViewFields.filename({ isTitle: true }),
 				modalViewFields.fileSize(),
 				modalViewFields.fileActions(),
 			],

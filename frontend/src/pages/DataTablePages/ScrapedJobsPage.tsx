@@ -13,10 +13,8 @@ export const ScrapedJobsPage = (): JSX.Element => {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const activeTab: ActiveTab = location.pathname === "/job-alerts/emails" ? "emails" : "alerts";
-	const { activeTourId } = useTour();
-	const { isMobile } = useViewport();
-	const tourOnly = activeTourId === "import-scraped-job";
-	const tourQueryParams = tourOnly ? { tour_only: "true" } : undefined;
+	const { isTourActive } = useTour();
+	const tourQueryParams = isTourActive ? { tour_only: "true" } : undefined;
 	const [alertsCount, setAlertsCount] = useState<number>(0);
 	const [emailsCount, setEmailsCount] = useState<number>(0);
 	const [alertsReload, setAlertsReload] = useState<number>(0);

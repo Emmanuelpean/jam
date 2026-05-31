@@ -11,11 +11,25 @@ import React, {
 } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
-import { TourSnapshot, useDataContext } from "./DataContext";
+import { useDataContext } from "./DataContext";
 import { useProgressOverlay } from "./useProgressOverlayContext";
 import { scrapedJobApi } from "../services/api/Services";
 import { useGlobalToast } from "../hooks/useNotificationToast";
 import { tourApi } from "../services/api/Others";
+import { EnrichedJobData, SpeculativeApplicationData } from "../services/schemas/DataTables";
+import { ScrapingFilterData } from "../services/schemas/Services";
+
+export interface TourSnapshot {
+	jobIds: Set<number>;
+	companyIds: Set<number>;
+	personIds: Set<number>;
+	interviewIds: Set<number>;
+	jobApplicationUpdateIds: Set<number>;
+	scrapingFilterIds: Set<number>;
+	aggregatorIds: Set<number>;
+	keywordIds: Set<number>;
+	speculativeApplicationIds: Set<number>;
+}
 
 interface TourContextType {
 	startTour: (tourId: string) => Promise<void>;
@@ -92,11 +106,12 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 		jobApplicationUpdates,
 		aggregators,
 		keywords,
-		scrapingFilters,
+		scrapingExclusionFilters,
 		speculativeApplications,
 		addEntity,
+		updateEntity,
 		deleteEntity,
-		setTourSnapshot,
+		setIsInTour,
 	} = useDataContext();
 	const { showToastError } = useGlobalToast();
 	const { showProgress, hideProgress } = useProgressOverlay();
@@ -106,10 +121,6 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	const originPathRef = useRef<string | null>(null);
 
 	const isTourActive: boolean = activeTourId !== null;
-
-	// Snapshot of all entity IDs that existed before the tour started.
-	// At cleanup time we diff against this to find (and delete) everything created during the tour.
-	const preInteractiveSnapshot = useRef<TourSnapshot>(emptySnapshot());
 
 	// IDs of entities JAM created automatically during tour setup — always cleaned up regardless
 	// of whether the user chooses to keep their own data.
@@ -126,39 +137,39 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	useEffect((): void => {
 		if (activeTourId !== "scraping-filters") return;
 		if (demoScrapingFilterId !== null) return;
-		const snapshot = preInteractiveSnapshot.current;
-		const newFilter = scrapingFilters.find((f) => !snapshot.scrapingFilterIds.has(f.id));
+		const newFilter: ScrapingFilterData | undefined = scrapingExclusionFilters.find(
+			(f: ScrapingFilterData): boolean => !jamCreatedIds.current.scrapingFilterIds.has(f.id)
+		);
 		if (newFilter) setDemoScrapingFilterId(newFilter.id);
-	}, [activeTourId, scrapingFilters, demoScrapingFilterId]);
+	}, [activeTourId, scrapingExclusionFilters, demoScrapingFilterId]);
 
 	// Detect the job created by the user during the first-job tour
 	useEffect((): void => {
 		if (activeTourId !== "first-job") return;
 		if (demoJobId !== null) return;
-		const newJob = jobs.find((j) => !preInteractiveSnapshot.current.jobIds.has(j.id));
+		const newJob: EnrichedJobData | undefined = jobs.find(
+			(j: EnrichedJobData): boolean => !jamCreatedIds.current.jobIds.has(j.id)
+		);
 		if (newJob) setDemoJobId(newJob.id);
 	}, [activeTourId, jobs, demoJobId]);
 
 	// True whenever the user has created at least one top-level entity during the tour
 	// that can meaningfully be kept (not a child of a JAM-created entity that will be deleted).
+	// During a tour, all visible entities have is_tour=true, so we just check against jamCreatedIds.
 	const hasUserCreatedData = useMemo((): boolean => {
 		if (!isTourActive) return false;
-		const snapshot = preInteractiveSnapshot.current;
 		const jamIds = jamCreatedIds.current;
 		return (
-			jobs.some((j) => !snapshot.jobIds.has(j.id) && !jamIds.jobIds.has(j.id)) ||
-			companies.some((c) => !snapshot.companyIds.has(c.id) && !jamIds.companyIds.has(c.id)) ||
-			persons.some((p) => !snapshot.personIds.has(p.id) && !jamIds.personIds.has(p.id)) ||
-			keywords.some((k) => !snapshot.keywordIds.has(k.id) && !jamIds.keywordIds.has(k.id)) ||
-			scrapingFilters.some((f) => !snapshot.scrapingFilterIds.has(f.id) && !jamIds.scrapingFilterIds.has(f.id)) ||
+			jobs.some((j) => !jamIds.jobIds.has(j.id)) ||
+			companies.some((c) => !jamIds.companyIds.has(c.id)) ||
+			persons.some((p) => !jamIds.personIds.has(p.id)) ||
+			keywords.some((k) => !jamIds.keywordIds.has(k.id)) ||
+			scrapingExclusionFilters.some((f) => !jamIds.scrapingFilterIds.has(f.id)) ||
 			speculativeApplications.some(
-				(s) =>
-					!snapshot.speculativeApplicationIds.has(s.id) &&
-					!jamIds.speculativeApplicationIds.has(s.id) &&
-					!jamIds.companyIds.has(s.company_id)
+				(s) => !jamIds.speculativeApplicationIds.has(s.id) && !jamIds.companyIds.has(s.company_id)
 			)
 		);
-	}, [isTourActive, jobs, companies, persons, keywords, scrapingFilters, speculativeApplications]);
+	}, [isTourActive, jobs, companies, persons, keywords, scrapingExclusionFilters, speculativeApplications]);
 
 	const startTour = useCallback(
 		async (tourId: string): Promise<void> => {
@@ -166,23 +177,8 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				originPathRef.current = location.pathname;
 				await tourApi.clearAll(token!);
 
-				// Capture a snapshot of every tracked entity that exists right now.
-				// endTour will delete anything created after this point.
-				preInteractiveSnapshot.current = {
-					jobIds: new Set(jobs.map((j) => j.id)),
-					companyIds: new Set(companies.map((c) => c.id)),
-					personIds: new Set(persons.map((p) => p.id)),
-					interviewIds: new Set(interviews.map((i) => i.id)),
-					jobApplicationUpdateIds: new Set(jobApplicationUpdates.map((u) => u.id)),
-					scrapingFilterIds: new Set(scrapingFilters.map((f) => f.id)),
-					aggregatorIds: new Set(aggregators.map((a) => a.id)),
-					keywordIds: new Set(keywords.map((k) => k.id)),
-					speculativeApplicationIds: new Set(speculativeApplications.map((s) => s.id)),
-				};
 				jamCreatedIds.current = emptySnapshot();
 
-				// Set the snapshot before any async entity creation so the stale cleanup
-				// guard in DataContext sees tourSnapshot !== null during the awaits below.
 				const ISOLATED_TOURS = new Set([
 					"first-job",
 					"follow-up-email",
@@ -193,7 +189,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					"add-contact",
 					"speculative-applications",
 				]);
-				if (ISOLATED_TOURS.has(tourId)) setTourSnapshot(preInteractiveSnapshot.current);
+				if (ISOLATED_TOURS.has(tourId)) setIsInTour(true);
 
 				showProgress("Setting up tour...");
 				try {
@@ -436,31 +432,14 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				showToastError(`Failed to start tour: ${err?.message ?? "Unknown error"}`);
 			}
 		},
-		[
-			jobs,
-			companies,
-			persons,
-			interviews,
-			jobApplicationUpdates,
-			aggregators,
-			keywords,
-			scrapingFilters,
-			speculativeApplications,
-			addEntity,
-			setTourSnapshot,
-			token,
-			location.pathname,
-			showToastError,
-			showProgress,
-			hideProgress,
-		]
+		[addEntity, setIsInTour, token, location.pathname, showToastError, showProgress, hideProgress]
 	);
 
 	const endTour = useCallback(
 		async (completed: boolean, keepUserData?: boolean): Promise<void> => {
-			const tourId = activeTourId;
+			const tourId: string | null = activeTourId;
 			setActiveTourId(null);
-			setTourSnapshot(null);
+			setIsInTour(false);
 
 			document.querySelectorAll<HTMLElement>(".modal.show").forEach((modal) => {
 				const cancelBtn = modal.querySelector<HTMLElement>('[id$="-cancel-button"]');
@@ -486,98 +465,102 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			}
 
 			if (completed && tourId && !completedTourIds.has(tourId)) {
-				const newIds = [...completedTourIds, tourId];
+				const newIds: string[] = [...completedTourIds, tourId];
 				setCompletedTourIds(new Set(newIds));
 				void updateCurrentUser({ preferences: { completed_tours: newIds } });
 			}
 
-			const snapshot = preInteractiveSnapshot.current;
-			const jamIds = jamCreatedIds.current;
-
-			// Compute all new IDs created since the tour started
-			const newInterviewIds = interviews.map((i) => i.id).filter((id) => !snapshot.interviewIds.has(id));
-			const newJobApplicationUpdateIds = jobApplicationUpdates
-				.map((u) => u.id)
-				.filter((id) => !snapshot.jobApplicationUpdateIds.has(id));
-			const newJobIds = jobs.map((j) => j.id).filter((id) => !snapshot.jobIds.has(id));
-			const newCompanyIds = companies.map((c) => c.id).filter((id) => !snapshot.companyIds.has(id));
-			const newPersonIds = persons.map((p) => p.id).filter((id) => !snapshot.personIds.has(id));
-			const newAggregatorIds = aggregators.map((a) => a.id).filter((id) => !snapshot.aggregatorIds.has(id));
-			const newKeywordIds = keywords.map((k) => k.id).filter((id) => !snapshot.keywordIds.has(id));
-			const newScrapingFilterIds = scrapingFilters
-				.map((f) => f.id)
-				.filter((id) => !snapshot.scrapingFilterIds.has(id));
-			const newSpeculativeApplicationIds = speculativeApplications
-				.map((s) => s.id)
-				.filter((id) => !snapshot.speculativeApplicationIds.has(id));
-
-			// User-created speculative applications whose company is also user-created can be kept.
-			// Those whose company is JAM-created will be cascade-deleted when that company is removed,
-			// so they are always cleaned up to keep frontend state consistent.
-			const userSAIds = newSpeculativeApplicationIds.filter((id) => !jamIds.speculativeApplicationIds.has(id));
-			const keepableSAIds = userSAIds.filter((id) => {
-				const sa = speculativeApplications.find((s) => s.id === id);
-				return !sa || !jamIds.companyIds.has(sa.company_id);
-			});
-			const cascadedSAIds = userSAIds.filter((id) => !keepableSAIds.includes(id));
-
-			const hasNewEntities = [
-				newInterviewIds,
-				newJobApplicationUpdateIds,
-				newJobIds,
-				newCompanyIds,
-				newPersonIds,
-				newAggregatorIds,
-				newKeywordIds,
-				newScrapingFilterIds,
-				newSpeculativeApplicationIds,
-			].some((arr) => arr.length > 0);
+			// During a tour all visible entities have is_tour=true (setIsInTour(false) was called above
+			// but the closure still holds the pre-update arrays). jamCreatedIds distinguishes JAM-
+			// seeded entities from ones the user created themselves.
+			const jamIds: TourSnapshot = jamCreatedIds.current;
+			const hasNewEntities: boolean =
+				jobs.length > 0 ||
+				companies.length > 0 ||
+				persons.length > 0 ||
+				aggregators.length > 0 ||
+				keywords.length > 0 ||
+				scrapingExclusionFilters.length > 0 ||
+				interviews.length > 0 ||
+				jobApplicationUpdates.length > 0 ||
+				speculativeApplications.length > 0;
 
 			if (hasNewEntities) {
 				setIsCleaningUp(true);
 				try {
-					// Round 1: delete child entities (interviews, job app updates) — always cleaned up
-					// regardless of keep/delete choice, since they depend on jobs that may be removed.
+					// Round 1: always delete child entities — they depend on jobs that may be removed.
 					await Promise.all([
-						...newInterviewIds.map((id) => deleteEntity("interview", id)),
-						...newJobApplicationUpdateIds.map((id) => deleteEntity("jobApplicationUpdate", id)),
+						...interviews.map((i) => deleteEntity("interview", i.id)),
+						...jobApplicationUpdates.map((u) => deleteEntity("jobApplicationUpdate", u.id)),
 					]);
-					// Round 2: delete jobs — only JAM-created ones when user chose to keep their data
-					const jobsToDelete = keepUserData ? newJobIds.filter((id) => jamIds.jobIds.has(id)) : newJobIds;
-					await Promise.all(jobsToDelete.map((id) => deleteEntity("job", id)));
-					// Round 3: delete speculative applications before companies (company_id FK has CASCADE)
-					const sAsToDelete = [
-						...newSpeculativeApplicationIds.filter((id) => jamIds.speculativeApplicationIds.has(id)),
-						...cascadedSAIds,
-						...(keepUserData ? [] : keepableSAIds),
-					];
-					await Promise.all(sAsToDelete.map((id) => deleteEntity("speculativeApplication", id)));
-					// Round 4: delete base entities — only JAM-created ones when user chose to keep their data
-					const companiesToDelete = keepUserData
-						? newCompanyIds.filter((id) => jamIds.companyIds.has(id))
-						: newCompanyIds;
-					const personsToDelete = keepUserData
-						? newPersonIds.filter((id) => jamIds.personIds.has(id))
-						: newPersonIds;
-					const aggregatorsToDelete = keepUserData
-						? newAggregatorIds.filter((id) => jamIds.aggregatorIds.has(id))
-						: newAggregatorIds;
-					const keywordsToDelete = keepUserData
-						? newKeywordIds.filter((id) => jamIds.keywordIds.has(id))
-						: newKeywordIds;
-					const filtersToDelete = keepUserData
-						? newScrapingFilterIds.filter((id) => jamIds.scrapingFilterIds.has(id))
-						: newScrapingFilterIds;
-					await Promise.all([
-						...companiesToDelete.map((id) => deleteEntity("company", id)),
-						...personsToDelete.map((id) => deleteEntity("person", id)),
-						...aggregatorsToDelete.map((id) => deleteEntity("aggregator", id)),
-						...keywordsToDelete.map((id) => deleteEntity("keyword", id)),
-						...filtersToDelete.map((id) => deleteEntity("scrapingFilter", id)),
-					]);
+
+					if (keepUserData) {
+						// Patch user-created entities to is_tour=false so they survive clearAll.
+						// SAs under JAM-created companies are cascade-deleted with their company — skip them.
+						const keepableSAs: SpeculativeApplicationData[] = speculativeApplications.filter(
+							(s) => !jamIds.speculativeApplicationIds.has(s.id) && !jamIds.companyIds.has(s.company_id)
+						);
+						await Promise.all([
+							...jobs
+								.filter((j) => !jamIds.jobIds.has(j.id))
+								.map((j) => updateEntity("job", j.id, { is_tour: false })),
+							...companies
+								.filter((c) => !jamIds.companyIds.has(c.id))
+								.map((c) => updateEntity("company", c.id, { is_tour: false })),
+							...persons
+								.filter((p) => !jamIds.personIds.has(p.id))
+								.map((p) => updateEntity("person", p.id, { is_tour: false })),
+							...aggregators
+								.filter((a) => !jamIds.aggregatorIds.has(a.id))
+								.map((a) => updateEntity("aggregator", a.id, { is_tour: false })),
+							...keywords
+								.filter((k) => !jamIds.keywordIds.has(k.id))
+								.map((k) => updateEntity("keyword", k.id, { is_tour: false })),
+							...scrapingExclusionFilters
+								.filter((f) => !jamIds.scrapingFilterIds.has(f.id))
+								.map((f) => updateEntity("scrapingExclusionFilter", f.id, { is_tour: false })),
+							...keepableSAs.map((s) => updateEntity("speculativeApplication", s.id, { is_tour: false })),
+						]);
+						// Delete JAM SAs before JAM companies (FK order)
+						await Promise.all(
+							speculativeApplications
+								.filter((s) => jamIds.speculativeApplicationIds.has(s.id))
+								.map((s) => deleteEntity("speculativeApplication", s.id))
+						);
+						await Promise.all([
+							...jobs.filter((j) => jamIds.jobIds.has(j.id)).map((j) => deleteEntity("job", j.id)),
+							...companies
+								.filter((c) => jamIds.companyIds.has(c.id))
+								.map((c) => deleteEntity("company", c.id)),
+							...persons
+								.filter((p) => jamIds.personIds.has(p.id))
+								.map((p) => deleteEntity("person", p.id)),
+							...aggregators
+								.filter((a) => jamIds.aggregatorIds.has(a.id))
+								.map((a) => deleteEntity("aggregator", a.id)),
+							...keywords
+								.filter((k) => jamIds.keywordIds.has(k.id))
+								.map((k) => deleteEntity("keyword", k.id)),
+							...scrapingExclusionFilters
+								.filter((f) => jamIds.scrapingFilterIds.has(f.id))
+								.map((f) => deleteEntity("scrapingExclusionFilter", f.id)),
+						]);
+					} else {
+						// Delete all tour entities. SAs first to respect FK order.
+						await Promise.all(
+							speculativeApplications.map((s) => deleteEntity("speculativeApplication", s.id))
+						);
+						await Promise.all([
+							...jobs.map((j) => deleteEntity("job", j.id)),
+							...companies.map((c) => deleteEntity("company", c.id)),
+							...persons.map((p) => deleteEntity("person", p.id)),
+							...aggregators.map((a) => deleteEntity("aggregator", a.id)),
+							...keywords.map((k) => deleteEntity("keyword", k.id)),
+							...scrapingExclusionFilters.map((f) => deleteEntity("scrapingExclusionFilter", f.id)),
+						]);
+					}
 				} finally {
 					setIsCleaningUp(false);
-					preInteractiveSnapshot.current = emptySnapshot();
 					jamCreatedIds.current = emptySnapshot();
 				}
 			}
@@ -609,11 +592,11 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			keywords,
 			interviews,
 			jobApplicationUpdates,
-			scrapingFilters,
+			scrapingExclusionFilters,
 			speculativeApplications,
 			deleteEntity,
-			setTourSnapshot,
-			demoScrapedJobId,
+			updateEntity,
+			setIsInTour,
 			token,
 			navigate,
 		]
@@ -628,7 +611,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	// post-cleanup visibleData snapshot instead of stale filtered data from Tour A.
 	useEffect((): void => {
 		if (!isTourActive && !isCleaningUp && pendingNextTourId !== null) {
-			const nextId = pendingNextTourId;
+			const nextId: string = pendingNextTourId;
 			setPendingNextTourId(null);
 			void startTourRef.current(nextId);
 		}

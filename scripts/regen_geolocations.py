@@ -3,7 +3,7 @@
 from app.database import session_local
 from app.geolocation.geolocation import geocode_location
 from app.models import ScrapedJob, Geolocation, Location
-from app.job_email_scraping.location_parser import LocationParser
+from app.job_email_scraping.location_parser import parse_location
 
 
 def run():
@@ -30,7 +30,7 @@ def run():
         scraped_jobs = session.query(ScrapedJob).all()
         for scraped_job in scraped_jobs:
             if scraped_job.location:
-                parsed_location, parsed_attendance = LocationParser().parse_location(scraped_job.location)
+                parsed_location, parsed_attendance = parse_location(scraped_job.location)
                 scraped_job.parsed_location = parsed_location
                 if parsed_location:
                     geolocation = geocode_location(parsed_location, session)

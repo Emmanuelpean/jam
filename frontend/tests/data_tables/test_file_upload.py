@@ -118,7 +118,7 @@ class TestFileUpload(BaseTest):
         self.get_element("application-tab").click()
 
         self._expand_section(self.document_section)
-        assert "great_cv.txt" in self.document_section.text
+        assert "GREAT_CV.TXT" in self.document_section.text
 
     def test_view_shows_not_provided_when_no_files(self) -> None:
         """View modal shows 'Not Provided' for both document fields when no files are attached."""
@@ -168,9 +168,7 @@ class TestFileUpload(BaseTest):
         self._open_job_edit_application_tab(self.test_job.id)
         self._upload_file("cv_id", oversized_content, "huge_cv.pdf")
 
-        error_el = WebDriverWait(self.driver, 5).until(
-            lambda d: d.find_element(By.CSS_SELECTOR, ".text-danger.small")
-        )
+        error_el = WebDriverWait(self.driver, 5).until(lambda d: d.find_element(By.CSS_SELECTOR, ".text-danger.small"))
         assert f"{settings.max_file_size_mb} MB" in error_el.text
 
         drop_zone = self.get_element("cv_id-drop-zone", enabled=False)

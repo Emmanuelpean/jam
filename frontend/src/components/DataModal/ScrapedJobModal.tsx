@@ -6,7 +6,7 @@ import DataModal, {
 	SectionConfig,
 	WarningMessageConfig,
 } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { findClosestOption, findExactOption, useFormOptions } from "../rendering/form/FormOptions";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { capitalise } from "../../utils/StringUtils";
@@ -38,6 +38,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 			getAggregatorPreviewConfig,
 			getPersonPreviewConfig,
 		} = useFormOptions();
+		const ff = useFormFields();
 
 		const transformInputData = (data: ScrapedJobData) => {
 			if (!data) return data;
@@ -68,7 +69,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				fields: [
 					modalViewFields.title({ isTitle: true }),
 					[
-						formFields.scrapedCompany(
+						ff.scrapedCompanyField(
 							companies,
 							companyModalRef,
 							(scrapedJob: ScrapedJobData) => ({
@@ -77,7 +78,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 							getCompanyPreviewConfig,
 							{ highlight: mode === "import" && !!data?.company }
 						),
-						formFields.jobURl(),
+						ff.jobUrlField(),
 					],
 				],
 			} as SectionConfig,
@@ -87,7 +88,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				key: "location",
 				title: "Location",
 				icon: "bi-geo-alt",
-				fields: [[formFields.attendanceType(), formFields.location()], modalViewFields.geolocationMap(false)],
+				fields: [[ff.attendanceTypeField(), ff.locationField()], modalViewFields.geolocationMap(false)],
 			} as SectionConfig,
 
 			{
@@ -96,8 +97,8 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				title: "Compensation & Priority",
 				icon: "bi-currency-pound",
 				fields: [
-					[formFields.salaryMin(), formFields.salaryMax()],
-					[formFields.personalRating(), formFields.isFavourite(), formFields.deadline()],
+					[ff.salaryMinField(), ff.salaryMaxField()],
+					[ff.personalRatingField(), ff.isFavouriteField(), ff.deadlineField()],
 				],
 			} as SectionConfig,
 
@@ -107,7 +108,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				title: "Source",
 				icon: "bi-search",
 				fields: [
-					formFields.sourceGroup(
+					ff.sourceGroupFields(
 						aggregators,
 						aggregatorModalRef,
 						getAggregatorPreviewConfig,
@@ -131,8 +132,8 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				icon: "bi-tags",
 				fields: [
 					[
-						formFields.keywords(keywords, keywordModalRef),
-						formFields.contacts(persons, personModalRef, null, getPersonPreviewConfig),
+						ff.keywordsField(keywords, keywordModalRef),
+						ff.contactsField(persons, personModalRef, null, getPersonPreviewConfig),
 					],
 				],
 			} as SectionConfig,
@@ -144,7 +145,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 				icon: "bi-card-text",
 				fields: [
 					modalViewFields.description(),
-					formFields.note({
+					ff.noteField({
 						placeholder:
 							"This role offers a chance to apply Python expertise to build scalable solutions " +
 							"while exploring opportunities for growth in automation, data analysis, and collaborative software development.",

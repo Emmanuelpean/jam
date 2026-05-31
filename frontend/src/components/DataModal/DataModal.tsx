@@ -463,7 +463,8 @@ function DataModalComponent<T extends JamData>(
 		}
 		const allFields: Field[] = flattenFieldsWithSections(getAllFields().form);
 		const requiredMissing: boolean = allFields.some(
-			(field: Field): boolean => !!(("required" in field) && field.required && !get(formData, getFieldName(field) ?? ""))
+			(field: Field): boolean =>
+				!!("required" in field && field.required && !get(formData, getFieldName(field) ?? ""))
 		);
 		if (requiredMissing) {
 			setHasLiveCustomError(false);
@@ -474,9 +475,13 @@ function DataModalComponent<T extends JamData>(
 		setHasLiveCustomError(hasFailed);
 		setErrors((prev: Errors): Errors => {
 			const next = { ...prev };
-			liveCustomErrorKeysRef.current.forEach((key: string): void => { delete next[key]; });
+			liveCustomErrorKeysRef.current.forEach((key: string): void => {
+				delete next[key];
+			});
 			liveCustomErrorKeysRef.current = new Set(Object.keys(result));
-			Object.entries(result).forEach(([key, msg]: [string, string]): void => { next[key] = msg; });
+			Object.entries(result).forEach(([key, msg]: [string, string]): void => {
+				next[key] = msg;
+			});
 			return next;
 		});
 	}, [formData, isEditing]);
@@ -622,7 +627,11 @@ function DataModalComponent<T extends JamData>(
 			if (firstItem && "isTitle" in firstItem && firstItem.isTitle) {
 				return (
 					<div key={index}>
-						<ModalViewFieldRenderer field={firstItem as ModalViewField} item={effectiveData} id={getModalId()} />
+						<ModalViewFieldRenderer
+							field={firstItem as ModalViewField}
+							item={effectiveData}
+							id={getModalId()}
+						/>
 					</div>
 				);
 			}
@@ -633,21 +642,28 @@ function DataModalComponent<T extends JamData>(
 		return (
 			<div key={index} className={`row`} style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}>
 				{itemList.map((field: Field, fieldIndex: number): JSX.Element => {
-					const fieldKey: string | string[] =
-						field.key || `field_${index}_${fieldIndex}`;
+					const fieldKey: string | string[] = field.key || `field_${index}_${fieldIndex}`;
 
 					return (
 						<div key={toKey(fieldKey)} className={columnClass}>
-							{isViewField(field)
-								? <ModalViewFieldRenderer field={field as ModalViewField} item={effectiveData} id={getModalId()} />
-								: renderFormField(
-										field as ModalFormField,
-										formData,
-										handleChange,
-										errors,
-										currentUser,
-										handleUploadingChange
-									)}
+							{isViewField(field) ? (
+								<ModalViewFieldRenderer
+									field={field as ModalViewField}
+									item={effectiveData}
+									id={getModalId()}
+								/>
+							) : (
+								renderFormField(
+									field as ModalFormField,
+									formData,
+									handleChange,
+									errors,
+									currentUser,
+									handleUploadingChange,
+									(key: string, message: string | null): void =>
+										setErrors((prev: Errors): Errors => ({ ...prev, [key]: message ?? "" }))
+								)
+							)}
 						</div>
 					);
 				})}
@@ -721,7 +737,6 @@ function DataModalComponent<T extends JamData>(
 			set(next, name, nextValue); // name like "premium.is_active"
 			return next;
 		});
-
 	};
 
 	const filterConditionalFields = (fieldsToFilter: FieldItem[]): FieldItem[] => {
@@ -1015,7 +1030,11 @@ function DataModalComponent<T extends JamData>(
 								{currentAdditionalFields.map(
 									(item: ModalViewField, index: number): JSX.Element => (
 										<div key={`outside-field-${index}`} className="mb-3">
-											<ModalViewFieldRenderer field={item} item={effectiveData} id={getModalId()} />
+											<ModalViewFieldRenderer
+												field={item}
+												item={effectiveData}
+												id={getModalId()}
+											/>
 										</div>
 									)
 								)}

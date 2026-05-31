@@ -215,7 +215,7 @@ class BaseTablePage(BaseTest):
             self.table_utils.add_entity_button.click()
             self.modal_utils.wait_for_edit_modal()
             self.modal_utils._fill_modal(duplicate_fields=self.duplicate_fields, **self.test_data)
-            self.modal_utils.confirm_button("edit").click()
+            self.modal_utils.assert_confirm_button_disabled("edit")
             self.modal_utils.get_element(".invalid-feedback", By.CSS_SELECTOR)
             self.modal_utils.cancel_button("edit").click()
             self.modal_utils.wait_for_edit_modal_close()

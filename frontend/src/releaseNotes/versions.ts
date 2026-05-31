@@ -68,7 +68,9 @@ export const WELCOME_SLIDES: ReleaseSlide[] = [
 		title: "Premium - Job Alert Scraping and Rating",
 		description:
 			"Typical job seekers receive hundreds of job alerts every month from job aggregators like LinkedIn and Indeed. " +
-			"For only " + PREMIUM_PRICE + "/month, JAM automatically scrapes these job details, rates them against your qualifications, " +
+			"For only " +
+			PREMIUM_PRICE +
+			"/month, JAM automatically scrapes these job details, rates them against your qualifications, " +
 			"and highlights the best matches for you.",
 		image: scrapedJobsPng,
 	},
@@ -153,7 +155,7 @@ export const RELEASE_SLIDES: Record<version, ReleaseSlide[]> = {
 	],
 	"1.2.0": [
 		{
-			icon: getEntityIcon("scrapingFilter"),
+			icon: getEntityIcon("scrapingExclusionFilter"),
 			title: "Job Scraping Filters",
 			description:
 				"Create custom filtering rules to exclude unwanted jobs from your job scraping results. " +

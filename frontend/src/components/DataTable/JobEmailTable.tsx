@@ -18,7 +18,7 @@ const JobEmailTable: React.FC<JobEmailTableProps> = ({
 		columns.length > 0
 			? columns
 			: [
-					tableColumns.titleColumn({ key: "subject", label: "Subject" }),
+					tableColumns.subjectColumn(),
 					tableColumns.platformColumn(),
 					tableColumns.alertNameColumn(),
 					tableColumns.jobsFoundColumn(),

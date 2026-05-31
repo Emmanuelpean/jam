@@ -1,6 +1,6 @@
 import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, ValidationErrors } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { KeywordData, KeywordDataTransform } from "../../services/schemas/DataTables";
@@ -8,9 +8,10 @@ import { KeywordData, KeywordDataTransform } from "../../services/schemas/DataTa
 export const KeywordModal = forwardRef<DataModalHandle<KeywordData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
+		const ff = useFormFields();
 
 		const fields = {
-			form: [formFields.name({ required: true, placeholder: "Software development" })],
+			form: [ff.nameField({ required: true, placeholder: "Software development" })],
 			view: [modalViewFields.name({ isTitle: true })],
 		};
 

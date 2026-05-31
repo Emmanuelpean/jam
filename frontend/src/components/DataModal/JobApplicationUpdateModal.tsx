@@ -1,29 +1,34 @@
 import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, Fields, JamDataModalProps } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { useFormOptions } from "../rendering/form/FormOptions";
-import { JobApplicationUpdateData, JobApplicationUpdateDataTransform } from "../../services/schemas/DataTables";
+import {
+	EnrichedJobApplicationUpdateData,
+	JobApplicationUpdateData,
+	JobApplicationUpdateDataTransform,
+} from "../../services/schemas/DataTables";
 
 export interface JobApplicationUpdateModalProps extends JamDataModalProps {
 	jobId?: number;
 }
 
 export const JobApplicationUpdateModal = forwardRef<
-	DataModalHandle<JobApplicationUpdateData>,
+	DataModalHandle<EnrichedJobApplicationUpdateData>,
 	JobApplicationUpdateModalProps
 >(({ size = "lg", jobId }: JobApplicationUpdateModalProps, ref): JSX.Element => {
 	const { jobs } = useFormOptions();
+	const ff = useFormFields();
 
 	const formFieldsArray: Fields = [
-		...(!jobId ? [formFields.job(jobs)] : []),
+		...(!jobId ? [ff.jobField(jobs)] : []),
 		[
-			formFields.datetime({
+			ff.datetimeField({
 				required: true,
 			}),
-			formFields.updateType(),
+			ff.updateTypeField(),
 		],
-		formFields.note({
+		ff.noteField({
 			placeholder:
 				"Application is under review and the hiring team will contact me regarding the next steps in the process.",
 		}),
@@ -51,7 +56,7 @@ export const JobApplicationUpdateModal = forwardRef<
 
 	return (
 		<>
-			<DataModal<JobApplicationUpdateData>
+			<DataModal<EnrichedJobApplicationUpdateData>
 				ref={ref}
 				size={size}
 				fields={fields}

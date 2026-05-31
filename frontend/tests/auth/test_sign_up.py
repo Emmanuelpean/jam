@@ -71,6 +71,7 @@ class TestSignUp(BaseTest):
 
         # Verify error message and database
         self.auth_utils.assert_email_error_message("Please provide a valid email address")
+        self.auth_utils.assert_confirm_button_disabled()
         assert not self.verify_user_in_database(test_email)
 
     def test_signup_no_email(self) -> None:
@@ -88,6 +89,7 @@ class TestSignUp(BaseTest):
 
         # Verify error message and database
         self.auth_utils.assert_email_error_message("Please provide a valid email address")
+        self.auth_utils.assert_confirm_button_disabled()
         assert not self.verify_user_in_database(test_email)
 
     def test_signup_no_password(self) -> None:
@@ -106,6 +108,7 @@ class TestSignUp(BaseTest):
         # Verify error message and database
         self.auth_utils.assert_password_error_message("Password is required")
         self.auth_utils.assert_confirm_password_error_message("Please confirm your password")
+        self.auth_utils.assert_confirm_button_disabled()
         assert not self.verify_user_in_database(test_email)
 
     def test_signup_password_mismatch(self) -> None:
@@ -123,6 +126,7 @@ class TestSignUp(BaseTest):
 
         # Verify error message and database
         self.auth_utils.assert_confirm_password_error_message("Passwords do not match")
+        self.auth_utils.assert_confirm_button_disabled()
         assert not self.verify_user_in_database(test_email)
 
     def test_signup_password_requirement(self) -> None:
@@ -140,6 +144,7 @@ class TestSignUp(BaseTest):
 
         # Verify error message and database
         self.auth_utils.assert_password_error_message("Password must be at least 8 characters long.")
+        self.auth_utils.assert_confirm_button_disabled()
         assert not self.verify_user_in_database(test_email)
 
     def test_signup_no_tc(self) -> None:
@@ -158,6 +163,7 @@ class TestSignUp(BaseTest):
         self.auth_utils.assert_accept_terms_error_message(
             "You must accept the Terms and Conditions and Privacy Policy to register."
         )
+        self.auth_utils.assert_confirm_button_disabled()
         assert not self.verify_user_in_database(test_email)
 
     def test_signup_limited(self, test_settings) -> None:
@@ -176,3 +182,24 @@ class TestSignUp(BaseTest):
 
         self.auth_utils.assert_toast_message("You are not allowed to sign up for now.")
         assert not self.verify_user_in_database(test_email)
+
+    def test_register_field_limits(self) -> None:
+        """Entering email or password over the limit disables Continue; reducing re-enables it."""
+
+        self.auth_utils.go_to_register()
+
+        # Email over limit (254 char limit)
+        self.auth_utils.set_email("a" * 246 + "@test.com")
+        self.auth_utils.assert_confirm_button_disabled()
+
+        # Back within limit
+        self.auth_utils.set_email("test@test.com")
+        self.auth_utils.assert_confirm_button_enabled()
+
+        # Password over limit (128 char limit)
+        self.auth_utils.set_password("P" * 129)
+        self.auth_utils.assert_confirm_button_disabled()
+
+        # Back within limit
+        self.auth_utils.set_password("Password123!")
+        self.auth_utils.assert_confirm_button_enabled()

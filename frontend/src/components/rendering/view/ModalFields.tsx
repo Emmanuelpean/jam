@@ -56,6 +56,12 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	filename: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "filename",
+		label: "Filename",
+		...overrides,
+	}),
+
 	title: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "title",
 		label: "Title",

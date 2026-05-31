@@ -151,3 +151,7 @@ Frontend reads from `frontend/.env` (typically just the API base URL).
 ## Editing Files on Windows
 
 Frontend files (`.tsx`, `.ts`, `.scss`) use **CRLF line endings** (`\r\n`) but linters (Prettier, Stylelint) may reformat them to **LF** (`\n`) during a session. The Edit tool fails silently when the line endings in the file don't match the string being searched.
+
+## Running Shell Commands on Windows
+
+This is a **native Windows environment** — never use `/mnt/c/...` paths. The Bash tool does not have WSL access here. Always use the **PowerShell tool** with Windows-style paths (e.g., `C:\Users\Emmanuel\WebstormProjects\jam`) for all shell commands.

@@ -49,30 +49,20 @@ export const displayError = (errorMessage: string | null): JSX.Element[] | null 
 };
 
 export const DefaultInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
-	const charCount = field.maxChars ? (value || "").length : 0;
-	const isOverLimit = field.maxChars ? charCount > field.maxChars : false;
-
 	return (
-		<>
-			<Form.Control
-				id={toKey(field.key)}
-				type={field.type || "text"}
-				name={toKey(field.key)}
-				key={toKey(field.key)}
-				value={value || ""}
-				onChange={handleChange}
-				placeholder={field.placeholder}
-				isInvalid={!!error || isOverLimit}
-				step={field.step}
-				autoComplete={field.autoComplete}
-				disabled={field.isDisabled}
-			/>
-			{isOverLimit && field.maxChars && (
-				<Form.Text className="text-danger">
-					{charCount} / {field.maxChars} characters
-				</Form.Text>
-			)}
-		</>
+		<Form.Control
+			id={toKey(field.key)}
+			type={field.type || "text"}
+			name={toKey(field.key)}
+			key={toKey(field.key)}
+			value={value || ""}
+			onChange={handleChange}
+			placeholder={field.placeholder}
+			isInvalid={!!error}
+			step={field.step}
+			autoComplete={field.autoComplete}
+			disabled={field.isDisabled}
+		/>
 	);
 };
 
@@ -82,17 +72,36 @@ export const renderFormField = (
 	handleChange: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,
 	errors: Errors,
 	currentUser?: CurrentUser | null,
-	onUploadingChange?: (uploading: boolean) => void
+	onUploadingChange?: (uploading: boolean) => void,
+	onError?: (key: string, message: string | null) => void
 ) => {
 	const value: any = get(formData, field.key);
 	const secondaryValue: any = field.secondaryKey ? get(formData, field.secondaryKey) : null;
 	const error: string | null | undefined = get(errors, field.key);
 	const previewConfig = field.previewConfig;
 
+	const wrappedHandleChange =
+		onError && field.maxChars && typeof field.key === "string"
+			? (e: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => {
+					handleChange(e);
+					const newValue = e.target.value;
+					if (typeof newValue === "string") {
+						onError(
+							field.key as string,
+							newValue.length > field.maxChars!
+								? `Must be at most ${field.maxChars} characters long (current: ${newValue.length})`
+								: null
+						);
+					}
+				}
+			: handleChange;
+
+	const isOverLimit: boolean = !!(field.maxChars && typeof value === "string" && value.length > field.maxChars);
+
 	const widgetProps: WidgetProps = {
 		field,
 		value,
-		handleChange,
+		handleChange: wrappedHandleChange,
 		error,
 		secondaryValue,
 		currentUser,
@@ -106,26 +115,45 @@ export const renderFormField = (
 
 	const renderWidget = (): JSX.Element => {
 		switch (field.type) {
-			case "checkbox":      return <Checkbox {...widgetProps} />;
-			case "toggle":        return <Toggle {...widgetProps} />;
-			case "textarea":      return <Textarea {...widgetProps} />;
+			case "checkbox":
+				return <Checkbox {...widgetProps} />;
+			case "toggle":
+				return <Toggle {...widgetProps} />;
+			case "textarea":
+				return <Textarea {...widgetProps} />;
 			case "select":
-			case "multiselect":   return <SelectInput {...widgetProps} />;
-			case "datetime-local": return <LocalDatetimeInput {...widgetProps} inputType="datetime-local" />;
-			case "date":          return <LocalDatetimeInput {...widgetProps} inputType="date" />;
-			case "password":      return <PasswordInput {...widgetProps} />;
-			case "salary":        return <SalaryInput {...widgetProps} />;
-			case "rating":        return <StarRating {...widgetProps} />;
-			case "url":           return <UrlInput {...widgetProps} />;
-			case "star_toggle":   return <FavouriteStar {...widgetProps} />;
-			case "cover_letter":  return <CoverLetterWidget {...widgetProps} />;
-			case "file_upload":   return <FileUploadWidget {...widgetProps} />;
-			default:              return <DefaultInput {...widgetProps} />;
+			case "multiselect":
+				return <SelectInput {...widgetProps} />;
+			case "datetime-local":
+				return <LocalDatetimeInput {...widgetProps} inputType="datetime-local" />;
+			case "date":
+				return <LocalDatetimeInput {...widgetProps} inputType="date" />;
+			case "password":
+				return <PasswordInput {...widgetProps} />;
+			case "salary":
+				return <SalaryInput {...widgetProps} />;
+			case "rating":
+				return <StarRating {...widgetProps} />;
+			case "url":
+				return <UrlInput {...widgetProps} />;
+			case "star_toggle":
+				return <FavouriteStar {...widgetProps} />;
+			case "cover_letter":
+				return <CoverLetterWidget {...widgetProps} />;
+			case "file_upload":
+				return <FileUploadWidget {...widgetProps} />;
+			default:
+				return <DefaultInput {...widgetProps} />;
 		}
 	};
 
+	const showCharCounter = isOverLimit && field.maxChars && field.type !== "textarea" && !onError;
+
 	return (
-		<Form.Group className={`mb-3${field.highlight ? " field-highlight" : ""}`} id={`${toKey(field.key)}-form-group`}>
+		<Form.Group
+			className={`mb-3${field.highlight ? " field-highlight" : ""}`}
+			id={`${toKey(field.key)}-form-group`}
+		>
 			{field.label && !hasOwnLabel && (
 				<Form.Label>
 					{field.icon && <i className={`${field.icon} me-2 text-muted`} aria-hidden="true" />}
@@ -135,6 +163,11 @@ export const renderFormField = (
 				</Form.Label>
 			)}
 			{renderWidget()}
+			{showCharCounter && (
+				<Form.Text className="text-danger">
+					{(value || "").length} / {field.maxChars} characters
+				</Form.Text>
+			)}
 			{error && (
 				<div className="invalid-feedback d-block" id={`${toKey(field.key)}-error-message`}>
 					{displayError(error)}

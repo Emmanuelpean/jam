@@ -64,6 +64,7 @@ function AuthForm(): JSX.Element {
 	const [demoLoading, setDemoLoading] = useState<boolean>(false);
 	const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
 	const [fieldErrors, setFieldErrors] = useState<Errors>({});
+	const hasFieldErrors: boolean = Object.values(fieldErrors).some((e) => !!e);
 	const { logout, login, isAuthenticated } = useAuth();
 	const { showToastSuccess, showToastError, showApiError } = useGlobalToast();
 	const { showLoading, hideLoading } = useLoading();
@@ -191,6 +192,10 @@ function AuthForm(): JSX.Element {
 				})
 			);
 		}
+	};
+
+	const handleFieldError = (key: string, message: string | null): void => {
+		setFieldErrors((prev: Errors): Errors => ({ ...prev, [key]: message ?? "" }));
 	};
 
 	const resetForm = (): void => {
@@ -442,6 +447,9 @@ function AuthForm(): JSX.Element {
 
 	const handleTermsCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
 		setAcceptedTerms(e.target.checked);
+		if (fieldErrors.terms) {
+			setFieldErrors((prev: Errors): Errors => ({ ...prev, terms: "" }));
+		}
 	};
 
 	const handleShowTerms = (e: React.MouseEvent<HTMLButtonElement>): void => {
@@ -461,6 +469,7 @@ function AuthForm(): JSX.Element {
 		icon: "bi bi-envelope-fill",
 		placeholder: "Enter your email",
 		autoComplete: "email",
+		maxChars: config?.column_limits.email,
 	};
 
 	const passwordField: ModalFormField = {
@@ -473,6 +482,7 @@ function AuthForm(): JSX.Element {
 		helpText: ["register", "resetPassword"].includes(displayedMode)
 			? `Password must be at least ${config?.min_password_length} characters long`
 			: null,
+		maxChars: config?.column_limits.password,
 	};
 
 	const confirmPasswordField: ModalFormField = {
@@ -482,6 +492,7 @@ function AuthForm(): JSX.Element {
 		icon: "bi bi-lock-fill",
 		placeholder: displayedMode === "resetPassword" ? "Confirm your new password" : "Confirm your password",
 		autoComplete: "new-password",
+		maxChars: config?.column_limits.password,
 	};
 
 	const firstNameField: ModalFormField = {
@@ -490,6 +501,7 @@ function AuthForm(): JSX.Element {
 		label: "First Name",
 		icon: "bi bi-person-fill",
 		placeholder: "Enter your first name",
+		maxChars: config?.column_limits.first_name,
 	};
 
 	const lastNameField: ModalFormField = {
@@ -498,6 +510,7 @@ function AuthForm(): JSX.Element {
 		label: "Last Name",
 		icon: "bi bi-person-fill",
 		placeholder: "Enter your last name",
+		maxChars: config?.column_limits.last_name,
 	};
 
 	const cardTitle: string =
@@ -587,30 +600,30 @@ function AuthForm(): JSX.Element {
 		<div className="auth-page-wrapper">
 			{/* Left branding panel - conditionally rendered based on screen size */}
 			{!isTablet && (
-			<div className="auth-branding-panel">
-				<div className="branding-content">
-					<div className="branding-logo">
-						<JamLogo />
+				<div className="auth-branding-panel">
+					<div className="branding-content">
+						<div className="branding-logo">
+							<JamLogo />
+						</div>
+						<h1 className="branding-title">Job Application Manager</h1>
+						<p className="branding-tagline">
+							Streamline your job search. Track applications, manage deadlines, and land your dream job.
+						</p>
+						<ul className="feature-list">
+							{featureItems.map(
+								(feature: Feature, index: number): JSX.Element => (
+									<li key={index} className="feature-item">
+										<div className="feature-icon">
+											<i className={feature.icon}></i>
+										</div>
+										<span className="feature-text">{feature.text}</span>
+										<div className="feature-tooltip">{feature.description}</div>
+									</li>
+								)
+							)}
+						</ul>
 					</div>
-					<h1 className="branding-title">Job Application Manager</h1>
-					<p className="branding-tagline">
-						Streamline your job search. Track applications, manage deadlines, and land your dream job.
-					</p>
-					<ul className="feature-list">
-						{featureItems.map(
-							(feature: Feature, index: number): JSX.Element => (
-								<li key={index} className="feature-item">
-									<div className="feature-icon">
-										<i className={feature.icon}></i>
-									</div>
-									<span className="feature-text">{feature.text}</span>
-									<div className="feature-tooltip">{feature.description}</div>
-								</li>
-							)
-						)}
-					</ul>
 				</div>
-			</div>
 			)}
 
 			{/* Right form panel */}
@@ -679,13 +692,32 @@ function AuthForm(): JSX.Element {
 									{/* Registration Step 1 */}
 									{displayedMode === "register" && displayedStep === 1 && (
 										<>
-											{renderFormField(emailField, formData, handleInputChange, fieldErrors)}
-											{renderFormField(passwordField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(
+												emailField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
+											{renderFormField(
+												passwordField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
 											{renderFormField(
 												confirmPasswordField,
 												formData,
 												handleInputChange,
-												fieldErrors
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
 											)}
 											{renderFormField(
 												termsField,
@@ -700,16 +732,48 @@ function AuthForm(): JSX.Element {
 									{/* Registration Step 2 */}
 									{displayedMode === "register" && displayedStep === 2 && (
 										<>
-											{renderFormField(firstNameField, formData, handleInputChange, fieldErrors)}
-											{renderFormField(lastNameField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(
+												firstNameField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
+											{renderFormField(
+												lastNameField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
 										</>
 									)}
 
 									{/* Login Mode */}
 									{displayedMode === "login" && (
 										<>
-											{renderFormField(emailField, formData, handleInputChange, fieldErrors)}
-											{renderFormField(passwordField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(
+												emailField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
+											{renderFormField(
+												passwordField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
 											<div className="d-flex justify-content-between align-items-center mb-3">
 												<Form.Check
 													type="checkbox"
@@ -736,18 +800,39 @@ function AuthForm(): JSX.Element {
 
 									{/* Forgot Password Mode */}
 									{displayedMode === "forgotPassword" && (
-										<>{renderFormField(emailField, formData, handleInputChange, fieldErrors)}</>
+										<>
+											{renderFormField(
+												emailField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
+										</>
 									)}
 
 									{/* Reset Password Mode */}
 									{displayedMode === "resetPassword" && (
 										<>
-											{renderFormField(passwordField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(
+												passwordField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
 											{renderFormField(
 												confirmPasswordField,
 												formData,
 												handleInputChange,
-												fieldErrors
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
 											)}
 										</>
 									)}
@@ -767,7 +852,7 @@ function AuthForm(): JSX.Element {
 										<ActionButton
 											type="submit"
 											id="confirm-button"
-											disabled={buttonDisabled}
+											disabled={buttonDisabled || hasFieldErrors}
 											loading={loading}
 											className="fw-semibold"
 											loadingText={
@@ -863,7 +948,7 @@ function AuthForm(): JSX.Element {
 							className="try-app-btn"
 							onClick={handleDemoLogin}
 							loading={demoLoading}
-							disabled={buttonDisabled}
+							disabled={buttonDisabled || hasFieldErrors}
 							defaultText="Try JAM with Demo Account"
 							loadingText="Loading demo..."
 							defaultIcon="bi bi-play-circle"

@@ -1,12 +1,10 @@
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
+import { EntityType, EntityTypeDataMap } from "../../contexts/DataContext";
 
-type EntityType = string;
+type ColumnRegistry = { [K in keyof EntityTypeDataMap]?: TableColumn<EntityTypeDataMap[K]>[] };
 
-let _cache: Record<EntityType, TableColumn[]> | null = null;
-
-function getDefaultColumnsMap(): Record<EntityType, TableColumn[]> {
-	if (_cache) return _cache;
-	_cache = {
+function getDefaultColumnsMap(): ColumnRegistry {
+	return {
 		job: [
 			tableColumns.titleColumn(),
 			tableColumns.companyBadgeColumn(),
@@ -97,25 +95,42 @@ function getDefaultColumnsMap(): Record<EntityType, TableColumn[]> {
 			tableColumns.createdAtColumn(),
 		],
 		jobEmail: [
-			tableColumns.titleColumn({ key: "subject", label: "Subject" }),
+			tableColumns.subjectColumn(),
 			tableColumns.platformColumn(),
 			tableColumns.alertNameColumn(),
 			tableColumns.jobsFoundColumn(),
 			tableColumns.dateReceivedColumn(),
 		],
+		user: [
+			tableColumns.idColumn(),
+			tableColumns.nameColumn(),
+			tableColumns.emailColumn(),
+			tableColumns.lastLoginColumn(),
+			tableColumns.isAdminColumn(),
+			tableColumns.isActiveColumn(),
+			tableColumns.toastActiveColumn(),
+			tableColumns.createdAtColumn(),
+		],
+		setting: [
+			tableColumns.nameColumn(),
+			tableColumns.valueColumn(),
+			tableColumns.descriptionColumn(),
+			tableColumns.isActiveColumn(),
+			tableColumns.createdAtColumn(),
+		],
 	};
-	return _cache;
 }
 
-export function getDefaultColumns(entityType: EntityType): TableColumn[] {
-	return getDefaultColumnsMap()[entityType] || [];
+export function getDefaultColumns(entityType: EntityType | string): TableColumn[] {
+	const map: ColumnRegistry = getDefaultColumnsMap();
+	return (map[entityType as keyof ColumnRegistry] ?? []) as TableColumn[];
 }
 
-export function getDefaultColumnKeys(entityType: EntityType): string[] {
+export function getDefaultColumnKeys(entityType: EntityType | string): string[] {
 	return getDefaultColumns(entityType).map((col: TableColumn): string => col.key);
 }
 
-export function resolveColumns(entityType: EntityType, keys: string[]): TableColumn[] {
+export function resolveColumns(entityType: EntityType | string, keys: string[]): TableColumn[] {
 	const defaults: TableColumn[] = getDefaultColumns(entityType);
 	return keys
 		.map((key: string): TableColumn | undefined => defaults.find((col: TableColumn): boolean => col.key === key))

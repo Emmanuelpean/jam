@@ -1,4 +1,13 @@
-import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import React, {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import {
 	aggregatorsApi,
 	companiesApi,
@@ -42,18 +51,6 @@ import { ApiError } from "../services/api/ApiError";
 import { GeoLocationData } from "../services/schemas/Base";
 import { tourApi } from "../services/api/Others";
 
-export interface TourSnapshot {
-	jobIds: Set<number>;
-	companyIds: Set<number>;
-	personIds: Set<number>;
-	interviewIds: Set<number>;
-	jobApplicationUpdateIds: Set<number>;
-	scrapingFilterIds: Set<number>;
-	aggregatorIds: Set<number>;
-	keywordIds: Set<number>;
-	speculativeApplicationIds: Set<number>;
-}
-
 export type EntityType =
 	| "job"
 	| "company"
@@ -65,7 +62,7 @@ export type EntityType =
 	| "setting"
 	| "user"
 	| "scrapedJob"
-	| "scrapingFilter"
+	| "scrapingExclusionFilter"
 	| "scrapingFavouriteFilter"
 	| "speculativeApplication"
 	| "jobEmail"
@@ -78,8 +75,8 @@ export type JamData =
 	| PersonData
 	| CompanyData
 	| EnrichedJobData
-	| InterviewData
-	| JobApplicationUpdateData
+	| EnrichedInterviewData
+	| EnrichedJobApplicationUpdateData
 	| UserData
 	| SettingData
 	| ScrapedJobData
@@ -101,7 +98,7 @@ export const entityTypeToGenericName = (entityType: EntityType): string => {
 		setting: "Setting",
 		user: "User",
 		scrapedJob: "Scraped Job",
-		scrapingFilter: "Scraping Filter",
+		scrapingExclusionFilter: "Scraping Filter",
 		scrapingFavouriteFilter: "Favourite Filter",
 		speculativeApplication: "Speculative Application",
 		jobEmail: "Job Email",
@@ -111,46 +108,67 @@ export const entityTypeToGenericName = (entityType: EntityType): string => {
 	return nameMap[entityType];
 };
 
-export const entityTypeToName = (
-	entityType: EntityType,
+export type EntityTypeDataMap = {
+	keyword: KeywordData;
+	aggregator: AggregatorData;
+	company: CompanyData;
+	person: PersonData;
+	speculativeApplication: SpeculativeApplicationData;
+	job: EnrichedJobData;
+	interview: EnrichedInterviewData;
+	jobApplicationUpdate: EnrichedJobApplicationUpdateData;
+	setting: SettingData;
+	user: UserData;
+	scrapedJob: ScrapedJobData;
+	scrapingExclusionFilter: ScrapingFilterData;
+	scrapingFavouriteFilter: ScrapingFilterData;
+	jobEmail: JobEmailData;
+	geolocation: GeoLocationData;
+	file: FileData;
+};
+
+export const entityTypeToName = <T extends EntityType>(
+	entityType: T,
 	dataContext: DataContextValue
-): ((data: JamData) => string) => {
-	// noinspection JSUnusedGlobalSymbols
-	const nameMap: Record<EntityType, (data: JamData) => string> = {
-		keyword: (data: JamData): string => (data as KeywordData).name,
-		aggregator: (data: JamData): string => (data as AggregatorData).name,
-		company: (data: JamData): string => (data as CompanyData).name,
-		person: (data: JamData): string => (data as PersonData).name,
-		speculativeApplication: (data: JamData): string => {
-			const company: CompanyData = findItemById(
-				dataContext.companies,
-				(data as SpeculativeApplicationData).company_id
-			)!;
+): ((data: EntityTypeDataMap[T]) => string) => {
+	const nameMap: { [K in EntityType]: (data: EntityTypeDataMap[K]) => string } = {
+		keyword: (data: KeywordData): string => data.name,
+		aggregator: (data: AggregatorData): string => data.name,
+		company: (data: CompanyData): string => data.name,
+		person: (data: PersonData): string => data.name,
+		speculativeApplication: (data: SpeculativeApplicationData): string => {
+			const company: CompanyData = findItemById(dataContext.companies, data.company_id)!;
 			return "Speculative Application for " + company.name;
 		},
-		job: (data: JamData): string => (data as JobData).title,
-		interview: (data: JamData): string => {
-			const job: JobData = findItemById(dataContext.jobs, (data as InterviewData).job_id)!;
-			return `${job.title} - Interview #${(data as EnrichedInterviewData).number}`;
+		job: (data: EnrichedJobData): string => data.title,
+		interview: (data: EnrichedInterviewData): string => {
+			const job: JobData = findItemById(dataContext.jobs, data.job_id)!;
+			return `${job.title} - Interview #${data.number}`;
 		},
-		jobApplicationUpdate: (data: JamData): string => {
-			const job: JobData = findItemById(dataContext.jobs, (data as InterviewData).job_id)!;
-			return `${job.title} - Update #${(data as EnrichedJobApplicationUpdateData).number}`;
+		jobApplicationUpdate: (data: EnrichedJobApplicationUpdateData): string => {
+			const job: JobData = findItemById(dataContext.jobs, data.job_id)!;
+			return `${job.title} - Update #${data.number}`;
 		},
-		setting: (data: JamData): string => (data as SettingData).name,
-		user: (data: JamData): string => (data as UserData).email,
-		scrapedJob: (data: JamData): string => (data as ScrapedJobData)?.title || "Scraped Job",
-		scrapingFilter: (data: JamData): string => getScrapingFilterName(data as ScrapingFilterData),
-		scrapingFavouriteFilter: (data: JamData): string => getScrapingFilterName(data as ScrapingFilterData),
-		jobEmail: (data: JamData): string => (data as JobEmailData)?.subject || "Job Email",
-		geolocation: (data: JamData): string => (data as GeoLocationData).query || "Location",
-		file: (data: JamData): string => (data as FileData).filename,
+		setting: (data: SettingData): string => data.name,
+		user: (data: UserData): string => data.email,
+		scrapedJob: (data: ScrapedJobData): string => data?.title || data?.url || "Scraped Job",
+		scrapingExclusionFilter: (data: ScrapingFilterData): string => getScrapingFilterName(data),
+		scrapingFavouriteFilter: (data: ScrapingFilterData): string => getScrapingFilterName(data),
+		jobEmail: (data: JobEmailData): string => data?.subject || "Job Email",
+		geolocation: (data: GeoLocationData): string => data.query || "Location",
+		file: (data: FileData): string => data.filename,
 	};
 	return nameMap[entityType];
 };
 
-const entityTypeToApi = (entityType: EntityType): CrudApi<JamData> | null => {
-	const apiMap: Partial<Record<EntityType, CrudApi<JamData>>> = {
+type EntityRawDataMap = Omit<EntityTypeDataMap, "job" | "interview" | "jobApplicationUpdate"> & {
+	job: JobData;
+	interview: InterviewData;
+	jobApplicationUpdate: JobApplicationUpdateData;
+};
+
+const entityTypeToApi = <T extends EntityType>(entityType: T): CrudApi<EntityRawDataMap[T]> | null => {
+	const apiMap: Partial<{ [K in EntityType]: CrudApi<EntityRawDataMap[K]> }> = {
 		job: jobsApi,
 		company: companiesApi,
 		person: personsApi,
@@ -161,7 +179,7 @@ const entityTypeToApi = (entityType: EntityType): CrudApi<JamData> | null => {
 		setting: settingsApi,
 		user: userApi,
 		scrapedJob: scrapedJobApi,
-		scrapingFilter: scrapingExclusionFilterApi,
+		scrapingExclusionFilter: scrapingExclusionFilterApi,
 		scrapingFavouriteFilter: scrapingFavouriteFilterApi,
 		speculativeApplication: speculativeApplicationsApi,
 		jobEmail: jobEmailApi,
@@ -186,7 +204,7 @@ export interface DataContextValue {
 	keywords: KeywordData[];
 	speculativeApplications: SpeculativeApplicationData[];
 	settings: SettingData[];
-	scrapingFilters: ScrapingFilterData[];
+	scrapingExclusionFilters: ScrapingFilterData[];
 	scrapingFavouriteFilters: ScrapingFilterData[];
 	users: UserData[];
 	aiSystemPrompts: AiSystemPromptData[];
@@ -194,13 +212,13 @@ export interface DataContextValue {
 
 	error: ApiError | null;
 
-	setTourSnapshot: (snapshot: TourSnapshot | null) => void;
+	setIsInTour: (isInTour: boolean) => void;
 
 	// Generic update functions
 	addEntity: <T extends EntityType>(type: T, data: any) => ApiResponsePromise<JamData>;
 	updateEntity: <T extends EntityType>(type: T, id: number, data: Partial<JamData>) => ApiResponsePromise<JamData>;
 	deleteEntity: <T extends EntityType>(type: T, id: number) => Promise<void>;
-	getEntityData: <T extends EntityType>(type: T) => JamData[];
+	getEntityData: <T extends EntityType>(type: T) => EntityTypeDataMap[T][];
 }
 
 const DataContext = createContext<DataContextValue | undefined>(undefined);
@@ -210,14 +228,19 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [rawJobs, setRawJobs] = useState<JobData[]>([]);
 	const [companies, setCompanies] = useState<CompanyData[]>([]);
 	const [persons, setPersons] = useState<PersonData[]>([]);
-	const [tourSnapshot, setTourSnapshot] = useState<TourSnapshot | null>(null);
+	const [isInTour, setIsInTourState] = useState<boolean>(false);
+	const isInTourRef = useRef<boolean>(false);
+	const setIsInTour = useCallback((value: boolean): void => {
+		isInTourRef.current = value;
+		setIsInTourState(value);
+	}, []);
 	const [rawInterviews, setRawInterviews] = useState<InterviewData[]>([]);
 	const [rawJobApplicationUpdates, setRawJobApplicationUpdates] = useState<JobApplicationUpdateData[]>([]);
 	const [aggregators, setAggregators] = useState<AggregatorData[]>([]);
 	const [keywords, setKeywords] = useState<KeywordData[]>([]);
 	const [speculativeApplications, setSpeculativeApplications] = useState<SpeculativeApplicationData[]>([]);
 	const [settings, setSettings] = useState<SettingData[]>([]);
-	const [scrapingFilters, setScrapingFilters] = useState<ScrapingFilterData[]>([]);
+	const [scrapingExclusionFilters, setScrapingExclusionFilters] = useState<ScrapingFilterData[]>([]);
 	const [scrapingFavouriteFilters, setScrapingFavouriteFilters] = useState<ScrapingFilterData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
 	const [aiSystemPrompts, setAiSystemPrompts] = useState<AiSystemPromptData[]>([]);
@@ -232,9 +255,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				(i: InterviewData): boolean => i.job_id === interview.job_id
 			);
 			jobInterviews = sortByKey(jobInterviews, "date", true);
-
 			const index: number = jobInterviews.findIndex((i: InterviewData): boolean => i.id === interview.id);
-
 			return {
 				...interview,
 				number: index + 1,
@@ -246,17 +267,12 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		EnrichedJobApplicationUpdateData[]
 	>((): EnrichedJobApplicationUpdateData[] => {
 		// Enrich updates with their sequence number per job
-
 		return rawJobApplicationUpdates.map((update: JobApplicationUpdateData): EnrichedJobApplicationUpdateData => {
-			const job: JobData | undefined = rawJobs.find((j: JobData): boolean => j.id === update.job_id)!;
-
 			let jobUpdates: JobApplicationUpdateData[] = rawJobApplicationUpdates.filter(
-				(u: JobApplicationUpdateData): boolean => u.job_id === job.id
+				(u: JobApplicationUpdateData): boolean => u.job_id === update.job_id
 			);
 			jobUpdates = sortByKey(jobUpdates, "date", true);
-
 			const index: number = jobUpdates.findIndex((u: JobApplicationUpdateData): boolean => u.id === update.id);
-
 			return {
 				...update,
 				number: index + 1,
@@ -266,7 +282,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 	const jobs: EnrichedJobData[] = useMemo<EnrichedJobData[]>((): EnrichedJobData[] => {
 		// Enrich jobs with calculated fields
-
 		return rawJobs.map((job: JobData): EnrichedJobData => {
 			const jobInterviews: InterviewData[] = rawInterviews.filter(
 				(i: InterviewData): boolean => i.job_id === job.id
@@ -279,20 +294,22 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			let lastUpdateDate: Date | null = null;
 			if (job.application_date) {
 				const dates: Date[] = [new Date(job.application_date)];
-				jobInterviews.forEach((i: InterviewData) => i.date && dates.push(new Date(i.date)));
-				jobUpdates.forEach((u: JobApplicationUpdateData) => u.date && dates.push(new Date(u.date)));
-				lastUpdateDate = dates.length > 0 ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;
+				jobInterviews.forEach((i: InterviewData): number => i.date && dates.push(new Date(i.date)));
+				jobUpdates.forEach((u: JobApplicationUpdateData): number => u.date && dates.push(new Date(u.date)));
+				lastUpdateDate =
+					dates.length > 0 ? new Date(Math.max(...dates.map((d: Date): number => d.getTime()))) : null;
 			}
 
 			// Calculate last_update_type
 			let lastUpdateType: string | null = null;
 			if (job.application_date && lastUpdateDate) {
-				let mostRecentDate = new Date(job.application_date);
+				let mostRecentDate: Date = new Date(job.application_date);
 				lastUpdateType = "Application";
 
 				if (jobInterviews.length > 0) {
-					const latestInterview = jobInterviews.reduce((latest, current) =>
-						new Date(current.date) > new Date(latest.date) ? current : latest
+					const latestInterview: InterviewData = jobInterviews.reduce(
+						(latest: InterviewData, current: InterviewData): InterviewData =>
+							new Date(current.date) > new Date(latest.date) ? current : latest
 					);
 					if (new Date(latestInterview.date) > mostRecentDate) {
 						mostRecentDate = new Date(latestInterview.date);
@@ -301,8 +318,12 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				}
 
 				if (jobUpdates.length > 0) {
-					const latestUpdate = jobUpdates.reduce((latest, current) =>
-						new Date(current.date) > new Date(latest.date) ? current : latest
+					const latestUpdate: JobApplicationUpdateData = jobUpdates.reduce(
+						(
+							latest: JobApplicationUpdateData,
+							current: JobApplicationUpdateData
+						): JobApplicationUpdateData =>
+							new Date(current.date) > new Date(latest.date) ? current : latest
 					);
 					if (new Date(latestUpdate.date) > mostRecentDate) {
 						lastUpdateType = `Update (${jobUpdates.length})`;
@@ -311,7 +332,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			}
 
 			// Calculate days_since_last_update
-			const daysSinceLastUpdate = lastUpdateDate
+			const daysSinceLastUpdate: number | null = lastUpdateDate
 				? Math.floor((Date.now() - lastUpdateDate.getTime()) / (1000 * 60 * 60 * 24))
 				: null;
 
@@ -346,7 +367,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		});
 	}, [rawJobs, rawInterviews, rawJobApplicationUpdates, companies]);
 
-	const fetchAllData = async () => {
+	const fetchAllData = async (): Promise<void> => {
 		setError(null);
 
 		// Define all promises with their labels
@@ -396,7 +417,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 		try {
 			// Track progress for each promise
-			const trackedPromises = fetchOperations.map(({ promise, label }) =>
+			const trackedPromises: any[] = fetchOperations.map(({ promise, label }: any): any =>
 				promise.then((result: ApiResponse<JamData[]>): ApiResponse<JamData[]> => {
 					completedOperations++;
 					const progressPercentage: number = Math.round((completedOperations / totalOperations) * 100);
@@ -405,7 +426,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				})
 			);
 
-			const results = await Promise.all(trackedPromises);
+			const results: any[] = await Promise.all(trackedPromises);
 
 			// Destructure based on what we fetched
 			const [
@@ -432,7 +453,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			setRawJobApplicationUpdates(jobApplicationUpdatesData.data || []);
 			setAggregators(aggregatorsData.data || []);
 			setKeywords(keywordsData.data || []);
-			setScrapingFilters(scrapingFiltersData.data || []);
+			setScrapingExclusionFilters(scrapingFiltersData.data || []);
 			setScrapingFavouriteFilters(scrapingFavouriteFiltersData.data || []);
 			setAiSystemPrompts(aiSystemPromptsData.data || []);
 			setFiles(filesData.data || []);
@@ -448,8 +469,10 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	};
 
 	// Helper to get setter function for an entity type
-	const entityTypeToSetter = (type: EntityType) => {
-		const setterMap: Partial<Record<EntityType, (fn: any) => void>> = {
+	const entityTypeToSetter = <T extends EntityType>(
+		type: T
+	): React.Dispatch<React.SetStateAction<EntityRawDataMap[T][]>> | undefined => {
+		const setterMap: Partial<{ [K in EntityType]: React.Dispatch<React.SetStateAction<EntityRawDataMap[K][]>> }> = {
 			job: setRawJobs,
 			company: setCompanies,
 			person: setPersons,
@@ -459,12 +482,12 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			keyword: setKeywords,
 			setting: setSettings,
 			user: setUsers,
-			scrapingFilter: setScrapingFilters,
+			scrapingExclusionFilter: setScrapingExclusionFilters,
 			scrapingFavouriteFilter: setScrapingFavouriteFilters,
 			speculativeApplication: setSpeculativeApplications,
 			file: setFiles,
 		};
-		return setterMap[type];
+		return setterMap[type] as React.Dispatch<React.SetStateAction<EntityRawDataMap[T][]>> | undefined;
 	};
 
 	const addEntity = useCallback(
@@ -472,7 +495,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			try {
 				const api = entityTypeToApi(entityType);
 				if (!api) return;
-				const apiResult: ApiResponse<JamData> = await api.create(newData, token);
+				const payload = isInTourRef.current ? { ...newData, is_tour: true } : newData;
+				const apiResult: ApiResponse<EntityRawDataMap[T]> = await api.create(payload, token);
 				const setter = entityTypeToSetter(entityType);
 				setter?.((prev: any[]): any[] => [...prev, apiResult.data]);
 				return apiResult;
@@ -489,7 +513,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			try {
 				const api = entityTypeToApi(entityType);
 				if (!api) return;
-				const apiResult: ApiResponse<JamData> = await api.update(id, updatedData, token);
+				const apiResult: ApiResponse<EntityRawDataMap[T]> = await api.update(id, updatedData, token);
 				const setter = entityTypeToSetter(entityType);
 				setter?.((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? apiResult.data : item)));
 				return apiResult;
@@ -531,25 +555,29 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	);
 
 	const visibleData = useMemo(() => {
-		// TODO we could simplify this by just filtering in/out is_tour data
-		const s = tourSnapshot;
 		return {
-			jobs: s ? jobs.filter((j) => !s.jobIds.has(j.id)) : jobs,
-			companies: s ? companies.filter((c) => !s.companyIds.has(c.id)) : companies,
-			persons: s ? persons.filter((p) => !s.personIds.has(p.id)) : persons,
-			interviews: s ? interviews.filter((i) => !s.interviewIds.has(i.id)) : interviews,
-			jobApplicationUpdates: s
-				? jobApplicationUpdates.filter((u) => !s.jobApplicationUpdateIds.has(u.id))
-				: jobApplicationUpdates,
-			aggregators: s ? aggregators.filter((a) => !s.aggregatorIds.has(a.id)) : aggregators,
-			keywords: s ? keywords.filter((k) => !s.keywordIds.has(k.id)) : keywords,
-			scrapingFilters: s ? scrapingFilters.filter((f) => !s.scrapingFilterIds.has(f.id)) : scrapingFilters,
-			speculativeApplications: s
-				? speculativeApplications.filter((sa) => !s.speculativeApplicationIds.has(sa.id))
-				: speculativeApplications,
+			jobs: jobs.filter((j: EnrichedJobData): boolean => j.is_tour === isInTour),
+			companies: companies.filter((c: CompanyData): boolean => c.is_tour === isInTour),
+			persons: persons.filter((p: PersonData): boolean => p.is_tour === isInTour),
+			interviews: interviews.filter((i: EnrichedInterviewData): boolean => i.is_tour === isInTour),
+			jobApplicationUpdates: jobApplicationUpdates.filter(
+				(u: EnrichedJobApplicationUpdateData): boolean => u.is_tour === isInTour
+			),
+			aggregators: aggregators.filter((a: AggregatorData): boolean => a.is_tour === isInTour),
+			keywords: keywords.filter((k: KeywordData): boolean => k.is_tour === isInTour),
+			scrapingExclusionFilters: scrapingExclusionFilters.filter(
+				(f: ScrapingFilterData): boolean => f.is_tour === isInTour
+			),
+			speculativeApplications: speculativeApplications.filter(
+				(sa: SpeculativeApplicationData): boolean => sa.is_tour === isInTour
+			),
+			files: files.filter((f: FileData): boolean => f.is_tour === isInTour),
+			scrapingFavouriteFilters: scrapingFavouriteFilters.filter(
+				(s: ScrapingFilterData) => s.is_tour === isInTour
+			),
 		};
 	}, [
-		tourSnapshot,
+		isInTour,
 		jobs,
 		companies,
 		persons,
@@ -557,13 +585,15 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		jobApplicationUpdates,
 		aggregators,
 		keywords,
-		scrapingFilters,
+		files,
+		scrapingExclusionFilters,
+		scrapingFavouriteFilters,
 		speculativeApplications,
 	]);
 
 	const getEntityData = useCallback(
-		<T extends EntityType>(entityType: T): JamData[] => {
-			const dataMap: Partial<Record<EntityType, JamData[]>> = {
+		<T extends EntityType>(entityType: T): EntityTypeDataMap[T][] => {
+			const dataMap: Partial<{ [K in EntityType]: EntityTypeDataMap[K][] }> = {
 				job: visibleData.jobs,
 				company: visibleData.companies,
 				person: visibleData.persons,
@@ -571,14 +601,14 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				jobApplicationUpdate: visibleData.jobApplicationUpdates,
 				aggregator: visibleData.aggregators,
 				keyword: visibleData.keywords,
-				scrapingFilter: visibleData.scrapingFilters,
+				scrapingExclusionFilter: visibleData.scrapingExclusionFilters,
 				setting: settings,
 				user: users,
 				scrapingFavouriteFilter: scrapingFavouriteFilters,
 				speculativeApplication: visibleData.speculativeApplications,
 				file: files,
 			};
-			return dataMap[entityType] ?? [];
+			return (dataMap[entityType] ?? []) as EntityTypeDataMap[T][];
 		},
 		[visibleData, settings, users, scrapingFavouriteFilters, files]
 	);
@@ -601,13 +631,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		<DataContext.Provider
 			value={{
 				...visibleData,
-				scrapingFavouriteFilters,
 				aiSystemPrompts,
-				files,
 				settings,
 				users,
 				error,
-				setTourSnapshot,
+				setIsInTour,
 				updateEntity,
 				deleteEntity,
 				addEntity,

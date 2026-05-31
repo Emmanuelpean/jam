@@ -14,7 +14,14 @@ export interface FileUploadWidgetProps extends WidgetProps {
 	extraActions?: ReactNode;
 }
 
-export const FileUploadWidget = ({ field, value, handleChange, data, onUploadingChange, extraActions }: FileUploadWidgetProps): JSX.Element => {
+export const FileUploadWidget = ({
+	field,
+	value,
+	handleChange,
+	data,
+	onUploadingChange,
+	extraActions,
+}: FileUploadWidgetProps): JSX.Element => {
 	const { token } = useAuth();
 	const { config } = useConfig();
 	const { addEntity, files } = useDataContext();
@@ -37,6 +44,20 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 				if (fileInputRef.current) fileInputRef.current.value = "";
 				return;
 			}
+		}
+		if (config?.column_limits?.file_name && file.name.length > config.column_limits.file_name) {
+			setUploadError(
+				`Filename exceeds the maximum allowed length of ${config.column_limits.file_name} characters.`
+			);
+			if (fileInputRef.current) fileInputRef.current.value = "";
+			return;
+		}
+		if (config?.column_limits?.file_mimetype && file.type.length > config.column_limits.file_mimetype) {
+			setUploadError(
+				`File type identifier exceeds the maximum allowed length of ${config.column_limits.file_mimetype} characters.`
+			);
+			if (fileInputRef.current) fileInputRef.current.value = "";
+			return;
 		}
 		setUploading(true);
 		onUploadingChange?.(true);
@@ -107,7 +128,13 @@ export const FileUploadWidget = ({ field, value, handleChange, data, onUploading
 
 	return (
 		<div>
-			<input id={`${fieldId}-file-input`} ref={fileInputRef} type="file" className="d-none" onChange={handleInputChange} />
+			<input
+				id={`${fieldId}-file-input`}
+				ref={fileInputRef}
+				type="file"
+				className="d-none"
+				onChange={handleInputChange}
+			/>
 			<div
 				id={`${fieldId}-drop-zone`}
 				className={`file-drop-zone${dragOver ? " drag-over" : ""}${uploading ? " uploading" : ""}${hasFile ? " has-file" : ""}`}

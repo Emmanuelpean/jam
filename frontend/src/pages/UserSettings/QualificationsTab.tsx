@@ -12,6 +12,7 @@ import LoadingSpinner from "../../components/Spinner/Spinner";
 import { UserQualification } from "../../services/schemas/Core";
 import { userQualificationApi } from "../../services/api/Users";
 import { AiSystemPromptData } from "../../services/schemas/Services";
+import { useConfig } from "../../contexts/ConfigContext";
 
 interface QualificationFormData {
 	qualification_id?: number;
@@ -26,6 +27,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 	const { token } = useAuth();
 	const { aiSystemPrompts } = useDataContext();
 	const { showToastSuccess, showToastError } = useGlobalToast();
+	const { config } = useConfig();
 	const [formData, setFormData] = useState<QualificationFormData>({
 		qualification_id: undefined,
 		experience: "",
@@ -97,8 +99,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		}
 	};
 
-	const EXPERIENCE_CHAR_LIMIT = 10000;
-	const OTHER_CHAR_LIMIT = 3500;
+	const limits = config?.column_limits;
 
 	const experienceField: ModalFormField = {
 		key: "experience",
@@ -107,7 +108,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		placeholder: "Describe your work experience...",
 		rows: 3,
 		autoHeight: true,
-		maxChars: EXPERIENCE_CHAR_LIMIT,
+		maxChars: limits?.experience ?? 10000,
 	};
 
 	const skillsField: ModalFormField = {
@@ -117,7 +118,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		placeholder: "List your skills...",
 		rows: 3,
 		autoHeight: true,
-		maxChars: OTHER_CHAR_LIMIT,
+		maxChars: limits?.skills ?? 3500,
 	};
 
 	const qualitiesField: ModalFormField = {
@@ -127,7 +128,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		placeholder: "Describe your qualities...",
 		rows: 3,
 		autoHeight: true,
-		maxChars: OTHER_CHAR_LIMIT,
+		maxChars: limits?.qualities ?? 3500,
 	};
 
 	const educationField: ModalFormField = {
@@ -137,7 +138,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		placeholder: "Describe your education...",
 		rows: 3,
 		autoHeight: true,
-		maxChars: OTHER_CHAR_LIMIT,
+		maxChars: limits?.education ?? 3500,
 	};
 
 	const interestsField: ModalFormField = {
@@ -147,7 +148,7 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		placeholder: "Describe your interests...",
 		rows: 3,
 		autoHeight: true,
-		maxChars: OTHER_CHAR_LIMIT,
+		maxChars: limits?.interests ?? 3500,
 	};
 
 	const latestSystemPrompt: AiSystemPromptData | null | undefined = aiSystemPrompts?.length
@@ -163,11 +164,11 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		!!formData.interests?.trim();
 
 	const isWithinCharLimits: boolean =
-		(formData.experience?.length || 0) <= EXPERIENCE_CHAR_LIMIT &&
-		(formData.skills?.length || 0) <= OTHER_CHAR_LIMIT &&
-		(formData.qualities?.length || 0) <= OTHER_CHAR_LIMIT &&
-		(formData.education?.length || 0) <= OTHER_CHAR_LIMIT &&
-		(formData.interests?.length || 0) <= OTHER_CHAR_LIMIT;
+		(formData.experience?.length || 0) <= (limits?.experience ?? 10000) &&
+		(formData.skills?.length || 0) <= (limits?.skills ?? 3500) &&
+		(formData.qualities?.length || 0) <= (limits?.qualities ?? 3500) &&
+		(formData.education?.length || 0) <= (limits?.education ?? 3500) &&
+		(formData.interests?.length || 0) <= (limits?.interests ?? 3500);
 
 	if (loading) {
 		return <LoadingSpinner text="Loading qualifications..." />;

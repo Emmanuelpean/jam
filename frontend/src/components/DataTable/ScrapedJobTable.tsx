@@ -254,7 +254,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 										<>
 											Scraping Filters (
 											{
-												dataContext.scrapingFilters.filter(
+												dataContext.scrapingExclusionFilters.filter(
 													(filter: ScrapingFilterData): boolean => filter.is_active
 												).length
 											}

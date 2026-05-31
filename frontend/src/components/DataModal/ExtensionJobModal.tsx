@@ -7,7 +7,7 @@ import DataModal, {
 	TabConfig,
 	ValidationErrors,
 } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { findClosestOption, findExactOption, useFormOptions } from "../rendering/form/FormOptions";
 import { getApplicationStatusBadgeClass } from "../rendering/view/Icons";
@@ -53,6 +53,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 			getAggregatorPreviewConfig,
 			getCompanyPreviewConfig,
 		} = useFormOptions();
+		const ff = useFormFields();
 
 		const transformInputData = async (data: ExtensionJobData) => {
 			if (!data) return data;
@@ -79,7 +80,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				icon: "bi-briefcase",
 				fields: [
 					modalViewFields.title({ isTitle: true }),
-					formFields.scrapedCompany(
+					ff.scrapedCompanyField(
 						companies,
 						companyModalRef,
 						(data: ExtensionJobData) => ({
@@ -87,7 +88,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 						}),
 						getCompanyPreviewConfig
 					),
-					formFields.jobURl(),
+					ff.jobUrlField(),
 				],
 			} as SectionConfig,
 			{
@@ -95,7 +96,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				key: "location",
 				title: "Location",
 				icon: "bi-geo-alt",
-				fields: [[formFields.attendanceType(), formFields.location()], modalViewFields.geolocationMap()],
+				fields: [[ff.attendanceTypeField(), ff.locationField()], modalViewFields.geolocationMap()],
 			} as SectionConfig,
 			{
 				type: "section",
@@ -103,8 +104,8 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				title: "Compensation & Priority",
 				icon: "bi-currency-pound",
 				fields: [
-					[formFields.salaryMin(), formFields.salaryMax()],
-					[formFields.personalRating(), formFields.isFavourite(), formFields.deadline()],
+					[ff.salaryMinField(), ff.salaryMaxField()],
+					[ff.personalRatingField(), ff.isFavouriteField(), ff.deadlineField()],
 				],
 			} as SectionConfig,
 			{
@@ -113,7 +114,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				title: "Source",
 				icon: "bi-search",
 				fields: [
-					formFields.sourceGroup(
+					ff.sourceGroupFields(
 						aggregators,
 						aggregatorModalRef,
 						getAggregatorPreviewConfig,
@@ -133,8 +134,8 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				icon: "bi-tags",
 				fields: [
 					[
-						formFields.keywords(keywords, keywordModalRef),
-						formFields.contacts(persons, personModalRef, null, getPersonPreviewConfig),
+						ff.keywordsField(keywords, keywordModalRef),
+						ff.contactsField(persons, personModalRef, null, getPersonPreviewConfig),
 					],
 				],
 			} as SectionConfig,
@@ -145,7 +146,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				icon: "bi-card-text",
 				fields: [
 					modalViewFields.description(),
-					formFields.note({ placeholder: "Add any additional notes about this role..." }),
+					ff.noteField({ placeholder: "Add any additional notes about this role..." }),
 				],
 			} as SectionConfig,
 		];
@@ -157,16 +158,17 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				title: "Application Details",
 				icon: "bi-send",
 				fields: [
-					[formFields.applicationDate(), formFields.applicationStatus()],
+					[ff.applicationDateField(), ff.applicationStatusField()],
 					[
-						formFields.applicationVia(),
-						formFields.aggregator(aggregators, aggregatorModalRef, null, getAggregatorPreviewConfig, {
-							key: "application_aggregator_id",
-							displayCondition: (formData: JobDataTransform): boolean =>
-								formData.applied_via ? formData.applied_via === "aggregator" : true,
-						}),
+						ff.applicationViaField(),
+						ff.applicationAggregatorField(
+							aggregators,
+							aggregatorModalRef,
+							null,
+							getAggregatorPreviewConfig
+						),
 					],
-					formFields.applicationUrl({ placeholder: "https://linkedin.com/jobs/123456/apply" }),
+					ff.applicationUrlField({ placeholder: "https://linkedin.com/jobs/123456/apply" }),
 				],
 			} as SectionConfig,
 			{
@@ -174,7 +176,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				key: "application-documents",
 				title: "Documents",
 				icon: "bi-paperclip",
-				fields: [[formFields.cvUpload(), formFields.coverLetterUpload()]],
+				fields: [[ff.cvUploadField(), ff.coverLetterUploadField()]],
 			} as SectionConfig,
 			{
 				type: "section",
@@ -182,7 +184,7 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 				title: "Notes",
 				icon: "bi-journal-text",
 				fields: [
-					formFields.note({
+					ff.noteField({
 						placeholder: "Notes about the application process...",
 						key: "application_note",
 						label: "",
@@ -221,15 +223,6 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 			cover_letter_id: jobData.cover_letter_id || null,
 		});
 
-		const customValidation = (formData: JobData): ValidationErrors => {
-			const errors: ValidationErrors = {};
-			if (formData.salary_min && isNaN(Number(formData.salary_min)))
-				errors.salary_min = "Minimum salary must be a valid number";
-			if (formData.salary_max && isNaN(Number(formData.salary_max)))
-				errors.salary_max = "Maximum salary must be a valid number";
-			return errors;
-		};
-
 		const applicationTabTitle = (jobData: JobData): ReactNode =>
 			jobData?.application_status ? (
 				<>
@@ -264,7 +257,6 @@ export const ExtensionJobModal = forwardRef<DataModalHandle<JobData>, JamDataMod
 					entityType="job"
 					size={size}
 					tabs={tabs}
-					validation={customValidation}
 				/>
 				<CompanyModal ref={companyModalRef} />
 				<PersonModal ref={personModalRef} />

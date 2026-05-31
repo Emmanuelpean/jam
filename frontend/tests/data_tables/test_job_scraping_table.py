@@ -24,7 +24,7 @@ class TestJobScrapingTable(BaseTest):
         :param scraped_job: The scraped job to show."""
 
         self.scrapedJob_table_utils.set_search(scraped_job.title)
-        self.scrapingFilter_table_utils.deadline_toggle.click()
+        self.scrapingExclusionFilter_table_utils.deadline_toggle.click()
 
     def test_import_scraped_job(self) -> None:
         """Test importing a scraped job and displaying a toast notification."""
@@ -126,7 +126,7 @@ class TestJobScrapingTable(BaseTest):
         self.scrapedJob_table_utils.set_search(scraped_job.title)
         assert self.scrapedJob_table_utils.check_id_not_in_table(scraped_job.id)
 
-        self.scrapingFilter_table_utils.deadline_toggle.click()
+        self.scrapingExclusionFilter_table_utils.deadline_toggle.click()
         assert self.scrapedJob_table_utils.check_id_in_table(scraped_job.id)
 
     def test_new_alert_last_login(self) -> None:
@@ -445,22 +445,22 @@ class TestScrapingFilters(BaseTest):
         """Test adding a scraping filter and displaying a toast notification."""
 
         filter_count = self.db.query(models.ScrapingExclusionFilter).count()
-        self.scrapingFilter_table_utils.add_entity_button.click()
-        self.scrapingFilter_modal_utils.add_entry(**self.test_data)
+        self.scrapingExclusionFilter_table_utils.add_entity_button.click()
+        self.scrapingExclusionFilter_modal_utils.add_entry(**self.test_data)
         assert self.db.query(models.ScrapingExclusionFilter).count() == filter_count + 1
 
     def test_deactivate_scraping_filter(self) -> None:
         """Test deactivating a scraping filter and displaying a toast notification."""
 
-        self.scrapingFilter_table_utils.table_row(self.no_filtered_index).click()
-        self.scrapingFilter_modal_utils.deactivate_button().click()
-        self.scrapingFilter_modal_utils.wait_for_view_modal_close()
+        self.scrapingExclusionFilter_table_utils.table_row(self.no_filtered_index).click()
+        self.scrapingExclusionFilter_modal_utils.deactivate_button().click()
+        self.scrapingExclusionFilter_modal_utils.wait_for_view_modal_close()
         self.assert_toast_message("Scraping Filter deactivated successfully.")
         self.db.expire_all()
         scraping_filter = self.db.query(models.ScrapingExclusionFilter).filter_by(id=self.no_filtered_index).first()
         assert not scraping_filter.is_active
         self.get_element("inactive-tab").click()
-        assert self.scrapingFilter_table_utils.table_row(self.no_filtered_index).is_displayed()
+        assert self.scrapingExclusionFilter_table_utils.table_row(self.no_filtered_index).is_displayed()
 
     def test_edit_scraping_filter(self) -> None:
         """Test deactivating a scraping filter when it has filtered jobs."""
@@ -468,20 +468,20 @@ class TestScrapingFilters(BaseTest):
         assert (
             not self.db.query(models.ScrapingExclusionFilter).filter_by(id=self.no_filtered_index).first().filtered_jobs
         )
-        self.scrapingFilter_table_utils.table_row(self.no_filtered_index).click()
-        assert self.scrapingFilter_modal_utils.deactivate_button().is_enabled()
-        self.scrapingFilter_modal_utils.edit_button("view", enabled=False).click()
-        self.scrapingFilter_modal_utils._fill_modal(value="Virtual")
-        self.scrapingFilter_modal_utils.confirm_button("edit").click()
-        self.scrapingFilter_modal_utils.wait_for_view_modal_close()
+        self.scrapingExclusionFilter_table_utils.table_row(self.no_filtered_index).click()
+        assert self.scrapingExclusionFilter_modal_utils.deactivate_button().is_enabled()
+        self.scrapingExclusionFilter_modal_utils.edit_button("view", enabled=False).click()
+        self.scrapingExclusionFilter_modal_utils._fill_modal(value="Virtual")
+        self.scrapingExclusionFilter_modal_utils.confirm_button("edit").click()
+        self.scrapingExclusionFilter_modal_utils.wait_for_view_modal_close()
 
     def test_edit_scraping_filter_failure(self) -> None:
         """Test deactivating a scraping filter when it has filtered jobs."""
 
         assert self.db.query(models.ScrapingExclusionFilter).filter_by(id=self.filtered_index).first().filtered_jobs
-        self.scrapingFilter_table_utils.table_row(self.filtered_index).click()
-        assert self.scrapingFilter_modal_utils.deactivate_button().is_enabled()
-        assert not self.scrapingFilter_modal_utils.edit_button("view", enabled=False).is_enabled()
+        self.scrapingExclusionFilter_table_utils.table_row(self.filtered_index).click()
+        assert self.scrapingExclusionFilter_modal_utils.deactivate_button().is_enabled()
+        assert not self.scrapingExclusionFilter_modal_utils.edit_button("view", enabled=False).is_enabled()
 
 
 class TestDismissExpiredBulkAction(BaseTest):

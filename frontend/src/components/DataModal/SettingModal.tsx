@@ -1,6 +1,6 @@
 import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, ValidationErrors } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { SettingData, SettingDataTransform } from "../../services/schemas/Core";
@@ -8,15 +8,16 @@ import { SettingData, SettingDataTransform } from "../../services/schemas/Core";
 export const SettingModal = forwardRef<DataModalHandle<SettingData>, JamDataModalProps>(
 	({ size = "xl" }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
+		const ff = useFormFields();
 
 		const fields = {
 			form: [
-				formFields.name({ required: true, placeholder: "allowlist" }),
-				formFields.value({ required: true, placeholder: "test_user@test.com" }),
-				formFields.description({
+				ff.nameField({ required: true, placeholder: "allowlist" }),
+				ff.valueField({ required: true, placeholder: "test_user@test.com" }),
+				ff.descriptionField({
 					placeholder: "Allow only those email addresses to sign up.",
 				}),
-				formFields.isActive(),
+				ff.isActiveField(),
 			],
 			view: [
 				modalViewFields.name(),

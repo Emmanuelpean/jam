@@ -7,7 +7,7 @@
     color: white;
     border-radius: 14.4px;
     background: var(--primary-gradient);
-    box-shadow: 0 7.2px 22.5px rgb(0 0 0 / 15%);
+    //box-shadow: 0 7.2px 22.5px rgb(0 0 0 / 15%);
     aspect-ratio: 1 / 1;
 }
 
@@ -37,7 +37,7 @@
     }
 
     &:hover .card {
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+        //box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
         border-color: var(--primary-light) !important;
     }
 

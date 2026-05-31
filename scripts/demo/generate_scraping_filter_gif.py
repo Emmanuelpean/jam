@@ -55,12 +55,12 @@ class ScrapingFilterBuilder(DemoBuilder):
 
         # Click the Add button to create a new filter
         print("  - Clicking add filter button...")
-        self.move_to_element("add-scrapingFilter-button", 500)
-        self.click_element("add-scrapingFilter-button")
+        self.move_to_element("add-scrapingExclusionFilter-button", 500)
+        self.click_element("add-scrapingExclusionFilter-button")
 
         # Wait for the add/edit modal to appear
         print("  - Waiting for filter form modal...")
-        self.wait.until(ec.presence_of_element_located((By.ID, "modal-edit-scrapingFilter")))
+        self.wait.until(ec.presence_of_element_located((By.ID, "modal-edit-scrapingExclusionFilter")))
         time.sleep(0.5)
         self.capture_frames_for_duration(1.0)
 
@@ -105,8 +105,8 @@ class ScrapingFilterBuilder(DemoBuilder):
 
         # Click confirm/save button
         print("  - Saving filter...")
-        self.move_to_element("modal-edit-scrapingFilter-confirm-button", 500)
-        self.click_element("modal-edit-scrapingFilter-confirm-button")
+        self.move_to_element("modal-edit-scrapingExclusionFilter-confirm-button", 500)
+        self.click_element("modal-edit-scrapingExclusionFilter-confirm-button")
 
         # Wait for the modal to close and the filter to appear in the table
         print("  - Waiting for filter to be saved...")
@@ -134,7 +134,7 @@ class ScrapingFilterBuilder(DemoBuilder):
 
         # Wait for the view modal to appear
         print("  - Viewing filter details...")
-        self.wait.until(ec.presence_of_element_located((By.ID, "modal-view-scrapingFilter")))
+        self.wait.until(ec.presence_of_element_located((By.ID, "modal-view-scrapingExclusionFilter")))
         time.sleep(1)
         self.capture_frames_for_duration(4.0)
 

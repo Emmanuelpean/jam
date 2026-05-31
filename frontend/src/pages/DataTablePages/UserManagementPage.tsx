@@ -44,7 +44,7 @@ export const UserManagementPage: React.FC = () => {
 		tableColumns.emailColumn(),
 		tableColumns.lastLoginColumn(),
 		tableColumns.isAdminColumn(),
-		tableColumns.isEnabledColumn(),
+		tableColumns.isActiveColumn(),
 		tableColumns.toastActiveColumn(),
 		tableColumns.createdAtColumn(),
 	];
@@ -53,7 +53,7 @@ export const UserManagementPage: React.FC = () => {
 		tableColumns.nameColumn(),
 		tableColumns.valueColumn(),
 		tableColumns.descriptionColumn(),
-		tableColumns.isEnabledColumn(),
+		tableColumns.isActiveColumn(),
 		tableColumns.createdAtColumn(),
 	];
 
@@ -185,6 +185,7 @@ export const UserManagementPage: React.FC = () => {
 					toolbarAddon={toolbarAddon}
 					onTotalCountChange={setUsersCount}
 					reloadTrigger={usersReload}
+					enableColumnConfig={true}
 				/>
 			</div>
 			<div style={{ display: activeTab === "settings" ? "block" : "none" }}>
@@ -196,6 +197,7 @@ export const UserManagementPage: React.FC = () => {
 					initialData={{ is_active: true }}
 					onTotalCountChange={setSettingsCount}
 					reloadTrigger={settingsReload}
+					enableColumnConfig={true}
 				/>
 			</div>
 			{activeTab === "email-templates" && <EmailTemplatesContent />}
