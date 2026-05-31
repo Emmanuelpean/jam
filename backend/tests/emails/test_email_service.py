@@ -2,6 +2,8 @@
 
 from unittest.mock import patch, MagicMock
 
+from jinja2 import TemplateNotFound
+
 import pytest
 
 from app.emails.email_service import EmailService
@@ -80,13 +82,12 @@ class TestEmailService:
             )
         assert "SMTP connection failed" in str(exc_info.value)
 
-    @patch("smtplib.SMTP")
-    @patch("builtins.open", side_effect=FileNotFoundError("Template not found"))
-    def test_send_verification_email_template_missing(self, _mock_file, _mock_smtp, email_svc) -> None:
+    def test_send_verification_email_template_missing(self, email_svc) -> None:
         """Test handling of missing email template."""
 
-        with pytest.raises(FileNotFoundError):
-            email_svc.send_verification_email("user@example.com", "http://verify.url")
+        with patch.object(email_svc.templates.env, "get_template", side_effect=TemplateNotFound("email_confirmation.html")):
+            with pytest.raises(TemplateNotFound):
+                email_svc.send_verification_email("user@example.com", "http://verify.url")
 
 
 class TestEmailServiceIMAP:
