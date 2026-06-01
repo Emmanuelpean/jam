@@ -184,14 +184,12 @@ function AuthForm(): JSX.Element {
 			})
 		);
 
-		if (fieldErrors[name as keyof Errors]) {
-			setFieldErrors(
-				(prev: Errors): Errors => ({
-					...prev,
-					[name]: "",
-				})
-			);
-		}
+		setFieldErrors((prev: Errors): Errors => {
+			const next = { ...prev };
+			if (next[name as keyof Errors]) delete next[name as keyof Errors];
+			if (name === "password" && next.confirmPassword) delete next.confirmPassword;
+			return next;
+		});
 	};
 
 	const handleFieldError = (key: string, message: string | null): void => {
@@ -233,7 +231,9 @@ function AuthForm(): JSX.Element {
 		if (mode === "register") {
 			const step: number = currentStep ?? registrationStep;
 			if (step === 1) {
-				errors.email = !formData.email ? "Email is required." : EmailValidation(formData.email);
+				if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+					errors.email = "Please provide a valid email address.";
+				}
 				if (!formData.password) {
 					errors.password = "Password is required.";
 				} else if (formData.password.length < config.min_password_length) {
@@ -263,7 +263,9 @@ function AuthForm(): JSX.Element {
 		}
 
 		if (["login", "forgotPassword"].includes(mode)) {
-			errors.email = !formData.email ? "Email is required." : EmailValidation(formData.email);
+			if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+				errors.email = "Please provide a valid email address.";
+			}
 		}
 
 		if (["login", "resetPassword"].includes(mode)) {
@@ -648,6 +650,16 @@ function AuthForm(): JSX.Element {
 									<div className="mb-3">
 										<div className="d-flex justify-content-between align-items-center mb-2">
 											<small className="text-muted">Step {displayedStep} of 2</small>
+											{displayedStep === 2 && (
+												<button
+													type="button"
+													onClick={handlePreviousStep}
+													className="btn-link"
+													style={{ cursor: "pointer" }}
+												>
+													<i className="bi bi-arrow-left me-1"></i>Back
+												</button>
+											)}
 										</div>
 										<div className="progress" style={{ height: "3.6px" }}>
 											<div
@@ -825,17 +837,7 @@ function AuthForm(): JSX.Element {
 
 									{/* Action buttons */}
 									<div className="d-grid gap-2">
-										{displayedMode === "register" && displayedStep === 2 && (
-											<ActionButton
-												type="button"
-												onClick={handlePreviousStep}
-												variant="secondary"
-												className="fw-semibold"
-												defaultText="Back"
-												defaultIcon="bi bi-arrow-left"
-											/>
-										)}
-										<ActionButton
+												<ActionButton
 											type="submit"
 											id="confirm-button"
 											disabled={buttonDisabled || hasFieldErrors}

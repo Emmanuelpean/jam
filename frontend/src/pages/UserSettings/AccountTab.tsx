@@ -131,9 +131,12 @@ export const AccountTab: React.FC = (): JSX.Element => {
 	const handleInputChange = (e: SyntheticEvent): void => {
 		const { name, value } = e.target;
 		setFormData((prev: AccountFormData): AccountFormData => ({ ...prev, [name]: value }));
-		if (errors[name]) {
-			setErrors((prev: ValidationErrors): ValidationErrors => ({ ...prev, [name]: "" }));
-		}
+		setErrors((prev: ValidationErrors): ValidationErrors => {
+			const next = { ...prev };
+			if (next[name]) delete next[name];
+			if (name === "new_password" && next.confirm_password) delete next.confirm_password;
+			return next;
+		});
 	};
 
 	const validateForm = (): boolean => {

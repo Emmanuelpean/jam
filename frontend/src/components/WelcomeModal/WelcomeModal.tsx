@@ -13,7 +13,7 @@ export const WelcomeModal = forwardRef<WelcomeModalHandle, WelcomeModalProps>(({
 		<SlideCarouselModal
 			ref={ref}
 			id="welcome-modal"
-			title="Welcome to Jam"
+			title="Welcome to JAM!"
 			titleIcon="stars"
 			slides={WELCOME_SLIDES}
 			finishText="Get Started!"

@@ -9,8 +9,8 @@ import jobsGif from "../assets/demo_gifs/job_page.gif";
 import scrapedJobsPng from "../assets/screenshots/scraped-jobs.png";
 import dashboardPng from "../assets/screenshots/dashboard.png";
 import { PREMIUM_PRICE } from "../pages/UserSettings/PremiumTab";
-import interviewsPng from "../assets/screenshots/interviews.png";
-import deadlinesPng from "../assets/screenshots/deadlines.png";
+import peopleGif from "../assets/demo_gifs/people_page.gif";
+import dashboardCustomisationGif from "../assets/demo_gifs/dashboard_customisation.gif";
 import { getEntityIcon } from "../components/rendering/view/Icons";
 
 export type version = "1.0.0" | "1.1.0" | "1.2.0" | "1.3.0";
@@ -37,31 +37,31 @@ export const WELCOME_SLIDES: ReleaseSlide[] = [
 		title: "Welcome to JAM!",
 		description:
 			"You have taken the first step toward landing your dream job. JAM is your all-in-one job application " +
-			"manager - designed to keep your search organized so you can focus on interviews, not admin work. Let us show " +
-			"you what is inside.",
+			"manager - designed to keep your search organized so you can focus on acing interviews, not tedious admin work! " +
+			"Let us show you what is inside.",
 		image: dashboardPng,
 	},
 	{
-		icon: "briefcase",
-		title: "Job Application Records",
+		title: "Record Your Job Applications",
 		description:
 			"Store every detail of your job applications in one place. Track roles, companies, contacts, dates, " +
 			"and notes so nothing slips through the cracks.",
 		image: jobsGif,
 	},
 	{
-		icon: "calendar-check",
-		title: "Interview Scheduling",
+		title: "Record Your Contacts",
 		description:
-			"Stay on top of your interviews with clear scheduling and status tracking. Log dates, stages, " +
-			"interviewers, and outcomes so you always know what's coming up next.",
-		image: interviewsPng,
+			"Keep track of every person you interact with during your job search. Store names, emails, phone numbers, " +
+			"LinkedIn profiles, and notes - and link contacts directly to jobs and companies.",
+		image: peopleGif,
 	},
 	{
-		icon: "clock",
-		title: "Deadline & Follow-Up Reminder",
-		description: "Get reminded of upcoming application deadlines and job requiring a follow-up",
-		image: deadlinesPng,
+		icon: "grid-1x2",
+		title: "Customise Your Dashboard",
+		description:
+			"Build a dashboard that works for you. Add, remove, and resize widgets to surface the information you care about most — " +
+			"upcoming interviews, follow-up reminders, deadlines, favourite jobs, and more.",
+		image: dashboardCustomisationGif,
 	},
 	{
 		icon: "inboxes",
