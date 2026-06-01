@@ -452,18 +452,19 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 		const totalOperations: number = fetchOperations.length;
 		let completedOperations: number = 0;
+		let displayIndex: number = 0;
 
 		try {
 			// Track progress for each promise
-			const trackedPromises: any[] = fetchOperations.map(({ promise, label }: any): any =>
+			const trackedPromises: any[] = fetchOperations.map(({ promise }: any): any =>
 				promise.then((result: ApiResponse<JamData[]>): ApiResponse<JamData[]> => {
 					completedOperations++;
 					const progressPercentage: number = Math.round((completedOperations / totalOperations) * 100);
-					console.log(label, completedOperations, totalOperations);
-					if (label === "Miscellaneous") {
+					const displayLabel: string = fetchOperations[displayIndex++].label;
+					if (displayLabel === "Miscellaneous") {
 						updateProgress(progressPercentage, `...And The Rest`);
 					} else {
-						updateProgress(progressPercentage, `Loading Your ${label}...`);
+						updateProgress(progressPercentage, `Loading Your ${displayLabel}...`);
 					}
 					return result;
 				})
