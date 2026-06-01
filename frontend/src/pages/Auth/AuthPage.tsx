@@ -9,7 +9,7 @@ import { PrivacyPolicyModal } from "./PrivacyPolicyPage";
 import { Errors, renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
-import { ModalFormField } from "../../components/rendering/form/FormRenders";
+import { EmailValidation, ModalFormField } from "../../components/rendering/form/FormRenders";
 import { authApi, GenericResponse } from "../../services/api/Users";
 import { ApiResponse } from "../../services/api/Base";
 import { useLoading } from "../../contexts/LoadingContext";
@@ -233,10 +233,7 @@ function AuthForm(): JSX.Element {
 		if (mode === "register") {
 			const step: number = currentStep ?? registrationStep;
 			if (step === 1) {
-				if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
-					errors.email = "Please provide a valid email address.";
-				}
-
+				errors.email = !formData.email ? "Email is required." : EmailValidation(formData.email);
 				if (!formData.password) {
 					errors.password = "Password is required.";
 				} else if (formData.password.length < config.min_password_length) {
@@ -266,9 +263,7 @@ function AuthForm(): JSX.Element {
 		}
 
 		if (["login", "forgotPassword"].includes(mode)) {
-			if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
-				errors.email = "Please provide a valid email address.";
-			}
+			errors.email = !formData.email ? "Email is required." : EmailValidation(formData.email);
 		}
 
 		if (["login", "resetPassword"].includes(mode)) {
@@ -470,6 +465,7 @@ function AuthForm(): JSX.Element {
 		placeholder: "Enter your email",
 		autoComplete: "email",
 		maxChars: config?.column_limits.email,
+		validation: EmailValidation,
 	};
 
 	const passwordField: ModalFormField = {
@@ -530,21 +526,11 @@ function AuthForm(): JSX.Element {
 		label: (
 			<span>
 				I agree to the{" "}
-				<button
-					type="button"
-					onClick={handleShowTerms}
-					className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-					style={{ cursor: "pointer" }}
-				>
+				<button type="button" onClick={handleShowTerms} className="btn-link" style={{ cursor: "pointer" }}>
 					Terms and Conditions
 				</button>
 				{" and the "}
-				<button
-					type="button"
-					onClick={handleShowPrivacy}
-					className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-					style={{ cursor: "pointer" }}
-				>
+				<button type="button" onClick={handleShowPrivacy} className="btn-link" style={{ cursor: "pointer" }}>
 					Privacy Policy
 				</button>
 			</span>
@@ -788,7 +774,7 @@ function AuthForm(): JSX.Element {
 												<button
 													type="button"
 													onClick={switchToForgotPassword}
-													className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent small"
+													className="btn-link"
 													style={{ cursor: "pointer" }}
 													id="forgot-password-link"
 												>
@@ -900,7 +886,7 @@ function AuthForm(): JSX.Element {
 												<button
 													type="button"
 													onClick={switchToLogin}
-													className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+													className="btn-link"
 													style={{ cursor: "pointer" }}
 												>
 													Back to Sign In
@@ -913,7 +899,7 @@ function AuthForm(): JSX.Element {
 													type="button"
 													id="switch-mode-button"
 													onClick={switchToRegister}
-													className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+													className="btn-link"
 													style={{ cursor: "pointer" }}
 												>
 													Sign Up
@@ -926,7 +912,7 @@ function AuthForm(): JSX.Element {
 													type="button"
 													id="switch-mode-button"
 													onClick={switchToLogin}
-													className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+													className="btn-link"
 													style={{ cursor: "pointer" }}
 												>
 													Sign In

@@ -61,6 +61,14 @@ const UrlValidation = (value: string): string | null => {
 	}
 };
 
+export const EmailValidation = (value: string): string | null => {
+	if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+		return "Please enter a valid email address";
+	} else {
+		return null;
+	}
+};
+
 export interface FormFieldOverride extends Partial<ModalFormField> {}
 
 const createFormFields = (limits: Partial<ColumnLimits>) => {
@@ -277,13 +285,7 @@ const createFormFields = (limits: Partial<ColumnLimits>) => {
 		type: "text",
 		placeholder: "person@company.com",
 		maxChars: limits.email,
-		validation: (value: string) => {
-			if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-				return "Please enter a valid email address";
-			} else {
-				return null;
-			}
-		},
+		validation: EmailValidation,
 		...overrides,
 	});
 

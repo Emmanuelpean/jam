@@ -206,10 +206,13 @@
     color: var(--primary-mid) !important;
     border: none !important;
     background: none !important;
+    font-weight: 600;
+    font-size: 0.88rem
 }
 
 .btn-link:hover {
     transform: translateY(-1px);
+    color: var(--primary-mid) !important;
 }
 
 .card-footer {

@@ -7,7 +7,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { authApi, exportApi, GenericResponse, UpdateCurrentUserResponse } from "../../services/api/Users";
 import { ApiResponse } from "../../services/api/Base";
 import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
-import { ModalFormField } from "../../components/rendering/form/FormRenders";
+import { EmailValidation, ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { useNavigate } from "react-router-dom";
 import { useConfig } from "../../contexts/ConfigContext";
@@ -148,9 +148,8 @@ export const AccountTab: React.FC = (): JSX.Element => {
 			newErrors.current_password = "Current password is required to update email or password";
 		}
 
-		if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-			newErrors.email = "Email format is invalid";
-		}
+		const emailError = formData.email ? EmailValidation(formData.email) : "Email is required";
+		if (emailError) newErrors.email = emailError;
 
 		if (formData.new_password || formData.confirm_password) {
 			if (formData.new_password && formData.new_password.length < config.min_password_length) {
