@@ -3,7 +3,6 @@
 import argparse
 import time
 
-from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 
@@ -14,7 +13,7 @@ class ScrapedJobsBuilder(DemoBuilder):
     """Records the scraped jobs page workflow and generates a GIF"""
 
     def record(self, email: str, password: str) -> None:
-        """Record the job alerts flow: view page, open a job, import via right-click"""
+        """Record the job alerts flow: view page, open a job, scroll down, import it"""
 
         print("Recording scraped jobs flow...")
 
@@ -33,7 +32,7 @@ class ScrapedJobsBuilder(DemoBuilder):
         rows = self.wait.until(
             ec.presence_of_all_elements_located((By.CSS_SELECTOR, "[id^='table-row-scrapedJob-']"))
         )
-        first_row = rows[0]
+        first_row = rows[2]
         self._move_to_element_obj(first_row, 500)
         self._click_element_obj(first_row)
 
@@ -41,33 +40,21 @@ class ScrapedJobsBuilder(DemoBuilder):
         print("  - Viewing AI-rated job alert...")
         self.wait.until(ec.presence_of_element_located((By.ID, "modal-import-scrapedJob")))
         time.sleep(0.5)
-        self.capture_frames_for_duration(3.5)
+        self.capture_frames_for_duration(2.0)
 
-        # Close this modal and right-click a different row to show the context menu
-        print("  - Closing modal...")
-        self.move_to_element("modal-import-scrapedJob-cancel-button", 400)
-        self.wait.until(ec.element_to_be_clickable((By.ID, "modal-import-scrapedJob-cancel-button"))).click()
-        time.sleep(0.5)
-        self.capture_frames_for_duration(0.8)
+        # Scroll down slowly inside the modal to show more content
+        print("  - Scrolling down in modal...")
+        modal = self.driver.find_element(By.CSS_SELECTOR, ".modal-body")
+        scroll_distance = self.driver.execute_script(
+            "return arguments[0].scrollHeight - arguments[0].clientHeight;", modal
+        )
+        steps = 25
+        scroll_per_step = scroll_distance / steps
+        for _ in range(steps):
+            self.driver.execute_script(f"arguments[0].scrollTop += {scroll_per_step};", modal)
+            self.capture_frames_for_duration(0.12)
 
-        # Right-click the second row to show context menu
-        print("  - Right-clicking second job alert...")
-        rows = self.driver.find_elements(By.CSS_SELECTOR, "[id^='table-row-scrapedJob-']")
-        second_row = rows[1]
-        self._move_to_element_obj(second_row, 500)
-        self.capture_frames_for_duration(0.3)
-        self._right_click_element_obj(second_row)
-        time.sleep(0.3)
-        self.capture_frames_for_duration(0.8)
-
-        # Click Import from the context menu
-        print("  - Selecting Import from context menu...")
-        self.move_to_element("context-menu-import", 300)
-        self.click_element("context-menu-import")
-        time.sleep(0.5)
-        self.wait.until(ec.presence_of_element_located((By.ID, "modal-import-scrapedJob")))
-        time.sleep(0.5)
-        self.capture_frames_for_duration(1.5)
+        self.capture_frames_for_duration(1.0)
 
         # Click the Import button to import the job
         print("  - Importing job...")
@@ -100,20 +87,6 @@ class ScrapedJobsBuilder(DemoBuilder):
         self.driver.execute_script(f"window.simulateClick({rect['x']}, {rect['y']});")
         self.capture_frames_for_duration(0.3)
         element.click()
-        time.sleep(0.2)
-        self.capture_frames_for_duration(0.3)
-
-    def _right_click_element_obj(self, element) -> None:
-        """Right-click a WebElement with visual cursor effect"""
-
-        rect = self.driver.execute_script(
-            "const r = arguments[0].getBoundingClientRect();"
-            "return {x: r.left + r.width/2, y: r.top + r.height/2};",
-            element,
-        )
-        self.driver.execute_script(f"window.simulateClick({rect['x']}, {rect['y']});")
-        self.capture_frames_for_duration(0.2)
-        ActionChains(self.driver).context_click(element).perform()
         time.sleep(0.2)
         self.capture_frames_for_duration(0.3)
 

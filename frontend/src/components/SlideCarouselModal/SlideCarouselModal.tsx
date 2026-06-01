@@ -1,4 +1,4 @@
-import React, { forwardRef, JSX, useCallback, useImperativeHandle, useRef, useState } from "react";
+import React, { forwardRef, JSX, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useArrowKeyNavigation } from "../../hooks/useArrowKeyNavigation";
 import { Modal } from "react-bootstrap";
 import JamModal from "../JamModal/JamModal";
@@ -29,6 +29,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 		const [currentStep, setCurrentStep] = useState<number>(0);
 		const [direction, setDirection] = useState<"next" | "prev" | null>(null);
 		const [loading, setLoading] = useState<boolean>(false);
+		const [imageLoaded, setImageLoaded] = useState<boolean>(false);
 		const { updateCurrentUser } = useAuth();
 		const [slideHeight, setSlideHeight] = useState<number | undefined>(undefined);
 		const measureRef = useRef<HTMLDivElement | null>(null);
@@ -42,6 +43,10 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 			}
 			if (maxHeight > 0) setSlideHeight(maxHeight);
 		}, []);
+
+		useEffect(() => {
+			setImageLoaded(false);
+		}, [currentStep]);
 
 		const isLastStep: boolean = currentStep === slides.length - 1;
 		const isFirstStep: boolean = currentStep === 0;
@@ -128,7 +133,20 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 					>
 						{slide.version && <p className="carousel-step-version">V{slide.version}</p>}
 						{slide.image ? (
-							<img src={slide.image} alt={slide.title} className="carousel-step-image" />
+							<div className="carousel-step-image-wrapper">
+								{!imageLoaded && (
+									<div className="spinner-border text-primary carousel-step-image-spinner" role="status">
+										<span className="visually-hidden">Loading...</span>
+									</div>
+								)}
+								<img
+									src={slide.image}
+									alt={slide.title}
+									className="carousel-step-image"
+									style={!imageLoaded ? { visibility: "hidden", position: "absolute" } : undefined}
+									onLoad={() => setImageLoaded(true)}
+								/>
+							</div>
 						) : (
 							<div className="carousel-step-icon">
 								<i className={`bi bi-${slide.icon}`} />

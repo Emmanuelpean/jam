@@ -416,7 +416,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				label: "Speculative Applications",
 			} as TypedFetchOperation<SpeculativeApplicationData[]>,
 			{ promise: companiesApi.getAll(token), label: "Companies" } as TypedFetchOperation<CompanyData[]>,
-			{ promise: personsApi.getAll(token), label: "Persons" } as TypedFetchOperation<PersonData[]>,
+			{ promise: personsApi.getAll(token), label: "Contacts" } as TypedFetchOperation<PersonData[]>,
 			{ promise: interviewsApi.getAll(token), label: "Interviews" } as TypedFetchOperation<InterviewData[]>,
 			{
 				promise: jobApplicationUpdatesApi.getAll(token),
@@ -433,13 +433,13 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				label: "Scraping Filters",
 			} as TypedFetchOperation<ScrapingFilterData[]>,
 			{
-				promise: aiSystemPromptsApi.getAll(token),
-				label: "Miscellaneous",
-			} as TypedFetchOperation<AiSystemPromptData[]>,
-			{
 				promise: filesApi.getAll(token),
 				label: "Files",
 			} as TypedFetchOperation<FileData[]>,
+			{
+				promise: aiSystemPromptsApi.getAll(token),
+				label: "Miscellaneous",
+			} as TypedFetchOperation<AiSystemPromptData[]>,
 		];
 
 		// Add admin-only calls if user is admin
@@ -459,7 +459,12 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				promise.then((result: ApiResponse<JamData[]>): ApiResponse<JamData[]> => {
 					completedOperations++;
 					const progressPercentage: number = Math.round((completedOperations / totalOperations) * 100);
-					updateProgress(progressPercentage, `Loading ${label}...`);
+					console.log(label, completedOperations, totalOperations);
+					if (label === "Miscellaneous") {
+						updateProgress(progressPercentage, `...And The Rest`);
+					} else {
+						updateProgress(progressPercentage, `Loading Your ${label}...`);
+					}
 					return result;
 				})
 			);
@@ -661,7 +666,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	// Show loading immediately on mount — DataProvider only renders when !!token,
 	// so this fires on login and on page refresh with an existing session.
 	useLayoutEffect((): void => {
-		showLoading("Initialising Data Load...", 0);
+		showLoading("Loading Your Data...", 0);
 	}, []);
 
 	useEffect((): void => {
