@@ -2051,7 +2051,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -2241,11 +2241,13 @@ class BaseTest(BaseUtils):
     # ---------------------------------------------------- DATABASE ----------------------------------------------------
 
     @property
-    def db_user(self) -> models.User | None:
+    def db_user(self) -> models.User:
         """Get the user from the database"""
 
         self.db.expire_all()
-        return self.db.query(models.User).filter(models.User.id == self.user.id).first()
+        user = self.db.query(models.User).filter(models.User.id == self.user.id).first()
+        assert user
+        return user
 
     def verify_user_in_database(self, email: str) -> list[models.User]:
         """Helper method to verify user exists in database"""

@@ -484,8 +484,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				keywordsData,
 				scrapingFiltersData,
 				scrapingFavouriteFiltersData,
-				aiSystemPromptsData,
 				filesData,
+				aiSystemPromptsData,
 				...adminData
 			] = results;
 

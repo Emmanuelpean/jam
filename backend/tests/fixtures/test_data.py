@@ -101,11 +101,25 @@ def test_files(session, test_users) -> list[models.File]:
 
 @pytest.fixture
 def test_jobs(
-    session, test_users, test_companies, test_keywords, test_persons, test_aggregators, test_files, test_geolocations
+    session,
+    test_users,
+    test_companies,
+    test_keywords,
+    test_persons,
+    test_aggregators,
+    test_files,
+    test_geolocations,
 ) -> list[models.Job]:
     """Create test job data"""
     return create_jobs(
-        session, test_keywords, test_persons, test_users, test_companies, test_aggregators, test_files, test_geolocations
+        session,
+        test_keywords,
+        test_persons,
+        test_users,
+        test_companies,
+        test_aggregators,
+        test_files,
+        test_geolocations,
     )
 
 
@@ -164,9 +178,7 @@ def test_interviews(session, test_users, test_jobs, test_persons, test_geolocati
 
 
 @pytest.fixture
-def interviews_unauthorised_data(
-    session, test_users, test_jobs, test_persons
-) -> tuple[list[dict], int, list[dict]]:
+def interviews_unauthorised_data(session, test_users, test_jobs, test_persons) -> tuple[list[dict], int, list[dict]]:
     """Create test interview data with incorrect job_id for access control testing"""
     owner_id = 1
     job_id = find_non_owned_entry(test_jobs, owner_id)

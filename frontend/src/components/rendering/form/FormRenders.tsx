@@ -55,7 +55,7 @@ export interface ModalFormField {
 
 const UrlValidation = (value: string): string | null => {
 	if (value && !value.includes(".")) {
-		return "Please enter a valid URL";
+		return "URL format is invalid";
 	} else {
 		return null;
 	}
@@ -63,7 +63,7 @@ const UrlValidation = (value: string): string | null => {
 
 export const EmailValidation = (value: string): string | null => {
 	if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-		return "Please enter a valid email address";
+		return "Email format is invalid";
 	} else {
 		return null;
 	}

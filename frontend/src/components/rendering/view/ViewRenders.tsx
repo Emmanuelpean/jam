@@ -900,6 +900,7 @@ export const RenderViewFieldWithContext: React.FC<{
 	view?: boolean;
 }> = ({ field, item, id, view = false }) => {
 	const context: DataContextValue = useDataContext();
+	console.log(context.files);
 	const { token } = useAuth();
 	const { currencies } = useStaticData();
 
