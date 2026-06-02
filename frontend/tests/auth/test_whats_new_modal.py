@@ -1,3 +1,5 @@
+"""Tests for the What's New Modal feature."""
+
 from base_test import BaseTest
 
 

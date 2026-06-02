@@ -100,6 +100,12 @@ class TestAccountSettingsPage(BaseTest):
         self.set_text(self.user_settings_utils.email, "f")
         self.user_settings_utils.confirm()
         self.user_settings_utils.assert_email_error_message("Email format is invalid")
+
+        # Adding 1 more character fixes the error and re-enables the button
+        self.user_settings_utils.email.send_keys("a")
+        self.user_settings_utils.assert_no_email_error_message()
+        self.user_settings_utils.assert_confirm_button_enabled()
+
         assert self.db_user.email == self.user.email
 
     # ------------------------------------------------ UPDATING PASSWORD -----------------------------------------------
@@ -124,6 +130,12 @@ class TestAccountSettingsPage(BaseTest):
         self.set_text(self.user_settings_utils.confirm_password, "n")
         self.user_settings_utils.confirm()
         self.user_settings_utils.assert_new_password_error_message("New password must be at least 8 characters long")
+
+        # Adding 1 more character fixes the error and re-enables the button
+        self.user_settings_utils.new_password.send_keys("a")
+        self.user_settings_utils.assert_no_new_password_error_message()
+        self.user_settings_utils.assert_confirm_button_enabled()
+
         assert verify_password(self.user.plain_password, self.db_user.password)
 
     def test_change_password_nonmatching(self) -> None:
@@ -134,6 +146,12 @@ class TestAccountSettingsPage(BaseTest):
         self.set_text(self.user_settings_utils.confirm_password, "n")
         self.user_settings_utils.confirm()
         self.user_settings_utils.assert_confirm_password_error_message("Passwords do not match")
+
+        # Adding 1 more character fixes the error and re-enables the button
+        self.user_settings_utils.confirm_password.send_keys("a")
+        self.user_settings_utils.assert_no_confirm_password_error_message()
+        self.user_settings_utils.assert_confirm_button_enabled()
+
         assert verify_password(self.user.plain_password, self.db_user.password)
 
     # -------------------------------------------------- DATA EXPORT ---------------------------------------------------

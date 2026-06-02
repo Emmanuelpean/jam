@@ -1,4 +1,6 @@
-from admin.test_maintenance import MaintenanceTestBase
+"""Test authentification pages during maintenance mode."""
+
+from base_test import MaintenanceTestBase
 
 
 class TestMaintenanceModeAuthEndpoints(MaintenanceTestBase):

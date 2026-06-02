@@ -1,3 +1,5 @@
+"""Tests for the sign-up page."""
+
 from base_test import BaseTest
 
 
@@ -72,10 +74,16 @@ class TestSignUp(BaseTest):
         # Verify error message and database
         self.auth_utils.assert_email_error_message("Please provide a valid email address")
         self.auth_utils.assert_confirm_button_disabled()
+
+        # Adding 1 more character fixes the error and re-enables the button
+        self.auth_utils.get_element("email").send_keys("a")
+        self.auth_utils.assert_no_email_error_message()
+        self.auth_utils.assert_confirm_button_enabled()
+
         assert not self.verify_user_in_database(test_email)
 
     def test_signup_no_email(self) -> None:
-        """Test signup with invalid email format"""
+        """Test signup with no email"""
 
         self.auth_utils.go_to_register()
         test_email, test_password = "", "Test123!"
@@ -90,6 +98,12 @@ class TestSignUp(BaseTest):
         # Verify error message and database
         self.auth_utils.assert_email_error_message("Please provide a valid email address")
         self.auth_utils.assert_confirm_button_disabled()
+
+        # Adding 1 more character fixes the error and re-enables the button
+        self.auth_utils.get_element("email").send_keys("a")
+        self.auth_utils.assert_no_email_error_message()
+        self.auth_utils.assert_confirm_button_enabled()
+
         assert not self.verify_user_in_database(test_email)
 
     def test_signup_no_password(self) -> None:
@@ -109,6 +123,13 @@ class TestSignUp(BaseTest):
         self.auth_utils.assert_password_error_message("Password is required")
         self.auth_utils.assert_confirm_password_error_message("Please confirm your password")
         self.auth_utils.assert_confirm_button_disabled()
+
+        # Adding 1 more character to password clears both password and confirm password errors
+        self.auth_utils.get_element("password").send_keys("a")
+        self.auth_utils.assert_no_password_error_message()
+        self.auth_utils.assert_no_confirm_password_error_message()
+        self.auth_utils.assert_confirm_button_enabled()
+
         assert not self.verify_user_in_database(test_email)
 
     def test_signup_password_mismatch(self) -> None:
@@ -127,10 +148,23 @@ class TestSignUp(BaseTest):
         # Verify error message and database
         self.auth_utils.assert_confirm_password_error_message("Passwords do not match")
         self.auth_utils.assert_confirm_button_disabled()
+
+        # Adding 1 more character fixes the error and re-enables the button
+        self.auth_utils.get_element("confirmPassword").send_keys("a")
+        self.auth_utils.assert_no_confirm_password_error_message()
+        self.auth_utils.assert_confirm_button_enabled()
+
+        # Submit again and clear the error with a new password
+        self.auth_utils.confirm()
+        self.auth_utils.assert_confirm_password_error_message("Passwords do not match")
+        self.auth_utils.assert_confirm_button_disabled()
+        self.auth_utils.set_password("a")
+        self.auth_utils.assert_no_confirm_password_error_message()
+
         assert not self.verify_user_in_database(test_email)
 
     def test_signup_password_requirement(self) -> None:
-        """Test signup with mismatched passwords"""
+        """Test signup with incorrect password length requirement (8 chars)"""
 
         self.auth_utils.go_to_register()
         test_email = f"test@test.com"
@@ -145,6 +179,12 @@ class TestSignUp(BaseTest):
         # Verify error message and database
         self.auth_utils.assert_password_error_message("Password must be at least 8 characters long.")
         self.auth_utils.assert_confirm_button_disabled()
+
+        # Adding 1 more character fixes the error and re-enables the button
+        self.auth_utils.get_element("password").send_keys("a")
+        self.auth_utils.assert_no_password_error_message()
+        self.auth_utils.assert_confirm_button_enabled()
+
         assert not self.verify_user_in_database(test_email)
 
     def test_signup_no_tc(self) -> None:
@@ -166,9 +206,10 @@ class TestSignUp(BaseTest):
         self.auth_utils.assert_confirm_button_disabled()
         assert not self.verify_user_in_database(test_email)
 
-    def test_signup_limited(self, test_settings) -> None:
+    def test_signup_limited(self) -> None:
         """Test signup when registrations are limited"""
 
+        self._create_setting(name="allowlist", value="")
         self.auth_utils.go_to_register()
         test_email, test_password = f"test@test.com", "Test123!"
         self.auth_utils.set_email(test_email)

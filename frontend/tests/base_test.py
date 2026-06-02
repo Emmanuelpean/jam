@@ -10,6 +10,7 @@ import uuid
 import platform
 import re
 import time
+from datetime import datetime, timezone, timedelta
 from typing import Generator
 
 import pytest
@@ -1322,6 +1323,21 @@ class AuthentificationUtils(BaseUtilsClass):
 
         self._assert_message("terms-", error_message)
 
+    def assert_no_email_error_message(self) -> None:
+        """Assert that the email error message is not displayed on the page"""
+
+        self.wait_for_disappear("email-error-message")
+
+    def assert_no_password_error_message(self) -> None:
+        """Assert that the password error message is not displayed on the page"""
+
+        self.wait_for_disappear("password-error-message")
+
+    def assert_no_confirm_password_error_message(self) -> None:
+        """Assert that the confirm password error message is not displayed on the page"""
+
+        self.wait_for_disappear("confirmPassword-error-message")
+
     # ------------------------------------------------------ PAGES -----------------------------------------------------
 
     def wait_for_dashboard(self) -> None:
@@ -1494,6 +1510,26 @@ class UserSettingsUtils(BaseUtilsClass):
         """Assert that the given error message is displayed on the page"""
 
         self._assert_message("confirm_password-", error_message)
+
+    def assert_no_email_error_message(self) -> None:
+        """Assert that the email error message is not displayed on the page"""
+
+        self.wait_for_disappear("email-error-message")
+
+    def assert_no_new_password_error_message(self) -> None:
+        """Assert that the new password error message is not displayed on the page"""
+
+        self.wait_for_disappear("new_password-error-message")
+
+    def assert_no_confirm_password_error_message(self) -> None:
+        """Assert that the confirm password error message is not displayed on the page"""
+
+        self.wait_for_disappear("confirm_password-error-message")
+
+    def assert_confirm_button_enabled(self) -> None:
+        """Wait until the confirm button becomes enabled (clickable)."""
+
+        self.get_element("confirm-button")
 
     @property
     def download_data_button(self) -> WebElement:
@@ -2051,7 +2087,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            # chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -2366,6 +2402,15 @@ class BaseTest(BaseUtils):
         self.db.refresh(rating)
         return rating
 
+    def _create_setting(self, **kwargs) -> models.Setting:
+        """Create a new setting entry"""
+
+        setting = models.Setting(**kwargs)
+        self.db.add(setting)
+        self.db.commit()
+        self.db.refresh(setting)
+        return setting
+
 
 def format_file_size(size: int | None) -> str:
     """Python equivalent of the frontend formatFileSize utility."""
@@ -2404,3 +2449,41 @@ def format_field(label: str | None, value: str | None) -> str:
         return f"{label}\n{value if value else 'Not Provided'}\n"
     else:
         return f"{value if value else 'Not Provided'}\n"
+
+
+class MaintenanceTestBase(BaseTest):
+    """Shared helpers for maintenance tests."""
+
+    _setting_id = None
+
+    def _set_maintenance_scheduled_at(self, iso_timestamp: str) -> None:
+        """Create or update the maintenance_scheduled_at setting via the API."""
+
+        if self._setting_id is None:
+            response = self.client.post("/settings/", json={"name": "maintenance_scheduled_at", "value": iso_timestamp})
+            assert response.status_code == 201
+            self._setting_id = response.json()["id"]
+        else:
+            response = self.client.put(f"/settings/{self._setting_id}", json={"value": iso_timestamp})
+            assert response.status_code == 200
+
+    def _clear_maintenance_scheduled_at(self) -> None:
+        """Delete the maintenance_scheduled_at setting if it exists."""
+
+        if self._setting_id is not None:
+            self.client.delete(f"/settings/{self._setting_id}")
+            self._setting_id = None
+
+    @staticmethod
+    def _get_future_timestamp(minutes: int | float = 30) -> str:
+        """Get an ISO 8601 timestamp for a time in the future."""
+
+        future_time = datetime.now(timezone.utc) + timedelta(minutes=minutes)
+        return future_time.isoformat()
+
+    @staticmethod
+    def _get_past_timestamp(minutes: int | float = 5) -> str:
+        """Get an ISO 8601 timestamp for a time in the past."""
+
+        past_time = datetime.now(timezone.utc) - timedelta(minutes=minutes)
+        return past_time.isoformat()

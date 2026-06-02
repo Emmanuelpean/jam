@@ -1,3 +1,5 @@
+"""Tests for the email verification flow."""
+
 import datetime as dt
 
 from base_test import models, BaseTest
@@ -84,6 +86,7 @@ class TestEmailVerification(BaseTest):
         test_password = "Test123!"
         self._register_and_verify_redirect(test_email, test_password)
         user = session.query(models.User).filter(models.User.email == test_email).first()
+        assert user
         token = session.query(models.UserToken).filter(models.UserToken.owner_id == user.id).first()
         token.created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=67)
         session.commit()

@@ -1,12 +1,14 @@
+"""Tests for the password reset flow."""
+
 from base_test import BaseTest
 
 
 class TestPasswordReset(BaseTest):
 
-    def test_password_reset_flow(self, test_users) -> None:
+    def test_password_reset_flow(self, test_regular_user) -> None:
         """Test complete password reset flow using test email endpoints"""
 
-        test_email = test_users[0].email
+        test_email = test_regular_user.email
         new_password = "NewPassword123!"
 
         # Clear any existing test emails
@@ -63,6 +65,26 @@ class TestPasswordReset(BaseTest):
 
         # Back within limit
         self.auth_utils.set_email("test@test.com")
+        self.auth_utils.assert_confirm_button_enabled()
+
+    def test_reset_password_lower_limit(self) -> None:
+        """Entering a password below the minimum length (8 chars) shows an error and disables Reset Password."""
+
+        self.driver.get(f"{self.frontend_base_url}/reset-password?token=dummytoken123")
+        self.get_element("password")  # wait for form to render
+
+        # Password below minimum (5 chars)
+        self.auth_utils.set_password("Passw")
+        self.auth_utils.set_confirm_password("Passw")
+        self.auth_utils.confirm()
+
+        # Verify error message and disabled button
+        self.auth_utils.assert_password_error_message("Password must be at least 8 characters long.")
+        self.auth_utils.assert_confirm_button_disabled()
+
+        # Adding 1 more character clears the error and re-enables the button
+        self.auth_utils.get_element("password").send_keys("a")
+        self.auth_utils.assert_no_password_error_message()
         self.auth_utils.assert_confirm_button_enabled()
 
     def test_reset_password_field_limits(self) -> None:

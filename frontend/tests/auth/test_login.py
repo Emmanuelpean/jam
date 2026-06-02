@@ -1,4 +1,4 @@
-"""Tests for login functionality"""
+"""Tests for the login page."""
 
 import time
 
@@ -25,12 +25,12 @@ class TestLogIn(BaseTest):
         # Confirm load by checking the dashboard
         self.auth_utils.wait_for_dashboard()
 
-    def test_invalid_login(self) -> None:
-        """Test login with invalid credentials"""
+    def test_incorrect_credentials_login(self) -> None:
+        """Test login with incorrect credentials"""
 
         test_email, test_password = "wrong@email.com", "wrong_password"
 
-        # Fill in login form with invalid credentials
+        # Fill in login form with incorrect credentials
         self.auth_utils.set_email(test_email)
         self.auth_utils.set_password(test_password)
         self.auth_utils.confirm()
@@ -39,7 +39,7 @@ class TestLogIn(BaseTest):
         self.auth_utils.assert_toast_message("Invalid credentials")
 
     def test_inactive_login(self, test_inactive_user) -> None:
-        """Test login with invalid credentials"""
+        """Test login with an inactive user's credentials"""
 
         test_email, test_password = test_inactive_user.email, test_inactive_user.plain_password
         assert not test_inactive_user.is_active
@@ -52,52 +52,61 @@ class TestLogIn(BaseTest):
         # Verify error message
         self.auth_utils.assert_toast_message("User account is not active.")
 
-    def test_login_invalid_email(self) -> None:
-        """Test login with invalid credentials"""
+    def test_login_malformed_email(self) -> None:
+        """Test login with invalid email"""
 
-        test_email, test_password = "wrong", "wrong_password"
-
-        # Fill in login form with invalid credentials
-        self.auth_utils.set_email(test_email)
-        self.auth_utils.set_password(test_password)
+        # Fill in login form with malformed email
+        self.auth_utils.set_email("wrong")
+        self.auth_utils.set_password("Test123!")
         self.auth_utils.confirm()
 
         # Verify error message
         self.auth_utils.assert_email_error_message("Please provide a valid email address")
         self.auth_utils.assert_confirm_button_disabled()
+
+        # Adding 1 more character fixes the error and re-enables the button
+        self.auth_utils.get_element("email").send_keys("a")
+        self.auth_utils.assert_no_email_error_message()
+        self.auth_utils.assert_confirm_button_enabled()
 
     def test_login_no_email(self) -> None:
-        """Test login with invalid credentials"""
-
-        test_email, test_password = "", "wrong_password"
+        """Test login with no email"""
 
         # Fill in login form with invalid credentials
-        self.auth_utils.set_email(test_email)
-        self.auth_utils.set_password(test_password)
+        self.auth_utils.set_email("")
+        self.auth_utils.set_password("Test123!")
         self.auth_utils.confirm()
 
         # Verify error message
         self.auth_utils.assert_email_error_message("Please provide a valid email address")
         self.auth_utils.assert_confirm_button_disabled()
 
-    def test_login_no_password(self) -> None:
-        """Test login with invalid credentials"""
+        # Adding 1 more character fixes the error and re-enables the button
+        self.auth_utils.get_element("email").send_keys("a")
+        self.auth_utils.assert_no_email_error_message()
+        self.auth_utils.assert_confirm_button_enabled()
 
-        test_email, test_password = "wrong@email.com", ""
+    def test_login_no_password(self) -> None:
+        """Test login with no password"""
 
         # Fill in login form with invalid credentials
-        self.auth_utils.set_email(test_email)
-        self.auth_utils.set_password(test_password)
+        self.auth_utils.set_email("email@email.com")
+        self.auth_utils.set_password("")
         self.auth_utils.confirm()
 
         # Verify error message
         self.auth_utils.assert_password_error_message("Password is required")
         self.auth_utils.assert_confirm_button_disabled()
 
+        # Adding 1 more character fixes the error and re-enables the button
+        self.auth_utils.get_element("password").send_keys("a")
+        self.auth_utils.assert_no_password_error_message()
+        self.auth_utils.assert_confirm_button_enabled()
+
     def test_unexpected_error(self) -> None:
         """Test login with unexpected error"""
 
-        self.auth_utils.set_email("crash@crash.com")
+        self.auth_utils.set_email("crash@crash.com")  # causes the backend to crash in test mode
         self.auth_utils.set_password("Test123!")
         self.auth_utils.confirm()
         self.auth_utils.assert_toast_message("An unknown error occurred during login.\nRight-click to send email")

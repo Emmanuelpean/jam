@@ -8,7 +8,7 @@ class TestDemoLogin(BaseTest):
 
         self.auth_utils.go_to_login()
 
-    def test_demo_login_shows_banner(self, test_demo_user) -> None:
+    def test_demo_login_shows_banner(self) -> None:
         """Clicking 'Try Demo' must log in and display the demo banner."""
 
         self.auth_utils.try_button.click()
@@ -17,7 +17,7 @@ class TestDemoLogin(BaseTest):
         banner = self.get_element("demo-banner")
         assert "demo account" in banner.text.lower()
 
-    def test_demo_logout_cancel_stays_logged_in(self, test_demo_user) -> None:
+    def test_demo_logout_cancel_stays_logged_in(self) -> None:
         """Cancelling the demo logout confirmation must keep the user on the dashboard."""
 
         self.auth_utils.try_button.click()
