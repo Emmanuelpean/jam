@@ -11,7 +11,7 @@ class TestWhatsNewModal(BaseTest):
 
         self.login()
         modal = self.get_element("welcome-modal")
-        assert "Welcome to Jam" in modal.text
+        assert "Welcome to JAM!" in modal.text
 
         # Navigate through all steps and close
         for _ in range(6):
