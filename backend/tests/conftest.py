@@ -40,6 +40,14 @@ pytest_plugins = [
 
 
 @pytest.fixture(autouse=True)
+def enable_test_mode():
+    """Force test_mode=True for all tests so emails are intercepted and test-only routes are active."""
+
+    with patch("app.config.settings.test_mode", True):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_nominatim_get():
     """Auto-mock Nominatim HTTP calls using MOCK_GEOCODING_RESPONSES.
     Known queries return a real-shaped Nominatim response; unknown queries return []

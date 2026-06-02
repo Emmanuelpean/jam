@@ -126,10 +126,9 @@ app.include_router(demo_routers.demo_router)
 # Stripe
 app.include_router(payment_routers.payment_router)
 
-# Testing
-if settings.test_mode:
-    app.include_router(email_routers.email_test_router)
-    app.include_router(payment_routers.payment_test_router)
+# Testing (routes are protected by their own test_mode checks)
+app.include_router(email_routers.email_test_router)
+app.include_router(payment_routers.payment_test_router)
 
 
 @app.get("/")

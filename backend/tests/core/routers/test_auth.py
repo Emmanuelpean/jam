@@ -13,6 +13,7 @@ from app.core import schemas
 from app.core.models import Setting
 from app.core.utils import send_password_reset_email
 from app.utils import hash_token
+from tests.utils.create_data.utils import create_db_entries
 
 
 def _create_maintenance_setting(session, minutes_offset: int) -> Setting:
@@ -190,6 +191,7 @@ class TestRegister:
         call_args = mock_email.call_args[0]
         assert call_args[0] == user_data["email"].lower()
         user = session.query(models.User).first()
+        assert user
         assert user.email == user_data["email"].lower()
 
     def test_register_user_exist(self, client, test_regular_user) -> None:
@@ -274,9 +276,10 @@ class TestRegister:
         assert "wait" in response.json()["detail"].lower()
         assert mock_email.call_count == 0
 
-    def test_register_not_setting_allowed(self, client, test_settings) -> None:
+    def test_register_not_setting_allowed(self, session, client) -> None:
         """Test registration blocked when email not on allowlist."""
 
+        create_db_entries(session, models.Setting, {"name": "allowlist", "value": ""})
         user_data = {
             "email": "test_user1@test.com",
             "password": "testpassword",
@@ -347,6 +350,7 @@ class TestEmailVerification:
         assert "verified successfully" in response.json()["message"].lower()
 
         verified_user = session.query(models.User).filter(models.User.id == user_id).first()
+        assert verified_user
         assert verified_user.is_verified is True
 
         # Check that the token was marked as used
@@ -407,6 +411,7 @@ class TestEmailVerification:
 
         # Re-query user to check verification status
         user = session.query(models.User).filter(models.User.id == user_id).first()
+        assert user
         assert user.is_verified is False
 
     def test_verify_email_blocked_during_maintenance(self, session, test_unverified_token_user, client) -> None:
@@ -566,6 +571,7 @@ class TestResetPassword:
         user = session.query(models.User).filter(models.User.id == user_id).first()
 
         # Remember current password for later comparison
+        assert user
         old_password_hash = user.password
 
         # Create password reset token
@@ -591,7 +597,7 @@ class TestResetPassword:
         assert "password has been reset" in response.json()["message"].lower()
 
         updated_user = session.query(models.User).filter(models.User.id == user_id).first()
-        assert updated_user.password != old_password_hash
+        assert updated_user and updated_user.password != old_password_hash
 
         # Re-query the token to check if it was marked as used
         updated_token = session.query(models.UserToken).filter(models.UserToken.id == token_id).first()

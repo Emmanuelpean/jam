@@ -15,6 +15,8 @@ from starlette.requests import Request
 
 from app import database, models
 from app.core import oauth2
+from app.config import settings
+
 
 NOT_ALLOWED_EXCEPTION = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
@@ -610,3 +612,10 @@ def generate_data_table_crud_router(
             db.commit()
 
     return router
+
+
+def require_test_mode() -> None:
+    """Raises an HTTPException if test mode is not enabled."""
+
+    if not settings.test_mode:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Test mode not enabled")

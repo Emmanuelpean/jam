@@ -2,21 +2,19 @@
 
 import re
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
 from app.config import settings
 from app.emails.email_service import email_service
+from app.routers.utility import require_test_mode
 
-email_test_router = APIRouter(prefix="/test", tags=["testing"])
+email_test_router = APIRouter(prefix="/test/emails", tags=["testing"], dependencies=[Depends(require_test_mode)])
 
 
 @email_test_router.get("/emails/{email_address}")
 def get_test_emails(email_address: str) -> dict:
     """Get all test emails sent to a specific address."""
-
-    if not settings.test_mode:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Test mode not enabled")
 
     emails = email_service.get_test_emails(email_address)
     return {"emails": emails}
@@ -25,9 +23,6 @@ def get_test_emails(email_address: str) -> dict:
 @email_test_router.get("/verification-link/{email_address}")
 def get_verification_link(email_address: str) -> dict:
     """Extract verification link from the most recent email."""
-
-    if not settings.test_mode:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Test mode not enabled")
 
     emails = email_service.get_test_emails(email_address)
     if not emails:
@@ -50,9 +45,6 @@ def get_verification_link(email_address: str) -> dict:
 def get_reset_link(email_address: str) -> dict:
     """Extract password reset link from the most recent email."""
 
-    if not settings.test_mode:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Test mode not enabled")
-
     emails = email_service.get_test_emails(email_address)
     if not emails:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No emails found")
@@ -72,9 +64,6 @@ def get_reset_link(email_address: str) -> dict:
 @email_test_router.delete("/emails")
 def clear_test_emails() -> dict:
     """Clear all test emails."""
-
-    if not settings.test_mode:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Test mode not enabled")
 
     email_service.clear_test_emails()
     return {"status": "cleared"}

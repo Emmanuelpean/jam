@@ -10,8 +10,9 @@ from starlette import status
 from app.core.oauth2 import get_current_user
 from app.models import User
 from app.payments import logger, stripe
+from app.routers.utility import require_test_mode
 
-payment_test_router = APIRouter(prefix="/test", tags=["testing"])
+payment_test_router = APIRouter(prefix="/test/payments", tags=["testing"], dependencies=[Depends(require_test_mode)])
 
 
 @payment_test_router.delete("/delete-all-customers")

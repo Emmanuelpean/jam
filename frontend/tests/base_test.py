@@ -378,21 +378,21 @@ class BaseUtils(object):
     def get_verification_link_from_email(self, email: str) -> str:
         """Helper method to get verification link from test email endpoint"""
 
-        response = requests.get(f"{self.backend_base_url}/test/verification-link/{email}")
+        response = requests.get(f"{self.backend_base_url}/test/emails/verification-link/{email}")
         assert response.status_code == 200, f"Failed to get verification link: {response.text}"
         return response.json()["verification_url"]
 
     def get_reset_link_from_email(self, email: str) -> str:
         """Helper method to get password reset link from test email endpoint"""
 
-        response = requests.get(f"{self.backend_base_url}/test/reset-link/{email}")
+        response = requests.get(f"{self.backend_base_url}/test/emails/reset-link/{email}")
         assert response.status_code == 200, f"Failed to get reset link: {response.text}"
         return response.json()["reset_url"]
 
     def clear_test_emails(self) -> None:
         """Helper method to clear all test emails"""
 
-        response = requests.delete(f"{self.backend_base_url}/test/emails")
+        response = requests.delete(f"{self.backend_base_url}/test/emails/emails")
         assert response.status_code == 200, "Failed to clear test emails"
 
     # ---------------------------------------------------- ELEMENTS ----------------------------------------------------
@@ -1789,13 +1789,13 @@ class PremiumSettingsUtils(BaseUtilsClass):
     def delete_stripe_data(self) -> None:
         """Delete Stripe customer data for the user"""
 
-        response = self.client.delete("/test/delete-all-customers")
+        response = self.client.delete("/test/payments/delete-all-customers")
         assert response.status_code == 200
 
     def advance_clock(self, days: int = 15) -> None:
         """Advance the Stripe clock"""
 
-        response = self.client.post("/test/advance-test-clock", json={"days": days})
+        response = self.client.post("/test/payments/advance-test-clock", json={"days": days})
         assert response.status_code == 200
         self.advance_browser_clock_days(days)
 
