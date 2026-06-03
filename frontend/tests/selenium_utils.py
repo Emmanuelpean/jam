@@ -117,10 +117,10 @@ class SeleniumUtils(object):
             else:
                 if enabled:
                     element = wait.until(ec.element_to_be_clickable((selector, element_id)))
+                    ActionChains(self.driver).move_to_element(element).perform()
                 else:
                     element = wait.until(ec.presence_of_element_located((selector, element_id)))
 
-            ActionChains(self.driver).move_to_element(element).perform()
             return element
 
         except Exception:

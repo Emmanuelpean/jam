@@ -40,6 +40,14 @@ class BaseUtils(SeleniumUtils):
     db = None
     client = None
 
+    def _init(self, driver: WebDriver, frontend_base_url: str, backend_base_url: str, db, client) -> None:
+        self.driver = driver
+        self.wait = WebDriverWait(self.driver, 10)
+        self.frontend_base_url = frontend_base_url
+        self.backend_base_url = backend_base_url
+        self.db = db
+        self.client = client
+
     def go_to_page(self, page: str) -> None:
         """Helper method to go to a specific page"""
 
@@ -117,32 +125,11 @@ class BaseUtils(SeleniumUtils):
         self.get_element("modal-close-btn").click()
 
 
-class BaseUtilsClass(BaseUtils):
-
-    def __init__(self, driver: WebDriver, frontend_base_url, backend_base_url, db, client):
-        """Object constructor
-        :param driver: Selenium WebDriver instance
-        :param frontend_base_url: Base URL of the frontend server
-        :param backend_base_url: Base URL of the backend server
-        :param db: Database session for backend API calls"""
-
-        self.driver = driver
-        self.wait = WebDriverWait(self.driver, 10)
-        self.frontend_base_url = frontend_base_url
-        self.backend_base_url = backend_base_url
-        self.db = db
-        self.client = client
-
-
-class DataModalUtils(BaseUtilsClass):
+class DataModalUtils(BaseUtils):
     """Base class for testing data modals"""
 
     def __init__(self, entry_type: str, **kwargs):
-        """Object constructor
-        :param entry_type: Type of entry (e.g., "job", "company", etc.)
-        :param kwargs: Additional arguments for the base class"""
-
-        BaseUtilsClass.__init__(self, **kwargs)
+        self._init(**kwargs)
         self.entry_type = entry_type
 
     # -------------------------------------------- INLINE ADD BUTTONS --------------------------------------------
@@ -678,15 +665,11 @@ class DataModalUtils(BaseUtilsClass):
         self.wait_for_edit_modal_close()
 
 
-class DataTableUtils(BaseUtilsClass):
+class DataTableUtils(BaseUtils):
     """Base class for testing data tables"""
 
     def __init__(self, entry_type: str, **kwargs):
-        """Object constructor
-        :param entry_type: Type of entry (e.g., "job", "company", etc.)
-        :param kwargs: Additional arguments for the base class"""
-
-        BaseUtilsClass.__init__(self, **kwargs)
+        self._init(**kwargs)
         self.entry_type = entry_type
 
     # ----------------------------------------------------- TABLES -----------------------------------------------------
@@ -883,13 +866,16 @@ class DataTableUtils(BaseUtilsClass):
         time.sleep(0.5)
 
 
-class AuthentificationUtils(BaseUtilsClass):
+class AuthentificationUtils(BaseUtils):
     """Test class for Authentication functionality including:
     - Login with valid credentials
     - Login with invalid credentials
     - Signup with valid data
     - Signup with invalid data
     - Form validation"""
+
+    def __init__(self, **kwargs):
+        self._init(**kwargs)
 
     # ----------------------------------------------------- INPUTS -----------------------------------------------------
 
@@ -1075,8 +1061,11 @@ class AuthentificationUtils(BaseUtilsClass):
         self.get_element("confirm-button")
 
 
-class UserSettingsUtils(BaseUtilsClass):
+class UserSettingsUtils(BaseUtils):
     """Test class for the User Settings Page"""
+
+    def __init__(self, **kwargs):
+        self._init(**kwargs)
 
     def go_to_account_tab(self) -> None:
         """Get the account tab button"""
@@ -1311,8 +1300,11 @@ class UserSettingsUtils(BaseUtilsClass):
         return self.get_element("interests")
 
 
-class FollowUpEmailModalUtils(BaseUtilsClass):
+class FollowUpEmailModalUtils(BaseUtils):
     """Utilities for the Follow-Up Email Modal."""
+
+    def __init__(self, **kwargs):
+        self._init(**kwargs)
 
     def wait_for_modal(self) -> WebElement:
         """Get the follow-up email modal element."""
@@ -1385,10 +1377,13 @@ class FollowUpEmailModalUtils(BaseUtilsClass):
         return self.get_element("default-email-btn")
 
 
-class AlertModalUtils(BaseUtilsClass):
+class AlertModalUtils(BaseUtils):
     """Utilities for the Confirm Modal."""
 
     key = ""
+
+    def __init__(self, **kwargs):
+        self._init(**kwargs)
 
     def wait_for_modal(self) -> WebElement:
         """Get the confirm modal element."""
@@ -1431,7 +1426,10 @@ class LogoutModalUtils(AlertModalUtils):
     key = "logout"
 
 
-class PremiumSettingsUtils(BaseUtilsClass):
+class PremiumSettingsUtils(BaseUtils):
+
+    def __init__(self, **kwargs):
+        self._init(**kwargs)
 
     @property
     def incomplete_qualifications_alert(self) -> WebElement:
@@ -1555,7 +1553,10 @@ class PremiumSettingsUtils(BaseUtilsClass):
         time.sleep(3)
 
 
-class TourUtils(BaseUtilsClass):
+class TourUtils(BaseUtils):
+
+    def __init__(self, **kwargs):
+        self._init(**kwargs)
 
     NON_PREMIUM_TOUR_IDS = [
         "app-overview",
@@ -1776,7 +1777,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")

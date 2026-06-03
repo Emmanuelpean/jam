@@ -152,7 +152,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
 					</div>
 				)}
 			</div>
-			<div className="custom-toast-progress" style={{ width: `${progress}%` }}></div>
+			<div className="custom-toast-progress" style={{ height: `${progress}%` }}></div>
 		</div>
 	);
 };
