@@ -24,7 +24,7 @@ from selenium.webdriver import ActionChains
 
 from app import models
 from base_test import BaseTest
-from react_select import ReactSelect
+from select_utils import Select
 
 TOUR_ID = "scraping-filters"
 
@@ -86,12 +86,12 @@ class TestScrapingFilterTour(BaseTest):
         """
         # Step 5 (sf-type): select type from ReactSelect; Next becomes enabled
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("type")).select_by_visible_text(filter_type)
+        Select(self.get_element("type")).select_by_visible_text(filter_type)
         self.tour_utils.click_next()
 
         # Step 6 (sf-operator): select operator from ReactSelect
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("operator")).select_by_visible_text(operator)
+        Select(self.get_element("operator")).select_by_visible_text(operator)
         self.tour_utils.click_next()
 
         # Step 7 (sf-value): type the filter value

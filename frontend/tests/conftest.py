@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import sys
 import threading
+import time
 from typing import Generator, Any
 
 import psutil
@@ -14,11 +15,12 @@ import requests
 
 from app.config import settings
 
-backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
+backend_path = os.path.abspath(os.path.join(str(__file__), "../../../backend"))
 sys.path.insert(0, backend_path)
+frontend_path = os.path.abspath(os.path.join(__file__, "../.."))
 
-import time
 
+# Load the pytest fixtures
 pytest_plugins = [
     "tests.fixtures.database",
     "tests.fixtures.clients",
@@ -52,7 +54,7 @@ def kill_process_on_port(port) -> bool:
     return False
 
 
-def kill_process_tree(parent_pid) -> None:
+def kill_process_tree(parent_pid: int) -> None:
     """Kill a process and all its children"""
 
     try:
@@ -127,7 +129,7 @@ def frontend_url(worker_id) -> str:
 
 
 @pytest.fixture(scope="session")
-def test_backend_server(database_url, worker_id, engine, frontend_url) -> Generator[str, None, None]:
+def test_backend_server(database_url, worker_id, frontend_url, engine) -> Generator[str, None, None]:
     """Start a test backend server for integration tests"""
     print("=" * 60)
     print(f"STARTING BACKEND SERVER (Worker: {worker_id})")
@@ -238,7 +240,6 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     print(f"Using port: {port}")
     kill_process_on_port(port)
 
-    frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     print(f"Frontend path: {frontend_path}")
 
     # Set environment variables for frontend

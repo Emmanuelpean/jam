@@ -7,7 +7,6 @@ their module index. Import from this module instead in test subfolders.
 import json
 import os
 import uuid
-import platform
 import re
 import time
 from datetime import datetime, timezone, timedelta
@@ -16,8 +15,7 @@ from typing import Generator
 import pytest
 import requests
 from selenium import webdriver
-from selenium.common import StaleElementReferenceException, TimeoutException
-from selenium.webdriver import ActionChains, Keys
+from selenium.common import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
@@ -28,10 +26,11 @@ from selenium.webdriver.support.wait import WebDriverWait
 from app import models
 from app.config import settings
 from app.core.oauth2 import create_access_token
-from react_select import ReactSelect
+from select_utils import Select
+from selenium_utils import SeleniumUtils
 
 
-class BaseUtils(object):
+class BaseUtils(SeleniumUtils):
     """Base class for selenium utilities"""
 
     driver: WebDriver = None
@@ -41,328 +40,15 @@ class BaseUtils(object):
     db = None
     client = None
 
-    def go_to_page(self, page) -> None:
+    def go_to_page(self, page: str) -> None:
         """Helper method to go to a specific page"""
 
-        self.driver.execute_script(f"window.history.pushState({{}}, '', '{self.frontend_base_url}/{page}');")
-        self.driver.execute_script("window.dispatchEvent(new Event('popstate'));")
-        # self.driver.get(f"{self.frontend_base_url}/{page}")
-        self.wait_for_page(page)
+        self.go_to_url(f"{self.frontend_base_url}/{page}")
 
-    def wait_for_page(self, page_url: str, timeout=None) -> None:
+    def wait_for_page(self, page: str, timeout=None) -> None:
         """Wait for the dashboard to load"""
 
-        if not timeout:
-            wait = self.wait
-        else:
-            wait = WebDriverWait(self.driver, timeout)
-        url = f"{self.frontend_base_url}/{page_url}"
-        try:
-            wait.until(ec.url_to_be(url))
-        except:
-            raise AssertionError(f"Failed to wait for URL {url}. Current URL: {self.driver.current_url}")
-
-    def advance_browser_clock_days(self, days: int) -> None:
-        """Advance the browser clock by the given number of days
-        :param days: Number of days to advance the clock by"""
-
-        self.driver.execute_script(
-            """
-            const RealDate = window.Date;
-
-            const offsetMs = Number(arguments[0]) || 0;
-            const baseTime = RealDate.now() + offsetMs;
-
-            function MockDate(...args) {
-                if (this instanceof MockDate) {
-                    return args.length
-                        ? new RealDate(...args)
-                        : new RealDate(baseTime);
-                }
-                return RealDate();
-            }
-
-            MockDate.prototype = RealDate.prototype;
-
-            // Preserve static methods
-            MockDate.now = () => baseTime;
-            MockDate.parse = RealDate.parse;
-            MockDate.UTC = RealDate.UTC;
-
-            window.Date = MockDate;
-        """,
-            days * 24 * 60 * 60 * 1000,
-        )
-
-    def get_all_element_ids(self) -> list[str]:
-        """Get all element IDs present on the current page"""
-
-        # Find all elements that have an ID attribute
-        elements_with_id = self.driver.find_elements(By.XPATH, "//*[@id]")
-
-        # Extract the ID values
-        element_ids = []
-        for element in elements_with_id:
-            element_id = element.get_attribute("id")
-            if element_id:
-                element_ids.append(element_id)
-
-        return sorted(element_ids)
-
-    def get_element(
-        self,
-        element_id: str,
-        selector: str = By.ID,
-        timeout: float = 10.0,
-        enabled=True,
-        within: WebElement | None = None,
-    ) -> WebElement:
-        """Get an element by its ID, with retry on stale element references.
-        :param element_id: ID of the element to get
-        :param selector: Selector to use for finding the element
-        :param timeout: How long to wait before raising an error
-        :param enabled: Whether to wait for the element to be enabled
-        :param within: Parent element to search within"""
-
-        time.sleep(0.1)
-        try:
-            wait = WebDriverWait(self.driver, timeout)
-            if within:
-
-                def find_within(_d):
-                    """Find element within a parent element"""
-                    try:
-                        if within:
-                            matches = within.find_elements(selector, element_id)
-                            return matches[0] if matches else None
-                        else:
-                            return None
-                    except StaleElementReferenceException:
-                        return None
-
-                element = wait.until(find_within)
-                if not element:
-                    all_ids = self.get_all_element_ids()
-                    raise AssertionError(f"Could not find element {element_id}\n" f"Possible IDs: {all_ids}")
-                if enabled:
-                    ActionChains(self.driver).move_to_element(element).perform()
-                return element
-            elif enabled:
-                element = wait.until(ec.element_to_be_clickable((selector, element_id)))
-            else:
-                element = wait.until(ec.presence_of_element_located((selector, element_id)))
-            if enabled:
-                ActionChains(self.driver).move_to_element(element).perform()
-            return element
-        except Exception:
-            all_ids = self.get_all_element_ids()
-
-            # If element exists in DOM, provide diagnostic info
-            if element_id in all_ids:
-                element = self.driver.find_element(selector, element_id)
-                diagnostics = self._get_element_diagnostics(element)
-                raise AssertionError(
-                    f"Element '{element_id}' exists in DOM but failed to become clickable.\n"
-                    f"Diagnostics:\n{diagnostics}"
-                )
-            else:
-                raise AssertionError(f"Could not find element {element_id}\n" f"Possible IDs: {all_ids}")
-
-    def check_element_exists(
-        self,
-        element_id: str,
-        selector: str = By.ID,
-        timeout: float = 0.1,
-    ) -> bool:
-        """Check if an element exists by its ID.
-        :param element_id: ID of the element to check
-        :param selector: Selector to use for finding the element
-        :param timeout: How long to wait before raising an error"""
-
-        try:
-            wait = WebDriverWait(self.driver, timeout)
-            wait.until(ec.presence_of_element_located((selector, element_id)))
-            return True
-        except TimeoutException:
-            return False
-
-    def _get_element_diagnostics(self, element: WebElement) -> str:
-        """Get diagnostic information about why an element isn't clickable"""
-
-        diagnostics = []
-
-        # Check visibility
-        try:
-            is_displayed = element.is_displayed()
-            diagnostics.append(f"  - is_displayed(): {is_displayed}")
-        except Exception as e:
-            diagnostics.append(f"  - is_displayed(): Error - {e}")
-
-        # Check enabled state
-        try:
-            is_enabled = element.is_enabled()
-            diagnostics.append(f"  - is_enabled(): {is_enabled}")
-        except Exception as e:
-            diagnostics.append(f"  - is_enabled(): Error - {e}")
-
-        # Check CSS properties
-        try:
-            display = element.value_of_css_property("display")
-            visibility = element.value_of_css_property("visibility")
-            opacity = element.value_of_css_property("opacity")
-            diagnostics.append(f"  - CSS display: {display}")
-            diagnostics.append(f"  - CSS visibility: {visibility}")
-            diagnostics.append(f"  - CSS opacity: {opacity}")
-        except Exception as e:
-            diagnostics.append(f"  - CSS properties: Error - {e}")
-
-        # Check position/size
-        try:
-            size = element.size
-            location = element.location
-            diagnostics.append(f"  - Size: {size}")
-            diagnostics.append(f"  - Location: {location}")
-        except Exception as e:
-            diagnostics.append(f"  - Size/Location: Error - {e}")
-
-        # Check for overlapping elements
-        try:
-            overlapping = self._check_overlapping_elements(element)
-            if overlapping:
-                diagnostics.append(f"  - Overlapping elements detected: {overlapping}")
-            else:
-                diagnostics.append(f"  - No overlapping elements detected")
-        except Exception as e:
-            diagnostics.append(f"  - Overlap check: Error - {e}")
-
-        # Check page load state
-        try:
-            ready_state = self.driver.execute_script("return document.readyState;")
-            diagnostics.append(f"  - Page readyState: {ready_state}")
-        except Exception as e:
-            diagnostics.append(f"  - Page state: Error - {e}")
-
-        return "\n".join(diagnostics)
-
-    def _check_overlapping_elements(self, element: WebElement) -> str:
-        """Check if another element is overlaying the target element"""
-
-        try:
-            # Get element center point
-            location = element.location
-            size = element.size
-            center_x = location["x"] + size["width"] / 2
-            center_y = location["y"] + size["height"] / 2
-
-            # Find element at that point using JavaScript
-            script = """
-            var element = arguments[0];
-            var x = arguments[1];
-            var y = arguments[2];
-            var topElement = document.elementFromPoint(x, y);
-            
-            if (topElement === element) {
-                return null;
-            }
-            
-            // Return info about the overlapping element
-            return {
-                tag: topElement.tagName,
-                id: topElement.id || 'no-id',
-                class: topElement.className || 'no-class',
-                zIndex: window.getComputedStyle(topElement).zIndex
-            };
-            """
-
-            result = self.driver.execute_script(script, element, center_x, center_y)
-
-            if result:
-                return f"<{result['tag']} id='{result['id']}' class='{result['class']}' z-index='{result['zIndex']}'>"
-            return ""
-
-        except Exception as e:
-            return f"Error checking overlap: {e}"
-
-    def wait_for_element_text(
-        self,
-        element_id: str,
-        expected_text: str,
-        selector: str = By.ID,
-        timeout: float = 10.0,
-    ) -> bool:
-        """Wait for an element's text to become the expected value.
-        :param element_id: ID of the element to check
-        :param expected_text: The text value to wait for
-        :param selector: Selector to use for finding the element
-        :param timeout: How long to wait before raising an error
-        :return: The element once its text matches"""
-
-        def text_matches(driver) -> bool:
-            """Check if the element's text matches the expected value
-            :param driver: WebDriver instance
-            :return True if the text matches, False otherwise"""
-
-            try:
-                el = driver.find_element(selector, element_id)
-                return el if el.text == expected_text else False
-            except:
-                return False
-
-        try:
-            wait = WebDriverWait(self.driver, timeout)
-            return wait.until(text_matches)
-        except TimeoutException:
-            # Get actual text for error message
-            try:
-                element = self.driver.find_element(selector, element_id)
-                actual_text = element.text
-            except:
-                actual_text = "<element not found>"
-            raise AssertionError(
-                f"Element '{element_id}' text did not become '{expected_text}' within {timeout}s. "
-                f"Actual text: '{actual_text}'"
-            )
-
-    def wait_for_disappear(
-        self,
-        element_id: str,
-        selector: str = By.ID,
-        timeout=10.0,
-    ) -> None:
-        """Wait for an element to disappear from the DOM
-        :param element_id: ID of the element to get
-        :param selector: Selector to use for finding the element
-        :param timeout: How long to wait before raising an error"""
-
-        try:
-            wait = WebDriverWait(self.driver, timeout)
-            wait.until(ec.invisibility_of_element_located((selector, element_id)))
-        except TimeoutException:
-            raise AssertionError(f"Element {element_id} did not disappear")
-
-    def context_menu(self, element: WebElement, choice: str) -> None:
-        """Row context menu"""
-
-        actions = ActionChains(self.driver)
-        actions.context_click(element).perform()
-        self.get_element(f"context-menu-{choice}").click()
-
-    @staticmethod
-    def set_text(element: WebElement, text: str = "") -> None:
-        """Clears the input element"""
-
-        modifier_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
-        element.send_keys(modifier_key, "a")
-        element.send_keys(Keys.DELETE)
-        element.send_keys(text)
-
-    def _wait_for_modal_close(self, name: str) -> None:
-        """Wait for the modal to close"""
-
-        try:
-            self.wait.until(ec.invisibility_of_element_located((By.ID, name)))
-        except:
-            raise AssertionError(f"{name} is present in: {self.get_all_element_ids()}")
+        self.wait_for_url(f"{self.frontend_base_url}/{page}", timeout=timeout)
 
     # ----------------------------------------------------- EMAILS -----------------------------------------------------
 
@@ -576,7 +262,7 @@ class DataModalUtils(BaseUtilsClass):
                     "applied_via",
                     "application_status",
                 ):
-                    select = ReactSelect(self.get_element(key))
+                    select = Select(self.get_element(key))
                     select.select_by_visible_text(value)
                 elif key in ["date", "application_date"]:
                     self.get_element(key + "_set_current").click()
@@ -1083,9 +769,12 @@ class DataTableUtils(BaseUtilsClass):
         """Get the entry ID of a table row by its index (0-based)
         :param index: Index of the table row"""
 
-        return int(
-            re.search(rf"table-row-{self.entry_type}-(\d+)", self.table_rows[index].get_attribute("id")).group(1)
-        )
+        pattern = rf"table-row-{self.entry_type}-(\d+)"
+        row_id = self.get_attribute(self.table_rows[index], "id")
+        match = re.search(pattern, row_id)
+        if not match:
+            raise ValueError(f"Could not find ID for table row at index {index}")
+        return int(match.group(1))
 
     def check_id_in_table(self, entry_id: int, **kwargs) -> bool:
         """Check if an ID is in the table"""
@@ -1127,7 +816,7 @@ class DataTableUtils(BaseUtilsClass):
         :param value: Value to select (e.g. "20", "40")"""
 
         if len(self.table_rows) >= 20:
-            ReactSelect(self.get_element("page-items-select")).select_by_visible_text(f"Show {value} Entries")
+            Select(self.get_element("page-items-select")).select_by_visible_text(f"Show {value} Entries")
 
     def table_row_click(self, row_index: int) -> None:
         """Click on a table row by its index (0-based)"""
@@ -1189,7 +878,7 @@ class DataTableUtils(BaseUtilsClass):
 
         section = self.get_element(f"filter-section-{column_key}", enabled=False)
         select_container = section.find_element(By.CLASS_NAME, "jam-select")
-        rs = ReactSelect(select_container)
+        rs = Select(select_container)
         rs.select_by_visible_text(visible_text)
         time.sleep(0.5)
 
@@ -1451,10 +1140,10 @@ class UserSettingsUtils(BaseUtilsClass):
         return self.get_element("update_limit")
 
     @property
-    def currency(self) -> ReactSelect:
+    def currency(self) -> Select:
         """Get the currency field"""
 
-        return ReactSelect(self.get_element("default_currency"))
+        return Select(self.get_element("default_currency"))
 
     def get_theme(self, theme_key: str) -> WebElement:
         """Get the theme field"""
@@ -1636,10 +1325,10 @@ class FollowUpEmailModalUtils(BaseUtilsClass):
         self._wait_for_modal_close("follow-up-modal")
 
     @property
-    def contact(self) -> ReactSelect:
+    def contact(self) -> Select:
         """Get the contact element in the modal."""
 
-        return ReactSelect(self.get_element("contactId"))
+        return Select(self.get_element("contactId"))
 
     @property
     def contact_text(self) -> str:
@@ -2254,6 +1943,8 @@ class BaseTest(BaseUtils):
 
         if not user:
             user = self.user
+        if not user:
+            raise AssertionError("No user provided")
 
         # Generate JWT directly — no HTTP call, no bcrypt verification
         token = create_access_token(
@@ -2362,10 +2053,26 @@ class BaseTest(BaseUtils):
         self.db.refresh(aggregator)
         return aggregator
 
-    def _make_scraped_job(self, **kwargs) -> models.ScrapedJob:
+    def _make_service_log(self, **kwargs) -> models.JobEmailScrapingServiceLog:
+        """Create and persist a JobEmailScrapingServiceLog."""
+
+        defaults = {
+            "run_datetime": datetime.now(timezone.utc),
+        }
+        defaults.update(kwargs)
+        service_log = models.JobEmailScrapingServiceLog(**defaults)
+        self.db.add(service_log)
+        self.db.commit()
+        self.db.refresh(service_log)
+        return service_log
+
+    def _make_scraped_job(
+        self, service_log: models.JobEmailScrapingServiceLog | None = None, **kwargs
+    ) -> models.ScrapedJob:
         """Create and persist a ScrapedJob owned by the current test user."""
 
-        service_log = self.db.query(models.JobEmailScrapingServiceLog).first()
+        if service_log is None:
+            service_log = self._make_service_log()
         defaults = {
             "external_job_id": str(uuid.uuid4()),
             "platform": "linkedin",
@@ -2383,13 +2090,24 @@ class BaseTest(BaseUtils):
         self.db.refresh(job)
         return job
 
-    def _create_job_rating(self, scraped_job: models.ScrapedJob, **kwargs) -> models.JobRating:
-        """Create and persist a JobRating linked to the given scraped job.
+    def _make_qualifications(self, **kwargs) -> models.UserQualification:
+        """Create and persist a UserQualification owned by the current test user."""
 
-        Automatically resolves user_qualification_id from the test user's qualifications.
-        Requires test_user_qualifications fixture to be loaded.
-        """
-        qualification = self.db.query(models.UserQualification).filter_by(owner_id=self.user.id).first()
+        defaults = {
+            "owner_id": self.user.id,
+            "experience": "Test experience",
+        }
+        defaults.update(kwargs)
+        qualification = models.UserQualification(**defaults)
+        self.db.add(qualification)
+        self.db.commit()
+        self.db.refresh(qualification)
+        return qualification
+
+    def _create_job_rating(self, scraped_job: models.ScrapedJob, **kwargs) -> models.JobRating:
+        """Create and persist a JobRating linked to the given scraped job."""
+
+        qualification = self._make_qualifications()
         defaults = {
             "owner_id": self.user.id,
             "scraped_job_id": scraped_job.id,

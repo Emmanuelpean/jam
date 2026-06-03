@@ -18,7 +18,7 @@ Tour step order (add-contact):
 
 from app import models
 from base_test import BaseTest
-from react_select import ReactSelect
+from select_utils import Select
 
 
 TOUR_ID = "add-contact"
@@ -351,7 +351,7 @@ class TestAddContactTour(BaseTest):
         # Step 4 (contact-company): open the company ReactSelect and check the pre-existing
         # company is absent (filtered out by the tour snapshot).
         self.tour_utils.wait_for_popover()
-        company_select = ReactSelect(self.get_element("company_id"))
+        company_select = Select(self.get_element("company_id"))
         company_select.open_menu()
         option_texts = [opt.text for opt in company_select.options]
         assert not any(pre_existing_company.name in text for text in option_texts), (

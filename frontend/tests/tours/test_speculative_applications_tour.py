@@ -16,7 +16,7 @@ Tour step order (speculative-applications):
 
 from app import models
 from base_test import BaseTest
-from react_select import ReactSelect
+from select_utils import Select
 
 
 TOUR_ID = "speculative-applications"
@@ -64,7 +64,7 @@ class TestSpeculativeApplicationsTour(BaseTest):
 
         # Step 2 (speculative-company): select an existing JAM-seeded company then Next.
         # nextStepId jumps directly to speculative-date, skipping company-filling.
-        ReactSelect(self.get_element("company_id")).select_by_visible_text("Anthropic")
+        Select(self.get_element("company_id")).select_by_visible_text("Anthropic")
         self.tour_utils.click_next()
 
         # Step 4 (speculative-date): set the current date-time, then Next
@@ -265,15 +265,15 @@ class TestSpeculativeApplicationsTour(BaseTest):
         self._start_tour_and_open_form()
 
         # Partially fill the SA form so unsaved changes exist
-        ReactSelect(self.get_element("company_id")).select_by_visible_text("Anthropic")
+        Select(self.get_element("company_id")).select_by_visible_text("Anthropic")
 
         # Skip the tour — the SA modal is still open with unsaved data
         self.tour_utils.click_skip()
 
         # The discard-confirmation dialog must NOT appear
-        assert not self.check_element_exists("delete-alert-modal"), (
-            "Discard confirmation dialog must not appear when skipping the tour"
-        )
+        assert not self.check_element_exists(
+            "delete-alert-modal"
+        ), "Discard confirmation dialog must not appear when skipping the tour"
 
         self.tour_utils.wait_for_popover_gone()
         self.wait_for_page(self.page_url)
@@ -313,7 +313,7 @@ class TestSpeculativeApplicationsTour(BaseTest):
 
         # ── Person modal ─────────────────────────────────────────────────────────
         # Advance past company (select existing) and optional fields to reach contacts
-        ReactSelect(self.get_element("company_id")).select_by_visible_text("Anthropic")
+        Select(self.get_element("company_id")).select_by_visible_text("Anthropic")
         self.tour_utils.click_next()  # → speculative-date
 
         self.tour_utils.wait_for_popover()
@@ -370,7 +370,7 @@ class TestSpeculativeApplicationsTour(BaseTest):
 
         # Step 2 again: orphan company is auto-selected — override with a JAM-seeded company
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("company_id")).select_by_visible_text("Anthropic")
+        Select(self.get_element("company_id")).select_by_visible_text("Anthropic")
         self.tour_utils.click_next()
 
         # Step 4 (speculative-date): optional — skip
@@ -424,7 +424,7 @@ class TestSpeculativeApplicationsTour(BaseTest):
         self._start_tour_and_open_form()
 
         # Navigate to the contacts step: company → date → email → contacts
-        ReactSelect(self.get_element("company_id")).select_by_visible_text("Anthropic")
+        Select(self.get_element("company_id")).select_by_visible_text("Anthropic")
         self.tour_utils.click_next()  # → speculative-date
 
         self.tour_utils.wait_for_popover()
@@ -436,7 +436,7 @@ class TestSpeculativeApplicationsTour(BaseTest):
         # Step 6 (speculative-contacts): open the ReactSelect and verify the pre-existing
         # person is absent (filtered out by the tour snapshot).
         self.tour_utils.wait_for_popover()
-        contacts_select = ReactSelect(self.get_element("contacts"))
+        contacts_select = Select(self.get_element("contacts"))
         contacts_select.open_menu()
         option_texts = [opt.text for opt in contacts_select.options]
         assert not any(pre_existing.name in text for text in option_texts), (

@@ -40,7 +40,7 @@ JAM entities seeded at tour start (all is_tour=True):
 
 from app import models
 from base_test import BaseTest
-from react_select import ReactSelect
+from select_utils import Select
 
 
 TOUR_ID = "first-job"
@@ -222,7 +222,7 @@ class TestFirstJobTour(BaseTest):
 
         # Step 3 (add-company): select Acme Corp then Next (jumps to job-url)
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("company_id")).select_by_visible_text("Acme Corp")
+        Select(self.get_element("company_id")).select_by_visible_text("Acme Corp")
         self.tour_utils.click_next()
 
         self._skip_from_url_to_save()
@@ -383,12 +383,12 @@ class TestFirstJobTour(BaseTest):
 
         # job-source: select "Aggregator" to reveal the aggregator sub-step
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("source_type")).select_by_visible_text("Aggregator")
+        Select(self.get_element("source_type")).select_by_visible_text("Aggregator")
         self.tour_utils.click_next()
 
         # job-source-aggregator: select LinkedIn Jobs (JAM entity) then Next
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("source_aggregator_id")).select_by_visible_text("LinkedIn Jobs")
+        Select(self.get_element("source_aggregator_id")).select_by_visible_text("LinkedIn Jobs")
         self.tour_utils.click_next()
 
         # job-source-recruiter and job-source-company: auto-skipped
@@ -505,7 +505,7 @@ class TestFirstJobTour(BaseTest):
 
         # Step 3 (add-company): open the company ReactSelect and check isolation
         self.tour_utils.wait_for_popover()
-        company_select = ReactSelect(self.get_element("company_id"))
+        company_select = Select(self.get_element("company_id"))
         company_select.open_menu()
         option_texts = [opt.text for opt in company_select.options]
         assert not any(pre_existing.name in text for text in option_texts), (

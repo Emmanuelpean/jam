@@ -19,7 +19,7 @@ JAM entities seeded at tour start (all is_tour=True):
 
 from app import models
 from base_test import BaseTest
-from react_select import ReactSelect
+from select_utils import Select
 
 
 TOUR_ID = "log-update"
@@ -75,7 +75,7 @@ class TestLogUpdateTour(BaseTest):
 
         # Step 6 (update-type): select a type
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("type")).select_by_visible_text("Received")
+        Select(self.get_element("type")).select_by_visible_text("Received")
         self.tour_utils.click_next()
 
     # ------------------------------------------------------------------ tests

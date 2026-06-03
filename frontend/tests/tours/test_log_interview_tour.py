@@ -23,7 +23,7 @@ JAM entities seeded at tour start (all is_tour=True):
 
 from app import models
 from base_test import BaseTest
-from react_select import ReactSelect
+from select_utils import Select
 
 
 TOUR_ID = "log-interview"
@@ -80,7 +80,7 @@ class TestLogInterviewTour(BaseTest):
 
         # Step 5 (interview-type): select a type
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("type")).select_by_visible_text("Video")
+        Select(self.get_element("type")).select_by_visible_text("Video")
         self.tour_utils.click_next()
 
     def _skip_from_attendance_to_save(self) -> None:
@@ -158,7 +158,7 @@ class TestLogInterviewTour(BaseTest):
 
         # Step 6 (interview-attendance): select On-site → location step appears
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("attendance_type")).select_by_visible_text("On-site")
+        Select(self.get_element("attendance_type")).select_by_visible_text("On-site")
         self.tour_utils.click_next()
 
         # Step 7 (interview-location): fill the location field
@@ -205,14 +205,14 @@ class TestLogInterviewTour(BaseTest):
 
         # Step 6 (interview-attendance): select Remote
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("attendance_type")).select_by_visible_text("Remote")
+        Select(self.get_element("attendance_type")).select_by_visible_text("Remote")
         self.tour_utils.click_next()
 
         # Step 8 (interview-interviewers): location must have been skipped
         self.tour_utils.wait_for_popover()
-        assert self.tour_utils.popover_title() == "Interviewers", (
-            "Expected to land on Interviewers after Remote attendance (location step skipped)"
-        )
+        assert (
+            self.tour_utils.popover_title() == "Interviewers"
+        ), "Expected to land on Interviewers after Remote attendance (location step skipped)"
 
         # Clean up by skipping the tour
         self.tour_utils.click_skip()

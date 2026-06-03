@@ -25,7 +25,7 @@ JAM entities seeded at tour start (all is_tour=True):
 
 from app import models
 from base_test import BaseTest
-from react_select import ReactSelect
+from select_utils import Select
 
 
 TOUR_ID = "log-application"
@@ -82,7 +82,7 @@ class TestLogApplicationTour(BaseTest):
 
         # Step 5 (log-application-status): select a status
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("application_status")).select_by_visible_text("Applied")
+        Select(self.get_element("application_status")).select_by_visible_text("Applied")
         self.tour_utils.click_next()
 
     def _skip_from_via_to_save(self) -> None:
@@ -158,12 +158,12 @@ class TestLogApplicationTour(BaseTest):
 
         # Step 6 (log-application-via): select Aggregator → aggregator sub-step appears
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("applied_via")).select_by_visible_text("Aggregator")
+        Select(self.get_element("applied_via")).select_by_visible_text("Aggregator")
         self.tour_utils.click_next()
 
         # Step 7 (log-application-aggregator): open the dropdown and verify isolation
         self.tour_utils.wait_for_popover()
-        agg_select = ReactSelect(self.get_element("application_aggregator_id"))
+        agg_select = Select(self.get_element("application_aggregator_id"))
         agg_select.open_menu()
         option_texts = [opt.text for opt in agg_select.options]
         assert not any(pre_existing.name in text for text in option_texts), (
@@ -195,7 +195,7 @@ class TestLogApplicationTour(BaseTest):
 
         # Step 6 (log-application-via): select Aggregator
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("applied_via")).select_by_visible_text("Aggregator")
+        Select(self.get_element("applied_via")).select_by_visible_text("Aggregator")
         self.tour_utils.click_next()
 
         # Step 7 (log-application-aggregator): click + to open inline aggregator form;
@@ -338,7 +338,7 @@ class TestLogApplicationTour(BaseTest):
 
         # Step 6 (log-application-via): select Aggregator
         self.tour_utils.wait_for_popover()
-        ReactSelect(self.get_element("applied_via")).select_by_visible_text("Aggregator")
+        Select(self.get_element("applied_via")).select_by_visible_text("Aggregator")
         self.tour_utils.click_next()
 
         # Step 7 (log-application-aggregator): click + to open inline aggregator modal
