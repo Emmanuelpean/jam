@@ -6,7 +6,6 @@ from demo_creator import DemoBuilder
 
 DEFAULT_PAGES = [
     "dashboard",
-    "job-alerts/jobs",
 ]
 
 
@@ -17,11 +16,11 @@ def main():
     args = parser.parse_args()
 
     taker = DemoBuilder(
-        width=1920,
-        height=1080,
+        width=int(1920 * 0.8),
+        height=int(1080 * 0.8),
         dark_mode=True,
         scale_factor=1,
-        headless=not args.no_headless,
+        headless=False,
     )
     taker.screenshot(DEFAULT_PAGES)
 

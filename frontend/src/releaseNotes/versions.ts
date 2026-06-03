@@ -8,6 +8,7 @@ import scrapingFilterGif from "../assets/demo_gifs/scraping_filter.gif";
 import jobsGif from "../assets/demo_gifs/job_page.gif";
 import scrapedJobsPng from "../assets/screenshots/scraped-jobs.png";
 import dashboardPng from "../assets/screenshots/dashboard.png";
+import scrapedJobsGif from "../assets/demo_gifs/scraped_jobs.gif";
 import { PREMIUM_PRICE } from "../pages/UserSettings/PremiumTab";
 import peopleGif from "../assets/demo_gifs/people_page.gif";
 import dashboardCustomisationGif from "../assets/demo_gifs/dashboard_customisation.gif";
@@ -72,7 +73,7 @@ export const WELCOME_SLIDES: ReleaseSlide[] = [
 			PREMIUM_PRICE +
 			"/month, JAM automatically scrapes these job details, rates them against your qualifications, " +
 			"and highlights the best matches for you.",
-		image: scrapedJobsPng,
+		image: scrapedJobsGif,
 	},
 	{
 		icon: "envelope-arrow-up",
