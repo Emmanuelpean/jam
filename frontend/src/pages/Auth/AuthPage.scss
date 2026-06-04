@@ -215,6 +215,12 @@
     color: var(--primary-mid) !important;
 }
 
+.btn-link:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .card-footer {
     margin-top: 1rem;
     text-align: center;

@@ -52,17 +52,25 @@ export const WELCOME_SLIDES: ReleaseSlide[] = [
 	{
 		title: "Record Your Contacts",
 		description:
-			"Keep track of every person you interact with during your job search. Store names, emails, phone numbers, " +
-			"LinkedIn profiles, and notes - and link contacts directly to jobs and companies.",
+			"Keep track of every person you interact with during your job search. Store names, emails, phone numbers, and " +
+			"LinkedIn profiles - and link contacts directly to jobs and companies.",
 		image: peopleGif,
 	},
 	{
 		icon: "grid-1x2",
 		title: "Customise Your Dashboard",
 		description:
-			"Build a dashboard that works for you. Add, remove, and resize widgets to surface the information you care about most — " +
+			"Build a dashboard that works for you. Add, remove, and resize widgets to surface the information you care about most - " +
 			"upcoming interviews, follow-up reminders, deadlines, favourite jobs, and more.",
 		image: dashboardCustomisationGif,
+	},
+	{
+		icon: "envelope-arrow-up",
+		title: "Follow-Up Email Generator",
+		description:
+			"Automatically generate personalised follow-up emails in seconds. Right-click any job, pick a contact, " +
+			"and get a ready-to-send message signed with your name.",
+		image: followupGif,
 	},
 	{
 		icon: "inboxes",
@@ -74,14 +82,6 @@ export const WELCOME_SLIDES: ReleaseSlide[] = [
 			"/month, JAM automatically scrapes these job details, rates them against your qualifications, " +
 			"and highlights the best matches for you.",
 		image: scrapedJobsGif,
-	},
-	{
-		icon: "envelope-arrow-up",
-		title: "Follow-Up Email Generator",
-		description:
-			"Automatically generate personalised follow-up emails in seconds. Right-click any job, pick a contact, " +
-			"and get a ready-to-send message signed with your name.",
-		image: followupGif,
 	},
 ];
 

@@ -48,6 +48,11 @@ body[data-mode="light"] {
     --bg-tertiary: #f8f9fa;
     --input-background-color: #ffffff;
     --btn-disabled-bg: #9e9e9e;
+
+    /* Table */
+    --table-row-bg: #f8f9fa;
+    --table-row-striped-bg: #f2f3f5;
+    --table-row-hover-bg: #e9ecef;
 }
 
 body[data-mode="dark"] {
@@ -83,6 +88,11 @@ body[data-mode="dark"] {
     --bg-tertiary: #233044;
     --input-background-color: #0f1a2e;
     --btn-disabled-bg: #757575;
+
+    /* Table */
+    --table-row-bg: #1e2a38;
+    --table-row-striped-bg: #263242;
+    --table-row-hover-bg: #2e3c50;
 }
 
 body {

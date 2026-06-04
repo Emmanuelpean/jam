@@ -43,7 +43,7 @@ export function GuidedTour(): JSX.Element | null {
 	const stepRef = useRef(step);
 	stepRef.current = step;
 
-	const [keepData, setKeepData] = useState(true);
+	const [keepData, setKeepData] = useState(false);
 
 	const directionRef = useRef<1 | -1>(1);
 
@@ -194,7 +194,7 @@ export function GuidedTour(): JSX.Element | null {
 	const nextDisabled =
 		isCleaningUp ||
 		hasVisibleErrors ||
-		((!!stepDef?.waitForInput || !!stepDef?.waitForValidEmailIfFilled || !!stepDef?.waitForValidUrlIfFilled) &&
+		((!!stepDef?.waitForInput || !!stepDef?.waitForValidEmailIfFilled || !!stepDef?.waitForValidLinkedInIfFilled) &&
 			!inputValid);
 	const canGoBack =
 		!isLast &&

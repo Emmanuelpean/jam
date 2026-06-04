@@ -53,14 +53,6 @@ export interface ModalFormField {
 	fileType?: string;
 }
 
-const UrlValidation = (value: string): string | null => {
-	if (value && !value.includes(".")) {
-		return "URL format is invalid";
-	} else {
-		return null;
-	}
-};
-
 export const EmailValidation = (value: string): string | null => {
 	if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
 		return "Email format is invalid";
@@ -138,7 +130,6 @@ const createFormFields = (limits: Partial<ColumnLimits>) => {
 		type: "url",
 		placeholder: "https://...",
 		maxChars: limits.url,
-		validation: UrlValidation,
 		...overrides,
 	});
 
@@ -148,7 +139,6 @@ const createFormFields = (limits: Partial<ColumnLimits>) => {
 		type: "url",
 		placeholder: "https://linkedin.com/jobs/123456",
 		maxChars: limits.url,
-		validation: UrlValidation,
 		liveValidation: (value: string, formData: any, dataContext: DataContextValue): string | null => {
 			if (!value) return null;
 			const dup: EnrichedJobData | undefined = dataContext.jobs.find(
@@ -305,7 +295,7 @@ const createFormFields = (limits: Partial<ColumnLimits>) => {
 		placeholder: "https://linkedin.com/in/username",
 		maxChars: limits.url,
 		validation: (value: string) => {
-			if (value && !value.includes("linkedin.com")) {
+			if (value && !value.includes("linkedin")) {
 				return "Please enter a valid LinkedIn URL";
 			} else {
 				return null;

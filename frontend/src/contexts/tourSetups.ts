@@ -84,22 +84,49 @@ export async function runTourSetup(tourId: string, deps: TourSetupDeps): Promise
 		const companyId: number = companyResult.data.id;
 		jamCreatedIds.current.companyIds.add(companyId);
 
-		const jobResult: ApiResponse<JobData> = await addEntity("job", {
-			title: "Software Engineer",
-			is_favourite: false,
-			is_tour: true,
-			url: "https://www.meridianlabs.com/jobs/software-engineer",
-			salary_min: 65000,
-			salary_max: 85000,
-			salary_currency: "GBP",
-			company_id: companyId,
-			location: "London, UK",
-			application_date: new Date().toISOString(),
-			application_status: "applied",
-			attendance_type: "hybrid",
-		});
-		demoIds.current.jobId = jobResult.data.id;
-		jamCreatedIds.current.jobIds.add(jobResult.data.id);
+		const interviewerPromises = tourId === "log-interview"
+			? [
+				addEntity("person", {
+					first_name: "James",
+					last_name: "Carter",
+					role: "Engineering Manager",
+					email: "james.carter@meridianlabs.com",
+					company_id: companyId,
+					is_tour: true,
+				}),
+				addEntity("person", {
+					first_name: "Priya",
+					last_name: "Sharma",
+					role: "Senior Software Engineer",
+					email: "priya.sharma@meridianlabs.com",
+					company_id: companyId,
+					is_tour: true,
+				}),
+			]
+			: [];
+
+		const [jobResult, ...personResults] = await Promise.all([
+			addEntity("job", {
+				title: "Software Engineer",
+				is_favourite: false,
+				is_tour: true,
+				url: "https://www.meridianlabs.com/jobs/software-engineer",
+				salary_min: 65000,
+				salary_max: 85000,
+				salary_currency: "GBP",
+				company_id: companyId,
+				location: "London, UK",
+				application_date: new Date().toISOString(),
+				application_status: "applied",
+				attendance_type: "hybrid",
+			}),
+			...interviewerPromises,
+		]);
+		demoIds.current.jobId = (jobResult as ApiResponse<JobData>).data.id;
+		jamCreatedIds.current.jobIds.add((jobResult as ApiResponse<JobData>).data.id);
+		for (const p of personResults) {
+			jamCreatedIds.current.personIds.add(p.data.id);
+		}
 	}
 
 	if (tourId === "first-job") {
@@ -166,6 +193,25 @@ export async function runTourSetup(tourId: string, deps: TourSetupDeps): Promise
 		jamCreatedIds.current.aggregatorIds.add(a2.data.id);
 	}
 
+	if (tourId === "add-contact") {
+		const [c1, c2] = await Promise.all([
+			addEntity("company", {
+				name: "Sterling Digital",
+				url: "https://www.sterlingdigital.com",
+				description: "London-based digital agency specialising in product design and engineering. ~120 employees.",
+				is_tour: true,
+			}),
+			addEntity("company", {
+				name: "Vertex Consulting",
+				url: "https://www.vertexconsulting.co.uk",
+				description: "Management and technology consultancy. UK and European clients across finance and retail.",
+				is_tour: true,
+			}),
+		]);
+		jamCreatedIds.current.companyIds.add(c1.data.id);
+		jamCreatedIds.current.companyIds.add(c2.data.id);
+	}
+
 	if (tourId === "speculative-applications") {
 		const [companyResult1, companyResult2] = await Promise.all([
 			addEntity("company", {
@@ -185,17 +231,46 @@ export async function runTourSetup(tourId: string, deps: TourSetupDeps): Promise
 		]);
 		jamCreatedIds.current.companyIds.add(companyResult1.data.id);
 		jamCreatedIds.current.companyIds.add(companyResult2.data.id);
+
+		const [p1, p2] = await Promise.all([
+			addEntity("person", {
+				first_name: "Sophie",
+				last_name: "Clarke",
+				role: "Talent Acquisition",
+				email: "sophie.clarke@anthropic.com",
+				company_id: companyResult1.data.id,
+				is_recruiter: true,
+				is_tour: true,
+			}),
+			addEntity("person", {
+				first_name: "Liam",
+				last_name: "Patel",
+				role: "Recruiter",
+				email: "liam.patel@deepmind.com",
+				company_id: companyResult2.data.id,
+				is_recruiter: true,
+				is_tour: true,
+			}),
+		]);
+		jamCreatedIds.current.personIds.add(p1.data.id);
+		jamCreatedIds.current.personIds.add(p2.data.id);
 	}
 
 	if (tourId === "log-application") {
-		const companyResult: ApiResponse<CompanyData> = await addEntity("company", {
-			name: "Meridian Labs",
-			url: "https://www.meridianlabs.com",
-			description: "Product-led growth startup specialising in data analytics. ~80 employees.",
-			is_tour: true,
-		});
+		const [companyResult, a1, a2] = await Promise.all([
+			addEntity("company", {
+				name: "Meridian Labs",
+				url: "https://www.meridianlabs.com",
+				description: "Product-led growth startup specialising in data analytics. ~80 employees.",
+				is_tour: true,
+			}),
+			addEntity("aggregator", { name: "LinkedIn Jobs", url: "https://www.linkedin.com/jobs", is_tour: true }),
+			addEntity("aggregator", { name: "Indeed", url: "https://www.indeed.com", is_tour: true }),
+		]);
 		const companyId: number = companyResult.data.id;
 		jamCreatedIds.current.companyIds.add(companyId);
+		jamCreatedIds.current.aggregatorIds.add(a1.data.id);
+		jamCreatedIds.current.aggregatorIds.add(a2.data.id);
 
 		const jobResult: ApiResponse<JobData> = await addEntity("job", {
 			title: "Software Engineer",

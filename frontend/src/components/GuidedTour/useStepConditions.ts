@@ -28,9 +28,9 @@ export function useStepConditions(
 	}, []);
 
 	useEffect(() => {
-		setInputValid(!!(stepDef?.waitForValidEmailIfFilled || stepDef?.waitForValidUrlIfFilled));
+		setInputValid(!!(stepDef?.waitForValidEmailIfFilled || stepDef?.waitForValidLinkedInIfFilled));
 		autoFocusedRef.current = false;
-	}, [step, stepDef?.waitForValidEmailIfFilled, stepDef?.waitForValidUrlIfFilled]);
+	}, [step, stepDef?.waitForValidEmailIfFilled, stepDef?.waitForValidLinkedInIfFilled]);
 
 	useEffect(() => {
 		if (!isTourActive || !stepDef?.autoFocusSelector) return;
@@ -45,8 +45,8 @@ export function useStepConditions(
 
 	useEffect(() => {
 		if (!isTourActive || !stepDef) return stop;
-		const { waitForSelector, waitForSelectorGone, waitForInput, waitForValidEmailIfFilled, waitForValidUrlIfFilled, autoFill } = stepDef;
-		if (!waitForSelector && !waitForSelectorGone && !waitForInput && !waitForValidEmailIfFilled && !waitForValidUrlIfFilled && !autoFill) return stop;
+		const { waitForSelector, waitForSelectorGone, waitForInput, waitForValidEmailIfFilled, waitForValidLinkedInIfFilled, autoFill } = stepDef;
+		if (!waitForSelector && !waitForSelectorGone && !waitForInput && !waitForValidEmailIfFilled && !waitForValidLinkedInIfFilled && !autoFill) return stop;
 
 		if (autoFill) {
 			let filled = false;
@@ -96,11 +96,11 @@ export function useStepConditions(
 				setInputValid(value === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
 				return;
 			}
-			if (waitForValidUrlIfFilled) {
-				const el = document.querySelector<HTMLInputElement>(waitForValidUrlIfFilled);
+			if (waitForValidLinkedInIfFilled) {
+				const el = document.querySelector<HTMLInputElement>(waitForValidLinkedInIfFilled);
 				tryAutoFocus(el);
 				const value = el?.value.trim() ?? "";
-				setInputValid(value === "" || value.includes("."));
+				setInputValid(value === "" || value.toLowerCase().includes("linkedin"));
 				return;
 			}
 			if (waitForInput) {

@@ -1,5 +1,17 @@
 @use "../../variables" as *;
 
+.table.table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-bg-type: var(--table-row-striped-bg);
+}
+
+.table.table-striped > tbody > tr:nth-of-type(even) > * {
+    --bs-table-bg-type: var(--table-row-bg);
+}
+
+.table.table-striped > tbody > tr:hover > * {
+    --bs-table-bg-state: var(--table-row-hover-bg);
+}
+
 thead.custom-header {
     color: white;
     background: var(--primary-gradient);

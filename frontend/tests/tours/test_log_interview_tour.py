@@ -267,11 +267,12 @@ class TestLogInterviewTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.tour_utils.click_next()
 
-        # Step 12 (interview-done): new person → toggle appears — keep
+        # Step 12 (interview-done): new person → toggle appears — check to keep
         self.tour_utils.wait_for_popover()
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         toggle = self.tour_utils.keep_data_toggle
-        assert toggle.is_selected(), "Keep my data toggle should default to checked"
+        assert not toggle.is_selected(), "Keep my data toggle should default to unchecked"
+        toggle.click()  # check → keep
         self.tour_utils.click_next()
 
         self.tour_utils.wait_for_popover_gone()
@@ -321,11 +322,10 @@ class TestLogInterviewTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.tour_utils.click_next()  # show-in-table → done
 
-        # Step 12 (interview-done): uncheck toggle → delete
+        # Step 12 (interview-done): toggle is unchecked by default → delete
         self.tour_utils.wait_for_popover()
         toggle = self.tour_utils.keep_data_toggle
-        assert toggle.is_selected(), "Keep my data toggle should default to checked"
-        toggle.click()  # uncheck → delete
+        assert not toggle.is_selected(), "Keep my data toggle should default to unchecked"
 
         self.tour_utils.click_next()
 

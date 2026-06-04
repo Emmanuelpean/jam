@@ -103,11 +103,10 @@ class TestAddContactTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.person_modal_utils.confirm_button("edit").click()
 
-        # Step 12 (contact-done): person is user-created → toggle appears, checked by default
+        # Step 12 (contact-done): person is user-created → toggle appears, unchecked by default
         self.tour_utils.wait_for_popover()
         toggle = self.get_element("tour-keep-data")
-        assert toggle.is_selected(), "Keep my data toggle should default to checked"
-        toggle.click()  # uncheck → delete
+        assert not toggle.is_selected(), "Keep my data toggle should default to unchecked"
 
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         self.tour_utils.click_next()
@@ -141,10 +140,11 @@ class TestAddContactTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.person_modal_utils.confirm_button("edit").click()
 
-        # Step 12 (contact-done): leave toggle checked (keep)
+        # Step 12 (contact-done): check toggle to keep
         self.tour_utils.wait_for_popover()
         toggle = self.get_element("tour-keep-data")
-        assert toggle.is_selected(), "Keep my data toggle should default to checked"
+        assert not toggle.is_selected(), "Keep my data toggle should default to unchecked"
+        toggle.click()  # check → keep
 
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         self.tour_utils.click_next()
@@ -212,10 +212,11 @@ class TestAddContactTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.person_modal_utils.confirm_button("edit").click()
 
-        # Step 12 (contact-done): toggle appears, leave checked (keep)
+        # Step 12 (contact-done): toggle appears, check to keep
         self.tour_utils.wait_for_popover()
         toggle = self.get_element("tour-keep-data")
-        assert toggle.is_selected(), "Keep my data toggle should default to checked"
+        assert not toggle.is_selected(), "Keep my data toggle should default to unchecked"
+        toggle.click()  # check → keep
 
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         self.tour_utils.click_next()
@@ -260,11 +261,10 @@ class TestAddContactTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.person_modal_utils.confirm_button("edit").click()
 
-        # Step 12 (contact-done): uncheck toggle → delete
+        # Step 12 (contact-done): toggle is unchecked by default → delete
         self.tour_utils.wait_for_popover()
         toggle = self.get_element("tour-keep-data")
-        assert toggle.is_selected(), "Keep my data toggle should default to checked"
-        toggle.click()
+        assert not toggle.is_selected(), "Keep my data toggle should default to unchecked"
 
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         self.tour_utils.click_next()

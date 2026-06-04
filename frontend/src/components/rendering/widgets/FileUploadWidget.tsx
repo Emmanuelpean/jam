@@ -31,7 +31,7 @@ export const FileUploadWidget = ({
 }: FileUploadWidgetProps): JSX.Element => {
 	const { token } = useAuth();
 	const { config } = useConfig();
-	const { addEntity, files } = useDataContext();
+	const { addEntity, files, companies } = useDataContext();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const tooltipRef = useRef<HTMLDivElement>(null);
 	const [uploading, setUploading] = useState<boolean>(false);
@@ -162,7 +162,15 @@ export const FileUploadWidget = ({
 
 	const openTextModal = (): void => {
 		setDraftText(savedText);
-		setFilenameInput(fileMetadata?.filename ?? "cover_letter.txt");
+		if (fileMetadata?.filename) {
+			setFilenameInput(fileMetadata.filename);
+		} else {
+			const jobTitle = (data?.title ?? "").trim();
+			const companyName = (companies.find((c) => c.id === data?.company_id)?.name ?? "").trim();
+			const parts = ["cover letter", jobTitle, companyName].filter(Boolean);
+			const sanitized = parts.join(" ").replace(/[<>:"/\\|?*]/g, "").replace(/\s+/g, " ").trim();
+			setFilenameInput(sanitized ? `${sanitized}.txt` : "cover_letter.txt");
+		}
 		setSaveError(null);
 		setShowTextModal(true);
 	};

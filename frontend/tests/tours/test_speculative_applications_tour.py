@@ -164,11 +164,10 @@ class TestSpeculativeApplicationsTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.speculativeApplication_modal_utils.confirm_button("edit").click()
 
-        # Step 10 (speculative-done): user-created company → toggle appears, checked by default
+        # Step 10 (speculative-done): user-created company → toggle appears, unchecked by default
         self.tour_utils.wait_for_popover()
         toggle = self.get_element("tour-keep-data")
-        assert toggle.is_selected(), "Keep my data toggle should default to checked"
-        toggle.click()  # uncheck → delete all user-created data
+        assert not toggle.is_selected(), "Keep my data toggle should default to unchecked"
 
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         self.tour_utils.click_next()
@@ -238,11 +237,11 @@ class TestSpeculativeApplicationsTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.speculativeApplication_modal_utils.confirm_button("edit").click()
 
-        # Step 10 (speculative-done): toggle appears; leave it checked (keep data)
+        # Step 10 (speculative-done): toggle appears; check to keep data
         self.tour_utils.wait_for_popover()
         toggle = self.get_element("tour-keep-data")
-        assert toggle.is_selected(), "Keep my data toggle should default to checked"
-        # Do not click — leave user data intact
+        assert not toggle.is_selected(), "Keep my data toggle should default to unchecked"
+        toggle.click()  # check → keep
 
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         self.tour_utils.click_next()
@@ -396,8 +395,8 @@ class TestSpeculativeApplicationsTour(BaseTest):
         # Step 10 (speculative-done): orphan company is user-created → toggle appears
         self.tour_utils.wait_for_popover()
         toggle = self.get_element("tour-keep-data")
-        assert toggle.is_selected(), "Keep my data toggle should default to checked"
-        # Leave toggle checked — orphan company should survive; SA is deleted (JAM company)
+        assert not toggle.is_selected(), "Keep my data toggle should default to unchecked"
+        toggle.click()  # check → keep orphan company
 
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         self.tour_utils.click_next()

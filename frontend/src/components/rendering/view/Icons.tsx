@@ -51,7 +51,7 @@ export function getTableIcon(title: string): string {
 		Other: "three-dots",
 		"Release Notes": "file-earmark-text",
 		"Browser Extension": "puzzle-fill",
-		"About JAM": "info-circle",
+		"About JAM": "window-sidebar",
 		"Service Dashboards": "stack",
 		"App Management": "terminal",
 		Files: "folder2-open",

@@ -474,7 +474,7 @@ function AuthForm(): JSX.Element {
 		key: "password",
 		type: "password",
 		label: displayedMode === "resetPassword" ? "New Password" : "Password",
-		icon: "bi bi-lock-fill",
+		icon: "bi bi-key-fill",
 		placeholder: displayedMode === "resetPassword" ? "Enter your new password" : "Enter your password",
 		autoComplete: displayedMode === "login" ? "current-password" : "new-password",
 		helpText: ["register", "resetPassword"].includes(displayedMode)
@@ -487,7 +487,7 @@ function AuthForm(): JSX.Element {
 		key: "confirmPassword",
 		type: "password",
 		label: "Confirm Password",
-		icon: "bi bi-lock-fill",
+		icon: "bi bi-key-fill",
 		placeholder: displayedMode === "resetPassword" ? "Confirm your new password" : "Confirm your password",
 		autoComplete: "new-password",
 		maxChars: config?.column_limits.password,
@@ -655,7 +655,7 @@ function AuthForm(): JSX.Element {
 													type="button"
 													onClick={handlePreviousStep}
 													className="btn-link"
-													style={{ cursor: "pointer" }}
+													disabled={buttonDisabled}
 												>
 													<i className="bi bi-arrow-left me-1"></i>Back
 												</button>
@@ -787,7 +787,7 @@ function AuthForm(): JSX.Element {
 													type="button"
 													onClick={switchToForgotPassword}
 													className="btn-link"
-													style={{ cursor: "pointer" }}
+													disabled={buttonDisabled}
 													id="forgot-password-link"
 												>
 													Forgot your password?
@@ -889,7 +889,7 @@ function AuthForm(): JSX.Element {
 													type="button"
 													onClick={switchToLogin}
 													className="btn-link"
-													style={{ cursor: "pointer" }}
+													disabled={buttonDisabled}
 												>
 													Back to Sign In
 												</button>
@@ -902,7 +902,7 @@ function AuthForm(): JSX.Element {
 													id="switch-mode-button"
 													onClick={switchToRegister}
 													className="btn-link"
-													style={{ cursor: "pointer" }}
+													disabled={buttonDisabled}
 												>
 													Sign Up
 												</button>
@@ -915,7 +915,7 @@ function AuthForm(): JSX.Element {
 													id="switch-mode-button"
 													onClick={switchToLogin}
 													className="btn-link"
-													style={{ cursor: "pointer" }}
+													disabled={buttonDisabled}
 												>
 													Sign In
 												</button>

@@ -162,8 +162,7 @@ class TestFirstJobTour(BaseTest):
         self.tour_utils.click_next()
 
         toggle = self.tour_utils.keep_data_toggle
-        assert toggle.is_selected(), "Keep my data toggle should default to checked"
-        toggle.click()  # uncheck → delete
+        assert not toggle.is_selected(), "Keep my data toggle should default to unchecked"
 
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         self.tour_utils.click_next()
@@ -195,7 +194,8 @@ class TestFirstJobTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.tour_utils.click_next()
 
-        assert self.tour_utils.keep_data_toggle.is_selected(), "Keep my data toggle should default to checked"
+        assert not self.tour_utils.keep_data_toggle.is_selected(), "Keep my data toggle should default to unchecked"
+        self.tour_utils.keep_data_toggle.click()  # check → keep
 
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         self.tour_utils.click_next()
@@ -231,7 +231,8 @@ class TestFirstJobTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.tour_utils.click_next()
 
-        assert self.tour_utils.keep_data_toggle.is_selected(), "Keep my data toggle should default to checked"
+        assert not self.tour_utils.keep_data_toggle.is_selected(), "Keep my data toggle should default to unchecked"
+        self.tour_utils.keep_data_toggle.click()  # check → keep
 
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         self.tour_utils.click_next()
@@ -277,8 +278,7 @@ class TestFirstJobTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.tour_utils.click_next()
 
-        assert self.tour_utils.keep_data_toggle.is_selected(), "Keep my data toggle should default to checked"
-        self.tour_utils.keep_data_toggle.click()  # uncheck → delete
+        assert not self.tour_utils.keep_data_toggle.is_selected(), "Keep my data toggle should default to unchecked"
 
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         self.tour_utils.click_next()
@@ -320,7 +320,8 @@ class TestFirstJobTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.tour_utils.click_next()
 
-        assert self.tour_utils.keep_data_toggle.is_selected(), "Keep my data toggle should default to checked"
+        assert not self.tour_utils.keep_data_toggle.is_selected(), "Keep my data toggle should default to unchecked"
+        self.tour_utils.keep_data_toggle.click()  # check → keep
 
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         self.tour_utils.click_next()
@@ -417,7 +418,8 @@ class TestFirstJobTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.tour_utils.click_next()
 
-        assert self.tour_utils.keep_data_toggle.is_selected(), "Keep my data toggle should default to checked"
+        assert not self.tour_utils.keep_data_toggle.is_selected(), "Keep my data toggle should default to unchecked"
+        self.tour_utils.keep_data_toggle.click()  # check → keep
 
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
         self.tour_utils.click_next()
