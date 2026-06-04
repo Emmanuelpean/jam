@@ -542,30 +542,30 @@ function AuthForm(): JSX.Element {
 	const featureItems: Feature[] = [
 		{
 			icon: "bi bi-briefcase",
-			text: "Manage job application records",
+			text: "Manage your job applications",
 			description: "Create and manage job application records with all the details you need",
 		},
 		{
+			icon: "bi bi-person",
+			text: "Keep track of your contacts",
+			description: "Keep track of every person you interact with during your job search",
+		},
+		{
 			icon: "bi bi-bar-chart",
-			text: "Monitor status and deadlines",
+			text: "Monitor application status, deadlines and upcoming interviews",
 			description:
 				"Keep track of application status, progress, upcoming interviews, and never miss important deadlines",
-		},
-		{
-			icon: "bi bi-inboxes",
-			text: "Scrape job alerts from emails",
-			description:
-				"Automatically scrape job alerts from popular job board email notifications like LinkedIn and Indeed",
-		},
-		{
-			icon: "bi bi-star-half",
-			text: "Auto-rate jobs by preference",
-			description: "Automatically rate scraped jobs based on your preferences to prioritise applications",
 		},
 		{
 			icon: "bi bi-envelope-arrow-up",
 			text: "Generate follow-up emails",
 			description: "Automatically generate personalised follow-up email drafts for your applications",
+		},
+		{
+			icon: "bi bi-stars",
+			text: "Scrape & auto-rate job alert emails",
+			description:
+				"Automatically scrape job alerts from LinkedIn, Indeed and more, then rate them by your preferences to prioritise applications",
 		},
 	];
 
@@ -837,7 +837,7 @@ function AuthForm(): JSX.Element {
 
 									{/* Action buttons */}
 									<div className="d-grid gap-2">
-												<ActionButton
+										<ActionButton
 											type="submit"
 											id="confirm-button"
 											disabled={buttonDisabled || hasFieldErrors}

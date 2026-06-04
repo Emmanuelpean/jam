@@ -137,8 +137,12 @@ class TestLogIn(BaseTest):
         # Refresh the page
         self.driver.get("https://google.com")
         self.driver.get(self.frontend_base_url + "/jobs")
-        time.sleep(0.5)
-        self.db.expire_all()
+        deadline = time.time() + 5
+        while time.time() < deadline:
+            self.db.expire_all()
+            if self.user.last_login and self.user.last_login > login_dt:
+                break
+            time.sleep(0.2)
         assert self.user.last_login > login_dt
         assert self.user.previous_login == login_dt
 

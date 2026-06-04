@@ -103,6 +103,7 @@ class Select(SeleniumUtils):
         """Select all options that display text matching the argument"""
 
         self.open_menu()
+        WebDriverWait(self.driver, 5).until(lambda d: len(self.options) > 0)
         wanted_elements_indexes = [self._get_option_index(i) for i in self.options if i.text.strip() == text.strip()]
 
         if len(wanted_elements_indexes) == 0:
