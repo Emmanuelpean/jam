@@ -115,7 +115,7 @@ class TestFilterSidebar(BaseTest):
 
         # The X clear button appears only when the input has text
         section = self.get_element("filter-section-title")
-        self.get_element("clear-btn", within=section).click()
+        self.get_element("clear-btn", parent=section).click()
         time.sleep(0.5)
 
         assert self.job_table_utils.get_row_count() == initial_count
