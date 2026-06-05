@@ -65,7 +65,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 			setExpiredJobs(response.data);
 			setShowDismissExpiredModal(true);
 		} catch {
-			showToastError("Failed to load expired alerts. Please try again.");
+			showToastError("Failed to load expired job alerts. Please try again.");
 		} finally {
 			hideProgress();
 		}
@@ -74,7 +74,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 	const handleConfirmDismissExpired = useCallback(
 		async (ids: number[]): Promise<void> => {
 			setShowDismissExpiredModal(false);
-			showProgress("Dismissing expired alerts…");
+			showProgress("Deleting expired alerts…");
 			try {
 				await Promise.all(
 					ids.map(
@@ -96,15 +96,15 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 
 	const handleBulkDismiss = useCallback(
 		async (ids: number[]): Promise<void> => {
-			const n = `${ids.length} alert${ids.length > 1 ? "s" : ""}`;
+			const noun = `job alert${ids.length !== 1 ? "s" : ""}`;
 			const confirmed: boolean = await showDelete({
 				title: "Delete Job Alerts",
-				message: `Delete ${n} job alerts?`,
+				message: `Delete ${ids.length} ${noun}?`,
 				confirmText: "Delete",
 				cancelText: "Cancel",
 			});
 			if (confirmed) {
-				showProgress(`Dismissing ${n}, please wait.`, "Dismissing alerts…");
+				showProgress("Dismissing alerts…");
 				try {
 					await Promise.all(
 						ids.map(
@@ -112,7 +112,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 								updateEntity("scrapedJob", id, { is_active: false })
 						)
 					);
-					showToastSuccess(`${n} job alerts dismissed.`);
+					showToastSuccess(`${ids.length} ${noun} dismissed.`);
 					tableRef.current?.clearSelection();
 					setInternalReloadTrigger((t: number): number => t + 1);
 				} catch {
@@ -234,6 +234,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 									label: "Delete All Expired",
 									icon: "calendar-x",
 									variant: "outline-danger",
+									skipIdCollection: true,
 									onClick: (): Promise<void> => handleDismissExpired(),
 								},
 							]

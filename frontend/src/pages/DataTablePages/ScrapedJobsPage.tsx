@@ -23,10 +23,10 @@ export const ScrapedJobsPage = (): JSX.Element => {
 	const switchTab = (tab: ActiveTab): void => {
 		if (tab === "alerts") {
 			navigate("/job-alerts/jobs", { replace: true });
-			setAlertsReload((n) => n + 1);
+			setAlertsReload((n: number): number => n + 1);
 		} else {
 			navigate("/job-alerts/emails", { replace: true });
-			setEmailsReload((n) => n + 1);
+			setEmailsReload((n: number): number => n + 1);
 		}
 	};
 

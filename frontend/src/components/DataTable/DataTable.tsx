@@ -61,6 +61,7 @@ export type BulkAction =
 			icon?: string;
 			variant?: string;
 			onClick: (ids: number[]) => void | Promise<void>;
+			skipIdCollection?: boolean;
 	  }
 	| { type: "divider" }
 	| { type: "header"; label: string };
@@ -713,7 +714,9 @@ function DataTableComponent<T extends JamData>(
 	const handleBulkAction = async (action: Extract<BulkAction, { type?: "action" }>): Promise<void> => {
 		try {
 			let ids: number[];
-			if (selectedIds.size > 0) {
+			if (action.skipIdCollection) {
+				ids = [];
+			} else if (selectedIds.size > 0) {
 				ids = [...selectedIds];
 			} else if (isServerPagination && totalCount > 0) {
 				const params: URLSearchParams = buildPagedParams(0, totalCount);

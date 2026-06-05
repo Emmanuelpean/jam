@@ -564,3 +564,76 @@ class TestDismissExpiredBulkAction(BaseTest):
         self.db.expire_all()
         updated = self.db.query(models.ScrapedJob).filter_by(id=expired_job.id).first()
         assert updated.is_active
+
+
+class TestBulkDeleteSelectedAction(BaseTest):
+
+    user_index = 0
+    page_url = "job-alerts/jobs"
+
+    def setup_function(self, request) -> None:
+        request.getfixturevalue("test_job_scraping_service_logs")
+        self.login()
+
+    def _select_row(self, scraped_job: models.ScrapedJob) -> None:
+        row = self.scrapedJob_table_utils.table_row(scraped_job.id)
+        row.find_element(By.CSS_SELECTOR, "input[type='checkbox']").click()
+
+    def _open_bulk_actions(self) -> None:
+        self.get_element("bulk-actions-dropdown").click()
+
+    def _click_delete_selected(self) -> None:
+        self._open_bulk_actions()
+        self.get_element("bulk-action-delete").click()
+
+    def test_delete_selected_confirm_dismisses_jobs(self) -> None:
+        """Selecting jobs and confirming bulk delete deactivates them and shows a toast."""
+
+        job1 = self._make_scraped_job(title="Job To Delete 1")
+        job2 = self._make_scraped_job(title="Job To Delete 2")
+        job3 = self._make_scraped_job(title="Job To Keep")
+        self.driver.refresh()
+        self.scrapedJob_table_utils.wait_for_table_load()
+
+        self._select_row(job1)
+        self._select_row(job2)
+        self._click_delete_selected()
+        self.delete_modal.confirm_button.click()
+
+        self.scrapedJob_table_utils.assert_toast_message("2 job alerts dismissed.")
+
+        self.db.expire_all()
+        assert not self.db.query(models.ScrapedJob).filter_by(id=job1.id).first().is_active
+        assert not self.db.query(models.ScrapedJob).filter_by(id=job2.id).first().is_active
+        assert self.db.query(models.ScrapedJob).filter_by(id=job3.id).first().is_active
+
+    def test_delete_selected_cancel_does_not_dismiss(self) -> None:
+        """Cancelling the delete confirmation leaves selected jobs active."""
+
+        job = self._make_scraped_job(title="Job Not To Delete")
+        self.driver.refresh()
+        self.scrapedJob_table_utils.wait_for_table_load()
+
+        self._select_row(job)
+        self._click_delete_selected()
+        self.delete_modal.cancel_button.click()
+
+        self.db.expire_all()
+        assert self.db.query(models.ScrapedJob).filter_by(id=job.id).first().is_active
+
+    def test_delete_all_visible_confirm_dismisses_all(self) -> None:
+        """With no rows selected, confirming bulk delete dismisses all visible jobs."""
+
+        job1 = self._make_scraped_job(title="Visible Job 1")
+        job2 = self._make_scraped_job(title="Visible Job 2")
+        self.driver.refresh()
+        self.scrapedJob_table_utils.wait_for_table_load()
+
+        self._click_delete_selected()
+        self.delete_modal.confirm_button.click()
+
+        self.scrapedJob_table_utils.assert_toast_message("2 job alerts dismissed.")
+
+        self.db.expire_all()
+        assert not self.db.query(models.ScrapedJob).filter_by(id=job1.id).first().is_active
+        assert not self.db.query(models.ScrapedJob).filter_by(id=job2.id).first().is_active
