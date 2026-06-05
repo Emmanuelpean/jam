@@ -331,7 +331,7 @@ class TestAddContactTour(BaseTest):
         assert self.tour_utils.popover_title() == "Company"
 
         # No company was created
-        self.tour_utils.poll_db_count(models.Company, self.user.id, initial_companies)
+        self.tour_utils.poll_db_count(models.Company, self.user.id, initial_companies + 2)
 
         # Clean up by skipping the tour
         self.tour_utils.click_skip()

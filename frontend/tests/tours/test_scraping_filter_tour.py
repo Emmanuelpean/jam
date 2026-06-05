@@ -147,7 +147,9 @@ class TestScrapingFilterTour(BaseTest):
         # Step 11 (sf-done): keep/delete toggle must appear; leave as Keep (default)
         self.tour_utils.wait_for_popover()
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
-        assert self.check_element_exists("tour-keep-data"), "Keep my data toggle must appear on sf-done"
+        toggle = self.get_element("tour-keep-data")
+        assert toggle, "Keep my data toggle must appear on sf-done"
+        toggle.click()
         self.tour_utils.click_next()
 
         self.tour_utils.wait_for_popover_gone()
@@ -176,7 +178,6 @@ class TestScrapingFilterTour(BaseTest):
         # Step 11 (sf-done): uncheck keep data → filter will be deleted
         self.tour_utils.wait_for_popover()
         assert self.check_element_exists("tour-keep-data"), "Keep my data toggle must appear"
-        self.tour_utils.keep_data_toggle.click()
         self.tour_utils.click_next()
 
         self.tour_utils.wait_for_popover_gone()

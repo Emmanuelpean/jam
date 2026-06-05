@@ -92,7 +92,7 @@ class TestJobScrapingTable(BaseTest):
         self.scrapedJob_modal_utils.delete_button("import").click()
         self.delete_modal.confirm_button.click()
         self.scrapedJob_modal_utils.wait_for_import_modal_close()
-        self.assert_toast_message("Scraped Job deleted successfully.")
+        self.assert_toast_message("Job Alert deleted successfully.")
         self.db.expire_all()
         scraped_job = self.db.query(models.ScrapedJob).filter_by(id=scraped_job.id).first()
         assert not scraped_job.is_active
@@ -107,7 +107,7 @@ class TestJobScrapingTable(BaseTest):
         self.scrapedJob_table_utils.table_context_menu(scraped_job.id, "delete")
         self.delete_modal.confirm_button.click()
         self.scrapedJob_modal_utils.wait_for_import_modal_close()
-        self.assert_toast_message("Scraped Job deleted successfully.")
+        self.assert_toast_message("Job Alert deleted successfully.")
         self.db.expire_all()
         scraped_job = self.db.query(models.ScrapedJob).filter_by(id=scraped_job.id).first()
         assert not scraped_job.is_active
@@ -455,7 +455,7 @@ class TestScrapingFilters(BaseTest):
         self.scrapingExclusionFilter_table_utils.table_row(self.no_filtered_index).click()
         self.scrapingExclusionFilter_modal_utils.deactivate_button().click()
         self.scrapingExclusionFilter_modal_utils.wait_for_view_modal_close()
-        self.assert_toast_message("Scraping Filter deactivated successfully.")
+        self.assert_toast_message("Alert Filter deactivated successfully.")
         self.db.expire_all()
         scraping_filter = self.db.query(models.ScrapingExclusionFilter).filter_by(id=self.no_filtered_index).first()
         assert not scraping_filter.is_active

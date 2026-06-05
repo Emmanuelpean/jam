@@ -52,11 +52,7 @@ class TestImportScrapedJobTour(BaseTest):
         self.tour_utils.start_tour(TOUR_ID)
         self.wait_for_page("job-alerts/jobs")
 
-        # Step 0 (scraped-intro): informational — click Next
-        self.tour_utils.click_next()
-
-        # Step 1 (scraped-nav): sidebar highlight — click Next
-        self.tour_utils.wait_for_popover()
+        # Step 1 (scraped-nav): informational — click Next
         self.tour_utils.click_next()
 
         # Step 2 (scraped-table): table overview; left-click is blocked — click Next
@@ -165,9 +161,7 @@ class TestImportScrapedJobTour(BaseTest):
         self.tour_utils.start_tour(TOUR_ID)
         self.wait_for_page("job-alerts/jobs")
 
-        # Steps 0-3: intro → nav → table → ai-score
-        self.tour_utils.click_next()
-        self.tour_utils.wait_for_popover()
+        # Steps 0-2: intro → nav → table → ai-score
         self.tour_utils.click_next()
         self.tour_utils.wait_for_popover()
         self.tour_utils.click_next()
@@ -200,11 +194,7 @@ class TestImportScrapedJobTour(BaseTest):
         self.tour_utils.start_tour(TOUR_ID)
         self.wait_for_page("job-alerts/jobs")
 
-        # Step 0 (scraped-intro): click Next
-        self.tour_utils.click_next()
-
-        # Step 1 (scraped-nav): click Next
-        self.tour_utils.wait_for_popover()
+        # Step 1 (scraped-intro): click Next
         self.tour_utils.click_next()
 
         # Step 2 (scraped-table): blockLeftClick is active
@@ -212,9 +202,9 @@ class TestImportScrapedJobTour(BaseTest):
         demo_job = self.db.query(models.ScrapedJob).filter_by(owner_id=self.user.id, is_tour=True).first()
         # Attempt a left-click on the demo row — modal must NOT open
         self.scrapedJob_table_utils.table_row_click(demo_job.id)
-        assert not self.check_element_exists("modal-import-scrapedJob", timeout=2), (
-            "Import modal must not open when blockLeftClick is active on scraped-table step"
-        )
+        assert not self.check_element_exists(
+            "modal-import-scrapedJob", timeout=2
+        ), "Import modal must not open when blockLeftClick is active on scraped-table step"
 
         # Clean up by skipping
         self.tour_utils.click_skip()
@@ -296,9 +286,9 @@ class TestImportScrapedJobTour(BaseTest):
         # Wait for the modal to close (confirms backActionSelector fired), then check popover title
         self.wait_for_disappear("modal-view-jobEmail")
         self.wait_for_element_text(self.tour_utils.TOUR_TITLE, "Open the Demo Email")
-        assert not self.check_element_exists("modal-view-jobEmail", timeout=2), (
-            "Email modal must be closed after clicking Back on scraped-email-modal-content"
-        )
+        assert not self.check_element_exists(
+            "modal-view-jobEmail", timeout=2
+        ), "Email modal must be closed after clicking Back on scraped-email-modal-content"
 
         # Clean up by skipping
         self.tour_utils.click_skip()

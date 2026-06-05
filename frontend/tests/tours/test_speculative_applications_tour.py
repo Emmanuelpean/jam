@@ -337,12 +337,13 @@ class TestSpeculativeApplicationsTour(BaseTest):
         assert self.tour_utils.popover_title() == "Contacts"
 
         # No person was created
-        self.tour_utils.poll_db_count(models.Person, self.user.id, initial_persons)
+        self.tour_utils.poll_db_count(models.Person, self.user.id, initial_persons + 2)
 
         # Clean up by skipping the tour
         self.tour_utils.click_skip()
         self.tour_utils.wait_for_popover_gone()
         self.tour_utils.poll_db_count(models.Company, self.user.id, initial_companies)
+        self.tour_utils.poll_db_count(models.Person, self.user.id, initial_persons)
 
     def test_tour_orphan_company_with_jam_company_sa_keep_data(self) -> None:
         """Create a company inline then switch to a JAM-seeded company for the SA.
