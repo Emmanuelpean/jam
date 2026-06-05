@@ -57,7 +57,7 @@ export type BulkAction =
 	| {
 			type?: "action";
 			id?: string;
-			label: string;
+			label: string | ((selectedCount: number, totalCount: number) => string);
 			icon?: string;
 			variant?: string;
 			onClick: (ids: number[]) => void | Promise<void>;
@@ -638,7 +638,7 @@ function DataTableComponent<T extends JamData>(
 				text: "Activate",
 				function: activateEntityHandler,
 				showLoading: true,
-				loadingMessage: "Activating Scraping Filter...",
+				loadingMessage: "Activating Alert Filter...",
 			},
 			{
 				action: "deactivate",
@@ -646,7 +646,7 @@ function DataTableComponent<T extends JamData>(
 				text: "Deactivate",
 				function: deactivateEntityHandler,
 				showLoading: true,
-				loadingMessage: "Deactivating Scraping Filter...",
+				loadingMessage: "Deactivating Alert Filter...",
 			},
 			{
 				action: "followup",
@@ -841,7 +841,7 @@ function DataTableComponent<T extends JamData>(
 								<BulkActionsDropdown
 									className="ms-auto"
 									selectedCount={selectedIds.size}
-									totalCount={displayTotal}
+									filteredCount={totalFilteredCount}
 									actions={bulkActions}
 									onAction={handleBulkAction}
 									onClearSelection={() => setSelectedIds(new Set())}

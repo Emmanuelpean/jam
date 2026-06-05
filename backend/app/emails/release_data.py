@@ -48,7 +48,7 @@ RELEASE_SLIDES: dict[str, list[dict]] = {
     ],
     "1.2.0": [
         {
-            "title": "Job Scraping Filters",
+            "title": "Job Alert Filters",
             "description": "Create rules to exclude unwanted jobs by company, title, or other parameters.",
         },
         {

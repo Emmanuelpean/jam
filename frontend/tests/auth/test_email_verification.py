@@ -49,11 +49,28 @@ class TestEmailVerification(BaseTest):
 
         self._register_and_verify_redirect(test_email, test_password)
         self.auth_utils.login_user(test_email, test_password)
-        self.auth_utils.assert_toast_message("Please wait")
+        message = "Your account is not verified. Please check your emails for the verification link or please wait"
+        self.auth_utils.assert_toast_message(message)
         self._verify_account_via_email_link(test_email)
         self.auth_utils.wait_for_login()
         self.auth_utils.login_user(test_email, test_password)
         self.auth_utils.wait_for_dashboard()
+
+    def test_login_after_rate_limit_sends_new_verification_email(self, session) -> None:
+        """Test that logging in with an unverified account after the rate limit window sends a new verification email."""
+
+        test_email = "newuser@test.com"
+        test_password = "Test123!"
+
+        self._register_and_verify_redirect(test_email, test_password)
+        user = session.query(models.User).filter(models.User.email == test_email).first()
+        assert user
+        token = session.query(models.UserToken).filter(models.UserToken.owner_id == user.id).first()
+        token.created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=3)
+        session.commit()
+
+        self.auth_utils.login_user(test_email, test_password)
+        self.auth_utils.assert_toast_message(f"A new verification email has been sent to {test_email}.")
 
     def test_registering_same_email_before_verification_shows_wait_then_allows_login(self, session) -> None:
         """Test that trying to register the same email before verification shows 'Please wait' message,

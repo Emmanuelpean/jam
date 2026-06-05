@@ -189,7 +189,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 		],
 	},
 	scraped_jobs: {
-		label: "Scraped Jobs",
+		label: "Job Alerts",
 		icon: "inbox",
 		fields: [
 			{

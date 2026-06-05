@@ -557,18 +557,19 @@ const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
 		id: "follow-up-send",
 		targetId: "email-service-dropdown",
 		title: "Send Your Email",
-		content:
-			"Click Send Email to open your default email client. Use the dropdown arrow to send via Gmail or Outlook instead.",
+		content: "Click Send Email to open your default email client.",
 		placement: "top",
 		hideNextButton: true,
 		waitForSelector: "#confirm-alert-modal-buttons",
+		showBack: true,
 	},
 	{
 		id: "follow-up-log-update",
 		targetId: "confirm-alert-modal-dialog",
 		title: "Log the Email",
 		content:
-			"After clicking Send, JAM asks if you want to record the email as a job application update. Click Yes to keep a full history of your follow-ups, or No to skip.",
+			"After clicking Send, JAM asks if you want to record the email as a job application update. " +
+			"Click Yes to keep a full history of your follow-ups, or No to skip.",
 		placement: "top",
 		hideNextButton: true,
 		waitForSelectorGone: "#confirm-alert-modal-dialog",
@@ -589,29 +590,19 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		targetId: null,
 		title: "Job Alert Scraping",
 		content:
-			"JAM automatically scans your email alert subscriptions from LinkedIn, Indeed, and similar platforms -" +
+			"TOAST (JAM Premium) automatically scans your email alert subscriptions from LinkedIn, Indeed, and similar platforms -" +
 			"pulling matching jobs straight into JAM so you never miss an opportunity. " +
-			"We've added a demo alert so you can try the full import flow.",
+			"We've added a demo alert so you can try it out.",
 		route: "/job-alerts/jobs",
 		placement: "center",
-	},
-	{
-		id: "scraped-nav",
-		targetId: "nav-scraped-jobs",
-		title: "Job Alerts Menu",
-		content:
-			"The Job Alerts page is always one click away from the sidebar. It shows every job pulled from your alert emails.",
-		route: "/job-alerts/jobs",
-		placement: "right",
 	},
 	{
 		id: "scraped-table",
 		targetId: "scrapedJob-data-table",
 		title: "Your Job Alerts",
 		content:
-			"Every job found in your alert emails appears here. " +
-			"New alerts since your last login are highlighted. " +
-			"Use the search bar and column headers to sort and filter.",
+			'Every job scraped from your alert emails lands here. Entries added since your last login are tagged "NEW", ' +
+			"and unread jobs show a blue dot. Use the search bar and column headers to filter and sort.",
 		route: "/job-alerts/jobs",
 		placement: "center",
 		blockLeftClick: true,
@@ -630,7 +621,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 	{
 		id: "scraped-filters",
 		targetId: "scraping-filters-button",
-		title: "Scraping Filters",
+		title: "Alert Filters",
 		content:
 			"Click here to configure what gets scraped - include or exclude keywords, locations, and platforms. " +
 			"Only alerts matching your active filters will appear in the table.",
@@ -645,7 +636,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		targetId: "scraping-filters-modal",
 		title: "There's a Tour for This!",
 		content:
-			'Scraping Filters have their own dedicated tour — "Creating & Managing Scraping Filters" — ' +
+			'Alert Filters have their own dedicated tour — "Creating & Managing Alert Filters" — ' +
 			"that walks you through building and testing a filter step by step. " +
 			"Click Next to close this panel and continue the current tour.",
 		route: "/job-alerts/jobs",
@@ -684,7 +675,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		title: "Inside the Job Email",
 		content:
 			"This view shows the raw alert email: sender, platform, alert name, and how many jobs were found. " +
-			"Expand the Scraped Jobs section to see every job that was pulled from this email — " +
+			"Expand the Job Alerts section to see every job that was pulled from this email — " +
 			"and the Email Content section to read the original message.",
 		route: "/job-alerts/emails",
 		placement: "center",
@@ -697,7 +688,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		id: "scraped-back-to-alerts",
 		targetId: "scraped-jobs-header",
 		title: "Back to Job Alerts",
-		content: "Now click Job Alerts to return to the scraped jobs table — we'll import the demo alert next.",
+		content: "Now click Job Alerts to return to the job alerts table — we'll import the demo alert next.",
 		route: "/job-alerts/emails",
 		placement: "bottom",
 		hideNextButton: true,
@@ -759,9 +750,9 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 	{
 		id: "sf-intro",
 		targetId: null,
-		title: "Scraping Filters",
+		title: "Alert Filters",
 		content:
-			"Scraping filters let you control exactly which job alerts get pulled into JAM. " +
+			"Alert filters let you control exactly which job alerts get pulled into JAM. " +
 			"Exclusion filters silently drop alerts that match - keeping your table free of irrelevant results. " +
 			"This tour walks you through creating and testing one.",
 		route: "/job-alerts/jobs",
@@ -771,7 +762,7 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 		id: "sf-open",
 		targetId: "scraping-filters-button",
 		title: "Open the Filter Panel",
-		content: "Click the Scraping Filters button to open the filter manager.",
+		content: "Click the Alert Filters button to open the filter manager.",
 		route: "/job-alerts/jobs",
 		placement: "bottom",
 		waitForSelector: "#scraping-filters-modal",
@@ -867,7 +858,7 @@ const SCRAPING_FILTER_STEPS: TourStep[] = [
 		targetId: null,
 		title: "All Done!",
 		content:
-			"You know how to create and manage scraping filters. " +
+			"You know how to create and manage alert filters. " +
 			"Use them to keep irrelevant alerts out of your table and surface only the roles that matter to you.",
 		placement: "center",
 	},
@@ -879,7 +870,8 @@ const LOG_APPLICATION_STEPS: TourStep[] = [
 		targetId: null,
 		title: "Logging a Job Application",
 		content:
-			"Once you've applied for a job, JAM lets you record the details - when you applied, the status, and how you submitted. We've added a demo job so you can try it now.",
+			"Once you've applied for a job, JAM lets you record the details - when you applied, the status, and how you submitted. " +
+			"We've added a demo job so you can try it now.",
 		route: "/jobs",
 		placement: "center",
 	},
@@ -926,7 +918,8 @@ const LOG_APPLICATION_STEPS: TourStep[] = [
 		targetId: "application_status-form-group",
 		title: "Application Status",
 		content:
-			"Set the current status - Applied, Under Review, Rejected, Offer Received, and more. This feeds your dashboard stats and highlights stalled applications.",
+			"Set the current status - Applied, Under Review, Rejected, Offer Received, and more. This feeds your " +
+			"dashboard stats and highlights stalled applications.",
 		placement: "right",
 		waitForInput: "#application_status-form-group .jam-select__input",
 		showBack: true,
@@ -936,7 +929,8 @@ const LOG_APPLICATION_STEPS: TourStep[] = [
 		targetId: "applied_via-form-group",
 		title: "How Did You Apply?",
 		content:
-			"Log how you submitted - directly on the company site, via a job board, LinkedIn, or through a recruiter. Tracking this helps you see which channels get the best results.",
+			"Log how you submitted - directly on the company site, via a job board, LinkedIn, or through a recruiter. " +
+			"Tracking this helps you see which channels get the best results. Click Next to skip.",
 		placement: "right",
 		showBack: true,
 	},
@@ -971,8 +965,7 @@ const LOG_APPLICATION_STEPS: TourStep[] = [
 		id: "log-application-url",
 		targetId: "application_url-form-group",
 		title: "Application URL",
-		content:
-			"Paste the link to your application confirmation or the original job listing. Useful if you need to refer back to it later.",
+		content: "Paste the link to your application confirmation. Useful if you need to refer back to it later.",
 		placement: "right",
 		showBack: true,
 	},
@@ -981,7 +974,8 @@ const LOG_APPLICATION_STEPS: TourStep[] = [
 		targetId: "cv_id-form-group",
 		title: "CV",
 		content:
-			"Upload the CV you submitted with this application. JAM stores it alongside the job so you can reference it any time.",
+			"Upload the CV you submitted with this application. JAM stores it alongside the job so you can refer to it " +
+			"any time. Click Next to skip.",
 		placement: "right",
 		showBack: true,
 	},
@@ -1036,7 +1030,8 @@ const LOG_APPLICATION_STEPS: TourStep[] = [
 		targetId: null,
 		title: "All Done!",
 		content:
-			"You've logged your application details. Keep updating the status as things progress - your dashboard will always reflect where you really stand. The demo job will be removed when you click Done.",
+			"You've logged your application details. Keep updating the status as things progress - your dashboard will " +
+			"always reflect where you really stand. The demo job will be removed when you click Done.",
 		placement: "center",
 	},
 ];
@@ -1047,7 +1042,8 @@ const LOG_INTERVIEW_STEPS: TourStep[] = [
 		targetId: null,
 		title: "Logging an Interview",
 		content:
-			"Once you've heard back about an interview, JAM lets you record every detail - type, date, location, and who you spoke with. We've added a demo application so you can try it now.",
+			"Once you've heard back about an interview, JAM lets you record every detail - type, date, location, and " +
+			"who you spoke with. We've added a demo application so you can try it now.",
 		route: "/jobs",
 		placement: "center",
 	},
@@ -1055,7 +1051,7 @@ const LOG_INTERVIEW_STEPS: TourStep[] = [
 		id: "interview-open-job",
 		targetId: "[demo-job-row]",
 		title: "Open the Application",
-		content: "Click this job row to open the application details.",
+		content: "Click this job row to open the job.",
 		route: "/jobs",
 		placement: "top",
 		waitForSelector: "#application-tab",
@@ -1066,7 +1062,7 @@ const LOG_INTERVIEW_STEPS: TourStep[] = [
 		id: "interview-application-tab",
 		targetId: "application-tab",
 		title: "Switch to the Application Tab",
-		content: "Click here to see your application history, including interviews and status updates.",
+		content: "Click here to see your application details.",
 		placement: "bottom",
 		waitForSelector: "#add-interview-button",
 		hideNextButton: true,
@@ -1092,8 +1088,7 @@ const LOG_INTERVIEW_STEPS: TourStep[] = [
 		id: "interview-type",
 		targetId: "type-form-group",
 		title: "Interview Type",
-		content:
-			"Record the format - phone screen, video call, technical, or on-site. Tracking types helps you spot patterns across your applications.",
+		content: "Record the format - phone call, video call, technical, or on-site.",
 		placement: "right",
 		waitForInput: "#type-form-group .jam-select__input",
 	},
@@ -1101,14 +1096,14 @@ const LOG_INTERVIEW_STEPS: TourStep[] = [
 		id: "interview-attendance",
 		targetId: "attendance_type-form-group",
 		title: "Attendance",
-		content: "Log whether the interview is remote or on-site.",
+		content: "Log whether the interview is remote or on-site. Click Next to skip.",
 		placement: "right",
 	},
 	{
 		id: "interview-location",
 		targetId: "location-form-group",
 		title: "Location",
-		content: "Enter the address or venue for the interview.",
+		content: "Enter the location of the interview. Click Next to skip.",
 		placement: "right",
 		skipIfSelectorAbsent: "#location-form-group",
 	},
@@ -1117,7 +1112,7 @@ const LOG_INTERVIEW_STEPS: TourStep[] = [
 		targetId: "interviewers-form-group",
 		title: "Interviewers",
 		content:
-			"Link the people who interviewed you. Contacts already in JAM appear here - or add someone new on the fly.",
+			"Link the people who interviewed you. Contacts already in JAM appear here - or add someone new on the fly. Click Next to skip.",
 		placement: "right",
 		waitForSelector: "#modal-edit-person",
 		autoAdvanceStepId: "interview-interviewer-filling",
@@ -1141,7 +1136,8 @@ const LOG_INTERVIEW_STEPS: TourStep[] = [
 		id: "interview-note",
 		targetId: "note-form-group",
 		title: "Notes",
-		content: "Capture anything worth remembering - questions asked, impressions, or things to follow up on.",
+		content:
+			"Capture anything worth remembering - questions asked, impressions, or things to follow up on. Click Next to skip.",
 		placement: "right",
 		showBack: true,
 	},
@@ -1160,7 +1156,7 @@ const LOG_INTERVIEW_STEPS: TourStep[] = [
 		id: "interview-show-in-table",
 		targetId: "interview-data-table",
 		title: "Interview Logged!",
-		content: "Your interview now appears in the timeline. Click Next to continue.",
+		content: "Your interview now appears in the timeline.",
 		placement: "top",
 		blockLeftClick: true,
 		allowedContextMenuActions: [],
@@ -1181,7 +1177,8 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 		targetId: null,
 		title: "Logging an Application Update",
 		content:
-			"Heard back from a company? JAM lets you log any status change - rejection, offer, under review - so your application history stays complete. We've added a demo application to try it on.",
+			"Got a reply, sent a follow-up, or had a call? Log it as an update to keep a full timeline of every " +
+			"application — so nothing slips through the cracks.",
 		route: "/jobs",
 		placement: "center",
 	},
@@ -1189,7 +1186,7 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 		id: "update-open-job",
 		targetId: "[demo-job-row]",
 		title: "Open the Application",
-		content: "Click this job row to open the application details.",
+		content: "Click this job row to open the job.",
 		route: "/jobs",
 		placement: "top",
 		waitForSelector: "#application-tab",
@@ -1200,7 +1197,7 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 		id: "update-application-tab",
 		targetId: "application-tab",
 		title: "Switch to the Application Tab",
-		content: "Click here to see your application history.",
+		content: "Click here to see your application details.",
 		placement: "bottom",
 		waitForSelector: "#add-jobApplicationUpdate-button",
 		hideNextButton: true,
@@ -1209,7 +1206,7 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 		id: "update-add",
 		targetId: "add-jobApplicationUpdate-button",
 		title: "Log an Update",
-		content: "Click this button to record a new status update.",
+		content: "Click this button to record a new update.",
 		placement: "bottom",
 		waitForSelector: "#modal-edit-jobApplicationUpdate",
 		hideNextButton: true,
@@ -1227,8 +1224,7 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 		id: "update-type",
 		targetId: "type-form-group",
 		title: "Update Type",
-		content:
-			"Choose the status - Rejected, Offer Received, Under Review, and more. This feeds your dashboard stats and helps you spot where applications are stalling.",
+		content: "Choose whether you sent or received the update.",
 		placement: "right",
 		waitForInput: "#type-form-group .jam-select__input",
 	},
@@ -1236,7 +1232,7 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 		id: "update-note",
 		targetId: "note-form-group",
 		title: "Notes",
-		content: "Add any details - feedback received, next steps, or a reminder for yourself.",
+		content: "Add any details - feedback received, next steps, or a reminder for yourself. Click Next to skip.",
 		placement: "right",
 	},
 	{
@@ -1263,7 +1259,8 @@ const LOG_UPDATE_STEPS: TourStep[] = [
 		targetId: null,
 		title: "All Done!",
 		content:
-			"Keep logging updates as they come in and your dashboard will always reflect where you really stand. The demo application will be removed when you click Done.",
+			"Keep logging updates as they come in and your dashboard will always reflect where you really stand. " +
+			"The demo application will be removed when you click Done.",
 		placement: "center",
 	},
 ];
@@ -1274,7 +1271,8 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		targetId: null,
 		title: "Adding a Contact",
 		content:
-			"Contacts in JAM are the people behind your job search - hiring managers, recruiters, and anyone you've spoken to. Linking them to jobs makes it easy to track relationships and generate follow-up emails. We'll clean up any test data when you're done.",
+			"Contacts in JAM are the people behind your job search - hiring managers, recruiters, and anyone you've spoken to." +
+			" Linking them to jobs makes it easy to track relationships and generate follow-up emails. ",
 		route: "/contacts",
 		placement: "center",
 	},
@@ -1282,7 +1280,7 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		id: "contact-add-btn",
 		targetId: "add-person-button",
 		title: "Add a Contact",
-		content: "Click this button to open the contact form.",
+		content: 'Click the "Add Contact" button to open the contact form.',
 		route: "/contacts",
 		placement: "bottom",
 		waitForSelector: "#modal-edit-person",
@@ -1341,8 +1339,7 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		id: "contact-email",
 		targetId: "email-form-group",
 		title: "Email Address",
-		content:
-			"If you have their email, add it here. JAM uses it to pre-fill the recipient in the follow-up email generator.",
+		content: "If you have their email, add it here. JAM uses it to generate follow-up emails.",
 		placement: "right",
 		waitForValidEmailIfFilled: '.modal.show input[name="email"]',
 		showBack: true,
@@ -1351,7 +1348,7 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		id: "contact-phone",
 		targetId: "phone-form-group",
 		title: "Phone Number",
-		content: "Add a phone number if you have one.",
+		content: "Add the contact's phone number or click Next to skip.",
 		placement: "right",
 		showBack: true,
 	},
@@ -1359,7 +1356,7 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		id: "contact-linkedin",
 		targetId: "linkedin_url-form-group",
 		title: "LinkedIn Profile",
-		content: "Paste their LinkedIn profile URL to keep it close at hand. Must be a LinkedIn URL.",
+		content: "Add their LinkedIn profile URL.",
 		placement: "right",
 		showBack: true,
 		waitForValidLinkedInIfFilled: '.modal.show input[name="linkedin_url"]',
@@ -1389,7 +1386,8 @@ const ADD_CONTACT_STEPS: TourStep[] = [
 		targetId: null,
 		title: "All Done!",
 		content:
-			"Your contact is saved. Open any job, go to the Tags & Contacts section, and add them - they'll appear as a badge you can right-click for quick actions. Choose below whether to keep the contact or delete it.",
+			"Your contact is saved. Open any job, go to the Tags & Contacts section, and add them - " +
+			"they'll appear as a badge you can right-click for quick actions. Choose below whether to keep the contact or delete it.",
 		placement: "center",
 	},
 ];
@@ -1399,7 +1397,8 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 		id: "speculative-intro",
 		title: "Speculative Applications",
 		content:
-			"A speculative application is a proactive outreach to a company that hasn't posted a specific vacancy. JAM tracks these separately so you can follow up and stay organised. We'll clean up any test data when you're done.",
+			"A speculative or spontaneous application is a proactive outreach to a company that hasn't posted a specific vacancy. " +
+			"JAM tracks these separately so you can follow up and stay organised.",
 		route: "/speculative-applications",
 		placement: "center",
 	},
@@ -1407,7 +1406,7 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 		id: "speculative-add",
 		targetId: "add-speculativeApplication-button",
 		title: "Log an Application",
-		content: "Click this button to log a new speculative outreach.",
+		content: 'Click the "Add Speculative Application" button to log a new speculative outreach.',
 		placement: "bottom",
 		waitForSelector: "#modal-edit-speculativeApplication",
 		hideNextButton: true,
@@ -1441,8 +1440,7 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 		id: "speculative-date",
 		targetId: "date-form-group",
 		title: "Date",
-		content:
-			"Log when you sent the application or made contact. JAM uses this to order your list and flag overdue follow-ups.",
+		content: "Log when you sent the application or made contact.",
 		placement: "right",
 		showBack: true,
 	},
@@ -1450,7 +1448,7 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 		id: "speculative-email",
 		targetId: "contact_email-form-group",
 		title: "Contact Email",
-		content: "If you contacted a specific person, add their email here to track who you spoke to.",
+		content: "If you sent your application to a specific email address, add it here. Click Next to skip.",
 		placement: "right",
 		showBack: true,
 	},
@@ -1459,7 +1457,7 @@ const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
 		targetId: "contacts-form-group",
 		title: "Contacts",
 		content:
-			"Link a person to this application — select an existing contact or click + to add a new one on the fly. Click Next to skip.",
+			"Link contacts to this application — select an existing contact or click + to add a new one on the fly. Click Next to skip.",
 		placement: "right",
 		waitForSelector: "#modal-edit-person",
 		autoAdvanceStepId: "speculative-contact-filling",
@@ -1581,7 +1579,7 @@ export const TOUR_STRUCTURE: TourDefinition[] = [
 	},
 	{
 		id: "scraping-filters",
-		title: "Creating & Managing Scraping Filters",
+		title: "Creating & Managing Alert Filters",
 		description: "Learn how to set up filters to control which job alerts get scraped into JAM.",
 		icon: "funnel",
 		steps: SCRAPING_FILTER_STEPS,

@@ -147,7 +147,7 @@ export const RunHistoryChart = ({
 			) : (
 				<div style={{ display: "flex" }}>
 					{logData && logData[0] && (
-						<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of scraped jobs" />
+						<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of job alerts" />
 					)}
 					{logData && logData[1] && (
 						<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />

@@ -115,7 +115,14 @@ def login(
             )
         else:
             error_code = result.error_code if result.error_code else status.HTTP_500_INTERNAL_SERVER_ERROR
-            raise HTTPException(status_code=error_code, detail=result.message)
+            if error_code == status.HTTP_429_TOO_MANY_REQUESTS:
+                message = (
+                    "Your account is not verified. Please check your emails for the verification link or "
+                    + result.message.lower()
+                )
+            else:
+                message = result.message
+            raise HTTPException(status_code=error_code, detail=message)
 
     # Block non-admin users from logging in during maintenance
     if not user.is_admin:

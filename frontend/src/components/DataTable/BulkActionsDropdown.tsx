@@ -4,7 +4,7 @@ import { BulkAction } from "./DataTable";
 
 interface BulkActionsDropdownProps {
 	selectedCount: number;
-	totalCount: number;
+	filteredCount: number;
 	actions: BulkAction[];
 	onAction: (action: Extract<BulkAction, { type?: "action" }>) => void;
 	onClearSelection: () => void;
@@ -13,17 +13,12 @@ interface BulkActionsDropdownProps {
 
 const BulkActionsDropdown = ({
 	selectedCount,
-	totalCount,
+	filteredCount,
 	actions,
 	onAction,
 	onClearSelection,
 	className,
 }: BulkActionsDropdownProps): JSX.Element => {
-	const header: string =
-		selectedCount > 0
-			? `${selectedCount} ${selectedCount === 1 ? "row" : "rows"} selected`
-			: `Apply to all ${totalCount} ${totalCount === 1 ? "item" : "items"}`;
-
 	return (
 		<Dropdown align="end" className={`bulk-actions-dropdown${className ? ` ${className}` : ""}`}>
 			<Dropdown.Toggle
@@ -43,7 +38,6 @@ const BulkActionsDropdown = ({
 				)}
 			</Dropdown.Toggle>
 			<Dropdown.Menu>
-				<Dropdown.Header>{header}</Dropdown.Header>
 				{actions.map((action: BulkAction, i: number): JSX.Element => {
 					if (action.type === "divider") return <Dropdown.Divider key={i} />;
 					if (action.type === "header") return <Dropdown.Header key={i}>{action.label}</Dropdown.Header>;
@@ -55,7 +49,9 @@ const BulkActionsDropdown = ({
 							onClick={(): void => onAction(action)}
 						>
 							{action.icon && <i className={`bi bi-${action.icon} me-2`}></i>}
-							{action.label}
+							{typeof action.label === "function"
+								? action.label(selectedCount, filteredCount)
+								: action.label}
 						</Dropdown.Item>
 					);
 				})}

@@ -992,8 +992,8 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 		<AccordionTable
 			title="Filtered Jobs"
 			data={data}
-			icon={getTableIcon("Scraped Jobs")}
-			helpText="Scraped Jobs that were filtered by this filter."
+			icon={getTableIcon("Job Alerts")}
+			helpText="Job Alerts that were filtered by this filter."
 		>
 			{(rows: ScrapedJobData[]) => <ScrapedJobsTableReadOnly data={rows} columns={param.columns} />}
 		</AccordionTable>

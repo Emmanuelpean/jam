@@ -5,7 +5,7 @@ import scrapedJobsPng from "../assets/screenshots/scraped-jobs.png";
 
 export default `<h4>Version 1.2.0</h4>
 
-<h5>Job Scraping Filters</h5>
+<h5>Job Alert Filters</h5>
 <ul>
     <li>Jobs that are scraped from job alert emails through TOAST can now be filtered out by creating custom filtering rules.</li>
     <li>Scraping filters can be easily managed in the Job Alerts table on your dashboard. Any job that matches one of your active filters will be automatically excluded from the table.</li>

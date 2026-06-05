@@ -136,7 +136,7 @@ export const RELEASE_SLIDES: Record<version, ReleaseSlide[]> = {
 			icon: "star-half",
 			title: "AI Job Rating",
 			description:
-				"Every scraped job is automatically rated by an LLM based on the qualifications " +
+				"Every job alert is automatically rated by an LLM based on the qualifications " +
 				"you set on your user page, helping you prioritise the best opportunities.",
 		},
 		{
@@ -157,7 +157,7 @@ export const RELEASE_SLIDES: Record<version, ReleaseSlide[]> = {
 	"1.2.0": [
 		{
 			icon: getEntityIcon("scrapingExclusionFilter"),
-			title: "Job Scraping Filters",
+			title: "Alert Filters",
 			description:
 				"Create custom filtering rules to exclude unwanted jobs from your job scraping results. " +
 				"Filter by company name, job title, or other parameters using flexible operators like Equals To or Contains. " +
@@ -200,7 +200,7 @@ export const RELEASE_SLIDES: Record<version, ReleaseSlide[]> = {
 			icon: "wrench",
 			title: "Quality of Life Improvements",
 			description:
-				"Data export now includes speculative applications and scraped jobs. " +
+				"Data export now includes speculative applications and job alerts. " +
 				"Job sources can be specified as Recruiter, Recruitment Company, Aggregator, or Other. " +
 				"Improved error messages with one-click support email. " +
 				"Rejected, Offered, and Withdrawn jobs are hidden from the Needs Chase table.",

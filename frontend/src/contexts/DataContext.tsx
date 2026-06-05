@@ -110,8 +110,8 @@ export const entityTypeToGenericName = (entityType: EntityType): string => {
 		keyword: "Tag",
 		setting: "Setting",
 		user: "User",
-		scrapedJob: "Scraped Job",
-		scrapingExclusionFilter: "Scraping Filter",
+		scrapedJob: "Job Alert",
+		scrapingExclusionFilter: "Alert Filter",
 		scrapingFavouriteFilter: "Favourite Filter",
 		speculativeApplication: "Speculative Application",
 		jobEmail: "Job Email",
@@ -164,7 +164,7 @@ export const entityTypeToName = <T extends EntityType>(
 		},
 		setting: (data: SettingData): string => data.name,
 		user: (data: UserData): string => data.email,
-		scrapedJob: (data: ScrapedJobData): string => data?.title || data?.url || "Scraped Job",
+		scrapedJob: (data: ScrapedJobData): string => data?.title || data?.url || "Job Alert",
 		scrapingExclusionFilter: (data: ScrapingFilterData): string => getScrapingFilterName(data),
 		scrapingFavouriteFilter: (data: ScrapingFilterData): string => getScrapingFilterName(data),
 		jobEmail: (data: JobEmailData): string => data?.subject || "Job Email",
@@ -426,11 +426,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			{ promise: keywordsApi.getAll(token), label: "Keywords" } as TypedFetchOperation<KeywordData[]>,
 			{
 				promise: scrapingExclusionFilterApi.getAll(token),
-				label: "Scraping Filters",
+				label: "Alert Filters",
 			} as TypedFetchOperation<ScrapingFilterData[]>,
 			{
 				promise: scrapingFavouriteFilterApi.getAll(token),
-				label: "Scraping Filters",
+				label: "Alert Filters",
 			} as TypedFetchOperation<ScrapingFilterData[]>,
 			{
 				promise: filesApi.getAll(token),

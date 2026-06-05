@@ -84,6 +84,45 @@ class TestAccountSettingsPage(BaseTest):
             "Invalid or expired token. Please request a new one by logging in and changing your email address."
         )
 
+    def test_email_change_within_rate_limit_shows_wait(self) -> None:
+        """Test that requesting a second email change within the rate limit window shows a 'Please wait' message."""
+
+        new_email = "newemail@email.com"
+        self.clear_test_emails()
+        self.set_text(self.user_settings_utils.current_password, self.user.plain_password)
+        self.set_text(self.user_settings_utils.email, new_email)
+        self.user_settings_utils.confirm()
+        self.assert_toast_message("Email change verification email sent successfully.")
+
+        self.driver.refresh()
+        self.set_text(self.user_settings_utils.current_password, self.user.plain_password)
+        self.set_text(self.user_settings_utils.email, new_email)
+        self.user_settings_utils.confirm()
+        self.assert_toast_message("Please wait")
+
+    def test_email_change_after_rate_limit_sends_new_email(self, session) -> None:
+        """Test that requesting an email change after the rate limit window sends a new email and shows a success message."""
+
+        new_email = "newemail@email.com"
+        self.clear_test_emails()
+        self.set_text(self.user_settings_utils.current_password, self.user.plain_password)
+        self.set_text(self.user_settings_utils.email, new_email)
+        self.user_settings_utils.confirm()
+        self.assert_toast_message("Email change verification email sent successfully.")
+
+        token = session.query(models.UserToken).filter(
+            models.UserToken.owner_id == self.user.id,
+            models.UserToken.token_type == models.TokenType.EMAIL_CHANGE,
+        ).first()
+        token.created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=3)
+        session.commit()
+
+        self.driver.refresh()
+        self.set_text(self.user_settings_utils.current_password, self.user.plain_password)
+        self.set_text(self.user_settings_utils.email, new_email)
+        self.user_settings_utils.confirm()
+        self.assert_toast_message("Email change verification email sent successfully.")
+
     def test_change_email_already_exist(self, test_users) -> None:
         """Test changing the email address"""
 

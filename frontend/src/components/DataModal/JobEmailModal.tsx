@@ -16,7 +16,7 @@ export const JobEmailModal = forwardRef<DataModalHandle<JobEmailData>, JamDataMo
 			{
 				type: "section",
 				key: "scraped-jobs",
-				title: "Scraped Jobs",
+				title: "Job Alerts",
 				icon: "bi-briefcase",
 				defaultExpanded: false,
 				fields: [

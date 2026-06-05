@@ -207,7 +207,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 			}
 			if (data?.is_failed) {
 				const reportLink = createReportLink(
-					"Scraped Job Error Report",
+					"Job Alert Error Report",
 					data?.scrape_error.map((e) => e.error).join("\n\n---\n\n") || null
 				);
 				result.push({

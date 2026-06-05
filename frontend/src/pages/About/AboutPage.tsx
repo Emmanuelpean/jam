@@ -47,7 +47,7 @@ const AboutPage = (): JSX.Element => {
 		{
 			icon: "bi-star-half",
 			title: "Job Rating",
-			description: "Automatically rate scraped jobs based on your preferences to prioritise applications",
+			description: "Automatically rate job alerts based on your preferences to prioritise applications",
 		},
 		{
 			icon: "bi-envelope-arrow-up",

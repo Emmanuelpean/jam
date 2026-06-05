@@ -55,7 +55,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 
 	const handleDismissExpired = useCallback(async (): Promise<void> => {
 		if (!token) return;
-		showProgress("Loading expired alerts, please wait.", "Loading expired alerts...");
+		showProgress("Loading expired alerts...");
 		try {
 			const response: ApiResponse<ScrapedJobData[]> = await scrapedJobApi.getExpired(token);
 			if (response.data.length === 0) {
@@ -74,7 +74,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 	const handleConfirmDismissExpired = useCallback(
 		async (ids: number[]): Promise<void> => {
 			setShowDismissExpiredModal(false);
-			showProgress("Dismissing expired alerts, please wait.", "Dismissing expired alerts…");
+			showProgress("Dismissing expired alerts…");
 			try {
 				await Promise.all(
 					ids.map(
@@ -222,15 +222,16 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 						: [
 								{
 									id: "bulk-action-delete",
-									label: "Delete",
+									label: (sel: number, total: number): string =>
+										sel > 0 ? `Delete ${sel} Selected` : `Delete All ${total} Visible`,
 									icon: "x-circle",
 									variant: "outline-danger",
 									onClick: (ids: number[]): Promise<void> => handleBulkDismiss(ids),
 								},
-								{ type: "divider" as const },
+								{ type: "divider" },
 								{
 									id: "bulk-action-delete-expired",
-									label: "Delete Expired",
+									label: "Delete All Expired",
 									icon: "calendar-x",
 									variant: "outline-danger",
 									onClick: (): Promise<void> => handleDismissExpired(),
@@ -246,13 +247,13 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 									variant="outline-primary"
 									onClick={(): void => setShowFilters(true)}
 									id={"scraping-filters-button"}
-									title="Scraping Filters"
+									title="Alert Filters"
 								>
 									{isMobile ? (
 										<i className="bi bi-funnel-fill"></i>
 									) : (
 										<>
-											Scraping Filters (
+											Alert Filters (
 											{
 												dataContext.scrapingExclusionFilters.filter(
 													(filter: ScrapingFilterData): boolean => filter.is_active
