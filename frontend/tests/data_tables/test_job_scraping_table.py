@@ -637,3 +637,80 @@ class TestBulkDeleteSelectedAction(BaseTest):
         self.db.expire_all()
         assert not self.db.query(models.ScrapedJob).filter_by(id=job1.id).first().is_active
         assert not self.db.query(models.ScrapedJob).filter_by(id=job2.id).first().is_active
+
+
+class TestJobEmailInteraction(BaseTest):
+
+    user_index = 0
+    page_url = "job-alerts/jobs"
+
+    def setup_function(self, request) -> None:
+        request.getfixturevalue("test_job_scraping_service_logs")
+        self.login()
+
+    def _open_email_and_expand_jobs_section(self, email: models.JobEmail) -> None:
+        """Switch to the emails tab, open the email modal, and expand the Job Alerts accordion."""
+        self.get_element("job-emails-header").click()
+        self.jobEmail_table_utils.table_row(email.id).click()
+        self.get_element("modal-view-jobEmail")
+        self.get_element("#scraped-jobs .accordion-button", By.CSS_SELECTOR).click()
+
+    def _click_job_row_in_modal(self, scraped_job: models.ScrapedJob) -> None:
+        """Click a scraped job row inside the email modal.
+
+        The same row ID exists in the (hidden) main alerts table, so scope
+        the lookup to the email modal to avoid finding the non-clickable copy.
+        """
+        selector = f"#modal-view-jobEmail #table-row-scrapedJob-{scraped_job.id}"
+        self.get_element(selector, By.CSS_SELECTOR).click()
+
+    def test_import_job_from_email_marks_imported_and_removes_from_alerts(self) -> None:
+        """Importing a job alert from within the email modal marks it as imported
+        and removes it from the job alerts table."""
+
+        scraped_job = self._make_scraped_job(title="Email Import Test Job")
+        email = self._make_job_email(scraped_jobs=[scraped_job])
+        self.driver.refresh()
+
+        self._open_email_and_expand_jobs_section(email)
+
+        self._click_job_row_in_modal(scraped_job)
+        self.scrapedJob_modal_utils.wait_for_import_modal()
+        self.scrapedJob_modal_utils.import_button().click()
+        self.scrapedJob_modal_utils.wait_for_import_modal_close()
+
+        self.db.expire_all()
+        assert self.db.query(models.ScrapedJob).filter_by(id=scraped_job.id).first().is_imported
+
+        self.jobEmail_modal_utils.cancel_button("view").click()
+        self.jobEmail_modal_utils.wait_for_view_modal_close()
+        self.get_element("scraped-jobs-header").click()
+        self.scrapedJob_table_utils.wait_for_table_load()
+
+        assert self.scrapedJob_table_utils.check_id_not_in_table(scraped_job.id)
+
+    def test_delete_job_from_email_deactivates_it_and_removes_from_alerts(self) -> None:
+        """Deleting a job alert from within the email modal deactivates it
+        and removes it from the job alerts table."""
+
+        scraped_job = self._make_scraped_job(title="Email Delete Test Job")
+        email = self._make_job_email(scraped_jobs=[scraped_job])
+        self.driver.refresh()
+
+        self._open_email_and_expand_jobs_section(email)
+
+        self._click_job_row_in_modal(scraped_job)
+        self.scrapedJob_modal_utils.wait_for_import_modal()
+        self.scrapedJob_modal_utils.delete_button("import").click()
+        self.delete_modal.confirm_button.click()
+        self.scrapedJob_modal_utils.wait_for_import_modal_close()
+
+        self.db.expire_all()
+        assert not self.db.query(models.ScrapedJob).filter_by(id=scraped_job.id).first().is_active
+
+        self.jobEmail_modal_utils.cancel_button("view").click()
+        self.jobEmail_modal_utils.wait_for_view_modal_close()
+        self.get_element("scraped-jobs-header").click()
+        self.scrapedJob_table_utils.wait_for_table_load()
+
+        assert self.scrapedJob_table_utils.check_id_not_in_table(scraped_job.id)

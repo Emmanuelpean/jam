@@ -18,7 +18,6 @@ export const ScrapedJobsPage = (): JSX.Element => {
 	const [alertsCount, setAlertsCount] = useState<number>(0);
 	const [emailsCount, setEmailsCount] = useState<number>(0);
 	const [alertsReload, setAlertsReload] = useState<number>(0);
-	const [emailsReload, setEmailsReload] = useState<number>(0);
 
 	const switchTab = (tab: ActiveTab): void => {
 		if (tab === "alerts") {
@@ -26,7 +25,6 @@ export const ScrapedJobsPage = (): JSX.Element => {
 			setAlertsReload((n: number): number => n + 1);
 		} else {
 			navigate("/job-alerts/emails", { replace: true });
-			setEmailsReload((n: number): number => n + 1);
 		}
 	};
 
@@ -61,11 +59,7 @@ export const ScrapedJobsPage = (): JSX.Element => {
 				/>
 			</div>
 			<div style={{ display: activeTab === "emails" ? "contents" : "none" }}>
-				<JobEmailTable
-					onTotalCountChange={setEmailsCount}
-					reloadTrigger={emailsReload}
-					queryParams={tourQueryParams}
-				/>
+				<JobEmailTable onTotalCountChange={setEmailsCount} queryParams={tourQueryParams} />
 			</div>
 		</>
 	);

@@ -1777,7 +1777,7 @@ class BaseTest(BaseUtils):
                 "intl.accept_languages": "en-GB",
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -2120,6 +2120,35 @@ class BaseTest(BaseUtils):
         self.db.commit()
         self.db.refresh(rating)
         return rating
+
+    def _make_job_email(
+        self,
+        scraped_jobs: list | None = None,
+        service_log: models.JobEmailScrapingServiceLog | None = None,
+        **kwargs,
+    ) -> models.JobEmail:
+        """Create and persist a JobEmail owned by the current test user."""
+
+        if service_log is None:
+            service_log = self._make_service_log()
+        defaults = {
+            "external_email_id": str(uuid.uuid4()),
+            "subject": "Test Job Alert Email",
+            "sender": "alerts@linkedin.com",
+            "date_received": datetime.now(timezone.utc),
+            "platform": "linkedin",
+            "body": "Test email body",
+            "owner_id": self.user.id,
+            "service_log_id": service_log.id,
+        }
+        defaults.update(kwargs)
+        email = models.JobEmail(**defaults)
+        if scraped_jobs:
+            email.jobs = scraped_jobs
+        self.db.add(email)
+        self.db.commit()
+        self.db.refresh(email)
+        return email
 
     def _create_setting(self, **kwargs) -> models.Setting:
         """Create a new setting entry"""
