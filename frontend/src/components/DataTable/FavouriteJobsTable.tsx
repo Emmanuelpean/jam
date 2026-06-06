@@ -3,29 +3,30 @@ import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../DataModal/JobModal";
 import { useViewport } from "../../contexts/ViewportContext";
+import { EnrichedJobData } from "../../services/schemas/DataTables";
 
 const FavouriteJobsTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTableProps): JSX.Element => {
 	const { isTablet, isSmallDesktop } = useViewport();
 
-	let defaultColumns: TableColumn[] =
+	let defaultColumns: TableColumn<EnrichedJobData>[] =
 		columns.length > 0
-			? columns
+			? (columns as TableColumn<EnrichedJobData>[])
 			: [
-					tableColumns.titleColumn(),
-					tableColumns.companyBadgeColumn(),
-					tableColumns.locationBadgeColumn(),
-					tableColumns.applicationStatusColumn(),
+					tableColumns.titleColumn<EnrichedJobData>(),
+					tableColumns.companyBadgeColumn<EnrichedJobData>(),
+					tableColumns.locationBadgeColumn<EnrichedJobData>(),
+					tableColumns.applicationStatusColumn<EnrichedJobData>(),
 				];
 
 	if (isSmallDesktop) {
-		defaultColumns = defaultColumns.filter((col: TableColumn): boolean => col.key !== "locationBadge");
+		defaultColumns = defaultColumns.filter((col: TableColumn<EnrichedJobData>): boolean => col.key !== "locationBadge");
 	}
 	if (isTablet) {
-		defaultColumns = defaultColumns.filter((col: TableColumn): boolean => col.key !== "companyBadge");
+		defaultColumns = defaultColumns.filter((col: TableColumn<EnrichedJobData>): boolean => col.key !== "companyBadge");
 	}
 
 	return (
-		<DataTable
+		<DataTable<EnrichedJobData>
 			entityType="job"
 			columns={defaultColumns}
 			data={data}

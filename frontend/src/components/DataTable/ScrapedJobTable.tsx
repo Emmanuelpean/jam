@@ -141,40 +141,40 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 		}),
 		[showPastDeadline, favouritesOnly]
 	);
-	let defaultColumns: TableColumn[] =
+	let defaultColumns: TableColumn<ScrapedJobData>[] =
 		columns.length > 0
-			? columns
+			? (columns as TableColumn<ScrapedJobData>[])
 			: [
-					tableColumns.titleColumn(),
-					tableColumns.scrapedCompanyColumn(),
-					tableColumns.locationBadgeColumn(),
-					tableColumns.salaryRangeColumn(),
-					tableColumns.overallScore(),
-					tableColumns.urlGenericColumn(),
-					tableColumns.platformColumn(),
-					tableColumns.scrapingStatusColumn(),
-					tableColumns.createdAtColumn({ label: "Date Received" }),
+					tableColumns.titleColumn<ScrapedJobData>(),
+					tableColumns.scrapedCompanyColumn<ScrapedJobData>(),
+					tableColumns.locationBadgeColumn<ScrapedJobData>(),
+					tableColumns.salaryRangeColumn<ScrapedJobData>(),
+					tableColumns.overallScore<ScrapedJobData>(),
+					tableColumns.urlGenericColumn<ScrapedJobData>(),
+					tableColumns.platformColumn<ScrapedJobData>(),
+					tableColumns.scrapingStatusColumn<ScrapedJobData>(),
+					tableColumns.createdAtColumn<ScrapedJobData>({ label: "Date Received" }),
 				];
 
 	if (isPreviewMode) {
 		defaultColumns = defaultColumns.filter(
-			(col: TableColumn): boolean => !["url", "is_processed"].includes(col.key)
+			(col: TableColumn<ScrapedJobData>): boolean => !["url", "is_processed"].includes(col.key)
 		);
 	}
 	if (dashboardMode && isTablet) {
 		defaultColumns = defaultColumns.filter(
-			(col: TableColumn): boolean => !["location", "url", "created_at"].includes(col.key)
+			(col: TableColumn<ScrapedJobData>): boolean => !["location", "url", "created_at"].includes(col.key)
 		);
 	}
 	if (dashboardMode && isMobile) {
 		defaultColumns = defaultColumns.filter(
-			(col: TableColumn): boolean => !["company", "is_processed"].includes(col.key)
+			(col: TableColumn<ScrapedJobData>): boolean => !["company", "is_processed"].includes(col.key)
 		);
 	}
 
 	return (
 		<>
-			<DataTable
+			<DataTable<ScrapedJobData>
 				ref={tableRef}
 				title={title}
 				entityType="scrapedJob"

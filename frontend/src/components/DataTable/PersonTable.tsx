@@ -2,21 +2,22 @@ import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { PersonModal } from "../DataModal/PersonModal";
+import { PersonData } from "../../services/schemas/DataTables";
 
 const PersonTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTableProps): JSX.Element => {
-	const defaultColumns: TableColumn[] =
+	const defaultColumns: TableColumn<PersonData>[] =
 		columns.length > 0
-			? columns
+			? (columns as TableColumn<PersonData>[])
 			: [
-					tableColumns.personNameColumn(),
-					tableColumns.roleColumn(),
-					tableColumns.emailColumn(),
-					tableColumns.phoneColumn(),
-					tableColumns.linkedinUrlColumn(),
+					tableColumns.personNameColumn<PersonData>(),
+					tableColumns.roleColumn<PersonData>(),
+					tableColumns.emailColumn<PersonData>(),
+					tableColumns.phoneColumn<PersonData>(),
+					tableColumns.linkedinUrlColumn<PersonData>(),
 				];
 
 	return (
-		<DataTable
+		<DataTable<PersonData>
 			entityType="person"
 			data={data}
 			columns={defaultColumns}

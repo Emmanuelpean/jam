@@ -287,46 +287,55 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [error, setError] = useState<ApiError | null>(null);
 
 	const interviews: EnrichedInterviewData[] = useMemo<EnrichedInterviewData[]>((): EnrichedInterviewData[] => {
-		// Enrich interviews with their sequence number per job
+		const byJobId = new Map<number, InterviewData[]>();
+		for (const interview of rawInterviews) {
+			if (!byJobId.has(interview.job_id)) byJobId.set(interview.job_id, []);
+			byJobId.get(interview.job_id)!.push(interview);
+		}
+		for (const [jobId, group] of byJobId) {
+			byJobId.set(jobId, sortByKey(group, "date", true));
+		}
 		return rawInterviews.map((interview: InterviewData): EnrichedInterviewData => {
-			let jobInterviews: InterviewData[] = rawInterviews.filter(
-				(i: InterviewData): boolean => i.job_id === interview.job_id
-			);
-			jobInterviews = sortByKey(jobInterviews, "date", true);
-			const index: number = jobInterviews.findIndex((i: InterviewData): boolean => i.id === interview.id);
-			return {
-				...interview,
-				number: index + 1,
-			};
+			const sorted: InterviewData[] = byJobId.get(interview.job_id)!;
+			const index: number = sorted.findIndex((i: InterviewData): boolean => i.id === interview.id);
+			return { ...interview, number: index + 1 };
 		});
 	}, [rawInterviews]);
 
 	const jobApplicationUpdates: EnrichedJobApplicationUpdateData[] = useMemo<
 		EnrichedJobApplicationUpdateData[]
 	>((): EnrichedJobApplicationUpdateData[] => {
-		// Enrich updates with their sequence number per job
+		const byJobId = new Map<number, JobApplicationUpdateData[]>();
+		for (const update of rawJobApplicationUpdates) {
+			if (!byJobId.has(update.job_id)) byJobId.set(update.job_id, []);
+			byJobId.get(update.job_id)!.push(update);
+		}
+		for (const [jobId, group] of byJobId) {
+			byJobId.set(jobId, sortByKey(group, "date", true));
+		}
 		return rawJobApplicationUpdates.map((update: JobApplicationUpdateData): EnrichedJobApplicationUpdateData => {
-			let jobUpdates: JobApplicationUpdateData[] = rawJobApplicationUpdates.filter(
-				(u: JobApplicationUpdateData): boolean => u.job_id === update.job_id
-			);
-			jobUpdates = sortByKey(jobUpdates, "date", true);
-			const index: number = jobUpdates.findIndex((u: JobApplicationUpdateData): boolean => u.id === update.id);
-			return {
-				...update,
-				number: index + 1,
-			};
+			const sorted: JobApplicationUpdateData[] = byJobId.get(update.job_id)!;
+			const index: number = sorted.findIndex((u: JobApplicationUpdateData): boolean => u.id === update.id);
+			return { ...update, number: index + 1 };
 		});
 	}, [rawJobApplicationUpdates]);
 
 	const jobs: EnrichedJobData[] = useMemo<EnrichedJobData[]>((): EnrichedJobData[] => {
-		// Enrich jobs with calculated fields
+		const interviewsByJobId = new Map<number, InterviewData[]>();
+		for (const interview of rawInterviews) {
+			if (!interviewsByJobId.has(interview.job_id)) interviewsByJobId.set(interview.job_id, []);
+			interviewsByJobId.get(interview.job_id)!.push(interview);
+		}
+		const updatesByJobId = new Map<number, JobApplicationUpdateData[]>();
+		for (const update of rawJobApplicationUpdates) {
+			if (!updatesByJobId.has(update.job_id)) updatesByJobId.set(update.job_id, []);
+			updatesByJobId.get(update.job_id)!.push(update);
+		}
+		const companiesById = new Map<number, CompanyData>(companies.map((c: CompanyData) => [c.id, c]));
+
 		return rawJobs.map((job: JobData): EnrichedJobData => {
-			const jobInterviews: InterviewData[] = rawInterviews.filter(
-				(i: InterviewData): boolean => i.job_id === job.id
-			);
-			const jobUpdates: JobApplicationUpdateData[] = rawJobApplicationUpdates.filter(
-				(u: JobApplicationUpdateData): boolean => u.job_id === job.id
-			);
+			const jobInterviews: InterviewData[] = interviewsByJobId.get(job.id) ?? [];
+			const jobUpdates: JobApplicationUpdateData[] = updatesByJobId.get(job.id) ?? [];
 
 			// Calculate last_update_date
 			let lastUpdateDate: Date | null = null;
@@ -386,9 +395,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			// Create the job name from the title and the company name
 			let jobName: string = job.title;
 			if (job.company_id) {
-				const company: CompanyData | undefined = companies.find(
-					(c: CompanyData): boolean => c.id === job.company_id
-				);
+				const company: CompanyData | undefined = companiesById.get(job.company_id);
 				if (company) {
 					jobName = `${job.title} (${company.name})`;
 				}
@@ -672,10 +679,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 	useEffect((): void => {
 		if (!token || !currentUser) return;
-		void tourApi
-			.clearAll(token)
-			.catch((): void => {})
-			.then((): Promise<void> => fetchAllData());
+		void Promise.all([tourApi.clearAll(token).catch(() => {}), fetchAllData()]);
 	}, [token, currentUser?.is_admin]);
 
 	return (
@@ -701,5 +705,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 export const useDataContext = (): DataContextValue => {
 	const context: DataContextValue | undefined = useContext(DataContext);
 	if (!context) throw new Error("useDataContext must be used within a DataProvider");
+	console.log(context.jobs)
 	return context;
 };

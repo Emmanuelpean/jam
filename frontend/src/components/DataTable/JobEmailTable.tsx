@@ -2,6 +2,7 @@ import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobEmailModal } from "../DataModal/JobEmailModal";
+import { JobEmailData } from "../../services/schemas/Services";
 
 interface JobEmailTableProps extends DataTableProps {
 	queryParams?: Record<string, string>;
@@ -14,19 +15,19 @@ const JobEmailTable: React.FC<JobEmailTableProps> = ({
 	reloadTrigger,
 	queryParams,
 }: JobEmailTableProps): JSX.Element => {
-	const defaultColumns: TableColumn[] =
+	const defaultColumns: TableColumn<JobEmailData>[] =
 		columns.length > 0
-			? columns
+			? (columns as TableColumn<JobEmailData>[])
 			: [
-					tableColumns.subjectColumn(),
-					tableColumns.platformColumn(),
-					tableColumns.alertNameColumn(),
-					tableColumns.jobsFoundColumn(),
-					tableColumns.dateReceivedColumn(),
+					tableColumns.subjectColumn<JobEmailData>(),
+					tableColumns.platformColumn<JobEmailData>(),
+					tableColumns.alertNameColumn<JobEmailData>(),
+					tableColumns.jobsFoundColumn<JobEmailData>(),
+					tableColumns.dateReceivedColumn<JobEmailData>(),
 				];
 
 	return (
-		<DataTable
+		<DataTable<JobEmailData>
 			title={title}
 			entityType="jobEmail"
 			onTotalCountChange={onTotalCountChange}

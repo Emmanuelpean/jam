@@ -3,6 +3,7 @@ import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { InterviewModal } from "../DataModal/InterviewModal";
 import { useTour } from "../../contexts/TourContext";
+import { EnrichedInterviewData } from "../../services/schemas/DataTables";
 
 interface InterviewsTableProps extends DataTableProps {
 	jobId?: number;
@@ -14,20 +15,20 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 	columns = [],
 	showAdd = true,
 }: InterviewsTableProps): JSX.Element => {
-	const defaultColumns: TableColumn[] =
+	const defaultColumns: TableColumn<EnrichedInterviewData>[] =
 		columns.length > 0
-			? columns
+			? (columns as TableColumn<EnrichedInterviewData>[])
 			: [
-					tableColumns.dateColumn(),
-					tableColumns.interviewTypeColumn(),
-					tableColumns.locationBadgeColumn(),
-					tableColumns.noteColumn(),
+					tableColumns.dateColumn<EnrichedInterviewData>(),
+					tableColumns.interviewTypeColumn<EnrichedInterviewData>(),
+					tableColumns.locationBadgeColumn<EnrichedInterviewData>(),
+					tableColumns.noteColumn<EnrichedInterviewData>(),
 				];
 
 	const { allowedContextMenuActions } = useTour();
 
 	return (
-		<DataTable
+		<DataTable<EnrichedInterviewData>
 			entityType="interview"
 			data={data}
 			columns={defaultColumns}

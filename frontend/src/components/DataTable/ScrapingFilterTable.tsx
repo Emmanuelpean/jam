@@ -30,15 +30,15 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	const contentRef = useRef<HTMLDivElement>(null);
 	const isExclusion: boolean = variant === "exclusion";
 
-	const defaultColumns: TableColumn[] =
+	const defaultColumns: TableColumn<ScrapingFilterData>[] =
 		columns.length > 0
-			? columns
+			? (columns as TableColumn<ScrapingFilterData>[])
 			: [
-					tableColumns.filterTypeColumn(),
-					tableColumns.filterOperatorColumn(),
-					tableColumns.valueColumn(),
-					tableColumns.caseSensitiveColumn(),
-					...(isExclusion ? [tableColumns.filteredJobCountColumn()] : []),
+					tableColumns.filterTypeColumn<ScrapingFilterData>(),
+					tableColumns.filterOperatorColumn<ScrapingFilterData>(),
+					tableColumns.valueColumn<ScrapingFilterData>(),
+					tableColumns.caseSensitiveColumn<ScrapingFilterData>(),
+					...(isExclusion ? [tableColumns.filteredJobCountColumn<ScrapingFilterData>()] : []),
 				];
 
 	const filters: ScrapingFilterData[] = isExclusion

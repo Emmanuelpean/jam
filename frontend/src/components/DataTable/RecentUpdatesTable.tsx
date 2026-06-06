@@ -2,21 +2,22 @@ import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../DataModal/JobModal";
+import { EnrichedJobData } from "../../services/schemas/DataTables";
 
 const RecentUpdatesTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTableProps): JSX.Element => {
-	const defaultColumns: TableColumn[] =
+	const defaultColumns: TableColumn<EnrichedJobData>[] =
 		columns.length > 0
-			? columns
+			? (columns as TableColumn<EnrichedJobData>[])
 			: [
-					tableColumns.titleColumn(),
-					tableColumns.companyBadgeColumn(),
-					tableColumns.applicationStatusColumn(),
-					tableColumns.lastUpdateTypeColumn(),
-					tableColumns.daysSinceLastUpdateColumn(),
+					tableColumns.titleColumn<EnrichedJobData>(),
+					tableColumns.companyBadgeColumn<EnrichedJobData>(),
+					tableColumns.applicationStatusColumn<EnrichedJobData>(),
+					tableColumns.lastUpdateTypeColumn<EnrichedJobData>(),
+					tableColumns.daysSinceLastUpdateColumn<EnrichedJobData>(),
 				];
 
 	return (
-		<DataTable
+		<DataTable<EnrichedJobData>
 			entityType="job"
 			columns={defaultColumns}
 			data={data}

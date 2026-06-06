@@ -15,10 +15,10 @@ const FilesPage = (): JSX.Element => {
 	const cvCount: number = files.filter((f: FileData): boolean => f.file_type === "cv").length;
 	const coverLetterCount: number = files.filter((f: FileData): boolean => f.file_type === "cover_letter").length;
 
-	const columns: TableColumn[] = [
-		tableColumns.filenameColumn(),
-		tableColumns.fileUsagesColumn(),
-		tableColumns.createdAtColumn(),
+	const columns: TableColumn<FileData>[] = [
+		tableColumns.filenameColumn<FileData>(),
+		tableColumns.fileUsagesColumn<FileData>(),
+		tableColumns.createdAtColumn<FileData>(),
 	];
 
 	return (

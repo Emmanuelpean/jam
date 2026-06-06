@@ -128,6 +128,34 @@ export const getScrapingFilterName = (scrapingFilter: ScrapingFilterData): strin
 	return type + " " + operator + ' "' + scrapingFilter.value + '"';
 };
 
+export const getInterviewCount = (data: JamData, dataContext: DataContextValue): number => {
+	const interviews: EnrichedInterviewData[] = filterByKey(dataContext.interviews, "job_id", data.id);
+	return interviews.length;
+};
+
+export const getJobApplicationUpdateCount = (data: JamData, dataContext: DataContextValue): number => {
+	const interviews: EnrichedJobApplicationUpdateData[] = filterByKey(
+		dataContext.jobApplicationUpdates,
+		"job_id",
+		data.id
+	);
+	return interviews.length;
+};
+
+export const getTotalInterviewCount = (dataContext: DataContextValue): number => {
+	const numbers: number[] = dataContext.interviews.map(
+		(interview: EnrichedInterviewData): number => interview.number
+	);
+	return Math.max(...numbers);
+};
+
+export const getTotalJobApplicationUpdateCount = (dataContext: DataContextValue): number => {
+	const numbers: number[] = dataContext.jobApplicationUpdates.map(
+		(update: EnrichedJobApplicationUpdateData): number => update.number
+	);
+	return Math.max(...numbers);
+};
+
 export const renderFunctions = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
@@ -524,19 +552,11 @@ export const renderFunctions = {
 	},
 
 	interviewCount: (param: RenderParams): number => {
-		const ctx: DataContextValue = param.dataContext;
-		const interviews: EnrichedInterviewData[] = filterByKey(ctx.interviews, "job_id", param.item?.id);
-		return interviews.length;
+		return getInterviewCount(param.item, param.dataContext);
 	},
 
 	jobApplicationUpdateCount: (param: RenderParams): number => {
-		const ctx: DataContextValue = param.dataContext;
-		const updates: EnrichedJobApplicationUpdateData[] = filterByKey(
-			ctx.jobApplicationUpdates,
-			"job_id",
-			param.item?.id
-		);
-		return updates.length;
+		return getJobApplicationUpdateCount(param.item, param.dataContext);
 	},
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------

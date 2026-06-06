@@ -19,7 +19,7 @@ const FailedScrapedJobsTable: React.FC<FailedScrapedJobsTableProps> = ({
 }: FailedScrapedJobsTableProps): JSX.Element => {
 	const { isTablet } = useViewport();
 
-	const errorTypeColumn: TableColumn = useMemo(
+	const errorTypeColumn: TableColumn<ScrapedJobData> = useMemo(
 		() => ({
 			key: "is_failed",
 			label: "Error Type",
@@ -42,22 +42,22 @@ const FailedScrapedJobsTable: React.FC<FailedScrapedJobsTableProps> = ({
 		[]
 	);
 
-	let columns: TableColumn[] = [
-		tableColumns.titleColumn(),
-		tableColumns.scrapedCompanyColumn(),
+	let columns: TableColumn<ScrapedJobData>[] = [
+		tableColumns.titleColumn<ScrapedJobData>(),
+		tableColumns.scrapedCompanyColumn<ScrapedJobData>(),
 		errorTypeColumn,
-		tableColumns.platformColumn(),
-		tableColumns.createdAtColumn({ label: "Date Received" }),
+		tableColumns.platformColumn<ScrapedJobData>(),
+		tableColumns.createdAtColumn<ScrapedJobData>({ label: "Date Received" }),
 	];
 
 	if (dashboardMode && isTablet) {
-		columns = columns.filter((col: TableColumn): boolean => !["company"].includes(col.key));
+		columns = columns.filter((col: TableColumn<ScrapedJobData>): boolean => !["company"].includes(col.key));
 	}
 
 	const queryParams = useMemo(() => ({ errors_only: "true" }), []);
 
 	return (
-		<DataTable
+		<DataTable<ScrapedJobData>
 			title={title}
 			entityType="scrapedJob"
 			onTotalCountChange={onTotalCountChange}

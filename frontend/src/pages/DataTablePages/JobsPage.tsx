@@ -6,7 +6,7 @@ import { JobModal } from "../../components/DataModal/JobModal";
 import { ExtensionJobData, ExtensionJobModal } from "../../components/DataModal/ExtensionJobModal";
 import { DataModalHandle } from "../../components/DataModal/DataModal";
 import { TableColumn, tableColumns } from "../../components/rendering/view/TableColumns";
-import { JobData } from "../../services/schemas/DataTables";
+import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
 
 const EXT_PARAMS: string[] = [
 	"ext_title",
@@ -75,14 +75,14 @@ const JobsPage = (): JSX.Element => {
 		navigate(location.pathname, { replace: true, state: {} });
 	}, [location.state?.quickAdd]); // eslint-disable-line react-hooks/exhaustive-deps
 
-	const columns: TableColumn[] = [
-		tableColumns.titleColumn(),
-		tableColumns.companyBadgeColumn(),
-		tableColumns.locationBadgeColumn(),
-		tableColumns.urlGenericColumn(),
-		tableColumns.salaryRangeColumn(),
-		tableColumns.personalRatingColumn(),
-		tableColumns.applicationStatusColumn({
+	const columns: TableColumn<EnrichedJobData>[] = [
+		tableColumns.titleColumn<EnrichedJobData>(),
+		tableColumns.companyBadgeColumn<EnrichedJobData>(),
+		tableColumns.locationBadgeColumn<EnrichedJobData>(),
+		tableColumns.urlGenericColumn<EnrichedJobData>(),
+		tableColumns.salaryRangeColumn<EnrichedJobData>(),
+		tableColumns.personalRatingColumn<EnrichedJobData>(),
+		tableColumns.applicationStatusColumn<EnrichedJobData>({
 			sidebarExtra: (
 				<div className="form-check form-switch mt-2">
 					<input
@@ -98,12 +98,12 @@ const JobsPage = (): JSX.Element => {
 				</div>
 			),
 		}),
-		tableColumns.createdAtColumn(),
+		tableColumns.createdAtColumn<EnrichedJobData>(),
 	];
 
 	return (
 		<>
-			<DataTable
+			<DataTable<EnrichedJobData>
 				ref={tableRef}
 				entityType="job"
 				initialSortConfig={{ key: "created_at", direction: "desc" }}

@@ -4,7 +4,7 @@ import { useFormFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
-import { CompanyData, CompanyDataTransform } from "../../services/schemas/DataTables";
+import { CompanyData, CompanyDataTransform, EnrichedJobData } from "../../services/schemas/DataTables";
 
 export const CompanyModal = forwardRef<DataModalHandle<CompanyData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
@@ -27,22 +27,22 @@ export const CompanyModal = forwardRef<DataModalHandle<CompanyData>, JamDataModa
 			view: [modalViewFields.name({ isTitle: true }), modalViewFields.url(), [modalViewFields.description()]],
 		};
 
-		const jobTableColumns: TableColumn[] = [
-			tableColumns.titleColumn(),
-			tableColumns.locationBadgeColumn(),
-			tableColumns.applicationStatusColumn(),
-			tableColumns.createdAtColumn(),
+		const jobTableColumns: TableColumn<EnrichedJobData>[] = [
+			tableColumns.titleColumn<EnrichedJobData>(),
+			tableColumns.locationBadgeColumn<EnrichedJobData>(),
+			tableColumns.applicationStatusColumn<EnrichedJobData>(),
+			tableColumns.createdAtColumn<EnrichedJobData>(),
 		];
 		const additionalFields: ModalViewField[] = [
 			modalViewFields.accordionJobTableCompany({
-				columns: jobTableColumns,
+				columns: jobTableColumns as TableColumn[],
 				helpText: "Jobs from this company.",
 			}),
 			modalViewFields.accordionPersonTable({
 				helpText: "Persons working at this company.",
 			}),
 			modalViewFields.accordionRecruitedJobTableCompany({
-				columns: jobTableColumns,
+				columns: jobTableColumns as TableColumn[],
 				helpText: "Jobs shared with you by this recruitment company.",
 			}),
 		];

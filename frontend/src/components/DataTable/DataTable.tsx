@@ -90,7 +90,7 @@ export interface GenericTableProps<T extends JamData = JamData> {
 	endpoint?: string;
 
 	// Table configuration
-	columns?: TableColumn[];
+	columns?: TableColumn<T>[];
 	initialSortConfig?: Partial<SortConfig>;
 	menuItems?: string[] | ((item: T) => string[]);
 	rowMode?: (item: T) => "default" | "import";
@@ -183,10 +183,10 @@ function DataTableComponent<T extends JamData>(
 ): JSX.Element {
 	const { token } = useAuth();
 	const { isTablet, isMobile } = useViewport();
-	const columnConfig: ColumnConfig = useColumnConfig(entityType, enableColumnConfig ? columns : undefined);
+	const columnConfig: ColumnConfig = useColumnConfig(entityType, enableColumnConfig ? (columns as TableColumn[]) : undefined);
 	const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
 	const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-	const effectiveColumns: TableColumn[] = enableColumnConfig ? columnConfig.visibleColumns : columns;
+	const effectiveColumns: TableColumn<T>[] = (enableColumnConfig ? columnConfig.visibleColumns : columns) as TableColumn<T>[];
 	const columnSidebarRef = useRef<HTMLDivElement>(null);
 	const dataContext: DataContextValue = useDataContext();
 	const {
@@ -197,7 +197,7 @@ function DataTableComponent<T extends JamData>(
 		filterSidebarRef,
 		filterPills,
 		activeFilterCount,
-	} = useTableFilters({ enableColumnConfig, columnConfig, effectiveColumns, dataContext });
+	} = useTableFilters({ enableColumnConfig, columnConfig, effectiveColumns: effectiveColumns as TableColumn[], dataContext });
 	const modalRef = useRef<DataModalHandle<T>>(null);
 	const openViewModal = (item: T): void | undefined => modalRef.current?.showView(item);
 	const openEditModal = (item: T): void | undefined => modalRef.current?.showEdit(item);
@@ -383,9 +383,9 @@ function DataTableComponent<T extends JamData>(
 		const searchTermLower: string = searchTerm.toLowerCase();
 
 		// Filter by search term
-		if (searchTermLower && effectiveColumns.some((col: TableColumn): boolean | undefined => col.searchable)) {
+		if (searchTermLower && effectiveColumns.some((col: TableColumn<T>): boolean | undefined => col.searchable)) {
 			filteredData = filteredData.filter((item: T): boolean => {
-				return effectiveColumns.some((column: TableColumn): boolean | undefined => {
+				return effectiveColumns.some((column: TableColumn<T>): boolean | undefined => {
 					if (!column.searchable) return false;
 					let value: string | null | Date | number;
 					if (column.searchFields) {
@@ -407,7 +407,7 @@ function DataTableComponent<T extends JamData>(
 			filteredData = applyFilters(
 				filteredData,
 				filters,
-				enableColumnConfig ? columnConfig.allColumns : effectiveColumns,
+				enableColumnConfig ? columnConfig.allColumns : (effectiveColumns as TableColumn[]),
 				dataContext
 			) as T[];
 		}
@@ -415,8 +415,8 @@ function DataTableComponent<T extends JamData>(
 		// Sort data
 		if (sortConfig.key) {
 			filteredData.sort((a: T, b: T): 0 | 1 | -1 => {
-				const column: TableColumn | undefined = effectiveColumns.find(
-					(col: TableColumn): boolean => col.key === sortConfig.key
+				const column: TableColumn<T> | undefined = effectiveColumns.find(
+					(col: TableColumn<T>): boolean => col.key === sortConfig.key
 				);
 				let aValue: any, bValue: any;
 				if (!column) return 0;
@@ -959,7 +959,7 @@ function DataTableComponent<T extends JamData>(
 												</th>
 											)}
 											{effectiveColumns.map(
-												(column: TableColumn): JSX.Element => (
+												(column: TableColumn<T>): JSX.Element => (
 													<th key={column.key} style={compact ? { padding: "0.5rem" } : {}}>
 														<div
 															className="d-flex align-items-center justify-content-between"
@@ -1041,7 +1041,7 @@ function DataTableComponent<T extends JamData>(
 														</td>
 													)}
 													{effectiveColumns.map(
-														(column: TableColumn, columnIndex: number): JSX.Element => (
+														(column: TableColumn<T>, columnIndex: number): JSX.Element => (
 															<td
 																key={column.key}
 																className={`align-middle${columnIndex === 0 && rowIndicator && rowIndicator(item) ? " table-cell--new" : ""}`}

@@ -41,5 +41,5 @@ class Owned(CommonBase):
     -----------
     - `owner_id` (int): Foreign key linking the record to the user table."""
 
-    owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
     is_tour = Column(Boolean, nullable=False, server_default=text("false"))

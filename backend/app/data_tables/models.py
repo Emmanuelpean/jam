@@ -474,7 +474,7 @@ class JobApplicationUpdate(Owned, Base):
     type = Column(String, nullable=False)
 
     # Foreign keys
-    job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False)
+    job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Relationships
     job = relationship("Job", back_populates="updates")

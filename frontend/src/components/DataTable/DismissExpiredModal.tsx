@@ -2,7 +2,7 @@ import React, { JSX } from "react";
 import { Modal } from "react-bootstrap";
 import JamModal from "../JamModal/JamModal";
 import { DataTable } from "./DataTable";
-import { tableColumns } from "../rendering/view/TableColumns";
+import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../DataModal/ScrapedJobModal";
 import { ScrapedJobData } from "../../services/schemas/Services";
 import { ActionButton } from "../rendering/form/ActionButton";
@@ -20,13 +20,13 @@ const DismissExpiredModal: React.FC<DismissExpiredModalProps> = ({
 	onConfirm,
 	onHide,
 }: DismissExpiredModalProps): JSX.Element => {
-	const columns = [
-		tableColumns.titleColumn(),
-		tableColumns.scrapedCompanyColumn(),
-		tableColumns.platformColumn(),
-		tableColumns.applicationDeadline(),
-		tableColumns.expiredReasonColumn(),
-		tableColumns.scrapingStatusColumn(),
+	const columns: TableColumn<ScrapedJobData>[] = [
+		tableColumns.titleColumn<ScrapedJobData>(),
+		tableColumns.scrapedCompanyColumn<ScrapedJobData>(),
+		tableColumns.platformColumn<ScrapedJobData>(),
+		tableColumns.applicationDeadline<ScrapedJobData>(),
+		tableColumns.expiredReasonColumn<ScrapedJobData>(),
+		tableColumns.scrapingStatusColumn<ScrapedJobData>(),
 	];
 
 	return (

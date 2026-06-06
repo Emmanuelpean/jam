@@ -1,9 +1,17 @@
 import { ReactNode } from "react";
-import { renderFunctions, RenderParams, ViewField } from "./ViewRenders";
+import {
+	getInterviewCount,
+	getJobApplicationUpdateCount,
+	getTotalInterviewCount,
+	getTotalJobApplicationUpdateCount,
+	renderFunctions,
+	RenderParams,
+	ViewField,
+} from "./ViewRenders";
 import { toDdMmYyyy } from "../../../utils/TimeUtils";
 import { DataContextValue, JamData } from "../../../contexts/DataContext";
 import { findItemById } from "../../../utils/Utils";
-import { CompanyData, EnrichedJobData, PersonData } from "../../../services/schemas/DataTables";
+import { AggregatorData, CompanyData, EnrichedJobData, JobData, KeywordData, PersonData } from "../../../services/schemas/DataTables";
 import { FilterConfig } from "../../DataTable/FilterTypes";
 import {
 	applicationStatusOptions,
@@ -18,8 +26,8 @@ export interface TableColumn<T extends JamData = JamData> extends ViewField {
 	searchable?: boolean;
 	type?: string;
 	minWidth?: string;
-	sortField?: string | ((item: any, dataContext: DataContextValue) => string | number | null);
-	searchFields?: string | ((item: any, dataContext: DataContextValue) => string | null);
+	sortField?: string | ((item: T, dataContext: DataContextValue) => string | number | null);
+	searchFields?: string | ((item: T, dataContext: DataContextValue) => string | null);
 	filterConfig?: FilterConfig;
 	sidebarExtra?: ReactNode;
 
@@ -618,7 +626,7 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	KeywordBadgeColumn: <T extends JamData & { keywords: number[] }>(
+	KeywordBadgeColumn: <T extends JamData & { keywords: number[]; source_aggregator_id: number | null }>(
 		overrides: ColumnOverrides<T> = {}
 	): TableColumn<T> => ({
 		key: "keywords",
@@ -750,110 +758,129 @@ export const tableColumns = {
 
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
 
-	jobCountCompanyColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
+	jobCountCompanyColumn: <T extends CompanyData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "jobs",
 		label: "Jobs",
 		sortable: true,
 		searchable: false,
-		sortField: (item, ctx) => ctx.jobs.filter((j: any) => j.company_id === item.id).length,
-		render: (param: RenderParams) => renderFunctions._jobCount(param, "company_id"),
+		sortField: (item: T, ctx: DataContextValue): number =>
+			ctx.jobs.filter((j: JobData): boolean => j.company_id === item.id).length,
+		render: (param: RenderParams): number => renderFunctions._jobCount(param, "company_id"),
 		filterConfig: {
 			type: "number",
 			min: 0,
 			step: 1,
 			display: "slider",
-			max: (ctx: DataContextValue) =>
-				maxCount(ctx.companies, (c) => ctx.jobs.filter((j: any) => j.company_id === c.id).length),
-		},
-		...overrides,
-	}),
-
-	jobCountAggregatorColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
-		key: "jobs",
-		label: "Jobs",
-		sortable: true,
-		searchable: false,
-		sortField: (item, ctx) => ctx.jobs.filter((j: any) => j.source_aggregator_id === item.id).length,
-		render: (param: RenderParams) => renderFunctions._jobCount(param, "source_aggregator_id"),
-		filterConfig: {
-			type: "number",
-			min: 0,
-			step: 1,
-			display: "slider",
-			max: (ctx: DataContextValue) =>
-				maxCount(ctx.aggregators, (a) => ctx.jobs.filter((j: any) => j.source_aggregator_id === a.id).length),
-		},
-		...overrides,
-	}),
-
-	jobCountKeywordColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
-		key: "jobs",
-		label: "Jobs",
-		sortable: true,
-		searchable: false,
-		sortField: (item, ctx) =>
-			ctx.jobs.filter((j: any) => Array.isArray(j.keywords) && j.keywords.includes(item.id)).length,
-		render: (param: RenderParams) => renderFunctions._jobCount(param, "keywords"),
-		filterConfig: {
-			type: "number",
-			min: 0,
-			step: 1,
-			display: "slider",
-			max: (ctx: DataContextValue) =>
+			max: (ctx: DataContextValue): number =>
 				maxCount(
-					ctx.keywords,
-					(k) => ctx.jobs.filter((j: any) => Array.isArray(j.keywords) && j.keywords.includes(k.id)).length
+					ctx.companies,
+					(c: CompanyData): number => ctx.jobs.filter((j: JobData): boolean => j.company_id === c.id).length
 				),
 		},
 		...overrides,
 	}),
 
-	jobApplicationCountAggregatorColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
+	jobCountAggregatorColumn: <T extends AggregatorData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
+		key: "jobs",
+		label: "Jobs",
+		sortable: true,
+		searchable: false,
+		sortField: (item: T, ctx: DataContextValue): number =>
+			ctx.jobs.filter((j: JobData): boolean => j.source_aggregator_id === item.id).length,
+		render: (param: RenderParams): number => renderFunctions._jobCount(param, "source_aggregator_id"),
+		filterConfig: {
+			type: "number",
+			min: 0,
+			step: 1,
+			display: "slider",
+			max: (ctx: DataContextValue): number =>
+				maxCount(
+					ctx.aggregators,
+					(a: AggregatorData): number =>
+						ctx.jobs.filter((j: JobData): boolean => j.source_aggregator_id === a.id).length
+				),
+		},
+		...overrides,
+	}),
+
+	jobCountKeywordColumn: <T extends KeywordData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
+		key: "jobs",
+		label: "Jobs",
+		sortable: true,
+		searchable: false,
+		sortField: (item: T, ctx: DataContextValue): number =>
+			ctx.jobs.filter((j: JobData): boolean => Array.isArray(j.keywords) && j.keywords.includes(item.id)).length,
+		render: (param: RenderParams): number => renderFunctions._jobCount(param, "keywords"),
+		filterConfig: {
+			type: "number",
+			min: 0,
+			step: 1,
+			display: "slider",
+			max: (ctx: DataContextValue): number =>
+				maxCount(
+					ctx.keywords,
+					(k: KeywordData): number =>
+						ctx.jobs.filter((j: JobData): boolean => Array.isArray(j.keywords) && j.keywords.includes(k.id))
+							.length
+				),
+		},
+		...overrides,
+	}),
+
+	jobApplicationCountAggregatorColumn: <T extends AggregatorData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "job_applications",
 		label: "Job Applications",
 		sortable: true,
 		searchable: false,
-		sortField: (item, ctx) => ctx.jobs.filter((j: any) => j.application_aggregator_id === item.id).length,
-		render: (param: RenderParams) => renderFunctions._jobApplicationCount(param, "application_aggregator_id"),
+		sortField: (item: T, ctx: DataContextValue): number =>
+			ctx.jobs.filter((j: JobData): boolean => j.application_aggregator_id === item.id).length,
+		render: (param: RenderParams): number =>
+			renderFunctions._jobApplicationCount(param, "application_aggregator_id"),
 		filterConfig: {
 			type: "number",
 			min: 0,
 			step: 1,
 			display: "slider",
-			max: (ctx: DataContextValue) =>
+			max: (ctx: DataContextValue): number =>
 				maxCount(
 					ctx.aggregators,
-					(a) => ctx.jobs.filter((j: any) => j.application_aggregator_id === a.id).length
+					(a: AggregatorData): number =>
+						ctx.jobs.filter((j: JobData): boolean => j.application_aggregator_id === a.id).length
 				),
 		},
 		...overrides,
 	}),
 
-	personCountCompanyColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
+	personCountCompanyColumn: <T extends CompanyData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "persons",
 		label: "Individuals",
 		sortable: true,
 		searchable: false,
-		sortField: (item, ctx) => ctx.persons.filter((p: any) => p.company_id === item.id).length,
-		render: (param: RenderParams) => renderFunctions._personCount(param, "company_id"),
+		sortField: (item: T, ctx: DataContextValue): number =>
+			ctx.persons.filter((p: PersonData): boolean => p.company_id === item.id).length,
+		render: (param: RenderParams): number => renderFunctions._personCount(param, "company_id"),
 		filterConfig: {
 			type: "number",
 			min: 0,
 			step: 1,
 			display: "slider",
-			max: (ctx: DataContextValue) =>
-				maxCount(ctx.companies, (c) => ctx.persons.filter((p: any) => p.company_id === c.id).length),
+			max: (ctx: DataContextValue): number =>
+				maxCount(
+					ctx.companies,
+					(c: CompanyData): number =>
+						ctx.persons.filter((p: PersonData): boolean => p.company_id === c.id).length
+				),
 		},
 		...overrides,
 	}),
 
-	recruitedJobCountCompanyColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
+	recruitedJobCountCompanyColumn: <T extends CompanyData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "recruiter_jobs",
 		label: "Submitted Jobs",
 		sortable: true,
 		searchable: false,
-		sortField: (item, ctx): number =>
-			ctx.jobs.filter((p: EnrichedJobData): boolean => p.recruitment_company_id === item.id).length,
+		sortField: (item: T, ctx: DataContextValue): number =>
+			ctx.jobs.filter((p: JobData): boolean => p.recruitment_company_id === item.id).length,
 		render: (param: RenderParams): number => renderFunctions._jobCount(param, "recruitment_company_id"),
 		filterConfig: {
 			type: "number",
@@ -864,7 +891,7 @@ export const tableColumns = {
 				maxCount(
 					ctx.companies,
 					(c: CompanyData): number =>
-						ctx.jobs.filter((p: EnrichedJobData): boolean => p.recruitment_company_id === c.id).length
+						ctx.jobs.filter((p: JobData): boolean => p.recruitment_company_id === c.id).length
 				),
 		},
 		...overrides,
@@ -877,42 +904,42 @@ export const tableColumns = {
 		label: "Filtered Jobs",
 		sortable: true,
 		searchable: false,
-		sortField: (item) => item.filtered_jobs.length,
+		sortField: (item: T): number => item.filtered_jobs.length,
 		render: renderFunctions.filteredJobCount,
 		filterConfig: { type: "number", min: 0, max: 50, step: 1, display: "slider" },
 		...overrides,
 	}),
 
-	interviewCountColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
+	interviewCountColumn: <T extends EnrichedJobData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "interviews",
 		label: "Interviews",
 		sortable: true,
 		searchable: false,
-		sortField: (item) => (item as any).interviews?.length || 0,
+		sortField: getInterviewCount,
 		render: renderFunctions.interviewCount,
 		filterConfig: {
 			type: "number",
 			min: 0,
 			step: 1,
 			display: "slider",
-			max: (ctx: DataContextValue) => maxCount(ctx.jobs, (j: any) => j.interviews?.length || 0),
+			max: getTotalInterviewCount,
 		},
 		...overrides,
 	}),
 
-	jobApplicationUpdateCountColumn: <T extends JamData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
+	jobApplicationUpdateCountColumn: <T extends EnrichedJobData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
 		key: "updates",
 		label: "Updates",
 		sortable: true,
 		searchable: false,
-		sortField: (item) => (item as any).updates?.length || 0,
+		sortField: getJobApplicationUpdateCount,
 		render: renderFunctions.jobApplicationUpdateCount,
 		filterConfig: {
 			type: "number",
 			min: 0,
 			step: 1,
 			display: "slider",
-			max: (ctx: DataContextValue) => maxCount(ctx.jobs, (j: any) => j.updates?.length || 0),
+			max: getTotalJobApplicationUpdateCount,
 		},
 		...overrides,
 	}),
