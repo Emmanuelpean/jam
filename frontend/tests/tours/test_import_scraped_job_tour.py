@@ -26,6 +26,7 @@ Cleanup on Done/Skip:
   - Imported Job (created on scraped-import-btn) is KEPT (noKeepData=true → always keepData=false for demo,
     but the actual imported Job is user data that persists after Done)
 """
+import time
 
 from app import models
 from base_test import BaseTest
@@ -84,6 +85,7 @@ class TestImportScrapedJobTour(BaseTest):
         # Step 6 (scraped-open-email): click demo email row;
         # tour auto-advances to step 7 when #modal-view-jobEmail appears.
         demo_email = self.db.query(models.JobEmail).filter_by(owner_id=self.user.id, is_tour=True).first()
+        time.sleep(0.5)  # wait for animation to finish
         self.jobEmail_table_utils.table_row_click(demo_email.id)
 
         # Step 7 (scraped-email-modal-content): email modal shown; click Next which closes modal
