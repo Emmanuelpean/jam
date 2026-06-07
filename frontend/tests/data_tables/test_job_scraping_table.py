@@ -291,7 +291,7 @@ class TestJobScrapingTable(BaseTest):
         self.show_job(scraped_job)
 
         row = self.scrapedJob_table_utils.table_row(scraped_job.id)
-        badge = row.find_element(By.CSS_SELECTOR, ".badge")
+        badge = row.find_element(By.CSS_SELECTOR, "#scraping-status-badge")
         assert badge.text == "RETRYING (1/3)"
 
     def test_scraped_job_retry_pending_modal_warning(self) -> None:
