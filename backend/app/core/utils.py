@@ -56,7 +56,6 @@ def generate_token(
     plain_token = secrets.token_urlsafe(32)
     hashed_token = utils.hash_token(plain_token)
 
-    # noinspection PyArgumentList
     new_token = models.UserToken(
         owner_id=user_id,
         token=hashed_token,

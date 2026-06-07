@@ -23,6 +23,7 @@ def client(session) -> Generator[TestClient, Any, None]:
     """Fixture that provides a test client with an overridden database dependency."""
 
     def override_get_db() -> Generator[orm.Session, Any, None]:
+        """Return the test session for database operations."""
         yield session
 
     app.dependency_overrides[database.get_db] = override_get_db  # noqa

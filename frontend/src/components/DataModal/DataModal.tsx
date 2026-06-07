@@ -144,7 +144,6 @@ function DataModalComponent<T extends JamData>(
 	const [effectiveData, setEffectiveData] = useState<any>(null);
 	useImperativeHandle(ref, () => ({
 		showView: async (data: T): Promise<void> => {
-			console.log(data);
 			setMode("view");
 			resetExpandedStates();
 			setInternalShow(true);

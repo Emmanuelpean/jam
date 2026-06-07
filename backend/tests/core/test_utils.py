@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 from app import models
+from app.core.models import TokenType
 from app.core.utils import generate_token, send_verification_with_rate_limit
 
 
@@ -11,7 +12,7 @@ class TestGenerateToken:
     def test_generate_token(self, test_regular_user, session) -> None:
         """Test generation of verification token."""
 
-        token, token_entry = generate_token(test_regular_user.id, "verification", session)
+        token, token_entry = generate_token(test_regular_user.id, TokenType.VERIFICATION, session)
         assert len(token) == 43
         assert len(token_entry.token) == 64
 
@@ -22,7 +23,7 @@ class TestSendVerificationWithRateLimit:
         """Test sending of verification email."""
 
         result = send_verification_with_rate_limit(
-            "verification",
+            TokenType.VERIFICATION,
             test_regular_user,
             session,
             lambda x, y, z: None,
@@ -48,7 +49,7 @@ class TestSendVerificationWithRateLimit:
         mock_send_function = Mock()
 
         result = send_verification_with_rate_limit(
-            "verification",
+            TokenType.VERIFICATION,
             test_unverified_token_user,
             session,
             mock_send_function,

@@ -199,6 +199,7 @@ class TestScrapedJobRaterRateJob:
 
     @staticmethod
     def make_service_log(session) -> models.JobRatingServiceLog:
+        """Create a service log for testing"""
         service_log = models.JobRatingServiceLog(run_datetime=dt.datetime.now())
         session.add(service_log)
         session.commit()
@@ -340,6 +341,7 @@ class TestScrapedJobRaterRateJob:
         import app.job_rating.scraped_job_rating as rating_module
 
         def raise_error(*_args, **_kwargs):
+            """Raise an error"""
             raise RuntimeError("AI service unavailable")
 
         monkeypatch.setattr(rating_module, "claude_query", raise_error)

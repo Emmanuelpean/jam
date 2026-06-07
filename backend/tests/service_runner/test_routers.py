@@ -67,7 +67,7 @@ class TestStartScraper:
             routers.start_scraper(mock_runner, test_admin_user, period_hours=2)
 
         assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-        assert "thread error" in exc_info.value.detail
+        assert exc_info.value.detail and "thread error" in exc_info.value.detail
 
 
 # ------------------------------------------------ STOP SCRAPER ------------------------------------------------
@@ -99,7 +99,7 @@ class TestStopScraper:
             routers.stop_scraper(mock_runner, test_admin_user)
 
         assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-        assert "cannot stop" in exc_info.value.detail
+        assert exc_info.value.detail and "cannot stop" in exc_info.value.detail
 
 
 # ----------------------------------------------- SCRAPER STATUS -----------------------------------------------
@@ -332,7 +332,7 @@ class TestGetLatest:
             routers.get_latest(test_admin_user, session, models.JobEmailScrapingServiceLog)
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
-        assert "No service logs found" in exc_info.value.detail
+        assert exc_info.value.detail and "No service logs found" in exc_info.value.detail
 
     def test_non_admin_forbidden(self, session, test_regular_user) -> None:
         """Non-admin users receive 403."""

@@ -227,6 +227,8 @@ class TestPagedFilters:
         """Provide common objects needed by every test in this class."""
 
         class Ctx:
+            """Context object for tests in this class."""
+
             user = test_regular_user
             service_log_id = test_job_scraping_service_logs[0].id
             qualification_id = test_user_qualifications[0].id
@@ -588,6 +590,8 @@ class TestFavouritesOnly:
         """Create a test setup with a user and a service log."""
 
         class Ctx:
+            """Context manager for test setup."""
+
             user = test_regular_user
             service_log_id = test_job_scraping_service_logs[0].id
 

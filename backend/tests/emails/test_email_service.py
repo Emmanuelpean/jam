@@ -197,11 +197,10 @@ class TestEmailServiceIMAP:
 
         content = email_svc.get_email_data("1")
 
-        assert content is not None
-        assert content["id"] == "1"
-        assert content["subject"] == "Test Email"
-        assert content["from"] == "sender@example.com"
-        assert "This is the email body" in content["body"]
+        assert content.id == "1"
+        assert content.subject == "Test Email"
+        assert content.from_email == "sender@example.com"
+        assert "This is the email body" in content.body
         mock_mail.close.assert_called_once()
         mock_mail.logout.assert_called_once()
 
@@ -234,8 +233,7 @@ class TestEmailServiceIMAP:
 
         content = email_svc.get_email_data("2")
 
-        assert content is not None
-        assert "<html>HTML body</html>" in content["body"]
+        assert "<html>HTML body</html>" in content.body
 
     @patch("imaplib.IMAP4_SSL")
     def test_get_email_data_multipart_container_part_skipped(self, mock_imap, email_svc) -> None:
@@ -263,8 +261,7 @@ class TestEmailServiceIMAP:
 
         content = email_svc.get_email_data("3")
 
-        assert content is not None
-        assert "Plain text body" in content["body"]
+        assert "Plain text body" in content.body
 
     @patch("imaplib.IMAP4_SSL")
     def test_get_email_data_single_part_non_bytes_payload_raises(self, mock_imap, email_svc) -> None:
@@ -285,20 +282,19 @@ class TestEmailServiceIMAP:
 
         # Patch get_payload on the parsed message to simulate a non-bytes return value
         with patch("email.message.Message.get_payload", return_value="not bytes"):
-            with pytest.raises(AssertionError):
+            with pytest.raises(Exception, match="4"):
                 email_svc.get_email_data("4")
 
     @patch("imaplib.IMAP4_SSL")
     def test_get_email_data_not_found(self, mock_imap, email_svc) -> None:
-        """Test retrieving non-existent email."""
+        """Test that fetching a non-existent email raises an exception."""
 
         mock_mail = MagicMock()
         mock_imap.return_value = mock_mail
         mock_mail.uid.return_value = ("NO", None)
 
-        content = email_svc.get_email_data("999")
-
-        assert content is None
+        with pytest.raises(Exception, match="999"):
+            email_svc.get_email_data("999")
 
     @patch("imaplib.IMAP4_SSL")
     def test_get_emails_success(self, mock_imap, email_svc) -> None:
@@ -342,9 +338,9 @@ class TestEmailServiceIMAP:
 
         assert len(emails) == 3
         # Should be in reverse order (most recent first)
-        assert emails[0]["subject"] == "Email 3"
-        assert emails[1]["subject"] == "Email 2"
-        assert emails[2]["subject"] == "Email 1"
+        assert emails[0].subject == "Email 3"
+        assert emails[1].subject == "Email 2"
+        assert emails[2].subject == "Email 1"
 
     @patch("imaplib.IMAP4_SSL")
     def test_get_emails_empty_results(self, mock_imap, email_svc) -> None:

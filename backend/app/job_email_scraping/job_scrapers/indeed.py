@@ -1,5 +1,7 @@
 """Indeed Job Scrapers"""
 
+"""Indeed Job Scrapers"""
+
 import re
 
 from app.job_email_scraping.job_scrapers.apify import ApifyJobScraper
@@ -25,7 +27,7 @@ class IndeedBrightdataJobScraper(BrightdataJobScraper):
             r"£(\d+(?:,\d+)?(?:k|K)?(?:\.\d+)?)\s*[-–]\s*£(\d+(?:,\d+)?(?:k|K)?(?:\.\d+)?)\s+(?:a|per)\s+(?:year|annum)"
         )
         salary_range = job_data.get("salary_formatted")
-        if salary_range and (match := re.search(salary_pattern, salary_range)):
+        if salary_range and (match := re.search(salary_pattern, str(salary_range))):
             min_amount = float(match.group(1).replace(",", ""))
             max_amount = float(match.group(2).replace(",", ""))
             currency = "GBP"

@@ -189,13 +189,13 @@ class TestScrapeJobListing:
         result = scraper.scrape_job_listing("https://veganjobs.com/job/slug")
         assert "Salary:" not in result.job.description
         assert "£50,000" not in result.job.description
-        assert "Job overview text" in result.job.description
+        assert result.job.description and "Job overview text" in result.job.description
 
     def test_overwiew_prefix_stripped_from_description(self, scraper_factory) -> None:
         """'Overwiew' (sic) prefix is stripped from description start."""
         scraper, _ = scraper_factory("slug", OVERWIEW_HTML)
         result = scraper.scrape_job_listing("https://veganjobs.com/job/slug")
-        assert not result.job.description.startswith("Overwiew")
+        assert result.job.description and not result.job.description.startswith("Overwiew")
 
     def test_get_called_with_url(self, scraper_factory) -> None:
         url = "https://veganjobs.com/job/some-slug"
@@ -245,6 +245,7 @@ class TestScrapeJob:
         call_count = 0
 
         def side_effect(url):
+            """Return success_result on first call, raise RuntimeError on second."""
             _ = url
             nonlocal call_count
             call_count += 1

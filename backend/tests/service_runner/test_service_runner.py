@@ -116,6 +116,7 @@ class TestStartRunner:
         captured = {}
 
         def fake_thread_init(**_kwargs):
+            """Fake thread init that captures the status."""
             captured["status_at_init"] = runner.service_runner_thread_status
             t = MagicMock()
             t.daemon = False
@@ -161,6 +162,7 @@ class TestRunService:
         statuses = []
 
         def capturing_fn(**_kwargs):
+            """Capture the status and stop after the first iteration."""
             statuses.append(runner.service_runner_thread_status)
             runner.stop_event.set()  # Stop after first iteration
             return make_service_result(0.0)
@@ -177,6 +179,7 @@ class TestRunService:
         running_during = []
 
         def capturing_fn(**_kwargs):
+            """Capture the status and stop after the first iteration."""
             running_during.append(runner.service_running)
             runner.stop_event.set()
             return make_service_result(0.0)
@@ -193,6 +196,7 @@ class TestRunService:
         call_count = 0
 
         def counting_fn(**_kwargs):
+            """Call count is incremented after the first iteration."""
             nonlocal call_count
             call_count += 1
             runner.stop_event.set()
@@ -210,6 +214,7 @@ class TestRunService:
         call_count = 0
 
         def raising_fn(**_kwargs):
+            """Raise an exception after the first iteration."""
             nonlocal call_count
             call_count += 1
             if call_count == 1:
@@ -223,6 +228,7 @@ class TestRunService:
         original_wait = runner.stop_event.wait
 
         def fast_wait(timeout=None):
+            """Fast wait that returns True immediately on the first call."""
             _ = timeout
             if call_count == 1:
                 runner.stop_event.set()
@@ -238,6 +244,7 @@ class TestRunService:
         """sleep_start / sleep_until are None after the service loop exits."""
 
         def one_shot_fn(**_kwargs):
+            """Service function that exits after the first iteration."""
             runner.stop_event.set()
             return make_service_result(0.0)
 
@@ -253,6 +260,7 @@ class TestRunService:
         received = {}
 
         def capturing_fn(**kwargs):
+            """Capture the service kwargs and stop after the first iteration."""
             received.update(kwargs)
             runner.stop_event.set()
             return make_service_result(0.0)
@@ -267,6 +275,7 @@ class TestRunService:
         """Even if the loop exits due to an unexpected error, status becomes stopped."""
 
         def always_raises(**_kwargs):
+            """Always raises an exception."""
             raise SystemExit(0)
 
         runner.service_function = always_raises

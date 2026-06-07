@@ -61,7 +61,6 @@ def test_unverified_token_user(session) -> models.User:
 
     user = create_users(session, [user_data])[0]
 
-    # noinspection PyArgumentList
     verification_token = models.UserToken(
         owner_id=user.id,
         token=hashed_token,
@@ -90,7 +89,6 @@ def test_user_change_email_token_user(session) -> models.User:
 
     user = create_users(session, [user_data])[0]
 
-    # noinspection PyArgumentList
     email_change_token = models.UserToken(
         owner_id=user.id,
         token=hashed_token,

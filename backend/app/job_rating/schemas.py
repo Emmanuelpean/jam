@@ -61,4 +61,4 @@ class JobRatingServiceLogOut(Out):
 class JobRatingServiceLogStartRequest(BaseModel):
     """Job Rating Service Log start request schema"""
 
-    period_hours: int | None = 3
+    period_hours: int = 3

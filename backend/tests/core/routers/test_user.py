@@ -7,12 +7,14 @@ operations behave as expected under various scenarios, including successful requ
 from datetime import datetime, timezone, timedelta
 from unittest.mock import patch
 
-import app.job_rating.models as job_rating_models
 import pytest
+
+import app.job_rating.models as job_rating_models
 from app import models, utils
 from app.base_schemas import COLUMN_LIMITS
 from app.core import schemas, oauth2
 from app.core.utils import generate_token, send_email_change_email
+from app.core.models import TokenType
 from tests.conftest import CRUDTestBase
 
 
@@ -334,6 +336,7 @@ class TestEmailVerification:
             )
             .first()
         )
+        assert token_entry
         pending_email = token_entry.pending_email
 
         response = client.get(
@@ -346,6 +349,7 @@ class TestEmailVerification:
         user = session.query(models.User).filter(models.User.id == test_user_change_email_token_user.id).first()
 
         # Verify email updated
+        assert user
         assert user.email == pending_email
 
         # Verify token was deleted
@@ -372,7 +376,7 @@ class TestEmailVerification:
 
         # Create email change token for demo user
         plain_token, token_obj = generate_token(
-            test_demo_user.id, "email_change", session, pending_email="newemail@test.com"
+            test_demo_user.id, TokenType.EMAIL_CHANGE, session, pending_email="newemail@test.com"
         )
 
         response = client.get(f"/current-user/verify-email/{plain_token}")
@@ -407,7 +411,6 @@ class TestEmailVerification:
         hashed_token = utils.hash_token(token)
         expired_time = datetime.now(timezone.utc) - timedelta(hours=25)
 
-        # noinspection PyArgumentList
         token_entry = models.UserToken(
             owner_id=user.id,
             token=hashed_token,
@@ -441,7 +444,9 @@ class TestEmailVerification:
         session.commit()
 
         # Create token with existing email as pending
-        plain_token, token_obj = generate_token(user.id, "email_change", session, pending_email=test_users[1].email)
+        plain_token, token_obj = generate_token(
+            user.id, TokenType.EMAIL_CHANGE, session, pending_email=test_users[1].email
+        )
 
         response = client.get(f"/current-user/verify-email/{plain_token}")
 
@@ -477,6 +482,7 @@ class TestTokenVersioning:
 
         # Verify new login works
         user = session.query(models.User).filter(models.User.id == test_regular_user.id).first()
+        assert user
         new_token = oauth2.create_access_token(data={"user_id": test_regular_user.id}, token_version=user.token_version)
         response = client.get("/current-user", headers={"Authorization": f"Bearer {new_token}"})
         assert response.status_code == 200
@@ -494,6 +500,7 @@ class TestTokenVersioning:
         assert response.status_code == 200
 
         user = session.query(models.User).filter(models.User.id == test_regular_user.id).first()
+        assert user
         assert user.token_version == initial_version
 
     @patch("app.core.routers.auth.email_service.send_email_change_notification")
@@ -510,6 +517,7 @@ class TestTokenVersioning:
         assert response.status_code == 200
 
         user = session.query(models.User).filter(models.User.id == test_user_change_email_token_user.id).first()
+        assert user
         assert user.token_version == initial_version + 1
         assert mock_email.call_count == 1
 
@@ -525,6 +533,7 @@ class TestTokenVersioning:
         assert response.status_code == 200
 
         user = session.query(models.User).filter(models.User.id == test_regular_user.id).first()
+        assert user
         assert user.token_version == initial_version
 
         # Verify token still works
@@ -625,14 +634,14 @@ class TestDeleteAccount:
         premium_id = test_regular_user.premium.id
 
         # Create a Job for the user
-        # noinspection PyArgumentList
+
         job = models.Job(title="Test Job", owner_id=user_id)
         session.add(job)
         session.commit()
         job_id = job.id
 
         # Create a Person and link it to the Job
-        # noinspection PyArgumentList
+
         person = models.Person(first_name="John", last_name="Doe", owner_id=user_id)
         session.add(person)
         session.commit()
@@ -641,13 +650,13 @@ class TestDeleteAccount:
         session.commit()
 
         # Create a service log for JobEmail
-        # noinspection PyArgumentList
+
         email_service_log = models.JobEmailScrapingServiceLog(run_datetime=datetime.now(timezone.utc))
         session.add(email_service_log)
         session.commit()
 
         # Create a JobEmail
-        # noinspection PyArgumentList
+
         job_email = models.JobEmail(
             external_email_id=f"test_email_{user_id}",
             subject="Test Job Alert",
@@ -663,7 +672,7 @@ class TestDeleteAccount:
         job_email_id = job_email.id
 
         # Create a ScrapedJob and link it to the JobEmail
-        # noinspection PyArgumentList
+
         scraped_job = models.ScrapedJob(
             external_job_id=f"test_scraped_job_{user_id}",
             platform="LinkedIn",
@@ -678,14 +687,14 @@ class TestDeleteAccount:
         session.commit()
 
         # Create a UserQualification for JobRating
-        # noinspection PyArgumentList
+
         user_qualification = models.UserQualification(experience="Test experience", owner_id=user_id)
         session.add(user_qualification)
         session.commit()
         user_qualification_id = user_qualification.id
 
         # Create a JobRating for the ScrapedJob
-        # noinspection PyArgumentList
+
         job_rating = job_rating_models.JobRating(
             overall_score=8,
             scraped_job_id=scraped_job_id,
@@ -767,7 +776,7 @@ class TestDeleteAccount:
         user_id = test_regular_user.id
 
         # Create an email change token for the user
-        generate_token(test_regular_user.id, "email_change", session, pending_email="newemail@test.com")
+        generate_token(test_regular_user.id, TokenType.EMAIL_CHANGE, session, pending_email="newemail@test.com")
 
         # Verify token exists
         user_token = (
@@ -903,7 +912,6 @@ class TestUserQualificationsCRUD(CRUDTestBase):
     ) -> None:
         """Try to upsert a new user qualification when linked to a job rating"""
 
-        # noinspection PyArgumentList
         job_rating = job_rating_models.JobRating(
             owner_id=test_users[0].id,
             scraped_job_id=test_scraped_jobs[0].id,

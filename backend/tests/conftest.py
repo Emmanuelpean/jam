@@ -54,6 +54,7 @@ def mock_nominatim_get():
     which causes call_geocoding_api to raise ValueError."""
 
     def side_effect(url, **kwargs):
+        """Mock the requests.get call to Nominatim."""
         _ = url
         params = kwargs.get("params", {})
         query = params.get("q")
@@ -76,7 +77,7 @@ def open_file(filepath: str) -> str:
     """Helper function to open a text file from the resources directory.
     :param filepath: The name of the file located in the resources directory"""
 
-    base_dir = os.path.dirname(__file__)
+    base_dir = str(os.path.dirname(__file__))
     filepath = os.path.join(base_dir, "resources", filepath)
     with open(filepath, "r", encoding="utf8") as ofile:
         return ofile.read()
@@ -441,7 +442,9 @@ class CRUDTestBase:
     ) -> None:
         """Test that authorised users can successfully update existing items."""
         client = self._get_authorised_client(authorised_clients)
-        response = self.put(client, self.update_data.get("id"), self.update_data)
+        data_id = self.update_data.get("id")
+        assert isinstance(data_id, int)
+        response = self.put(client, data_id, self.update_data)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(self.update_data, response.json())
 
@@ -549,6 +552,7 @@ _ACTION_META = {
 
 
 def make_undefined_method_params(defined: list[str], undefined: list[str]):
+    """Generate pytest.param objects for undefined methods."""
     defined_upper = {a.upper() for a in defined}
     params = []
     for action in undefined:

@@ -33,6 +33,7 @@ BASE_JOB: dict = {
 
 
 def make_job(**overrides) -> dict:
+    """Return a job dict with the given overrides merged in."""
     return {**BASE_JOB, **overrides}
 
 

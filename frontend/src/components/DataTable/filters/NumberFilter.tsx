@@ -15,7 +15,7 @@ interface Props {
 
 function resolveMax(config: NumberFilterConfig, dataContext?: any): number {
 	if (typeof config.max === "function") {
-		return config.max(dataContext) || 1;
+		return config.max(dataContext) || 0;
 	}
 	return config.max;
 }

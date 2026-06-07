@@ -1,3 +1,5 @@
+"""Gmail utilities"""
+
 import re
 
 

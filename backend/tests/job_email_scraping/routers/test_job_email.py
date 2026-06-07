@@ -215,6 +215,8 @@ class TestJobAlertEmailsPagedFilters:
         """Provide common objects needed by every test in this class."""
 
         class Ctx:
+            """Context object for the test."""
+
             user = test_regular_user
             service_log_id = test_job_scraping_service_logs[0].id
 
@@ -411,9 +413,7 @@ class TestJobAlertEmailsPagedFilters:
         self._create_email(
             session, setup.user.id, setup.service_log_id, subject="Python on LinkedIn", platform="linkedin"
         )
-        self._create_email(
-            session, setup.user.id, setup.service_log_id, subject="Python on Indeed", platform="indeed"
-        )
+        self._create_email(session, setup.user.id, setup.service_log_id, subject="Python on Indeed", platform="indeed")
         self._create_email(
             session, setup.user.id, setup.service_log_id, subject="Java on LinkedIn", platform="linkedin"
         )

@@ -1,4 +1,5 @@
 import { SelectOption } from "../rendering/form/FormOptions";
+import { DataContextValue } from "../../contexts/DataContext";
 
 export interface FilterPill {
 	key: string;
@@ -29,7 +30,7 @@ export interface DateFilterConfig {
 export interface NumberFilterConfig {
 	type: "number";
 	min: number;
-	max: number | ((ctx: any) => number);
+	max: number | ((ctx: DataContextValue) => number);
 	step?: number;
 	display?: "slider" | "input";
 	nullable?: boolean;

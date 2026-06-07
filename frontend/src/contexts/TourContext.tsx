@@ -222,7 +222,11 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 			if (ISOLATED_TOURS.has(tourId)) {
 				setIsCleaningUp(true);
 				try {
-					const groups: Array<{ items: { id: number }[]; type: EntityType; jamIdSet: Set<number> }> = [
+					const groups: Array<{
+						items: { id: number; is_tour: boolean }[];
+						type: EntityType;
+						jamIdSet: Set<number>;
+					}> = [
 						{ items: jobs, type: "job", jamIdSet: jamIds.jobIds },
 						{ items: companies, type: "company", jamIdSet: jamIds.companyIds },
 						{ items: persons, type: "person", jamIdSet: jamIds.personIds },
@@ -245,8 +249,8 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					await Promise.all(
 						groups.flatMap(({ items, type, jamIdSet }): Promise<void>[] =>
 							items
-								.filter((e: { id: number }): boolean => jamIdSet.has(e.id))
-								.map((e: { id: number }): Promise<void> => deleteEntity(type, e.id))
+								.filter((e): boolean => e.is_tour && jamIdSet.has(e.id))
+								.map((e): Promise<void> => deleteEntity(type, e.id))
 						)
 					);
 
@@ -268,17 +272,19 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 						await Promise.all(
 							groups.flatMap(({ items, type, jamIdSet }): Promise<void>[] =>
 								items
-									.filter((e: { id: number }): boolean => !jamIdSet.has(e.id))
-									.map((e: { id: number }): Promise<void> => deleteEntity(type, e.id))
+									.filter((e): boolean => e.is_tour && !jamIdSet.has(e.id))
+									.map((e): Promise<void> => deleteEntity(type, e.id))
 							)
 						);
 					}
 
 					// Round 3: Clear all remaining data
 					await tourApi.clearAll(token!);
-				}catch {
-					showToastError("Failed to clean up tour data. This may cause tour generated data to be visible. " +
-						"You may try to reload the page to fix this.");
+				} catch {
+					showToastError(
+						"Failed to clean up tour data. This may cause tour generated data to be visible. " +
+							"You may try to reload the page to fix this."
+					);
 				} finally {
 					setIsCleaningUp(false);
 					jamCreatedIds.current = emptySnapshot();

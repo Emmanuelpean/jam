@@ -60,6 +60,7 @@ class TestGeocodeLocation:
         geo = create_db_entries(session, Geolocation, data)[0]
         result = geocode_location(geo.query, session)
 
+        assert result
         assert result.id == geo.id
         assert mock_nominatim_get.call_count == 0
 

@@ -380,7 +380,6 @@ class TestEmailVerification:
         expired_time = datetime.now(timezone.utc) - timedelta(hours=25)
 
         # Create user with preferences and stripe details
-        # noinspection PyArgumentList
         user = models.User(
             email="unverified@test.com",
             password="password",
@@ -394,7 +393,6 @@ class TestEmailVerification:
         user_id = user.id
 
         # Create expired verification token
-        # noinspection PyArgumentList
         expired_token = models.UserToken(
             owner_id=user_id,
             token=verification_code,
@@ -575,7 +573,6 @@ class TestResetPassword:
         old_password_hash = user.password
 
         # Create password reset token
-        # noinspection PyArgumentList
         reset_token = models.UserToken(
             owner_id=user.id,
             token=reset_code,

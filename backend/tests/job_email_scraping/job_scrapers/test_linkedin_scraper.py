@@ -247,6 +247,7 @@ class TestScrapeJob:
             mock_settings.brightdata_linkedin_dataset_id = "ds"
 
             def mock_response(status_code, json_data=None, text=""):
+                """Returns a mock response object with the given status code and data."""
                 r = __import__("unittest.mock", fromlist=["MagicMock"]).MagicMock()
                 r.status_code = status_code
                 r.json.return_value = json_data

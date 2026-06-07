@@ -11,7 +11,14 @@ import {
 import { toDdMmYyyy } from "../../../utils/TimeUtils";
 import { DataContextValue, JamData } from "../../../contexts/DataContext";
 import { findItemById } from "../../../utils/Utils";
-import { AggregatorData, CompanyData, EnrichedJobData, JobData, KeywordData, PersonData } from "../../../services/schemas/DataTables";
+import {
+	AggregatorData,
+	CompanyData,
+	EnrichedJobData,
+	JobData,
+	KeywordData,
+	PersonData,
+} from "../../../services/schemas/DataTables";
 import { FilterConfig } from "../../DataTable/FilterTypes";
 import {
 	applicationStatusOptions,
@@ -827,7 +834,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	jobApplicationCountAggregatorColumn: <T extends AggregatorData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
+	jobApplicationCountAggregatorColumn: <T extends AggregatorData>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "job_applications",
 		label: "Job Applications",
 		sortable: true,
@@ -927,7 +936,9 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	jobApplicationUpdateCountColumn: <T extends EnrichedJobData>(overrides: ColumnOverrides<T> = {}): TableColumn<T> => ({
+	jobApplicationUpdateCountColumn: <T extends EnrichedJobData>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
 		key: "updates",
 		label: "Updates",
 		sortable: true,

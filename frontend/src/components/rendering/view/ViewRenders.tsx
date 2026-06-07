@@ -146,14 +146,14 @@ export const getTotalInterviewCount = (dataContext: DataContextValue): number =>
 	const numbers: number[] = dataContext.interviews.map(
 		(interview: EnrichedInterviewData): number => interview.number
 	);
-	return Math.max(...numbers);
+	return numbers.length === 0 ? 0 : Math.max(...numbers);
 };
 
 export const getTotalJobApplicationUpdateCount = (dataContext: DataContextValue): number => {
 	const numbers: number[] = dataContext.jobApplicationUpdates.map(
 		(update: EnrichedJobApplicationUpdateData): number => update.number
 	);
-	return Math.max(...numbers);
+	return numbers.length === 0 ? 0 : Math.max(...numbers);
 };
 
 export const renderFunctions = {
@@ -522,12 +522,30 @@ export const renderFunctions = {
 
 	scrapingStatus: (param: RenderParams): ReactNode => {
 		if (!param.item) return null;
-		if (param.item.is_failed) return <span id="scraping-status-badge" className="badge bg-danger">Failed</span>;
+		if (param.item.is_failed)
+			return (
+				<span id="scraping-status-badge" className="badge bg-danger">
+					Failed
+				</span>
+			);
 		if (!param.item.is_processed && param.item.scrape_error?.length) {
-			return <span id="scraping-status-badge" className="badge bg-warning text-dark">Retrying ({param.item.retry_count}/3)</span>;
+			return (
+				<span id="scraping-status-badge" className="badge bg-warning text-dark">
+					Retrying ({param.item.retry_count}/3)
+				</span>
+			);
 		}
-		if (!param.item.is_processed) return <span id="scraping-status-badge" className="badge bg-secondary">Pending</span>;
-		return <span id="scraping-status-badge" className="badge bg-success">Scraped</span>;
+		if (!param.item.is_processed)
+			return (
+				<span id="scraping-status-badge" className="badge bg-secondary">
+					Pending
+				</span>
+			);
+		return (
+			<span id="scraping-status-badge" className="badge bg-success">
+				Scraped
+			</span>
+		);
 	},
 
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
@@ -920,7 +938,6 @@ export const RenderViewFieldWithContext: React.FC<{
 	view?: boolean;
 }> = ({ field, item, id, view = false }) => {
 	const context: DataContextValue = useDataContext();
-	console.log(context.files);
 	const { token } = useAuth();
 	const { currencies } = useStaticData();
 

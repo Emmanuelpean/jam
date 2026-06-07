@@ -44,7 +44,7 @@ def get_allowed_origins() -> list[str]:
 
 
 app.add_middleware(
-    CORSMiddleware,
+    CORSMiddleware,  # type: ignore[arg-type]
     allow_origins=get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],

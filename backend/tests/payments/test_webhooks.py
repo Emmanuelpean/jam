@@ -47,6 +47,7 @@ class TestProcessSubscriptionEvent:
 
         assert response.status_code == 200
         user = session.query(models.User).filter(models.User.id == test_stripe_user.id).first()
+        assert user
         assert user.stripe_details.subscription_id == "sub_new_123"
         assert user.premium.is_active is True
 
@@ -68,6 +69,7 @@ class TestProcessSubscriptionEvent:
 
         assert response.status_code == 200
         user = session.query(models.User).filter(models.User.id == test_stripe_user.id).first()
+        assert user
         assert user.premium.is_active is False
 
     @patch("app.payments.webhooks.stripe.Subscription.retrieve_async", new_callable=AsyncMock)
@@ -165,6 +167,7 @@ class TestGetSubscriptionStatus:
         assert response.status_code == 200
         mock_retrieve.assert_not_called()
         user = session.query(models.User).filter(models.User.id == test_stripe_user.id).first()
+        assert user
         assert user.stripe_details.subscription_status is None
         assert user.stripe_details.trial_end_date is None
 
@@ -185,6 +188,7 @@ class TestGetSubscriptionStatus:
         assert response.status_code == 200
         mock_retrieve.assert_called_once_with("sub_existing")
         user = session.query(models.User).filter(models.User.id == test_stripe_user.id).first()
+        assert user
         assert user.stripe_details.subscription_status == "active"
         assert user.stripe_details.trial_end_date == 1735689600
 

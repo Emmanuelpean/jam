@@ -705,6 +705,5 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 export const useDataContext = (): DataContextValue => {
 	const context: DataContextValue | undefined = useContext(DataContext);
 	if (!context) throw new Error("useDataContext must be used within a DataProvider");
-	console.log(context.jobs)
 	return context;
 };

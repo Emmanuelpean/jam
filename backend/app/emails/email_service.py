@@ -3,12 +3,14 @@
 import email
 import imaplib
 import smtplib
+import traceback
 from datetime import datetime, timedelta
 from email.header import decode_header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from app.config import settings
+from app.emails.schemas import EmailData
 from app.emails.templates import email_templates
 from app.emails.utils import clean_email_address, build_multi_from_query
 from app.utils import AppLogger
@@ -365,7 +367,7 @@ class EmailService(object):
             mail.close()
             mail.logout()
 
-    def get_email_data(self, email_id: str) -> dict[str, str | None | datetime] | None:
+    def get_email_data(self, email_id: str) -> EmailData:
         """Get the content of a specific email by ID.
         :param email_id: The email message UID (unique identifier)
         :return: Dictionary with email details (subject, from, date, body)"""
@@ -379,10 +381,9 @@ class EmailService(object):
             status, msg_data = mail.uid("fetch", email_id, "(RFC822)")
 
             if status != "OK":
-                return None
+                raise Exception("Status is not OK")
 
             # Parse email content
-            # noinspection PyUnresolvedReferences
             raw_email = msg_data[0][1]
             msg = email.message_from_bytes(raw_email)
 
@@ -410,6 +411,8 @@ class EmailService(object):
                     break
                 except ValueError:
                     continue
+            if not date_received:
+                raise ValueError(f"Failed to parse date: {date}")
 
             body_text = ""
             html_text = ""
@@ -453,21 +456,24 @@ class EmailService(object):
             # Prefer text, but fallback to HTML if needed
             final_body = html_text or body_text
 
-            return {
-                "id": email_id,
-                "message_id": message_id,
-                "subject": subject,
-                "from": from_email,
-                "to": to_email,
-                "date": date_received,
-                "body": final_body,
-            }
+            return EmailData(
+                id=email_id,
+                message_id=message_id,
+                subject=subject,
+                from_email=from_email,
+                to_email=to_email,
+                date=date_received,
+                body=final_body,
+            )
+
+        except:
+            raise Exception(f"Failed to fetch email data for email ID: {email_id} with error: {traceback.format_exc()}")
 
         finally:
             mail.close()
             mail.logout()
 
-    def get_emails(self, *args, **kwargs) -> list[dict[str, str]]:
+    def get_emails(self, *args, **kwargs) -> list[EmailData]:
         """Get multiple emails matching criteria.
         :param args: arguments passed to get_email_ids
         :param kwargs: Keyword arguments passed to get_email_ids

@@ -27,7 +27,6 @@ class TestUserTokenRemainingSeconds:
         created_time = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=minutes_ago)
 
         # Create a token with the specified creation time
-        # noinspection PyArgumentList
         token = models.UserToken(
             owner_id=test_regular_user.id,
             token="test_token_hash",
@@ -66,7 +65,6 @@ class TestUserTokenIsValid:
         created_time = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=minutes_ago)
 
         # Create a token with the specified type and creation time
-        # noinspection PyArgumentList
         token = models.UserToken(
             owner_id=test_regular_user.id,
             token="test_token_hash",
@@ -91,7 +89,6 @@ class TestUserTokenDeletesExistingOfSameType:
     def _add_token(session, user_id, token_type, token):
         """Helper function to add a token to the database."""
 
-        # noinspection PyArgumentList
         token = models.UserToken(owner_id=user_id, token=token, token_type=token_type)
         session.add(token)
         session.commit()

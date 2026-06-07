@@ -68,6 +68,7 @@ def demo_client(demo_session):
     """FastAPI test client whose get_db dependency returns the demo session."""
 
     def override_get_db():
+        """Return the demo session for demo routes."""
         yield demo_session
 
     app.dependency_overrides[database.get_db] = override_get_db
@@ -81,9 +82,11 @@ def demo_login_client(session, demo_session):
     get_demo_db (demo schema) for login tests."""
 
     def override_get_db():
+        """Return the public session for public routes."""
         yield session
 
     def override_get_demo_db():
+        """Return the demo session for demo routes."""
         yield demo_session
 
     app.dependency_overrides[database.get_db] = override_get_db

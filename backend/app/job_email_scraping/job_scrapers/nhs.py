@@ -22,13 +22,15 @@ class NhsJobScraper(ApifyJobScraper):
         # Deadline
         deadline = None
         is_closed = False
-        if job_data.get("closingDate", "").upper() == "THIS JOB IS NOW CLOSED":
-            is_closed = True
-        else:
-            try:
-                deadline = dt.datetime.strptime(job_data.get("closingDate"), "%d %B %Y")
-            except:
-                pass
+        closing_date = job_data.get("closingDate")
+        if isinstance(closing_date, str):
+            if closing_date.upper() == "THIS JOB IS NOW CLOSED":
+                is_closed = True
+            else:
+                try:
+                    deadline = dt.datetime.strptime(closing_date, "%d %B %Y")
+                except:
+                    pass
 
         # Salary
         pattern = r"(?P<currency>£)\s*(?P<min>[\d,]+)\s*to\s*(?P=currency)\s*(?P<max>[\d,]+).*?(?P<frequency>a year|per annum)"
@@ -45,7 +47,7 @@ class NhsJobScraper(ApifyJobScraper):
 
         # Description
         description = [job_data.get("jobSummaryText"), job_data.get("mainDutiesText"), job_data.get("aboutUsText")]
-        description = "\n\n".join([d for d in description if d])
+        description = "\n\n".join([d for d in description if isinstance(d, str)])
 
         # Raise an exception if planned downtime
         if (

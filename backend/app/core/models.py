@@ -104,7 +104,6 @@ class User(CommonBase, Base):
         # Handle preferences - create an instance if dict provided or if not already set
         if preferences_data:
             if isinstance(preferences_data, dict):
-                # noinspection PyArgumentList
                 self.preferences = UserPreferences(**preferences_data)
             else:
                 self.preferences = preferences_data
@@ -114,7 +113,6 @@ class User(CommonBase, Base):
         # Handle stripe_details - create an instance if dict provided or if not already set
         if stripe_details_data:
             if isinstance(stripe_details_data, dict):
-                # noinspection PyArgumentList
                 self.stripe_details = StripeDetails(**stripe_details_data)
             else:
                 self.stripe_details = stripe_details_data
@@ -124,7 +122,6 @@ class User(CommonBase, Base):
         # Handle premium - create instance if dict provided or if not already set
         if premium_data:
             if isinstance(premium_data, dict):
-                # noinspection PyArgumentList
                 self.premium = PremiumSettings(**premium_data)
             else:
                 self.premium = premium_data
