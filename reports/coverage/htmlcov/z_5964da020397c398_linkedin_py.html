@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_5964da020397c398_nhs_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.14.1">coverage.py v7.14.1</a>,
-            created at 2026-05-31 23:52 +0100
+            created at 2026-06-07 21:42 +0100
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -102,12 +102,12 @@
     <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">        <span class="nam">min_amount</span> <span class="op">=</span> <span class="nam">max_amount</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">        <span class="nam">salary_currency</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">        <span class="nam">base_salary</span> <span class="op">=</span> <span class="nam">job_data</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"base_salary"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">        <span class="key">if</span> <span class="nam">base_salary</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">        <span class="key">if</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">base_salary</span><span class="op">,</span> <span class="nam">dict</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">            <span class="nam">currency</span> <span class="op">=</span> <span class="nam">base_salary</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"currency"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">            <span class="nam">payment_period</span> <span class="op">=</span> <span class="nam">base_salary</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"payment_period"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">            <span class="com"># Only extract salary if it's yearly</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">            <span class="key">if</span> <span class="nam">payment_period</span> <span class="key">and</span> <span class="nam">payment_period</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span> <span class="op">==</span> <span class="str">"yr"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">            <span class="key">if</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">payment_period</span><span class="op">,</span> <span class="nam">str</span><span class="op">)</span> <span class="key">and</span> <span class="nam">payment_period</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span> <span class="op">==</span> <span class="str">"yr"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">                <span class="nam">min_amount</span> <span class="op">=</span> <span class="nam">base_salary</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"min_amount"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">                <span class="nam">max_amount</span> <span class="op">=</span> <span class="nam">base_salary</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"max_amount"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">                <span class="nam">salary_currency</span> <span class="op">=</span> <span class="nam">currency</span>&nbsp;</span><span class="r"></span></p>
@@ -143,7 +143,7 @@
             <a class="nav" href="z_5964da020397c398_nhs_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.14.1">coverage.py v7.14.1</a>,
-            created at 2026-05-31 23:52 +0100
+            created at 2026-06-07 21:42 +0100
         </p>
     </div>
 </footer>
