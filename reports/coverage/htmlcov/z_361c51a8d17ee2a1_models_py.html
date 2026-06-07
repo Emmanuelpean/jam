@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_361c51a8d17ee2a1_routers_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.14.1">coverage.py v7.14.1</a>,
-            created at 2026-05-31 23:52 +0100
+            created at 2026-06-07 10:15 +0100
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -556,7 +556,7 @@
     <p class="run"><span class="n"><a id="t474" href="#t474">474</a></span><span class="t">    <span class="nam">type</span> <span class="op">=</span> <span class="nam">Column</span><span class="op">(</span><span class="nam">String</span><span class="op">,</span> <span class="nam">nullable</span><span class="op">=</span><span class="key">False</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t475" href="#t475">475</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t476" href="#t476">476</a></span><span class="t">    <span class="com"># Foreign keys</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t477" href="#t477">477</a></span><span class="t">    <span class="nam">job_id</span> <span class="op">=</span> <span class="nam">Column</span><span class="op">(</span><span class="nam">Integer</span><span class="op">,</span> <span class="nam">ForeignKey</span><span class="op">(</span><span class="str">"job.id"</span><span class="op">,</span> <span class="nam">ondelete</span><span class="op">=</span><span class="str">"CASCADE"</span><span class="op">)</span><span class="op">,</span> <span class="nam">nullable</span><span class="op">=</span><span class="key">False</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t477" href="#t477">477</a></span><span class="t">    <span class="nam">job_id</span> <span class="op">=</span> <span class="nam">Column</span><span class="op">(</span><span class="nam">Integer</span><span class="op">,</span> <span class="nam">ForeignKey</span><span class="op">(</span><span class="str">"job.id"</span><span class="op">,</span> <span class="nam">ondelete</span><span class="op">=</span><span class="str">"CASCADE"</span><span class="op">)</span><span class="op">,</span> <span class="nam">nullable</span><span class="op">=</span><span class="key">False</span><span class="op">,</span> <span class="nam">index</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t478" href="#t478">478</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t479" href="#t479">479</a></span><span class="t">    <span class="com"># Relationships</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t480" href="#t480">480</a></span><span class="t">    <span class="nam">job</span> <span class="op">=</span> <span class="nam">relationship</span><span class="op">(</span><span class="str">"Job"</span><span class="op">,</span> <span class="nam">back_populates</span><span class="op">=</span><span class="str">"updates"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -606,7 +606,7 @@
             <a class="nav" href="z_361c51a8d17ee2a1_routers_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.14.1">coverage.py v7.14.1</a>,
-            created at 2026-05-31 23:52 +0100
+            created at 2026-06-07 10:15 +0100
         </p>
     </div>
 </footer>
