@@ -4,7 +4,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.job_email_scraping.models import ScrapedJob, ScrapingExclusionFilter, ScrapingFavouriteFilter
-from job_email_scraping.schemas import ScrapingFilterCreate
+from app.job_email_scraping.schemas import ScrapingFilterCreate
 
 STRING_OPERATORS = [
     "contains",
