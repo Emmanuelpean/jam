@@ -6,6 +6,7 @@ import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
 import { authApi, exportApi, GenericResponse, UpdateCurrentUserResponse } from "../../services/api/Users";
 import { ApiResponse } from "../../services/api/Base";
+import { handleApiError } from "../../services/api/ApiError";
 import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { EmailValidation, ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
@@ -53,6 +54,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		}
 	}, [currentUser]);
 	const [showConfirmModal, setShowConfirmModal] = useState(false);
+	const [verifying, setVerifying] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 	const [downloadingData, setDownloadingData] = useState(false);
 	const hasPendingEmail: boolean = !!currentUser?.pending_email_change;
@@ -117,10 +119,20 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		setFormData((prev: AccountFormData): AccountFormData => ({ ...prev, delete_password: "" }));
 	};
 
-	const proceedToConfirmation = (): void => {
-		if (!formData.delete_password) return;
-		setShowDeleteModal(false);
-		setShowConfirmModal(true);
+	const proceedToConfirmation = async (): Promise<void> => {
+		if (!formData.delete_password || !token) return;
+		setVerifying(true);
+		try {
+			await authApi.verifyPassword(formData.delete_password, token);
+			setShowDeleteModal(false);
+			setShowConfirmModal(true);
+		} catch (error) {
+			setErrors(
+				(prev: ValidationErrors): ValidationErrors => ({ ...prev, delete_password: "Password is incorrect." })
+			);
+		} finally {
+			setVerifying(false);
+		}
 	};
 
 	const closeConfirmModal = (): void => {
@@ -220,11 +232,21 @@ export const AccountTab: React.FC = (): JSX.Element => {
 				);
 			}
 		} catch (error) {
-			showApiError(
-				error,
-				"Account Update Failed",
-				"An unknown error occured while trying to update your account details."
-			);
+			const { status } = handleApiError(error);
+			if (status === 401) {
+				setErrors(
+					(prev: ValidationErrors): ValidationErrors => ({
+						...prev,
+						current_password: "The current password is incorrect.",
+					})
+				);
+			} else {
+				showApiError(
+					error,
+					"Account Update Failed",
+					"An unknown error occurred while trying to update your account details."
+				);
+			}
 		} finally {
 			setSubmitting(false);
 		}
@@ -293,6 +315,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		key: "delete_password",
 		type: "password",
 		label: "Password",
+		isDisabled: verifying,
 	};
 
 	return (
@@ -326,6 +349,18 @@ export const AccountTab: React.FC = (): JSX.Element => {
 				<Col md={6}>{renderFormField(newPasswordField, formData, handleInputChange, errors)}</Col>
 				<Col md={6}>{renderFormField(confirmPasswordField, formData, handleInputChange, errors)}</Col>
 			</Row>
+			<div className="mt-4">
+				<ActionButton
+					type="submit"
+					variant="primary"
+					disabled={submitting}
+					loading={submitting}
+					defaultIcon="bi-save"
+					id={"confirm-button"}
+					defaultText={"Save Account Settings"}
+					loadingText={"Saving..."}
+				/>
+			</div>
 
 			<hr className="my-4" />
 
@@ -343,18 +378,6 @@ export const AccountTab: React.FC = (): JSX.Element => {
 				loadingText={"Downloading..."}
 				id="download-data-button"
 			/>
-
-			<div className="mt-4">
-				<ActionButton
-					type="submit"
-					variant="primary"
-					disabled={submitting}
-					defaultIcon="bi-save"
-					id={"confirm-button"}
-					defaultText={"Save Account Settings"}
-					loadingText={"Saving..."}
-				/>
-			</div>
 
 			<hr className="my-4" />
 
@@ -384,30 +407,34 @@ export const AccountTab: React.FC = (): JSX.Element => {
 						<i className="bi bi-exclamation-triangle"></i> Delete Account
 					</Modal.Title>
 				</Modal.Header>
-				<Modal.Body>
-					<Alert variant="danger">
-						<strong>Warning:</strong> This action is permanent and cannot be undone. All your data will be
-						permanently deleted.
-					</Alert>
-					<p>Please enter your password to confirm account deletion:</p>
-					{renderFormField(deletePasswordField, formData, handleInputChange, errors)}
-				</Modal.Body>
-				<Modal.Footer>
-					<ActionButton
-						variant="secondary"
-						onClick={closeDeleteModal}
-						defaultText="Cancel"
-						id="cancel-delete-button"
-					/>
-					<ActionButton
-						variant="danger"
-						onClick={proceedToConfirmation}
-						disabled={!formData.delete_password}
-						defaultIcon="bi-arrow-right"
-						defaultText="Continue"
-						id="continue-delete-button"
-					/>
-				</Modal.Footer>
+				<Form onSubmit={(e) => { e.preventDefault(); void proceedToConfirmation(); }}>
+					<Modal.Body>
+						<Alert variant="danger">
+							<strong>Warning:</strong> This action is permanent and cannot be undone. All your data will be
+							permanently deleted.
+						</Alert>
+						<p>Please enter your password to confirm account deletion:</p>
+						{renderFormField(deletePasswordField, formData, handleInputChange, errors)}
+					</Modal.Body>
+					<Modal.Footer>
+						<ActionButton
+							variant="secondary"
+							onClick={closeDeleteModal}
+							defaultText="Cancel"
+							id="cancel-delete-button"
+						/>
+						<ActionButton
+							variant="danger"
+							onClick={proceedToConfirmation}
+							disabled={!formData.delete_password || verifying}
+							loading={verifying}
+							defaultIcon="bi-arrow-right"
+							defaultText="Continue"
+							loadingText="Verifying..."
+							id="continue-delete-button"
+						/>
+					</Modal.Footer>
+				</Form>
 			</JamModal>
 
 			<JamModal show={showConfirmModal} onHide={closeConfirmModal} size={"lg"} centered id="confirm-delete-modal">
@@ -424,10 +451,10 @@ export const AccountTab: React.FC = (): JSX.Element => {
 						</p>
 						<ul className="mt-2 mb-0">
 							<li>All job applications and tracking data</li>
-							<li>Saved jobs and email alerts</li>
+							<li>Interview records and job application updates</li>
+							<li>All contact and company records</li>
 							<li>User preferences and settings</li>
-							<li>Interview records and notes</li>
-							<li>All contacts and companies</li>
+							<li>Saved jobs and email alerts</li>
 							{currentUser?.premium?.is_active && (
 								<li className="fw-bold">
 									Your active premium subscription (will be cancelled immediately)

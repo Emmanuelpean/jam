@@ -292,6 +292,10 @@ def update_account(
 
     db.commit()
     db.refresh(current_user)
+
+    if password_changed:
+        email_service.send_password_changed_notification(current_user.email)
+
     return result
 
 
@@ -400,6 +404,20 @@ def check_email_pending(
         return {"has_pending_email": False, "pending_email": None}
 
     return {"has_pending_email": True, "pending_email": token_entry.pending_email}
+
+
+@current_user_router.post("/verify-password", response_model=base_schemas.GenericResponse)
+def verify_password_endpoint(
+    verify_request: schemas.AccountDeleteRequest,
+    current_user: models.User = Depends(oauth2.get_current_user),
+) -> dict[str, str | bool]:
+    """Verify the current user's password without making any changes."""
+    if not utils.verify_password(verify_request.password, current_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Password is incorrect.",
+        )
+    return {"message": "Password verified.", "success": True}
 
 
 @current_user_router.delete("/", response_model=base_schemas.GenericResponse)

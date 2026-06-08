@@ -31,12 +31,12 @@ class TestAccountSettingsPage(BaseTest):
         )
 
     def test_update_email_incorrect_password(self) -> None:
-        """Test updating email without current password"""
+        """Test updating email with an incorrect current password shows an inline field error"""
 
         self.set_text(self.user_settings_utils.current_password, "wrong")
         self.set_text(self.user_settings_utils.email, "test@test.com")
         self.user_settings_utils.confirm()
-        self.assert_toast_message("The current password is incorrect.")
+        self.user_settings_utils.assert_password_error_message("The current password is incorrect.")
 
     def test_change_email_success(self) -> None:
         """Test changing the email address"""
@@ -238,15 +238,32 @@ class TestAccountSettingsPage(BaseTest):
         assert deleted_user is None
 
     def test_delete_account_wrong_password(self) -> None:
-        """Test account deletion with wrong password"""
+        """Test that entering a wrong password in the first modal shows an inline field error"""
 
         self.user_settings_utils.delete_account_button.click()
         self.set_text(self.user_settings_utils.delete_password, self.user.plain_password + "something")
         self.user_settings_utils.continue_delete_button.click()
-        self.user_settings_utils.final_delete_button.click()
-        self.assert_toast_message("Failed to delete account. Password is incorrect.")
+        self.user_settings_utils.assert_delete_password_error_message("Password is incorrect.")
         assert self.db_user is not None
         assert self.db_user.email == self.user.email
+
+    def test_delete_account_wrong_then_correct_password(self, session) -> None:
+        """Test that correcting the password after a wrong-password error allows deletion"""
+
+        user_id = self.user.id
+        self.user_settings_utils.delete_account_button.click()
+        self.set_text(self.user_settings_utils.delete_password, self.user.plain_password + "something")
+        self.user_settings_utils.continue_delete_button.click()
+        self.user_settings_utils.assert_delete_password_error_message("Password is incorrect.")
+
+        # Correct the password and retry
+        self.set_text(self.user_settings_utils.delete_password, self.user.plain_password)
+        self.user_settings_utils.continue_delete_button.click()
+        self.user_settings_utils.final_delete_button.click()
+        self.wait_for_page("login")
+        self.assert_toast_message("Your account has been permanently deleted.")
+        deleted_user = session.query(models.User).filter(models.User.id == user_id).first()
+        assert deleted_user is None
 
     def test_download_data_before_deletion(self, session) -> None:
         """Test downloading data from the confirmation modal before deletion"""

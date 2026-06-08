@@ -803,7 +803,8 @@ textarea.form-control {
     letter-spacing: 0.025em;
     text-transform: uppercase;
     border-radius: 7.2px;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     overflow: hidden;
     max-width: 100%;
     white-space: nowrap;

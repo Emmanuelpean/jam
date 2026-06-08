@@ -1,4 +1,4 @@
-import React, { JSX, useEffect } from "react";
+import React, { JSX, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AccountTab } from "./AccountTab";
 import { PreferencesTab } from "./PreferencesTab";
@@ -45,6 +45,12 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 		{ id: "premium", label: "Premium", icon: "gem" },
 	];
 
+	const contentColRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		contentColRef.current?.scrollTo({ top: 0 });
+	}, [activeTab]);
+
 	const handleTabChange = (tabId: tabs): void => {
 		navigate(`/settings/${tabId}`);
 	};
@@ -76,7 +82,7 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 					</div>
 				</div>
 
-				<div className="settings-content-col">
+				<div className="settings-content-col" ref={contentColRef}>
 					<div className="settings-content">
 						{activeTab === "account" && <AccountTab />}
 						{activeTab === "preferences" && <PreferencesTab />}

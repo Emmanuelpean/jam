@@ -110,7 +110,8 @@ class TestCurrentUser:
         assert mock_email_verif.call_count == 0
         assert response.status_code == 403
 
-    def test_update_password(self, regular_user_client, test_regular_user, session) -> None:
+    @patch("app.core.routers.user.email_service.send_password_changed_notification")
+    def test_update_password(self, mock_notify, regular_user_client, test_regular_user, session) -> None:
         """Test updating own password as non-admin."""
 
         # Get initial token version
@@ -131,6 +132,10 @@ class TestCurrentUser:
         # Verify response indicates logout
         assert response.json()["logged_out"] is True
         assert "log in again" in response.json()["message"].lower()
+
+        # Verify email sent
+        assert mock_notify.call_count == 1
+        assert mock_notify.call_args[0][0] == test_regular_user.email
 
     def test_update_password_demo_fail(self, demo_user_client, test_demo_user, session) -> None:
         """Test updating own password as demo user (should fail)."""
@@ -173,7 +178,8 @@ class TestCurrentUser:
         response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 400
 
-    def test_update_account(self, session, regular_user_client, test_regular_user) -> None:
+    @patch("app.core.routers.user.email_service.send_password_changed_notification")
+    def test_update_account(self, mock_notify, session, regular_user_client, test_regular_user) -> None:
         """Test updating account does not affect the password."""
 
         password = test_regular_user.password
@@ -182,6 +188,7 @@ class TestCurrentUser:
         assert response.status_code == 200
         session.refresh(test_regular_user)
         assert test_regular_user.password == password
+        assert mock_notify.call_count == 0
 
     def test_update_preferences(self, session, regular_user_client, test_regular_user) -> None:
         """Test updating user preferences that don't require password."""
@@ -539,6 +546,53 @@ class TestTokenVersioning:
         # Verify token still works
         response = regular_user_client.get("/current-user")
         assert response.status_code == 200
+
+
+class TestVerifyPassword:
+    """Test suite for the POST /current-user/verify-password endpoint."""
+
+    def test_verify_password_success(self, regular_user_client, test_regular_user) -> None:
+        """Test that the correct password returns 200."""
+
+        response = regular_user_client.post(
+            "/current-user/verify-password", json={"password": test_regular_user.plain_password}
+        )
+        assert response.status_code == 200
+        assert response.json()["success"] is True
+
+    def test_verify_password_incorrect_password(self, regular_user_client, test_regular_user) -> None:
+        """Test that a wrong password returns 401."""
+
+        response = regular_user_client.post(
+            "/current-user/verify-password", json={"password": test_regular_user.plain_password + "wrong"}
+        )
+        assert response.status_code == 401
+        assert "incorrect" in response.json()["detail"].lower()
+
+    def test_verify_password_empty_password(self, regular_user_client) -> None:
+        """Test that an empty password returns 401."""
+
+        response = regular_user_client.post("/current-user/verify-password", json={"password": ""})
+        assert response.status_code == 401
+        assert "incorrect" in response.json()["detail"].lower()
+
+    def test_verify_password_unauthenticated(self, client) -> None:
+        """Test that unauthenticated requests return 401."""
+
+        response = client.post("/current-user/verify-password", json={"password": "anypassword"})
+        assert response.status_code == 401
+
+    def test_verify_password_does_not_modify_user(self, regular_user_client, test_regular_user, session) -> None:
+        """Test that a successful password verification leaves user state unchanged."""
+
+        initial_token_version = test_regular_user.token_version
+        initial_password_hash = test_regular_user.password
+
+        regular_user_client.post("/current-user/verify-password", json={"password": test_regular_user.plain_password})
+
+        session.refresh(test_regular_user)
+        assert test_regular_user.token_version == initial_token_version
+        assert test_regular_user.password == initial_password_hash
 
 
 class TestDeleteAccount:

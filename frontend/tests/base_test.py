@@ -1209,6 +1209,11 @@ class UserSettingsUtils(BaseUtils):
 
         self.get_element("confirm-button")
 
+    def assert_delete_password_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed under the delete password field"""
+
+        self._assert_message("delete_password-", error_message)
+
     @property
     def download_data_button(self) -> WebElement:
         """Get the download data button"""

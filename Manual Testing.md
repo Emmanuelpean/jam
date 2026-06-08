@@ -16,3 +16,24 @@ Set test_mode=False in the .env file.
   * [ ] Login with incorrect credentials
 * [ ] Password reset
 
+# Homepage
+* [X] Welcome modal shows on first visit.
+* [X] Tour popup shows after the welcome modal is closed.
+* [X] All tours are working.
+
+
+# Jobs
+* [X] Job creation with all fields filled in.
+* [X] Add interview
+* [X] Add update
+
+# Other data
+* [X] Company creation with all fields filled in.
+* [ ] Person creation with all fields filled in.
+* [ ] Aggregator creation with all fields filled in.
+* [ ] Keyword creation with all fields filled in.
+
+# Table customisation
+* [ ] Table can be sorted by any column.
+* [ ] Table columns can be toggled
+* [ ] Filters work

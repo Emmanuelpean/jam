@@ -48,6 +48,7 @@ export interface AuthApi {
 	checkPendingEmail: (token: string) => ApiResponsePromise<boolean>;
 	requestPasswordReset: (email: string) => ApiResponsePromise<GenericResponse>;
 	resetPassword: (token: string, newPassword: string) => ApiResponsePromise<GenericResponse>;
+	verifyPassword: (password: string, token: string) => ApiResponsePromise<GenericResponse>;
 	deleteAccount: (password: string, token: string) => ApiResponsePromise<GenericResponse>;
 	demoCleanup: (token: string) => ApiResponsePromise<GenericResponse>;
 }
@@ -97,6 +98,10 @@ export const authApi: AuthApi = {
 			token,
 			new_password: newPassword,
 		});
+	},
+
+	verifyPassword: async (password: string, token: string): ApiResponsePromise<GenericResponse> => {
+		return baseApi.post("current-user/verify-password", { password }, token);
 	},
 
 	deleteAccount: async (password: string, token: string): ApiResponsePromise<GenericResponse> => {
