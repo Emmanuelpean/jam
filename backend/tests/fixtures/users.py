@@ -6,6 +6,7 @@ import pytest
 
 from app import models
 from app.utils import hash_token
+from app.core.models import TokenType
 from tests.utils import test_data as td
 from tests.utils.create_data.core import create_users, create_user_qualifications
 
@@ -64,7 +65,7 @@ def test_unverified_token_user(session) -> models.User:
     verification_token = models.UserToken(
         owner_id=user.id,
         token=hashed_token,
-        token_type="verification",
+        token_type=TokenType.EMAIL_VERIFICATION,
         created_at=dt.datetime.now(dt.timezone.utc),
     )
     session.add(verification_token)
@@ -92,7 +93,7 @@ def test_user_change_email_token_user(session) -> models.User:
     email_change_token = models.UserToken(
         owner_id=user.id,
         token=hashed_token,
-        token_type="email_change",
+        token_type=TokenType.EMAIL_CHANGE,
         created_at=dt.datetime.now(dt.timezone.utc),
         pending_email="newemail@test.com",
     )

@@ -6,10 +6,11 @@ from typing import Callable
 from sqlalchemy.orm import Session
 from starlette import status
 
-from app import utils, models, base_schemas
-from app.core.models import TokenType
+from app import utils, models
 from app.config import settings
+from app.core.models import TokenType
 from app.emails.email_service import email_service
+from app.base_schemas import GenericResponse
 
 
 def get_token(
@@ -69,26 +70,17 @@ def generate_token(
     return plain_token, new_token
 
 
-def send_verification_with_rate_limit(
+def check_token_rate_limit(
     token_type: TokenType,
     user: models.User,
     db: Session,
-    send_email_function: Callable,
-    endpoint: str,
-    name: str,
-    pending_email: str | None = None,
-) -> base_schemas.GenericResponse:
-    """Send verification email with rate limiting.
+) -> int:
+    """Check if the user has exceeded the rate limit for a given token type.
     :param token_type: Type of the token (e.g., 'verification')
     :param user: user entry
-    :param db: database session
-    :param send_email_function: Function to send the email
-    :param endpoint: Frontend endpoint for the verification link
-    :param name: Name of the token type for messaging
-    :param pending_email: Optional pending email for email_change tokens
-    :return: Dictionary with success status, message and error code"""
+    :param db: Database session
+    :return: True if rate limit exceeded, False otherwise"""
 
-    # Check if enough time has passed since last token was generated
     existing_token = (
         db.query(models.UserToken)
         .filter(models.UserToken.owner_id == user.id)
@@ -98,12 +90,38 @@ def send_verification_with_rate_limit(
     )
     if existing_token:
         seconds_remaining = existing_token.remaining_seconds
-        if float(str(seconds_remaining)) > 0:
-            return base_schemas.GenericResponse(
-                success=False,
-                message=f"Please wait {seconds_remaining} seconds before requesting another {name} email.",
-                error_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            )
+        return seconds_remaining
+    else:
+        return 0
+
+
+def send_rate_limited_tokenized_email(
+    token_type: TokenType,
+    user: models.User,
+    db: Session,
+    send_email_function: Callable,
+    endpoint: str,
+    name: str,
+    pending_email: str | None = None,
+) -> GenericResponse:
+    """Send verification email with rate limiting.
+    :param token_type: Type of the token
+    :param user: user entry
+    :param db: database session
+    :param send_email_function: Function to send the email
+    :param endpoint: Frontend endpoint for the verification link
+    :param name: Name of the token type for messaging
+    :param pending_email: Optional pending email for email_change tokens
+    :return: Dictionary with success status, message, and error code"""
+
+    # Check if enough time has passed since last token was generated
+    seconds_remaining = check_token_rate_limit(token_type, user, db)
+    if seconds_remaining > 0:
+        return GenericResponse(
+            success=False,
+            message=f"Please wait {seconds_remaining} seconds before requesting another {name} email.",
+            error_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
 
     # Generate new verification token and delete the old ones
     plain_token, hashed_token_obj = generate_token(user.id, token_type, db, pending_email)
@@ -112,49 +130,49 @@ def send_verification_with_rate_limit(
         # Send the email to the user with the plain token
         verification_url = f"{settings.frontend_url}/{endpoint}/?token={plain_token}"
         send_email_function(user.email, verification_url, user.first_name)
-        return base_schemas.GenericResponse(
+        return GenericResponse(
             success=True,
             message=f"{name} email sent successfully.",
             error_code=None,
         )
 
     except Exception as e:
-        return base_schemas.GenericResponse(
+        return GenericResponse(
             success=False,
             message=f"Error sending {token_type} email: {e}",
             error_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 
-def send_email_verification_email(
+def send_rate_limited_tokenized_email_verification_email(
     user: models.User,
     db: Session,
-) -> base_schemas.GenericResponse:
+) -> GenericResponse:
     """Send email verification email with rate limiting.
     :param user: user entry
     :param db: database session
-    :return: Dictionary with success status, message and error code"""
+    :return: Dictionary with success status, message, and error code"""
 
-    return send_verification_with_rate_limit(
-        token_type=TokenType.VERIFICATION,
+    return send_rate_limited_tokenized_email(
+        token_type=TokenType.EMAIL_VERIFICATION,
         user=user,
         db=db,
-        send_email_function=email_service.send_verification_email,
+        send_email_function=email_service.send_email_verification_email,
         endpoint="verify-email",
         name="Verification",
     )
 
 
-def send_password_reset_email(
+def send_rate_limited_tokenized_password_reset_email(
     user: models.User,
     db: Session,
-) -> base_schemas.GenericResponse:
+) -> GenericResponse:
     """Send password reset email with rate limiting.
     :param user: user entry
     :param db: database session
-    :return: Dictionary with success status, message and error code"""
+    :return: Dictionary with success status, message, and error code"""
 
-    return send_verification_with_rate_limit(
+    return send_rate_limited_tokenized_email(
         token_type=TokenType.PASSWORD_RESET,
         user=user,
         db=db,
@@ -164,18 +182,18 @@ def send_password_reset_email(
     )
 
 
-def send_email_change_email(
+def send_rate_limited_tokenized_email_change_email(
     user: models.User,
     new_email: str,
     db: Session,
-) -> base_schemas.GenericResponse:
+) -> GenericResponse:
     """Send new email verification email with rate limiting.
     :param user: user entry
     :param new_email: new email address to verify
     :param db: database session
-    :return: Dictionary with success status, message and error code"""
+    :return: Dictionary with success status, message, and error code"""
 
-    return send_verification_with_rate_limit(
+    return send_rate_limited_tokenized_email(
         token_type=TokenType.EMAIL_CHANGE,
         user=user,
         db=db,
@@ -183,4 +201,23 @@ def send_email_change_email(
         endpoint="verify-new-email",
         pending_email=new_email,
         name="Email change verification",
+    )
+
+
+def send_tokenized_password_changed_email_with_rate_limit(
+    user: models.User,
+    db: Session,
+) -> GenericResponse:
+    """Send a notification email to the user when their password is changed.
+    :param user: user entry
+    :param db: database session
+    :return: Dictionary with success status, message, and error code"""
+
+    return send_rate_limited_tokenized_email(
+        token_type=TokenType.PASSWORD_CHANGE,
+        user=user,
+        db=db,
+        send_email_function=lambda email, b, c: email_service.send_password_changed_notification(email),
+        name="Password changed",
+        endpoint="",
     )

@@ -204,9 +204,10 @@ class PremiumSettings(Owned, Base):
 class TokenType(str, Enum):
     """User token type enum."""
 
-    VERIFICATION = "verification"
+    EMAIL_VERIFICATION = "email_verification"
     PASSWORD_RESET = "password_reset"
     EMAIL_CHANGE = "email_change"
+    PASSWORD_CHANGE = "password_change"
 
 
 class UserToken(Owned, Base):
@@ -229,9 +230,10 @@ class UserToken(Owned, Base):
 
         # Define expiration times based on the token type
         expiration_minutes = {
-            TokenType.VERIFICATION: settings.verification_token_expiration_minutes,
+            TokenType.EMAIL_VERIFICATION: settings.verification_token_expiration_minutes,
             TokenType.PASSWORD_RESET: settings.password_reset_token_expiration_minutes,
             TokenType.EMAIL_CHANGE: settings.email_change_token_expiration_minutes,
+            TokenType.PASSWORD_CHANGE: settings.password_reset_token_expiration_minutes,
         }
 
         # noinspection PyTypeChecker

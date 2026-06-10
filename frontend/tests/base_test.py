@@ -1088,25 +1088,61 @@ class UserSettingsUtils(BaseUtils):
         self.get_element("premium-tab").click()
 
     @property
+    def change_email_button(self) -> WebElement:
+        """Get the Change Email button on the account page"""
+
+        return self.get_element("change-email-button")
+
+    @property
+    def change_password_button(self) -> WebElement:
+        """Get the Change Password button on the account page"""
+
+        return self.get_element("change-password-button")
+
+    @property
+    def confirm_email_change_button(self) -> WebElement:
+        """Get the confirm button inside the email change modal"""
+
+        return self.get_element("confirm-email-change-button")
+
+    @property
+    def cancel_email_change_button(self) -> WebElement:
+        """Get the cancel button inside the email change modal"""
+
+        return self.get_element("cancel-email-change-button")
+
+    @property
+    def confirm_password_change_button(self) -> WebElement:
+        """Get the confirm button inside the password change modal"""
+
+        return self.get_element("confirm-password-change-button")
+
+    @property
+    def cancel_password_change_button(self) -> WebElement:
+        """Get the cancel button inside the password change modal"""
+
+        return self.get_element("cancel-password-change-button")
+
+    @property
     def current_password(self) -> WebElement:
-        """Get the current password field"""
+        """Get the current password field in the password change modal"""
         return self.get_element("current_password")
 
     @property
     def email(self) -> WebElement:
-        """Get the email field"""
+        """Get the email field in the email change modal"""
 
         return self.get_element("email")
 
     @property
     def new_password(self) -> WebElement:
-        """Get the new password field"""
+        """Get the new password field in the password change modal"""
 
         return self.get_element("new_password")
 
     @property
     def confirm_password(self) -> WebElement:
-        """Get the confirmation password field"""
+        """Get the confirmation password field in the password change modal"""
 
         return self.get_element("confirm_password")
 

@@ -207,11 +207,8 @@ class UserUpdate(BaseModel):
 
 
 class CurrentUserUpdate(BaseModel):
-    """User account update schema"""
+    """User account update schema for non-sensitive profile fields"""
 
-    email: EmailField | None = None
-    current_password: str | None = Field(default=None, max_length=COLUMN_LIMITS.password)
-    password: str | None = Field(default=None, max_length=COLUMN_LIMITS.password)
     first_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.first_name)
     last_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.last_name)
     app_version: str | None = Field(default=None, max_length=COLUMN_LIMITS.app_version)
@@ -219,10 +216,17 @@ class CurrentUserUpdate(BaseModel):
     premium: CurrentUserPremiumDetailsUpdate | None = None
 
 
-class CurrentUserUpdateResponse(BaseModel):
-    success: bool
-    message: str
-    logged_out: bool | None = None
+class CurrentUserPasswordUpdate(BaseModel):
+    """Schema for the current user's password change"""
+
+    current_password: str = Field(max_length=COLUMN_LIMITS.password)
+    new_password: str = Field(max_length=COLUMN_LIMITS.password)
+
+
+class CurrentUserEmailUpdate(BaseModel):
+    """Schema for the current user's email change request"""
+
+    email: EmailField
 
 
 # ------------------------------------------------- USER QUALIFICATIONS ------------------------------------------------

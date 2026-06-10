@@ -83,9 +83,6 @@ export interface UserDataTransform {
 }
 
 export interface UserDataUpdate {
-	email?: string | null;
-	password?: string | null;
-	current_password?: string | null;
 	first_name?: string | null;
 	last_name?: string | null;
 	app_version?: string | null;

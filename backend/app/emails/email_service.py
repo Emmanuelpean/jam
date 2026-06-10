@@ -84,7 +84,7 @@ class EmailService(object):
             self.logger.error(f"Failed to send {message_type} email to %s: %s", recipient, str(e))
             raise e
 
-    def send_verification_email(
+    def send_email_verification_email(
         self,
         recipient: str,
         verification_url: str,

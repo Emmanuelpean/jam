@@ -85,9 +85,11 @@ class TestEmailService:
     def test_send_verification_email_template_missing(self, email_svc) -> None:
         """Test handling of missing email template."""
 
-        with patch.object(email_svc.templates.env, "get_template", side_effect=TemplateNotFound("email_confirmation.html")):
+        with patch.object(
+            email_svc.templates.env, "get_template", side_effect=TemplateNotFound("email_confirmation.html")
+        ):
             with pytest.raises(TemplateNotFound):
-                email_svc.send_verification_email("user@example.com", "http://verify.url")
+                email_svc.send_email_verification_email("user@example.com", "http://verify.url")
 
 
 class TestEmailServiceIMAP:

@@ -11,7 +11,11 @@ from app import utils, models, database, base_schemas
 from app.config import settings
 from app.core import schemas, oauth2
 from app.core.models import get_setting_value, TokenType
-from app.core.utils import send_email_verification_email, send_password_reset_email, get_token
+from app.core.utils import (
+    send_rate_limited_tokenized_email_verification_email,
+    send_rate_limited_tokenized_password_reset_email,
+    get_token,
+)
 from app.demo.seed import seed_demo_data
 from app.emails.email_service import email_service
 
@@ -105,7 +109,7 @@ def login(
 
     # Check that the user is verified
     if not user.is_verified:
-        result = send_email_verification_email(user, db)
+        result = send_rate_limited_tokenized_email_verification_email(user, db)
 
         # Raise appropriate exception based on email sending result
         if result.success:
@@ -177,7 +181,7 @@ def create_user(
     if existing_user:
         # If user exists but is not verified, resend verification email
         if not existing_user.is_verified:
-            result = send_email_verification_email(existing_user, db)
+            result = send_rate_limited_tokenized_email_verification_email(existing_user, db)
             if result.success:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -201,7 +205,7 @@ def create_user(
     db.refresh(new_user)
 
     # Send verification email
-    result = send_email_verification_email(new_user, db)
+    result = send_rate_limited_tokenized_email_verification_email(new_user, db)
     if not result.success:
         # Rollback user creation if email fails
         db.delete(new_user)
@@ -227,7 +231,7 @@ def verify_email(
     _assert_not_maintenance(db)
 
     verification_code = utils.hash_token(token)
-    token_entry = get_token(verification_code, TokenType.VERIFICATION, db)
+    token_entry = get_token(verification_code, TokenType.EMAIL_VERIFICATION, db)
 
     if not token_entry:
         raise HTTPException(
@@ -294,7 +298,7 @@ def request_password_reset(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Test users cannot reset their password.")
 
     # Send password reset email with rate limiting
-    result = send_password_reset_email(user, db)
+    result = send_rate_limited_tokenized_password_reset_email(user, db)
     if not result.success:
         error_code = result.error_code if result.error_code else status.HTTP_500_INTERNAL_SERVER_ERROR
         raise HTTPException(status_code=error_code, detail=result.message)

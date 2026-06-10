@@ -68,6 +68,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 				// Invalid token — log out user
 				if (status === 401 || status === 403) {
 					localStorage.removeItem("token");
+					sessionStorage.removeItem("token");
 					setToken(null);
 					setCurrentUser(null);
 				} else {
@@ -85,10 +86,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	): Promise<ApiResponse<UpdateCurrentUserResponse> | null> => {
 		if (!token) return null;
 		const response: ApiResponse<UpdateCurrentUserResponse> = await authApi.updateCurrentUser(userData, token);
-		if (response.data.logged_out) {
-			logout();
-			return response;
-		}
 		const userResponse: ApiResponse<UserData> = await authApi.getCurrentUser(token);
 		setCurrentUser((prev: CurrentUser | null): CurrentUser | null =>
 			prev ? { ...prev, ...userResponse.data } : prev
@@ -108,7 +105,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 	}, [token, userFetched, fetchUserInfo]);
 
-	// Record last login only for returning users (token already in localStorage on mount)
+	// Record last login only for returning users (token already in localStorage/sessuinStorage on mount)
 	useEffect((): void => {
 		if (hadTokenOnMount.current && token) {
 			authApi.heartbeat(token).catch(() => null);

@@ -673,8 +673,9 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 	// Show loading immediately on mount — DataProvider only renders when !!token,
 	// so this fires on login and on page refresh with an existing session.
-	useLayoutEffect((): void => {
+	useLayoutEffect((): (() => void) => {
 		showLoading("Loading Your Data...", 0);
+		return (): void => hideLoading();
 	}, []);
 
 	useEffect((): void => {
