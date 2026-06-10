@@ -366,7 +366,7 @@ class TestEmailVerification:
         )
 
         assert response.status_code == 200
-        assert "email address changed successfully" in response.json()["message"].lower()
+        assert "email address has been successfully updated" in response.json()["message"].lower()
 
         user = session.query(models.User).filter(models.User.id == test_user_change_email_token_user.id).first()
 
