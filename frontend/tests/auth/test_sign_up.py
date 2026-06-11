@@ -35,7 +35,7 @@ class TestSignUp(BaseTest):
         self.auth_utils.wait_for_login()
         assert self.verify_user_in_database(test_email)
         self.auth_utils.assert_toast_message(
-            "Account created! Please check your email to verify your account before logging in."
+            "Account created! Please check your email inbox to verify your account before logging in."
         )
 
     def test_signup_existing_email(self, test_users) -> None:

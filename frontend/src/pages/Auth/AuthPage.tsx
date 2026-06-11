@@ -348,7 +348,7 @@ function AuthForm(): JSX.Element {
 			if (result.data.success) {
 				switchToLogin();
 				showToastSuccess(
-					"Account created! Please check your email to verify your account before logging in.",
+					"Account created! Please check your email inbox to verify your account before logging in.",
 					"Registration Successful"
 				);
 			} else {
