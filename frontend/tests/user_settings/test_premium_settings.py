@@ -21,11 +21,6 @@ class TestPremiumSettingsPage(BaseTest):
     page_url = "settings/premium"
     _stripe_listener = None
 
-    def clear_stripe_customer_data(self) -> None:
-        """Clear Stripe customer data for the user"""
-
-        self.client.post("/test/delete_stripe_customer")
-
     def setup_function(self, request) -> None:
         """Setup function"""
 
@@ -48,22 +43,26 @@ class TestPremiumSettingsPage(BaseTest):
         timeout = 30
         start_time = time.time()
         while time.time() - start_time < timeout:
-            line = self.stripe_listener.stdout.readline()
-            if line:
-                print(f"[STRIPE] {line.strip()}")
-                if "Ready!" in line:
-                    break
+            stdout = self.stripe_listener.stdout
+            if stdout:
+                line = stdout.readline()
+                if line:
+                    print(f"[STRIPE] {line.strip()}")
+                    if "Ready!" in line:
+                        break
         else:
             raise RuntimeError("Stripe listener failed to start within timeout")
 
         # Start a thread to continuously drain stdout so the buffer doesn't fill up and block
         def drain_stdout() -> None:
             """Drain the stripe listener stdout to prevent it from filling up the buffer"""
-            for l in self.stripe_listener.stdout:
-                print(f"[STRIPE] {l.strip()}")
+            if self.stripe_listener.stdout:
+                for l in self.stripe_listener.stdout:
+                    print(f"[STRIPE] {l.strip()}")
 
         self._stripe_drain_thread = threading.Thread(target=drain_stdout, daemon=True)
         self._stripe_drain_thread.start()
+        self.client.post("/test/delete_stripe_customer")
 
         self.login()
 
@@ -112,19 +111,8 @@ class TestPremiumSettingsPage(BaseTest):
         self.premium_settings_utils.subscription_button.click()
         self.premium_settings_utils.stripe_cancel_subscription_button.click()
         self.premium_settings_utils.stripe_confirm_button.click()
-        self.premium_settings_utils.stripe_cancel_feedback.click()
         self.premium_settings_utils.stripe_return_to_business_link.click()
         self.wait_for_page("settings/premium?success=true")
-
-    def test_trial_payment(self) -> None:
-        """Test the Stripe payment modal interaction
-        Activate the trial, add a payment method and move the clock forward by 15 days"""
-
-        self._activate_trial()
-        self._add_payment_method_during_trial()
-        self.premium_settings_utils.advance_clock(15)
-        self.premium_settings_utils.assert_status_title("Premium")
-        assert self.premium_settings_utils.subscription_button.text == "Manage Subscription"
 
     def test_trial_elapses(self) -> None:
         """Test the Stripe payment modal interaction

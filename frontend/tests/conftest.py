@@ -31,6 +31,21 @@ pytest_plugins = [
 ]
 
 
+@pytest.fixture(scope="session", autouse=True)
+def enable_test_mode() -> Generator[None, None, None]:
+    """Enable test mode for the in-process TestClient (self.client).
+
+    The uvicorn subprocess gets TEST_MODE=true via its env, but self.client runs the
+    FastAPI app in this pytest process, where settings.test_mode comes from backend/.env
+    (TEST_MODE=False locally). Without this, test-only endpoints return 403 locally even
+    though they pass in CI (where TEST_MODE is set as a job env var)."""
+
+    original = settings.test_mode
+    settings.test_mode = True
+    yield
+    settings.test_mode = original
+
+
 def kill_process_on_port(port) -> bool:
     """Kill any process using the specified port"""
     try:
