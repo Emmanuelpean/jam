@@ -39,9 +39,6 @@ export type TableSortConfigs = Record<string, SortConfig>;
 export interface UserPreferences {
 	theme: string;
 	dark_mode: ThemeMode;
-	chase_threshold: number;
-	deadline_threshold: number;
-	update_limit: number;
 	default_currency: string;
 	extension_banner_dismissed: boolean;
 	completed_tours: string[] | null;

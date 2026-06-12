@@ -89,9 +89,6 @@ class UserPreferencesCreate(BaseModel):
 
     theme: str | None = Field(default=None, max_length=COLUMN_LIMITS.theme)
     dark_mode: ThemeMode = Field(default="system", max_length=COLUMN_LIMITS.theme_mode)
-    chase_threshold: int | None = None
-    deadline_threshold: int | None = None
-    update_limit: int | None = None
     default_currency: str | None = None
     extension_banner_dismissed: bool = False
     completed_tours: list[TourId] | None = Field(default=None, max_length=COLUMN_LIMITS.completed_tours)

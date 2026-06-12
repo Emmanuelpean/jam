@@ -15,29 +15,6 @@ class TestPreferenceSettingsPage(BaseTest):
 
         self.login()
 
-    def test_dashboard_settings(self) -> None:
-        """Test changing the dashboard settings"""
-
-        assert self.user_settings_utils.chase_threshold.get_attribute("value") == str(
-            self.db_user.preferences.chase_threshold
-        )
-        assert self.user_settings_utils.deadline_threshold.get_attribute("value") == str(
-            self.db_user.preferences.deadline_threshold
-        )
-        assert self.user_settings_utils.update_limit.get_attribute("value") == str(
-            self.db_user.preferences.update_limit
-        )
-
-        self.set_text(self.user_settings_utils.chase_threshold, "100")
-        self.set_text(self.user_settings_utils.deadline_threshold, "101")
-        self.set_text(self.user_settings_utils.update_limit, "102")
-        self.user_settings_utils.confirm()
-        self.assert_toast_message("Preferences updated successfully.")
-
-        assert self.db_user.preferences.chase_threshold == 100
-        assert self.db_user.preferences.deadline_threshold == 101
-        assert self.db_user.preferences.update_limit == 102
-
     def test_currency_settings(self) -> None:
         """Test changing the currency settings"""
 

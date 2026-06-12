@@ -1,8 +1,6 @@
 """Tests for the customisable dashboard: edit mode, adding/removing widgets, save, cancel, reset."""
 
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 from dashboard_base import DashboardTestBase
 
@@ -37,63 +35,45 @@ class TestDashboardCustomisation(DashboardTestBase):
     def _enter_edit_mode(self) -> None:
         """Click the pencil button to enter edit mode."""
         self.get_element(EDIT_BTN).click()
-        # Wait for the save button to appear (confirms edit mode is active)
-        WebDriverWait(self.driver, 5).until(
-            EC.presence_of_element_located((By.ID, SAVE_BTN))
-        )
+        self.get_elements(SAVE_BTN)
 
     def _exit_edit_mode_cancel(self) -> None:
         """Click the edit/cancel toggle button to cancel (exit without saving)."""
         self.get_element(EDIT_BTN).click()
-        WebDriverWait(self.driver, 5).until(
-            EC.invisibility_of_element_located((By.ID, SAVE_BTN))
-        )
+        self.wait_for_disappear(SAVE_BTN)
 
     def _save(self) -> None:
         """Click save and wait for save button to disappear (edit mode exits)."""
         self.get_element(SAVE_BTN).click()
-        WebDriverWait(self.driver, 5).until(
-            EC.invisibility_of_element_located((By.ID, SAVE_BTN))
-        )
+        self.wait_for_disappear(SAVE_BTN)
 
     def _add_widget(self, widget_type: str, variant_key: str) -> None:
         """Open widget picker, select type then variant."""
         self.get_element(ADD_WIDGET_BTN).click()
-        # Wait for and click type card
         type_id = PICKER_TYPE.format(type=widget_type)
-        WebDriverWait(self.driver, 5).until(
-            EC.element_to_be_clickable((By.ID, type_id))
-        ).click()
-        # Wait for and click variant card
+        self.get_element(type_id).click()
         variant_id = PICKER_VARIANT.format(key=variant_key)
-        WebDriverWait(self.driver, 5).until(
-            EC.element_to_be_clickable((By.ID, variant_id))
-        ).click()
-        # Wait for the modal to close before returning so callers can rely on
-        # the new widget already being in the DOM.
-        WebDriverWait(self.driver, 5).until(
-            EC.invisibility_of_element_located((By.ID, variant_id))
-        )
+        self.get_element(variant_id).click()
+        self.wait_for_disappear(variant_id)
 
     def _remove_widget(self, widget_id: str, confirm: bool = True) -> None:
         """Click the remove button for a widget and confirm (or cancel) the dialog."""
         self.get_element(f"widget-remove-btn-{widget_id}").click()
         btn_id = DELETE_CONFIRM_BTN if confirm else DELETE_CANCEL_BTN
-        WebDriverWait(self.driver, 5).until(
-            EC.element_to_be_clickable((By.ID, btn_id))
-        ).click()
+        self.get_element(btn_id).click()
 
     def _grid_item_count(self) -> int:
         return len(self.driver.find_elements(By.CSS_SELECTOR, ".dashboard-grid-item"))
 
     # ------------------------------------------- EDIT MODE TOGGLE ------------------------------------------
 
-    def test_edit_mode_shows_toolbar_buttons(self) -> None:
+    def test_edit_mode_shows_toolbar_and_widget_buttons(self) -> None:
         """Entering edit mode reveals save, add-widget and reset buttons."""
         self._enter_edit_mode()
         assert self.get_element(SAVE_BTN).is_displayed()
         assert self.get_element(ADD_WIDGET_BTN).is_displayed()
         assert self.get_element(RESET_BTN).is_displayed()
+        assert self.get_element("widget-remove-btn-w-test-0").is_displayed()
 
     def test_cancel_hides_toolbar_buttons(self) -> None:
         """Cancelling edit mode hides the save/add/reset buttons."""
@@ -101,18 +81,7 @@ class TestDashboardCustomisation(DashboardTestBase):
         self._exit_edit_mode_cancel()
         # Save button should no longer be in the DOM / visible
         assert not self.check_element_exists(SAVE_BTN)
-
-    def test_edit_mode_shows_remove_buttons(self) -> None:
-        """In edit mode a remove button appears for each widget."""
-        initial_count = self._grid_item_count()
-        self._enter_edit_mode()
-        remove_btns = self.driver.find_elements(By.CSS_SELECTOR, ".widget-remove-btn")
-        assert len(remove_btns) == initial_count
-
-    def test_remove_buttons_hidden_outside_edit_mode(self) -> None:
-        """Remove buttons are not rendered when not in edit mode."""
-        remove_btns = self.driver.find_elements(By.CSS_SELECTOR, ".widget-remove-btn")
-        assert len(remove_btns) == 0
+        assert not self.get_element("widget-remove-btn-w-test-0", enabled=False).is_displayed()
 
     # ----------------------------------------------- ADD WIDGET -------------------------------------------
 
@@ -199,10 +168,7 @@ class TestDashboardCustomisation(DashboardTestBase):
         initial_count = self._grid_item_count()
         self._enter_edit_mode()
         self.get_element(RESET_BTN).click()
-        WebDriverWait(self.driver, 5).until(
-            EC.element_to_be_clickable((By.ID, RESET_CONFIRM_BTN))
-        ).click()
-        # Reset keeps edit mode active — save to apply
+        self.get_element(RESET_CONFIRM_BTN).click()
         self._save()
         assert self._grid_item_count() > initial_count
 
@@ -210,9 +176,7 @@ class TestDashboardCustomisation(DashboardTestBase):
         """After reset and save, reloading shows the same widget count as right after reset."""
         self._enter_edit_mode()
         self.get_element(RESET_BTN).click()
-        WebDriverWait(self.driver, 5).until(
-            EC.element_to_be_clickable((By.ID, RESET_CONFIRM_BTN))
-        ).click()
+        self.get_element(RESET_CONFIRM_BTN).click()
         self._save()
         count_after_reset = self._grid_item_count()
         self._reload()

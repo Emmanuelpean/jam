@@ -57,6 +57,8 @@
     color: white;
     border-radius: 127.8px;
     background: var(--primary-gradient);
+    /* Default: pushed to the far right of the header */
+    margin-left: auto;
 }
 
 .activity-count-badge {
@@ -111,6 +113,7 @@
     height: 100%;
     overflow: hidden;
     border: 2px solid transparent;
+    transition: border-color 0.2s ease, border-radius 0.2s ease;
 }
 
 .grid-item-content {
@@ -149,34 +152,58 @@
     }
 }
 
-/* Widget remove button */
+.widget-config-btn,
 .widget-remove-btn {
     position: absolute;
     top: 4px;
-    right: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
-    padding: 0;
-    font-size: 16px;
+    width: 26px !important;
+    height: 26px !important;
+    padding: 0 !important;
     line-height: 1;
-    cursor: pointer;
-    color: var(--bs-danger);
-    border: 1px solid var(--bs-border-color);
-    border-radius: 50%;
-    background: var(--bs-body-bg);
+    border-width: 1px;
+    border-radius: 50% !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-    transition: color 0.15s, border-color 0.15s, background 0.15s, box-shadow 0.15s;
     z-index: 999;
 
-    &:hover {
-        color: white;
-        border-color: var(--bs-danger);
-        background: var(--bs-danger);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    // Hidden by default; the buttons stay mounted so they can animate in/out with edit mode.
+    opacity: 0;
+    transform: scale(0.7);
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+
+    // Center the icon glyph itself: flexing the <i> removes Bootstrap Icons'
+    // `vertical-align: -.125em`, which otherwise shifts the glyph down as font-size grows.
+    i {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
     }
+}
+
+.dashboard-edit-mode {
+    .widget-config-btn,
+    .widget-remove-btn {
+        opacity: 1;
+        transform: scale(1);
+        visibility: visible;
+        pointer-events: auto;
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s;
+    }
+}
+
+.widget-remove-btn {
+    right: 4px;
+    font-size: 20px !important;
+}
+
+.widget-config-btn {
+    right: 34px;
+    font-size: 14px !important;
 }
 
 /* Edit mode styles */
@@ -192,6 +219,16 @@
         background: var(--bs-primary);
         opacity: 0.15;
         border-radius: 0.5rem;
+    }
+
+    /* In edit mode, place the badge beside the label and push header actions right,
+       keeping the top-right corner clear for the overlaid config/remove buttons. */
+    .table-count-badge {
+        margin-left: 0;
+    }
+
+    .table-card-header-actions {
+        margin-left: auto;
     }
 }
 /* Dashboard layout */

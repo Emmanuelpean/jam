@@ -15,6 +15,7 @@ import {
 } from "../../services/schemas/DataTables";
 import { formatActivityDate } from "../../utils/TimeUtils";
 import { DashboardCard } from "./DashboardCard";
+import { ConfigurableDashboardCard, WidgetSetting } from "./WidgetConfig";
 
 const getActivityColor = (type: string): string => {
 	const colorMap: Record<string, string> = {
@@ -99,6 +100,9 @@ interface ActivityFeedCardProps<T> {
 	items: T[];
 	id?: string;
 	renderItem: (item: T, index: number, isLast: boolean) => JSX.Element;
+	settings?: WidgetSetting[];
+	isEditMode?: boolean;
+	open?: boolean;
 }
 
 export const ActivityFeedCard = <T,>({
@@ -112,26 +116,52 @@ export const ActivityFeedCard = <T,>({
 	emptyDescription,
 	items,
 	renderItem,
-}: ActivityFeedCardProps<T>): JSX.Element => (
-	<DashboardCard
-		id={id}
-		icon={icon}
-		title={title}
-		subtitle={subtitle}
-		badgeValue={badgeValue}
-		isEmpty={items.length === 0}
-		emptyState={{
-			icon: emptyIcon,
-			title: emptyTitle,
-			description: emptyDescription,
-		}}
-		bodyPadding={false}
-	>
+	settings,
+	isEditMode,
+	open,
+}: ActivityFeedCardProps<T>): JSX.Element => {
+	const emptyState = { icon: emptyIcon, title: emptyTitle, description: emptyDescription };
+	const timeline: JSX.Element = (
 		<div id={id ? `${id}-timeline` : undefined} className="activity-timeline px-4 flex-grow-1">
-			{items.map((item, index) => renderItem(item, index, index === items.length - 1))}
+			{items.map((item: T, index: number): JSX.Element => renderItem(item, index, index === items.length - 1))}
 		</div>
-	</DashboardCard>
-);
+	);
+
+	if (settings && settings.length > 0) {
+		return (
+			<ConfigurableDashboardCard
+				id={id}
+				icon={icon}
+				title={title}
+				subtitle={subtitle}
+				badgeValue={badgeValue}
+				isEmpty={items.length === 0}
+				emptyState={emptyState}
+				settings={settings}
+				isEditMode={isEditMode}
+				open={open}
+				bodyPadding={false}
+			>
+				{timeline}
+			</ConfigurableDashboardCard>
+		);
+	}
+
+	return (
+		<DashboardCard
+			id={id}
+			icon={icon}
+			title={title}
+			subtitle={subtitle}
+			badgeValue={badgeValue}
+			isEmpty={items.length === 0}
+			emptyState={emptyState}
+			bodyPadding={false}
+		>
+			{timeline}
+		</DashboardCard>
+	);
+};
 
 export interface RecentActivity {
 	data: JobData | EnrichedInterviewData | EnrichedJobApplicationUpdateData;
@@ -141,7 +171,7 @@ export interface RecentActivity {
 }
 
 export const renderRecentActivityItem = (activity: RecentActivity, index: number, isLast: boolean): JSX.Element => {
-	const number =
+	const number: string =
 		activity.type === "Interview" || activity.type === "Job Application Update"
 			? ` #${"number" in activity.data ? activity.data.number : ""}`
 			: "";
@@ -176,7 +206,7 @@ export const renderUpcomingInterviewItem = (
 ): JSX.Element => {
 	const jobField: ViewField = {
 		key: "activity-item-" + index,
-		render: (params: RenderParams) => renderFunctions.interviewBadge(params),
+		render: (params: RenderParams): ReactNode => renderFunctions.interviewBadge(params),
 	};
 
 	return (
@@ -201,7 +231,7 @@ export const renderPastInterviewItem = (
 ): JSX.Element => {
 	const jobField: ViewField = {
 		key: "activity-item-" + index,
-		render: (params: RenderParams) => renderFunctions.interviewBadge(params),
+		render: (params: RenderParams): ReactNode => renderFunctions.interviewBadge(params),
 	};
 
 	return (
@@ -226,7 +256,7 @@ export const renderStatusUpdateItem = (
 ): JSX.Element => {
 	const jobField: ViewField = {
 		key: "activity-item-" + index,
-		render: (params: RenderParams) => renderFunctions.jobApplicationUpdateBadge(params),
+		render: (params: RenderParams): ReactNode => renderFunctions.jobApplicationUpdateBadge(params),
 	};
 
 	return (
@@ -247,7 +277,7 @@ export const renderStatusUpdateItem = (
 export const renderUpcomingDeadlineItem = (job: EnrichedJobData, index: number, isLast: boolean): JSX.Element => {
 	const jobField: ViewField = {
 		key: "activity-item-" + index,
-		render: (params: RenderParams) => renderFunctions.jobBadge(params),
+		render: (params: RenderParams): ReactNode => renderFunctions.jobBadge(params),
 	};
 
 	return (
@@ -258,7 +288,7 @@ export const renderUpcomingDeadlineItem = (job: EnrichedJobData, index: number, 
 			icon="alarm"
 			dateOnly
 			isLast={isLast}
-			title={job.name || job.title}
+			title={job.name}
 			date={job.deadline as Date}
 		>
 			<RenderViewFieldWithContext field={jobField} item={{ job_id: job.id }} id={index.toString()} />

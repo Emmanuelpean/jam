@@ -15,9 +15,6 @@ import { ThemeItem } from "../../components/Sidebar/ThemeItem";
 
 interface PreferencesFormData {
 	default_currency: string;
-	chase_threshold?: number;
-	deadline_threshold?: number;
-	update_limit?: number;
 }
 
 export const PreferencesTab: React.FC = () => {
@@ -26,9 +23,6 @@ export const PreferencesTab: React.FC = () => {
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [formData, setFormData] = useState<PreferencesFormData>(() => ({
 		default_currency: currentUser?.preferences.default_currency || "",
-		chase_threshold: currentUser?.preferences.chase_threshold || 0,
-		deadline_threshold: currentUser?.preferences.deadline_threshold || 0,
-		update_limit: currentUser?.preferences.update_limit || 0,
 	}));
 	const [errors, setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState(false);
@@ -39,9 +33,6 @@ export const PreferencesTab: React.FC = () => {
 			formInitialized.current = true;
 			setFormData({
 				default_currency: currentUser.preferences.default_currency || "",
-				chase_threshold: currentUser.preferences.chase_threshold || 0,
-				deadline_threshold: currentUser.preferences.deadline_threshold || 0,
-				update_limit: currentUser.preferences.update_limit || 0,
 			});
 		}
 	}, [currentUser]);
@@ -65,44 +56,14 @@ export const PreferencesTab: React.FC = () => {
 		}
 	};
 
-	const validateForm = (): boolean => {
-		const newErrors: ValidationErrors = {};
-
-		if (
-			formData.chase_threshold !== undefined &&
-			(formData.chase_threshold < 1 || formData.chase_threshold > 365)
-		) {
-			newErrors.chase_threshold = "Chase threshold must be between 1 and 365 days";
-		}
-
-		if (
-			formData.deadline_threshold !== undefined &&
-			(formData.deadline_threshold < 1 || formData.deadline_threshold > 365)
-		) {
-			newErrors.deadline_threshold = "Deadline threshold must be between 1 and 365 days";
-		}
-
-		if (formData.update_limit !== undefined && (formData.update_limit < 1 || formData.update_limit > 1000)) {
-			newErrors.update_limit = "Update limit must be between 1 and 1000";
-		}
-
-		setErrors(newErrors);
-		return Object.keys(newErrors).length === 0;
-	};
-
 	const handleSubmit = async (e: React.FormEvent): Promise<void> => {
 		e.preventDefault();
-		if (!validateForm() || !token) return;
+		if (!token) return;
 		setSubmitting(true);
 
 		try {
-			const updateData: any = { default_currency: formData.default_currency };
-			if (formData.chase_threshold !== undefined) updateData.chase_threshold = formData.chase_threshold;
-			if (formData.deadline_threshold !== undefined) updateData.deadline_threshold = formData.deadline_threshold;
-			if (formData.update_limit !== undefined) updateData.update_limit = formData.update_limit;
-
 			const response: ApiResponse<UpdateCurrentUserResponse> | null = await updateCurrentUser({
-				preferences: updateData,
+				preferences: { default_currency: formData.default_currency },
 			});
 			if (!response) return;
 
@@ -112,30 +73,6 @@ export const PreferencesTab: React.FC = () => {
 		} finally {
 			setSubmitting(false);
 		}
-	};
-
-	const chaseThresholdField: ModalFormField = {
-		key: "chase_threshold",
-		type: "number",
-		label: "Chase Threshold (days)",
-		placeholder: "10",
-		helpText: "Jobs below this threshold will be flagged for follow-up",
-	};
-
-	const deadlineThresholdField: ModalFormField = {
-		key: "deadline_threshold",
-		type: "number",
-		label: "Deadline Threshold (days)",
-		placeholder: "3",
-		helpText: "Jobs within this threshold are considered near deadline",
-	};
-
-	const updateLimitField: ModalFormField = {
-		key: "update_limit",
-		type: "number",
-		label: "Update Display Limit",
-		placeholder: "50",
-		helpText: "Maximum number of job updates to show",
 	};
 
 	const currencyField: ModalFormField = {
@@ -148,13 +85,6 @@ export const PreferencesTab: React.FC = () => {
 
 	return (
 		<Form onSubmit={handleSubmit}>
-			<h5 className="mb-3">
-				<i className="bi bi-speedometer"></i> Dashboard Settings
-			</h5>
-			{renderFormField(chaseThresholdField, formData, handleInputChange, errors)}
-			{renderFormField(deadlineThresholdField, formData, handleInputChange, errors)}
-			{renderFormField(updateLimitField, formData, handleInputChange, errors)}
-			<hr className="my-4" />
 			<h5 className="mb-3">
 				<i className="bi bi-currency-dollar"></i> Currency Settings
 			</h5>

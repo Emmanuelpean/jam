@@ -153,16 +153,15 @@ class UserPreferences(Owned, Base):
     -----------
     - `theme` (str): The theme of the application.
     - `dark_mode` (bool): Indicates whether dark mode is enabled.
-    - `chase_threshold` (int): The threshold for chasing jobs in the dashboard.
-    - `deadline_threshold` (int): The threshold for deadlines in the dashboard.
-    - `update_limit` (int): Max number updates displayed in the dashboard.
-    - `default_currency` (str): The default currency for salary fields."""
+    - `default_currency` (str): The default currency for salary fields.
+    - `dashboard_layout` (str, optional): The layout of the dashboard.
+    - `table_columns` (dict, optional): The table column configurations.
+    - `table_sort` (dict, optional): The sort configuration for tables.
+    - `extension_banner_dismissed` (bool): Indicates whether the extension banner has been dismissed.
+    - `completed_tours` (list, optional): A list of completed guided tours.`"""
 
     theme = Column(String, nullable=False, server_default="mixed-berry")
     dark_mode = Column(String, nullable=False, server_default="system")
-    chase_threshold = Column(Integer, nullable=False, server_default="14")
-    deadline_threshold = Column(Integer, nullable=False, server_default="7")
-    update_limit = Column(Integer, nullable=False, server_default="10")
     default_currency = Column(String, nullable=False, server_default="GBP")
     dashboard_layout = Column(Text, nullable=True)
     table_columns = Column(JSON, nullable=True)

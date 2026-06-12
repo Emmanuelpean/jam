@@ -60,17 +60,87 @@ export type GraphField =
 
 export type WidgetType = "metric" | "table" | "timeline" | "graph" | "map";
 
+// --- Per-widget numeric settings (previously stored as user preferences) ---
+
+// A resolved setting handed to the configuration sidebar.
+export interface WidgetSetting {
+	key: string;
+	label: string;
+	value: number;
+	onChange: (value: number) => void;
+	min?: number;
+	max?: number;
+	helpText?: string;
+}
+
+// A reusable definition for a numeric setting. `key` is the config field it reads/writes.
+export interface WidgetSettingTemplate {
+	key: string;
+	label: string;
+	default: number;
+	min: number;
+	max: number;
+	helpText?: string;
+}
+
+// Defined once and shared across every widget that uses them.
+export const WIDGET_SETTING_TEMPLATES: Record<string, WidgetSettingTemplate> = {
+	chaseThreshold: {
+		key: "chaseThreshold",
+		label: "Chase threshold (days)",
+		default: 14,
+		min: 1,
+		max: 365,
+		helpText: "Applications with no update for longer than this are flagged.",
+	},
+	deadlineThreshold: {
+		key: "deadlineThreshold",
+		label: "Deadline threshold (days)",
+		default: 7,
+		min: 1,
+		max: 365,
+		helpText: "Jobs with a deadline within this many days are shown.",
+	},
+	updateLimit: {
+		key: "updateLimit",
+		label: "Items shown",
+		default: 10,
+		min: 1,
+		max: 1000,
+		helpText: "Maximum number of items to display.",
+	},
+};
+
+// Which setting templates apply to each widget variant (keyed by configToVariantKey).
+export const WIDGET_VARIANT_SETTINGS: Record<string, string[]> = {
+	follow_up: ["chaseThreshold"], // shared by the follow_up metric and table
+	upcoming_deadlines: ["deadlineThreshold"],
+	upcoming_deadlines_timeline: ["deadlineThreshold"],
+	recent_activity: ["updateLimit"],
+	status_updates: ["updateLimit"],
+};
+
 export interface MetricConfig {
 	type: "metric";
 	metric: MetricVariant;
+	// Only used by the "follow_up" metric
+	chaseThreshold?: number;
 }
 export interface TableConfig {
 	type: "table";
 	source: TableVariant;
+	// Only used by the "follow_up" table
+	chaseThreshold?: number;
+	// Only used by the "upcoming_deadlines" table
+	deadlineThreshold?: number;
 }
 export interface TimelineConfig {
 	type: "timeline";
 	feed: TimelineVariant;
+	// Only used by the "upcoming_deadlines_timeline" feed
+	deadlineThreshold?: number;
+	// Only used by the "recent_activity" and "status_updates" feeds
+	updateLimit?: number;
 }
 
 export type ChartType = "line" | "bar" | "pie";
@@ -528,6 +598,37 @@ export function configToVariantKey(config: WidgetConfig): string {
 		case "map":
 			return config.metric;
 	}
+}
+
+// Effective value of a numeric setting for a widget, falling back to the template default.
+export function getWidgetSettingValue(config: WidgetConfig, key: string): number {
+	const value = (config as unknown as Record<string, unknown>)[key];
+	return typeof value === "number" ? value : (WIDGET_SETTING_TEMPLATES[key]?.default ?? 0);
+}
+
+// Build the settings shown in a widget's configuration sidebar from its templates.
+export function buildWidgetSettings(
+	config: WidgetConfig,
+	onConfigChange: (updated: WidgetConfig) => void
+): WidgetSetting[] {
+	const keys = WIDGET_VARIANT_SETTINGS[configToVariantKey(config)] ?? [];
+	return keys.map((key: string): WidgetSetting => {
+		const template = WIDGET_SETTING_TEMPLATES[key]!;
+		return {
+			key,
+			label: template.label,
+			min: template.min,
+			max: template.max,
+			helpText: template.helpText,
+			value: getWidgetSettingValue(config, key),
+			onChange: (v: number): void => onConfigChange({ ...config, [key]: v } as WidgetConfig),
+		};
+	});
+}
+
+// Whether a widget exposes any configurable settings (i.e. should show the config button).
+export function widgetHasSettings(config: WidgetConfig): boolean {
+	return (WIDGET_VARIANT_SETTINGS[configToVariantKey(config)] ?? []).length > 0;
 }
 
 export function isWidgetPremium(config: WidgetConfig): boolean {

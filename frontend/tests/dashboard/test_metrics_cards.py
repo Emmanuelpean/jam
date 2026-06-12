@@ -15,7 +15,7 @@ AVG_RESPONSE_TIME = "stat-card-avg_response_time"
 
 NOW = dt.datetime.now(dt.timezone.utc)
 PAST = NOW - dt.timedelta(days=3)
-LONG_PAST = NOW - dt.timedelta(days=20)  # > 14-day chase_threshold default
+LONG_PAST = NOW - dt.timedelta(days=20)  # > 14-day default chase threshold
 
 
 class TestMetricsCards(DashboardTestBase):

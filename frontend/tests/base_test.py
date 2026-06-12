@@ -1147,24 +1147,6 @@ class UserSettingsUtils(BaseUtils):
         return self.get_element("confirm_password")
 
     @property
-    def chase_threshold(self) -> WebElement:
-        """Get the chase threshold input"""
-
-        return self.get_element("chase_threshold")
-
-    @property
-    def deadline_threshold(self) -> WebElement:
-        """Get the deadline threshold input"""
-
-        return self.get_element("deadline_threshold")
-
-    @property
-    def update_limit(self) -> WebElement:
-        """Get the update limit input"""
-
-        return self.get_element("update_limit")
-
-    @property
     def currency(self) -> Select:
         """Get the currency field"""
 

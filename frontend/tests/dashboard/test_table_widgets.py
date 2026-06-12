@@ -16,8 +16,8 @@ FAILED_JOBS_TABLE = "table-card-error_jobs"
 
 NOW = dt.datetime.now(dt.timezone.utc)
 PAST = NOW - dt.timedelta(days=3)
-LONG_PAST = NOW - dt.timedelta(days=20)  # > 14-day chase_threshold → triggers follow-up
-SOON = NOW + dt.timedelta(days=3)  # within 7-day deadline_threshold → upcoming deadline
+LONG_PAST = NOW - dt.timedelta(days=20)  # > 14-day default chase threshold → triggers follow-up
+SOON = NOW + dt.timedelta(days=3)  # within 7-day default deadline threshold → upcoming deadline
 FAR_FUTURE = NOW + dt.timedelta(days=14)  # beyond 7-day threshold → not upcoming
 
 
@@ -25,7 +25,7 @@ class TestFollowUpTable(DashboardTestBase):
     """Tests for the Follow-up Required table widget.
 
     Shows pending applications whose last activity was > 14 days ago
-    (configurable via UserPreferences.chase_threshold).
+    (the default chase threshold, configurable per widget in dashboard edit mode).
     """
 
     user_index = 0
@@ -110,8 +110,8 @@ class TestFollowUpTable(DashboardTestBase):
 class TestUpcomingDeadlinesTable(DashboardTestBase):
     """Tests for the Upcoming Deadlines table widget.
 
-    Shows jobs with a deadline within the next 7 days (deadline_threshold)
-    that have not been applied to yet.
+    Shows jobs with a deadline within the next 7 days (the default deadline
+    threshold) that have not been applied to yet.
     """
 
     user_index = 0

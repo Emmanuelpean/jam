@@ -70,7 +70,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 	return (
 		<Card id={id} className={`shadow-sm border-0 h-100 d-flex flex-column ${className}`}>
 			<Card.Header className="table-card-header border-0 p-0">
-				<div className="d-flex align-items-center justify-content-between p-4">
+				<div className="d-flex align-items-center gap-2 p-4">
 					<div
 						className="d-flex align-items-center"
 						onClick={handleHeaderClick}
@@ -84,14 +84,19 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 							{subtitle && <small className="text-muted">{subtitle}</small>}
 						</div>
 					</div>
-					<div className="d-flex align-items-center gap-2" style={{ height: "100%" }}>
-						{badgeValue != null && (
-							<div id={id ? `${id}-badge` : undefined} className="table-count-badge">
-								{badgeValue}
-							</div>
-						)}
-						{headerAction}
-					</div>
+					{badgeValue != null && (
+						<div id={id ? `${id}-badge` : undefined} className="table-count-badge">
+							{badgeValue}
+						</div>
+					)}
+					{headerAction && (
+						<div
+							className="d-flex align-items-center gap-2 table-card-header-actions"
+							style={{ height: "100%" }}
+						>
+							{headerAction}
+						</div>
+					)}
 				</div>
 			</Card.Header>
 			<Card.Body className="p-0 flex-grow-1 d-flex flex-column" style={{ minHeight: 0 }}>

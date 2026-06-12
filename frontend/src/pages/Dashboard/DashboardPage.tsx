@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState, JSX } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState, JSX } from "react";
+import { Button } from "react-bootstrap";
 import { ResponsiveGridLayout, Layout, LayoutItem, ResponsiveLayouts, useContainerWidth } from "react-grid-layout";
 import { useAuth } from "../../contexts/AuthContext";
 import "react-grid-layout/css/styles.css";
@@ -22,18 +23,27 @@ import FailedScrapedJobsTable from "../../components/DataTable/FailedScrapedJobs
 import RecentUpdatesTable from "../../components/DataTable/RecentUpdatesTable";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
 import {
+	buildWidgetSettings,
 	DashboardLayoutDataV3,
 	generateWidgetId,
 	getDefaultLayout,
 	getDefaultLayoutForConfig,
+	getWidgetSettingValue,
 	GraphConfig,
 	MapConfig,
+	MetricConfig,
+	MetricVariant,
 	parseLayoutData,
+	TableConfig,
+	TimelineConfig,
 	WidgetConfig,
+	widgetHasSettings,
 	WidgetInstance,
+	WidgetSetting,
 } from "./widgetRegistry";
 import GraphWidget from "./GraphWidget";
 import MapWidget from "./MapWidget";
+import { ConfigurableDashboardCard, ConfigurableStatCard } from "./WidgetConfig";
 import { useDashboardData } from "./useDashboardData";
 import { useAlert } from "../../contexts/AlertContext";
 import WidgetPickerModal from "./WidgetPickerModal";
@@ -42,11 +52,12 @@ import { DashboardToolbar } from "./DashboardToolbar";
 import { MOBILE_BREAKPOINT, TABLET_BREAKPOINT } from "../../contexts/ViewportContext";
 
 function findFirstFit(existing: LayoutItem[], w: number, h: number, cols: number): { x: number; y: number } {
-	const maxY = existing.reduce((max, item) => Math.max(max, item.y + item.h), 0);
+	const maxY: number = existing.reduce((max: number, item: LayoutItem): number => Math.max(max, item.y + item.h), 0);
 	for (let y = 0; y <= maxY; y++) {
 		for (let x = 0; x <= cols - w; x++) {
-			const overlaps = existing.some(
-				(item) => x < item.x + item.w && x + w > item.x && y < item.y + item.h && y + h > item.y
+			const overlaps: boolean = existing.some(
+				(item: LayoutItem): boolean =>
+					x < item.x + item.w && x + w > item.x && y < item.y + item.h && y + h > item.y
 			);
 			if (!overlaps) return { x, y };
 		}
@@ -72,8 +83,36 @@ const Dashboard: React.FC = () => {
 		return () => clearTimeout(timer);
 	}, [width, mounted]);
 	const [isEditMode, setIsEditMode] = useState(false);
+	const [openConfigId, setOpenConfigId] = useState<string | null>(null);
 	const [minEditHeight, setMinEditHeight] = useState(0);
 	const gridWrapperRef = useRef<HTMLDivElement>(null);
+	const badgeRectsRef = useRef<Map<string, DOMRect>>(new Map());
+
+	useEffect(() => {
+		if (!isEditMode) setOpenConfigId(null);
+	}, [isEditMode]);
+
+	// FLIP-animate the header count badges as they shift position when edit mode toggles.
+	useLayoutEffect(() => {
+		const wrapper = gridWrapperRef.current;
+		if (!wrapper) return;
+		wrapper.querySelectorAll<HTMLElement>(".table-count-badge").forEach((badge: HTMLElement): void => {
+			const key = badge.id;
+			const last = badge.getBoundingClientRect();
+			const first = badgeRectsRef.current.get(key);
+			if (first) {
+				const dx = first.left - last.left;
+				if (Math.abs(dx) > 1) {
+					badge.style.transition = "none";
+					badge.style.transform = `translateX(${dx}px)`;
+					void badge.offsetWidth; // force reflow so the starting offset is applied
+					badge.style.transition = "transform 0.25s ease";
+					badge.style.transform = "";
+				}
+			}
+			badgeRectsRef.current.set(key, last);
+		});
+	}, [isEditMode]);
 
 	useEffect(() => {
 		if (!isEditMode) {
@@ -117,17 +156,17 @@ const Dashboard: React.FC = () => {
 		jobApplications,
 		jobApplicationPending,
 		activeApplications,
-		needsChase,
-		upcomingDeadlines,
 		upcomingInterviews,
 		pastInterviews,
-		statusUpdates,
-		upcomingDeadlinesTimeline,
-		recentActivity,
 		interviewRate,
 		avgResponseTime,
 		favouriteJobs,
 		recentUpdates,
+		getNeedsChase,
+		getUpcomingDeadlines,
+		getUpcomingDeadlinesTimeline,
+		getRecentActivity,
+		getStatusUpdates,
 	} = useDashboardData();
 
 	const handleLayoutChange = (newLayout: Layout, allLayouts: ResponsiveLayouts): void => {
@@ -204,7 +243,13 @@ const Dashboard: React.FC = () => {
 		);
 	};
 
-	const renderMetricWidget = (metric: string): React.ReactNode => {
+	const renderMetricWidget = (
+		config: MetricConfig,
+		isEditMode: boolean,
+		settings: WidgetSetting[],
+		open: boolean
+	): React.ReactNode => {
+		const metric: MetricVariant = config.metric;
 		switch (metric) {
 			case "total_jobs":
 				return (
@@ -241,13 +286,16 @@ const Dashboard: React.FC = () => {
 				);
 			case "follow_up":
 				return (
-					<StatCard
+					<ConfigurableStatCard
 						id="stat-card-follow_up"
 						name="Need Follow-up"
-						value={needsChase.length}
+						value={getNeedsChase(getWidgetSettingValue(config, "chaseThreshold")).length}
 						icon="telephone"
 						variant="danger"
 						description="Applications requiring action"
+						isEditMode={isEditMode}
+						open={open}
+						settings={settings}
 					/>
 				);
 			case "active_applications":
@@ -288,11 +336,18 @@ const Dashboard: React.FC = () => {
 		}
 	};
 
-	const renderTableWidget = (source: string): React.ReactNode => {
+	const renderTableWidget = (
+		config: TableConfig,
+		isEditMode: boolean,
+		settings: WidgetSetting[],
+		open: boolean
+	): React.ReactNode => {
+		const source = config.source;
 		switch (source) {
-			case "follow_up":
+			case "follow_up": {
+				const needsChase = getNeedsChase(getWidgetSettingValue(config, "chaseThreshold"));
 				return (
-					<DashboardCard
+					<ConfigurableDashboardCard
 						id="table-card-follow_up"
 						icon="telephone"
 						title="Applications Requiring Follow-up"
@@ -303,13 +358,18 @@ const Dashboard: React.FC = () => {
 							title: "No follow-ups needed",
 							description: "All your applications are up to date",
 						}}
+						isEditMode={isEditMode}
+						open={open}
+						settings={settings}
 					>
 						<JobsToChase data={needsChase} />
-					</DashboardCard>
+					</ConfigurableDashboardCard>
 				);
-			case "upcoming_deadlines":
+			}
+			case "upcoming_deadlines": {
+				const upcomingDeadlines = getUpcomingDeadlines(getWidgetSettingValue(config, "deadlineThreshold"));
 				return (
-					<DashboardCard
+					<ConfigurableDashboardCard
 						id="table-card-upcoming_deadlines"
 						icon="clock"
 						title="Upcoming Deadlines"
@@ -320,10 +380,14 @@ const Dashboard: React.FC = () => {
 							title: "No upcoming deadlines",
 							description: "You have no application deadlines approaching",
 						}}
+						isEditMode={isEditMode}
+						open={open}
+						settings={settings}
 					>
 						<UpcomingDeadlinesTable data={upcomingDeadlines} />
-					</DashboardCard>
+					</ConfigurableDashboardCard>
 				);
+			}
 			case "job_alerts":
 				return (
 					<DashboardCard
@@ -423,9 +487,16 @@ const Dashboard: React.FC = () => {
 		}
 	};
 
-	const renderTimelineWidget = (feed: string): React.ReactNode => {
+	const renderTimelineWidget = (
+		config: TimelineConfig,
+		isEditMode: boolean,
+		settings: WidgetSetting[],
+		open: boolean
+	): React.ReactNode => {
+		const feed = config.feed;
 		switch (feed) {
-			case "recent_activity":
+			case "recent_activity": {
+				const recentActivity = getRecentActivity(getWidgetSettingValue(config, "updateLimit"));
 				return (
 					<ActivityFeedCard
 						id="activity-card-recent_activity"
@@ -437,8 +508,12 @@ const Dashboard: React.FC = () => {
 						emptyDescription="Your recent activity will appear here"
 						items={recentActivity}
 						renderItem={renderRecentActivityItem}
+						isEditMode={isEditMode}
+						open={open}
+						settings={settings}
 					/>
 				);
+			}
 			case "upcoming_interviews":
 				return (
 					<ActivityFeedCard
@@ -467,7 +542,8 @@ const Dashboard: React.FC = () => {
 						renderItem={renderPastInterviewItem}
 					/>
 				);
-			case "status_updates":
+			case "status_updates": {
+				const statusUpdates = getStatusUpdates(getWidgetSettingValue(config, "updateLimit"));
 				return (
 					<ActivityFeedCard
 						id="activity-card-status_updates"
@@ -479,9 +555,16 @@ const Dashboard: React.FC = () => {
 						emptyDescription="Replies and notes on your applications will appear here"
 						items={statusUpdates}
 						renderItem={renderStatusUpdateItem}
+						isEditMode={isEditMode}
+						open={open}
+						settings={settings}
 					/>
 				);
-			case "upcoming_deadlines_timeline":
+			}
+			case "upcoming_deadlines_timeline": {
+				const upcomingDeadlinesTimeline = getUpcomingDeadlinesTimeline(
+					getWidgetSettingValue(config, "deadlineThreshold")
+				);
 				return (
 					<ActivityFeedCard
 						id="activity-card-upcoming_deadlines_timeline"
@@ -493,21 +576,29 @@ const Dashboard: React.FC = () => {
 						emptyDescription="Approaching application deadlines will appear here"
 						items={upcomingDeadlinesTimeline}
 						renderItem={renderUpcomingDeadlineItem}
+						isEditMode={isEditMode}
+						open={open}
+						settings={settings}
 					/>
 				);
+			}
 			default:
 				return null;
 		}
 	};
 
 	const renderWidget = (config: WidgetConfig, widgetId: string): React.ReactNode => {
+		const settings: WidgetSetting[] = buildWidgetSettings(config, (updated: WidgetConfig): void =>
+			handleUpdateWidgetConfig(widgetId, updated)
+		);
+		const open: boolean = openConfigId === widgetId;
 		switch (config.type) {
 			case "metric":
-				return renderMetricWidget(config.metric);
+				return renderMetricWidget(config, isEditMode, settings, open);
 			case "table":
-				return renderTableWidget(config.source);
+				return renderTableWidget(config, isEditMode, settings, open);
 			case "timeline":
-				return renderTimelineWidget(config.feed);
+				return renderTimelineWidget(config, isEditMode, settings, open);
 			case "graph":
 				return (
 					<GraphWidget
@@ -623,20 +714,37 @@ const Dashboard: React.FC = () => {
 								(widget: WidgetInstance): JSX.Element => (
 									<div key={widget.id} className="dashboard-grid-item">
 										{isEditMode && (
-											<>
-												<div className="drag-handle">
-													<i className="bi bi-grip-horizontal"></i>
-												</div>
-												<button
-													id={`widget-remove-btn-${widget.id}`}
-													className="widget-remove-btn"
-													onClick={(): void => handleRemoveWidget(widget.id)}
-													title="Remove widget"
-												>
-													<i className="bi bi-x"></i>
-												</button>
-											</>
+											<div className="drag-handle">
+												<i className="bi bi-grip-horizontal"></i>
+											</div>
 										)}
+										{/* Config/remove buttons stay mounted so they can animate in and out;
+											their visibility is driven by the .dashboard-edit-mode class. */}
+										{widgetHasSettings(widget.config) && (
+											<Button
+												id={`widget-config-btn-${widget.id}`}
+												className="widget-config-btn"
+												variant="outline-primary"
+												active={openConfigId === widget.id}
+												onClick={(): void =>
+													setOpenConfigId((prev: string | null): string | null =>
+														prev === widget.id ? null : widget.id
+													)
+												}
+												title="Configure widget"
+											>
+												<i className="bi bi-gear"></i>
+											</Button>
+										)}
+										<Button
+											id={`widget-remove-btn-${widget.id}`}
+											className="widget-remove-btn"
+											variant="outline-danger"
+											onClick={(): void => handleRemoveWidget(widget.id)}
+											title="Remove widget"
+										>
+											<i className="bi bi-x"></i>
+										</Button>
 										<div className="grid-item-content">
 											{renderWidget(widget.config, widget.id)}
 										</div>

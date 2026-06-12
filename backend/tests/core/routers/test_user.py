@@ -241,12 +241,12 @@ class TestUpdateCurrentUser:
         # Get initial token version
         initial_token_version = test_regular_user.token_version
 
-        update_data = {"preferences": {"chase_threshold": 100}}
+        update_data = {"preferences": {"default_currency": "USD"}}
         response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 200
 
         updated_user = self.get_user(test_regular_user.id, session)
-        assert updated_user.preferences.chase_threshold == 100
+        assert updated_user.preferences.default_currency == "USD"
 
         # Verify token version NOT incremented (no password/email change)
         assert updated_user.token_version == initial_token_version
@@ -288,7 +288,7 @@ class TestUpdateCurrentUser:
     def test_unauthorised_update(self, session, client, test_regular_user) -> None:
         """Test updating without authentication."""
 
-        update_data = {"chase_threshold": 100}
+        update_data = {"preferences": {"default_currency": "USD"}}
         response = client.put("/current-user", json=update_data)
         assert response.status_code == 401
 
@@ -550,7 +550,7 @@ class TestTokenVersioning:
 
         initial_version = test_regular_user.token_version
 
-        update_data = {"chase_threshold": 200}
+        update_data = {"preferences": {"default_currency": "USD"}}
         response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 200
 
