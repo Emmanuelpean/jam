@@ -165,9 +165,3 @@ export interface ForwardingConfirmationLinkData extends OwnedOut {
 	platform: string;
 	is_used: boolean;
 }
-
-// ---------------------------------------------------- AI PROMPTS ----------------------------------------------------
-
-export interface AiSystemPromptData extends BaseOut {
-	prompt: string;
-}

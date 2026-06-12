@@ -90,7 +90,6 @@ app.include_router(job_email_scraping_routers.scraping_favourite_filter_router)
 app.include_router(job_email_scraping_routers.forwarding_confirmation_router)
 
 # Job Rating routers
-app.include_router(job_rating_routers.llm_system_prompt_router)
 app.include_router(job_rating_routers.job_rating_router)
 app.include_router(job_rating_routers.job_rating_service_log_router)
 app.include_router(job_rating_routers.job_rating_service_router)

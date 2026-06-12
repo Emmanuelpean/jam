@@ -1,4 +1,3 @@
 from app.job_rating.routers.job_rating import job_rating_router
 from app.job_rating.routers.service_runner import job_rating_service_router
 from app.job_rating.routers.service_log import job_rating_service_log_router
-from app.job_rating.routers.llm_prompt import llm_system_prompt_router

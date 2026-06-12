@@ -1,5 +1,4 @@
 import {
-	AiSystemPromptData,
 	ForwardingConfirmationLinkData,
 	JobEmailData,
 	JobRatingData,
@@ -145,8 +144,6 @@ export const jobRatingServiceRunnerApi: JobRatingServiceRunnerApi = {
 		return serviceApi.post("job-rating-service-runner/start", data, token);
 	},
 };
-
-export const aiSystemPromptsApi: CrudApi<AiSystemPromptData> = createCrudApi("ai-system-prompts");
 
 // Job Email API
 export interface JobEmailCrudApi extends CrudApi<JobEmailData> {

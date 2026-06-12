@@ -7,15 +7,6 @@ from pydantic import BaseModel
 from app.base_schemas import Out
 
 
-# --------------------------------------------------- AI SYSTEM PROMPT ---------------------------------------------------
-
-
-class AiSystemPromptOut(Out):
-    """AI System Prompt output schema"""
-
-    prompt: str
-
-
 # ----------------------------------------------------- JOB RATING -----------------------------------------------------
 
 

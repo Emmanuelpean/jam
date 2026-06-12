@@ -1,17 +1,15 @@
 import React, { useEffect, useState, JSX } from "react";
-import { Card, Form } from "react-bootstrap";
+import { Form } from "react-bootstrap";
 import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
-import { useDataContext } from "../../contexts/DataContext";
 import { ApiResponse } from "../../services/api/Base";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import LoadingSpinner from "../../components/Spinner/Spinner";
 import { UserQualification } from "../../services/schemas/Core";
 import { userQualificationApi } from "../../services/api/Users";
-import { AiSystemPromptData } from "../../services/schemas/Services";
 import { useConfig } from "../../contexts/ConfigContext";
 
 interface QualificationFormData {
@@ -25,7 +23,6 @@ interface QualificationFormData {
 
 export const QualificationsTab: React.FC = (): JSX.Element => {
 	const { token } = useAuth();
-	const { aiSystemPrompts } = useDataContext();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const { config } = useConfig();
 	const [formData, setFormData] = useState<QualificationFormData>({
@@ -151,11 +148,6 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		maxChars: limits?.interests ?? 3500,
 	};
 
-	const latestSystemPrompt: AiSystemPromptData | null | undefined = aiSystemPrompts?.length
-		? [...aiSystemPrompts].sort((a: AiSystemPromptData, b: AiSystemPromptData): number => b.id - a.id)[0]
-		: null;
-	const systemPrompt: string | undefined = latestSystemPrompt?.prompt;
-
 	const hasAtLeastOneQualification: boolean =
 		!!formData.experience?.trim() ||
 		!!formData.skills?.trim() ||
@@ -197,34 +189,6 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 					/>
 				</div>
 			</Form>
-
-			{systemPrompt && (
-				<Card className="mt-4">
-					<Card.Header>
-						<i className="bi bi-robot me-2" />
-						AI System Prompt
-					</Card.Header>
-					<Card.Body>
-						<p className="text-muted mb-2">
-							This is the system prompt used by the AI to evaluate job matches based on your
-							qualifications.
-						</p>
-						<pre
-							style={{
-								whiteSpace: "pre-wrap",
-								wordBreak: "break-word",
-								backgroundColor: "var(--bs-tertiary-bg)",
-								padding: "1rem",
-								borderRadius: "0.375rem",
-								fontSize: "0.875rem",
-								margin: 0,
-							}}
-						>
-							{systemPrompt}
-						</pre>
-					</Card.Body>
-				</Card>
-			)}
 		</>
 	);
 };

@@ -24,7 +24,7 @@ import {
 } from "../services/api/DataTables";
 import { ApiResponse, ApiResponsePromise } from "../services/api/Base";
 import { userApi } from "../services/api/Users";
-import { aiSystemPromptsApi, jobEmailApi, scrapedJobApi } from "../services/api/Services";
+import { jobEmailApi, scrapedJobApi } from "../services/api/Services";
 import { useAuth } from "./AuthContext";
 import { useLoading } from "./LoadingContext";
 import { findItemById, sortByKey } from "../utils/Utils";
@@ -46,7 +46,7 @@ import {
 	SpeculativeApplicationData,
 } from "../services/schemas/DataTables";
 import { SettingData, UserData } from "../services/schemas/Core";
-import { AiSystemPromptData, JobEmailData, ScrapedJobData, ScrapingFilterData } from "../services/schemas/Services";
+import { JobEmailData, ScrapedJobData, ScrapingFilterData } from "../services/schemas/Services";
 import { ApiError } from "../services/api/ApiError";
 import { GeoLocationData } from "../services/schemas/Base";
 import { tourApi } from "../services/api/Others";
@@ -241,7 +241,6 @@ export interface DataContextValue {
 	scrapingExclusionFilters: ScrapingFilterData[];
 	scrapingFavouriteFilters: ScrapingFilterData[];
 	users: UserData[];
-	aiSystemPrompts: AiSystemPromptData[];
 	files: FileData[];
 
 	error: ApiError | null;
@@ -281,7 +280,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [scrapingExclusionFilters, setScrapingExclusionFilters] = useState<ScrapingFilterData[]>([]);
 	const [scrapingFavouriteFilters, setScrapingFavouriteFilters] = useState<ScrapingFilterData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
-	const [aiSystemPrompts, setAiSystemPrompts] = useState<AiSystemPromptData[]>([]);
 	const [files, setFiles] = useState<FileData[]>([]);
 	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
@@ -443,10 +441,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				promise: filesApi.getAll(token),
 				label: "Files",
 			} as TypedFetchOperation<FileData[]>,
-			{
-				promise: aiSystemPromptsApi.getAll(token),
-				label: "Miscellaneous",
-			} as TypedFetchOperation<AiSystemPromptData[]>,
 		];
 
 		// Add admin-only calls if user is admin
@@ -468,11 +462,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 					completedOperations++;
 					const progressPercentage: number = Math.round((completedOperations / totalOperations) * 100);
 					const displayLabel: string = fetchOperations[displayIndex++].label;
-					if (displayLabel === "Miscellaneous") {
-						updateProgress(progressPercentage, `...And The Rest`);
-					} else {
-						updateProgress(progressPercentage, `Loading Your ${displayLabel}...`);
-					}
+					updateProgress(progressPercentage, `Loading Your ${displayLabel}...`);
 					return result;
 				})
 			);
@@ -492,7 +482,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				scrapingFiltersData,
 				scrapingFavouriteFiltersData,
 				filesData,
-				aiSystemPromptsData,
 				...adminData
 			] = results;
 
@@ -506,7 +495,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			setKeywords(keywordsData.data || []);
 			setScrapingExclusionFilters(scrapingFiltersData.data || []);
 			setScrapingFavouriteFilters(scrapingFavouriteFiltersData.data || []);
-			setAiSystemPrompts(aiSystemPromptsData.data || []);
 			setFiles(filesData.data || []);
 			if (currentUser?.is_admin) {
 				setSettings(adminData[0].data || []);
@@ -687,7 +675,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		<DataContext.Provider
 			value={{
 				...visibleData,
-				aiSystemPrompts,
 				settings,
 				users,
 				error,
