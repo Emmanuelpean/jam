@@ -1,7 +1,6 @@
-import React, { JSX, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import React, { JSX } from "react";
 import { Button, Spinner } from "react-bootstrap";
-import "./ActionButton.scss";
+import { Tooltip } from "../../Tooltip/Tooltip";
 
 export type ButtonVariant =
 	| "primary"
@@ -70,40 +69,6 @@ export const ActionButton = ({
 	style,
 	...otherProps
 }: ActionButtonProps): JSX.Element => {
-	const wrapperRef = useRef<HTMLDivElement>(null);
-	const [tooltipCoords, setTooltipCoords] = useState<{ top: number; left: number } | null>(null);
-
-	const handleMouseEnter = () => {
-		if (!tooltip || !wrapperRef.current) return;
-		const rect = wrapperRef.current.getBoundingClientRect();
-		const GAP = 8;
-		let top: number, left: number;
-		switch (tooltipPlacement) {
-			case "top":
-				top = rect.top - GAP;
-				left = rect.left + rect.width / 2;
-				break;
-			case "bottom":
-				top = rect.bottom + GAP;
-				left = rect.left + rect.width / 2;
-				break;
-			case "left":
-				top = rect.top + rect.height / 2;
-				left = rect.left - GAP;
-				break;
-			case "right":
-				top = rect.top + rect.height / 2;
-				left = rect.right + GAP;
-				break;
-			default:
-				top = rect.top - GAP;
-				left = rect.left + rect.width / 2;
-		}
-		setTooltipCoords({ top, left });
-	};
-
-	const handleMouseLeave = () => setTooltipCoords(null);
-
 	const buttonClasses = `${className} ${fullWidth ? "w-100" : ""}`.trim();
 	const renderContent = (): React.ReactNode => {
 		return (
@@ -176,27 +141,13 @@ export const ActionButton = ({
 	// Wrap with tooltip if provided
 	if (tooltip) {
 		return (
-			<>
-				<div
-					ref={wrapperRef}
-					className="ab-tooltip-wrap"
-					style={{ flex: "1 1", width: fullWidth ? "100%" : "auto" }}
-					onMouseEnter={handleMouseEnter}
-					onMouseLeave={handleMouseLeave}
-				>
-					{button}
-				</div>
-				{tooltipCoords &&
-					createPortal(
-						<div
-							className={`ab-tooltip-portal ab-tooltip-portal--${tooltipPlacement}`}
-							style={{ top: tooltipCoords.top, left: tooltipCoords.left }}
-						>
-							{tooltip}
-						</div>,
-						document.body
-					)}
-			</>
+			<Tooltip
+				content={tooltip}
+				placement={tooltipPlacement}
+				style={{ flex: "1 1", width: fullWidth ? "100%" : "auto" }}
+			>
+				{button}
+			</Tooltip>
 		);
 	}
 

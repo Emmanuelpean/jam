@@ -4,6 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useDataContext } from "../../contexts/DataContext";
 import { MapConfig, MapGranularity, MapMetric } from "./widgetRegistry";
+import { Tooltip, TITLE_TOOLTIP_DELAY } from "../../components/Tooltip/Tooltip";
 import { DashboardCard } from "./DashboardCard";
 import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
 import { JobModal } from "../../components/DataModal/JobModal";
@@ -173,22 +174,17 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange, isEditMod
 		}
 
 		return Array.from(jobsByKey.entries()).flatMap(([key, jobs]) => {
-			const jobsWithGeo = jobs.filter(
-				(j) => j.geolocation?.latitude != null && j.geolocation?.longitude != null
-			);
+			const jobsWithGeo = jobs.filter((j) => j.geolocation?.latitude != null && j.geolocation?.longitude != null);
 			if (jobsWithGeo.length === 0) return [];
 
-			const lat =
-				jobsWithGeo.reduce((s, j) => s + j.geolocation!.latitude!, 0) / jobsWithGeo.length;
-			const lng =
-				jobsWithGeo.reduce((s, j) => s + j.geolocation!.longitude!, 0) / jobsWithGeo.length;
+			const lat = jobsWithGeo.reduce((s, j) => s + j.geolocation!.latitude!, 0) / jobsWithGeo.length;
+			const lng = jobsWithGeo.reduce((s, j) => s + j.geolocation!.longitude!, 0) / jobsWithGeo.length;
 
 			let value = jobs.length;
 			if (config.metric === "avg_salary") {
 				const salaries = jobs
 					.map((j) => {
-						if (j.salary_min != null && j.salary_max != null)
-							return (j.salary_min + j.salary_max) / 2;
+						if (j.salary_min != null && j.salary_max != null) return (j.salary_min + j.salary_max) / 2;
 						return j.salary_min ?? j.salary_max ?? null;
 					})
 					.filter((s): s is number => s != null);
@@ -234,26 +230,27 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange, isEditMod
 	const meta = METRIC_META[config.metric];
 	const tileUrl = isDarkMode ? MAP_TILES.dark : MAP_TILES.light;
 
-	const granularityToggle = onConfigChange && isEditMode ? (
-		<div className="btn-group btn-group-sm map-granularity-toggle" role="group">
-			<button
-				type="button"
-				className={`btn btn-sm ${granularity === "city" ? "btn-primary" : "btn-outline-secondary"}`}
-				style={{ fontSize: "0.75rem", padding: "0.2rem 0.7rem" }}
-				onClick={() => onConfigChange({ ...config, granularity: "city" })}
-			>
-				City
-			</button>
-			<button
-				type="button"
-				className={`btn btn-sm ${granularity === "country" ? "btn-primary" : "btn-outline-secondary"}`}
-				style={{ fontSize: "0.75rem", padding: "0.2rem 0.7rem" }}
-				onClick={() => onConfigChange({ ...config, granularity: "country" })}
-			>
-				Country
-			</button>
-		</div>
-	) : undefined;
+	const granularityToggle =
+		onConfigChange && isEditMode ? (
+			<div className="btn-group btn-group-sm map-granularity-toggle" role="group">
+				<button
+					type="button"
+					className={`btn btn-sm ${granularity === "city" ? "btn-primary" : "btn-outline-secondary"}`}
+					style={{ fontSize: "0.75rem", padding: "0.2rem 0.7rem" }}
+					onClick={() => onConfigChange({ ...config, granularity: "city" })}
+				>
+					City
+				</button>
+				<button
+					type="button"
+					className={`btn btn-sm ${granularity === "country" ? "btn-primary" : "btn-outline-secondary"}`}
+					style={{ fontSize: "0.75rem", padding: "0.2rem 0.7rem" }}
+					onClick={() => onConfigChange({ ...config, granularity: "country" })}
+				>
+					Country
+				</button>
+			</div>
+		) : undefined;
 
 	return (
 		<>
@@ -271,35 +268,37 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange, isEditMod
 			>
 				<div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "row", position: "relative" }}>
 					<div ref={mapWrapperRef} style={{ position: "relative", flex: 1, minWidth: 0 }}>
-					{mapSize && <MapContainer
-						center={[20, 0]}
-						zoom={2}
-						style={{ width: mapSize.width, height: mapSize.height }}
-						scrollWheelZoom={false}
-					>
-						<TileLayer attribution={ATTRIBUTION} url={tileUrl} />
-						<MapFitter points={points} />
-						<MapCenterer point={selectedPoint} />
-						<MapResizer trigger={selectedPoint?.key} />
-						{points.map((point) => {
-							const isSelected = selectedPoint?.key === point.key;
-							return (
-								<CircleMarker
-									key={point.key}
-									center={[point.lat, point.lng]}
-									radius={isSelected ? getRadius(point.value) + 4 : getRadius(point.value)}
-									pathOptions={{
-										fillColor: getColor(point.value),
-										color: isSelected ? "#f59e0b" : "white",
-										weight: isSelected ? 3 : 1.5,
-										opacity: 1,
-										fillOpacity: isSelected ? 1 : 0.75,
-									}}
-									eventHandlers={{ click: () => setSelectedPoint(point) }}
-								/>
-							);
-						})}
-					</MapContainer>}
+						{mapSize && (
+							<MapContainer
+								center={[20, 0]}
+								zoom={2}
+								style={{ width: mapSize.width, height: mapSize.height }}
+								scrollWheelZoom={false}
+							>
+								<TileLayer attribution={ATTRIBUTION} url={tileUrl} />
+								<MapFitter points={points} />
+								<MapCenterer point={selectedPoint} />
+								<MapResizer trigger={selectedPoint?.key} />
+								{points.map((point) => {
+									const isSelected = selectedPoint?.key === point.key;
+									return (
+										<CircleMarker
+											key={point.key}
+											center={[point.lat, point.lng]}
+											radius={isSelected ? getRadius(point.value) + 4 : getRadius(point.value)}
+											pathOptions={{
+												fillColor: getColor(point.value),
+												color: isSelected ? "#f59e0b" : "white",
+												weight: isSelected ? 3 : 1.5,
+												opacity: 1,
+												fillOpacity: isSelected ? 1 : 0.75,
+											}}
+											eventHandlers={{ click: () => setSelectedPoint(point) }}
+										/>
+									);
+								})}
+							</MapContainer>
+						)}
 					</div>
 
 					{selectedPoint && (
@@ -311,7 +310,9 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange, isEditMod
 									</div>
 									<div className="map-jobs-panel-location-text">
 										<div className="map-jobs-panel-location-name">{selectedPoint.label}</div>
-										<div className="map-jobs-panel-location-count">{formatValue(selectedPoint)}</div>
+										<div className="map-jobs-panel-location-count">
+											{formatValue(selectedPoint)}
+										</div>
 									</div>
 								</div>
 								<button
@@ -342,9 +343,13 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange, isEditMod
 											onClick={() => jobModalRef.current?.showView(job)}
 										>
 											<div className="map-job-item-body">
-												<div className="map-job-title" title={job.title}>
-													{job.title}
-												</div>
+												<Tooltip
+													content={job.title}
+													delay={TITLE_TOOLTIP_DELAY}
+													style={{ display: "block", width: "100%", minWidth: 0 }}
+												>
+													<div className="map-job-title">{job.title}</div>
+												</Tooltip>
 												<div className="map-job-meta">
 													{company && (
 														<span className="map-job-company">
@@ -353,7 +358,9 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange, isEditMod
 														</span>
 													)}
 													{statusColor && (
-														<span className={`map-job-status map-job-status--${statusColor}`}>
+														<span
+															className={`map-job-status map-job-status--${statusColor}`}
+														>
 															{job.application_status}
 														</span>
 													)}

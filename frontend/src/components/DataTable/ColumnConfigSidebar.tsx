@@ -1,6 +1,7 @@
 import React, { JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { CustomSelect } from "../rendering/widgets/CustomSelect";
+import { Tooltip, TITLE_TOOLTIP_DELAY } from "../Tooltip/Tooltip";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -235,16 +236,17 @@ const ColumnConfigSidebar: React.FC<ColumnConfigSidebarProps> = ({
 							size="sm"
 							className="mb-2"
 						/>
-						<Button
-							id="column-config-sort-direction-btn"
-							variant="outline-primary"
-							className="column-config-sort-btn"
-							onClick={() => handleSortDirectionChange(sortDirection === "asc" ? "desc" : "asc")}
-							title={sortDirection === "asc" ? "Ascending" : "Descending"}
-						>
-							<i className={`bi bi-sort-${sortDirection === "asc" ? "up" : "down"}`}></i>
-							{sortDirection === "asc" ? " Asc" : " Desc"}
-						</Button>
+						<Tooltip content={sortDirection === "asc" ? "Ascending" : "Descending"} delay={TITLE_TOOLTIP_DELAY}>
+							<Button
+								id="column-config-sort-direction-btn"
+								variant="outline-primary"
+								className="column-config-sort-btn"
+								onClick={() => handleSortDirectionChange(sortDirection === "asc" ? "desc" : "asc")}
+							>
+								<i className={`bi bi-sort-${sortDirection === "asc" ? "up" : "down"}`}></i>
+								{sortDirection === "asc" ? " Asc" : " Desc"}
+							</Button>
+						</Tooltip>
 					</div>
 				</div>
 				<div className="column-config-footer">

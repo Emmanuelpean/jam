@@ -77,7 +77,10 @@
     gap: 14px;
 }
 
-.modal:not(:last-of-type) .modal-content::after {
+/* Dim an underlying modal only when another modal is actually stacked on top of it.
+   Uses :has(~ .modal) rather than :not(:last-of-type) so unrelated elements portaled
+   to <body> (tooltips, context menus, ...) don't falsely trigger the overlay. */
+.modal:has(~ .modal) .modal-content::after {
     position: absolute;
     z-index: 10;
     content: "";

@@ -3,6 +3,7 @@ import "./UrlInput.scss";
 import { WidgetProps } from "./WidgetRenders";
 import React, { JSX } from "react";
 import { toKey } from "../../../utils/StringUtils";
+import { Tooltip, TITLE_TOOLTIP_DELAY } from "../../Tooltip/Tooltip";
 
 export const UrlInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
 	const handleOpenUrl = () => {
@@ -30,15 +31,16 @@ export const UrlInput = ({ field, value, handleChange, error }: WidgetProps): JS
 				className="url-input-field"
 				disabled={field.isDisabled}
 			/>
-			<button
-				type="button"
-				className={`url-open-button ${!value || !value.trim() ? "disabled" : ""}`}
-				onClick={handleOpenUrl}
-				disabled={!value || !value.trim()}
-				title="Open URL in new tab"
-			>
-				<i className="bi bi-box-arrow-up-right"></i>
-			</button>
+			<Tooltip content="Open URL in new tab" delay={TITLE_TOOLTIP_DELAY}>
+				<button
+					type="button"
+					className={`url-open-button ${!value || !value.trim() ? "disabled" : ""}`}
+					onClick={handleOpenUrl}
+					disabled={!value || !value.trim()}
+				>
+					<i className="bi bi-box-arrow-up-right"></i>
+				</button>
+			</Tooltip>
 		</div>
 	);
 };

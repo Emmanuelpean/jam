@@ -39,7 +39,7 @@ export const CompanyModal = forwardRef<DataModalHandle<CompanyData>, JamDataModa
 				helpText: "Jobs from this company.",
 			}),
 			modalViewFields.accordionPersonTable({
-				helpText: "Persons working at this company.",
+				helpText: "Contacts working at this company.",
 			}),
 			modalViewFields.accordionRecruitedJobTableCompany({
 				columns: jobTableColumns as TableColumn[],

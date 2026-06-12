@@ -1,8 +1,9 @@
 import React, { JSX, ReactNode, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Alert, Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
+import { Alert, Badge, Card, Col, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
+import { Tooltip } from "../../components/Tooltip/Tooltip";
 import { useConfig } from "../../contexts/ConfigContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAlert } from "../../contexts/AlertContext";
@@ -442,9 +443,9 @@ export const PremiumTab = (): JSX.Element => {
 								further.
 							</p>
 							<p>
-								Scraped jobs appear in the <Link to="/job-alerts/jobs">scraped job table</Link>, where you
-								can review, import, or delete them. You can also apply scraping filters to refine the
-								results. For example, you can exclude jobs posted by specific companies or filter by
+								Scraped jobs appear in the <Link to="/job-alerts/jobs">scraped job table</Link>, where
+								you can review, import, or delete them. You can also apply scraping filters to refine
+								the results. For example, you can exclude jobs posted by specific companies or filter by
 								location, salary range, or keywords.
 							</p>
 
@@ -453,17 +454,17 @@ export const PremiumTab = (): JSX.Element => {
 								{jobBoards.map((board: JobBoard): JSX.Element => {
 									const email: string = config?.platform_sender_emails?.[board.emailKey];
 									return (
-										<OverlayTrigger
+										<Tooltip
 											key={board.name}
 											placement="top"
-											overlay={
-												<Tooltip>
+											content={
+												<>
 													<div>Forward emails from:</div>
 													<div style={{ whiteSpace: "nowrap" }}>{email}</div>
 													<div style={{ fontSize: "0.85em", opacity: 0.8 }}>
 														(Right-click to copy)
 													</div>
-												</Tooltip>
+												</>
 											}
 										>
 											<Badge
@@ -478,7 +479,7 @@ export const PremiumTab = (): JSX.Element => {
 												<i className={`bi bi-${board.icon} me-1`}></i>
 												{board.name}
 											</Badge>
-										</OverlayTrigger>
+										</Tooltip>
 									);
 								})}
 							</div>

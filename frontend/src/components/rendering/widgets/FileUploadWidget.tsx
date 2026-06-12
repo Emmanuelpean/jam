@@ -1,6 +1,6 @@
 import React, { useRef, useState, JSX, ReactNode, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { Button, Form, Modal } from "react-bootstrap";
+import { Tooltip, TITLE_TOOLTIP_DELAY } from "../../Tooltip/Tooltip";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useConfig } from "../../../contexts/ConfigContext";
 import { useDataContext } from "../../../contexts/DataContext";
@@ -33,11 +33,9 @@ export const FileUploadWidget = ({
 	const { config } = useConfig();
 	const { addEntity, files, companies } = useDataContext();
 	const fileInputRef = useRef<HTMLInputElement>(null);
-	const tooltipRef = useRef<HTMLDivElement>(null);
 	const [uploading, setUploading] = useState<boolean>(false);
 	const [uploadError, setUploadError] = useState<string | null>(null);
 	const [dragOver, setDragOver] = useState<boolean>(false);
-	const [tooltipCoords, setTooltipCoords] = useState<{ top: number; left: number } | null>(null);
 
 	const [savedText, setSavedText] = useState<string>("");
 	const [draftText, setDraftText] = useState<string>("");
@@ -152,14 +150,6 @@ export const FileUploadWidget = ({
 		await filesApi.preview(value, token);
 	};
 
-	const handleTooltipEnter = (): void => {
-		if (!tooltipRef.current) return;
-		const rect = tooltipRef.current.getBoundingClientRect();
-		setTooltipCoords({ top: rect.top - 8, left: rect.left + rect.width / 2 });
-	};
-
-	const handleTooltipLeave = (): void => setTooltipCoords(null);
-
 	const openTextModal = (): void => {
 		setDraftText(savedText);
 		if (fileMetadata?.filename) {
@@ -168,7 +158,11 @@ export const FileUploadWidget = ({
 			const jobTitle = (data?.title ?? "").trim();
 			const companyName = (companies.find((c) => c.id === data?.company_id)?.name ?? "").trim();
 			const parts = ["cover letter", jobTitle, companyName].filter(Boolean);
-			const sanitized = parts.join(" ").replace(/[<>:"/\\|?*]/g, "").replace(/\s+/g, " ").trim();
+			const sanitized = parts
+				.join(" ")
+				.replace(/[<>:"/\\|?*]/g, "")
+				.replace(/\s+/g, " ")
+				.trim();
 			setFilenameInput(sanitized ? `${sanitized}.txt` : "cover_letter.txt");
 		}
 		setSaveError(null);
@@ -194,7 +188,9 @@ export const FileUploadWidget = ({
 
 		const filename = filenameInput.trim() || "cover_letter.txt";
 		if (config?.column_limits?.file_name && filename.length > config.column_limits.file_name) {
-			setSaveError(`Filename exceeds the maximum allowed length of ${config.column_limits.file_name} characters.`);
+			setSaveError(
+				`Filename exceeds the maximum allowed length of ${config.column_limits.file_name} characters.`
+			);
 			return;
 		}
 
@@ -228,18 +224,20 @@ export const FileUploadWidget = ({
 
 	const fieldId = field.key as string;
 
-	const pencilButton = textEditable && (!hasFile || isTextFile) ? (
-		<Button
-			id={`${fieldId}-write-btn`}
-			variant={"outline-primary"}
-			className="rounded-circle p-0 d-flex align-items-center justify-content-center file-drop-action-btn cover-letter-pencil-btn"
-			style={{ width: 32, height: 32 }}
-			title="Edit text"
-			onClick={openTextModal}
-		>
-			<i className="bi bi-pencil" style={{ fontSize: "0.8rem" }} />
-		</Button>
-	) : null;
+	const pencilButton =
+		textEditable && (!hasFile || isTextFile) ? (
+			<Tooltip content="Edit text" delay={TITLE_TOOLTIP_DELAY}>
+				<Button
+					id={`${fieldId}-write-btn`}
+					variant={"outline-primary"}
+					className="rounded-circle p-0 d-flex align-items-center justify-content-center file-drop-action-btn cover-letter-pencil-btn"
+					style={{ width: 32, height: 32 }}
+					onClick={openTextModal}
+				>
+					<i className="bi bi-pencil" style={{ fontSize: "0.8rem" }} />
+				</Button>
+			</Tooltip>
+		) : null;
 
 	const allExtraActions = (
 		<>
@@ -289,20 +287,19 @@ export const FileUploadWidget = ({
 							<div className="file-drop-filesize text-muted">{formatFileSize(fileMetadata!.size)}</div>
 							<div className="file-drop-actions" onClick={(e) => e.stopPropagation()}>
 								{canPreviewFile(fileMetadata!.type) ? (
-									<Button
-										id={`${fieldId}-preview-btn`}
-										variant={"outline-secondary"}
-										className="file-drop-action-btn"
-										onClick={handlePreview}
-										title="Preview"
-									>
-										<i className="bi bi-eye" />
-									</Button>
+									<Tooltip content="Preview" delay={TITLE_TOOLTIP_DELAY}>
+										<Button
+											id={`${fieldId}-preview-btn`}
+											variant={"outline-secondary"}
+											className="file-drop-action-btn"
+											onClick={handlePreview}
+										>
+											<i className="bi bi-eye" />
+										</Button>
+									</Tooltip>
 								) : (
-									<div
-										ref={tooltipRef}
-										onMouseEnter={handleTooltipEnter}
-										onMouseLeave={handleTooltipLeave}
+									<Tooltip
+										content="Preview not available for this file type"
 										style={{ cursor: "not-allowed" }}
 									>
 										<Button
@@ -314,38 +311,30 @@ export const FileUploadWidget = ({
 										>
 											<i className="bi bi-eye" />
 										</Button>
-									</div>
+									</Tooltip>
 								)}
-								<Button
-									id={`${fieldId}-download-btn`}
-									variant={"outline-primary"}
-									className="file-drop-action-btn"
-									onClick={handleDownload}
-									title="Download"
-								>
-									<i className="bi bi-download" />
-								</Button>
-								<Button
-									id={`${fieldId}-remove-btn`}
-									variant={"outline-danger"}
-									className="file-drop-action-btn"
-									onClick={handleRemove}
-									title="Remove"
-								>
-									<i className="bi bi-x-lg" />
-								</Button>
+								<Tooltip content="Download" delay={TITLE_TOOLTIP_DELAY}>
+									<Button
+										id={`${fieldId}-download-btn`}
+										variant={"outline-primary"}
+										className="file-drop-action-btn"
+										onClick={handleDownload}
+									>
+										<i className="bi bi-download" />
+									</Button>
+								</Tooltip>
+								<Tooltip content="Remove" delay={TITLE_TOOLTIP_DELAY}>
+									<Button
+										id={`${fieldId}-remove-btn`}
+										variant={"outline-danger"}
+										className="file-drop-action-btn"
+										onClick={handleRemove}
+									>
+										<i className="bi bi-x-lg" />
+									</Button>
+								</Tooltip>
 								{allExtraActions}
 							</div>
-							{tooltipCoords &&
-								createPortal(
-									<div
-										className="ab-tooltip-portal ab-tooltip-portal--top"
-										style={{ top: tooltipCoords.top, left: tooltipCoords.left }}
-									>
-										Preview not available for this file type
-									</div>,
-									document.body
-								)}
 						</>
 					) : (
 						<>

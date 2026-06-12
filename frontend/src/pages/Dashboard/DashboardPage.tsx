@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState, JSX } from "react";
 import { Button } from "react-bootstrap";
+import { Tooltip, TITLE_TOOLTIP_DELAY } from "../../components/Tooltip/Tooltip";
 import { ResponsiveGridLayout, Layout, LayoutItem, ResponsiveLayouts, useContainerWidth } from "react-grid-layout";
 import { useAuth } from "../../contexts/AuthContext";
 import "react-grid-layout/css/styles.css";
@@ -718,33 +719,33 @@ const Dashboard: React.FC = () => {
 												<i className="bi bi-grip-horizontal"></i>
 											</div>
 										)}
-										{/* Config/remove buttons stay mounted so they can animate in and out;
-											their visibility is driven by the .dashboard-edit-mode class. */}
 										{widgetHasSettings(widget.config) && (
-											<Button
-												id={`widget-config-btn-${widget.id}`}
-												className="widget-config-btn"
-												variant="outline-primary"
-												active={openConfigId === widget.id}
-												onClick={(): void =>
-													setOpenConfigId((prev: string | null): string | null =>
-														prev === widget.id ? null : widget.id
-													)
-												}
-												title="Configure widget"
-											>
-												<i className="bi bi-gear"></i>
-											</Button>
+											<Tooltip content="Configure widget" delay={TITLE_TOOLTIP_DELAY}>
+												<Button
+													id={`widget-config-btn-${widget.id}`}
+													className="widget-config-btn"
+													variant="outline-primary"
+													active={openConfigId === widget.id}
+													onClick={(): void =>
+														setOpenConfigId((prev: string | null): string | null =>
+															prev === widget.id ? null : widget.id
+														)
+													}
+												>
+													<i className="bi bi-gear"></i>
+												</Button>
+											</Tooltip>
 										)}
-										<Button
-											id={`widget-remove-btn-${widget.id}`}
-											className="widget-remove-btn"
-											variant="outline-danger"
-											onClick={(): void => handleRemoveWidget(widget.id)}
-											title="Remove widget"
-										>
-											<i className="bi bi-x"></i>
-										</Button>
+										<Tooltip content="Remove widget" delay={TITLE_TOOLTIP_DELAY}>
+											<Button
+												id={`widget-remove-btn-${widget.id}`}
+												className="widget-remove-btn"
+												variant="outline-danger"
+												onClick={(): void => handleRemoveWidget(widget.id)}
+											>
+												<i className="bi bi-x"></i>
+											</Button>
+										</Tooltip>
 										<div className="grid-item-content">
 											{renderWidget(widget.config, widget.id)}
 										</div>

@@ -3,6 +3,7 @@ import { Form } from "react-bootstrap";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
 import "./Datetime.scss";
 import { toKey } from "../../../utils/StringUtils";
+import { Tooltip, TITLE_TOOLTIP_DELAY } from "../../Tooltip/Tooltip";
 
 export const formatDateTime = (datetime?: string | Date, dateOnly: boolean = false): string => {
 	if (!datetime) {
@@ -80,25 +81,31 @@ export const LocalDatetimeInput = ({
 				disabled={field.isDisabled}
 			/>
 			{formattedValue && !field.isDisabled && (
-				<i
-					className="bi bi-x datetime-embedded-icon datetime-clear-icon"
-					onClick={clearValue}
-					id={toKey(field.key) + "_clear"}
-					title="Clear"
-				></i>
+				<Tooltip content="Clear" delay={TITLE_TOOLTIP_DELAY}>
+					<i
+						className="bi bi-x datetime-embedded-icon datetime-clear-icon"
+						onClick={clearValue}
+						id={toKey(field.key) + "_clear"}
+					></i>
+				</Tooltip>
 			)}
-			<i
-				className="bi bi-calendar datetime-embedded-icon datetime-calendar-icon"
-				onClick={openPicker}
-				id={toKey(field.key) + "_open_picker"}
-				title="Open picker"
-			></i>
-			<i
-				className="bi bi-clock datetime-embedded-icon"
-				onClick={setCurrentValue}
-				id={toKey(field.key) + "_set_current"}
-				title={inputType === "datetime-local" ? "Set to current date and time" : "Set to current date"}
-			></i>
+			<Tooltip content="Open picker" delay={TITLE_TOOLTIP_DELAY}>
+				<i
+					className="bi bi-calendar datetime-embedded-icon datetime-calendar-icon"
+					onClick={openPicker}
+					id={toKey(field.key) + "_open_picker"}
+				></i>
+			</Tooltip>
+			<Tooltip
+				content={inputType === "datetime-local" ? "Set to current date and time" : "Set to current date"}
+				delay={TITLE_TOOLTIP_DELAY}
+			>
+				<i
+					className="bi bi-clock datetime-embedded-icon"
+					onClick={setCurrentValue}
+					id={toKey(field.key) + "_set_current"}
+				></i>
+			</Tooltip>
 		</div>
 	);
 };

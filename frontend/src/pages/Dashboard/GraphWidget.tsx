@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Tooltip as UiTooltip, TITLE_TOOLTIP_DELAY } from "../../components/Tooltip/Tooltip";
 import { CustomSelect } from "../../components/rendering/widgets/CustomSelect";
 import { Button } from "react-bootstrap";
 import {
@@ -80,14 +81,28 @@ const renderLineChart = (data: ChartDataPoint[], suffix = "", xLabel?: string, y
 				tick={{ fontSize: 13, fill: "var(--bs-body-color)" }}
 				stroke="var(--bs-border-color)"
 				interval="preserveStartEnd"
-				label={xLabel ? { value: xLabel, position: "insideBottom", offset: -10, style: AXIS_LABEL_STYLE } : undefined}
+				label={
+					xLabel
+						? { value: xLabel, position: "insideBottom", offset: -10, style: AXIS_LABEL_STYLE }
+						: undefined
+				}
 			/>
 			<YAxis
 				tick={{ fontSize: 13, fill: "var(--bs-body-color)" }}
 				stroke="var(--bs-border-color)"
 				allowDecimals={false}
 				tickFormatter={(v) => `${v}${suffix}`}
-				label={yLabel ? { value: yLabel, angle: -90, position: "insideLeft", offset: 15, style: { ...AXIS_LABEL_STYLE, textAnchor: "middle" } } : undefined}
+				label={
+					yLabel
+						? {
+								value: yLabel,
+								angle: -90,
+								position: "insideLeft",
+								offset: 15,
+								style: { ...AXIS_LABEL_STYLE, textAnchor: "middle" },
+							}
+						: undefined
+				}
 			/>
 			<Tooltip content={<CustomTooltip suffix={suffix} />} />
 			<Line
@@ -104,7 +119,10 @@ const renderLineChart = (data: ChartDataPoint[], suffix = "", xLabel?: string, y
 
 const renderBarChart = (data: ChartDataPoint[], suffix = "", xLabel?: string, yLabel?: string) => (
 	<ResponsiveContainer width="100%" height="100%">
-		<BarChart data={data} margin={{ top: 5, right: 20, left: yLabel ? 10 : 0, bottom: data.length > 8 ? 60 : xLabel ? 20 : 5 }}>
+		<BarChart
+			data={data}
+			margin={{ top: 5, right: 20, left: yLabel ? 10 : 0, bottom: data.length > 8 ? 60 : xLabel ? 20 : 5 }}
+		>
 			<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
 			<XAxis
 				dataKey="name"
@@ -114,14 +132,28 @@ const renderBarChart = (data: ChartDataPoint[], suffix = "", xLabel?: string, yL
 				angle={data.length > 8 ? -45 : 0}
 				textAnchor={data.length > 8 ? "end" : "middle"}
 				height={data.length > 8 ? 60 : xLabel ? 40 : 30}
-				label={xLabel && data.length <= 8 ? { value: xLabel, position: "insideBottom", offset: -10, style: AXIS_LABEL_STYLE } : undefined}
+				label={
+					xLabel && data.length <= 8
+						? { value: xLabel, position: "insideBottom", offset: -10, style: AXIS_LABEL_STYLE }
+						: undefined
+				}
 			/>
 			<YAxis
 				tick={{ fontSize: 13, fill: "var(--bs-body-color)" }}
 				stroke="var(--bs-border-color)"
 				allowDecimals={false}
 				tickFormatter={(v) => `${v}${suffix}`}
-				label={yLabel ? { value: yLabel, angle: -90, position: "insideLeft", offset: 15, style: { ...AXIS_LABEL_STYLE, textAnchor: "middle" } } : undefined}
+				label={
+					yLabel
+						? {
+								value: yLabel,
+								angle: -90,
+								position: "insideLeft",
+								offset: 15,
+								style: { ...AXIS_LABEL_STYLE, textAnchor: "middle" },
+							}
+						: undefined
+				}
 			/>
 			<Tooltip content={<CustomTooltip suffix={suffix} />} />
 			<Bar
@@ -241,9 +273,7 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 
 	const suffix = config.field === "import_rate" || config.field === "applied_rate" ? "%" : "";
 
-	const xLabel = fieldMeta?.supportsGranularity
-		? effectiveGranularity === "week" ? "Week" : "Month"
-		: undefined;
+	const xLabel = fieldMeta?.supportsGranularity ? (effectiveGranularity === "week" ? "Week" : "Month") : undefined;
 	const yLabel = fieldMeta?.yLabel;
 
 	const renderChart = () => {
@@ -271,14 +301,15 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 			headerAction={
 				isEditMode ? (
 					<div style={{ paddingRight: "1rem" }}>
-						<Button
-							className="graph-sidebar-toggle"
-							variant={`${sidebarOpen ? "primary" : "outline-primary"}`}
-							onClick={(): void => setSidebarOpen((prev: boolean): boolean => !prev)}
-							title="Configure"
-						>
-							<i className={`bi bi-gear`}></i>
-						</Button>
+						<UiTooltip content="Configure" delay={TITLE_TOOLTIP_DELAY}>
+							<Button
+								className="graph-sidebar-toggle"
+								variant={`${sidebarOpen ? "primary" : "outline-primary"}`}
+								onClick={(): void => setSidebarOpen((prev: boolean): boolean => !prev)}
+							>
+								<i className={`bi bi-gear`}></i>
+							</Button>
+						</UiTooltip>
 					</div>
 				) : undefined
 			}

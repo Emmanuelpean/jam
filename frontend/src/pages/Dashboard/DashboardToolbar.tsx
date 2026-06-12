@@ -1,5 +1,6 @@
 import React from "react";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
+import { Tooltip } from "../../components/Tooltip/Tooltip";
 
 interface DashboardToolbarProps {
 	isEditMode: boolean;
@@ -22,15 +23,16 @@ export const DashboardToolbar: React.FC<DashboardToolbarProps> = ({
 }) => (
 	<div className="dashboard-edit-toolbar">
 		<div className="dashboard-edit-toolbar-inner">
-			<button
-				id="dashboard-edit-btn"
-				data-tour="dashboard-customise"
-				className={`sidebar-icon-btn ${isEditMode ? "btn btn-outline-secondary active-edit" : "dashboard-edit-trigger-inline"}`}
-				onClick={isEditMode ? onCancel : onEdit}
-				title={isEditMode ? "Cancel" : "Customise dashboard"}
-			>
-				<i className={`bi bi-${isEditMode ? "x-lg" : "pencil-square"}`}></i>
-			</button>
+			<Tooltip content={isEditMode ? "Cancel" : "Customise dashboard"} placement={"left"}>
+				<button
+					id="dashboard-edit-btn"
+					data-tour="dashboard-customise"
+					className={`sidebar-icon-btn ${isEditMode ? "btn btn-outline-secondary active-edit" : "dashboard-edit-trigger-inline"}`}
+					onClick={isEditMode ? onCancel : onEdit}
+				>
+					<i className={`bi bi-${isEditMode ? "x-lg" : "pencil-square"}`}></i>
+				</button>
+			</Tooltip>
 			{isEditMode && (
 				<>
 					<ActionButton

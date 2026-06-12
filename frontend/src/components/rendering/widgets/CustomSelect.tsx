@@ -1,6 +1,7 @@
 import React, { JSX, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { GroupedSelectOption, SelectOption } from "../form/FormOptions";
+import { Tooltip, TITLE_TOOLTIP_DELAY } from "../../Tooltip/Tooltip";
 
 export interface CustomSelectProps {
 	id: string;
@@ -57,23 +58,24 @@ const AddButtonIndicator = ({ addButton, parentData, onClose }: AddButtonIndicat
 	};
 
 	return (
-		<div
-			className={`custom-dropdown-indicator${hover ? " active" : ""}`}
-			onMouseDown={handleMouseDown}
-			onClick={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-			}}
-			onMouseEnter={() => setHover(true)}
-			onMouseLeave={() => setHover(false)}
-			tabIndex={-1}
-			aria-label="Add new item"
-			role="button"
-			title="Add new item"
-			id={buttonId}
-		>
-			<i className="bi bi-plus-circle"></i>
-		</div>
+		<Tooltip content="Add new item" delay={TITLE_TOOLTIP_DELAY}>
+			<div
+				className={`custom-dropdown-indicator${hover ? " active" : ""}`}
+				onMouseDown={handleMouseDown}
+				onClick={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+				}}
+				onMouseEnter={() => setHover(true)}
+				onMouseLeave={() => setHover(false)}
+				tabIndex={-1}
+				aria-label="Add new item"
+				role="button"
+				id={buttonId}
+			>
+				<i className="bi bi-plus-circle"></i>
+			</div>
+		</Tooltip>
 	);
 };
 
@@ -590,7 +592,14 @@ export const CustomSelect = ({
 					)}
 				</div>
 			</div>
-			{(isOpen || isClosing) && createPortal(<>{backdrop}{menu}</>, document.getElementById("jam-select-portal") ?? document.body)}
+			{(isOpen || isClosing) &&
+				createPortal(
+					<>
+						{backdrop}
+						{menu}
+					</>,
+					document.getElementById("jam-select-portal") ?? document.body
+				)}
 		</div>
 	);
 };

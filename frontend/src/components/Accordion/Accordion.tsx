@@ -38,7 +38,7 @@ export const Accordion = ({
 				onClick={handleToggle}
 				style={{ cursor: "pointer", userSelect: "none" }}
 			>
-				<div className="d-flex align-items-center">{header}</div>
+				<div className="d-flex">{header}</div>
 				<i
 					className={`bi bi-chevron-down text-muted accordion-chevron ${isOpen ? "accordion-chevron-open" : ""}`}
 				></i>
