@@ -16,12 +16,10 @@ class TestPreferenceSettingsPage(BaseTest):
         self.login()
 
     def test_currency_settings(self) -> None:
-        """Test changing the currency settings"""
+        """Test changing the currency settings auto-saves without a confirm button"""
 
         self.user_settings_utils.currency.select_by_visible_text("US Dollar")
-        self.user_settings_utils.confirm()
-        self.assert_toast_message("Preferences updated successfully.")
-        assert self.db_user.preferences.default_currency == "USD"
+        self.poll_db_value(lambda: self.db_user.preferences.default_currency, "USD")
 
     def test_theme_settings(self) -> None:
         """Test changing the theme settings"""

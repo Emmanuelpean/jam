@@ -11,8 +11,6 @@ The follow-up-email tour seeds:
   - 1 Interview: linked to the job     (Interview.is_tour)
 """
 
-import time
-
 from app import models
 from base_test import BaseTest
 
@@ -30,33 +28,13 @@ class TestStaleTourDataCleanup(BaseTest):
 
     def _poll_marker_gone(self, model_class, timeout: float = 10.0) -> None:
         """Poll the DB until no is_tour rows remain for the current user."""
-        deadline = time.time() + timeout
-        while time.time() < deadline:
-            self.db.expire_all()
-            self.db.rollback()
-            count = (
-                self.db.query(model_class)
-                .filter(
-                    model_class.owner_id == self.db_user.id,
-                    model_class.is_tour == True,
-                )
-                .count()
-            )
-            if count == 0:
-                return
-            time.sleep(0.5)
-
-        self.db.expire_all()
-        self.db.rollback()
-        remaining = (
-            self.db.query(model_class)
-            .filter(
-                model_class.owner_id == self.db_user.id,
-                model_class.is_tour == True,
-            )
-            .all()
+        self.poll_db_value(
+            lambda: self.db.query(model_class)
+            .filter(model_class.owner_id == self.db_user.id, model_class.is_tour == True)
+            .count(),
+            0,
+            timeout=timeout,
         )
-        assert not remaining, f"{model_class.__name__} is_tour rows still present after {timeout}s: {[r.id for r in remaining]}"
 
     # ------------------------------------------------------------------ tests
 

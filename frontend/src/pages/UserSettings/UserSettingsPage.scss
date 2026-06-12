@@ -125,7 +125,8 @@
 /* Better separator styling */
 .settings-content hr {
     margin: 2rem 0;
-    border-color: var(--bs-border-color);
+    border: none;
+    border-top: 2px solid var(--bs-border-color);
     opacity: 0.5;
 }
 

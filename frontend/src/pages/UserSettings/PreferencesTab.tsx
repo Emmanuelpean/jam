@@ -5,11 +5,8 @@ import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useFormOptions } from "../../components/rendering/form/FormOptions";
 import { useAuth } from "../../contexts/AuthContext";
-import { UpdateCurrentUserResponse } from "../../services/api/Users";
-import { ApiResponse } from "../../services/api/Base";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { Theme, THEMES } from "../../utils/Theme";
-import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { DarkModeToggle } from "../../components/Sidebar/DarkModeToggle";
 import { ThemeItem } from "../../components/Sidebar/ThemeItem";
 
@@ -18,14 +15,13 @@ interface PreferencesFormData {
 }
 
 export const PreferencesTab: React.FC = () => {
-	const { currentUser, updateCurrentUser, token } = useAuth();
+	const { currentUser, updateCurrentUser } = useAuth();
 	const { currencyNames } = useFormOptions();
-	const { showToastSuccess, showToastError } = useGlobalToast();
+	const { showToastError } = useGlobalToast();
 	const [formData, setFormData] = useState<PreferencesFormData>(() => ({
 		default_currency: currentUser?.preferences.default_currency || "",
 	}));
 	const [errors, setErrors] = useState<ValidationErrors>({});
-	const [submitting, setSubmitting] = useState(false);
 	const formInitialized = useRef(false);
 
 	useEffect(() => {
@@ -48,30 +44,18 @@ export const PreferencesTab: React.FC = () => {
 		}
 	};
 
-	const handleInputChange = (e: SyntheticEvent): void => {
+	const handleInputChange = async (e: SyntheticEvent): Promise<void> => {
 		const { name, value } = e.target;
 		setFormData((prev: PreferencesFormData): PreferencesFormData => ({ ...prev, [name]: value }));
 		if (errors[name]) {
 			setErrors((prev: ValidationErrors): ValidationErrors => ({ ...prev, [name]: "" }));
 		}
-	};
-
-	const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-		e.preventDefault();
-		if (!token) return;
-		setSubmitting(true);
 
 		try {
-			const response: ApiResponse<UpdateCurrentUserResponse> | null = await updateCurrentUser({
-				preferences: { default_currency: formData.default_currency },
-			});
-			if (!response) return;
-
-			showToastSuccess("Preferences updated successfully.");
+			await updateCurrentUser({ preferences: { [name]: value } });
 		} catch (error) {
 			showToastError("Failed to update preferences.");
-		} finally {
-			setSubmitting(false);
+			console.error("Error saving preferences:", error);
 		}
 	};
 
@@ -84,7 +68,7 @@ export const PreferencesTab: React.FC = () => {
 	};
 
 	return (
-		<Form onSubmit={handleSubmit}>
+		<Form>
 			<h5 className="mb-3">
 				<i className="bi bi-currency-dollar"></i> Currency Settings
 			</h5>
@@ -119,16 +103,6 @@ export const PreferencesTab: React.FC = () => {
 			<div className="mb-3">
 				<label className="form-label">Mode</label>
 				<DarkModeToggle />
-			</div>
-			<div className="mt-4">
-				<ActionButton
-					type="submit"
-					variant="primary"
-					disabled={submitting}
-					defaultIcon="save"
-					id={"confirm-button"}
-					defaultText={submitting ? "Saving..." : "Save Preferences"}
-				/>
 			</div>
 		</Form>
 	);

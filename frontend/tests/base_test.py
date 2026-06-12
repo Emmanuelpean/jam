@@ -58,6 +58,30 @@ class BaseUtils(SeleniumUtils):
 
         self.wait_for_url(f"{self.frontend_base_url}/{page}", timeout=timeout)
 
+    def poll_db_value(self, getter, expected, timeout: float = 10.0) -> None:
+        """Poll the DB until getter() returns expected, or raise.
+
+        Useful when the value is committed by the backend API process (a separate
+        process from the test) and therefore lands after a delay.
+
+        :param getter: A callable returning the current value (re-queried each poll).
+        :param expected: The value to wait for.
+        :param timeout: Maximum time to wait in seconds."""
+
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            # rollback() ends the current transaction so the next query gets a fresh
+            # READ COMMITTED snapshot and can see rows committed by the backend API process.
+            self.db.expire_all()
+            self.db.rollback()
+            if getter() == expected:
+                return
+            time.sleep(0.5)
+        self.db.expire_all()
+        self.db.rollback()
+        actual = getter()
+        assert actual == expected, f"expected {expected!r}, got {actual!r} after {timeout}s"
+
     # ----------------------------------------------------- EMAILS -----------------------------------------------------
 
     def get_verification_token_from_db(self, email: str) -> str:
@@ -1684,20 +1708,11 @@ class TourUtils(BaseUtils):
 
     def poll_db_count(self, model_class, owner_id: int, expected: int, timeout: float = 10.0) -> None:
         """Poll the DB until the row count for owner_id equals expected, or raise."""
-        deadline = time.time() + timeout
-        while time.time() < deadline:
-            # rollback() ends the current transaction so the next query gets a fresh
-            # READ COMMITTED snapshot and can see rows committed by the backend API process.
-            self.db.expire_all()
-            self.db.rollback()
-            count = self.db.query(model_class).filter_by(owner_id=owner_id).count()
-            if count == expected:
-                return
-            time.sleep(0.5)
-        self.db.expire_all()
-        self.db.rollback()
-        actual = self.db.query(model_class).filter_by(owner_id=owner_id).count()
-        assert actual == expected, f"{model_class.__name__}: expected {expected}, got {actual} after {timeout}s"
+        self.poll_db_value(
+            lambda: self.db.query(model_class).filter_by(owner_id=owner_id).count(),
+            expected,
+            timeout=timeout,
+        )
 
 
 class BaseTest(BaseUtils):
