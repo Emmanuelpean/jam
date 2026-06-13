@@ -94,26 +94,38 @@ const Dashboard: React.FC = () => {
 	}, [isEditMode]);
 
 	// FLIP-animate the header count badges as they shift position when edit mode toggles.
+	// "First" positions are captured at the moment the toggle is triggered (see captureBadgeRects),
+	// while the DOM is still in its current, settled state — relying on positions recorded during an
+	// earlier commit would be stale on the first toggle, before the grid layout has measured itself.
 	useLayoutEffect(() => {
 		const wrapper = gridWrapperRef.current;
 		if (!wrapper) return;
 		wrapper.querySelectorAll<HTMLElement>(".table-count-badge").forEach((badge: HTMLElement): void => {
-			const key = badge.id;
+			const first = badgeRectsRef.current.get(badge.id);
+			if (!first) return;
 			const last = badge.getBoundingClientRect();
-			const first = badgeRectsRef.current.get(key);
-			if (first) {
-				const dx = first.left - last.left;
-				if (Math.abs(dx) > 1) {
-					badge.style.transition = "none";
-					badge.style.transform = `translateX(${dx}px)`;
-					void badge.offsetWidth; // force reflow so the starting offset is applied
-					badge.style.transition = "transform 0.25s ease";
-					badge.style.transform = "";
-				}
+			const dx = first.left - last.left;
+			if (Math.abs(dx) > 1) {
+				badge.style.transition = "none";
+				badge.style.transform = `translateX(${dx}px)`;
+				void badge.offsetWidth; // force reflow so the starting offset is applied
+				badge.style.transition = "transform 0.25s ease";
+				badge.style.transform = "";
 			}
-			badgeRectsRef.current.set(key, last);
 		});
+		badgeRectsRef.current.clear();
 	}, [isEditMode]);
+
+	// Snapshot the current badge positions just before edit mode is toggled, so the FLIP effect above
+	// has an accurate "first" frame to animate from.
+	const captureBadgeRects = (): void => {
+		const wrapper = gridWrapperRef.current;
+		if (!wrapper) return;
+		badgeRectsRef.current.clear();
+		wrapper.querySelectorAll<HTMLElement>(".table-count-badge").forEach((badge: HTMLElement): void => {
+			badgeRectsRef.current.set(badge.id, badge.getBoundingClientRect());
+		});
+	};
 
 	useEffect(() => {
 		if (!isEditMode) {
@@ -185,6 +197,7 @@ const Dashboard: React.FC = () => {
 		try {
 			await updateCurrentUser({ preferences: { dashboard_layout: JSON.stringify(layoutData) } });
 			savedLayoutRef.current = layoutData;
+			captureBadgeRects();
 			setIsEditMode(false);
 		} finally {
 			setIsSaving(false);
@@ -193,6 +206,7 @@ const Dashboard: React.FC = () => {
 
 	const handleCancel = (): void => {
 		setLayoutData(savedLayoutRef.current);
+		captureBadgeRects();
 		setIsEditMode(false);
 	};
 
@@ -759,7 +773,10 @@ const Dashboard: React.FC = () => {
 			<DashboardToolbar
 				isEditMode={isEditMode}
 				isSaving={isSaving}
-				onEdit={(): void => setIsEditMode(true)}
+				onEdit={(): void => {
+					captureBadgeRects();
+					setIsEditMode(true);
+				}}
 				onCancel={handleCancel}
 				onSave={handleSave}
 				onAddWidget={(): void => setShowWidgetPicker(true)}
