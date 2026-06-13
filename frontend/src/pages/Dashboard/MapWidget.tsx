@@ -267,12 +267,12 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange, isEditMod
 				headerAction={granularityToggle}
 			>
 				<div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "row", position: "relative" }}>
-					<div ref={mapWrapperRef} style={{ position: "relative", flex: 1, minWidth: 0 }}>
+					<div ref={mapWrapperRef} style={{ position: "relative", flex: 1, minWidth: 0, overflow: "hidden" }}>
 						{mapSize && (
 							<MapContainer
 								center={[20, 0]}
 								zoom={2}
-								style={{ width: mapSize.width, height: mapSize.height }}
+								style={{ width: "100%", height: "100%" }}
 								scrollWheelZoom={false}
 							>
 								<TileLayer attribution={ATTRIBUTION} url={tileUrl} />

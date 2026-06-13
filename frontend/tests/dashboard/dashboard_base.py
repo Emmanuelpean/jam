@@ -14,6 +14,7 @@ _LAYOUT_DEFAULTS: dict[str, dict] = {
     "table": {"w": 8, "h": 12, "minW": 4, "minH": 8},
     "timeline": {"w": 4, "h": 12, "minW": 3, "minH": 8},
     "graph": {"w": 6, "h": 8, "minW": 4, "minH": 6},
+    "map": {"w": 8, "h": 14, "minW": 4, "minH": 10},
 }
 
 

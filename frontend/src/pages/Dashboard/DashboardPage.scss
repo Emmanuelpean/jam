@@ -357,6 +357,8 @@
 
 /* Map widget jobs panel */
 .map-jobs-panel {
+    position: relative;
+    z-index: 2; // paint above the (positioned) map wrapper so the map can't cover the panel
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
