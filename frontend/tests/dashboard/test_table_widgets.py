@@ -305,14 +305,14 @@ class TestFavouritesTable(DashboardTestBase):
 
     def test_favourites_shows_matching_job(self) -> None:
         """A job whose title matches an active favourite filter appears as one row."""
-        self._create_favourite_filter(type="title", operator="contains", value="Python")
+        self._create_favourite_filter(filter_type="title", operator="contains", value="Python")
         self._create_scraped_job(title="Python Developer")
         self._reload()
         assert len(self._rows()) == 1
 
     def test_favourites_badge_reflects_matching_count(self) -> None:
         """Badge count equals the number of jobs that match the favourite filters."""
-        self._create_favourite_filter(type="title", operator="contains", value="Engineer")
+        self._create_favourite_filter(filter_type="title", operator="contains", value="Engineer")
         self._create_scraped_job(title="Software Engineer")
         self._create_scraped_job(title="Data Engineer")
         self._reload()
@@ -321,14 +321,14 @@ class TestFavouritesTable(DashboardTestBase):
 
     def test_favourites_excludes_non_matching_job(self) -> None:
         """A job that does not match any active filter is not shown."""
-        self._create_favourite_filter(type="title", operator="contains", value="Python")
+        self._create_favourite_filter(filter_type="title", operator="contains", value="Python")
         self._create_scraped_job(title="Java Developer")
         self._reload()
         assert len(self._rows()) == 0
 
     def test_favourites_mixed_matching_and_non_matching(self) -> None:
         """Only the job that matches the filter is shown when mixed jobs exist."""
-        self._create_favourite_filter(type="title", operator="contains", value="Python")
+        self._create_favourite_filter(filter_type="title", operator="contains", value="Python")
         self._create_scraped_job(title="Python Developer")
         self._create_scraped_job(title="Java Developer")
         self._reload()
@@ -336,14 +336,14 @@ class TestFavouritesTable(DashboardTestBase):
 
     def test_favourites_inactive_filter_is_ignored(self) -> None:
         """An inactive favourite filter does not cause jobs to appear."""
-        self._create_favourite_filter(type="title", operator="contains", value="Python", is_active=False)
+        self._create_favourite_filter(filter_type="title", operator="contains", value="Python", is_active=False)
         self._create_scraped_job(title="Python Developer")
         self._reload()
         assert len(self._rows()) == 0
 
     def test_favourites_row_displays_job_title(self) -> None:
         """Each matching row must contain the job title."""
-        self._create_favourite_filter(type="company", operator="equals", value="Acme Corp")
+        self._create_favourite_filter(filter_type="company", operator="equals", value="Acme Corp")
         self._create_scraped_job(title="Backend Developer", company="Acme Corp")
         self._reload()
         row = self._rows()[0]
