@@ -121,7 +121,7 @@ export const RunHistoryChart = ({
 
 	return (
 		<div className="status-card mt-4">
-			<div className="d-flex justify-content-between align-items-center mb-3">
+			<div className="history-chart-header d-flex justify-content-between align-items-center">
 				<h2 className="card-title mb-0">
 					<i className="bi bi-clock-history me-2"></i>
 					Run History

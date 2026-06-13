@@ -20,6 +20,21 @@
     border-bottom: 3px solid var(--bs-border-color);
 }
 
+// When the title shares a row with another control (e.g. the platform
+// selector), the underline should span the full card width, not just the
+// title text. Move the border to the header row and clear it on the title.
+.status-card .history-chart-header {
+    margin-bottom: 21.6px;
+    padding-bottom: 14.4px;
+    border-bottom: 3px solid var(--bs-border-color);
+}
+
+.status-card .history-chart-header .card-title {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
 .status-content {
     display: grid;
     align-items: center;
