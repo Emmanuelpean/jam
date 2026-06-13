@@ -1,4 +1,4 @@
-import dashboardPng from "../assets/screenshots/dashboard.png";
+import dashboardCustomisationGif from "../assets/demo_gifs/dashboard_customisation.gif";
 import tableCustomisationPng from "../assets/screenshots/table_customisation.png";
 
 export default `<h4>Version 1.3.0</h4>
@@ -15,7 +15,7 @@ export default `<h4>Version 1.3.0</h4>
     <li><strong>Map widgets</strong> show a geographic view of your jobs, with options to display job count, average salary, or top keywords by location.</li>
     <li>Your layout is saved automatically when you click the save button. You can reset the dashboard to its default layout at any time.</li>
 </ul>
-<img src="${dashboardPng}" alt="Customisable dashboard" width="100%" style="padding: 0 5rem;" />
+<img src="${dashboardCustomisationGif}" alt="Customisable dashboard" width="100%" style="padding: 0 5rem;" />
 
 <h5>Customisable Tables & Advanced Filtering</h5>
 <ul>
@@ -53,6 +53,6 @@ export default `<h4>Version 1.3.0</h4>
     <li>Hovering over an option in a company, location, contact, or aggregator dropdown now shows a floating preview card with key details, so you can identify the right entry without opening it.</li>
     <li>Locations are now stored as plain text instead of being linked to a separate location record. This simplifies data entry and removes the need to manage a separate locations table.</li>
     <li>The Jobs table now has a <strong>Hide rejected / withdrawn</strong> toggle inside the application status filter, letting you quickly exclude closed applications from view.</li>
-    <li>The Premium settings page now shows a warning when job rating is active but your qualifications profile is incomplete, with a direct link to fill in the missing fields.</li>
+    <li>The Premium settings page now shows a warning when job rating is active but your qualification profile is incomplete, with a direct link to fill in the missing fields.</li>
 </ul>
 `;

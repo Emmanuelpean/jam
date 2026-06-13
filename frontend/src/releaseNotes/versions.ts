@@ -212,15 +212,16 @@ export const RELEASE_SLIDES: Record<version, ReleaseSlide[]> = {
 			title: "Customisable Dashboard",
 			description:
 				"Your dashboard is now fully customisable. Add, remove, resize, and rearrange widgets in edit mode. " +
-				"Choose from Metric, Table, Timeline, Graph, and Map widget types, or build a custom graph from your own data.",
-			image: dashboardPng,
+				"Choose from Metric, Table, Timeline, Graph, and Map widget types, or build a custom graph from your own data. " +
+				"Save your layout, or reset to the default at any time.",
+			image: dashboardCustomisationGif,
 		},
 		{
 			icon: "table",
-			title: "Customisable Table Columns",
+			title: "Customisable Tables & Advanced Filtering",
 			description:
-				"All data tables now support column customisation. Show or hide columns to focus on what matters, " +
-				"with preferences saved per table.",
+				"All data tables now support column customisation — show or hide columns to focus on what matters, with preferences saved per table. " +
+				"Use the new filter sidebar to narrow results by any field, and multi-select scraped jobs to perform bulk actions like deleting expired ones.",
 		},
 		{
 			icon: "star-fill",
@@ -228,6 +229,28 @@ export const RELEASE_SLIDES: Record<version, ReleaseSlide[]> = {
 			description:
 				"Save your favourite filter configurations on the Job Alerts page and apply them with a single click. " +
 				"A dedicated Favourite Job Alerts dashboard widget highlights matching jobs at a glance.",
+		},
+		{
+			icon: "paperclip",
+			title: "CV & Cover Letter Attachments",
+			description:
+				"Attach a CV and cover letter directly to a job application by uploading or dragging and dropping files. " +
+				"Preview PDFs and images inline, download other file types, and write plain-text cover letters using the built-in editor.",
+		},
+		{
+			icon: "signpost-split",
+			title: "Guided Tour",
+			description:
+				"New to JAM? Start the guided tour from the sidebar under Take a Tour. " +
+				"It walks you through the key features step by step and can be paused and resumed at any time.",
+		},
+		{
+			icon: "wrench",
+			title: "Quality of Life Improvements",
+			description:
+				"Hover over company, location, contact, or aggregator options to see a floating preview card with key details. " +
+				"Locations are now stored as plain text, the Jobs table has a Hide rejected / withdrawn toggle, " +
+				"and the Premium page warns when job rating is active but your qualifications profile is incomplete.",
 		},
 	],
 };
