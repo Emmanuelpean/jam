@@ -6,9 +6,9 @@ their module index. Import from this module instead in test subfolders.
 
 import json
 import os
-import uuid
 import re
 import time
+import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Generator
 
@@ -2196,6 +2196,124 @@ class BaseTest(BaseUtils):
         self.db.commit()
         self.db.refresh(setting)
         return setting
+
+    def _create_job(self, title: str = "Test Job", **kwargs) -> models.Job:
+        """Create and persist a Job owned by the current test user."""
+
+        job = models.Job(owner_id=self.user.id, title=title, **kwargs)
+        self.db.add(job)
+        self.db.commit()
+        self.db.refresh(job)
+        return job
+
+    def _create_geolocated_job(self, title: str, city: str, country: str, lat: float, lng: float) -> models.Job:
+        """Create a Job linked to a geocoded location so it appears as a marker on the map."""
+
+        geo = models.Geolocation(
+            query=f"{city}, {country} ({title})",  # query is unique-constrained
+            latitude=lat,
+            longitude=lng,
+            city=city,
+            country=country,
+        )
+        self.db.add(geo)
+        self.db.flush()
+        return self._create_job(title=title, location=f"{city}, {country}", geolocation_id=geo.id)
+
+    def _create_interview(self, job_id: int, date: datetime, **kwargs) -> models.Interview:
+        """Create and persist an Interview for the given job."""
+
+        defaults = {"type": "HR"}
+        defaults.update(kwargs)
+        interview = models.Interview(owner_id=self.user.id, job_id=job_id, date=date, **defaults)
+        self.db.add(interview)
+        self.db.commit()
+        self.db.refresh(interview)
+        return interview
+
+    def _create_update(self, job_id: int, date: datetime, **kwargs) -> models.JobApplicationUpdate:
+        """Create and persist a JobApplicationUpdate for the given job."""
+
+        defaults = {"type": "received"}
+        defaults.update(kwargs)
+        update = models.JobApplicationUpdate(owner_id=self.user.id, job_id=job_id, date=date, **defaults)
+        self.db.add(update)
+        self.db.commit()
+        self.db.refresh(update)
+        return update
+
+    def _create_scraped_job(self, title: str = "Scraped Job", **kwargs) -> models.ScrapedJob:
+        """Create and persist a ScrapedJob owned by the current test user.
+
+        A JobEmailScrapingServiceLog is created automatically if service_log_id is not provided.
+        external_job_id defaults to a per-instance sequential value so multiple calls within
+        one test always produce unique IDs without any manual bookkeeping.
+        """
+
+        if not hasattr(self, "_scraped_job_seq"):
+            self._scraped_job_seq = 0
+        self._scraped_job_seq += 1
+
+        if "service_log_id" not in kwargs:
+            log = models.JobEmailScrapingServiceLog(run_datetime=datetime.now(timezone.utc))
+            self.db.add(log)
+            self.db.flush()
+            kwargs["service_log_id"] = log.id
+
+        external_job_id = kwargs.pop("external_job_id", f"ext-{self._scraped_job_seq}")
+        platform = kwargs.pop("platform", "Indeed")
+
+        scraped_job = models.ScrapedJob(
+            owner_id=self.user.id,
+            external_job_id=external_job_id,
+            platform=platform,
+            title=title,
+            **kwargs,
+        )
+        self.db.add(scraped_job)
+        self.db.commit()
+        self.db.refresh(scraped_job)
+        return scraped_job
+
+    def _create_scraped_job_with_failed_rating(self, title: str = "Failed Rating Job", **kwargs) -> models.ScrapedJob:
+        """Create a scraped job that has a failed JobRating (is_success=False)."""
+
+        job = self._create_scraped_job(title=title, **kwargs)
+        self._create_job_rating(job, is_success=False, llm_model="XX")
+        return job
+
+    def _create_favourite_filter(
+        self, filter_type: str, operator: str, value: str, **kwargs
+    ) -> models.ScrapingFavouriteFilter:
+        """Create and persist a ScrapingFavouriteFilter owned by the current test user."""
+
+        fav = models.ScrapingFavouriteFilter(
+            owner_id=self.user.id,
+            type=filter_type,
+            operator=operator,
+            value=value,
+            **kwargs,
+        )
+        self.db.add(fav)
+        self.db.commit()
+        self.db.refresh(fav)
+        return fav
+
+    def _create_confirmation_link(self, is_used: bool = False, **kwargs) -> models.ForwardingConfirmationLink:
+        """Create and persist a forwarding confirmation link owned by the current test user."""
+
+        link = models.ForwardingConfirmationLink(
+            email_external_id="ext_test_123",
+            url="https://mail.google.com/confirm/abc123",
+            platform="gmail",
+            is_used=is_used,
+            owner_id=self.user.id,
+            **kwargs,
+        )
+        self.db.add(link)
+        self.db.commit()
+        self.db.refresh(link)
+        return link
 
 
 def format_file_size(size: int | None) -> str:

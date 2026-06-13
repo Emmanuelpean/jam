@@ -75,6 +75,12 @@ export const Tooltip = ({
 		setCoords(null);
 	};
 
+	// Only react to keyboard focus: a mouse click also focuses the element, and we don't
+	// want that to re-open a tooltip the same click just hid (mouse focus isn't :focus-visible).
+	const handleFocus = (): void => {
+		if (document.activeElement?.matches?.(":focus-visible")) show();
+	};
+
 	// Cancel a pending show if the tooltip unmounts mid-delay.
 	useEffect(() => clearTimer, []);
 
@@ -85,7 +91,8 @@ export const Tooltip = ({
 			style={style}
 			onMouseEnter={show}
 			onMouseLeave={hide}
-			onFocus={show}
+			onMouseDown={hide}
+			onFocus={handleFocus}
 			onBlur={hide}
 		>
 			{children}

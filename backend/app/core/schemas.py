@@ -224,6 +224,7 @@ class CurrentUserEmailUpdate(BaseModel):
     """Schema for the current user's email change request"""
 
     email: EmailField
+    current_password: str = Field(max_length=COLUMN_LIMITS.password)
 
 
 # ------------------------------------------------- USER QUALIFICATIONS ------------------------------------------------

@@ -176,22 +176,6 @@ class TestForwardingConfirmationLinks(BaseTest):
     page_url = "settings/premium"
     _link: models.ForwardingConfirmationLink = None
 
-    def _create_confirmation_link(self, is_used: bool = False, **kwargs) -> models.ForwardingConfirmationLink:
-        """Helper to create a forwarding confirmation link in the database."""
-
-        return create_db_entries(
-            self.db,
-            models.ForwardingConfirmationLink,
-            {
-                "email_external_id": "ext_test_123",
-                "url": "https://mail.google.com/confirm/abc123",
-                "platform": "gmail",
-                "is_used": is_used,
-                "owner_id": self.user.id,
-                **kwargs,
-            },
-        )[0]
-
     def setup_function(self, request) -> None:
         """Setup for each test function."""
 

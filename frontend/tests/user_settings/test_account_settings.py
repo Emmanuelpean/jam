@@ -113,14 +113,22 @@ class TestAccountSettingsPageEmailChange(BaseTest):
 
         return f"A verification email has been sent to {new_email}. Please check your inbox to confirm the change."
 
+    def request_email_change(self, new_email: str, password: str | None = None) -> None:
+        """Open the change-email modal, fill in the new email and current password, then submit.
+        :param new_email: The new email address to request.
+        :param password: The current password to confirm with (defaults to the logged-in user's password)."""
+
+        self.user_settings_utils.change_email_button.click()
+        self.set_text(self.user_settings_utils.email, new_email)
+        self.set_text(self.user_settings_utils.current_password, self.user.plain_password if password is None else password)
+        self.user_settings_utils.confirm_email_change_button.click()
+
     def test_change_email_success(self) -> None:
         """Test changing the email address via the change-email modal"""
 
         new_email = "newemail@email.com"
         self.clear_test_emails()
-        self.user_settings_utils.change_email_button.click()
-        self.set_text(self.user_settings_utils.email, new_email)
-        self.user_settings_utils.confirm_email_change_button.click()
+        self.request_email_change(new_email)
         self.assert_toast_message(self.get_success_message(new_email))
         assert new_email in self.get_element("pending-email-info").text
         verification_url = self.get_verification_link_from_email(new_email)
@@ -135,9 +143,7 @@ class TestAccountSettingsPageEmailChange(BaseTest):
 
         new_email = "newuser@test.com"
         self.clear_test_emails()
-        self.user_settings_utils.change_email_button.click()
-        self.set_text(self.user_settings_utils.email, new_email)
-        self.user_settings_utils.confirm_email_change_button.click()
+        self.request_email_change(new_email)
         self.assert_toast_message(self.get_success_message(new_email))
         invalid_verification_url = self.get_verification_link_from_email(new_email)[:-4]
         self.driver.get(invalid_verification_url)
@@ -150,9 +156,7 @@ class TestAccountSettingsPageEmailChange(BaseTest):
 
         new_email = "newuser@test.com"
         self.clear_test_emails()
-        self.user_settings_utils.change_email_button.click()
-        self.set_text(self.user_settings_utils.email, new_email)
-        self.user_settings_utils.confirm_email_change_button.click()
+        self.request_email_change(new_email)
         self.assert_toast_message(self.get_success_message(new_email))
         self.db_user.verification_token_created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=20)
         invalid_verification_url = self.get_verification_link_from_email(new_email)[:-4]
@@ -166,15 +170,11 @@ class TestAccountSettingsPageEmailChange(BaseTest):
 
         new_email = "newemail@email.com"
         self.clear_test_emails()
-        self.user_settings_utils.change_email_button.click()
-        self.set_text(self.user_settings_utils.email, new_email)
-        self.user_settings_utils.confirm_email_change_button.click()
+        self.request_email_change(new_email)
         self.assert_toast_message(self.get_success_message(new_email))
 
         self.driver.refresh()
-        self.user_settings_utils.change_email_button.click()
-        self.set_text(self.user_settings_utils.email, new_email)
-        self.user_settings_utils.confirm_email_change_button.click()
+        self.request_email_change(new_email)
         self.user_settings_utils.assert_email_error_message("Please wait")
 
     def test_email_change_after_rate_limit_sends_new_email(self, session) -> None:
@@ -182,9 +182,7 @@ class TestAccountSettingsPageEmailChange(BaseTest):
 
         new_email = "newemail@email.com"
         self.clear_test_emails()
-        self.user_settings_utils.change_email_button.click()
-        self.set_text(self.user_settings_utils.email, new_email)
-        self.user_settings_utils.confirm_email_change_button.click()
+        self.request_email_change(new_email)
         self.assert_toast_message(self.get_success_message(new_email))
 
         token = (
@@ -199,18 +197,21 @@ class TestAccountSettingsPageEmailChange(BaseTest):
         session.commit()
 
         self.driver.refresh()
-        self.user_settings_utils.change_email_button.click()
-        self.set_text(self.user_settings_utils.email, new_email)
-        self.user_settings_utils.confirm_email_change_button.click()
+        self.request_email_change(new_email)
         self.assert_toast_message(self.get_success_message(new_email))
 
     def test_change_email_already_exist(self, test_users) -> None:
         """Test changing the email to one already registered shows an inline error"""
 
-        self.user_settings_utils.change_email_button.click()
-        self.set_text(self.user_settings_utils.email, test_users[2].email)
-        self.user_settings_utils.confirm_email_change_button.click()
+        self.request_email_change(test_users[2].email)
         self.user_settings_utils.assert_email_error_message("Email already registered")
+        assert self.db_user.email == self.user.email
+
+    def test_change_email_incorrect_password(self) -> None:
+        """Test changing the email with an incorrect current password shows an inline error"""
+
+        self.request_email_change("newemail@email.com", password="wrongpassword")
+        self.user_settings_utils.assert_password_error_message("The current password is incorrect.")
         assert self.db_user.email == self.user.email
 
     def test_change_email_incorrect_format(self, test_users) -> None:
@@ -241,9 +242,7 @@ class TestAccountSettingsPageEmailChange(BaseTest):
 
         new_email = "newemail@email.com"
         self.clear_test_emails()
-        self.user_settings_utils.change_email_button.click()
-        self.set_text(self.user_settings_utils.email, new_email)
-        self.user_settings_utils.confirm_email_change_button.click()
+        self.request_email_change(new_email)
         self.assert_toast_message(self.get_success_message(new_email))
 
         # Visit the verification link. In a real-world scenario this would happen in a separate

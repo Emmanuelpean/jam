@@ -305,6 +305,12 @@ def update_email(
             detail="Demo users cannot change their email address.",
         )
 
+    if not utils.verify_password(payload.current_password, current_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="The current password is incorrect.",
+        )
+
     new_email = payload.email
     if new_email == current_user.email:
         raise HTTPException(

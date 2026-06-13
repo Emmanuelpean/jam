@@ -52,7 +52,7 @@ export interface AuthApi {
 	getCurrentUser: (token: string) => ApiResponsePromise<UserData>;
 	updateCurrentUser: (data: UserDataUpdate, token: string) => ApiResponsePromise<UpdateCurrentUserResponse>;
 	updatePassword: (data: UpdatePasswordRequest, token: string) => ApiResponsePromise<UpdatePasswordResponse>;
-	updateEmail: (email: string, token: string) => ApiResponsePromise<GenericResponse>;
+	updateEmail: (email: string, currentPassword: string, token: string) => ApiResponsePromise<GenericResponse>;
 	heartbeat: (token: string) => ApiResponsePromise<GenericResponse>;
 	verifyEmail: (token: string) => ApiResponsePromise<GenericResponse>;
 	verifyNewEmail: (token: string) => ApiResponsePromise<GenericResponse>;
@@ -88,15 +88,12 @@ export const authApi: AuthApi = {
 		return baseApi.put("current-user/", data, token);
 	},
 
-	updatePassword: async (
-		data: UpdatePasswordRequest,
-		token: string
-	): ApiResponsePromise<UpdatePasswordResponse> => {
+	updatePassword: async (data: UpdatePasswordRequest, token: string): ApiResponsePromise<UpdatePasswordResponse> => {
 		return baseApi.put("current-user/password", data, token);
 	},
 
-	updateEmail: async (email: string, token: string): ApiResponsePromise<GenericResponse> => {
-		return baseApi.put("current-user/email", { email }, token);
+	updateEmail: async (email: string, currentPassword: string, token: string): ApiResponsePromise<GenericResponse> => {
+		return baseApi.put("current-user/email", { email, current_password: currentPassword }, token);
 	},
 
 	checkPendingEmail: async (token: string): ApiResponsePromise<boolean> => {

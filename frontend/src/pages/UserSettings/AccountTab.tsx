@@ -21,6 +21,7 @@ interface AccountFormData {
 
 interface EmailFormData {
 	email?: string;
+	current_password?: string;
 }
 
 interface PasswordFormData {
@@ -213,14 +214,14 @@ export const AccountTab: React.FC = (): JSX.Element => {
 	// ----- Email change modal handlers -----
 
 	const openEmailModal = (): void => {
-		setEmailFormData({ email: "" });
+		setEmailFormData({ email: "", current_password: "" });
 		setEmailErrors({});
 		setShowEmailModal(true);
 	};
 
 	const closeEmailModal = (): void => {
 		setShowEmailModal(false);
-		setEmailFormData({ email: "" });
+		setEmailFormData({ email: "", current_password: "" });
 		setEmailErrors({});
 	};
 
@@ -236,10 +237,14 @@ export const AccountTab: React.FC = (): JSX.Element => {
 			setEmailErrors({ email: "New email must be different from your current email." });
 			return;
 		}
+		if (!emailFormData.current_password) {
+			setEmailErrors({ current_password: "Current password is required" });
+			return;
+		}
 
 		setChangingEmail(true);
 		try {
-			await authApi.updateEmail(newEmail, token);
+			await authApi.updateEmail(newEmail, emailFormData.current_password, token);
 			const message = `A verification email has been sent to ${newEmail}. Please check your inbox to confirm the change.`;
 			showToastSuccess(message, "Email Change Pending");
 			await fetchUserInfo(token);
@@ -248,7 +253,9 @@ export const AccountTab: React.FC = (): JSX.Element => {
 			const { status } = handleApiError(error);
 			const detail =
 				error instanceof ApiError ? (error.data as { detail?: string } | undefined)?.detail : undefined;
-			if ((status === 400 || status === 429) && detail) {
+			if (status === 401) {
+				setEmailErrors({ current_password: "The current password is incorrect." });
+			} else if ((status === 400 || status === 429) && detail) {
 				setEmailErrors({ email: detail });
 			} else {
 				showApiError(
@@ -350,7 +357,16 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		type: "text",
 		label: "New Email Address",
 		placeholder: "Enter your new email address",
-		autoComplete: "email",
+		autoComplete: "off",
+		isDisabled: changingEmail,
+	};
+
+	const emailCurrentPasswordField: ModalFormField = {
+		key: "current_password",
+		type: "password",
+		label: "Current Password",
+		placeholder: "Enter your current password",
+		autoComplete: "new-password",
 		isDisabled: changingEmail,
 	};
 
@@ -359,7 +375,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		type: "password",
 		label: "Current Password",
 		placeholder: "Enter your current password",
-		autoComplete: "current-password",
+		autoComplete: "new-password",
 		isDisabled: changingPassword,
 	};
 
@@ -385,6 +401,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		key: "delete_password",
 		type: "password",
 		label: "Password",
+		autoComplete: "new-password",
 		isDisabled: verifying,
 	};
 
@@ -528,6 +545,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 						<p>
 							Current email: <strong>{currentUser?.email}</strong>
 						</p>
+						{renderFormField(emailCurrentPasswordField, emailFormData, handleEmailInputChange, emailErrors)}
 						{renderFormField(newEmailField, emailFormData, handleEmailInputChange, emailErrors)}
 					</Modal.Body>
 					<Modal.Footer>

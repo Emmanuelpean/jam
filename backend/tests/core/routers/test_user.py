@@ -82,7 +82,7 @@ class TestUpdateCurrentUserEmail:
         # Get initial token version
         initial_token_version = test_regular_user.token_version
 
-        update_data = {"email": "newemail@example.com"}
+        update_data = {"email": "newemail@example.com", "current_password": test_regular_user.plain_password}
         response = regular_user_client.put("/current-user/email", json=update_data)
         assert mock_email_verif.call_count == 1
         assert mock_email_verif.call_args[0][0] == "newemail@example.com"
@@ -108,9 +108,14 @@ class TestUpdateCurrentUserEmail:
     def test_update_email_rate_limited(self, mock_email_verif, regular_user_client, test_regular_user, session) -> None:
         """Test that a rate-limited email change returns 429."""
 
-        regular_user_client.put("/current-user/email", json={"email": "newemail@example.com"})
+        password = test_regular_user.plain_password
+        regular_user_client.put(
+            "/current-user/email", json={"email": "newemail@example.com", "current_password": password}
+        )
         # Second request — should be rate limited
-        response = regular_user_client.put("/current-user/email", json={"email": "another@example.com"})
+        response = regular_user_client.put(
+            "/current-user/email", json={"email": "another@example.com", "current_password": password}
+        )
         assert response.status_code == 429
         assert mock_email_verif.call_count == 1
         assert "wait" in response.json()["detail"].lower()
@@ -118,14 +123,26 @@ class TestUpdateCurrentUserEmail:
     def test_update_email_same_as_current(self, regular_user_client, test_regular_user) -> None:
         """Test that requesting an email change to the current email returns 400."""
 
-        response = regular_user_client.put("/current-user/email", json={"email": test_regular_user.email})
+        response = regular_user_client.put(
+            "/current-user/email",
+            json={"email": test_regular_user.email, "current_password": test_regular_user.plain_password},
+        )
         assert response.status_code == 400
+
+    @patch("app.core.routers.auth.email_service.send_email_change_verification")
+    def test_update_email_incorrect_password(self, mock_email_verif, regular_user_client, test_regular_user) -> None:
+        """Test that an email change with an incorrect current password returns 401."""
+
+        update_data = {"email": "newemail@example.com", "current_password": "wrongpassword"}
+        response = regular_user_client.put("/current-user/email", json=update_data)
+        assert response.status_code == 401
+        assert mock_email_verif.call_count == 0
 
     @patch("app.core.routers.auth.email_service.send_email_change_verification")
     def test_update_email_demo_fail(self, mock_email_verif, demo_user_client, test_demo_user) -> None:
         """Test updating own email as demo user (should fail)."""
 
-        update_data = {"email": "newemail@example.com"}
+        update_data = {"email": "newemail@example.com", "current_password": test_demo_user.plain_password}
         response = demo_user_client.put("/current-user/email", json=update_data)
         assert mock_email_verif.call_count == 0
         assert response.status_code == 403
@@ -133,14 +150,14 @@ class TestUpdateCurrentUserEmail:
     def test_update_incorrect_email_format(self, session, regular_user_client, test_regular_user) -> None:
         """Test updating with invalid email."""
 
-        update_data = {"email": "ff"}
+        update_data = {"email": "ff", "current_password": test_regular_user.plain_password}
         response = regular_user_client.put("/current-user/email", json=update_data)
         assert response.status_code == 422
 
     def test_update_existing_email(self, session, regular_user_client, test_regular_user, test_admin_user) -> None:
         """Test updating with an email that already exists."""
 
-        update_data = {"email": test_admin_user.email}
+        update_data = {"email": test_admin_user.email, "current_password": test_regular_user.plain_password}
         response = regular_user_client.put("/current-user/email", json=update_data)
         assert response.status_code == 400
 
@@ -517,7 +534,7 @@ class TestTokenVersioning:
 
         initial_version = test_regular_user.token_version
 
-        update_data = {"email": "newemail@example.com"}
+        update_data = {"email": "newemail@example.com", "current_password": test_regular_user.plain_password}
         response = regular_user_client.put("/current-user/email", json=update_data)
         assert response.status_code == 200
 
