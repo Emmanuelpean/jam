@@ -418,19 +418,18 @@ class CRUDTestBase:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.requires_actions("post")
-    def test_post_data_only_authorised(
+    def test_post_unowned_link_rejected(
         self,
         authorised_clients,
         request,
     ) -> None:
-        """Test that users can successfully create data they own on non-admin endpoints."""
+        """Test that creating an entry linking to a related entry the user does not own is rejected (non-admin endpoints)."""
         if not self.admin_only and self.unauthorised_data_fixture:
             data, owner_id = request.getfixturevalue(self.unauthorised_data_fixture)[:2]
             for datum in data:
                 datum = {key: value for key, value in datum.items() if key not in ("id", "owner_id")}
                 response = self.post(authorised_clients[owner_id - 1], datum)
-                assert response.status_code == status.HTTP_201_CREATED
-                assert_ownership(data, owner_id)
+                assert response.status_code == status.HTTP_403_FORBIDDEN
 
     # ------------------------------------------------------- PUT ------------------------------------------------------
 

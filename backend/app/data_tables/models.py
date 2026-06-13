@@ -337,7 +337,7 @@ class Job(Owned, Base):
 
     # Relationships
     company = relationship("Company", back_populates="jobs", foreign_keys=[company_id])
-    geolocation = relationship("Geolocation", foreign_keys=[geolocation_id])
+    geolocation = relationship("Geolocation", foreign_keys=[geolocation_id], lazy="selectin")
     keywords = relationship("Keyword", secondary=job_keyword_mapping, back_populates="jobs", lazy="selectin")
     contacts = relationship("Person", secondary=job_contact_mapping, back_populates="jobs", lazy="selectin")
     source_aggregator = relationship("Aggregator", foreign_keys=[source_aggregator_id], back_populates="jobs")
@@ -441,9 +441,11 @@ class Interview(Owned, Base):
     job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Relationships
-    geolocation = relationship("Geolocation", foreign_keys=[geolocation_id])
+    geolocation = relationship("Geolocation", foreign_keys=[geolocation_id], lazy="selectin")
     job = relationship("Job", back_populates="interviews")
-    interviewers = relationship("Person", secondary=interview_interviewer_mapping, back_populates="interviews")
+    interviewers = relationship(
+        "Person", secondary=interview_interviewer_mapping, back_populates="interviews", lazy="selectin"
+    )
 
     __table_args__ = (CheckConstraint("attendance_type IN ('on-site', 'remote')", name="valid_attendance_type_values"),)
 

@@ -21,7 +21,7 @@ export const configApi = {
 		return response.data;
 	},
 	getStatus: async (): Promise<Status> => {
-		const response: ApiResponse<Status> = await baseApi.get("config/status/", null);
+		const response: ApiResponse<Status> = await baseApi.get("config/status", null);
 		return response.data;
 	},
 };
