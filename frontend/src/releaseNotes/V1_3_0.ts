@@ -1,5 +1,4 @@
 import dashboardCustomisationGif from "../assets/demo_gifs/dashboard_customisation.gif";
-import tableCustomisationPng from "../assets/screenshots/table_customisation.png";
 
 export default `<h4>Version 1.3.0</h4>
 
@@ -23,7 +22,6 @@ export default `<h4>Version 1.3.0</h4>
     <li>Table data can now be filtered using the filter sidebar. Access it via the filter icon in the table toolbar to narrow results by any available field. For example, on the Scraped Jobs table you can filter by AI rating to show only jobs with rating higher than 8.</li>
     <li>Scraped jobs now support multi-select. Use the checkboxes to select multiple jobs at once and perform bulk actions such as deleting them or deleting expired jobs.</li>
 </ul>
-<img src="${tableCustomisationPng}" alt="Customisable table" width="70%" style="padding: 0 5rem;" />
 
 <h5>Favourite Filters for Scraped Jobs</h5>
 <ul>
