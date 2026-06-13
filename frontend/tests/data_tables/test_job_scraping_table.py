@@ -24,7 +24,7 @@ class TestJobScrapingTable(BaseTest):
         :param scraped_job: The scraped job to show."""
 
         self.scrapedJob_table_utils.set_search(scraped_job.title)
-        self.scrapingExclusionFilter_table_utils.deadline_toggle.click()
+        self.scrapedJob_table_utils.toggle_expired_jobs()
 
     def test_import_scraped_job(self) -> None:
         """Test importing a scraped job and displaying a toast notification."""
@@ -126,7 +126,7 @@ class TestJobScrapingTable(BaseTest):
         self.scrapedJob_table_utils.set_search(scraped_job.title)
         assert self.scrapedJob_table_utils.check_id_not_in_table(scraped_job.id)
 
-        self.scrapingExclusionFilter_table_utils.deadline_toggle.click()
+        self.scrapedJob_table_utils.toggle_expired_jobs()
         assert self.scrapedJob_table_utils.check_id_in_table(scraped_job.id)
 
     def test_new_alert_last_login(self) -> None:

@@ -281,14 +281,16 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 									)
 								</Button>
 							)}
-							<ActionToggle
-								id="show-past-deadline-toggle"
-								label="Expired jobs"
-								checked={showPastDeadline}
-								onChange={(): void => setShowPastDeadline((prev: boolean): boolean => !prev)}
-							/>
 						</div>
 					)
+				}
+				filterSidebarExtra={
+					<ActionToggle
+						id="show-past-deadline-toggle"
+						label="Show Expired jobs"
+						checked={showPastDeadline}
+						onChange={(): void => setShowPastDeadline((prev: boolean): boolean => !prev)}
+					/>
 				}
 			/>
 			<ScrapingFilterTable

@@ -91,9 +91,17 @@ interface FilterSidebarProps {
 	columns: TableColumn[];
 	filters: ActiveFilters;
 	onFiltersChange: (f: ActiveFilters) => void;
+	extra?: React.ReactNode;
 }
 
-const FilterSidebar = ({ isOpen, onClose, columns, filters, onFiltersChange }: FilterSidebarProps): JSX.Element => {
+const FilterSidebar = ({
+	isOpen,
+	onClose,
+	columns,
+	filters,
+	onFiltersChange,
+	extra,
+}: FilterSidebarProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 	const filterableColumns: TableColumn[] = useMemo(
 		(): TableColumn[] => columns.filter((c: TableColumn): FilterConfig | undefined => c.filterConfig),
@@ -129,21 +137,20 @@ const FilterSidebar = ({ isOpen, onClose, columns, filters, onFiltersChange }: F
 			</div>
 
 			<div className="filter-sidebar-body">
-				{filterableColumns.length === 0 ? (
-					<p className="text-muted text-center small py-3">No filterable columns.</p>
-				) : (
-					filterableColumns.map(
-						(col: TableColumn): JSX.Element => (
-							<FilterSection
-								key={col.key}
-								column={col}
-								value={filters[col.key]}
-								onChange={(v: FilterValue): void => handleChange(col.key, v)}
-								dataContext={dataContext}
-							/>
-						)
-					)
-				)}
+				{extra && <div className="filter-sidebar-extra">{extra}</div>}
+				{filterableColumns.length === 0
+					? !extra && <p className="text-muted text-center small py-3">No filterable columns.</p>
+					: filterableColumns.map(
+							(col: TableColumn): JSX.Element => (
+								<FilterSection
+									key={col.key}
+									column={col}
+									value={filters[col.key]}
+									onChange={(v: FilterValue): void => handleChange(col.key, v)}
+									dataContext={dataContext}
+								/>
+							)
+						)}
 			</div>
 
 			<div className="filter-sidebar-footer">

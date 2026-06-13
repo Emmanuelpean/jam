@@ -116,6 +116,7 @@ export interface GenericTableProps<T extends JamData = JamData> {
 	// Additional content
 	children?: (data: T[]) => ReactNode;
 	toolbarAddon?: React.ReactNode;
+	filterSidebarExtra?: React.ReactNode;
 	reloadTrigger?: number;
 	queryParams?: Record<string, string>;
 
@@ -163,6 +164,7 @@ function DataTableComponent<T extends JamData>(
 		menuItems,
 		rowMode,
 		toolbarAddon,
+		filterSidebarExtra,
 		reloadTrigger,
 		queryParams,
 		defaultModalMode = "view",
@@ -183,10 +185,15 @@ function DataTableComponent<T extends JamData>(
 ): JSX.Element {
 	const { token } = useAuth();
 	const { isTablet, isMobile } = useViewport();
-	const columnConfig: ColumnConfig = useColumnConfig(entityType, enableColumnConfig ? (columns as TableColumn[]) : undefined);
+	const columnConfig: ColumnConfig = useColumnConfig(
+		entityType,
+		enableColumnConfig ? (columns as TableColumn[]) : undefined
+	);
 	const [columnSidebarOpen, setColumnSidebarOpen] = useState<boolean>(false);
 	const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-	const effectiveColumns: TableColumn<T>[] = (enableColumnConfig ? columnConfig.visibleColumns : columns) as TableColumn<T>[];
+	const effectiveColumns: TableColumn<T>[] = (
+		enableColumnConfig ? columnConfig.visibleColumns : columns
+	) as TableColumn<T>[];
 	const columnSidebarRef = useRef<HTMLDivElement>(null);
 	const dataContext: DataContextValue = useDataContext();
 	const {
@@ -197,7 +204,12 @@ function DataTableComponent<T extends JamData>(
 		filterSidebarRef,
 		filterPills,
 		activeFilterCount,
-	} = useTableFilters({ enableColumnConfig, columnConfig, effectiveColumns: effectiveColumns as TableColumn[], dataContext });
+	} = useTableFilters({
+		enableColumnConfig,
+		columnConfig,
+		effectiveColumns: effectiveColumns as TableColumn[],
+		dataContext,
+	});
 	const modalRef = useRef<DataModalHandle<T>>(null);
 	const openViewModal = (item: T): void | undefined => modalRef.current?.showView(item);
 	const openEditModal = (item: T): void | undefined => modalRef.current?.showEdit(item);
@@ -1129,6 +1141,7 @@ function DataTableComponent<T extends JamData>(
 										})}
 										filters={filters}
 										onFiltersChange={setFilters}
+										extra={filterSidebarExtra}
 									/>
 								</div>
 							)}

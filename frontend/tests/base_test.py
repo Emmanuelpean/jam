@@ -854,6 +854,13 @@ class DataTableUtils(BaseUtils):
         self.get_element("filter-toggle-btn").click()
         self.get_element("filter-clear-btn", enabled=False)
 
+    def toggle_expired_jobs(self) -> None:
+        """Open the filter sidebar, flip the 'Show expired jobs' toggle, then close the sidebar."""
+
+        self.open_filter_sidebar()
+        self.deadline_toggle.click()
+        self.get_element("filter-close-btn").click()
+
     def is_section_active(self, column_key: str) -> bool:
         """Return True if the filter section for the given column key is highlighted as active"""
 
