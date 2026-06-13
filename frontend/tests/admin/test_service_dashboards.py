@@ -9,13 +9,11 @@ These tests cover:
 6. Proper display of critical, service, scraping and rating errors
 """
 
-import uuid
-from datetime import datetime, timezone
-
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 
-from base_test import BaseTest, models
+from base_test import BaseTest
 
 
 class ServiceDashboardBase(BaseTest):
@@ -138,55 +136,32 @@ class TestJobScrapingDashboardErrors(ServiceDashboardBase):
 
     def setup_function(self, request) -> None:
         # Service log with today's date so it appears in the default "last 1 week" date range
-        service_log = models.JobEmailScrapingServiceLog(
-            run_datetime=datetime.now(timezone.utc),
+        service_log = self._make_service_log(
             run_duration=30.0,
             is_success=False,
             error_message=self.CRITICAL_ERROR,
         )
-        self.db.add(service_log)
-        self.db.commit()
-        self.db.refresh(service_log)
 
         # Service error linked to this log (appears in "Service Errors" column)
-        service_error = models.JobEmailScrapingServiceError(
-            error_type="ConnectionError",
-            message=self.SERVICE_ERROR,
-            traceback="Traceback (most recent call last): ...",
-            service_log_id=service_log.id,
-        )
-        self.db.add(service_error)
+        self._make_service_error(service_log=service_log, message=self.SERVICE_ERROR)
 
         # Scraped job with a known error (appears in "Scraping Errors" column)
-        scraped_job = models.ScrapedJob(
-            external_job_id=str(uuid.uuid4()),
-            platform="linkedin",
-            owner_id=self.db_user.id,
+        scraped_job = self._make_scraped_job(
+            service_log=service_log,
             is_failed=True,
-            is_processed=True,
             scrape_error=[{"datetime": "2026-03-16T10:00:00+00:00", "error": self.SCRAPING_ERROR}],
-            service_log_id=service_log.id,
             url="https://test.com",
         )
-        self.db.add(scraped_job)
-        self.db.commit()
-        self.db.refresh(scraped_job)
 
         # Platform stat referencing the failed job so the hook picks it up
-        platform_stat = models.JobEmailScrapingPlatformStat(
-            name="linkedin",
-            service_log_id=service_log.id,
-            job_scrape_failed_ids=[scraped_job.id],
-        )
-        self.db.add(platform_stat)
-        self.db.commit()
+        self._make_platform_stat(service_log=service_log, job_scrape_failed_ids=[scraped_job.id])
         self.login()
 
     def test_errors_display(self) -> None:
         """Critical, service and scraping errors all appear in the Error Summary card."""
 
         # Wait for errors to load (card shows a spinner while fetching)
-        def _error_loaded(d):
+        def _error_loaded(d: WebElement):
             try:
                 return self.CRITICAL_ERROR in d.find_element(By.ID, "error-summary-card").text
             except StaleElementReferenceException:
@@ -215,53 +190,27 @@ class TestJobRatingDashboardErrors(ServiceDashboardBase):
         request.getfixturevalue("test_user_qualifications")
 
         # Scraping service log needed as FK for the scraped job
-        scraping_log = models.JobEmailScrapingServiceLog(
-            run_datetime=datetime.now(timezone.utc),
-            run_duration=10.0,
-        )
-        self.db.add(scraping_log)
-        self.db.commit()
-        self.db.refresh(scraping_log)
+        scraping_log = self._make_service_log(run_duration=10.0)
 
         # Scraped job needed as FK for the job rating
-        scraped_job = models.ScrapedJob(
-            external_job_id=str(uuid.uuid4()),
-            platform="linkedin",
-            owner_id=self.db_user.id,
-            is_processed=True,
-            service_log_id=scraping_log.id,
-            url="https://test.com",
-        )
-        self.db.add(scraped_job)
-        self.db.commit()
-        self.db.refresh(scraped_job)
-
-        qualification = self.db.query(models.UserQualification).filter_by(owner_id=self.db_user.id).first()
+        scraped_job = self._make_scraped_job(service_log=scraping_log, url="https://test.com")
 
         # Job rating that failed (the error appears in "Job Rating Errors" column)
-        rating = models.JobRating(
-            scraped_job_id=scraped_job.id,
-            owner_id=self.db_user.id,
-            user_qualification_id=qualification.id,
+        rating = self._create_job_rating(
+            scraped_job,
             is_success=False,
             error=self.RATING_ERROR,
             llm_model="claude-sonnet-4-6",
         )
-        self.db.add(rating)
-        self.db.commit()
-        self.db.refresh(rating)
 
         # Rating service log with today's date: error_message for Critical Errors,
         # job_failed_ids referencing the failed rating for the Rating Errors column
-        rating_log = models.JobRatingServiceLog(
-            run_datetime=datetime.now(timezone.utc),
+        self._make_rating_service_log(
             run_duration=20.0,
             is_success=False,
             error_message=self.CRITICAL_ERROR,
             job_failed_ids=[rating.id],
         )
-        self.db.add(rating_log)
-        self.db.commit()
         self.login()
         self._go_to_rating_tab()
 

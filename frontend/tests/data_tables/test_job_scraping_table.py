@@ -210,7 +210,7 @@ class TestJobScrapingTable(BaseTest):
 
         row.click()
         self.scrapedJob_modal_utils.wait_for_import_modal()
-        self.close_modal()
+        self.scrapedJob_modal_utils.close_modal()
 
         row = self.scrapedJob_table_utils.table_row(job.id)
         assert not row.find_elements(By.CSS_SELECTOR, "span.read-dot"), "Expected read-dot to disappear after opening"

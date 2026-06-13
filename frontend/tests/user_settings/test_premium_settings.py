@@ -10,7 +10,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 
 from base_test import models, BaseTest
-from tests.utils.create_data.utils import create_db_entries
 from tests.utils.test_data import TOAST_USER_1_INDEX
 
 
@@ -255,17 +254,7 @@ class TestIncompleteQualificationsWarning(BaseTest):
     def test_alert_not_shown_when_qualifications_incomplete(self) -> None:
         """Alert is shown when at least one qualification field is populated, but not all five fields."""
 
-        create_db_entries(
-            self.db,
-            models.UserQualification,
-            [
-                {
-                    "owner_id": self.user.id,
-                    "experience": "5 years Python",
-                    "skills": "Python, FastAPI",
-                }
-            ],
-        )
+        self._make_qualifications(experience="5 years Python", skills="Python, FastAPI")
         self.driver.refresh()
         time.sleep(0.5)
         assert self.check_element_exists("incomplete-qualifications-alert")
@@ -273,19 +262,12 @@ class TestIncompleteQualificationsWarning(BaseTest):
     def test_alert_not_shown_when_all_qualifications_filled(self) -> None:
         """Alert is hidden once all five qualification fields are populated."""
 
-        create_db_entries(
-            self.db,
-            models.UserQualification,
-            [
-                {
-                    "owner_id": self.user.id,
-                    "experience": "5 years Python",
-                    "skills": "Python, FastAPI",
-                    "qualities": "Analytical, detail-oriented",
-                    "education": "BSc Computer Science",
-                    "interests": "Backend development",
-                }
-            ],
+        self._make_qualifications(
+            experience="5 years Python",
+            skills="Python, FastAPI",
+            qualities="Analytical, detail-oriented",
+            education="BSc Computer Science",
+            interests="Backend development",
         )
         self.refresh()
         self.wait_for_disappear("incomplete-qualifications-alert")

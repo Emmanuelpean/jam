@@ -15,7 +15,7 @@ import time
 from base_test import MaintenanceTestBase
 
 # Timeout that comfortably exceeds the 2s test-mode poll interval
-POLL_TIMEOUT = 5
+POLL_TIMEOUT = 3
 
 
 class TestMaintenanceBanner(MaintenanceTestBase):
