@@ -1,5 +1,7 @@
-import React, { forwardRef, JSX, useCallback, useImperativeHandle, useRef, useState } from "react";
+import React, { forwardRef, JSX, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useArrowKeyNavigation } from "../../hooks/useArrowKeyNavigation";
 import { Modal } from "react-bootstrap";
+import JamModal from "../JamModal/JamModal";
 import { ActionButton } from "../rendering/form/ActionButton";
 import { useAuth } from "../../contexts/AuthContext";
 import packageJson from "../../../package.json";
@@ -18,14 +20,16 @@ interface SlideCarouselModalProps {
 	slides: ReleaseSlide[];
 	finishText: string;
 	finishIcon: string;
+	onFinish?: () => void;
 }
 
 export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCarouselModalProps>(
-	({ id, title, titleIcon, slides, finishText, finishIcon }: SlideCarouselModalProps, ref): JSX.Element => {
+	({ id, title, titleIcon, slides, finishText, finishIcon, onFinish }: SlideCarouselModalProps, ref): JSX.Element => {
 		const [show, setShow] = useState<boolean>(false);
 		const [currentStep, setCurrentStep] = useState<number>(0);
 		const [direction, setDirection] = useState<"next" | "prev" | null>(null);
 		const [loading, setLoading] = useState<boolean>(false);
+		const [imageLoaded, setImageLoaded] = useState<boolean>(false);
 		const { updateCurrentUser } = useAuth();
 		const [slideHeight, setSlideHeight] = useState<number | undefined>(undefined);
 		const measureRef = useRef<HTMLDivElement | null>(null);
@@ -39,6 +43,10 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 			}
 			if (maxHeight > 0) setSlideHeight(maxHeight);
 		}, []);
+
+		useEffect(() => {
+			setImageLoaded(false);
+		}, [currentStep]);
 
 		const isLastStep: boolean = currentStep === slides.length - 1;
 		const isFirstStep: boolean = currentStep === 0;
@@ -63,6 +71,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 				setLoading(false);
 			}
 			setShow(false);
+			onFinish?.();
 		};
 
 		const handleNext = (): void => {
@@ -79,22 +88,32 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 			setCurrentStep((prev: number): number => prev - 1);
 		};
 
+		useArrowKeyNavigation({ active: show, onNext: handleNext, onPrev: handleBack, canGoPrev: !isFirstStep, nextOnEnter: true });
+
 		if (!slide) return <></>;
 
 		return (
-			<Modal show={show} onHide={markAsSeen} centered size="lg" className="slide-carousel-modal" id={id}
-				onEntered={measureSlides}>
-				<Modal.Header closeButton>
+			<JamModal
+				show={show}
+				onHide={markAsSeen}
+				centered
+				size="lg"
+				className="slide-carousel-modal"
+				id={id}
+				onEntered={measureSlides}
+			>
+				<JamModal.Header onClose={markAsSeen}>
 					<Modal.Title>
 						<i className={`bi bi-${titleIcon} me-2`} />
 						{title}
 					</Modal.Title>
-				</Modal.Header>
+				</JamModal.Header>
 				<Modal.Body>
 					{/* Hidden container to measure all slides */}
 					<div ref={measureRef} className="carousel-measure-container">
 						{slides.map((s: ReleaseSlide, i: number) => (
 							<div key={i} className="carousel-step">
+								{s.version && <p className="carousel-step-version">V{s.version}</p>}
 								{s.image ? (
 									<img src={s.image} alt={s.title} className="carousel-step-image" />
 								) : (
@@ -107,9 +126,27 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 							</div>
 						))}
 					</div>
-					<div key={currentStep} className={`carousel-step${direction ? ` slide-${direction}` : ""}`} style={slideHeight ? { minHeight: slideHeight } : undefined}>
+					<div
+						key={currentStep}
+						className={`carousel-step${direction ? ` slide-${direction}` : ""}`}
+						style={slideHeight ? { minHeight: slideHeight } : undefined}
+					>
+						{slide.version && <p className="carousel-step-version">V{slide.version}</p>}
 						{slide.image ? (
-							<img src={slide.image} alt={slide.title} className="carousel-step-image" />
+							<div className="carousel-step-image-wrapper">
+								{!imageLoaded && (
+									<div className="spinner-border text-primary carousel-step-image-spinner" role="status">
+										<span className="visually-hidden">Loading...</span>
+									</div>
+								)}
+								<img
+									src={slide.image}
+									alt={slide.title}
+									className="carousel-step-image"
+									style={!imageLoaded ? { visibility: "hidden", position: "absolute" } : undefined}
+									onLoad={() => setImageLoaded(true)}
+								/>
+							</div>
 						) : (
 							<div className="carousel-step-icon">
 								<i className={`bi bi-${slide.icon}`} />
@@ -124,7 +161,10 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 								<button
 									key={index}
 									className={`carousel-dot ${index === currentStep ? "active" : ""}`}
-									onClick={() => { setDirection(index > currentStep ? "next" : "prev"); setCurrentStep(index); }}
+									onClick={() => {
+										setDirection(index > currentStep ? "next" : "prev");
+										setCurrentStep(index);
+									}}
 									aria-label={`Go to slide ${index + 1}`}
 								/>
 							)
@@ -153,7 +193,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 						/>
 					</div>
 				</Modal.Footer>
-			</Modal>
+			</JamModal>
 		);
 	}
 );

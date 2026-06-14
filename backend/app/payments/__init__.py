@@ -1,7 +1,6 @@
 """Payment-related API routes using Stripe for subscription management."""
 
 import stripe
-from fastapi import APIRouter
 
 from app.config import settings
 from app.utils import AppLogger

@@ -5,6 +5,7 @@ import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
 import { createSeries } from "../ServiceUtils";
 import { ModalFormField } from "../../../components/rendering/form/FormRenders";
 import { SelectInput } from "../../../components/rendering/widgets/SelectWidget";
+import { useDelayedLoading } from "../../../hooks/useDelayedLoading";
 
 interface RunHistoryChartProps {
 	serviceLogData: JobScrapingServiceLogData[] | null;
@@ -45,6 +46,7 @@ export const RunHistoryChart = ({
 	isRunning,
 	loading = false,
 }: RunHistoryChartProps): JSX.Element => {
+	const visibleLoading = useDelayedLoading(loading);
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
 
 	useEffect(() => {
@@ -110,7 +112,7 @@ export const RunHistoryChart = ({
 	}, [serviceLogData, selectedPlatform]);
 
 	const platformField: ModalFormField = {
-		name: "platform",
+		key: "platform",
 		type: "select",
 		label: "Platform",
 		options: platformOptions,
@@ -119,7 +121,7 @@ export const RunHistoryChart = ({
 
 	return (
 		<div className="status-card mt-4">
-			<div className="d-flex justify-content-between align-items-center mb-3">
+			<div className="history-chart-header d-flex justify-content-between align-items-center">
 				<h2 className="card-title mb-0">
 					<i className="bi bi-clock-history me-2"></i>
 					Run History
@@ -136,7 +138,7 @@ export const RunHistoryChart = ({
 					/>
 				</div>
 			</div>
-			{loading ? (
+			{visibleLoading ? (
 				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "270px" }}>
 					<div className="spinner-border text-primary" role="status">
 						<span className="visually-hidden">Loading...</span>
@@ -145,7 +147,7 @@ export const RunHistoryChart = ({
 			) : (
 				<div style={{ display: "flex" }}>
 					{logData && logData[0] && (
-						<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of scraped jobs" />
+						<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of job alerts" />
 					)}
 					{logData && logData[1] && (
 						<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />

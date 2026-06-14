@@ -1,7 +1,7 @@
 import { BaseOut, GeoLocationData, OwnedOut } from "./Base";
 
 export interface ServiceLog extends BaseOut {
-	run_datetime: string;
+	run_datetime: Date;
 	run_duration: number | null;
 	is_success: boolean | null;
 	error_message: string | null;
@@ -69,7 +69,7 @@ export interface ScrapedJobData extends OwnedOut {
 	is_skipped: boolean;
 	skip_reason: string | null;
 	scrape_error: Array<{ datetime: string; error: string }>;
-	scrape_datetime: Date | string;
+	scrape_datetime: Date;
 	retry_count: number;
 	next_retry_at: string | null;
 	is_active: boolean;
@@ -82,21 +82,20 @@ export interface ScrapedJobData extends OwnedOut {
 	platform: string | null;
 	is_closed: boolean;
 	url: string | null;
-	deadline: Date | string | null;
+	deadline: Date | null;
 	company: string | null;
-	location_postcode: string | null;
-	location_city: string | null;
-	location_country: string | null;
-	parsed_location: string | null;
-	attendance_type: string | null;
 	location: string | null;
+	attendance_type: string | null;
+	raw_location: string | null;
 	emails: number[];
 	job_rating: JobRatingData | null;
 	geolocation: GeoLocationData | null;
+	read_at: Date | null;
 }
 
 export interface ScrapedJobUpdate {
-	is_imported: boolean;
+	is_imported?: boolean;
+	read_at?: string | null;
 }
 
 export interface JobRatingData extends BaseOut {
@@ -125,6 +124,8 @@ export interface ScrapingFilterTransform {
 	case_sensitive: boolean;
 }
 
+export type FilterVariant = "exclusion" | "favourite";
+
 export interface ScrapingFilterData extends OwnedOut {
 	type: string;
 	operator: string;
@@ -134,13 +135,21 @@ export interface ScrapingFilterData extends OwnedOut {
 	filtered_jobs: number[];
 }
 
+export interface ScrapingFilterCreate {
+	type: string;
+	operator: string;
+	value: string;
+	case_sensitive: boolean;
+	is_tour?: boolean;
+}
+
 // ----------------------------------------------------- JOB EMAIL -----------------------------------------------------
 
 export interface JobEmailData extends OwnedOut {
 	external_email_id: string | null;
 	subject: string | null;
 	sender: string | null;
-	date_received: Date | string | null;
+	date_received: Date | null;
 	platform: string | null;
 	body: string | null;
 	service_log_id: number | null;
@@ -155,10 +164,4 @@ export interface ForwardingConfirmationLinkData extends OwnedOut {
 	url: string;
 	platform: string;
 	is_used: boolean;
-}
-
-// ---------------------------------------------------- AI PROMPTS ----------------------------------------------------
-
-export interface AiSystemPromptData extends BaseOut {
-	prompt: string;
 }

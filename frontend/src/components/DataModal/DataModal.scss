@@ -13,13 +13,21 @@
     height: 100%;
     max-height: 90vh;
     border-radius: 14px !important;
+    will-change: height;
 }
 
 .modal-body {
+    position: relative;
     overflow: hidden auto;
     flex: 1 1 auto;
     min-height: 0;
     padding: 1.5rem;
+}
+
+.modal-body-blurring {
+    user-select: none;
+    pointer-events: none;
+    filter: blur(4px);
 }
 
 .modal-header .modal-title {
@@ -32,24 +40,11 @@
 
 .modal-header {
     flex-shrink: 0;
-    padding: 1.5rem 2rem;
+    padding: 1rem 1.5rem 1rem 1.25rem !important;
     color: white;
     border-bottom: none;
     border-radius: 14px 14px 0 0;
     background: var(--primary-gradient);
-}
-
-/* Close button */
-.modal-header .btn-close {
-    transition: all 0.2s ease;
-    opacity: 0.8;
-    background-size: 1.2em;
-    filter: invert(1);
-}
-
-.modal-header .btn-close:hover {
-    transform: scale(1.1);
-    opacity: 1;
 }
 
 /* Handle form wrapper in edit mode */
@@ -82,7 +77,10 @@
     gap: 14px;
 }
 
-.modal:not(:last-of-type) .modal-content::after {
+/* Dim an underlying modal only when another modal is actually stacked on top of it.
+   Uses :has(~ .modal) rather than :not(:last-of-type) so unrelated elements portaled
+   to <body> (tooltips, context menus, ...) don't falsely trigger the overlay. */
+.modal:has(~ .modal) .modal-content::after {
     position: absolute;
     z-index: 10;
     content: "";
@@ -98,8 +96,12 @@
 }
 
 .modal-content-animated {
-    overflow: hidden !important;
+    overflow: hidden;
     transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.data-modal .accordion-button:focus {
+    box-shadow: inset 0 0 0 2px var(--jam-glow);
 }
 
 /* Specific fixes for tabbed modals */
@@ -155,8 +157,22 @@
 
 .modal-content-animated-inner {
     overflow: visible;
-    padding-right: 2px;
-    padding-left: 2px;
+}
+
+/* Above mobile: smooth width per size class, bypassing Bootstrap's breakpoint snapping */
+@media (width > $mobile-breakpoint) {
+    .data-modal .modal-dialog {
+        max-width: min(90vw, 500px);
+    }
+    .data-modal .modal-dialog.modal-sm {
+        max-width: min(90vw, 300px);
+    }
+    .data-modal .modal-dialog.modal-lg {
+        max-width: min(90vw, 800px);
+    }
+    .data-modal .modal-dialog.modal-xl {
+        max-width: min(90vw, 1140px);
+    }
 }
 
 /* Mobile fullscreen slide-in from right */
@@ -196,4 +212,36 @@
     .data-modal.modal {
         padding: 0 !important;
     }
+}
+
+@keyframes field-highlight-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 2px rgba(var(--bs-warning-rgb), 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(var(--bs-warning-rgb), 0.7);
+    }
+}
+
+/* View mode: cols wrap below ~500px (2×250px basis) and badge text truncates within them */
+.data-modal .row > [class*="col-"] {
+    flex: 1 1 250px;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
+    overflow-y: visible;
+}
+
+/* Edit mode: cols wrap when inputs no longer fit side by side */
+.data-modal form .row > [class*="col-"] {
+    min-width: min-content;
+    overflow: visible;
+}
+
+.field-highlight {
+    padding: 0.75rem;
+    animation: field-highlight-pulse 2s ease-in-out infinite;
+    border: 1.5px solid rgba(var(--bs-warning-rgb), 0.6);
+    border-radius: 8px;
+    background-color: rgba(var(--bs-warning-rgb), 0.06);
 }

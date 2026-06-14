@@ -1,13 +1,6 @@
 import React, { forwardRef, ReactNode, useRef } from "react";
-import DataModal, {
-	DataModalHandle,
-	Fields,
-	JamDataModalProps,
-	SectionConfig,
-	TabConfig,
-	ValidationErrors,
-} from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import DataModal, { DataModalHandle, Fields, JamDataModalProps, SectionConfig, TabConfig } from "./DataModal";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { getApplicationStatusBadgeClass } from "../rendering/view/Icons";
 import { useAuth } from "../../contexts/AuthContext";
@@ -17,22 +10,32 @@ import { CompanyModal } from "./CompanyModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { KeywordModal } from "./KeywordModal";
-import { LocationModal } from "./LocationModal";
+import FollowUpModal, { FollowUpModalHandle } from "../FollowUpModal/FollowUpModal";
+import { ActionButton } from "../rendering/form/ActionButton";
 import { JobData, JobDataTransform } from "../../services/schemas/DataTables";
 
 interface JobAndApplicationProps extends JamDataModalProps {
 	defaultActiveTab?: "job" | "application";
 }
 
-export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
+export const JobModal = forwardRef<DataModalHandle<JobData>, JobAndApplicationProps>(
 	({ size = "xl", defaultActiveTab = "job" }: JobAndApplicationProps, ref) => {
-		const locationModalRef = useRef<DataModalHandle>(null);
 		const personModalRef = useRef<DataModalHandle>(null);
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const aggregatorModalRef = useRef<DataModalHandle>(null);
 		const keywordModalRef = useRef<DataModalHandle>(null);
+		const followUpModalRef = useRef<FollowUpModalHandle>(null);
 		const { currentUser } = useAuth();
-		const { companies, locations, keywords, persons, aggregators } = useFormOptions();
+		const {
+			companies,
+			keywords,
+			persons,
+			aggregators,
+			getCompanyPreviewConfig,
+			getPersonPreviewConfig,
+			getAggregatorPreviewConfig,
+		} = useFormOptions();
+		const ff = useFormFields();
 
 		const jobFormFields: Fields = [
 			{
@@ -41,8 +44,8 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				title: "Basic Information",
 				icon: "bi-briefcase",
 				fields: [
-					formFields.jobTitle({ placeholder: "Python Software Engineer" }),
-					[formFields.company(companies, companyModalRef), formFields.jobURl()],
+					ff.jobTitleField({ placeholder: "Python Software Engineer" }),
+					[ff.companyField(companies, companyModalRef, null, getCompanyPreviewConfig), ff.jobUrlField()],
 				],
 			} as SectionConfig,
 			{
@@ -50,7 +53,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				key: "location-schedule",
 				title: "Location",
 				icon: "bi-geo-alt",
-				fields: [[formFields.attendanceType(), formFields.location(locations, locationModalRef)]],
+				fields: [[ff.attendanceTypeField(), ff.locationField()]],
 			} as SectionConfig,
 			{
 				type: "section",
@@ -58,8 +61,8 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				title: "Compensation & Priority",
 				icon: "bi-currency-pound",
 				fields: [
-					[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
-					[formFields.personalRating(), formFields.deadline()],
+					[ff.salaryMinField(), ff.salaryMaxField()],
+					[ff.personalRatingField(), ff.isFavouriteField(), ff.deadlineField()],
 				],
 			} as SectionConfig,
 			{
@@ -68,26 +71,17 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				title: "Source",
 				icon: "bi-search",
 				fields: [
-					[
-						formFields.sourceType(),
-						formFields.aggregator(aggregators, aggregatorModalRef, null, null, {
-							name: "source_aggregator_id",
-							displayCondition: (formData: JobDataTransform): boolean => {
-								return ["aggregator", "aggregator_email"].includes(formData.source_type || "");
-							},
-						}),
-						formFields.recruiter(persons, personModalRef, null, null, {
-							displayCondition: (formData: JobDataTransform): boolean => {
-								return formData.source_type ? formData.source_type === "recruiter" : false;
-							},
-						}),
-						formFields.company(companies, companyModalRef, null, null, {
-							name: "recruitment_company_id",
-							displayCondition: (formData: JobDataTransform): boolean => {
-								return formData.source_type ? formData.source_type === "recruitment_company" : false;
-							},
-						}),
-					],
+					ff.sourceGroupFields(
+						aggregators,
+						aggregatorModalRef,
+						getAggregatorPreviewConfig,
+						persons,
+						personModalRef,
+						getPersonPreviewConfig,
+						companies,
+						companyModalRef,
+						getCompanyPreviewConfig
+					),
 				],
 			} as SectionConfig,
 			{
@@ -96,7 +90,10 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				title: "Tags & Contacts",
 				icon: "bi-tags",
 				fields: [
-					[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
+					[
+						ff.keywordsField(keywords, keywordModalRef),
+						ff.contactsField(persons, personModalRef, null, getPersonPreviewConfig),
+					],
 				],
 			} as SectionConfig,
 			{
@@ -105,12 +102,12 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				title: "Details",
 				icon: "bi-card-text",
 				fields: [
-					formFields.description({
+					ff.descriptionField({
 						placeholder:
 							"We are seeking a Python Software Engineer to develop, optimise, and maintain scalable software " +
 							"solutions that drive innovation and support our growing business needs.",
 					}),
-					formFields.note({
+					ff.noteField({
 						placeholder:
 							"This role offers a chance to apply Python expertise to build scalable solutions " +
 							"while exploring opportunities for growth in automation, data analysis, and collaborative software development.",
@@ -143,8 +140,8 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				title: "Compensation & Priority",
 				icon: "bi-currency-pound",
 				fields: [
-					[modalViewFields.salaryRange(), modalViewFields.personalRating()],
-					[modalViewFields.deadline()],
+					[modalViewFields.salaryRange(), modalViewFields.deadline()],
+					[modalViewFields.personalRating(), modalViewFields.isFavourite()],
 				],
 			} as SectionConfig,
 			{
@@ -202,18 +199,26 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				title: "Application Details",
 				icon: "bi-send",
 				fields: [
-					[formFields.applicationDate(), formFields.applicationStatus()],
+					[ff.applicationDateField(), ff.applicationStatusField()],
 					[
-						formFields.applicationVia(),
-						formFields.aggregator(aggregators, aggregatorModalRef, null, null, {
-							name: "application_aggregator_id",
-							displayCondition: (formData: JobDataTransform): boolean => {
-								return formData.applied_via ? formData.applied_via === "aggregator" : true;
-							},
-						}),
+						ff.applicationViaField(),
+						ff.applicationAggregatorField(
+							aggregators,
+							aggregatorModalRef,
+							null,
+							getAggregatorPreviewConfig,
+							{}
+						),
 					],
-					formFields.applicationUrl({ placeholder: "https://linkedin.com/application/453635" }),
+					ff.applicationUrlField({ placeholder: "https://linkedin.com/application/453635" }),
 				],
+			} as SectionConfig,
+			{
+				type: "section",
+				key: "application-documents",
+				title: "Documents",
+				icon: "bi-paperclip",
+				fields: [[ff.cvUploadField(), ff.coverLetterUploadField()]],
 			} as SectionConfig,
 			{
 				type: "section",
@@ -221,11 +226,11 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				title: "Notes",
 				icon: "bi-journal-text",
 				fields: [
-					formFields.note({
+					ff.noteField({
 						placeholder:
 							"The application process involves submitting an online application, followed by technical " +
 							"assessments and interviews to evaluate coding skills, problem-solving ability, and cultural fit.",
-						name: "application_note",
+						key: "application_note",
 						label: "",
 					}),
 				],
@@ -246,6 +251,13 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 			} as SectionConfig,
 			{
 				type: "section",
+				key: "application-documents",
+				title: "Documents",
+				icon: "bi-paperclip",
+				fields: [[modalViewFields.applicationCvBadge(), modalViewFields.applicationCoverLetterBadge()]],
+			} as SectionConfig,
+			{
+				type: "section",
 				key: "application-notes",
 				title: "Notes",
 				icon: "bi-journal-text",
@@ -259,6 +271,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 		const transformData = (jobData: JobDataTransform): JobDataTransform => {
 			return {
 				title: jobData.title.trim(),
+				is_favourite: jobData.is_favourite ?? false,
 				description: jobData.description?.trim() || null,
 				note: jobData.note?.trim() || null,
 				url: jobData.url?.trim() || null,
@@ -267,7 +280,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				salary_currency: currentUser?.preferences.default_currency?.trim() || null,
 				personal_rating: jobData.personal_rating || null,
 				company_id: jobData.company_id || null,
-				location_id: jobData.location_id || null,
+				location: jobData.location?.trim() || null,
 				deadline: jobData.deadline ? convertToEndOfDay(jobData.deadline) : null,
 				source_aggregator_id: jobData.source_aggregator_id || null,
 				source_type: jobData.source_type?.trim() || null,
@@ -275,35 +288,26 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				recruitment_company_id: jobData.recruitment_company_id || null,
 				keywords: jobData.keywords || [],
 				contacts: jobData.contacts || [],
-				application_date: jobData.application_date ? new Date(jobData.application_date) : null,
+				application_date: jobData.application_date,
 				application_url: jobData.application_url?.trim() || null,
 				application_status: jobData.application_status?.trim() || null,
 				applied_via: jobData.applied_via?.trim() || null,
 				application_aggregator_id: jobData.application_aggregator_id || null,
 				application_note: jobData.application_note?.trim() || null,
 				attendance_type: jobData.attendance_type?.trim() || null,
+				cv_id: jobData.cv_id || null,
+				cover_letter_id: jobData.cover_letter_id || null,
 			};
-		};
-
-		const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
-			const errors: ValidationErrors = {};
-			if (formData.salary_min && isNaN(Number(formData.salary_min))) {
-				errors.salary_min = "Minimum Salary must be a valid number";
-			}
-			if (formData.salary_max && isNaN(Number(formData.salary_max))) {
-				errors.salary_max = "Maximum Salary must be a valid number";
-			}
-			return errors;
 		};
 
 		const applicationTabTitle = (jobData: JobData): ReactNode => {
 			return jobData?.application_status ? (
-				<>
-					Job Application{" "}
-					<span className={`badge ${getApplicationStatusBadgeClass(jobData.application_status)} badge`}>
+				<span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem" }}>
+					Job Application
+					<span className={`badge ${getApplicationStatusBadgeClass(jobData.application_status)}`}>
 						{jobData.application_status}
 					</span>
-				</>
+				</span>
 			) : (
 				"Job Application"
 			);
@@ -330,21 +334,32 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 
 		return (
 			<>
-				<DataModal
+				<DataModal<JobData>
 					ref={ref}
 					transformFormData={transformData}
 					entityType="job"
 					size={size}
 					tabs={tabs}
 					defaultActiveTab={defaultActiveTab}
-					validation={customValidation}
+					extraViewFooterButtons={(activeTab: string | null, data) =>
+						activeTab === "application" && data?.has_application ? (
+							<ActionButton
+								id="job-modal-follow-up-button"
+								variant="primary"
+								onClick={() => followUpModalRef.current?.show(data)}
+								defaultText="Follow-up Email"
+								defaultIcon="bi bi-envelope"
+								fullWidth={false}
+							/>
+						) : null
+					}
 				/>
 
 				<CompanyModal ref={companyModalRef} />
 				<PersonModal ref={personModalRef} />
 				<AggregatorModal ref={aggregatorModalRef} />
 				<KeywordModal ref={keywordModalRef} />
-				<LocationModal ref={locationModalRef} />
+				<FollowUpModal ref={followUpModalRef} />
 			</>
 		);
 	}

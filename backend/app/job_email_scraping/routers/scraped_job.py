@@ -7,17 +7,16 @@ import datetime as dt
 from typing import Literal
 
 from fastapi import Depends, HTTPException
-from sqlalchemy import asc, desc, or_
+from sqlalchemy import and_, asc, case, desc, distinct, false, func, or_
 from sqlalchemy.orm import Session, joinedload
 from starlette import status
-from starlette.requests import Request
 
 from app import models
 from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.job_email_scraping import schemas
-from app.routers.utility import generate_data_table_crud_router, filter_query
-
+from app.job_email_scraping.filtering import rule_to_sql_predicate
+from app.routers.utility import generate_data_table_crud_router, parse_column_filters
 
 # GET endpoint for admin user to get all scraped jobs
 scraped_job_router = generate_data_table_crud_router(
@@ -30,9 +29,10 @@ scraped_job_router = generate_data_table_crud_router(
 )
 
 
-@scraped_job_router.get("/paged", response_model=schemas.PaginatedScrapedJobResponse)
+@scraped_job_router.get(
+    "/paged", response_model=schemas.PaginatedScrapedJobResponse | schemas.PaginatedScrapedJobIdsResponse
+)
 def get_all(
-    request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
     page: int = 0,
@@ -41,10 +41,14 @@ def get_all(
     sort_direction: Literal["asc", "desc"] = "desc",
     show_past_deadline: bool = False,
     since_last_login: bool = False,
+    favourites_only: bool = False,
+    errors_only: bool = False,
+    tour_only: bool = False,
     search: str | None = None,
+    filters: str | None = None,
+    ids_only: bool = False,
 ) -> dict:
     """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped.
-    :param request: Request
     :param db: Database session
     :param current_user: Current user
     :param page: Page number
@@ -53,22 +57,54 @@ def get_all(
     :param sort_direction: sort direction
     :param show_past_deadline: Show scraped jobs with past deadlines
     :param since_last_login: Only show jobs created since last login
-    :param search: Search term"""
+    :param favourites_only: Only show jobs that are in the user's favourites
+    :param errors_only: Only show jobs that failed to be scraped or rated
+    :param tour_only: Only show tour demo entries
+    :param search: Search term
+    :param filters: JSON-encoded filter object
+    :param ids_only: Return only IDs instead of full objects"""
 
-    # Base query with eager loading of job_rating
+    # Base query
+    query = db.query(models.ScrapedJob)
+    if not ids_only:
+        query = query.options(joinedload(models.ScrapedJob.job_rating))  # Eager load rating for full response
     # noinspection PyComparisonWithNone
     query = (
-        db.query(models.ScrapedJob)
-        .options(joinedload(models.ScrapedJob.job_rating))  # Always load rating
-        .filter(models.ScrapedJob.owner_id == current_user.id)
+        query.filter(models.ScrapedJob.owner_id == current_user.id)
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.is_active.is_(True))
         .filter(models.ScrapedJob.exclusion_filter_id == None)
     )
 
+    if tour_only:
+        query = query.filter(models.ScrapedJob.is_tour.is_(True))
+
+    if favourites_only:
+        fav_filters = (
+            db.query(models.ScrapingFavouriteFilter)
+            .filter(models.ScrapingFavouriteFilter.owner_id == current_user.id)
+            .filter(models.ScrapingFavouriteFilter.is_active.is_(True))
+            .all()
+        )
+        if fav_filters:
+            fav_predicates = [rule_to_sql_predicate(f) for f in fav_filters]
+            query = query.filter(or_(*fav_predicates))
+        else:
+            query = query.filter(false())  # Filter out all rows if no favourites
+
+    # Errors only
+    if errors_only:
+        query = query.outerjoin(models.JobRating).filter(
+            or_(
+                models.ScrapedJob.is_failed.is_(True),
+                models.JobRating.is_success.is_(False),
+            )
+        )
+
+    # Total before deadline/login/search/column filters
     total = query.count()
 
-    if not show_past_deadline:
+    if not show_past_deadline and not errors_only:
         query = query.filter(
             or_(
                 models.ScrapedJob.deadline.is_(None),
@@ -93,25 +129,27 @@ def get_all(
             )
         )
 
-    # Apply filters
-    filter_params = dict(request.query_params)
-    filter_params.pop("page", None)
-    filter_params.pop("page_size", None)
-    filter_params.pop("sort_by", None)
-    filter_params.pop("sort_direction", None)
-    filter_params.pop("search", None)
-    filter_params.pop("show_past_deadline", None)
-    filter_params.pop("since_last_login", None)
-    query = filter_query(query, models.ScrapedJob, filter_params)
+    # Determine if we need a JobRating join (for filters or sorting)
+    needs_rating_join = sort_by.startswith("job_rating.") and not errors_only
+    filter_conditions, joined_models = parse_column_filters(
+        filters, models.ScrapedJob, prefixed_models={"job_rating": models.JobRating}
+    )
+    if models.JobRating in joined_models:
+        needs_rating_join = True
+
+    # Apply the join once if needed
+    if needs_rating_join:
+        query = query.outerjoin(models.JobRating)
+
+    # Apply all filter conditions
+    for cond in filter_conditions:
+        query = query.filter(cond)
 
     # Apply sorting
     if sort_by.startswith("job_rating."):
-        # Handle sorting by job_rating relationship attributes
-        rating_attribute = sort_by.split(".", 1)[1]  # e.g., "overall_score"
+        rating_attribute = sort_by.split(".", 1)[1]
 
         if hasattr(models.JobRating, rating_attribute):
-            # Need explicit join for ORDER BY to work
-            query = query.outerjoin(models.JobRating)
             sort_column = getattr(models.JobRating, rating_attribute)
 
             if sort_direction == "desc":
@@ -119,7 +157,6 @@ def get_all(
             else:
                 query = query.order_by(asc(sort_column).nulls_last())
         else:
-            # Default sorting if invalid column
             query = query.order_by(desc(models.ScrapedJob.scrape_datetime).nulls_last())
     elif hasattr(models.ScrapedJob, sort_by):
         sort_column = getattr(models.ScrapedJob, sort_by)
@@ -128,15 +165,25 @@ def get_all(
         else:
             query = query.order_by(asc(sort_column).nulls_last())
     else:
-        # Default sorting if invalid column
         query = query.order_by(desc(models.ScrapedJob.scrape_datetime).nulls_last())
 
-    # Get total count before pagination
+    # Get total filtered count before pagination
     total_filtered = query.count()
 
     # Calculate pagination
     offset = page * page_size
     total_pages = (total_filtered + page_size - 1) // page_size if total_filtered > 0 else 1
+
+    if ids_only:
+        ids = query.with_entities(models.ScrapedJob.id).offset(offset).limit(page_size).all()
+        return {
+            "items": [row[0] for row in ids],
+            "total": total,
+            "total_filtered": total_filtered,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+        }
 
     # Apply pagination
     results = query.offset(offset).limit(page_size).all()
@@ -195,6 +242,88 @@ def get_scraped_jobs_filtered_by_filter(
     return scraped_jobs
 
 
+@scraped_job_router.get("/platform-stats", response_model=list[schemas.PlatformAlertStats])
+def get_platform_stats(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get count of scraped jobs, imported scraped jobs, and applied scraped jobs, grouped by platform and alert name
+    for the current user.
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: List of platform alert stats grouped by platform and alert name"""
+
+    query = (
+        db.query(
+            models.JobEmail.platform,
+            models.JobEmail.alert_name,
+            # 1. Scraped jobs
+            func.count(distinct(models.ScrapedJob.id)).label("scraped_count"),
+            # 2. Scraped jobs that have a linked Job entry
+            func.count(distinct(case((models.Job.id.isnot(None), models.ScrapedJob.id)))).label("imported_count"),
+            # 3. Scraped jobs whose linked Job has been applied to
+            func.count(
+                distinct(
+                    case(
+                        (
+                            models.Job.has_application,
+                            models.ScrapedJob.id,
+                        )
+                    )
+                )
+            ).label("applied_count"),
+        )
+        .join(models.JobEmail.jobs)
+        .outerjoin(
+            models.Job, and_(models.Job.scraped_job_id == models.ScrapedJob.id, models.Job.owner_id == current_user.id)
+        )
+        .filter(models.ScrapedJob.owner_id == current_user.id)
+        .group_by(
+            models.JobEmail.platform,
+            models.JobEmail.alert_name,
+        )
+    )
+
+    results = query.all()
+    return [
+        {
+            "platform": result.platform or "Unknown",
+            "alert_name": result.alert_name,
+            "scraped_count": result.scraped_count,
+            "imported_count": result.imported_count,
+            "applied_count": result.applied_count,
+        }
+        for result in results
+    ]
+
+
+@scraped_job_router.get("/expired", response_model=list[schemas.ScrapedJobOut])
+def get_expired(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Return all active scraped jobs that are expired: closed or past deadline."""
+    now = dt.datetime.now(dt.timezone.utc)
+    # noinspection PyComparisonWithNone
+    return (
+        db.query(models.ScrapedJob)
+        .filter(models.ScrapedJob.owner_id == current_user.id)
+        .filter(models.ScrapedJob.is_imported.is_(False))
+        .filter(models.ScrapedJob.is_active.is_(True))
+        .filter(models.ScrapedJob.exclusion_filter_id == None)
+        .filter(
+            or_(
+                models.ScrapedJob.is_closed == True,
+                and_(
+                    models.ScrapedJob.deadline.isnot(None),
+                    models.ScrapedJob.deadline < now,
+                ),
+            ),
+        )
+        .all()
+    )
+
+
 # PUT endpoint for regular users to update the entries
 generate_data_table_crud_router(
     table_model=models.ScrapedJob,
@@ -205,3 +334,107 @@ generate_data_table_crud_router(
     allowed_actions=["put"],
     router=scraped_job_router,
 )
+
+
+@scraped_job_router.post("/tour-demo", response_model=schemas.ScrapedJobOut, status_code=status.HTTP_201_CREATED)
+def create_tour_demo(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Create a demo scraped job for the guided tour. Idempotent: deletes any existing demo first."""
+
+    now = dt.datetime.now(dt.timezone.utc)
+
+    # Create the tour service log as needed
+    service_log = db.query(models.JobEmailScrapingServiceLog).filter_by(is_tour=True).first()
+    if not service_log:
+        service_log = models.JobEmailScrapingServiceLog(run_datetime=now, is_tour=True)
+        db.add(service_log)
+        db.flush()
+
+    # Create the job email
+    email = models.JobEmail(
+        owner_id=current_user.id,
+        service_log_id=service_log.id,
+        external_email_id="000000",
+        subject="20 Jobs found for your search",
+        body="We have found 20 jobs for your search 'R&D Engineer'",
+        platform="linkedin",
+        sender="test@test.com",
+        date_received=now,
+        is_tour=True,
+    )
+    db.add(email)
+    db.commit()
+
+    # Create the scraped job
+    scraped_job = models.ScrapedJob(
+        owner_id=current_user.id,
+        service_log_id=service_log.id,
+        external_job_id=f"tour-demo-{current_user.id}",
+        platform="LinkedIn",
+        is_processed=True,
+        is_scraped=True,
+        scrape_datetime=now,
+        is_active=True,
+        is_tour=True,
+        title="Senior Python Developer",
+        company="Acme Corp",
+        attendance_type="hybrid",
+        salary_min=70000,
+        salary_max=90000,
+        salary_currency="GBP",
+        description="We are looking for a Senior Python Developer to join our growing engineering team. "
+        "You will design and build scalable backend services, mentor junior developers, and collaborate "
+        "closely with product and data teams.",
+        url="https://www.linkedin.com/jobs/view/tour-demo",
+    )
+    db.add(scraped_job)
+
+    # Create the user qualification
+    user_qualification = models.UserQualification(owner_id=current_user.id, is_tour=True, experience="some experience")
+    db.add(user_qualification)
+    db.commit()
+
+    # Create the job rating
+    job_rating = models.JobRating(
+        owner_id=current_user.id,
+        scraped_job_id=scraped_job.id,
+        user_qualification_id=user_qualification.id,
+        llm_model="tour-demo",
+        is_success=True,
+        overall_score=8,
+        technical_score=8,
+        experience_score=7,
+        educational_score=8,
+        interest_score=9,
+        feedback="Strong match for your Python backend experience. The hybrid attendance and salary range align well with your preferences.",
+        is_tour=True,
+    )
+    db.add(job_rating)
+    db.commit()
+
+    # Link the email to the scraped job via the association table
+    email.jobs.append(scraped_job)
+    db.commit()
+    db.refresh(scraped_job)
+
+    return scraped_job
+
+
+@scraped_job_router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_scraped_job(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Hard-delete a scraped job owned by the current user."""
+    scraped_job = (
+        db.query(models.ScrapedJob)
+        .filter(models.ScrapedJob.id == item_id, models.ScrapedJob.owner_id == current_user.id)
+        .first()
+    )
+    if not scraped_job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scraped Job not found")
+    db.delete(scraped_job)
+    db.commit()

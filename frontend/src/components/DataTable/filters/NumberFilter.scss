@@ -1,0 +1,108 @@
+.filter-range-slider {
+	padding: 0 0.25rem;
+	transition: opacity 0.15s ease;
+
+	&--disabled {
+		opacity: 0.35;
+		pointer-events: none;
+	}
+}
+
+.filter-range-slider-track {
+	position: relative;
+	height: 4px;
+	border-radius: 2px;
+	background: var(--bs-border-color, #dee2e6);
+	margin: 10px 0 6px;
+}
+
+.filter-range-slider-fill {
+	position: absolute;
+	height: 100%;
+	border-radius: 2px;
+	background: var(--primary-mid, #6c5ce7);
+	pointer-events: none;
+}
+
+.filter-range-slider-input {
+	position: absolute;
+	top: 50%;
+	left: 0;
+	width: 100%;
+	margin: 0;
+	transform: translateY(-50%);
+	appearance: none;
+	-webkit-appearance: none;
+	background: transparent;
+	pointer-events: none;
+
+	&::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: var(--primary-mid, #6c5ce7);
+		border: 2px solid white;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+		cursor: pointer;
+		pointer-events: auto;
+	}
+
+	&::-moz-range-thumb {
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: var(--primary-mid, #6c5ce7);
+		border: 2px solid white;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+		cursor: pointer;
+		pointer-events: auto;
+	}
+}
+
+.filter-range-slider-labels {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.72rem;
+	color: var(--bs-secondary-color, #6c757d);
+	padding: 3px 4px 0 4px;
+}
+
+.filter-number-wrapper--with-null {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.5rem;
+}
+
+.filter-number-range-col {
+	flex: 1;
+	min-width: 0;
+}
+
+.filter-null-buttons {
+	display: flex;
+	gap: 0.3rem;
+	flex-shrink: 0;
+}
+
+.filter-null-btn {
+	border: 1px solid var(--bs-border-color, #dee2e6);
+	background: none;
+	border-radius: 999px;
+	padding: 0.15rem 0.55rem;
+	font-size: 0.72rem;
+	cursor: pointer;
+	color: var(--bs-body-color);
+	transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+	&:hover {
+		background: var(--bs-tertiary-bg, #f8f9fa);
+	}
+
+	&.active {
+		background: var(--primary-mid, #6c5ce7);
+		color: white;
+		border-color: var(--primary-mid, #6c5ce7);
+	}
+}

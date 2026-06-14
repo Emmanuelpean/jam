@@ -1,0 +1,78 @@
+.jam-tooltip-wrap {
+	// Real box so hover is detected even over disabled controls (which emit no mouse
+	// events of their own). Sized to its child; positioning measures the child directly.
+	display: inline-flex;
+	max-width: 100%;
+}
+
+.jam-tooltip {
+	position: fixed;
+	z-index: 10000;
+	width: max-content;
+	max-width: 320px;
+	padding: 0.4rem 0.7rem;
+	font-size: 0.875rem;
+	line-height: 1.35;
+	text-align: center;
+	white-space: normal;
+	word-break: break-word;
+	color: var(--bs-body-color);
+	background: var(--bs-tertiary-bg);
+	border-radius: 0.3rem;
+	box-shadow: 0 2px 7px rgb(0 0 0 / 20%);
+	pointer-events: none;
+
+	&::after {
+		content: "";
+		position: absolute;
+		border: 8px solid transparent;
+	}
+
+	&--top {
+		transform: translateX(-50%) translateY(-100%);
+
+		&::after {
+			top: 100%;
+			left: 50%;
+			transform: translateX(-50%);
+			border-bottom-width: 0;
+			border-top-color: var(--bs-tertiary-bg);
+		}
+	}
+
+	&--bottom {
+		transform: translateX(-50%);
+
+		&::after {
+			bottom: 100%;
+			left: 50%;
+			transform: translateX(-50%);
+			border-top-width: 0;
+			border-bottom-color: var(--bs-tertiary-bg);
+		}
+	}
+
+	&--left {
+		transform: translateX(-100%) translateY(-50%);
+
+		&::after {
+			top: 50%;
+			left: 100%;
+			transform: translateY(-50%);
+			border-right-width: 0;
+			border-left-color: var(--bs-tertiary-bg);
+		}
+	}
+
+	&--right {
+		transform: translateY(-50%);
+
+		&::after {
+			top: 50%;
+			right: 100%;
+			transform: translateY(-50%);
+			border-left-width: 0;
+			border-right-color: var(--bs-tertiary-bg);
+		}
+	}
+}

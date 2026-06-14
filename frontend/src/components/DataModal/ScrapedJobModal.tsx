@@ -6,45 +6,52 @@ import DataModal, {
 	SectionConfig,
 	WarningMessageConfig,
 } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { findClosestOption, findExactOption, useFormOptions } from "../rendering/form/FormOptions";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { capitalise } from "../../utils/StringUtils";
 import { CompanyModal } from "./CompanyModal";
-import { LocationModal } from "./LocationModal";
 import { KeywordModal } from "./KeywordModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { JamData, useDataContext } from "../../contexts/DataContext";
-import { JobData, JobDataTransform, LocationDataTransform } from "../../services/schemas/DataTables";
+import { JobData } from "../../services/schemas/DataTables";
+import { JobCreate } from "../../services/schemas/DataTables";
 import { ScrapedJobData, ScrapedJobUpdate } from "../../services/schemas/Services";
 import { useConfig } from "../../contexts/ConfigContext";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
 import { ApiResponse } from "../../services/api/Base";
 
-export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
+export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDataModalProps>(
 	({ size = "xl", onDelete, onSuccess: parentOnSuccess, canEdit = true }: JamDataModalProps, ref): JSX.Element => {
 		const { addEntity } = useDataContext();
 		const { config } = useConfig();
 		const companyModalRef = useRef<DataModalHandle>(null);
-		const locationModalRef = useRef<DataModalHandle>(null);
 		const keywordModalRef = useRef<DataModalHandle>(null);
 		const personModalRef = useRef<DataModalHandle>(null);
 		const aggregatorModalRef = useRef<DataModalHandle>(null);
-		const { companies, locations, keywords, persons, aggregators } = useFormOptions();
+		const {
+			companies,
+			keywords,
+			persons,
+			aggregators,
+			getCompanyPreviewConfig,
+			getAggregatorPreviewConfig,
+			getPersonPreviewConfig,
+		} = useFormOptions();
+		const ff = useFormFields();
 
 		const transformInputData = (data: ScrapedJobData) => {
 			if (!data) return data;
 			return {
 				...data,
 				company_id: data.company ? findClosestOption(companies, data.company) : null,
-				location_id: data.parsed_location ? findClosestOption(locations, data.parsed_location) : null,
 				source_aggregator_id: data.platform ? findExactOption(aggregators, data.platform) : null,
 				source_type: "aggregator_email",
 			};
 		};
 
-		const jobFormFields: Fields = [
+		const getJobFormFields = (mode: string, data: ScrapedJobData): Fields => [
 			{
 				type: "section",
 				key: "rating",
@@ -63,10 +70,16 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				fields: [
 					modalViewFields.title({ isTitle: true }),
 					[
-						formFields.scrapedCompany(companies, companyModalRef, (scrapedJob: ScrapedJobData) => ({
-							name: scrapedJob.company,
-						})),
-						formFields.jobURl(),
+						ff.scrapedCompanyField(
+							companies,
+							companyModalRef,
+							(scrapedJob: ScrapedJobData) => ({
+								name: scrapedJob.company,
+							}),
+							getCompanyPreviewConfig,
+							{ highlight: mode === "import" && !!data?.company }
+						),
+						ff.jobUrlField(),
 					],
 				],
 			} as SectionConfig,
@@ -76,19 +89,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				key: "location",
 				title: "Location",
 				icon: "bi-geo-alt",
-				fields: [
-					formFields.scrapedLocation(
-						locations,
-						locationModalRef,
-						(scrapedJob: ScrapedJobData): LocationDataTransform => ({
-							postcode: scrapedJob.location_postcode,
-							city: scrapedJob.location_city,
-							country: scrapedJob.location_country,
-						})
-					),
-					formFields.attendanceType(),
-					modalViewFields.scrapedLocationMap(),
-				],
+				fields: [[ff.attendanceTypeField(), ff.locationField()], modalViewFields.geolocationMap(false)],
 			} as SectionConfig,
 
 			{
@@ -97,8 +98,8 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				title: "Compensation & Priority",
 				icon: "bi-currency-pound",
 				fields: [
-					[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
-					[formFields.personalRating(), formFields.deadline()],
+					[ff.salaryMinField(), ff.salaryMaxField()],
+					[ff.personalRatingField(), ff.isFavouriteField(), ff.deadlineField()],
 				],
 			} as SectionConfig,
 
@@ -108,36 +109,20 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				title: "Source",
 				icon: "bi-search",
 				fields: [
-					[
-						formFields.sourceType(),
-						formFields.aggregator(
-							aggregators,
-							aggregatorModalRef,
-							(scrapedJob: ScrapedJobData) => ({
-								name: scrapedJob.platform ? capitalise(scrapedJob.platform) : undefined,
-							}),
-							null,
-							{
-								name: "source_aggregator_id",
-								displayCondition: (formData: JobDataTransform): boolean => {
-									return ["aggregator", "aggregator_email"].includes(
-										formData.source_type ? formData.source_type : ""
-									);
-								},
-							}
-						),
-						formFields.recruiter(persons, personModalRef, null, null, {
-							displayCondition: (formData: JobDataTransform): boolean => {
-								return formData.source_type ? formData.source_type === "recruiter" : false;
-							},
-						}),
-						formFields.company(companies, companyModalRef, null, null, {
-							name: "recruitment_company_id",
-							displayCondition: (formData: JobDataTransform): boolean => {
-								return formData.source_type ? formData.source_type === "recruitment_company" : false;
-							},
-						}),
-					],
+					ff.sourceGroupFields(
+						aggregators,
+						aggregatorModalRef,
+						getAggregatorPreviewConfig,
+						persons,
+						personModalRef,
+						getPersonPreviewConfig,
+						companies,
+						companyModalRef,
+						getCompanyPreviewConfig,
+						(scrapedJob: ScrapedJobData) => ({
+							name: scrapedJob.platform ? capitalise(scrapedJob.platform) : undefined,
+						})
+					),
 				],
 			} as SectionConfig,
 
@@ -147,7 +132,10 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				title: "Tags & Contacts",
 				icon: "bi-tags",
 				fields: [
-					[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
+					[
+						ff.keywordsField(keywords, keywordModalRef),
+						ff.contactsField(persons, personModalRef, null, getPersonPreviewConfig),
+					],
 				],
 			} as SectionConfig,
 
@@ -158,7 +146,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				icon: "bi-card-text",
 				fields: [
 					modalViewFields.description(),
-					formFields.note({
+					ff.noteField({
 						placeholder:
 							"This role offers a chance to apply Python expertise to build scalable solutions " +
 							"while exploring opportunities for growth in automation, data analysis, and collaborative software development.",
@@ -179,9 +167,9 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			modalViewFields.jobRatingSection(),
 			modalViewFields.title({ isTitle: true }),
 			modalViewFields.description(),
-			[modalViewFields.company(), modalViewFields.location()],
+			[modalViewFields.company(), modalViewFields.locationBadge()],
 			[modalViewFields.platform(), modalViewFields.url()],
-			modalViewFields.scrapedLocationMap(),
+			modalViewFields.geolocationMap(false),
 		];
 
 		const warningMessage = (data: ScrapedJobData): WarningMessageConfig[] | null => {
@@ -219,7 +207,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			}
 			if (data?.is_failed) {
 				const reportLink = createReportLink(
-					"Scraped Job Error Report",
+					"Job Alert Error Report",
 					data?.scrape_error.map((e) => e.error).join("\n\n---\n\n") || null
 				);
 				result.push({
@@ -255,7 +243,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		};
 
 		const onSuccess = async (formData: JobData): Promise<any> => {
-			const jobData: Partial<JobDataTransform> = {
+			const jobData: JobCreate = {
 				title: formData.title.trim(),
 				description: formData.description?.trim() || null,
 				note: formData.note?.trim() || null,
@@ -264,16 +252,18 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				salary_max: formData.salary_max || null,
 				salary_currency: formData.salary_currency || null,
 				personal_rating: formData.personal_rating || null,
+				is_favourite: formData.is_favourite ?? false,
 				company_id: formData.company_id || null,
-				location_id: formData.location_id || null,
+				location: formData.location?.trim() || null, // geolocation upon entry creation in db
 				source_type: formData.source_type || null,
 				source_aggregator_id: formData.source_aggregator_id || null,
 				recruiter_id: formData.recruiter_id || null,
 				recruitment_company_id: formData.recruitment_company_id || null,
-				deadline: formData.deadline ? convertToEndOfDay(formData.deadline) : null,
+				deadline: formData.deadline ? convertToEndOfDay(formData.deadline).toISOString() : null,
 				keywords: formData.keywords || [],
 				contacts: formData.contacts || [],
 				attendance_type: formData.attendance_type?.trim() || null,
+				scraped_job_id: formData.id || null,
 			};
 			const result: ApiResponse<JamData> = await addEntity("job", jobData);
 			parentOnSuccess?.(result);
@@ -281,9 +271,9 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 		return (
 			<>
-				<DataModal
+				<DataModal<ScrapedJobData>
 					ref={ref}
-					fields={{ form: jobFormFields, view: viewFields }}
+					fields={(data: any, mode: string) => ({ form: getJobFormFields(mode, data), view: viewFields })}
 					transformFormData={transformData}
 					transformInputData={transformInputData}
 					entityType="scrapedJob"
@@ -294,7 +284,6 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 					canEdit={canEdit}
 				/>
 				<CompanyModal ref={companyModalRef} />
-				<LocationModal ref={locationModalRef} />
 				<KeywordModal ref={keywordModalRef} />
 				<PersonModal ref={personModalRef} />
 				<AggregatorModal ref={aggregatorModalRef} />

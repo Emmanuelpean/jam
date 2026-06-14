@@ -55,7 +55,7 @@ def _remap_with_map(
     result = []
     for entry in data:
         val = entry.get(key)
-        if val is not None:
+        if isinstance(val, int):
             if val not in index_map:
                 continue
             entry[key] = objects[index_map[val] - 1].id
@@ -122,12 +122,6 @@ def seed_demo_data(db: Session, user: models.User) -> None:
     # Companies
     companies = create_db_entries(db, models.Company, _filter_owner(data_tables.COMPANY_DATA, owner_id))
 
-    # Locations (remap geolocation_id)
-    location_data = override_properties(
-        _filter_owner(data_tables.LOCATION_DATA, owner_id), ("geolocation_id", geolocations)
-    )
-    locations = create_db_entries(db, models.Location, location_data)
-
     # Persons (remap company_id)
     person_data = override_properties(_filter_owner(data_tables.PERSON_DATA, owner_id), ("company_id", companies))
     persons = create_db_entries(db, models.Person, person_data)
@@ -145,7 +139,6 @@ def seed_demo_data(db: Session, user: models.User) -> None:
     job_data = override_properties(
         _filter_owner(data_tables.JOB_DATA, owner_id),
         ("company_id", companies),
-        ("location_id", locations),
         ("source_aggregator_id", aggregators),
         ("cv_id", files),
         ("cover_letter_id", files),
@@ -178,10 +171,9 @@ def seed_demo_data(db: Session, user: models.User) -> None:
     )
     db.flush()
 
-    # Interviews (remap location_id, job_id)
+    # Interviews (remap job_id)
     interview_data = override_properties(
         _filter_owner(data_tables.INTERVIEW_DATA, owner_id),
-        ("location_id", locations),
         ("job_id", jobs),
     )
     interviews = create_db_entries(db, models.Interview, interview_data)
@@ -295,7 +287,7 @@ def seed_demo_data(db: Session, user: models.User) -> None:
     for entry in rating_data:
         # Remap user_qualification_id (user 1's qualifications are consecutive at start)
         qual_id = entry.get("user_qualification_id")
-        if qual_id is not None and qual_id <= len(qualifications):
+        if isinstance(qual_id, int) and qual_id <= len(qualifications):
             entry["user_qualification_id"] = qualifications[qual_id - 1].id
         else:
             entry["user_qualification_id"] = qualifications[0].id if qualifications else None

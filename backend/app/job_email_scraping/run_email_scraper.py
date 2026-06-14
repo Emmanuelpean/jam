@@ -7,6 +7,8 @@ from app.job_email_scraping.email_scraper import JobEmailScraper
 
 
 def main():
+    """Run the job email scraper."""
+
     parser = argparse.ArgumentParser(description="Run the job email scraper for a specified number of days.")
     parser.add_argument(
         "--days",

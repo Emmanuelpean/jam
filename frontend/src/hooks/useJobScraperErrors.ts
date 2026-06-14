@@ -64,7 +64,6 @@ export const useJobScraperErrors = (
 				}
 
 				const scraped_jobs: ApiResponse<ScrapedJobData[]> = await scrapedJobApi.getAll(token, { id: ids });
-				console.log(scraped_jobs);
 				const errorCounts: Record<string, ErrorCount> = {};
 				scraped_jobs.data.forEach((job: ScrapedJobData): void => {
 					if (job.scrape_error.length > 0) {

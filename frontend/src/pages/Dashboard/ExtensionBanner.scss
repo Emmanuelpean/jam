@@ -3,8 +3,8 @@
     align-items: center;
     gap: 14.4px;
     padding: 12.6px 16.2px;
-    border-radius: 12.6px;
-    background: var(--bs-card-bg);
+    border-radius: 5.4px;
+    background: var(--bs-body-bg);
     border: 1px solid rgba(var(--primary-end-rgb, 72, 52, 212), 0.18);
     position: relative;
 }
@@ -39,13 +39,18 @@
 }
 
 .extension-banner-badge {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    padding: 1.8px 7.2px;
+    padding: 2px 9px;
     border-radius: 18px;
     background: var(--primary-gradient);
     color: white;
     letter-spacing: 0.2px;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+    &:hover {
+        transform: translateY(-1.5px);
+        color: white;}
 }
 
 .extension-banner-subtitle {

@@ -84,46 +84,46 @@ export const StyleGuidePage: React.FC = () => {
 
 	// Mock field definitions for custom widgets
 	const checkboxField: ModalFormField = {
-		name: "checkbox",
+		key: "checkbox",
 		label: "Custom Checkbox",
 		type: "checkbox",
 	};
 
 	const passwordField: ModalFormField = {
-		name: "password",
+		key: "password",
 		label: "Password Input",
 		type: "password",
 		helpText: "Enter a secure password",
 	};
 
 	const salaryField: ModalFormField = {
-		name: "salary",
+		key: "salary",
 		label: "Salary Input",
 		type: "salary",
 		placeholder: "Enter salary amount",
 	};
 
 	const ratingField: ModalFormField = {
-		name: "rating",
+		key: "rating",
 		label: "Star Rating",
 		type: "rating",
 		maxRating: 5,
 	};
 
 	const datetimeField: ModalFormField = {
-		name: "datetime",
+		key: "datetime",
 		label: "DateTime Picker",
 		type: "datetime-local",
 	};
 
 	const dateField: ModalFormField = {
-		name: "date",
+		key: "date",
 		label: "Date Picker",
 		type: "date",
 	};
 
 	const selectField: ModalFormField = {
-		name: "select",
+		key: "select",
 		label: "Select Widget",
 		type: "select",
 		options: [
@@ -134,14 +134,14 @@ export const StyleGuidePage: React.FC = () => {
 	};
 
 	const textareaField: ModalFormField = {
-		name: "textarea",
+		key: "textarea",
 		label: "Text Area",
 		type: "textarea",
 		placeholder: "Enter multiple lines of text here...",
 	};
 
 	const urlField: ModalFormField = {
-		name: "url",
+		key: "url",
 		label: "URL Input",
 		type: "url",
 		placeholder: "Enter a valid URL",

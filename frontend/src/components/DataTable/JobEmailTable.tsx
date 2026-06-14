@@ -2,40 +2,32 @@ import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobEmailModal } from "../DataModal/JobEmailModal";
-import { renderFunctions, RenderParams } from "../rendering/view/ViewRenders";
+import { JobEmailData } from "../../services/schemas/Services";
 
-const JobEmailTable: React.FC<DataTableProps> = ({
+interface JobEmailTableProps extends DataTableProps {
+	queryParams?: Record<string, string>;
+}
+
+const JobEmailTable: React.FC<JobEmailTableProps> = ({
 	columns = [],
 	title = undefined,
 	onTotalCountChange,
 	reloadTrigger,
-}: DataTableProps): JSX.Element => {
-	const defaultColumns: TableColumn[] =
+	queryParams,
+}: JobEmailTableProps): JSX.Element => {
+	const defaultColumns: TableColumn<JobEmailData>[] =
 		columns.length > 0
-			? columns
+			? (columns as TableColumn<JobEmailData>[])
 			: [
-					tableColumns.titleColumn({ key: "subject", label: "Subject" }),
-					{ key: "sender", label: "Sender", sortable: true, searchable: true, type: "text" } as TableColumn,
-					tableColumns.platformColumn(),
-					{
-						key: "alert_name",
-						label: "Alert Name",
-						sortable: true,
-						searchable: true,
-						type: "text",
-					} as TableColumn,
-					{ key: "job_found_n", label: "Jobs Found", sortable: true, type: "number" } as TableColumn,
-					{
-						key: "date_received",
-						label: "Date Received",
-						sortable: true,
-						type: "date",
-						render: (params: RenderParams) => renderFunctions._date(params, "date_received"),
-					} as TableColumn,
+					tableColumns.subjectColumn<JobEmailData>(),
+					tableColumns.platformColumn<JobEmailData>(),
+					tableColumns.alertNameColumn<JobEmailData>(),
+					tableColumns.jobsFoundColumn<JobEmailData>(),
+					tableColumns.dateReceivedColumn<JobEmailData>(),
 				];
 
 	return (
-		<DataTable
+		<DataTable<JobEmailData>
 			title={title}
 			entityType="jobEmail"
 			onTotalCountChange={onTotalCountChange}
@@ -47,8 +39,10 @@ const JobEmailTable: React.FC<DataTableProps> = ({
 			modalSize="xl"
 			showAdd={false}
 			showSearch={true}
+			enableColumnConfig={true}
 			menuItems={["view"]}
 			reloadTrigger={reloadTrigger}
+			queryParams={queryParams}
 		/>
 	);
 };

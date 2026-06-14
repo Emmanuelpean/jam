@@ -3,7 +3,6 @@ import { MenuItem } from "../../ContextMenu/ContextMenu";
 import { DataModalHandle } from "../../DataModal/DataModal";
 import { useContextMenu } from "../../../contexts/ContextMenuContext";
 import FollowUpModal, { FollowUpModalHandle } from "../../FollowUpModal/FollowUpModal";
-import { LocationModal } from "../../DataModal/LocationModal";
 import { CompanyModal } from "../../DataModal/CompanyModal";
 import { PersonModal } from "../../DataModal/PersonModal";
 import { KeywordModal } from "../../DataModal/KeywordModal";
@@ -15,14 +14,11 @@ import { useDeleteEntityConfirm } from "../../../utils/DeleteHandler";
 import { DataContextValue, EntityType, JamData, useDataContext } from "../../../contexts/DataContext";
 import { getEntityIcon } from "./Icons";
 import { useGlobalToast } from "../../../hooks/useNotificationToast";
-import {
-	AggregatorData,
-	CompanyData,
-	JobData,
-	KeywordData,
-	LocationData,
-	PersonData,
-} from "../../../services/schemas/DataTables";
+import { AggregatorData, CompanyData, FileData, JobData, KeywordData, PersonData } from "../../../services/schemas/DataTables";
+import { LocationModal } from "../../DataModal/LocationModal";
+import { FileModal } from "../../DataModal/FileModal";
+import { useTour } from "../../../contexts/TourContext";
+
 
 type FlexibleModalComponent = React.ForwardRefExoticComponent<any>;
 
@@ -65,6 +61,7 @@ const createDataBadge = <T extends JamData>(
 		const deleteHandler = useDeleteEntityConfirm(entityType);
 		const dataContext: DataContextValue = useDataContext();
 		const { showToastSuccess } = useGlobalToast();
+		const { allowedContextMenuActions } = useTour();
 
 		const handleRemove = (item: JamData): void => {
 			if (parentItem && parentKey) {
@@ -117,8 +114,11 @@ const createDataBadge = <T extends JamData>(
 			},
 		];
 
+		const effectiveMenuItemKeys = allowedContextMenuActions
+			? menuItemKeys.filter((k) => allowedContextMenuActions.includes(k))
+			: menuItemKeys;
 		const menuItems: MenuItem[] = availableMenuItems.filter((menuItem: MenuItem): boolean =>
-			menuItemKeys.includes(menuItem.action)
+			effectiveMenuItemKeys.includes(menuItem.action)
 		);
 
 		const handleContextMenu = (e: MouseEvent<HTMLSpanElement>) => {
@@ -167,12 +167,7 @@ export const CompanyBadge = createDataBadge(
 	"bg-success",
 	(item: CompanyData): string => item.name
 );
-export const LocationBadge = createDataBadge(
-	LocationModal,
-	"location",
-	"bg-warning",
-	(item: LocationData): string => item.name
-);
+export const LocationBadge = createDataBadge(LocationModal, "geolocation", "bg-warning", (): string => "", ["view"]);
 export const KeywordBadge = createDataBadge(
 	KeywordModal,
 	"keyword",
@@ -185,6 +180,13 @@ export const AggregatorBadge = createDataBadge(
 	"aggregator",
 	"bg-dark",
 	(item: AggregatorData): string => item.name
+);
+export const FileBadge = createDataBadge(
+	FileModal,
+	"file",
+	"bg-secondary",
+	(item: FileData): string => item.filename,
+	["view", "edit", "delete"]
 );
 export const JobApplicationUpdateBadge = createDataBadge(
 	JobApplicationUpdateModal,

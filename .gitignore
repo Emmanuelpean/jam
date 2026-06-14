@@ -16,6 +16,7 @@ frontend/coverage
 
 # production
 frontend/build
+frontend/dist
 
 # misc
 .DS_Store
@@ -32,6 +33,7 @@ reports
 .coverage
 test_logs
 .claude
+frontend/.claude
 
 chrome_extension/node_modules
 chrome_extension/dist

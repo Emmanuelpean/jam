@@ -12,10 +12,11 @@ The CRUDTestBase class is in tests/utils/crud_test_base.py
 
 import datetime as dt
 import os
-from typing import Any
+from typing import Any, Type
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pydantic import BaseModel
 from requests import Response
 from starlette import status
 from starlette.testclient import TestClient
@@ -39,12 +40,29 @@ pytest_plugins = [
 
 
 @pytest.fixture(autouse=True)
+def enable_test_mode():
+    """Force test_mode=True for all tests so emails are intercepted and test-only routes are active."""
+
+    with patch("app.config.settings.test_mode", True):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_captcha_verification():
+    """Bypass Cloudflare Turnstile network calls in tests; production verification stays intact."""
+
+    with patch("app.core.routers.auth.verify_captcha_token", return_value=True):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_nominatim_get():
     """Auto-mock Nominatim HTTP calls using MOCK_GEOCODING_RESPONSES.
     Known queries return a real-shaped Nominatim response; unknown queries return []
     which causes call_geocoding_api to raise ValueError."""
 
     def side_effect(url, **kwargs):
+        """Mock the requests.get call to Nominatim."""
         _ = url
         params = kwargs.get("params", {})
         query = params.get("q")
@@ -67,7 +85,7 @@ def open_file(filepath: str) -> str:
     """Helper function to open a text file from the resources directory.
     :param filepath: The name of the file located in the resources directory"""
 
-    base_dir = os.path.dirname(__file__)
+    base_dir = str(os.path.dirname(__file__))
     filepath = os.path.join(base_dir, "resources", filepath)
     with open(filepath, "r", encoding="utf8") as ofile:
         return ofile.read()
@@ -126,8 +144,8 @@ class CRUDTestBase:
     - actions_to_test: list[str] - which CRUD actions to test (any subset of ["get", "post", "put", "delete"])"""
 
     endpoint: str = ""
-    create_schema = None
-    out_schema = None
+    create_schema: Type[BaseModel] | None = None
+    out_schema: Type[BaseModel] | None = None
     test_data_ref: str = ""
     update_data: dict[str, str | int] = None
     create_data: list[dict] = None
@@ -136,6 +154,7 @@ class CRUDTestBase:
     unauthorised_data_fixture = None
     admin_only: bool = False
     actions_to_test: list[str] = ["get", "post", "put", "delete"]
+    too_long_create_data: dict | None = None
 
     def check_output(
         self,
@@ -148,7 +167,7 @@ class CRUDTestBase:
             for d1, d2 in zip(test_data, response_data):
                 return self.check_output(d1, d2)
 
-        if isinstance(response_data, dict):
+        if isinstance(response_data, dict) and self.out_schema is not None:
             response_data = self.out_schema(**response_data)
 
         if isinstance(test_data, dict):
@@ -398,19 +417,27 @@ class CRUDTestBase:
                 assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.requires_actions("post")
-    def test_post_data_only_authorised(
+    def test_post_field_too_long(self, authorised_clients) -> None:
+        """Test that creating an item with a field exceeding its max length returns 422."""
+        if self.too_long_create_data is None:
+            return
+        client = self._get_authorised_client(authorised_clients)
+        response = self.post(client, self.too_long_create_data)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    @pytest.mark.requires_actions("post")
+    def test_post_unowned_link_rejected(
         self,
         authorised_clients,
         request,
     ) -> None:
-        """Test that users can successfully create data they own on non-admin endpoints."""
+        """Test that creating an entry linking to a related entry the user does not own is rejected (non-admin endpoints)."""
         if not self.admin_only and self.unauthorised_data_fixture:
             data, owner_id = request.getfixturevalue(self.unauthorised_data_fixture)[:2]
             for datum in data:
                 datum = {key: value for key, value in datum.items() if key not in ("id", "owner_id")}
                 response = self.post(authorised_clients[owner_id - 1], datum)
-                assert response.status_code == status.HTTP_201_CREATED
-                assert_ownership(data, owner_id)
+                assert response.status_code == status.HTTP_403_FORBIDDEN
 
     # ------------------------------------------------------- PUT ------------------------------------------------------
 
@@ -422,7 +449,9 @@ class CRUDTestBase:
     ) -> None:
         """Test that authorised users can successfully update existing items."""
         client = self._get_authorised_client(authorised_clients)
-        response = self.put(client, self.update_data.get("id"), self.update_data)
+        data_id = self.update_data.get("id")
+        assert isinstance(data_id, int)
+        response = self.put(client, data_id, self.update_data)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(self.update_data, response.json())
 
@@ -530,6 +559,7 @@ _ACTION_META = {
 
 
 def make_undefined_method_params(defined: list[str], undefined: list[str]):
+    """Generate pytest.param objects for undefined methods."""
     defined_upper = {a.upper() for a in defined}
     params = []
     for action in undefined:

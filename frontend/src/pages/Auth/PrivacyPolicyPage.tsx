@@ -1,5 +1,6 @@
 import React, { JSX } from "react";
 import { Button, Card, Col, Container, Modal, Row } from "react-bootstrap";
+import JamModal from "../../components/JamModal/JamModal";
 import { Link } from "react-router-dom";
 import "./TermsConditions.scss";
 import "../About/AboutPage.scss";
@@ -352,7 +353,7 @@ interface PrivacyPolicyModalProps {
 
 export function PrivacyPolicyModal({ show, onHide }: PrivacyPolicyModalProps): JSX.Element {
 	return (
-		<Modal show={show} onHide={onHide} scrollable className="terms-modal">
+		<JamModal show={show} onHide={onHide} scrollable className="terms-modal">
 			<Modal.Header closeButton className="terms-header">
 				<Modal.Title className="d-flex align-items-center">
 					<i className="bi bi-shield-check me-2"></i>
@@ -367,12 +368,12 @@ export function PrivacyPolicyModal({ show, onHide }: PrivacyPolicyModalProps): J
 					<i className="bi bi-check-circle me-2"></i>I Understand and Accept
 				</Button>
 			</Modal.Footer>
-		</Modal>
+		</JamModal>
 	);
 }
 
 const PrivacyPolicyPage = (): JSX.Element => (
-	<div className="gradient-bg" style={{ borderRadius: "18px", overflow: "hidden", minHeight: "100%" }}>
+	<div style={{ borderRadius: "18px", overflow: "hidden", minHeight: "100%" }}>
 		<Container className="py-5">
 			<Row className="justify-content-center mb-4">
 				<Col lg={8} className="text-center">

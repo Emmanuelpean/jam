@@ -3,6 +3,8 @@
 Python equivalent of frontend releaseSlides from versions.ts.
 """
 
+PREMIUM_PRICE = "£8"
+
 RELEASE_SLIDES: dict[str, list[dict]] = {
     "1.0.0": [
         {
@@ -46,7 +48,7 @@ RELEASE_SLIDES: dict[str, list[dict]] = {
     ],
     "1.2.0": [
         {
-            "title": "Job Scraping Filters",
+            "title": "Job Alert Filters",
             "description": "Create rules to exclude unwanted jobs by company, title, or other parameters.",
         },
         {
@@ -59,7 +61,7 @@ RELEASE_SLIDES: dict[str, list[dict]] = {
         },
         {
             "title": "JAM Premium",
-            "description": "For only £5/month, JAM automatically scrapes job alert emails details, "
+            "description": f"For only {PREMIUM_PRICE}/month, JAM automatically scrapes job alert emails details, "
             "rates them against your qualifications, and highlights the best matches for you. "
             "New users get a 14-day free trial.",
         },
@@ -70,6 +72,27 @@ RELEASE_SLIDES: dict[str, list[dict]] = {
         {
             "title": "Quality of Life Improvements",
             "description": "Extended data export, new job source types, and improved error messages.",
+        },
+    ],
+    "1.3.0": [
+        {
+            "title": "Customisable Dashboard",
+            "description": "Your dashboard is now fully customisable. Add, remove, resize, and rearrange widgets in "
+            "edit mode. Choose from Metric, Table, Timeline, Graph, and Map widget types, or build a "
+            "custom graph from your own data.",
+        },
+        {
+            "title": "Customisable Table Columns",
+            "description": "All data tables now support column customisation. Show or hide columns to focus on what "
+            "matters, with preferences saved per table.",
+        },
+        {
+            "title": "Favourite Filters for Job Alerts",
+            "description": "Use filters to highlights matching jobs at a glance.",
+        },
+        {
+            "title": "CV & Cover Letter Attachments",
+            "description": "Attach a CV and cover letter directly to a job application.",
         },
     ],
 }

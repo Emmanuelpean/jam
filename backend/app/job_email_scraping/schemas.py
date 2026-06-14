@@ -7,9 +7,35 @@ from datetime import datetime
 
 from pydantic import field_validator, Field
 
-from app.base_schemas import BaseModel, OwnedOut, Out, serialise_relationships
+from app.base_schemas import BaseModel, OwnedOut, Out, serialise_relationships, OwnedCreate
 from app.data_tables.schemas import GeolocationOut
 from app.job_rating.schemas import JobRatingOut
+
+
+class Salary(BaseModel):
+    min_amount: float | None = None
+    max_amount: float | None = None
+    currency: str | None = None
+
+
+class JobInfo(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    url: str | None = None
+    raw_url: str | None = None
+    deadline: dt.datetime | None = None
+    salary: Salary = Field(default_factory=Salary)
+    is_closed: bool = False
+
+
+class JobResult(BaseModel):
+    platform: str | None = None
+    job_id: str | None = None
+    company: str | None = None
+    company_id: str | None = None
+    location: str | None = None
+    raw: str | None = None
+    job: JobInfo
 
 
 # --------------------------------------------------- JOB ALERT EMAIL --------------------------------------------------
@@ -68,6 +94,7 @@ class ScrapedJob(BaseModel):
     skip_reason: str | None = None
     retry_count: int = 0
     next_retry_at: datetime | None = None
+    read_at: datetime | None = None
 
     # Job data
     title: str | None = None
@@ -77,13 +104,10 @@ class ScrapedJob(BaseModel):
     salary_currency: str | None = None
     url: str | None = None
     deadline: datetime | None = None
-    parsed_location: str | None = None
+    location: str | None = None
     attendance_type: str | None = None
     is_closed: bool = False
-    location: str | None = None
-    location_city: str | None = None
-    location_postcode: str | None = None
-    location_country: str | None = None
+    raw_location: str | None = None
     company: str | None = None
 
 
@@ -92,6 +116,7 @@ class ScrapedJobUpdate(BaseModel):
 
     is_active: bool | None = None
     is_imported: bool | None = None
+    read_at: datetime | None = None
 
 
 class ScrapedJobOut(ScrapedJob, OwnedOut):
@@ -129,6 +154,26 @@ class PaginatedJobEmailResponse(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+class PaginatedScrapedJobIdsResponse(BaseModel):
+    """Paginated Scraped Job IDs-only response schema"""
+
+    items: list[int]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class PlatformAlertStats(BaseModel):
+    """Platform Alert Stats output schema"""
+
+    platform: str
+    alert_name: str | None = None
+    scraped_count: int
+    imported_count: int
+    applied_count: int
 
 
 # ----------------------------------------------------- SERVICE LOG ----------------------------------------------------
@@ -212,14 +257,14 @@ class JobEmailScrapingServiceErrorOut(Out):
 class JobEmailScrapingStartRequest(BaseModel):
     """Start Request schema for email scraper service"""
 
-    period_hours: float | None = 3.0
-    timedelta_days: int | None = 1
+    period_hours: float | int = 3.0
+    timedelta_days: int = 1
 
 
 # ------------------------------------------------- SCRAPED JOB FILTER -------------------------------------------------
 
 
-class ScrapingFilterCreate(BaseModel):
+class ScrapingFilterCreate(OwnedCreate):
     """Scraped Job Filter creation schema"""
 
     type: str
@@ -249,6 +294,23 @@ class ScrapingFilterOut(OwnedOut, ScrapingFilterCreate):
         return serialise_relationships(value)
 
 
+class ScrapingFavouriteFilterOut(OwnedOut, ScrapingFilterCreate):
+    """Scraped Job Favourite Filter output schema"""
+
+    pass
+
+
+class FilterPreviewResponse(BaseModel):
+    """Response schema for filter preview endpoint"""
+
+    items: list[ScrapedJobOut]
+    total: int
+    total_filtered: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
 # ------------------------------------------- FORWARDING CONFIRMATION LINK ---------------------------------------------
 
 
@@ -263,29 +325,3 @@ class ForwardingConfirmationLinkUpdate(BaseModel):
     """Forwarding Confirmation Link update schema"""
 
     is_used: bool
-
-
-class Salary(BaseModel):
-    min_amount: float | None = None
-    max_amount: float | None = None
-    currency: str | None = None
-
-
-class JobInfo(BaseModel):
-    title: str | None = None
-    description: str | None = None
-    url: str | None = None
-    raw_url: str | None = None
-    deadline: dt.datetime | None = None
-    salary: Salary = Field(default_factory=Salary)
-    is_closed: bool = False
-
-
-class JobResult(BaseModel):
-    platform: str | None = None
-    job_id: str | None = None
-    company: str | None = None
-    company_id: str | None = None
-    location: str | None = None
-    raw: str | None = None
-    job: JobInfo

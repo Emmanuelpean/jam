@@ -1,7 +1,9 @@
 import React, { createContext, JSX, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
+import { useTour } from "./TourContext";
 import { WhatsNewModal, WhatsNewModalHandle } from "../components/WhatsNewModal/WhatsNewModal";
 import { WelcomeModal, WelcomeModalHandle } from "../components/WelcomeModal/WelcomeModal";
+import { TourHintPopup } from "../components/TourHintPopup/TourHintPopup";
 import {
 	getNewerReleaseSlides,
 	getReleaseSlidesForLastVersion,
@@ -32,7 +34,13 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 	const whatsNewRef = useRef<WhatsNewModalHandle>(null);
 	const welcomeRef = useRef<WelcomeModalHandle>(null);
 	const { currentUser } = useAuth();
+	const { isTourSelectOpen } = useTour();
 	const [slides, setSlides] = useState<ReleaseSlide[]>([]);
+	const [showTourHint, setShowTourHint] = useState<boolean>(false);
+
+	useEffect(() => {
+		if (isTourSelectOpen) setShowTourHint(false);
+	}, [isTourSelectOpen]);
 
 	const showWhatsNew = useCallback((): void => {
 		const newSlides: ReleaseSlide[] = getReleaseSlidesForLastVersion();
@@ -73,7 +81,13 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 		<WhatsNewContext.Provider value={{ showWhatsNew, showWelcome }}>
 			{children}
 			<WhatsNewModal ref={whatsNewRef} slides={slides} />
-			<WelcomeModal ref={welcomeRef} />
+			<WelcomeModal
+				ref={welcomeRef}
+				onFinish={(): void => {
+					setShowTourHint(true);
+				}}
+			/>
+			{showTourHint && <TourHintPopup onClose={(): void => setShowTourHint(false)} />}
 		</WhatsNewContext.Provider>
 	);
 }

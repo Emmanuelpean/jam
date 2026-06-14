@@ -35,11 +35,14 @@ frontend_path = Path(__file__).parent.parent.parent / "frontend"
 sys.path.insert(0, str(backend_path))
 
 from app.database import create_db_url
+from app.config import settings
 from tests.utils.seed_database import reset_database, create_database_data
 from tests.utils.create_data.core import create_users
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+settings.test_mode = True
 
 # CSS for cursor and click highlighting
 HIGHLIGHT_CSS = """
@@ -267,7 +270,7 @@ class DemoBuilder:
 
     def __init__(
         self,
-        output_dir: str = "../frontend/src/assets/",
+        output_dir: str = "../../frontend/src/assets/",
         output_name: str = "demo.gif",
         fps: int = 30,
         headless: bool = True,
@@ -339,7 +342,9 @@ class DemoBuilder:
 
             if self.dark_mode:
                 for user in users:
-                    user.preferences.dark_mode = True
+                    user.preferences.dark_mode = "dark"
+                    user.preferences.theme = "blueberry"
+                    user.preferences.extension_banner_dismissed = True
                 db.commit()
 
             return users[0].email, users[0].plain_password
@@ -678,7 +683,8 @@ class DemoBuilder:
                 print(f"  Screenshotting: {page}...")
 
                 self.driver.get(url)
-                time.sleep(5)
+                WebDriverWait(self.driver, 60).until(ec.invisibility_of_element_located((By.ID, "loading-spinner")))
+                time.sleep(1)
 
                 screenshot_path = self.screenshot_output_path / f"{page}.png"
                 self.driver.save_screenshot(str(screenshot_path))

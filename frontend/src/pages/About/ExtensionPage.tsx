@@ -1,19 +1,14 @@
 import React, { JSX } from "react";
-import { Card, Col, Container, Row } from "react-bootstrap";
+import { Col, Container, Row } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.scss";
-
-interface Feature {
-	icon: string;
-	title: string;
-	description: string;
-}
+import AppFeaturesList, { Feature } from "./AppFeaturesList";
 
 const extensionFeatures: Feature[] = [
 	{
 		icon: "bi-cursor-fill",
 		title: "One-Click Import",
-		description: "Save any supported job listing to JAM in a single click — no manual data entry required",
+		description: "Save any supported job listing to JAM in a single click - no manual data entry required",
 	},
 	{
 		icon: "bi-magic",
@@ -28,87 +23,100 @@ const extensionFeatures: Feature[] = [
 	{
 		icon: "bi-grid",
 		title: "Multi-Platform Support",
-		description: "Works across LinkedIn, Indeed, NHS Jobs, and VeganJobs — with more platforms planned",
+		description: "Works across LinkedIn, Indeed, NHS Jobs, and VeganJobs - with more platforms planned",
 	},
 ];
 
 const ExtensionPage = (): JSX.Element => {
 	return (
-		<div className="gradient-bg" style={{ borderRadius: "18px", overflow: "hidden", minHeight: "100%" }}>
-			<Container className="py-5">
-				<div className="text-center mb-4">
-					<div className="extension-about-icon">
-						<i className="bi bi-puzzle-fill" />
-					</div>
-					<h2 className="display-5 fw-bold mt-3">SPREAD Chrome Extension</h2>
-					<a
-						href="https://chromewebstore.google.com/detail/spread/dnkmbfflallehleblligcokipgijnbhe"
-						target="_blank"
-						rel="noopener noreferrer"
-						className="extension-about-badge m-1"
-						style={{ textDecoration: "none" }}
-					>
-						<i className="bi bi-download me-1" />
-						Install from Chrome Web Store
-					</a>
-					<p
-						className="about-text-muted mt-2"
-						style={{ fontSize: "1.3rem", letterSpacing: "0.06em", textTransform: "uppercase" }}
-					>
-						Smart Plugin for Recruitment Extraction &amp; Aggregation of Data
-					</p>
-				</div>
-
-				<Row className="justify-content-center mb-4">
-					<Col lg={10}>
-						<Card className="glass-card border-0 p-4">
-							<Card.Body className="text-center">
-								<p className="fs-5 about-text-muted mb-0" style={{ lineHeight: "1.625" }}>
-									SPREAD is a Chrome extension that connects your browser directly to JAM. Browse job
-									listings on LinkedIn, Indeed, NHS Jobs or VeganJobs, click one button, and the full
-									job details are instantly imported — no copy-pasting, no manual entry.
-								</p>
-							</Card.Body>
-						</Card>
-					</Col>
-				</Row>
-
-				<div className="features-grid mb-4">
-					{extensionFeatures.map(
-						(feature: Feature, index: number): JSX.Element => (
-							<div className="feature-card p-4" key={index}>
-								<div className="d-flex align-items-start align-items-center">
-									<div className="feature-icon me-3">
-										<i className={`bi ${feature.icon}`} style={{ fontSize: "2rem" }} />
-									</div>
-									<div>
-										<h5 className="fw-bold mb-2">{feature.title}</h5>
-										<p className="about-text-muted mb-0">{feature.description}</p>
-									</div>
+		<div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+			<div className="about-container d-flex flex-column align-items-center justify-content-center">
+				<div className="hero-overlay">
+					<Container className="py-5">
+						<Row className="justify-content-center text-center py-5">
+							<Col lg={8}>
+								<div className="extension-about-icon">
+									<i className="bi bi-puzzle-fill" />
 								</div>
-							</div>
-						)
-					)}
+								<div
+									className="logo-text-below text-gradient-primary"
+									style={{ fontSize: "45px", fontWeight: "bold" }}
+								>
+									SPREAD
+								</div>
+								<div
+									className="d-flex flex-column flex-sm-row align-items-center justify-content-center gap-3 mt-3"
+									style={{ fontSize: "15.3px" }}
+								>
+									<div className="glass-badge">
+										<span className="about-text-muted">Version</span>
+										<span className="link-gradient ms-2">1.0.0</span>
+									</div>
+									<a
+										href="https://chromewebstore.google.com/detail/spread/dnkmbfflallehleblligcokipgijnbhe"
+										target="_blank"
+										rel="noopener noreferrer"
+										className="glass-badge link-gradient"
+										style={{ textDecoration: "none", fontSize: "15.3px" }}
+									>
+										<i className="bi bi-download me-2" />
+										Install from Chrome Web Store
+									</a>
+								</div>
+							</Col>
+						</Row>
+					</Container>
 				</div>
 
-				<div className="text-center">
-					<p className="about-text-muted mb-3" style={{ fontSize: "0.85rem" }}>
-						Supported platforms
-					</p>
-					<div className="d-flex justify-content-center gap-2 flex-wrap">
-						{[
-							{ label: "LinkedIn", color: "#0a66c2" },
-							{ label: "Indeed", color: "#0a66c2" },
-							{ label: "NHS Jobs", color: "#0a66c2" },
-							{ label: "VeganJobs", color: "#0a66c2" },
-						].map((p) => (
-							<span key={p.label} className="extension-platform-badge" style={{ background: p.color }}>
-								{p.label}
-							</span>
-						))}
-					</div>
-				</div>
-			</Container>
+				<Container className="py-5">
+					<Row className="justify-content-center mb-5">
+						<Col lg={12} className="text-center mb-2">
+							<h2 className="display-5 fw-bold">
+								Smart Plugin for Recruitment Extraction &amp; Aggregation of Data
+							</h2>
+						</Col>
+						<Col lg={10}>
+							<p
+								className="fs-5 about-text-muted mb-0"
+								style={{ lineHeight: "1.625", textAlign: "center" }}
+							>
+								SPREAD is a Chrome extension that connects your browser directly to JAM. Browse job
+								listings on aggregator websites such as LinkedIn and Indeed, click one button, and the
+								full job details are instantly imported - no copy-pasting, no manual entry.
+							</p>
+						</Col>
+					</Row>
+
+					<Row className="justify-content-center mb-5">
+						<Col lg={8} className="text-center mb-2">
+							<h2 className="display-5 fw-bold">What SPREAD Can Do For You</h2>
+						</Col>
+					</Row>
+					<AppFeaturesList features={extensionFeatures} className="mb-5" />
+
+					<Row className="justify-content-center">
+						<Col lg={8} className="text-center">
+							<p className="about-text-muted mb-3">Supported platforms</p>
+							<div className="d-flex justify-content-center gap-2 flex-wrap">
+								{[
+									{ label: "LinkedIn", color: "#0a66c2" },
+									{ label: "Indeed", color: "#0a66c2" },
+									{ label: "NHS Jobs", color: "#0a66c2" },
+									{ label: "VeganJobs", color: "#0a66c2" },
+								].map((p) => (
+									<span
+										key={p.label}
+										className="extension-platform-badge"
+										style={{ background: p.color }}
+									>
+										{p.label}
+									</span>
+								))}
+							</div>
+						</Col>
+					</Row>
+				</Container>
+			</div>
 		</div>
 	);
 };

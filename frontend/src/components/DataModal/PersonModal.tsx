@@ -1,24 +1,28 @@
 import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, Fields, JamDataModalProps, ValidationErrors } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { CompanyModal } from "./CompanyModal";
 import { PersonData, PersonTransform } from "../../services/schemas/DataTables";
 
-export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
+export const PersonModal = forwardRef<DataModalHandle<PersonData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const companyModalRef = React.useRef<DataModalHandle>(null);
-		const { companies } = useFormOptions();
+		const { companies, getCompanyPreviewConfig } = useFormOptions();
 		const dataContext: DataContextValue = useDataContext();
+		const ff = useFormFields();
 
 		const formFieldsArray: Fields = [
-			[formFields.firstName({ placeholder: "Jane" }), formFields.lastName({ placeholder: "Doe" })],
-			[formFields.company(companies, companyModalRef), formFields.role({ placeholder: "Team Leader" })],
-			[formFields.email({ placeholder: "jane.doe@company.com" }), formFields.phone()],
-			formFields.linkedinUrl({ placeholder: "https://linkedin.com/in/janedoe" }),
-			formFields.isRecruiter(),
+			[ff.firstNameField({ placeholder: "Jane" }), ff.lastNameField({ placeholder: "Doe" })],
+			[
+				ff.companyField(companies, companyModalRef, null, getCompanyPreviewConfig),
+				ff.roleField({ placeholder: "Team Leader" }),
+			],
+			[ff.emailField({ placeholder: "jane.doe@company.com" }), ff.phoneField()],
+			ff.linkedinUrlField({ placeholder: "https://linkedin.com/in/janedoe" }),
+			ff.isRecruiterField(),
 		];
 
 		const viewFieldsArray: Fields = [
@@ -35,23 +39,23 @@ export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 		const additionalFields: ModalViewField[] = [
 			modalViewFields.accordionInterviewTablePerson({
-				helpText: "Interviews attended by this person.",
+				helpText: "Interviews attended by this contact.",
 			}),
 			modalViewFields.accordionJobTablePerson({
-				helpText: "Jobs associated with this person as a contact.",
+				helpText: "Jobs associated with this contact.",
 			}),
 			modalViewFields.accordionRecruitedJobTablePerson({
-				helpText: "Jobs shared with you by this person.",
+				helpText: "Jobs shared with you by this contact.",
 			}),
 		];
 
-		const customValidation = async (formData: PersonData): Promise<ValidationErrors> => {
+		const customValidation = (formData: PersonData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 
 			const duplicates: PersonData[] = dataContext.persons.filter(
 				(person: PersonData): boolean =>
-					person.first_name.trim().toLowerCase() === formData.first_name.trim().toLowerCase() &&
-					person.last_name.trim().toLowerCase() === formData.last_name.trim().toLowerCase() &&
+					person.first_name.toLowerCase() === formData.first_name?.trim().toLowerCase() &&
+					person.last_name.toLowerCase() === formData.last_name?.trim().toLowerCase() &&
 					person.company_id === formData.company_id &&
 					person.id !== formData?.id
 			);
@@ -60,7 +64,7 @@ export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				errors.first_name =
 					errors.last_name =
 					errors.company_id =
-						`A person with this name and company already exists`;
+						`A contact with this name and company already exists`;
 			}
 			return errors;
 		};
@@ -80,7 +84,7 @@ export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 		return (
 			<>
-				<DataModal
+				<DataModal<PersonData>
 					ref={ref}
 					size={size}
 					fields={fields}

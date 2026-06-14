@@ -1,6 +1,7 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Card } from "react-bootstrap";
-import { ModalViewField, ModalViewFields, renderModalViewField } from "../rendering/view/ModalFields";
+import { ModalViewField, ModalViewFields, ModalViewFieldRenderer } from "../rendering/view/ModalFields";
 import "./FloatingPreview.scss";
 import { getColumnClass, normaliseArray } from "../../utils/Utils";
 
@@ -40,6 +41,11 @@ export const FloatingPreview = ({ data, fields, position, show }: FloatingPrevie
 			newLeft = viewportWidth - previewRect.width - 20;
 		}
 
+		// Check if preview would overflow left edge
+		if (newLeft < 20) {
+			newLeft = 20;
+		}
+
 		setAdjustedPosition({ top: newTop, left: newLeft });
 	}, [show, position]);
 
@@ -60,7 +66,7 @@ export const FloatingPreview = ({ data, fields, position, show }: FloatingPrevie
 				{itemList.map((field: ModalViewField): JSX.Element => {
 					return (
 						<div key={field.key} className={columnClass}>
-							{renderModalViewField(field as ModalViewField, data, `floating-preview-${data.id}`)}
+							<ModalViewFieldRenderer field={field as ModalViewField} item={data} id={`floating-preview-${data.id}`} />
 						</div>
 					);
 				})}
@@ -68,7 +74,7 @@ export const FloatingPreview = ({ data, fields, position, show }: FloatingPrevie
 		);
 	};
 
-	return (
+	return createPortal(
 		<div
 			ref={previewRef}
 			className="floating-preview-container"
@@ -76,7 +82,7 @@ export const FloatingPreview = ({ data, fields, position, show }: FloatingPrevie
 				position: "fixed",
 				top: `${adjustedPosition.top}px`,
 				left: `${adjustedPosition.left}px`,
-				zIndex: 9999,
+				zIndex: 10000,
 				maxWidth: "360px",
 			}}
 			onMouseDown={handleMouseDown}
@@ -84,6 +90,7 @@ export const FloatingPreview = ({ data, fields, position, show }: FloatingPrevie
 			<Card>
 				<Card.Body>{fields.map((item, index: number) => renderFieldGroup(item, index))}</Card.Body>
 			</Card>
-		</div>
+		</div>,
+		document.getElementById("jam-select-portal") ?? document.body
 	);
 };

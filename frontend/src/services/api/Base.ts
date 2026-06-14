@@ -1,7 +1,8 @@
 import { ApiError } from "./ApiError";
+import { parseDates } from "../../utils/TimeUtils";
 
-export const API_BASE_URL: string = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
-export const API_SERVICE_URL: string = process.env.REACT_APP_API_SERVICE_URL || "http://localhost:8001";
+export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+export const API_SERVICE_URL: string = import.meta.env.VITE_API_SERVICE_URL || "http://localhost:8001";
 
 const parseResponseBody = async (response: Response): Promise<any> => {
 	if (response.status === 204) {
@@ -42,13 +43,15 @@ export interface ApiResponse<T = any> {
 export type ApiResponsePromise<T = any> = Promise<ApiResponse<T>>;
 
 const handleResponse = async <T>(response: Response, responseType?: boolean): Promise<ApiResponse<T>> => {
-	const data = responseType ? await response.blob() : await parseResponseBody(response);
+	const rawData: any = responseType ? await response.blob() : await parseResponseBody(response);
 
 	if (!response.ok) {
-		const message = (data && (data.message || data.detail)) || `Request failed with status ${response.status}`;
-
-		throw new ApiError(message, response.status, data);
+		const message: string =
+			(rawData && (rawData.message || rawData.detail)) || `Request failed with status ${response.status}`;
+		throw new ApiError(message, response.status, rawData);
 	}
+
+	const data: any = responseType ? rawData : parseDates(rawData);
 
 	return {
 		data,

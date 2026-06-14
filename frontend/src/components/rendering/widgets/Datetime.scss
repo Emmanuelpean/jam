@@ -4,8 +4,37 @@
     align-items: center;
 }
 
-.datetime-input-with-icon {
-    padding-right: 3rem !important;
+.form-control.datetime-input-with-icon {
+
+    &::-webkit-calendar-picker-indicator {
+        display: none;
+    }
+    font: inherit;
+    color: var(--bs-body-color);
+
+    &::-webkit-datetime-edit,
+    &::-webkit-datetime-edit-fields-wrapper,
+    &::-webkit-datetime-edit-text,
+    &::-webkit-datetime-edit-day-field,
+    &::-webkit-datetime-edit-month-field,
+    &::-webkit-datetime-edit-year-field,
+    &::-webkit-datetime-edit-hour-field,
+    &::-webkit-datetime-edit-minute-field,
+    &::-webkit-datetime-edit-ampm-field {
+        color: var(--bs-body-color);
+    }
+
+    &.datetime-empty::-webkit-datetime-edit,
+    &.datetime-empty::-webkit-datetime-edit-fields-wrapper,
+    &.datetime-empty::-webkit-datetime-edit-text,
+    &.datetime-empty::-webkit-datetime-edit-day-field,
+    &.datetime-empty::-webkit-datetime-edit-month-field,
+    &.datetime-empty::-webkit-datetime-edit-year-field,
+    &.datetime-empty::-webkit-datetime-edit-hour-field,
+    &.datetime-empty::-webkit-datetime-edit-minute-field,
+    &.datetime-empty::-webkit-datetime-edit-ampm-field {
+        color: var(--placeholder-text-color);
+    }
 }
 
 .datetime-embedded-icon {
@@ -25,4 +54,17 @@
 
 .datetime-embedded-icon:hover {
     color: var(--primary-mid) !important;
+}
+
+.datetime-input-wrapper:has(.datetime-embedded-icon:hover) .form-control {
+    border-color: var(--primary-mid);
+}
+
+.datetime-calendar-icon {
+    right: 2.6rem;
+}
+
+.datetime-clear-icon {
+    right: 3.94rem;
+    font-size: 1.25rem;
 }

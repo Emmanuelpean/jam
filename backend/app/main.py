@@ -44,7 +44,7 @@ def get_allowed_origins() -> list[str]:
 
 
 app.add_middleware(
-    CORSMiddleware,
+    CORSMiddleware,  # type: ignore[arg-type]
     allow_origins=get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
@@ -62,7 +62,7 @@ async def demo_schema_middleware(request: Request, call_next):
             payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
             if payload.get("is_demo"):
                 database.demo_mode.set(True)
-        except Exception:
+        except jwt.PyJWTError:
             pass
     response = await call_next(request)
     database.demo_mode.set(False)
@@ -72,7 +72,6 @@ async def demo_schema_middleware(request: Request, call_next):
 # Data table routers
 app.include_router(data_table_routers.company_router)
 app.include_router(data_table_routers.person_router)
-app.include_router(data_table_routers.location_router)
 app.include_router(data_table_routers.job_router)
 app.include_router(data_table_routers.aggregator_router)
 app.include_router(data_table_routers.interview_router)
@@ -87,10 +86,10 @@ app.include_router(job_email_scraping_routers.job_alert_email_router)
 app.include_router(job_email_scraping_routers.job_scraping_service_log_router)
 app.include_router(job_email_scraping_routers.email_scraper_service_router)
 app.include_router(job_email_scraping_routers.scraping_filter_router)
+app.include_router(job_email_scraping_routers.scraping_favourite_filter_router)
 app.include_router(job_email_scraping_routers.forwarding_confirmation_router)
 
 # Job Rating routers
-app.include_router(job_rating_routers.llm_system_prompt_router)
 app.include_router(job_rating_routers.job_rating_router)
 app.include_router(job_rating_routers.job_rating_service_log_router)
 app.include_router(job_rating_routers.job_rating_service_router)
@@ -117,6 +116,7 @@ app.include_router(email_routers.email_template_router)
 # Others
 app.include_router(app_routers.other_router)
 app.include_router(app_routers.config_router)
+app.include_router(app_routers.tour_router)
 app.include_router(geolocation_routers.router)
 
 # Demo
@@ -125,10 +125,9 @@ app.include_router(demo_routers.demo_router)
 # Stripe
 app.include_router(payment_routers.payment_router)
 
-# Testing
-if settings.test_mode:
-    app.include_router(email_routers.email_test_router)
-    app.include_router(payment_routers.payment_test_router)
+# Testing (routes are protected by their own test_mode checks)
+app.include_router(email_routers.email_test_router)
+app.include_router(payment_routers.payment_test_router)
 
 
 @app.get("/")

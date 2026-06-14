@@ -1,0 +1,248 @@
+@keyframes cp-backdrop-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes cp-backdrop-out {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+
+@keyframes cp-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes cp-card-out {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.98);
+    }
+}
+
+.cp-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgb(0 0 0 / 45%);
+
+    &.opening { animation: cp-backdrop-in 0.15s ease forwards; }
+    &.closing  { animation: cp-backdrop-out 0.15s ease forwards; }
+}
+
+.cp-card {
+    width: 100%;
+    max-width: 560px;
+    max-height: calc(100vh - 120px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--bs-card-border-color);
+    border-radius: 10.8px;
+    background: var(--bs-body-bg);
+    box-shadow: 0 20px 60px rgb(0 0 0 / 30%);
+
+    &.opening { animation: cp-card-in 0.15s ease forwards; }
+    &.closing  { animation: cp-card-out 0.15s ease forwards; }
+}
+
+/* Search row — gradient accent line at bottom, same as .table-card-header */
+.cp-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px;
+
+    &::after {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 1.8px;
+        content: "";
+        opacity: 0.9;
+        background: var(--primary-gradient);
+    }
+}
+
+.cp-search-icon {
+    font-size: 1.25rem;
+    color: var(--bs-secondary-color);
+    flex-shrink: 0;
+}
+
+.cp-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.95rem;
+    color: var(--bs-body-color);
+
+    &::placeholder { color: var(--bs-secondary-color); }
+}
+
+.cp-esc-hint {
+    font-size: 0.7rem;
+    padding: 2px 7px;
+    border: 1px solid var(--bs-card-border-color);
+    border-radius: 4px;
+    color: var(--bs-secondary-color);
+    background: var(--bs-secondary-bg);
+    flex-shrink: 0;
+}
+
+/* Item list */
+.cp-list {
+    flex: 1;
+    overflow-y: auto;
+    margin: 0;
+    padding: 6px 8px;
+    list-style: none;
+    min-height: 0;
+
+    &::-webkit-scrollbar { width: 3.6px; }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--bs-border-color);
+        border-radius: 2px;
+    }
+}
+
+.cp-group-header {
+    padding: 8px 8px 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+}
+
+.cp-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    cursor: pointer;
+    border-radius: 7px;
+    transition: background 0.1s ease;
+
+    &:hover,
+    &.active {
+        background: var(--bs-border-color);
+    }
+
+    /* Gradient active state — matches sidebar .nav-item.active */
+    &.active {
+        background: var(--primary-mid);
+
+        .cp-item-icon-wrapper { background: rgb(255 255 255 / 20%); }
+        .cp-item-icon         { color: white; }
+        .cp-item-label        { color: white; }
+
+        .cp-shortcut kbd {
+            color: rgb(255 255 255 / 75%);
+            border-color: rgb(255 255 255 / 25%);
+            background: rgb(255 255 255 / 15%);
+            box-shadow: none;
+        }
+    }
+}
+
+/* Icon wrapper — matches .header-icon-wrapper but scaled down */
+.cp-item-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 7.2px;
+    background: var(--bs-secondary-bg);
+    flex-shrink: 0;
+}
+
+.cp-item-icon {
+    font-size: 0.95rem;
+    color: var(--bs-secondary-color);
+}
+
+.cp-item-label {
+    flex: 1;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--bs-body-color);
+}
+
+.cp-empty {
+    padding: 28px 16px;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--bs-secondary-color);
+    list-style: none;
+}
+
+/* Keyboard shortcut badges */
+.cp-shortcut {
+    display: flex;
+    gap: 3px;
+    flex-shrink: 0;
+
+    kbd {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        padding: 1px 6px;
+        font-size: 0.7rem;
+        font-family: inherit;
+        border: 1px solid var(--bs-card-border-color);
+        border-radius: 4px;
+        background: var(--bs-secondary-bg);
+        color: var(--bs-secondary-color);
+        box-shadow: 0 1px 0 var(--bs-card-border-color);
+    }
+}
+
+/* Footer hint bar */
+.cp-footer {
+    display: flex;
+    gap: 16px;
+    padding: 9px 16px;
+    border-top: 1px solid var(--bs-card-border-color);
+    font-size: 0.7rem;
+    color: var(--bs-secondary-color);
+    background: var(--bs-secondary-bg);
+
+    span {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    kbd {
+        padding: 1px 5px;
+        font-size: 0.65rem;
+        font-family: inherit;
+        border: 1px solid var(--bs-card-border-color);
+        border-radius: 3px;
+        background: var(--bs-body-bg);
+        color: var(--bs-secondary-color);
+    }
+}

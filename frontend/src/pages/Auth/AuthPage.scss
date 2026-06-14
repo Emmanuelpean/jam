@@ -133,7 +133,7 @@
         &::before {
             position: absolute;
             top: -5.4px;
-            left: 21.6px;
+            left: 26px;
             width: 10.8px;
             height: 10.8px;
             content: "";
@@ -206,10 +206,19 @@
     color: var(--primary-mid) !important;
     border: none !important;
     background: none !important;
+    font-weight: 600;
+    font-size: 0.88rem
 }
 
 .btn-link:hover {
     transform: translateY(-1px);
+    color: var(--primary-mid) !important;
+}
+
+.btn-link:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 .card-footer {
@@ -221,6 +230,29 @@
 
 .card-footer a:hover {
     text-decoration: underline;
+}
+
+/* Final registration step: consent + CAPTCHA */
+.step3-label {
+    font-size: 1rem;
+    font-weight: 600;
+    display: block;
+    margin-top: 1.2rem;
+    margin-bottom: 0.6rem;
+
+    i {
+        margin-right: 0.4rem;
+        color: var(--primary-mid);
+    }
+}
+
+.captcha-section {
+    margin-top: 1.2rem;
+
+    .turnstile-widget {
+        display: flex;
+        justify-content: center;
+    }
 }
 
 /* Mobile logo - always displayed when rendered */

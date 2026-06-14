@@ -1,6 +1,6 @@
 import React, { forwardRef, useRef } from "react";
 import DataModal, { DataModalHandle, DataModalProps, Fields, ValidationErrors } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
@@ -8,20 +8,21 @@ import { CompanyModal } from "./CompanyModal";
 import { PersonModal } from "./PersonModal";
 import { SpeculativeApplicationData, SpeculativeApplicationDataTransform } from "../../services/schemas/DataTables";
 
-export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModalProps>(
+export const SpeculativeApplicationModal = forwardRef<DataModalHandle<SpeculativeApplicationData>, DataModalProps>(
 	({ size = "lg" }: DataModalProps, ref) => {
 		const personModalRef = useRef<DataModalHandle>(null);
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const dataContext: DataContextValue = useDataContext();
-		const { companies, persons } = useFormOptions();
+		const { companies, persons, getCompanyPreviewConfig } = useFormOptions();
+		const ff = useFormFields();
 
 		const jobFormFields: Fields = [
 			[
-				formFields.datetime({ required: false }),
-				formFields.company(companies, companyModalRef, null, null, { required: true }),
+				ff.companyField(companies, companyModalRef, null, getCompanyPreviewConfig, { required: true }),
+				ff.datetimeField({ required: false }),
 			],
-			[formFields.email({ name: "contact_email" }), formFields.contacts(persons, personModalRef)],
-			formFields.note(),
+			[ff.emailField({ key: "contact_email" }), ff.contactsField(persons, personModalRef)],
+			ff.noteField(),
 		];
 
 		const jobViewFields: Fields = [
@@ -32,7 +33,7 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModal
 
 		const transformData = (formData: SpeculativeApplicationDataTransform): SpeculativeApplicationDataTransform => {
 			return {
-				date: formData.date ? new Date(formData.date) : null,
+				date: formData.date,
 				note: formData.note?.trim() || null,
 				contact_email: formData.contact_email?.trim() || null,
 				company_id: formData.company_id,
@@ -40,7 +41,7 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModal
 			};
 		};
 
-		const customValidation = async (formData: SpeculativeApplicationData): Promise<ValidationErrors> => {
+		const customValidation = (formData: SpeculativeApplicationData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 
 			if (formData.company_id) {
@@ -58,7 +59,7 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModal
 
 		return (
 			<>
-				<DataModal
+				<DataModal<SpeculativeApplicationData>
 					ref={ref}
 					transformFormData={transformData}
 					entityType="speculativeApplication"

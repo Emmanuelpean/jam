@@ -4,6 +4,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.job_email_scraping.models import ScrapedJob, ScrapingExclusionFilter, ScrapingFavouriteFilter
+from app.job_email_scraping.schemas import ScrapingFilterCreate
 
 STRING_OPERATORS = [
     "contains",
@@ -14,10 +15,12 @@ STRING_OPERATORS = [
     "not_equals",
 ]
 
+NUM_OPERATORS = ["less_than", "greater_than"]
+
 
 def apply_rule_to_values(
     job_value: str | float | int,
-    rule_value: str | float | int,
+    rule_value: str,
     op: str,
     case_sensitive: bool,
 ) -> bool:
@@ -28,43 +31,45 @@ def apply_rule_to_values(
     :param case_sensitive: Whether the comparison should be case-sensitive.
     :return: True if the rule matches (i.e. job should be filtered out)."""
 
-    # Normalise strings for case-insensitive ops
-    if isinstance(job_value, str) and not case_sensitive and op in STRING_OPERATORS:
-        job_value = job_value.lower()
-        rule_value = rule_value.lower()
+    # String operations
+    if op in STRING_OPERATORS:
+        job_value = str(job_value)
+        if not case_sensitive:
+            job_value = job_value.lower()
+            rule_value = rule_value.lower()
 
-    # String operators
-    if op == "contains":
-        return isinstance(job_value, str) and rule_value in job_value
-    if op == "not_contains":
-        return isinstance(job_value, str) and rule_value not in job_value
-    if op == "equals":
-        return job_value == rule_value
-    if op == "not_equals":
-        return job_value != rule_value
-    if op == "starts_with":
-        return isinstance(job_value, str) and job_value.startswith(rule_value)
-    if op == "ends_with":
-        return isinstance(job_value, str) and job_value.endswith(rule_value)
+        if op == "contains":
+            return rule_value in job_value
+        if op == "not_contains":
+            return rule_value not in job_value
+        if op == "equals":
+            return job_value == rule_value
+        if op == "not_equals":
+            return job_value != rule_value
+        if op == "starts_with":
+            return job_value.startswith(rule_value)
+        if op == "ends_with":
+            return job_value.endswith(rule_value)
 
-    # Numeric operators
-    try:
-        num_val = float(job_value)
-        num_rule = float(rule_value)
-    except (TypeError, ValueError):
-        return False
+    # Numeric operations
+    if op in NUM_OPERATORS:
+        try:
+            num_val = float(job_value)
+            num_rule = float(rule_value)
+        except (TypeError, ValueError):
+            return False
 
-    if op == "less_than":
-        return num_val <= num_rule
-    if op == "greater_than":
-        return num_val >= num_rule
+        if op == "less_than":
+            return num_val <= num_rule
+        if op == "greater_than":
+            return num_val >= num_rule
 
     return False
 
 
 def job_matches_rule_python(
-    job: ScrapedJob | ScrapingFavouriteFilter,
-    job_filter: ScrapingExclusionFilter,
+    job: ScrapedJob,
+    job_filter: ScrapingExclusionFilter | ScrapingFavouriteFilter,
 ) -> bool:
     """Check if a job matches a given filter rule using Python logic.
     :param job: The ScrapedJob instance to check.
@@ -72,7 +77,7 @@ def job_matches_rule_python(
     :return: True if the job matches the rule (i.e. should be filtered out)."""
 
     field_value = getattr(job, job_filter.type, None)
-    if field_value is None:
+    if not isinstance(field_value, (str, int, float)):
         return False
 
     return apply_rule_to_values(
@@ -106,30 +111,7 @@ def is_job_filtered_out(
         return None
 
 
-def is_job_favoured(
-    session: Session,
-    job: ScrapedJob,
-) -> ScrapingExclusionFilter | None:
-    """Check if a job should be favoured out for a given user based on their rules.
-    :param session: SQLAlchemy session for database access.
-    :param job: The ScrapedJob instance to check.
-    :return: True if the job should be filtered out for the user."""
-
-    rules = (
-        session.query(ScrapingFavouriteFilter)
-        .filter(ScrapingFavouriteFilter.owner_id == job.owner_id)
-        .filter(ScrapingFavouriteFilter.is_active.is_(True))
-        .all()
-    )
-
-    for rule in rules:
-        if job_matches_rule_python(job, rule):
-            return rule
-    else:
-        return None
-
-
-def rule_to_sql_predicate(job_filter: ScrapingExclusionFilter):
+def rule_to_sql_predicate(job_filter: ScrapingExclusionFilter | ScrapingFavouriteFilter | ScrapingFilterCreate):
     """Convert a rule into a SQLAlchemy expression that matches jobs to EXCLUDE.
     Only applies if the field is not NULL."""
 
@@ -165,5 +147,5 @@ def rule_to_sql_predicate(job_filter: ScrapingExclusionFilter):
         else:
             raise ValueError(f"Unsupported operator: {op}")
 
-    # CRUCIAL: Only exclude if field is NOT NULL
+    # Only exclude if field is NOT NULL
     return field.isnot(None) & condition

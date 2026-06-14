@@ -1,39 +1,31 @@
 import React, { forwardRef, useRef } from "react";
 import DataModal, { DataModalHandle, Fields, JamDataModalProps } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { useFormOptions } from "../rendering/form/FormOptions";
-import { LocationModal } from "./LocationModal";
 import { PersonModal } from "./PersonModal";
-import { InterviewDataTransform, JobData } from "../../services/schemas/DataTables";
+import { EnrichedInterviewData, InterviewDataTransform } from "../../services/schemas/DataTables";
 
 export interface InterviewModalProps extends JamDataModalProps {
 	jobId?: number;
 }
-export const InterviewModal = forwardRef<DataModalHandle, InterviewModalProps>(
-	({ size = "lg", jobId }: InterviewModalProps, ref) => {
-		const locationModalRef = useRef<DataModalHandle>(null);
+export const InterviewModal = forwardRef<DataModalHandle<EnrichedInterviewData>, InterviewModalProps>(
+	({ size = "lg", jobId }: InterviewModalProps, ref): JSX.Element => {
 		const personModalRef = useRef<DataModalHandle>(null);
-		const { locations, persons, jobs } = useFormOptions();
+		const { persons, jobs, getPersonPreviewConfig } = useFormOptions();
+		const ff = useFormFields();
 
 		const formFieldsArray: Fields = [
-			...(!jobId ? [formFields.job(jobs)] : []),
+			...(!jobId ? [ff.jobField(jobs)] : []),
 			[
-				formFields.datetime({
+				ff.datetimeField({
 					required: true,
 				}),
-				formFields.interviewType(),
+				ff.interviewTypeField(),
 			],
-			[
-				formFields.interviewAttendanceType(),
-				formFields.location(locations, locationModalRef, null, null, {
-					displayCondition: (formData: JobData): boolean => {
-						return formData.attendance_type === "on-site";
-					},
-				}),
-			],
-			formFields.interviewers(persons, personModalRef),
-			formFields.note({
+			[ff.interviewAttendanceTypeField(), ff.locationField()],
+			ff.interviewersField(persons, personModalRef, null, getPersonPreviewConfig),
+			ff.noteField({
 				placeholder: "Add notes about the interview, questions asked, impressions, etc...",
 			}),
 		];
@@ -52,9 +44,9 @@ export const InterviewModal = forwardRef<DataModalHandle, InterviewModalProps>(
 
 		const transformFormData = (data: InterviewDataTransform): InterviewDataTransform => {
 			return {
-				date: new Date(data.date),
+				date: data.date,
 				type: data.type,
-				location_id: data.location_id,
+				location: data.location?.trim() || null,
 				job_id: jobId || data.job_id,
 				attendance_type: data.attendance_type,
 				interviewers: data.interviewers || [],
@@ -64,7 +56,7 @@ export const InterviewModal = forwardRef<DataModalHandle, InterviewModalProps>(
 
 		return (
 			<>
-				<DataModal
+				<DataModal<EnrichedInterviewData>
 					ref={ref}
 					size={size}
 					fields={fields}
@@ -72,7 +64,6 @@ export const InterviewModal = forwardRef<DataModalHandle, InterviewModalProps>(
 					transformFormData={transformFormData}
 				/>
 
-				<LocationModal ref={locationModalRef} />
 				<PersonModal ref={personModalRef} />
 			</>
 		);

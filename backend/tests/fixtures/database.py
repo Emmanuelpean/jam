@@ -13,11 +13,12 @@ from tests.utils.seed_database import reset_database
 @pytest.fixture(scope="session")
 def worker_database_name(worker_id) -> str:
     """Generate unique database name for each worker."""
-    DATABASE_NAME = "jam_test"
+
+    database_name = "jam_test"
     if worker_id == "master":
-        return DATABASE_NAME
+        return database_name
     else:
-        return f"{DATABASE_NAME}_{worker_id}"
+        return f"{database_name}_{worker_id}"
 
 
 @pytest.fixture(scope="session")
@@ -54,8 +55,8 @@ def engine(database_url, worker_id) -> Generator[Engine, Any, None]:
 def session(engine) -> Generator[orm.Session, Any, None]:
     """Fixture that sets up and tears down a new database session for each test function."""
     reset_database(engine, False)
-    TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    db = TestingSessionLocal()
+    testing_session_local = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db = testing_session_local()
     try:
         yield db
     finally:

@@ -3,7 +3,7 @@
 import pytest
 
 from app.job_email_scraping.email_parsers.nhs import parse_nhs_job_email, extract_alert_name
-from tests.job_email_scraping.resources import NHS_EMAIL_3, NHS_EMAIL_4
+from tests.utils.job_email_resources import NHS_EMAIL_3, NHS_EMAIL_4
 
 
 class TestParseIndeedJobEmail:
@@ -210,6 +210,7 @@ class TestExtractJobAlertTitle:
         """Test that parts are separated by single space."""
         html = "<td><h3>Your job alert settings</h3><li>Your keywords: test</li><li>Your location: city</li></td>"
         result = extract_alert_name(html)
+        assert result
         assert result.count(" ") == 1  # Only one space between parts
 
     def test_multiple_td_elements_finds_correct_one(self) -> None:

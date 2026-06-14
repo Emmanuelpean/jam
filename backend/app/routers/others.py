@@ -4,10 +4,12 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
 from app import models, database
+from app.base_schemas import COLUMN_LIMITS
 from app.config import settings
 from app.core.models import get_setting_value
+from app.core.schemas import ConfigOut
 from app.job_email_scraping.email_parsers import PLATFORM_SENDER_EMAILS
-from app.resources import COUNTRIES, CURRENCIES
+from app.resources import CURRENCIES
 
 other_router = APIRouter(prefix="/others", tags=["others"])
 
@@ -17,13 +19,6 @@ def get_currencies() -> list[dict]:
     """Get the list of currencies."""
 
     return CURRENCIES
-
-
-@other_router.get("/countries/", response_class=JSONResponse)
-def get_countries() -> list[dict]:
-    """Get the list of countries."""
-
-    return COUNTRIES
 
 
 config_router = APIRouter(prefix="/config", tags=["config"])
@@ -38,7 +33,7 @@ def get_demo_credentials(db) -> str:
     return user.email
 
 
-@config_router.get("/")
+@config_router.get("/", response_model=ConfigOut)
 def get_config(
     db=Depends(database.get_db),
 ) -> dict:
@@ -51,6 +46,10 @@ def get_config(
         "min_password_length": settings.min_password_length,
         "app_demo_username": get_demo_credentials(db),
         "scrape_max_retry": settings.scrape_max_retry,
+        "max_file_size_mb": settings.max_file_size_mb,
+        "monthly_scrape_quota": settings.monthly_scrape_quota,
+        "turnstile_site_key": settings.turnstile_site_key,
+        "column_limits": COLUMN_LIMITS,
     }
 
 

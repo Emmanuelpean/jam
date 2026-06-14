@@ -81,11 +81,6 @@ export const useToast = (): UseToastReturn => {
 		};
 
 		setToasts((prev: Toast[]): Toast[] => [...prev, newToast]);
-
-		// Auto-hide after delay
-		setTimeout(() => {
-			hideToast(id);
-		}, delay);
 	};
 
 	const hideToast = (id: number): void => {

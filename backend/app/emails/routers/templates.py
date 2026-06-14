@@ -1,20 +1,16 @@
 """Router to get email templates"""
 
-from pathlib import Path
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from starlette import status
 
 from app import models
 from app.config import settings
 from app.core import oauth2
 from app.routers.utility import assert_admin
+from app.emails.templates import email_templates
 
 email_template_router = APIRouter(prefix="/email-templates", tags=["email-templates"])
-
-_templates = Jinja2Templates(directory=str(Path(__file__).parent.parent / "templates"))
 
 _SAMPLE_DATA: dict[str, dict] = {
     "email_confirmation": {
@@ -83,5 +79,10 @@ def preview_email_template(
     if template_name not in _SAMPLE_DATA:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Template '{template_name}' not found")
 
-    template = _templates.env.get_template(f"{template_name}.html")
-    return template.render(**_SAMPLE_DATA[template_name])
+    if email_templates.env:
+        template = email_templates.env.get_template(f"{template_name}.html")
+        return template.render(**_SAMPLE_DATA[template_name])
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Jinja2 environment not initialized"
+        )

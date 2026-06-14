@@ -2,6 +2,7 @@ import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../DataModal/ScrapedJobModal";
+import { ScrapedJobData } from "../../services/schemas/Services";
 
 interface ScrapedJobsTableReadOnlyProps extends DataTableProps {
 	viewOnly?: boolean;
@@ -13,23 +14,23 @@ const ScrapedJobsTableReadOnly: React.FC<ScrapedJobsTableReadOnlyProps> = ({
 	onSuccess,
 	viewOnly = false,
 }: ScrapedJobsTableReadOnlyProps): JSX.Element => {
-	const defaultColumns: TableColumn[] =
+	const defaultColumns: TableColumn<ScrapedJobData>[] =
 		columns.length > 0
-			? columns
+			? (columns as TableColumn<ScrapedJobData>[])
 			: [
-					tableColumns.titleColumn(),
-					tableColumns.scrapedCompanyColumn(),
-					tableColumns.scrapedLocationColumn(),
-					tableColumns.salaryRangeColumn(),
-					tableColumns.isImportedColumn(),
-					tableColumns.isActiveColumn(),
-					tableColumns.urlGenericColumn(),
-					tableColumns.createdAtColumn({ label: "Date Received" }),
+					tableColumns.titleColumn<ScrapedJobData>(),
+					tableColumns.scrapedCompanyColumn<ScrapedJobData>(),
+					tableColumns.locationBadgeColumn<ScrapedJobData>(),
+					tableColumns.salaryRangeColumn<ScrapedJobData>(),
+					tableColumns.isImportedColumn<ScrapedJobData>(),
+					tableColumns.isActiveColumn<ScrapedJobData>({ label: "Deleted" }),
+					tableColumns.urlGenericColumn<ScrapedJobData>(),
+					tableColumns.createdAtColumn<ScrapedJobData>({ label: "Date Received" }),
 				];
 
 	return (
 		<>
-			<DataTable
+			<DataTable<ScrapedJobData>
 				entityType="scrapedJob"
 				mode={viewOnly ? "default" : "import"}
 				columns={defaultColumns}

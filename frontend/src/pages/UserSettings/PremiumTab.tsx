@@ -1,7 +1,9 @@
 import React, { JSX, ReactNode, useEffect, useRef, useState } from "react";
-import { Alert, Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
+import { Link } from "react-router-dom";
+import { Alert, Badge, Card, Col, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
+import { Tooltip } from "../../components/Tooltip/Tooltip";
 import { useConfig } from "../../contexts/ConfigContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAlert } from "../../contexts/AlertContext";
@@ -11,7 +13,10 @@ import { paymentsApi, PortalSessionResponse } from "../../services/api/Payments"
 import { ScrapingGuideModal, ScrapingGuideModalHandle } from "../../components/ScrapingGuideModal/ScrapingGuideModal";
 import { forwardingConfirmationApi } from "../../services/api/Services";
 import { ForwardingConfirmationLinkData } from "../../services/schemas/Services";
-import { PremiumDetails } from "../../services/schemas/Core";
+import { PremiumDetails, UserQualification } from "../../services/schemas/Core";
+import { userQualificationApi } from "../../services/api/Users";
+
+export const PREMIUM_PRICE = "£8";
 
 interface SubscriptionStatusDisplay {
 	title: string;
@@ -108,6 +113,7 @@ export const PremiumTab = (): JSX.Element => {
 	const [jobRatingLoading, setJobRatingLoading] = useState<boolean>(false);
 	const [jobScrapingLoading, setJobScrapingLoading] = useState<boolean>(false);
 	const [confirmationLink, setConfirmationLink] = useState<ForwardingConfirmationLinkData | null>(null);
+	const [qualifications, setQualifications] = useState<UserQualification | null>(null);
 
 	// Poll user data every 5 seconds while tab is active
 	useEffect(() => {
@@ -122,6 +128,20 @@ export const PremiumTab = (): JSX.Element => {
 			void clearInterval(intervalId);
 		};
 	}, [token, fetchUserInfo]);
+
+	// Fetch qualifications to check completeness for premium users
+	useEffect((): void => {
+		if (!token || !currentUser?.premium.is_active) return;
+		const fetch = async (): Promise<void> => {
+			try {
+				const response: ApiResponse<UserQualification> = await userQualificationApi.getLatest(token);
+				setQualifications(response.data ?? null);
+			} catch {
+				setQualifications(null);
+			}
+		};
+		void fetch();
+	}, [token, currentUser?.premium.is_active]);
 
 	// Fetch pending forwarding confirmation links
 	useEffect((): void => {
@@ -211,12 +231,6 @@ export const PremiumTab = (): JSX.Element => {
 		});
 	};
 
-	const copyScraperEmail = (_: React.MouseEvent): void => {
-		navigator.clipboard.writeText(config.support_email).then((_: void): void => {
-			showToastSuccess(`${config.support_email} copied to clipboard`);
-		});
-	};
-
 	const statusDisplay: SubscriptionStatusDisplay = getSubscriptionStatusDisplay(
 		currentUser?.stripe_details.subscription_status ?? null,
 		currentUser?.stripe_details.trial_end_date ?? null,
@@ -226,6 +240,21 @@ export const PremiumTab = (): JSX.Element => {
 	const hasActiveSubscription: boolean = ["active", "trialing", "paused"].includes(
 		currentUser?.stripe_details.subscription_status || ""
 	);
+
+	const QUALIFICATION_FIELDS: {
+		key: "experience" | "skills" | "qualities" | "education" | "interests";
+		label: string;
+	}[] = [
+		{ key: "experience", label: "Experience" },
+		{ key: "skills", label: "Skills" },
+		{ key: "qualities", label: "Qualities" },
+		{ key: "education", label: "Education" },
+		{ key: "interests", label: "Interests" },
+	];
+	const missingQualificationFields =
+		currentUser?.premium.is_active && currentUser?.premium.job_rating_active
+			? QUALIFICATION_FIELDS.filter((f) => !qualifications?.[f.key]?.trim())
+			: [];
 
 	const jobBoards: JobBoard[] = [
 		{ name: "LinkedIn", url: "https://linkedin.com", icon: "linkedin", emailKey: "linkedin" },
@@ -294,22 +323,22 @@ export const PremiumTab = (): JSX.Element => {
 			<Card className="mb-4">
 				<Card.Body className={"premium-card"}>
 					{/* Subscription Status Section */}
-					<div className="text-center mb-4">
+					<div className="text-center pt-2 pb-1">
 						<div className="premium-status-icon mx-auto mb-3">
 							<i className={statusDisplay.icon}></i>
 						</div>
 						<h3 className="mb-2" id="status-title">
 							{statusDisplay.title}
 						</h3>
-						<p className="text-muted mb-4" style={{ fontSize: "1rem" }} id={"status-message"}>
+						<div className="text-muted" style={{ fontSize: "1rem" }} id={"status-message"}>
 							{statusDisplay.message}
-						</p>
+						</div>
 
 						{/* Action Buttons */}
 						{statusDisplay.showSubscribeButton ? (
 							<div className="d-flex flex-column align-items-center gap-3">
 								<div className="premium-price-tag">
-									<span style={{ fontSize: "1.5rem", fontWeight: 700 }}>£5</span>
+									<span style={{ fontSize: "1.5rem", fontWeight: 700 }}>{PREMIUM_PRICE}</span>
 									<span style={{ opacity: 0.8 }}>/month</span>
 								</div>
 								{!currentUser?.stripe_details.trial_end_date && (
@@ -329,7 +358,7 @@ export const PremiumTab = (): JSX.Element => {
 						) : hasActiveSubscription ? (
 							<div className="d-flex flex-column align-items-center gap-3">
 								<div className="premium-price-tag">
-									<span style={{ fontSize: "1.25rem", fontWeight: 600 }}>£5</span>
+									<span style={{ fontSize: "1.25rem", fontWeight: 600 }}>{PREMIUM_PRICE}</span>
 									<span style={{ opacity: 0.8 }}>/month</span>
 								</div>
 								<ActionButton
@@ -396,7 +425,7 @@ export const PremiumTab = (): JSX.Element => {
 							</div>
 
 							<p>
-								Automatically scrape and import jobs from job aggregator platforms (<i>e.g.</i> Linkedin
+								Automatically scrape and import jobs from job aggregator platforms (<i>e.g.</i> LinkedIn
 								and Indeed) job alert emails.
 							</p>
 
@@ -409,33 +438,33 @@ export const PremiumTab = (): JSX.Element => {
 							<p className="mb-4">
 								<strong>Stage 2 - Deep Scraping</strong>: JAM then visits the corresponding job board
 								page to collect richer information like the full job description. This deeper scraping
-								is limited to XX jobs per month per user. After this limit is reached, new job alert
-								emails are still parsed, but their job pages are not scraped further.
+								is limited to {config?.monthly_scrape_quota} jobs per month per user. After this limit
+								is reached, new job alert emails are still parsed, but their job pages are not scraped
+								further.
 							</p>
 							<p>
-								Each scraped job appears in your dashboard, where you can review, import, or remove it.
-								The location and company fields are automatically suggested based on your existing
-								entries. You can also apply scraping filters to refine the results. For example, you can
-								exclude jobs posted by specific companies or filter by location, salary range, or
-								keywords.
+								Scraped jobs appear in the <Link to="/job-alerts/jobs">scraped job table</Link>, where
+								you can review, import, or delete them. You can also apply scraping filters to refine
+								the results. For example, you can exclude jobs posted by specific companies or filter by
+								location, salary range, or keywords.
 							</p>
 
 							<h6 className="premium-feature-section-title">Supported job boards:</h6>
 							<div className="job-board-badges">
-								{jobBoards.map((board) => {
-									const email = config?.platform_sender_emails?.[board.emailKey];
+								{jobBoards.map((board: JobBoard): JSX.Element => {
+									const email: string = config?.platform_sender_emails?.[board.emailKey];
 									return (
-										<OverlayTrigger
+										<Tooltip
 											key={board.name}
 											placement="top"
-											overlay={
-												<Tooltip>
+											content={
+												<>
 													<div>Forward emails from:</div>
 													<div style={{ whiteSpace: "nowrap" }}>{email}</div>
 													<div style={{ fontSize: "0.85em", opacity: 0.8 }}>
 														(Right-click to copy)
 													</div>
-												</Tooltip>
+												</>
 											}
 										>
 											<Badge
@@ -450,7 +479,7 @@ export const PremiumTab = (): JSX.Element => {
 												<i className={`bi bi-${board.icon} me-1`}></i>
 												{board.name}
 											</Badge>
-										</OverlayTrigger>
+										</Tooltip>
 									);
 								})}
 							</div>
@@ -498,14 +527,29 @@ export const PremiumTab = (): JSX.Element => {
 								)}
 							</div>
 
+							{missingQualificationFields.length > 0 && (
+								<Alert id="incomplete-qualifications-alert" variant="warning" className="mt-3 mb-3">
+									<p className="mb-1 small fw-semibold">
+										<i className="bi bi-exclamation-triangle me-2" />
+										Incomplete profile — scoring may be less accurate
+									</p>
+									<p className="mb-2 small">
+										Missing:{" "}
+										<strong>{missingQualificationFields.map((f) => f.label).join(", ")}</strong>
+									</p>
+									<Link to="/settings/qualifications" className="small alert-link">
+										Complete your profile <i className="bi bi-arrow-right ms-1" />
+									</Link>
+								</Alert>
+							)}
 							<p>
-								Our AI analyses every job opportunity against your qualifications, delivering
+								Claude is used to analyse every job opportunity against your qualifications, delivering
 								personalised match scores so you can focus on roles that truly matter.
 							</p>
 
 							<h6 className="premium-feature-section-title">How It Works</h6>
 							<p className="small">
-								When jobs are collected, AI automatically evaluates each one against your experience,
+								Once jobs are scraped, Claude automatically evaluates each one against your experience,
 								education, skills, and interests - no manual work required.
 							</p>
 
@@ -513,27 +557,27 @@ export const PremiumTab = (): JSX.Element => {
 							<ul className="scoring-dimensions">
 								<li>
 									<span>
-										<strong>Overall Match</strong> — Holistic assessment of profile fit
+										<strong>Overall Match</strong> - Holistic assessment of profile fit
 									</span>
 								</li>
 								<li>
 									<span>
-										<strong>Technical Fit</strong> — Skills and methodology alignment
+										<strong>Technical Fit</strong> - Skills and methodology alignment
 									</span>
 								</li>
 								<li>
 									<span>
-										<strong>Experience</strong> — Background and career level match
+										<strong>Experience</strong> - Background and career level match
 									</span>
 								</li>
 								<li>
 									<span>
-										<strong>Education</strong> — Academic credential compatibility
+										<strong>Education</strong> - Academic credential compatibility
 									</span>
 								</li>
 								<li>
 									<span>
-										<strong>Interest</strong> — Career goals and passion alignment
+										<strong>Interest</strong> - Career goals and passion alignment
 									</span>
 								</li>
 							</ul>

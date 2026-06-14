@@ -7,6 +7,7 @@ content), and records run statistics in an JobScrapingServiceLog."""
 
 import datetime as dt
 import traceback
+from enum import Enum
 
 from sqlalchemy import or_
 
@@ -17,10 +18,10 @@ from app.emails.email_service import EmailService
 from app.geolocation.geolocation import geocode_location
 from app.job_email_scraping.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
-from app.job_email_scraping.filtering import is_job_filtered_out, is_job_favoured
+from app.job_email_scraping.filtering import is_job_filtered_out
 from app.job_email_scraping.gmail import extract_forwarding_confirmation_link, extract_gmail_originator
 from app.job_email_scraping.job_scrapers import SCRAPERS
-from app.job_email_scraping.location_parser import LocationParser
+from app.job_email_scraping.location_parser import parse_location
 from app.job_email_scraping.models import (
     JobEmail,
     ScrapedJob,
@@ -36,6 +37,17 @@ from app.utils import AppLogger
 SERVICE_NAME = "email_scraper_service"
 
 
+class EmailProvider(Enum):
+    """Enum of email providers"""
+
+    GMAIL = "gmail"
+
+
+FORWARDING_EMAILS = {EmailProvider.GMAIL: "forwarding-noreply@google.com"}
+FORWARDING_LINK_EXTRACTORS = {EmailProvider.GMAIL: extract_forwarding_confirmation_link}
+ORIGINATOR_EXTRACTORS = {EmailProvider.GMAIL: extract_gmail_originator}
+
+
 class JobEmailScraper(EmailService):
     """Job Email Alert Scraper"""
 
@@ -44,7 +56,7 @@ class JobEmailScraper(EmailService):
         :param db: optional database session for testing"""
 
         EmailService.__init__(self, settings.scraper_email_username, settings.scraper_email_password)
-        self.location_parser = LocationParser()
+
         self.logger = AppLogger.create_service_logger(SERVICE_NAME, "INFO")
         self.db = next(get_db()) if db is None else db
 
@@ -52,7 +64,6 @@ class JobEmailScraper(EmailService):
         """Create a new service log entry
         :param kwargs: JobEmailScrapingServiceLog keyword arguments"""
 
-        # noinspection PyArgumentList
         service_log_entry = JobEmailScrapingServiceLog(**kwargs)
         self.db.add(service_log_entry)
         self.db.commit()
@@ -106,7 +117,6 @@ class JobEmailScraper(EmailService):
         :return: JobEmailScrapingServiceError instance"""
 
         tb = traceback.format_exc()
-        # noinspection PyArgumentList
         err = JobEmailScrapingServiceError(
             error_type=type(exc).__name__,
             message=str(exc),
@@ -140,19 +150,25 @@ class JobEmailScraper(EmailService):
 
         return self.get_user_monthly_scrape_count(owner_id) >= settings.monthly_scrape_quota
 
-    def extract_forwarding_email_confirmation(self, service_log: JobEmailScrapingServiceLog):
+    def extract_forwarding_email_confirmation(
+        self,
+        service_log: JobEmailScrapingServiceLog,
+        timedelta_days: int | float = 1,
+    ) -> None:
         """Extract and save forwarding confirmation links from emails sent by different email providers
-        :param service_log: associated JobEmailScrapingServiceLog instance"""
+        :param service_log: associated JobEmailScrapingServiceLog instance
+        :param timedelta_days: Number of days to search for emails"""
 
-        email_platforms = {"gmail": "forwarding-noreply@google.com"}
-        for email_platform in email_platforms:
+        for email_platform in EmailProvider:
             try:
-                email_ids = self.get_email_ids(from_email=email_platforms[email_platform], timedelta_days=365)
+                email = FORWARDING_EMAILS[email_platform]
+                email_ids = self.get_email_ids(from_email=email, timedelta_days=timedelta_days)
             except:
-                self.log_service_error(service_log, f"Failed to get email with platform {email_platform}.")
+                self.log_service_error(service_log, f"Failed to get email with platform {email_platform.value}.")
                 continue
 
             for email_id in email_ids:
+                # Try to save the email if it does not already exist
                 try:
                     existing_entry = (
                         self.db.query(models.ForwardingConfirmationLink)
@@ -169,15 +185,19 @@ class JobEmailScraper(EmailService):
                         service_log, f"Failed to read email {email_id} with platform {email_platform}."
                     )
                     continue
+
                 try:
-                    link = extract_forwarding_confirmation_link(email["body"])
+                    # Extract the forwarding link
+                    link = FORWARDING_LINK_EXTRACTORS[email_platform](email.body)
                     if not link:
                         message = (
                             "Forwarding confirmation link not found in email body. Skipping forwarding confirmation."
                         )
                         self.logger.warning(message)
                         continue
-                    user_email = extract_gmail_originator(email["body"])
+
+                    # Extract the user email and user details
+                    user_email = ORIGINATOR_EXTRACTORS[email_platform](email.body)
                     user = self.db.query(models.User).filter(models.User.email == user_email).first()
                     if not user:
                         message = (
@@ -185,17 +205,18 @@ class JobEmailScraper(EmailService):
                         )
                         self.logger.warning(message)
                         continue
-                    # noinspection PyArgumentList
+
+                    # Create the confirmation email
                     confirmation = models.ForwardingConfirmationLink(
-                        email_external_id=email["id"],
+                        email_external_id=email.id,
                         url=link,
-                        platform=email_platform,
+                        platform=email_platform.value,
                         owner_id=user.id,
                     )
                     self.db.add(confirmation)
                     self.db.commit()
                 except:
-                    message = f"Failed to extract forwarding confirmation link from email {email["id"]}"
+                    message = f"Failed to extract forwarding confirmation link from email {email.id}"
                     self.log_service_error(service_log, message)
 
     # ------------------------------------------------ EMAIL PROCESSING ------------------------------------------------
@@ -206,7 +227,7 @@ class JobEmailScraper(EmailService):
         user: models.User,
         service_log_id: int,
         forwarded: bool = False,
-    ) -> tuple[JobEmail, bool]:
+    ) -> tuple[JobEmail | None, bool]:
         """Read and save an email to the database
         :param email_id: Email ID
         :param user: User entry associated with this email
@@ -227,25 +248,27 @@ class JobEmailScraper(EmailService):
             message = self.get_email_data(email_id)
 
             # Determine the platform
-            platform = PLATFORM_SENDER_EMAILS.get(message["from"].lower())
+            platform = PLATFORM_SENDER_EMAILS.get(message.from_email.lower())
             if not platform:
                 for plat in PLATFORM_SENDER_EMAILS:
-                    if plat in message["body"].lower():
+                    if plat in message.body.lower():
                         platform = PLATFORM_SENDER_EMAILS[plat]
                         break
             if not platform:
-                raise ValueError("Email body does not contain a valid platform identifier.")
-            alert_name = ALERT_NAME_EXTRACTORS[platform](message["subject"], message["body"])
-            sender = message["from"] if forwarded else message["to"]
+                self.logger.info(f"Email with ID {email_id} does not have a valid platform.")
+                return None, True
+            alert_name = ALERT_NAME_EXTRACTORS[platform](message.subject, message.body)
+            sender = message.from_email if forwarded else message.to_email
+
             # Create a new email record
             email_record = JobEmail(
                 owner_id=user.id,
                 service_log_id=service_log_id,
                 external_email_id=email_id,
-                subject=message["subject"],
+                subject=message.subject,
                 sender=sender,
-                date_received=message["date"],
-                body=remove_style_tags(message["body"]),
+                date_received=message.date,
+                body=remove_style_tags(message.body),
                 platform=platform,
                 alert_name=alert_name,
             )
@@ -265,16 +288,13 @@ class JobEmailScraper(EmailService):
         result = {}  # noqa
 
         # Location & attendance type
-        result["location"] = job_result.location
-        result["parsed_location"], result["attendance_type"] = self.location_parser.parse_location(result["location"])
+        result["raw_location"] = job_result.location
+        result["location"], result["attendance_type"] = parse_location(result["raw_location"])
 
-        if result["parsed_location"]:
-            geolocation = geocode_location(result["parsed_location"], self.db, self.logger)
+        if result["location"]:
+            geolocation = geocode_location(result["location"], self.db, self.logger)
             if geolocation:
                 result["geolocation_id"] = geolocation.id
-                result["location_postcode"] = geolocation.postcode
-                result["location_city"] = geolocation.city
-                result["location_country"] = geolocation.country
 
         # Salary
         result["salary_min"] = job_result.job.salary.min_amount
@@ -326,7 +346,6 @@ class JobEmailScraper(EmailService):
             if not existing_entry:
                 data = self.process_job_result(job_result)
 
-                # noinspection PyArgumentList
                 new_job = ScrapedJob(
                     owner_id=email_record.owner_id,
                     service_log_id=email_record.service_log_id,
@@ -397,10 +416,8 @@ class JobEmailScraper(EmailService):
             "deadline",
             "company",
             "is_closed",
+            "raw_location",
             "location",
-            "location_city",
-            "location_country",
-            "location_postcode",
             "attendance_type",
         ]
         for key in columns:
@@ -418,7 +435,7 @@ class JobEmailScraper(EmailService):
         start_time = dt.datetime.now()
         self.logger.info("Starting email scraping workflow")
         service_log = self.create_service_log(run_datetime=start_time)
-        self.extract_forwarding_email_confirmation(service_log)
+        self.extract_forwarding_email_confirmation(service_log, timedelta_days)
 
         try:
             # Process emails for all users
@@ -496,6 +513,9 @@ class JobEmailScraper(EmailService):
                 try:
                     email_record, is_new = self.get_and_save_email_to_db(email_id, user, service_log.id, forwarded)
 
+                    if not email_record:
+                        continue
+
                     # Extract jobs if this is a new email
                     if is_new:
                         self.upsert_platform_stat(service_log, email_record.platform, email_saved_ids=email_record.id)
@@ -507,7 +527,7 @@ class JobEmailScraper(EmailService):
                 except Exception as exception:
                     self.log_service_error(service_log, exception)
                     self.logger.exception(
-                        f"Failed to get and save email data due to error: {exception}. Skipping email."
+                        f"Failed to get and save email with ID {email_id} due to error: {exception}. Skipping email."
                     )
                     continue  # next email
 
@@ -588,23 +608,6 @@ class JobEmailScraper(EmailService):
             except Exception as exception:
                 error = (
                     f"Failed to check filtering for job ID {job_record.external_job_id} due to error: {exception}. "
-                    f"Proceeding with scraping."
-                )
-                self.log_service_error(service_log, error)
-                self.logger.exception(error)
-
-            # Check if favoured
-            try:
-                if favoured_rule := is_job_favoured(self.db, job_record):
-                    self.logger.info(
-                        f"Job ID {job_record.external_job_id} favoured for user ID {job_record.owner_id} "
-                        f"due to rule {favoured_rule.name}"
-                    )
-                    job_record.favourite_filter_id = favoured_rule.id
-                    self.db.commit()
-            except Exception as exception:
-                error = (
-                    f"Failed to check favouring for job ID {job_record.external_job_id} due to error: {exception}. "
                     f"Proceeding with scraping."
                 )
                 self.log_service_error(service_log, error)

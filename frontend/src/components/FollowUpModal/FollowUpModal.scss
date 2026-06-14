@@ -3,8 +3,7 @@
     padding: 0;
     border-radius: 11px !important;
     background: var(--primary-gradient);
-    box-shadow: 0 5px 18px var(--jam-glow),
-    0 2px 4px rgb(0 0 0 / 10%);
+    box-shadow: 0 2px 4px rgb(0 0 0 / 10%);
 }
 
 /* Make both buttons transparent so the gradient shows through */
@@ -23,11 +22,10 @@
 
 /* Hover effect - darken slightly */
 .email-service-dropdown:hover {
-    transition: var(--transition);
+    transition: all var(--transition);
     transform: translateY(-2px);
     background: var(--primary-hover-gradient);
-    box-shadow: 0 7px 22px var(--jam-glow),
-    0 4px 7px rgb(0 0 0 / 15%);
+    box-shadow: 0 4px 7px rgb(0 0 0 / 15%);
 }
 
 /* Active state */

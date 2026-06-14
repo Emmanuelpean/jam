@@ -7,8 +7,8 @@ export const Toggle = ({ field, value, handleChange }: WidgetProps): JSX.Element
 	return (
 		<Form.Check
 			type="switch"
-			id={toKey(field.name)}
-			name={toKey(field.name)}
+			id={toKey(field.key)}
+			name={toKey(field.key)}
 			checked={value || false}
 			onChange={handleChange}
 			label={field.label}

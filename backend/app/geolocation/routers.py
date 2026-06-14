@@ -1,3 +1,5 @@
+"""Geolocation router"""
+
 from fastapi import APIRouter, Body, Depends
 from sqlalchemy.orm import Session
 
@@ -15,4 +17,6 @@ def geolocate(
     db: Session = Depends(database.get_db),
     _current_user: models.User = Depends(oauth2.get_current_user),
 ) -> models.Geolocation | None:
+    """Geocode a location string."""
+
     return geocode_location(string, db)

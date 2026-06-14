@@ -17,7 +17,6 @@ from tests.utils.create_data.data_tables import (
     create_keywords,
     create_aggregators,
     create_geolocations,
-    create_locations,
     create_companies,
     create_people,
     create_jobs,
@@ -36,6 +35,7 @@ from tests.utils.create_data.job_scraping import (
     create_job_scraping_service_errors,
     create_job_alert_emails,
     create_scraping_filters,
+    create_scraping_favourite_filters,
     create_scraped_jobs,
 )
 
@@ -125,13 +125,6 @@ def create_database_data(db, includes=None, excludes=None, **kwargs) -> None:
     else:
         geolocations = None
 
-    if "locations" in kwargs:
-        locations = kwargs["locations"]
-    elif should_create("locations") and users and geolocations:
-        locations = create_locations(db, users, geolocations)
-    else:
-        locations = None
-
     if "companies" in kwargs:
         companies = kwargs["companies"]
     elif should_create("companies") and users:
@@ -155,13 +148,13 @@ def create_database_data(db, includes=None, excludes=None, **kwargs) -> None:
 
     if "jobs" in kwargs:
         jobs = kwargs["jobs"]
-    elif should_create("jobs") and all([keywords, people, users, companies, locations, aggregators, files]):
-        jobs = create_jobs(db, keywords, people, users, companies, locations, aggregators, files)
+    elif should_create("jobs") and all([keywords, people, users, companies, aggregators, files, geolocations]):
+        jobs = create_jobs(db, keywords, people, users, companies, aggregators, files, geolocations)
     else:
         jobs = None
 
-    if should_create("interviews") and "interviews" not in kwargs and all([people, users, locations, jobs]):
-        create_interviews(db, people, users, locations, jobs)
+    if should_create("interviews") and "interviews" not in kwargs and all([people, users, jobs, geolocations]):
+        create_interviews(db, people, users, jobs, geolocations)
 
     if should_create("job_application_updates") and "job_application_updates" not in kwargs and users and jobs:
         create_job_application_updates(db, users, jobs)
@@ -203,6 +196,11 @@ def create_database_data(db, includes=None, excludes=None, **kwargs) -> None:
         scraping_filters = create_scraping_filters(db, users)
     else:
         scraping_filters = None
+
+    if "scraping_favourite_filters" in kwargs:
+        pass
+    elif should_create("scraping_favourite_filters") and users:
+        create_scraping_favourite_filters(db, users)
 
     if "scraped_jobs" in kwargs:
         scraped_jobs = kwargs["scraped_jobs"]

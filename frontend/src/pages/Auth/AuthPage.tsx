@@ -2,26 +2,26 @@ import React, { JSX, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { FormData, useAuth } from "../../contexts/AuthContext";
 import "./AuthPage.scss";
-import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
-import { Alert, Card, Form, Spinner } from "react-bootstrap";
+import JamLogo from "../../assets/Logo.svg?react";
+import { Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
 import { PrivacyPolicyModal } from "./PrivacyPolicyPage";
 import { Errors, renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
-import { ModalFormField } from "../../components/rendering/form/FormRenders";
+import { EmailValidation, ModalFormField } from "../../components/rendering/form/FormRenders";
 import { authApi, GenericResponse } from "../../services/api/Users";
 import { ApiResponse } from "../../services/api/Base";
 import { useLoading } from "../../contexts/LoadingContext";
 import { DEFAULT_THEME } from "../../utils/Theme";
 import { ApiError } from "../../services/api/ApiError";
 import { useConfig } from "../../contexts/ConfigContext";
+import { useViewport } from "../../contexts/ViewportContext";
+import TurnstileWidget from "./TurnstileWidget";
 
 type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "verifyEmail" | "verifyNewEmail";
 
 let isVerifying: boolean = false;
-
-const TABLET_BREAKPOINT = 993;
 
 const determineAuthMode = (pathname: string, token: string | null): AuthMode => {
 	const normalizedPath: string = pathname.endsWith("/") && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
@@ -57,14 +57,17 @@ function AuthForm(): JSX.Element {
 	const [registrationStep, setRegistrationStep] = useState<number>(1);
 	const [formData, setFormData] = useState<FormData>(defaultFormData);
 	const [resetToken, setResetToken] = useState<string>("");
-	const [showMobileWarning, setShowMobileWarning] = useState<boolean>(false);
 	const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
+	const [acceptedPrivacy, setAcceptedPrivacy] = useState<boolean>(false);
 	const [showTerms, setShowTerms] = useState<boolean>(false);
 	const [showPrivacy, setShowPrivacy] = useState<boolean>(false);
+	const [rememberMe, setRememberMe] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [demoLoading, setDemoLoading] = useState<boolean>(false);
 	const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
 	const [fieldErrors, setFieldErrors] = useState<Errors>({});
+	const [captchaToken, setCaptchaToken] = useState<string>("");
+	const hasFieldErrors: boolean = Object.values(fieldErrors).some((e) => !!e);
 	const { logout, login, isAuthenticated } = useAuth();
 	const { showToastSuccess, showToastError, showApiError } = useGlobalToast();
 	const { showLoading, hideLoading } = useLoading();
@@ -74,7 +77,7 @@ function AuthForm(): JSX.Element {
 	const [displayedMode, setDisplayedMode] = useState<AuthMode>(mode);
 	const [displayedStep, setDisplayedStep] = useState<number>(registrationStep);
 	const prevModeRef = useRef<string | null>(null);
-	const [isLargeScreen, setIsLargeScreen] = useState<boolean>(window.innerWidth > TABLET_BREAKPOINT);
+	const { isTablet } = useViewport();
 
 	useEffect(() => {
 		const el = contentRef.current;
@@ -175,18 +178,6 @@ function AuthForm(): JSX.Element {
 			});
 	}, [mode, location.pathname, searchParams, navigate]);
 
-	useEffect(() => {
-		const checkScreenSize = () => {
-			const isLarge = window.innerWidth > TABLET_BREAKPOINT;
-			setIsLargeScreen(isLarge);
-			setShowMobileWarning(window.innerWidth < 768);
-		};
-
-		checkScreenSize();
-		window.addEventListener("resize", checkScreenSize);
-		return () => window.removeEventListener("resize", checkScreenSize);
-	}, []);
-
 	const handleInputChange = (e: SyntheticEvent): void => {
 		const { name, value } = e.target;
 		setFormData(
@@ -196,22 +187,26 @@ function AuthForm(): JSX.Element {
 			})
 		);
 
-		if (fieldErrors[name as keyof Errors]) {
-			setFieldErrors(
-				(prev: Errors): Errors => ({
-					...prev,
-					[name]: "",
-				})
-			);
-		}
+		setFieldErrors((prev: Errors): Errors => {
+			const next = { ...prev };
+			if (next[name as keyof Errors]) delete next[name as keyof Errors];
+			if (name === "password" && next.confirmPassword) delete next.confirmPassword;
+			return next;
+		});
+	};
+
+	const handleFieldError = (key: string, message: string | null): void => {
+		setFieldErrors((prev: Errors): Errors => ({ ...prev, [key]: message ?? "" }));
 	};
 
 	const resetForm = (): void => {
 		setFormData(defaultFormData);
 		setAcceptedTerms(false);
+		setAcceptedPrivacy(false);
 		setFieldErrors({});
 		setResetToken("");
 		setRegistrationStep(1);
+		setCaptchaToken("");
 	};
 
 	const switchToRegister = (): void => {
@@ -244,7 +239,6 @@ function AuthForm(): JSX.Element {
 				if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
 					errors.email = "Please provide a valid email address.";
 				}
-
 				if (!formData.password) {
 					errors.password = "Password is required.";
 				} else if (formData.password.length < config.min_password_length) {
@@ -256,11 +250,6 @@ function AuthForm(): JSX.Element {
 				} else if (formData.password !== formData.confirmPassword) {
 					errors.confirmPassword = "Passwords do not match.";
 				}
-
-				if (!acceptedTerms) {
-					errors.terms = "You must accept the Terms and Conditions and Privacy Policy to register.";
-				}
-
 			} else if (step === 2) {
 				if (!formData.firstName || formData.firstName.trim().length === 0) {
 					errors.firstName = "First name is required.";
@@ -268,6 +257,18 @@ function AuthForm(): JSX.Element {
 
 				if (!formData.lastName || formData.lastName.trim().length === 0) {
 					errors.lastName = "Last name is required.";
+				}
+			} else if (step === 3) {
+				if (!acceptedTerms) {
+					errors.terms = "You must accept the Terms and Conditions to register.";
+				}
+
+				if (!acceptedPrivacy) {
+					errors.privacy = "You must accept the Privacy Policy to register.";
+				}
+
+				if (!captchaToken) {
+					errors.captcha = "Please complete the CAPTCHA to continue.";
 				}
 			}
 
@@ -310,7 +311,7 @@ function AuthForm(): JSX.Element {
 		setButtonDisabled(true);
 
 		try {
-			const result: GenericResponse = await login(formData.email, formData.password);
+			const result: GenericResponse = await login(formData.email, formData.password, rememberMe);
 
 			if (result.success) {
 				navigate("/dashboard");
@@ -331,11 +332,11 @@ function AuthForm(): JSX.Element {
 
 		if (Object.keys(errors).length > 0) return;
 
-		setRegistrationStep(2);
+		setRegistrationStep(registrationStep + 1);
 	};
 
 	const handlePreviousStep = (): void => {
-		setRegistrationStep(1);
+		setRegistrationStep((prev: number): number => Math.max(1, prev - 1));
 		setFieldErrors({});
 	};
 
@@ -355,19 +356,25 @@ function AuthForm(): JSX.Element {
 				password: formData.password,
 				first_name: formData.firstName,
 				last_name: formData.lastName,
+				captcha_token: captchaToken,
 			});
 
 			if (result.data.success) {
 				switchToLogin();
 				showToastSuccess(
-					"Account created! Please check your email to verify your account before logging in.",
+					"Account created! Please check your email inbox to verify your account before logging in.",
 					"Registration Successful"
 				);
 			} else {
 				showToastError(result.data.message, errorTitle);
+				setCaptchaToken("");
+				setRegistrationStep(3);
 			}
 		} catch (error) {
 			showApiError(error, errorTitle, "An unknown error occurred during registration.");
+			// Turnstile tokens are single-use — clear so the user re-solves on the next attempt
+			setCaptchaToken("");
+			setRegistrationStep(1);
 		} finally {
 			setLoading(false);
 			setButtonDisabled(false);
@@ -446,7 +453,7 @@ function AuthForm(): JSX.Element {
 		} else if (mode === "login") {
 			handleLogin().then();
 		} else if (mode === "register") {
-			if (registrationStep === 1) {
+			if (registrationStep < 3) {
 				handleNextStep();
 			} else {
 				handleRegister().then();
@@ -456,8 +463,17 @@ function AuthForm(): JSX.Element {
 
 	const handleTermsCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
 		setAcceptedTerms(e.target.checked);
+		if (fieldErrors.terms) {
+			setFieldErrors((prev: Errors): Errors => ({ ...prev, terms: "" }));
+		}
 	};
 
+	const handlePrivacyCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+		setAcceptedPrivacy(e.target.checked);
+		if (fieldErrors.privacy) {
+			setFieldErrors((prev: Errors): Errors => ({ ...prev, privacy: "" }));
+		}
+	};
 
 	const handleShowTerms = (e: React.MouseEvent<HTMLButtonElement>): void => {
 		e.preventDefault();
@@ -470,48 +486,55 @@ function AuthForm(): JSX.Element {
 	};
 
 	const emailField: ModalFormField = {
-		name: "email",
+		key: "email",
 		type: "text",
 		label: "Email Address",
 		icon: "bi bi-envelope-fill",
 		placeholder: "Enter your email",
+		autoComplete: "email",
+		maxChars: config?.column_limits.email,
+		validation: EmailValidation,
 	};
 
 	const passwordField: ModalFormField = {
-		name: "password",
+		key: "password",
 		type: "password",
 		label: displayedMode === "resetPassword" ? "New Password" : "Password",
-		icon: "bi bi-lock-fill",
+		icon: "bi bi-key-fill",
 		placeholder: displayedMode === "resetPassword" ? "Enter your new password" : "Enter your password",
 		autoComplete: displayedMode === "login" ? "current-password" : "new-password",
 		helpText: ["register", "resetPassword"].includes(displayedMode)
 			? `Password must be at least ${config?.min_password_length} characters long`
 			: null,
+		maxChars: config?.column_limits.password,
 	};
 
 	const confirmPasswordField: ModalFormField = {
-		name: "confirmPassword",
+		key: "confirmPassword",
 		type: "password",
 		label: "Confirm Password",
-		icon: "bi bi-lock-fill",
+		icon: "bi bi-key-fill",
 		placeholder: displayedMode === "resetPassword" ? "Confirm your new password" : "Confirm your password",
 		autoComplete: "new-password",
+		maxChars: config?.column_limits.password,
 	};
 
 	const firstNameField: ModalFormField = {
-		name: "firstName",
+		key: "firstName",
 		type: "text",
 		label: "First Name",
 		icon: "bi bi-person-fill",
 		placeholder: "Enter your first name",
+		maxChars: config?.column_limits.first_name,
 	};
 
 	const lastNameField: ModalFormField = {
-		name: "lastName",
+		key: "lastName",
 		type: "text",
 		label: "Last Name",
 		icon: "bi bi-person-fill",
 		placeholder: "Enter your last name",
+		maxChars: config?.column_limits.last_name,
 	};
 
 	const cardTitle: string =
@@ -523,29 +546,30 @@ function AuthForm(): JSX.Element {
 					? "Login"
 					: displayedStep === 1
 						? "Get Started"
-						: "Tell Us About Yourself";
+						: displayedStep === 2
+							? "Tell Us About Yourself"
+							: "Almost There";
 
 	const termsField: ModalFormField = {
-		name: "terms",
+		key: "terms",
 		type: "checkbox",
 		label: (
 			<span>
 				I agree to the{" "}
-				<button
-					type="button"
-					onClick={handleShowTerms}
-					className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-					style={{ cursor: "pointer" }}
-				>
+				<button type="button" onClick={handleShowTerms} className="btn-link" style={{ cursor: "pointer" }}>
 					Terms and Conditions
 				</button>
-				{" and the "}
-				<button
-					type="button"
-					onClick={handleShowPrivacy}
-					className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-					style={{ cursor: "pointer" }}
-				>
+			</span>
+		),
+	};
+
+	const privacyField: ModalFormField = {
+		key: "privacy",
+		type: "checkbox",
+		label: (
+			<span>
+				I agree to the{" "}
+				<button type="button" onClick={handleShowPrivacy} className="btn-link" style={{ cursor: "pointer" }}>
 					Privacy Policy
 				</button>
 			</span>
@@ -555,30 +579,30 @@ function AuthForm(): JSX.Element {
 	const featureItems: Feature[] = [
 		{
 			icon: "bi bi-briefcase",
-			text: "Manage job application records",
+			text: "Manage your job applications",
 			description: "Create and manage job application records with all the details you need",
 		},
 		{
+			icon: "bi bi-person",
+			text: "Keep track of your contacts",
+			description: "Keep track of every person you interact with during your job search",
+		},
+		{
 			icon: "bi bi-bar-chart",
-			text: "Monitor status and deadlines",
+			text: "Monitor application status, deadlines and upcoming interviews",
 			description:
 				"Keep track of application status, progress, upcoming interviews, and never miss important deadlines",
-		},
-		{
-			icon: "bi bi-inboxes",
-			text: "Scrape job alerts from emails",
-			description:
-				"Automatically scrape job alerts from popular job board email notifications like LinkedIn and Indeed",
-		},
-		{
-			icon: "bi bi-star-half",
-			text: "Auto-rate jobs by preference",
-			description: "Automatically rate scraped jobs based on your preferences to prioritise applications",
 		},
 		{
 			icon: "bi bi-envelope-arrow-up",
 			text: "Generate follow-up emails",
 			description: "Automatically generate personalised follow-up email drafts for your applications",
+		},
+		{
+			icon: "bi bi-stars",
+			text: "Scrape & auto-rate job alert emails",
+			description:
+				"Automatically scrape job alerts from LinkedIn, Indeed and more, then rate them by your preferences to prioritise applications",
 		},
 	];
 
@@ -600,7 +624,7 @@ function AuthForm(): JSX.Element {
 	return (
 		<div className="auth-page-wrapper">
 			{/* Left branding panel - conditionally rendered based on screen size */}
-			{isLargeScreen && (
+			{!isTablet && (
 				<div className="auth-branding-panel">
 					<div className="branding-content">
 						<div className="branding-logo">
@@ -630,8 +654,7 @@ function AuthForm(): JSX.Element {
 			{/* Right form panel */}
 			<div className="auth-form-panel">
 				<div className="auth-container">
-					{/* Mobile logo - conditionally rendered based on screen size */}
-					{!isLargeScreen && (
+					{isTablet && (
 						<div className="auth-logo">
 							<div className="logo-container logo-container-vertical">
 								<div className="branding-logo" style={{ marginBottom: 0 }}>
@@ -640,25 +663,6 @@ function AuthForm(): JSX.Element {
 								<div className="logo-text-below text-gradient-primary">Job Application Manager</div>
 							</div>
 						</div>
-					)}
-
-					{showMobileWarning && (
-						<Alert
-							variant="warning"
-							dismissible
-							onClose={() => setShowMobileWarning(false)}
-							className="mb-3"
-							style={{ maxWidth: "450px" }}
-						>
-							<Alert.Heading className="h6 d-flex align-items-center mb-2">
-								<i className="bi bi-exclamation-triangle-fill me-2"></i>
-								Limited Mobile Support
-							</Alert.Heading>
-							<p className="mb-0 small">
-								JAM is not fully optimised for small screens yet. For the best experience, please use a
-								tablet or desktop device.
-							</p>
-						</Alert>
 					)}
 
 					<Card
@@ -682,14 +686,24 @@ function AuthForm(): JSX.Element {
 								{displayedMode === "register" && (
 									<div className="mb-3">
 										<div className="d-flex justify-content-between align-items-center mb-2">
-											<small className="text-muted">Step {displayedStep} of 2</small>
+											<small className="text-muted">Step {displayedStep} of 3</small>
+											{displayedStep > 1 && (
+												<button
+													type="button"
+													onClick={handlePreviousStep}
+													className="btn-link"
+													disabled={buttonDisabled}
+												>
+													<i className="bi bi-arrow-left me-1"></i>Back
+												</button>
+											)}
 										</div>
 										<div className="progress" style={{ height: "3.6px" }}>
 											<div
 												className="progress-bar"
 												role="progressbar"
-												style={{ width: `${(displayedStep / 2) * 100}%` }}
-												aria-valuenow={(displayedStep / 2) * 100}
+												style={{ width: `${(displayedStep / 3) * 100}%` }}
+												aria-valuenow={(displayedStep / 3) * 100}
 												aria-valuemin={0}
 												aria-valuemax={100}
 											></div>
@@ -713,20 +727,32 @@ function AuthForm(): JSX.Element {
 									{/* Registration Step 1 */}
 									{displayedMode === "register" && displayedStep === 1 && (
 										<>
-											{renderFormField(emailField, formData, handleInputChange, fieldErrors)}
-											{renderFormField(passwordField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(
+												emailField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
+											{renderFormField(
+												passwordField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
 											{renderFormField(
 												confirmPasswordField,
 												formData,
 												handleInputChange,
-												fieldErrors
-											)}
-											{renderFormField(
-												termsField,
-												{ terms: acceptedTerms },
-												// @ts-ignore
-												handleTermsCheckboxChange,
-												fieldErrors
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
 											)}
 										</>
 									)}
@@ -734,22 +760,111 @@ function AuthForm(): JSX.Element {
 									{/* Registration Step 2 */}
 									{displayedMode === "register" && displayedStep === 2 && (
 										<>
-											{renderFormField(firstNameField, formData, handleInputChange, fieldErrors)}
-											{renderFormField(lastNameField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(
+												firstNameField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
+											{renderFormField(
+												lastNameField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
+										</>
+									)}
+
+									{/* Registration Step 3 */}
+									{displayedMode === "register" && displayedStep === 3 && (
+										<>
+											<span className="step3-label">
+												<i className="bi bi-file-earmark-text"></i>
+												Review our T&amp;C and Privacy Policy
+											</span>
+											{renderFormField(
+												termsField,
+												{ terms: acceptedTerms },
+												// @ts-ignore
+												handleTermsCheckboxChange,
+												fieldErrors
+											)}
+											{renderFormField(
+												privacyField,
+												{ privacy: acceptedPrivacy },
+												// @ts-ignore
+												handlePrivacyCheckboxChange,
+												fieldErrors
+											)}
+
+											<div className="captcha-section mb-3">
+												<span className="step3-label">
+													<i className="bi bi-shield-check"></i>
+													Just checking that you are not a robot
+												</span>
+												<TurnstileWidget
+													siteKey={config.turnstile_site_key}
+													onVerify={(token: string) => {
+														setCaptchaToken(token);
+														setFieldErrors(
+															(prev: Errors): Errors => ({ ...prev, captcha: "" })
+														);
+													}}
+													onExpire={() => setCaptchaToken("")}
+													onError={() => setCaptchaToken("")}
+												/>
+												{fieldErrors.captcha && (
+													<div className="invalid-feedback d-block text-center mt-2">
+														{fieldErrors.captcha}
+													</div>
+												)}
+											</div>
 										</>
 									)}
 
 									{/* Login Mode */}
 									{displayedMode === "login" && (
 										<>
-											{renderFormField(emailField, formData, handleInputChange, fieldErrors)}
-											{renderFormField(passwordField, formData, handleInputChange, fieldErrors)}
-											<div className="text-end mb-3">
+											{renderFormField(
+												emailField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
+											{renderFormField(
+												passwordField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
+											<div className="d-flex justify-content-between align-items-center mb-3">
+												<Form.Check
+													type="checkbox"
+													id="remember-me"
+													label="Remember me"
+													checked={rememberMe}
+													onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+														setRememberMe(e.target.checked)
+													}
+													className="small"
+												/>
 												<button
 													type="button"
 													onClick={switchToForgotPassword}
-													className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent small"
-													style={{ cursor: "pointer" }}
+													className="btn-link"
+													disabled={buttonDisabled}
 													id="forgot-password-link"
 												>
 													Forgot your password?
@@ -760,38 +875,49 @@ function AuthForm(): JSX.Element {
 
 									{/* Forgot Password Mode */}
 									{displayedMode === "forgotPassword" && (
-										<>{renderFormField(emailField, formData, handleInputChange, fieldErrors)}</>
+										<>
+											{renderFormField(
+												emailField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
+										</>
 									)}
 
 									{/* Reset Password Mode */}
 									{displayedMode === "resetPassword" && (
 										<>
-											{renderFormField(passwordField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(
+												passwordField,
+												formData,
+												handleInputChange,
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
+											)}
 											{renderFormField(
 												confirmPasswordField,
 												formData,
 												handleInputChange,
-												fieldErrors
+												fieldErrors,
+												undefined,
+												undefined,
+												handleFieldError
 											)}
 										</>
 									)}
 
 									{/* Action buttons */}
-									<div className="d-grid gap-2">
-										{displayedMode === "register" && displayedStep === 2 && (
-											<ActionButton
-												type="button"
-												onClick={handlePreviousStep}
-												variant="secondary"
-												className="fw-semibold"
-												defaultText="Back"
-												defaultIcon="bi bi-arrow-left"
-											/>
-										)}
+									<div className="d-grid gap-2 pt-1">
 										<ActionButton
 											type="submit"
 											id="confirm-button"
-											disabled={buttonDisabled}
+											disabled={buttonDisabled || hasFieldErrors}
 											loading={loading}
 											className="fw-semibold"
 											loadingText={
@@ -801,7 +927,7 @@ function AuthForm(): JSX.Element {
 														? "Sending..."
 														: displayedMode === "login"
 															? "Signing in..."
-															: displayedStep === 1
+															: displayedStep < 3
 																? "Please wait..."
 																: "Creating Account..."
 											}
@@ -812,7 +938,7 @@ function AuthForm(): JSX.Element {
 														? "Send Reset Link"
 														: displayedMode === "login"
 															? "Sign In"
-															: displayedStep === 1
+															: displayedStep < 3
 																? "Continue"
 																: "Create Account"
 											}
@@ -823,7 +949,7 @@ function AuthForm(): JSX.Element {
 														? "bi bi-envelope-paper"
 														: displayedMode === "login"
 															? "bi bi-box-arrow-in-right"
-															: displayedStep === 1
+															: displayedStep < 3
 																? "bi bi-arrow-right"
 																: "bi bi-person-plus"
 											}
@@ -839,8 +965,8 @@ function AuthForm(): JSX.Element {
 												<button
 													type="button"
 													onClick={switchToLogin}
-													className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-													style={{ cursor: "pointer" }}
+													className="btn-link"
+													disabled={buttonDisabled}
 												>
 													Back to Sign In
 												</button>
@@ -852,8 +978,8 @@ function AuthForm(): JSX.Element {
 													type="button"
 													id="switch-mode-button"
 													onClick={switchToRegister}
-													className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-													style={{ cursor: "pointer" }}
+													className="btn-link"
+													disabled={buttonDisabled}
 												>
 													Sign Up
 												</button>
@@ -865,8 +991,8 @@ function AuthForm(): JSX.Element {
 													type="button"
 													id="switch-mode-button"
 													onClick={switchToLogin}
-													className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-													style={{ cursor: "pointer" }}
+													className="btn-link"
+													disabled={buttonDisabled}
 												>
 													Sign In
 												</button>
@@ -887,7 +1013,7 @@ function AuthForm(): JSX.Element {
 							className="try-app-btn"
 							onClick={handleDemoLogin}
 							loading={demoLoading}
-							disabled={buttonDisabled}
+							disabled={buttonDisabled || hasFieldErrors}
 							defaultText="Try JAM with Demo Account"
 							loadingText="Loading demo..."
 							defaultIcon="bi bi-play-circle"

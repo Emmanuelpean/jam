@@ -1,37 +1,23 @@
-import React, { JSX, useEffect, useState } from "react";
+import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../DataModal/JobModal";
+import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
 
 const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTableProps): JSX.Element => {
-	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
-	let defaultColumns: TableColumn[] =
+	let defaultColumns: TableColumn<EnrichedJobData>[] =
 		columns.length > 0
-			? columns
+			? (columns as TableColumn<EnrichedJobData>[])
 			: [
-					tableColumns.titleColumn(),
-					tableColumns.companyBadgeColumn(),
-					tableColumns.locationBadgeColumn(),
-					tableColumns.daysSinceLastUpdateColumn(),
-					tableColumns.lastUpdateTypeColumn(),
+					tableColumns.titleColumn<EnrichedJobData>(),
+					tableColumns.companyBadgeColumn<EnrichedJobData>(),
+					tableColumns.locationBadgeColumn<EnrichedJobData>(),
+					tableColumns.daysSinceLastUpdateColumn<EnrichedJobData>(),
+					tableColumns.lastUpdateTypeColumn<EnrichedJobData>(),
 				];
 
-	useEffect(() => {
-		const handleResize = (): void => setWindowWidth(window.innerWidth);
-		window.addEventListener("resize", handleResize);
-		return () => window.removeEventListener("resize", handleResize);
-	}, []);
-
-	if (windowWidth < 1300) {
-		defaultColumns = defaultColumns.filter((col: TableColumn): boolean => col.key !== "location");
-	}
-	if (windowWidth < 1000) {
-		defaultColumns = defaultColumns.filter((col: TableColumn): boolean => col.key !== "company");
-	}
-
 	return (
-		<DataTable
+		<DataTable<EnrichedJobData>
 			entityType="job"
 			columns={defaultColumns}
 			data={data}
@@ -40,7 +26,13 @@ const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: 
 			modalSize="xl"
 			showSearch={false}
 			showAdd={false}
-			menuItems={["view", "edit", "delete", "snooze", "followup"]}
+			menuItems={(job: JobData) => [
+				"view",
+				"edit",
+				"delete",
+				"snooze",
+				...(job.has_application ? ["followup"] : []),
+			]}
 			modalProps={{ defaultActiveTab: "application" }}
 		/>
 	);

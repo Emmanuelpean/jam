@@ -1,5 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { Button, ButtonGroup, Dropdown, Modal } from "react-bootstrap";
+import JamModal from "../JamModal/JamModal";
 import { useAlert } from "../../contexts/AlertContext";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { GroupedSelectOption, useFormOptions } from "../rendering/form/FormOptions";
@@ -164,14 +165,14 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 
 	const selectField: ModalFormField = {
 		type: "select",
-		name: "contactId",
+		key: "contactId",
 		label: "Contact",
 		options: contactOptions,
 	};
 
 	const bodyField: ModalFormField = {
 		type: "textarea",
-		name: "body",
+		key: "body",
 		label: "Email Body",
 		placeholder: "Enter your follow up email here...",
 		rows: 10,
@@ -179,7 +180,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 
 	const subjectField: ModalFormField = {
 		type: "text",
-		name: "subject",
+		key: "subject",
 		label: "Email Subject",
 		placeholder: "Enter the email subject here...",
 	};
@@ -218,7 +219,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 				dataContext
 					.addEntity("jobApplicationUpdate", {
 						type: "sent",
-						job_id: currentJob?.id,
+						job_id: currentJob!.id,
 						note: `Follow up email sent to ${contact?.name}\n\nSubject: ${formData.subject}\n\n${formData.body}`,
 						date: new Date().toISOString(),
 					})
@@ -238,16 +239,16 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 	};
 
 	return (
-		<Modal
+		<JamModal
 			show={internalShow}
 			onHide={handleCloseWithConfirmation}
 			centered={true}
 			size={"lg"}
 			id={"follow-up-modal"}
 		>
-			<Modal.Header closeButton>
+			<JamModal.Header onClose={handleCloseWithConfirmation}>
 				<Modal.Title>Follow Up Email Generator</Modal.Title>
-			</Modal.Header>
+			</JamModal.Header>
 			<Modal.Body>
 				{renderFormField(selectField, formData, handleChange, errors, currentUser)}
 				{renderFormField(subjectField, formData, handleChange, errors, currentUser)}
@@ -271,6 +272,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 							as={ButtonGroup}
 							className="email-service-dropdown flex-fill"
 							style={{ width: "100%" }}
+							id={"email-service-dropdown"}
 						>
 							<Button variant="primary" onClick={(): void => handleSend("default")} id={"send-btn"}>
 								<i className="bi bi-send-fill me-2"></i>
@@ -308,7 +310,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 					</div>
 				</div>
 			</Modal.Footer>
-		</Modal>
+		</JamModal>
 	);
 });
 

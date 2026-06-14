@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.models import Geolocation
-from app.resources import COUNTRIES
 
 _last_call_time = 0.0
 _api_lock = threading.Lock()
@@ -27,7 +26,7 @@ def call_geocoding_api(query: str) -> tuple[float, float, dict]:
 
     print("Calling Nominatim API for query:", query)
     base_url = "https://nominatim.openstreetmap.org/search"
-    params = {"format": "json", "limit": 1, "addressdetails": 1, "q": query}
+    params = {"format": "json", "limit": 1, "addressdetails": 1, "q": query, "accept-language": "en"}
     headers = {"User-Agent": f"JAM/{settings.app_version} ({settings.main_email_username})"}
 
     try:
@@ -50,9 +49,9 @@ def call_geocoding_api(query: str) -> tuple[float, float, dict]:
 
 
 def geocode_location(
-    query: str | dict,
-    db: Session,
-    logger: logging.Logger | None = None,
+        query: str,
+        db: Session,
+        logger: logging.Logger | None = None,
 ) -> Geolocation | None:
     """Geocode a location or scraped job using cached results when available.
     Links the location/scraped job to a Geolocation record via foreign key.
@@ -62,11 +61,7 @@ def geocode_location(
     :return: The geolocation ID if successful, else None."""
 
     # Decode HTML entities and normalise whitespace
-    if isinstance(query, dict):
-        sanitised_query = {k: html.unescape(v).strip() if isinstance(v, str) else v for k, v in query.items() if v}
-        sanitised_query = ", ".join(sanitised_query.values())
-    else:
-        sanitised_query = html.unescape(query).strip()
+    sanitised_query = html.unescape(query).strip()
 
     # Check cache first
     cached = db.query(Geolocation).filter_by(query=sanitised_query).first()
@@ -77,23 +72,14 @@ def geocode_location(
         try:
             lat, lon, address_dict = call_geocoding_api(sanitised_query)
 
-            # Create new geolocation entry
-            oms_country = address_dict.get("country")
-            matched_country = None
-            if oms_country:
-                for country in COUNTRIES:
-                    if oms_country.lower() == country["name"].lower():
-                        matched_country = country["name"]
-                        break
-
             new_geo = Geolocation(
                 query=sanitised_query,
                 latitude=lat,
                 longitude=lon,
                 data=address_dict,
                 postcode=address_dict.get("postcode"),
-                city=address_dict.get("town") or address_dict.get("city"),
-                country=matched_country,
+                city=address_dict.get("town") or address_dict.get("city") or address_dict.get("province"),
+                country=address_dict.get("country"),
             )
             db.add(new_geo)
             db.commit()

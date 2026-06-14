@@ -1,17 +1,16 @@
 import React, { useEffect, useState, JSX } from "react";
-import { Card, Form } from "react-bootstrap";
+import { Form } from "react-bootstrap";
 import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
-import { useDataContext } from "../../contexts/DataContext";
 import { ApiResponse } from "../../services/api/Base";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import LoadingSpinner from "../../components/Spinner/Spinner";
 import { UserQualification } from "../../services/schemas/Core";
 import { userQualificationApi } from "../../services/api/Users";
-import { AiSystemPromptData } from "../../services/schemas/Services";
+import { useConfig } from "../../contexts/ConfigContext";
 
 interface QualificationFormData {
 	qualification_id?: number;
@@ -24,8 +23,8 @@ interface QualificationFormData {
 
 export const QualificationsTab: React.FC = (): JSX.Element => {
 	const { token } = useAuth();
-	const { aiSystemPrompts } = useDataContext();
 	const { showToastSuccess, showToastError } = useGlobalToast();
+	const { config } = useConfig();
 	const [formData, setFormData] = useState<QualificationFormData>({
 		qualification_id: undefined,
 		experience: "",
@@ -97,63 +96,57 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		}
 	};
 
-	const EXPERIENCE_CHAR_LIMIT = 10000;
-	const OTHER_CHAR_LIMIT = 3500;
+	const limits = config?.column_limits;
 
 	const experienceField: ModalFormField = {
-		name: "experience",
+		key: "experience",
 		type: "textarea",
 		label: "Experience",
 		placeholder: "Describe your work experience...",
 		rows: 3,
 		autoHeight: true,
-		maxChars: EXPERIENCE_CHAR_LIMIT,
+		maxChars: limits?.experience ?? 10000,
 	};
 
 	const skillsField: ModalFormField = {
-		name: "skills",
+		key: "skills",
 		type: "textarea",
 		label: "Skills",
 		placeholder: "List your skills...",
 		rows: 3,
 		autoHeight: true,
-		maxChars: OTHER_CHAR_LIMIT,
+		maxChars: limits?.skills ?? 3500,
 	};
 
 	const qualitiesField: ModalFormField = {
-		name: "qualities",
+		key: "qualities",
 		type: "textarea",
 		label: "Qualities",
 		placeholder: "Describe your qualities...",
 		rows: 3,
 		autoHeight: true,
-		maxChars: OTHER_CHAR_LIMIT,
+		maxChars: limits?.qualities ?? 3500,
 	};
 
 	const educationField: ModalFormField = {
-		name: "education",
+		key: "education",
 		type: "textarea",
 		label: "Education",
 		placeholder: "Describe your education...",
 		rows: 3,
 		autoHeight: true,
-		maxChars: OTHER_CHAR_LIMIT,
+		maxChars: limits?.education ?? 3500,
 	};
 
 	const interestsField: ModalFormField = {
-		name: "interests",
+		key: "interests",
 		type: "textarea",
 		label: "Interests",
 		placeholder: "Describe your interests...",
 		rows: 3,
 		autoHeight: true,
-		maxChars: OTHER_CHAR_LIMIT,
+		maxChars: limits?.interests ?? 3500,
 	};
-
-	const latestSystemPrompt: AiSystemPromptData | null | undefined = aiSystemPrompts?.length
-		? [...aiSystemPrompts].sort((a: AiSystemPromptData, b: AiSystemPromptData): number => b.id - a.id)[0]
-		: null;
-	const systemPrompt: string | undefined = latestSystemPrompt?.prompt;
 
 	const hasAtLeastOneQualification: boolean =
 		!!formData.experience?.trim() ||
@@ -163,11 +156,11 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 		!!formData.interests?.trim();
 
 	const isWithinCharLimits: boolean =
-		(formData.experience?.length || 0) <= EXPERIENCE_CHAR_LIMIT &&
-		(formData.skills?.length || 0) <= OTHER_CHAR_LIMIT &&
-		(formData.qualities?.length || 0) <= OTHER_CHAR_LIMIT &&
-		(formData.education?.length || 0) <= OTHER_CHAR_LIMIT &&
-		(formData.interests?.length || 0) <= OTHER_CHAR_LIMIT;
+		(formData.experience?.length || 0) <= (limits?.experience ?? 10000) &&
+		(formData.skills?.length || 0) <= (limits?.skills ?? 3500) &&
+		(formData.qualities?.length || 0) <= (limits?.qualities ?? 3500) &&
+		(formData.education?.length || 0) <= (limits?.education ?? 3500) &&
+		(formData.interests?.length || 0) <= (limits?.interests ?? 3500);
 
 	if (loading) {
 		return <LoadingSpinner text="Loading qualifications..." />;
@@ -196,34 +189,6 @@ export const QualificationsTab: React.FC = (): JSX.Element => {
 					/>
 				</div>
 			</Form>
-
-			{systemPrompt && (
-				<Card className="mt-4">
-					<Card.Header>
-						<i className="bi bi-robot me-2" />
-						AI System Prompt
-					</Card.Header>
-					<Card.Body>
-						<p className="text-muted mb-2">
-							This is the system prompt used by the AI to evaluate job matches based on your
-							qualifications.
-						</p>
-						<pre
-							style={{
-								whiteSpace: "pre-wrap",
-								wordBreak: "break-word",
-								backgroundColor: "var(--bs-tertiary-bg)",
-								padding: "1rem",
-								borderRadius: "0.375rem",
-								fontSize: "0.875rem",
-								margin: 0,
-							}}
-						>
-							{systemPrompt}
-						</pre>
-					</Card.Body>
-				</Card>
-			)}
 		</>
 	);
 };

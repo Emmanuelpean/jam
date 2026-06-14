@@ -1,5 +1,6 @@
 import React from "react";
 import { Form, Spinner } from "react-bootstrap";
+import { useDelayedLoading } from "../../../hooks/useDelayedLoading";
 
 interface ActionToggleProps {
 	id: string;
@@ -20,16 +21,21 @@ export const ActionToggle: React.FC<ActionToggleProps> = ({
 	loading = false,
 	className = "",
 }) => {
+	const visibleLoading = useDelayedLoading(loading);
+
 	return (
 		<div className={`d-flex align-items-center ${className}`}>
-			{loading && <Spinner animation="border" size="sm" className="me-2" aria-label="Loading toggle state" />}
+			{visibleLoading && (
+				<Spinner animation="border" size="sm" className="me-2" aria-label="Loading toggle state" />
+			)}
 			<Form.Check
 				type="switch"
 				id={id}
 				label={label}
 				checked={checked}
 				onChange={onChange}
-				disabled={disabled || loading}
+				disabled={disabled || loading || visibleLoading}
+				style={{ userSelect: "none" }}
 			/>
 		</div>
 	);

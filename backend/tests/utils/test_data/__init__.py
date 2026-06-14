@@ -55,14 +55,12 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
         "PERSON_DATA": [("company_id", "COMPANY_DATA", "optional")],  # Can be None
         "JOB_DATA": [
             ("company_id", "COMPANY_DATA", "optional"),
-            ("location_id", "LOCATION_DATA", "optional"),
             ("source_aggregator_id", "AGGREGATOR_DATA", "optional"),
             ("cv_id", "FILE_DATA", "optional"),
             ("cover_letter_id", "FILE_DATA", "optional"),
             ("application_aggregator_id", "AGGREGATOR_DATA", "optional"),
         ],
         "INTERVIEW_DATA": [
-            ("location_id", "LOCATION_DATA", "optional"),
             ("job_id", "JOB_DATA", "required"),  # Should always have a job
         ],
         "JOB_APPLICATION_UPDATE_DATA": [("job_id", "JOB_DATA", "required")],  # Should always reference a job
@@ -253,7 +251,6 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
 analysis_results = validate_ownership_integrity_detailed(
     {
         "COMPANY_DATA": COMPANY_DATA,
-        "LOCATION_DATA": LOCATION_DATA,
         "PERSON_DATA": PERSON_DATA,
         "JOB_DATA": JOB_DATA,
         "INTERVIEW_DATA": INTERVIEW_DATA,

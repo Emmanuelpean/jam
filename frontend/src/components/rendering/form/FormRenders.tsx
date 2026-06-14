@@ -14,12 +14,14 @@ import {
 	updateTypeOptions,
 } from "./FormOptions";
 import { DataModalHandle } from "../../DataModal/DataModal";
-import { EnrichedJobData } from "../../../services/schemas/DataTables";
+import { EnrichedJobData, JobData } from "../../../services/schemas/DataTables";
 import { DataContextValue } from "../../../contexts/DataContext";
+import { useConfig } from "../../../contexts/ConfigContext";
+import { ColumnLimits } from "../../../services/schemas/Base";
 
 export interface ModalFormField {
-	name: string | string[];
-	secondaryName?: string;
+	key: string | string[];
+	secondaryKey?: string;
 	label?: string | JSX.Element | null;
 	icon?: string;
 	type: string;
@@ -39,91 +41,104 @@ export interface ModalFormField {
 	addButton?: {
 		modalRef: React.RefObject<DataModalHandle | null>;
 		transformParentData?: ((parentData: any) => any) | null;
+		id?: string;
 	};
 	tabIndex?: number;
 	displayCondition?: (item: any) => boolean;
 	previewConfig?: SelectWidgetPreviewConfig | null;
 	isDisabled?: boolean;
+	highlight?: boolean;
 	autoHeight?: boolean;
 	maxChars?: number;
+	fileType?: string;
 }
 
-interface FormFieldOverride extends Partial<ModalFormField> {}
+export const EmailValidation = (value: string): string | null => {
+	if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+		return "Email format is invalid";
+	} else {
+		return null;
+	}
+};
 
-export const formFields = {
+export interface FormFieldOverride extends Partial<ModalFormField> {}
+
+const createFormFields = (limits: Partial<ColumnLimits>) => {
 	// ------------------------------------------------- BASIC FIELDS -------------------------------------------------
 
-	title: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "title",
+	const titleField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "title",
 		label: "Title",
 		type: "text",
 		required: true,
 		placeholder: "Enter title",
+		maxChars: limits.job_title,
 		...overrides,
-	}),
+	});
 
-	value: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "value",
+	const valueField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "value",
 		label: "Value",
 		type: "textarea",
 		required: true,
 		...overrides,
-	}),
+	});
 
-	name: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "name",
+	const nameField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "name",
 		label: "Name",
 		type: "text",
 		required: true,
 		placeholder: "Enter name",
+		maxChars: limits.name,
 		...overrides,
-	}),
+	});
 
-	description: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "description",
+	const descriptionField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "description",
 		label: "Description",
 		type: "textarea",
 		rows: 4,
 		placeholder: "Enter description...",
+		maxChars: limits.description,
 		...overrides,
-	}),
+	});
 
-	note: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "note",
+	const fileNameField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "filename",
+		label: "Filename",
+		type: "text",
+		required: true,
+		placeholder: "Enter filename",
+		maxChars: limits.file_name,
+		...overrides,
+	});
+
+	const noteField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "note",
 		label: "Notes",
 		type: "textarea",
 		rows: 4,
 		placeholder: "Add your notes...",
+		maxChars: limits.note,
 		...overrides,
-	}),
+	});
 
-	url: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "url",
+	const urlField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "url",
 		label: "URL",
 		type: "url",
 		placeholder: "https://...",
-		validation: (value: string): string | null => {
-			if (value && !value.includes(".")) {
-				return "Please enter a valid URL";
-			} else {
-				return null;
-			}
-		},
+		maxChars: limits.url,
 		...overrides,
-	}),
+	});
 
-	jobURl: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "url",
+	const jobUrlField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "url",
 		label: "Job URL",
 		type: "url",
 		placeholder: "https://linkedin.com/jobs/123456",
-		validation: (value: string) => {
-			if (value && !value.includes(".")) {
-				return "Please enter a valid URL";
-			} else {
-				return null;
-			}
-		},
+		maxChars: limits.url,
 		liveValidation: (value: string, formData: any, dataContext: DataContextValue): string | null => {
 			if (!value) return null;
 			const dup: EnrichedJobData | undefined = dataContext.jobs.find(
@@ -133,294 +148,328 @@ export const formFields = {
 			return dup ? "A job with this URL already exists" : null;
 		},
 		...overrides,
-	}),
+	});
 
-	datetime: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "date",
+	const locationField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "location",
+		label: "Location",
+		type: "text",
+		placeholder: "e.g. London, UK",
+		maxChars: limits.location,
+		isClearable: true,
+		displayCondition: (formData: JobData): boolean => {
+			return formData.attendance_type !== "remote";
+		},
+		...overrides,
+	});
+
+	const datetimeField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "date",
 		label: "Date & Time",
 		type: "datetime-local",
 		required: true,
 		...overrides,
-	}),
+	});
 
-	deadline: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "deadline",
+	const deadlineField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "deadline",
 		label: "Application Deadline",
 		type: "date",
 		...overrides,
-	}),
+	});
 
-	updateType: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "type",
+	const updateTypeField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "type",
 		label: "Update Type",
 		type: "select",
 		required: true,
 		options: updateTypeOptions,
 		...overrides,
-	}),
+	});
 
-	isActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "is_active",
+	const isActiveField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "is_active",
 		label: "Active",
 		type: "checkbox",
 		...overrides,
-	}),
+	});
 
-	caseSensitive: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "case_sensitive",
+	const caseSensitiveField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "case_sensitive",
 		label: "Case Sensitive",
 		type: "checkbox",
 		...overrides,
-	}),
+	});
 
-	isRecruiter: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "is_recruiter",
+	const isRecruiterField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "is_recruiter",
 		label: "Is Recruiter",
 		type: "checkbox",
 		...overrides,
-	}),
+	});
 
-	// ------------------------------------------------- USERS ------------------------------------------------
+	// ------------------------------------------------- USER FIELDS ------------------------------------------------
 
-	isAdmin: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "is_admin",
+	const isAdminField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "is_admin",
 		label: "Admin",
 		type: "checkbox",
 		...overrides,
-	}),
+	});
 
-	premiumActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: ["premium", "is_active"],
+	const premiumActiveField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: ["premium", "is_active"],
 		label: "Premium Active",
 		type: "toggle",
 		...overrides,
-	}),
+	});
 
-	jobScrapingActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: ["premium", "job_scraping_active"],
+	const jobScrapingActiveField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: ["premium", "job_scraping_active"],
 		label: "Job Scraping Active",
 		type: "toggle",
 		...overrides,
-	}),
+	});
 
-	jobRatingActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: ["premium", "job_rating_active"],
+	const jobRatingActiveField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: ["premium", "job_rating_active"],
 		label: "Job Rating Active",
 		type: "toggle",
 		...overrides,
-	}),
+	});
 
-	password: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "password",
+	const passwordField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "password",
 		label: "Password",
 		type: "password",
 		required: true,
+		maxChars: limits.password,
 		...overrides,
-	}),
+	});
 
 	// ------------------------------------------------- PERSON FIELDS ------------------------------------------------
 
-	firstName: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "first_name",
+	const firstNameField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "first_name",
 		label: "First Name",
 		type: "text",
 		required: true,
 		placeholder: "Enter first name",
+		maxChars: limits.first_name,
 		...overrides,
-	}),
+	});
 
-	lastName: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "last_name",
+	const lastNameField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "last_name",
 		label: "Last Name",
 		type: "text",
 		required: true,
 		placeholder: "Enter last name",
+		maxChars: limits.last_name,
 		...overrides,
-	}),
+	});
 
-	email: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "email",
+	const emailField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "email",
 		label: "Email",
 		type: "text",
 		placeholder: "person@company.com",
-		validation: (value: string) => {
-			if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-				return "Please enter a valid email address";
-			} else {
-				return null;
-			}
-		},
+		maxChars: limits.email,
+		validation: EmailValidation,
 		...overrides,
-	}),
+	});
 
-	phone: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "phone",
+	const phoneField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "phone",
 		label: "Phone",
 		type: "tel",
 		placeholder: "+44 20 7946 0958",
+		maxChars: limits.phone,
 		...overrides,
-	}),
+	});
 
-	linkedinUrl: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "linkedin_url",
+	const linkedinUrlField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "linkedin_url",
 		label: "LinkedIn Profile",
 		type: "text",
 		placeholder: "https://linkedin.com/in/username",
+		maxChars: limits.url,
 		validation: (value: string) => {
-			if (value && !value.includes("linkedin.com")) {
+			if (value && !value.includes("linkedin")) {
 				return "Please enter a valid LinkedIn URL";
 			} else {
 				return null;
 			}
 		},
 		...overrides,
-	}),
+	});
 
-	role: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "role",
+	const roleField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "role",
 		label: "Role",
 		type: "text",
+		maxChars: limits.role,
 		...overrides,
-	}),
+	});
 
 	// ------------------------------------------------- LOCATION FIELDS -----------------------------------------------
 
-	city: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "city",
+	const cityField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "city",
 		label: "City",
 		type: "text",
 		placeholder: "Enter city name",
 		...overrides,
-	}),
+	});
 
-	postcode: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "postcode",
+	const postcodeField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "postcode",
 		label: "Post Code",
 		type: "text",
 		placeholder: "Enter post code",
 		...overrides,
-	}),
-
-	country: (countries: SelectOption[] = [], overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "country",
-		label: "Country",
-		type: "select",
-		options: countries,
-		placeholder: "Search and select a country...",
-		isSearchable: true,
-		isClearable: true,
-		...overrides,
-	}),
+	});
 
 	// ------------------------------------------------- JOB FIELDS --------------------------------------------------
 
-	jobTitle: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "title",
+	const isFavouriteField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "is_favourite",
+		label: "Favourite",
+		type: "star_toggle",
+		...overrides,
+	});
+
+	const jobTitleField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "title",
 		label: "Job Title",
 		type: "text",
 		required: true,
 		placeholder: "Enter job title",
+		maxChars: limits.job_title,
 		...overrides,
-	}),
+	});
 
-	salaryMin: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "salary_min",
+	const salaryMinField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "salary_min",
 		label: "Minimum Salary",
 		type: "salary",
-		placeholder: "Enter minimum salary",
+		placeholder: "35000",
 		step: "1000",
+		liveValidation: (value: string) => {
+			return value && isNaN(Number(value)) ? "Minimum Salary must be a valid number" : null;
+		},
 		...overrides,
-	}),
+	});
 
-	salaryMax: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "salary_max",
+	const salaryMaxField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "salary_max",
 		label: "Maximum Salary",
 		type: "salary",
-		placeholder: "Enter maximum salary",
+		placeholder: "45000",
 		step: "1000",
+		liveValidation: (value: string) => {
+			return value && isNaN(Number(value)) ? "Maximum Salary must be a valid number" : null;
+		},
 		...overrides,
-	}),
+	});
 
-	personalRating: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "personal_rating",
+	const personalRatingField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "personal_rating",
 		label: "Personal Rating",
 		type: "rating",
 		maxRating: 5,
 		...overrides,
-	}),
+	});
 
-	attendanceType: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "attendance_type",
+	const attendanceTypeField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "attendance_type",
 		label: "Attendance Type",
 		type: "select",
 		options: attendanceTypeOptions,
 		...overrides,
-	}),
+	});
 
-	interviewAttendanceType: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "attendance_type",
+	const interviewAttendanceTypeField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "attendance_type",
 		label: "Attendance Type",
 		type: "select",
 		options: interviewAttendanceOptions,
 		...overrides,
-	}),
+	});
 
 	// ------------------------------------------------- INTERVIEW FIELDS --------------------------------------------
 
-	interviewType: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "type",
+	const interviewTypeField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "type",
 		label: "Interview Type",
 		type: "select",
 		required: true,
 		options: interviewTypeOptions,
 		placeholder: "Select interview type",
 		...overrides,
-	}),
+	});
 
 	// ------------------------------------------------- APPLICATION FIELDS -----------------------------------------
 
-	applicationDate: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		...formFields.datetime(),
-		name: "application_date",
+	const applicationDateField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		...datetimeField(),
+		key: "application_date",
 		label: "Application Date",
 		required: false,
 		...overrides,
-	}),
+	});
 
-	applicationStatus: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "application_status",
+	const applicationStatusField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "application_status",
 		label: "Application Status",
 		type: "select",
 		options: applicationStatusOptions,
 		...overrides,
-	}),
+	});
 
-	applicationUrl: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "application_url",
+	const applicationUrlField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "application_url",
 		label: "Application URL",
 		type: "text",
 		placeholder: "https://...",
+		maxChars: limits.url,
 		...overrides,
-	}),
+	});
 
-	applicationVia: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "applied_via",
+	const applicationViaField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "applied_via",
 		label: "Application Via",
 		type: "select",
 		options: appliedViaOptions,
 		...overrides,
-	}),
+	});
+
+	const cvUploadField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "cv_id",
+		label: "CV",
+		type: "file_upload",
+		fileType: "cv",
+		...overrides,
+	});
+
+	const coverLetterUploadField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "cover_letter_id",
+		label: "Cover Letter",
+		type: "cover_letter",
+		fileType: "cover_letter",
+		...overrides,
+	});
 
 	// ------------------------------------------- SELECT FIELDS WITH OPTIONS ------------------------------------------
 
-	company: (
+	const companyField = (
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "company_id",
+		key: "company_id",
 		label: "Company",
 		type: "select",
 		placeholder: "Select or search company...",
@@ -428,137 +477,102 @@ export const formFields = {
 		isClearable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-company" },
 		...overrides,
-	}),
+	});
 
-	scrapedCompany: (
+	const scrapedCompanyField = (
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
+		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "company_id",
-		secondaryName: "company",
+		key: "company_id",
+		secondaryKey: "company",
 		label: "Company",
 		type: "select",
 		placeholder: "Select or search company...",
 		isSearchable: true,
 		isClearable: true,
-		options: options,
-		addButton: { modalRef, transformParentData },
-		...overrides,
-	}),
-
-	location: (
-		options: SelectOption[] = [],
-		modalRef: React.RefObject<DataModalHandle | null>,
-		transformParentData?: ((parentData: any) => any) | null,
-		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {}
-	): ModalFormField => ({
-		name: "location_id",
-		label: "Location",
-		type: "select",
-		placeholder: "Select or search location...",
-		isSearchable: true,
-		isClearable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-company" },
 		...overrides,
-	}),
+	});
 
-	scrapedLocation: (
-		options: SelectOption[] = [],
-		modalRef: React.RefObject<DataModalHandle | null>,
-		transformParentData?: ((parentData: any) => any) | null,
-		overrides: FormFieldOverride = {}
-	): ModalFormField => ({
-		name: "location_id",
-		secondaryName: "parsed_location",
-		label: "Location",
-		type: "select",
-		placeholder: "Select or search location...",
-		isSearchable: true,
-		isClearable: true,
-		options: options,
-		addButton: { modalRef, transformParentData },
-		...overrides,
-	}),
-
-	keywords: (
+	const keywordsField = (
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "keywords",
+		key: "keywords",
 		label: "Tags",
 		type: "multiselect",
 		placeholder: "Select or search tags...",
 		isSearchable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-keyword" },
 		...overrides,
-	}),
+	});
 
-	contacts: (
+	const contactsField = (
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "contacts",
+		key: "contacts",
 		label: "Contacts",
 		type: "multiselect",
 		placeholder: "Select or search contacts...",
 		isSearchable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-contact" },
 		...overrides,
-	}),
+	});
 
-	interviewers: (
+	const interviewersField = (
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "interviewers",
+		key: "interviewers",
 		label: "Interviewers",
 		type: "multiselect",
 		isSearchable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-interviewer" },
 		...overrides,
-	}),
+	});
 
-	recruiter: (
+	const recruiterField = (
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "recruiter_id",
+		key: "recruiter_id",
 		label: "Recruiter",
 		type: "select",
 		isSearchable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-recruiter" },
 		...overrides,
-	}),
+	});
 
-	job: (options: SelectOption[] = [], overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "job_id",
+	const jobField = (options: SelectOption[] = [], overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "job_id",
 		label: "Job",
 		type: "select",
 		required: true,
@@ -567,16 +581,16 @@ export const formFields = {
 		isClearable: false,
 		options: options,
 		...overrides,
-	}),
+	});
 
-	aggregator: (
+	const aggregatorField = (
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
-		name: "aggregator_id",
+		key: "aggregator_id",
 		label: "Aggregator",
 		type: "select",
 		placeholder: "Select an aggregator",
@@ -584,23 +598,64 @@ export const formFields = {
 		isClearable: true,
 		previewConfig: previewConfig,
 		options: options,
-		addButton: { modalRef, transformParentData },
+		addButton: { modalRef, transformParentData, id: "add-button-aggregator" },
 		...overrides,
-	}),
+	});
 
-	sourceType: (overrides: FormFieldOverride = {}): ModalFormField => ({
+	const applicationAggregatorField = (
+		options: SelectOption[] = [],
+		modalRef: React.RefObject<DataModalHandle | null>,
+		transformParentData?: ((parentData: any) => any) | null,
+		previewConfig: SelectWidgetPreviewConfig | null = null,
+		overrides: FormFieldOverride = {}
+	): ModalFormField => ({
+		...aggregatorField(options, modalRef, transformParentData, previewConfig),
+		key: "application_aggregator_id",
+		displayCondition: (formData: { applied_via: string | null }): boolean =>
+			formData.applied_via ? formData.applied_via === "aggregator" : false,
+		...overrides,
+	});
+
+	const sourceTypeField = (overrides: FormFieldOverride = {}): ModalFormField => ({
 		options: sourceTypeOptions,
-		name: "source_type",
+		key: "source_type",
 		label: "Source",
 		type: "select",
 		placeholder: "Select source",
 		isSearchable: true,
 		isClearable: true,
 		...overrides,
-	}),
+	});
 
-	scrapingFilterType: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "type",
+	const sourceGroupFields = (
+		aggregators: SelectOption[],
+		aggregatorModalRef: React.RefObject<DataModalHandle | null>,
+		getAggregatorPreviewConfig: SelectWidgetPreviewConfig | null,
+		persons: SelectOption[],
+		personModalRef: React.RefObject<DataModalHandle | null>,
+		getPersonPreviewConfig: SelectWidgetPreviewConfig | null,
+		companies: SelectOption[],
+		companyModalRef: React.RefObject<DataModalHandle | null>,
+		getCompanyPreviewConfig: SelectWidgetPreviewConfig | null,
+		aggregatorTransformParentData: ((parentData: any) => any) | null = null
+	): ModalFormField[] => [
+		sourceTypeField(),
+		aggregatorField(aggregators, aggregatorModalRef, aggregatorTransformParentData, getAggregatorPreviewConfig, {
+			key: "source_aggregator_id",
+			displayCondition: (formData: any): boolean =>
+				["aggregator", "aggregator_email"].includes(formData.source_type || ""),
+		}),
+		recruiterField(persons, personModalRef, null, getPersonPreviewConfig, {
+			displayCondition: (formData: any): boolean => formData.source_type === "recruiter",
+		}),
+		companyField(companies, companyModalRef, null, getCompanyPreviewConfig, {
+			key: "recruitment_company_id",
+			displayCondition: (formData: any): boolean => formData.source_type === "recruitment_company",
+		}),
+	];
+
+	const scrapingFilterTypeField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "type",
 		label: "Filter Type",
 		type: "select",
 		required: true,
@@ -609,10 +664,10 @@ export const formFields = {
 		isClearable: true,
 		options: scrapingFilterTypeOptions,
 		...overrides,
-	}),
+	});
 
-	scrapingFilterOperator: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "operator",
+	const scrapingFilterOperatorField = (overrides: FormFieldOverride = {}): ModalFormField => ({
+		key: "operator",
 		label: "Operator",
 		type: "select",
 		required: true,
@@ -621,5 +676,69 @@ export const formFields = {
 		isClearable: true,
 		options: scrapingFilterOperatorOptions,
 		...overrides,
-	}),
+	});
+
+	return {
+		titleField,
+		valueField,
+		nameField,
+		descriptionField,
+		fileNameField,
+		noteField,
+		urlField,
+		jobUrlField,
+		locationField,
+		datetimeField,
+		deadlineField,
+		updateTypeField,
+		isActiveField,
+		caseSensitiveField,
+		isRecruiterField,
+		isAdminField,
+		premiumActiveField,
+		jobScrapingActiveField,
+		jobRatingActiveField,
+		passwordField,
+		firstNameField,
+		lastNameField,
+		emailField,
+		phoneField,
+		linkedinUrlField,
+		roleField,
+		cityField,
+		postcodeField,
+		isFavouriteField,
+		jobTitleField,
+		salaryMinField,
+		salaryMaxField,
+		personalRatingField,
+		attendanceTypeField,
+		interviewAttendanceTypeField,
+		interviewTypeField,
+		applicationDateField,
+		applicationStatusField,
+		applicationUrlField,
+		applicationViaField,
+		cvUploadField,
+		coverLetterUploadField,
+		companyField,
+		scrapedCompanyField,
+		keywordsField,
+		contactsField,
+		interviewersField,
+		recruiterField,
+		jobField,
+		aggregatorField,
+		applicationAggregatorField,
+		sourceTypeField,
+		sourceGroupFields,
+		scrapingFilterTypeField,
+		scrapingFilterOperatorField,
+	};
+};
+
+export const useFormFields = () => {
+	const { config } = useConfig();
+	const limits = config?.column_limits ?? {};
+	return createFormFields(limits);
 };

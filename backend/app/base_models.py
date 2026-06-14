@@ -4,7 +4,7 @@ to provide a shared structure for all models, including common attributes like `
 
 import re
 
-from sqlalchemy import Column, Integer, ForeignKey, TIMESTAMP, text, func
+from sqlalchemy import Boolean, Column, Integer, ForeignKey, TIMESTAMP, text, func
 from sqlalchemy.ext.declarative import declared_attr
 
 
@@ -18,7 +18,6 @@ class CommonBase(object):
     - `created_at` (datetime): The timestamp of when the record was created. Automatically populated upon creation.
     - `modified_at` (datetime): The timestamp of when the record was modified. Automatically updated upon updates."""
 
-    # noinspection PyMethodParameters
     @declared_attr
     def __tablename__(cls) -> str:
         """Return the class name as table name e.g. JobApplication -> job_application"""
@@ -42,4 +41,5 @@ class Owned(CommonBase):
     -----------
     - `owner_id` (int): Foreign key linking the record to the user table."""
 
-    owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    is_tour = Column(Boolean, nullable=False, server_default=text("false"))

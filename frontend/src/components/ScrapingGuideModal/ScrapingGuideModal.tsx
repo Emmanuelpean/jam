@@ -1,5 +1,6 @@
 import React, { forwardRef, JSX, useImperativeHandle, useState } from "react";
 import { Modal } from "react-bootstrap";
+import JamModal from "../JamModal/JamModal";
 import { Accordion } from "../Accordion/Accordion";
 import { useConfig } from "../../contexts/ConfigContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
@@ -31,13 +32,13 @@ export const ScrapingGuideModal = forwardRef<ScrapingGuideModalHandle>((_, ref):
 	};
 
 	return (
-		<Modal show={visible} onHide={() => setVisible(false)} centered size="lg">
-			<Modal.Header closeButton>
+		<JamModal show={visible} onHide={() => setVisible(false)} centered size="lg">
+			<JamModal.Header onClose={() => setVisible(false)}>
 				<Modal.Title>
 					<i className="bi bi-envelope-paper me-2" />
 					Job Scraping Setup Guide
 				</Modal.Title>
-			</Modal.Header>
+			</JamModal.Header>
 			<Modal.Body>
 				<p>
 					To enable job scraping, you need to set up an email forwarding rule in your email client. For each
@@ -100,12 +101,16 @@ export const ScrapingGuideModal = forwardRef<ScrapingGuideModalHandle>((_, ref):
 					header={
 						<span>
 							<i className="bi bi-microsoft me-2" />
-							<strong>Outlook (Web)</strong>
+							<strong>Outlook (Web) / Hotmail</strong>
 						</span>
 					}
 					isOpen={openSection === "outlook-web"}
 					onToggle={() => toggleSection("outlook-web")}
 				>
+					<p className="small text-muted mt-2">
+						Hotmail addresses (<code>@hotmail.com</code>, <code>@live.com</code>) use the same
+						interface — sign in at <strong>outlook.live.com</strong>.
+					</p>
 					<ol className="mt-2 mb-2">
 						<li>
 							Open Outlook on the web and click the <strong>gear icon</strong> (top-right) to open
@@ -238,6 +243,6 @@ export const ScrapingGuideModal = forwardRef<ScrapingGuideModalHandle>((_, ref):
 					</ol>
 				</Accordion>
 			</Modal.Body>
-		</Modal>
+		</JamModal>
 	);
 });

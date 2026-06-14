@@ -3,6 +3,7 @@
 Provides a factory function to generate FastAPI routers with standard CRUD endpoints,
 including user ownership validation, query filtering, and many-to-many relationship handling."""
 
+import json
 from typing import Any, Callable
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -12,8 +13,11 @@ from sqlalchemy.orm import Session
 from starlette import status
 from starlette.requests import Request
 
-from app import database, models
+from app import models
 from app.core import oauth2
+from app.config import settings
+from app.database import Base, get_db
+
 
 NOT_ALLOWED_EXCEPTION = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
@@ -21,74 +25,26 @@ NOT_ALLOWED_EXCEPTION = HTTPException(
 )
 
 
-def filter_out_non_owned(
-    entry: Any,
-    current_user_id: int,
-    processed_objects: set = None,
-) -> Any:
-    """Recursively filter out related objects that don't belong to the current user.
-    :param entry: The SQLAlchemy model instance to filter
-    :param current_user_id: The ID of the current user
-    :param processed_objects: Set to track processed objects (prevents infinite recursion)
-    :return: The filtered SQLAlchemy model instance"""
+def _owned_fk_columns(table_model) -> dict[str, Any]:
+    """Map each foreign-key column of a model to the related model class, keeping only targets that are owned.
 
-    if processed_objects is None:
-        processed_objects = set()
+    Used to validate at write time that a user can only link an entry to related entries they own.
+    :param table_model: The SQLAlchemy model class to inspect.
+    :return: Dict of {column_name: related_model_class} for FK columns pointing at an owner-scoped table."""
 
-    # Avoid infinite recursion
-    obj_id = id(entry)
-    if obj_id in processed_objects:
-        return entry
-    processed_objects.add(obj_id)
+    # Resolve target table names to their mapped classes
+    table_to_model = {mapper.class_.__tablename__: mapper.class_ for mapper in Base.registry.mappers}
 
-    # Get the SQLAlchemy mapper for this object
-    if not hasattr(entry, "__mapper__"):
-        return entry
+    fk_columns: dict[str, Any] = {}
+    for column in table_model.__table__.columns:
+        for fk in column.foreign_keys:
+            related_model = table_to_model.get(fk.column.table.name)
+            # Only validate ownership for FKs pointing at owner-scoped tables
+            if related_model is not None and hasattr(related_model, "owner_id"):
+                fk_columns[column.name] = related_model
+            break
 
-    mapper = entry.__mapper__
-
-    # Iterate through all relationships
-    for relationship_prop in mapper.relationships:
-        attr_name = relationship_prop.key
-        related_value = getattr(entry, attr_name, None)
-
-        if related_value is None:
-            continue
-
-        # Handle list relationships (one-to-many, many-to-many)
-        if isinstance(related_value, list):
-            filtered_list = []
-            for item in related_value:
-                # Check if item has owner_id and if it matches current user
-                if hasattr(item, "owner_id"):
-                    if item.owner_id == current_user_id:
-                        # Recursively filter this item too
-                        filtered_item = filter_out_non_owned(item, current_user_id, processed_objects)
-                        filtered_list.append(filtered_item)
-                else:
-                    # Keep items without owner_id (like system data)
-                    filtered_item = filter_out_non_owned(item, current_user_id, processed_objects)
-                    filtered_list.append(filtered_item)
-
-            # Replace the relationship with filtered list
-            setattr(entry, attr_name, filtered_list)
-
-        # Handle single relationships (many-to-one, one-to-one)
-        else:
-            if hasattr(related_value, "owner_id"):
-                if related_value.owner_id != current_user_id:
-                    # Set to None if not owned by current user
-                    setattr(entry, attr_name, None)
-                else:
-                    # Recursively filter the related object
-                    filtered_related = filter_out_non_owned(related_value, current_user_id, processed_objects)
-                    setattr(entry, attr_name, filtered_related)
-            else:
-                # Keep and recursively filter items without owner_id
-                filtered_related = filter_out_non_owned(related_value, current_user_id, processed_objects)
-                setattr(entry, attr_name, filtered_related)
-
-    return entry
+    return fk_columns
 
 
 def filter_query(
@@ -142,6 +98,88 @@ def filter_query(
                 query = query.filter(col == converted_value)
 
     return query
+
+
+def parse_column_filters(
+    filters_json: str | None,
+    model,
+    prefixed_models: dict | None = None,
+) -> tuple[list, set]:
+    """Parse a JSON column-filter string into SQLAlchemy conditions.
+    :param filters_json: JSON-encoded filter object (or None)
+    :param model: Primary SQLAlchemy model to resolve column names against
+    :param prefixed_models: Optional mapping of dot-prefix to model, e.g. {"job_rating": JobRating}
+    :return: (conditions, models_needing_join) — apply conditions with query.filter(); join the returned models"""
+
+    if not filters_json:
+        return [], set()
+
+    conditions: list = []
+    models_needing_join: set = set()
+
+    for key, fval in json.loads(filters_json).items():
+        col = None
+
+        if prefixed_models:
+            for prefix, prefixed_model in prefixed_models.items():
+                if key.startswith(prefix + "."):
+                    attr_name = key.split(".", 1)[1]
+                    if hasattr(prefixed_model, attr_name):
+                        col = getattr(prefixed_model, attr_name)
+                        models_needing_join.add(prefixed_model)
+                    break
+
+        if col is None:
+            if hasattr(model, key):
+                col = getattr(model, key)
+            else:
+                continue
+
+        ftype = fval.get("type")
+
+        if ftype == "text":
+            value = (fval.get("value") or "").strip()
+            if value:
+                conditions.append(col.ilike(f"%{value}%"))
+
+        elif ftype == "select":
+            selected = fval.get("selected", [])
+            if selected:
+                conditions.append(col.in_(selected))
+
+        elif ftype == "number":
+            min_val = fval.get("min")
+            max_val = fval.get("max")
+            null_filter = fval.get("nullFilter")
+
+            if null_filter == "null":
+                conditions.append(col.is_(None))
+            elif null_filter == "not_null":
+                conditions.append(col.isnot(None))
+                if min_val is not None:
+                    conditions.append(col >= min_val)
+                if max_val is not None:
+                    conditions.append(col <= max_val)
+            else:
+                if min_val is not None:
+                    conditions.append(col >= min_val)
+                if max_val is not None:
+                    conditions.append(col <= max_val)
+
+        elif ftype == "date":
+            from_val = fval.get("from")
+            to_val = fval.get("to")
+            if from_val:
+                conditions.append(col >= from_val)
+            if to_val:
+                conditions.append(col <= to_val + "T23:59:59")
+
+        elif ftype == "reference":
+            selected_ids = fval.get("selectedIds", [])
+            if selected_ids:
+                conditions.append(col.in_([int(sid) for sid in selected_ids]))
+
+    return conditions, models_needing_join
 
 
 def assert_admin(user: models.User) -> None:
@@ -249,6 +287,32 @@ def generate_data_table_crud_router(
                     if not hasattr(related_obj, "owner_id") or getattr(related_obj, "owner_id") == owner_id:
                         db.execute(association_table.insert().values(**{local_key: entry_id, remote_key: value_id}))
 
+    # Foreign-key columns whose target table is owner-scoped; used to prevent linking to others' entries
+    owned_fk_columns = _owned_fk_columns(table_model)
+
+    def validate_fk_ownership(
+        db: Session,
+        data: dict,
+        owner_id: int,
+    ) -> None:
+        """Ensure all foreign keys in the data point at entries owned by the current user.
+        :param db: Database session.
+        :param data: The main entry data (post-transform) about to be written.
+        :param owner_id: ID of the current user (owner).
+        :raises: HTTPException 403 if a foreign key references an entry the user does not own or that does not exist."""
+
+        for column_name, related_model in owned_fk_columns.items():
+            value_id = data.get(column_name)
+            if value_id is None:
+                continue
+
+            related_obj = db.query(related_model).filter(related_model.id == value_id).first()
+            if related_obj is None or getattr(related_obj, "owner_id", None) != owner_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Cannot link to a {related_model.__tablename__} that does not exist or that you do not own",
+                )
+
     # ------------------------------------------------------- GET ------------------------------------------------------
 
     if "get" in allowed_actions or "get_all" in allowed_actions:
@@ -256,7 +320,7 @@ def generate_data_table_crud_router(
         @router.get("/", response_model=list[out_schema])  # noqa
         def get_all(
             request: Request,
-            db: Session = Depends(database.get_db),
+            db: Session = Depends(get_db),
             current_user: models.User = Depends(oauth2.get_current_user),
             limit: int | None = None,
         ):
@@ -289,18 +353,14 @@ def generate_data_table_crud_router(
 
             query = filter_query(query, table_model, filter_params)
 
-            results = query.limit(limit).all()
-            if current_user.is_admin:
-                return results
-            else:
-                return [filter_out_non_owned(result, current_user.id) for result in results]
+            return query.limit(limit).all()
 
     if "get" in allowed_actions or "get_one" in allowed_actions:
 
         @router.get("/{entry_id}", response_model=out_schema)
         def get_one(
             entry_id: int,
-            db: Session = Depends(database.get_db),
+            db: Session = Depends(get_db),
             current_user: models.User = Depends(oauth2.get_current_user),
         ):
             """Get an entry by ID.
@@ -322,10 +382,7 @@ def generate_data_table_crud_router(
             # Ensure that the user is authorised to view this entry
             check_ownership(entry, current_user)
 
-            if current_user.is_admin:
-                return entry
-            else:
-                return filter_out_non_owned(entry, current_user.id)
+            return entry
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
@@ -334,7 +391,7 @@ def generate_data_table_crud_router(
         @router.post("/", status_code=status.HTTP_201_CREATED, response_model=out_schema)
         def create(
             item: create_schema,  # noqa
-            db: Session = Depends(database.get_db),
+            db: Session = Depends(get_db),
             current_user: models.User = Depends(oauth2.get_current_user),
         ):
             """Create a new entry.
@@ -374,6 +431,9 @@ def generate_data_table_crud_router(
             if hasattr(table_model, "owner_id"):
                 main_data["owner_id"] = current_user.id
 
+            # Prevent linking to related entries the user does not own
+            validate_fk_ownership(db, main_data, current_user.id)
+
             # Create the main entry
             new_entry = table_model(**main_data)
             db.add(new_entry)
@@ -390,14 +450,12 @@ def generate_data_table_crud_router(
 
             # Handle many-to-many relationships
             if m2m_data:
-                upsert_many_to_many(db, new_entry.id, m2m_data, current_user.id)
+                new_entry_id = new_entry.id
+                upsert_many_to_many(db, new_entry_id, m2m_data, current_user.id)
                 db.commit()
-                db.refresh(new_entry)
+                new_entry = db.query(table_model).filter(table_model.id == new_entry_id).first()
 
-            if current_user.is_admin:
-                return new_entry
-            else:
-                return filter_out_non_owned(new_entry, current_user.id)
+            return new_entry
 
     # ------------------------------------------------------- PUT ------------------------------------------------------
 
@@ -407,7 +465,7 @@ def generate_data_table_crud_router(
         def update(
             entry_id: int,
             item: update_schema,  # noqa
-            db: Session = Depends(database.get_db),
+            db: Session = Depends(get_db),
             current_user: models.User = Depends(oauth2.get_current_user),
         ):
             """Update an entry by ID.
@@ -455,6 +513,9 @@ def generate_data_table_crud_router(
                 entry_data = {c.name: getattr(entry, c.name) for c in entry.__table__.columns}
                 main_data.update(transform(main_data, db, entry_data))
 
+            # Prevent linking to related entries the user does not own
+            validate_fk_ownership(db, main_data, current_user.id)
+
             # Update the record
             for field, value in main_data.items():
                 if isinstance(value, dict):
@@ -479,10 +540,7 @@ def generate_data_table_crud_router(
                     )
 
             # Return the updated entry
-            if current_user.is_admin:
-                return entry
-            else:
-                return filter_out_non_owned(entry, current_user.id)
+            return entry
 
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 
@@ -491,7 +549,7 @@ def generate_data_table_crud_router(
         @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
         def delete(
             entry_id: int,
-            db: Session = Depends(database.get_db),
+            db: Session = Depends(get_db),
             current_user: models.User = Depends(oauth2.get_current_user),
         ):
             """Delete an entry by ID.
@@ -526,3 +584,10 @@ def generate_data_table_crud_router(
             db.commit()
 
     return router
+
+
+def require_test_mode() -> None:
+    """Raises an HTTPException if test mode is not enabled."""
+
+    if not settings.test_mode:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Test mode not enabled")

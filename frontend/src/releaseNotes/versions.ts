@@ -1,18 +1,21 @@
 import V1_0_0 from "./V1_0_0";
 import V1_1_0 from "./V1_1_0";
 import V1_2_0 from "./V1_2_0";
+import V1_3_0 from "./V1_3_0";
 import followupGif from "../assets/demo_gifs/followup_email.gif";
 import speculativeApplicationGif from "../assets/demo_gifs/speculative_application.gif";
 import scrapingFilterGif from "../assets/demo_gifs/scraping_filter.gif";
 import jobsGif from "../assets/demo_gifs/job_page.gif";
 import scrapedJobsPng from "../assets/screenshots/scraped-jobs.png";
 import dashboardPng from "../assets/screenshots/dashboard.png";
-import interviewsPng from "../assets/screenshots/interviews.png";
-import deadlinesPng from "../assets/screenshots/deadlines.png";
+import scrapedJobsGif from "../assets/demo_gifs/scraped_jobs.gif";
+import { PREMIUM_PRICE } from "../pages/UserSettings/PremiumTab";
+import peopleGif from "../assets/demo_gifs/people_page.gif";
+import dashboardCustomisationGif from "../assets/demo_gifs/dashboard_customisation.gif";
 import { getEntityIcon } from "../components/rendering/view/Icons";
 
-export type version = "1.0.0" | "1.1.0" | "1.2.0";
-export const VERSIONS: version[] = ["1.0.0", "1.1.0", "1.2.0"];
+export type version = "1.0.0" | "1.1.0" | "1.2.0" | "1.3.0";
+export const VERSIONS: version[] = ["1.0.0", "1.1.0", "1.2.0", "1.3.0"];
 export const LAST_VERSION: version = VERSIONS[VERSIONS.length - 1]!;
 
 export interface ReleaseSlide {
@@ -20,12 +23,14 @@ export interface ReleaseSlide {
 	title: string;
 	description: string;
 	image?: string;
+	version?: string;
 }
 
 export const releaseNotes: Record<version, string> = {
 	"1.0.0": V1_0_0,
 	"1.1.0": V1_1_0,
 	"1.2.0": V1_2_0,
+	"1.3.0": V1_3_0,
 };
 
 export const WELCOME_SLIDES: ReleaseSlide[] = [
@@ -33,40 +38,31 @@ export const WELCOME_SLIDES: ReleaseSlide[] = [
 		title: "Welcome to JAM!",
 		description:
 			"You have taken the first step toward landing your dream job. JAM is your all-in-one job application " +
-			"manager - designed to keep your search organized so you can focus on interviews, not admin work. Let us show " +
-			"you what is inside.",
+			"manager - designed to keep your search organized so you can focus on acing interviews, not tedious admin work! " +
+			"Let us show you what is inside.",
 		image: dashboardPng,
 	},
 	{
-		icon: "briefcase",
-		title: "Job Application Records",
+		title: "Record Your Job Applications",
 		description:
 			"Store every detail of your job applications in one place. Track roles, companies, contacts, dates, " +
 			"and notes so nothing slips through the cracks.",
 		image: jobsGif,
 	},
 	{
-		icon: "calendar-check",
-		title: "Interview Scheduling",
+		title: "Record Your Contacts",
 		description:
-			"Stay on top of your interviews with clear scheduling and status tracking. Log dates, stages, " +
-			"interviewers, and outcomes so you always know what's coming up next.",
-		image: interviewsPng,
+			"Keep track of every person you interact with during your job search. Store names, emails, phone numbers, and " +
+			"LinkedIn profiles - and link contacts directly to jobs and companies.",
+		image: peopleGif,
 	},
 	{
-		icon: "clock",
-		title: "Deadline & Follow-Up Reminder",
-		description: "Get reminded of upcoming application deadlines and job requiring a follow-up",
-		image: deadlinesPng,
-	},
-	{
-		icon: "inboxes",
-		title: "Premium - Job Alert Scraping and Rating",
+		icon: "grid-1x2",
+		title: "Customise Your Dashboard",
 		description:
-			"Typical job seekers receive hundreds of job alerts every month from job aggregators like LinkedIn and Indeed. " +
-			"For only £5/month, JAM automatically scrapes these job details, rates them against your qualifications, " +
-			"and highlights the best matches for you.",
-		image: scrapedJobsPng,
+			"Build a dashboard that works for you. Add, remove, and resize widgets to surface the information you care about most - " +
+			"upcoming interviews, follow-up reminders, deadlines, favourite jobs, and more.",
+		image: dashboardCustomisationGif,
 	},
 	{
 		icon: "envelope-arrow-up",
@@ -75,6 +71,17 @@ export const WELCOME_SLIDES: ReleaseSlide[] = [
 			"Automatically generate personalised follow-up emails in seconds. Right-click any job, pick a contact, " +
 			"and get a ready-to-send message signed with your name.",
 		image: followupGif,
+	},
+	{
+		icon: "inboxes",
+		title: "Premium - Job Alert Scraping and Rating",
+		description:
+			"Typical job seekers receive hundreds of job alerts every month from job aggregators like LinkedIn and Indeed. " +
+			"For only " +
+			PREMIUM_PRICE +
+			"/month, JAM automatically scrapes these job details, rates them against your qualifications, " +
+			"and highlights the best matches for you.",
+		image: scrapedJobsGif,
 	},
 ];
 
@@ -129,7 +136,7 @@ export const RELEASE_SLIDES: Record<version, ReleaseSlide[]> = {
 			icon: "star-half",
 			title: "AI Job Rating",
 			description:
-				"Every scraped job is automatically rated by an LLM based on the qualifications " +
+				"Every job alert is automatically rated by an LLM based on the qualifications " +
 				"you set on your user page, helping you prioritise the best opportunities.",
 		},
 		{
@@ -149,8 +156,8 @@ export const RELEASE_SLIDES: Record<version, ReleaseSlide[]> = {
 	],
 	"1.2.0": [
 		{
-			icon: getEntityIcon("scrapingFilter"),
-			title: "Job Scraping Filters",
+			icon: getEntityIcon("scrapingExclusionFilter"),
+			title: "Alert Filters",
 			description:
 				"Create custom filtering rules to exclude unwanted jobs from your job scraping results. " +
 				"Filter by company name, job title, or other parameters using flexible operators like Equals To or Contains. " +
@@ -193,10 +200,57 @@ export const RELEASE_SLIDES: Record<version, ReleaseSlide[]> = {
 			icon: "wrench",
 			title: "Quality of Life Improvements",
 			description:
-				"Data export now includes speculative applications and scraped jobs. " +
+				"Data export now includes speculative applications and job alerts. " +
 				"Job sources can be specified as Recruiter, Recruitment Company, Aggregator, or Other. " +
 				"Improved error messages with one-click support email. " +
 				"Rejected, Offered, and Withdrawn jobs are hidden from the Needs Chase table.",
+		},
+	],
+	"1.3.0": [
+		{
+			icon: "grid-1x2",
+			title: "Customisable Dashboard",
+			description:
+				"Your dashboard is now fully customisable. Add, remove, resize, and rearrange widgets in edit mode. " +
+				"Choose from Metric, Table, Timeline, Graph, and Map widget types, or build a custom graph from your own data. " +
+				"Save your layout, or reset to the default at any time.",
+			image: dashboardCustomisationGif,
+		},
+		{
+			icon: "table",
+			title: "Customisable Tables & Advanced Filtering",
+			description:
+				"All data tables now support column customisation — show or hide columns to focus on what matters, with preferences saved per table. " +
+				"Use the new filter sidebar to narrow results by any field, and multi-select scraped jobs to perform bulk actions like deleting expired ones.",
+		},
+		{
+			icon: "star-fill",
+			title: "Favourite Filters for Job Alerts",
+			description:
+				"Save your favourite filter configurations on the Job Alerts page and apply them with a single click. " +
+				"A dedicated Favourite Job Alerts dashboard widget highlights matching jobs at a glance.",
+		},
+		{
+			icon: "paperclip",
+			title: "CV & Cover Letter Attachments",
+			description:
+				"Attach a CV and cover letter directly to a job application by uploading or dragging and dropping files. " +
+				"Preview PDFs and images inline, download other file types, and write plain-text cover letters using the built-in editor.",
+		},
+		{
+			icon: "signpost-split",
+			title: "Guided Tour",
+			description:
+				"New to JAM? Start the guided tour from the sidebar under Take a Tour. " +
+				"It walks you through the key features step by step and can be paused and resumed at any time.",
+		},
+		{
+			icon: "wrench",
+			title: "Quality of Life Improvements",
+			description:
+				"Hover over company, location, contact, or aggregator options to see a floating preview card with key details. " +
+				"Locations are now stored as plain text, the Jobs table has a Hide rejected / withdrawn toggle, " +
+				"and the Premium page warns when job rating is active but your qualifications profile is incomplete.",
 		},
 	],
 };
@@ -219,5 +273,10 @@ export function getReleaseSlidesForLastVersion(): ReleaseSlide[] {
 export function getNewerReleaseSlides(userVersion: string): ReleaseSlide[] {
 	const newer: version[] = VERSIONS.filter((v: version): boolean => compareVersions(v, userVersion) > 0);
 	newer.sort(compareVersions);
-	return newer.flatMap((v: version): ReleaseSlide[] => RELEASE_SLIDES[v] ?? []);
+	const multipleVersions: boolean = newer.length > 1;
+	return newer.flatMap((v: version): ReleaseSlide[] =>
+		(RELEASE_SLIDES[v] ?? []).map(
+			(slide: ReleaseSlide): ReleaseSlide => (multipleVersions ? { ...slide, version: v } : slide)
+		)
+	);
 }

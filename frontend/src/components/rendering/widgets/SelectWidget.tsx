@@ -1,9 +1,7 @@
 import React, { JSX, useCallback, useRef, useState } from "react";
-import Select, { ActionMeta, MultiValue, SingleValue } from "react-select";
-import makeAnimated from "react-select/animated";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
 import { FloatingPreview } from "../../FloatingPreview/FloatingPreview";
-import { CustomSelectOption } from "../form/CustomSelectOption";
+import { CustomSelect } from "./CustomSelect";
 import { ModalViewFields } from "../view/ModalFields";
 import { GroupedSelectOption, SelectOption } from "../form/FormOptions";
 import { toKey } from "../../../utils/StringUtils";
@@ -13,8 +11,6 @@ export interface SelectWidgetPreviewConfig {
 	fields: ModalViewFields;
 	getDataById: (id: number) => any;
 }
-
-const animatedComponents = makeAnimated();
 
 // Type guard to check if options are grouped
 const isGroupedOptions = (
@@ -43,52 +39,6 @@ const findOption = (
 	}
 };
 
-const CustomDropdownIndicator = (props: any): JSX.Element => {
-	const [hover, setHover] = useState(false);
-	const menuIsOpen = props.selectProps.menuIsOpen;
-	const isActive = hover || menuIsOpen;
-	const customProps = props.selectProps;
-
-	return (
-		<div
-			className={`custom-dropdown-indicator ${isActive ? "active" : ""}`}
-			onMouseDown={(e: React.MouseEvent) => {
-				e.preventDefault();
-				e.stopPropagation();
-				if (customProps.addButtonModalRef) {
-					if (customProps.transformParentData && customProps.parentData) {
-						const defaultData = customProps.transformParentData(customProps.parentData);
-						customProps.addButtonModalRef.current?.showAdd(defaultData, (newData: any) => {
-							if (customProps.onAddSuccess) {
-								customProps.onAddSuccess(newData);
-							}
-						});
-					} else {
-						customProps.addButtonModalRef.current?.showAdd({}, (newData: any) => {
-							if (customProps.onAddSuccess) {
-								customProps.onAddSuccess(newData);
-							}
-						});
-					}
-				}
-			}}
-			onClick={(e: React.MouseEvent) => {
-				e.preventDefault();
-				e.stopPropagation();
-			}}
-			onMouseEnter={() => setHover(true)}
-			onMouseLeave={() => setHover(false)}
-			tabIndex={-1}
-			aria-label="Add new item"
-			role="button"
-			title="Add new item"
-			id="add-button"
-		>
-			<i className="bi bi-plus-circle"></i>
-		</div>
-	);
-};
-
 export const SelectInput = ({
 	field,
 	value,
@@ -115,7 +65,7 @@ export const SelectInput = ({
 				const currentIds = Array.isArray(value) ? value : [];
 				const syntheticEvent: SyntheticEvent = {
 					target: {
-						name: toKey(field.name),
+						name: toKey(field.key),
 						value: [...currentIds, newId],
 					},
 				};
@@ -124,14 +74,14 @@ export const SelectInput = ({
 				// For single select, replace value
 				const syntheticEvent: SyntheticEvent = {
 					target: {
-						name: toKey(field.name),
+						name: toKey(field.key),
 						value: newId,
 					},
 				};
 				handleChange(syntheticEvent);
 			}
 		},
-		[field.name, handleChange, isMulti, value]
+		[field.key, handleChange, isMulti, value]
 	);
 
 	const handleHover = useCallback(
@@ -179,72 +129,52 @@ export const SelectInput = ({
 		}
 	}
 
-	const selectComponents = { ...animatedComponents };
-
-	if (field.addButton?.modalRef) {
-		selectComponents.DropdownIndicator = CustomDropdownIndicator;
-	} else {
-		// selectComponents.DropdownIndicator = undefined;
-		// selectComponents.IndicatorSeparator = undefined;
-	}
-
-	if (previewConfig?.enabled) {
-		selectComponents.Option = (props: any) => (
-			<CustomSelectOption {...props} onHover={handleHover} onHoverEnd={handleHoverEnd} />
-		);
-	}
-
 	const selectElement = (
 		<>
-			<Select<SelectOption, boolean>
-				name={toKey(field.name)}
+			<CustomSelect
+				id={toKey(field.key)}
+				name={toKey(field.key)}
 				value={selectedValue}
-				onChange={(
-					selectedOptions: MultiValue<SelectOption> | SingleValue<SelectOption>,
-					_actionMeta: ActionMeta<SelectOption>
-				) => {
+				onChange={(selected) => {
 					if (isMulti) {
-						const ids: string[] = Array.isArray(selectedOptions)
-							? selectedOptions.map((option: SelectOption) => option.value)
+						const ids: string[] = Array.isArray(selected)
+							? (selected as SelectOption[]).map((option) => option.value)
 							: [];
-
-						const syntheticEvent: SyntheticEvent = {
-							target: {
-								name: toKey(field.name),
-								value: ids,
-							},
-						};
-						handleChange(syntheticEvent);
+						handleChange({ target: { name: toKey(field.key), value: ids } });
 					} else {
-						const syntheticEvent: SyntheticEvent = {
+						handleChange({
 							target: {
-								name: toKey(field.name),
-								value: selectedOptions ? (selectedOptions as SelectOption).value : null,
+								name: toKey(field.key),
+								value: selected ? (selected as SelectOption).value : null,
 							},
-						};
-						handleChange(syntheticEvent);
+						});
 					}
 				}}
 				onMenuClose={handleMenuClose}
-				id={toKey(field.name)}
 				options={field.options || []}
 				closeMenuOnSelect={!isMulti}
 				placeholder={field.placeholder || `Select ${field.label}`}
 				isSearchable={field.isSearchable !== false}
 				isClearable={field.isClearable !== false}
 				isMulti={isMulti}
-				menuPortalTarget={document.body}
-				className={`react-select-container ${field.required ? "required" : ""} ${error ? "error" : ""}`}
-				classNamePrefix="react-select"
-				components={selectComponents}
+				className={`jam-select ${field.required ? "required" : ""} ${error ? "error" : ""}`}
 				isDisabled={field.isDisabled}
-				// @ts-ignore
-				addButtonModalRef={field.addButton?.modalRef}
+				addButton={
+					field.addButton?.modalRef
+						? {
+								modalRef: field.addButton.modalRef,
+								transformParentData: field.addButton.transformParentData,
+								onSuccess: handleAddSuccess,
+								id: field.addButton.id,
+						  }
+						: undefined
+				}
 				parentData={data}
-				transformParentData={field.addButton?.transformParentData}
-				onAddSuccess={handleAddSuccess}
+				previewHandlers={
+					previewConfig?.enabled ? { onHover: handleHover, onHoverEnd: handleHoverEnd } : undefined
+				}
 			/>
-			{previewConfig?.enabled && (
+						{previewConfig?.enabled && (
 				<FloatingPreview
 					data={previewData}
 					fields={previewConfig.fields}

@@ -177,7 +177,7 @@ class TestGetOrCreateStripeCustomer:
             await get_or_create_stripe_customer(mock_user, mock_db)
 
         assert exc_info.value.status_code == 503
-        assert "Payment service temporarily unavailable" in exc_info.value.detail
+        assert exc_info.value.detail and "Payment service temporarily unavailable" in exc_info.value.detail
         mock_db.rollback.assert_called_once()
 
     @pytest.mark.asyncio
@@ -203,5 +203,5 @@ class TestGetOrCreateStripeCustomer:
                 await get_or_create_stripe_customer(mock_user, mock_db)
 
         assert exc_info.value.status_code == 500
-        assert "An error occurred" in exc_info.value.detail
+        assert exc_info.value.detail and "An error occurred" in exc_info.value.detail
         mock_db.rollback.assert_called_once()

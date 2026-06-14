@@ -12,7 +12,7 @@ const ReleaseNotesPage = (): JSX.Element => {
 	const { showWhatsNew } = useWhatsNew();
 
 	return (
-		<div className="gradient-bg" style={{ borderRadius: "18px", overflow: "hidden" }}>
+		<div className="about-container d-flex flex-column align-items-center justify-content-center">
 			<Container className="py-5">
 				<Row className="justify-content-center mb-4">
 					<Col lg={8} className="text-center">

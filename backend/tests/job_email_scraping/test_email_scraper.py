@@ -9,9 +9,10 @@ import pytest
 
 from app import models
 from app.config import settings
+from app.emails.schemas import EmailData
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
 from app.job_email_scraping.schemas import JobResult
-from tests.job_email_scraping import resources
+from tests.utils import job_email_resources as resources
 from tests.job_email_scraping.mock_job_scrapers import MockIndeedBrightdataJobScraper
 from tests.utils.test_data import TOAST_USER_1_INDEX
 
@@ -31,6 +32,7 @@ class TestSaveEmailToDb:
             )
 
             assert is_created
+            assert result_email
             assert result_email.external_email_id == email_id
             assert result_email.subject
             assert result_email.sender == resources.TEST_EMAILS[email_id]["to"]
@@ -47,7 +49,6 @@ class TestSaveEmailToDb:
 
         message_id = list(resources.TEST_EMAILS.keys())[0]
 
-        # noinspection PyArgumentList
         existing_email = models.JobEmail(
             external_email_id=message_id,
             subject="Different Subject",
@@ -67,6 +68,7 @@ class TestSaveEmailToDb:
         )
 
         assert is_created is False
+        assert result_email
         assert result_email.id == existing_email.id
         assert result_email.subject == "Different Subject"
 
@@ -105,7 +107,6 @@ class TestSaveJobBaseInfoToDb:
         jobs = email["parsed_output"]
 
         # Create existing jobs
-        # noinspection PyArgumentList
         existing_job = models.ScrapedJob(
             external_job_id=jobs[0].job_id,
             owner_id=test_users[0].id,
@@ -159,7 +160,6 @@ class TestUpdateScrapedJobData:
         email = resources.LINKEDIN_EMAIL_3
         jobs = email["parsed_output"]
 
-        # noinspection PyArgumentList
         sample_scraped_job = models.ScrapedJob(
             external_job_id=jobs[0].job_id,
             owner_id=test_users[0].id,
@@ -199,13 +199,13 @@ class TestUpdateScrapedJobData:
 
         # Verify the data was saved correctly
         assert sample_scraped_job.is_scraped is True
+        job_data = sample_job_data["job"]
+        assert isinstance(job_data, dict)
         assert sample_scraped_job.company == "Initial Company Name"  # not overwritten
-        assert sample_scraped_job.location_city == "Greater London"
-        assert sample_scraped_job.location_country == "United Kingdom"
-        assert sample_scraped_job.title == sample_job_data["job"]["title"]
-        assert sample_scraped_job.description == sample_job_data["job"]["description"]
-        assert sample_scraped_job.salary_min == sample_job_data["job"]["salary"]["min_amount"]  # overwritten
-        assert sample_scraped_job.salary_max == sample_job_data["job"]["salary"]["max_amount"]
+        assert sample_scraped_job.title == job_data["title"]
+        assert sample_scraped_job.description == job_data["description"]
+        assert sample_scraped_job.salary_min == job_data["salary"]["min_amount"]  # overwritten
+        assert sample_scraped_job.salary_max == job_data["salary"]["max_amount"]
 
 
 # ----------------------------------------------------- RUN METHODS ----------------------------------------------------
@@ -228,11 +228,13 @@ class TestExtractEmailData:
 
         # Verify platform stats updated
         platform_stat = session.query(models.JobEmailScrapingPlatformStat).first()
+        assert platform_stat
         assert platform_stat.name == email_entry.platform
         assert len(platform_stat.job_found_ids) == len(expected_jobs)
 
         # Verify service log
         service_log = session.query(models.JobEmailScrapingServiceLog).first()
+        assert service_log
         assert service_log.job_found_n == len(expected_jobs)
 
         # Verify service errors
@@ -241,6 +243,7 @@ class TestExtractEmailData:
 
         # Verify email record updated
         email_record = session.query(models.JobEmail).filter(models.JobEmail.id == email_entry.id).first()
+        assert email_record
         assert email_record.job_found_n == len(expected_jobs)
 
     def test_indeed_email_jobs_success(
@@ -257,11 +260,13 @@ class TestExtractEmailData:
 
         # Verify platform stats updated
         platform_stat = session.query(models.JobEmailScrapingPlatformStat).first()
+        assert platform_stat
         assert platform_stat.name == email_entry.platform
         assert len(platform_stat.job_found_ids) == len(expected_jobs)
 
         # Verify email record updated
         email_record = session.query(models.JobEmail).filter(models.JobEmail.id == email_entry.id).first()
+        assert email_record
         assert email_record.job_found_n == len(expected_jobs)
 
     def test_veganjobs_email_jobs_success(
@@ -278,11 +283,13 @@ class TestExtractEmailData:
 
         # Verify platform stats updated
         platform_stat = session.query(models.JobEmailScrapingPlatformStat).first()
+        assert platform_stat
         assert platform_stat.name == email_entry.platform
         assert len(platform_stat.job_found_ids) == len(expected_jobs)
 
         # Verify email record updated
         email_record = session.query(models.JobEmail).filter(models.JobEmail.id == email_entry.id).first()
+        assert email_record
         assert email_record.job_found_n == len(expected_jobs)
 
     def test_nhs_email_jobs_success(
@@ -299,11 +306,13 @@ class TestExtractEmailData:
 
         # Verify platform stats updated
         platform_stat = session.query(models.JobEmailScrapingPlatformStat).first()
+        assert platform_stat
         assert platform_stat.name == email_entry.platform
         assert len(platform_stat.job_found_ids) == len(expected_jobs)
 
         # Verify email record updated
         email_record = session.query(models.JobEmail).filter(models.JobEmail.id == email_entry.id).first()
+        assert email_record
         assert email_record.job_found_n == len(expected_jobs)
 
     def test_linkedin_email_jobs_success_duplicates_different_owners(
@@ -333,6 +342,7 @@ class TestExtractEmailData:
 
         # Verify platform stats updated
         platform_stat = session.query(models.JobEmailScrapingPlatformStat).first()
+        assert platform_stat
         assert platform_stat.name == email_entry_1.platform
         assert len(platform_stat.job_found_ids) == len(expected_jobs) * 2  # counted for both users
 
@@ -351,6 +361,7 @@ class TestExtractEmailData:
 
         # Verify platform stats updated
         platform_stat = session.query(models.JobEmailScrapingPlatformStat).first()
+        assert platform_stat
         assert platform_stat.name == email_entry.platform
         assert len(platform_stat.job_found_ids) == len(expected_job_ids)  # did not save the duplicates
 
@@ -577,7 +588,6 @@ class TestScrapeJobs:
 
         scraped_jobs = []
         for job in jobs:
-            # noinspection PyArgumentList
             scraped_job = models.ScrapedJob(
                 external_job_id=job.job_id,
                 title=job.job.title,
@@ -773,7 +783,6 @@ class TestScrapeJobs:
     def test_scraping_filter(self, nhs_scraped_jobs, test_job_scraping_service_log, test_job_scraper, session) -> None:
         """Test successful processing of NHS email jobs with scraping filter applied"""
 
-        # noinspection PyArgumentList
         filter_entry = models.ScrapingExclusionFilter(
             type="title",
             operator="contains",
@@ -821,7 +830,6 @@ class TestScrapeJobs:
 
         # Add a large number of scraped jobs
         for i in range(n):
-            # noinspection PyArgumentList
             scraped_job = models.ScrapedJob(
                 owner_id=linkedin_scraped_jobs[0].owner_id,
                 external_job_id=str(i),
@@ -1004,16 +1012,16 @@ class TestExtractForwardingEmailConfirmation:
     )
     FORWARDING_CANCELLATION_URL = "https://mail-settings.google.com/mail/uf-%5BANGjdJ8crp9rBh5i9I%5D-YPBzzHEVNTIn"
 
-    def _make_forwarding_email(self, user_email: str, email_id: str = "fwd_confirm_1") -> dict:
-        """Build a mock forwarding confirmation email dict for a given gmail address."""
-        return {
-            "id": email_id,
-            "subject": "Gmail Forwarding Confirmation",
-            "from": "forwarding-noreply@google.com",
-            "to": "jam.scraper@example.com",
-            "date": dt.datetime(2025, 1, 1),
-            "platform": "gmail",
-            "body": (
+    def _make_forwarding_email(self, user_email: str, email_id: str = "fwd_confirm_1") -> EmailData:
+        """Build a mock forwarding confirmation EmailData for a given gmail address."""
+        return EmailData(
+            id=email_id,
+            message_id="",
+            subject="Gmail Forwarding Confirmation",
+            from_email="forwarding-noreply@google.com",
+            to_email="jam.scraper@example.com",
+            date=dt.datetime(2025, 1, 1),
+            body=(
                 f"{user_email} has requested to automatically forward mail to your email address "
                 f"(jam.scraper@example.com). Please click the link below to confirm the request: "
                 f"{self.FORWARDING_CONFIRMATION_URL} "
@@ -1021,20 +1029,20 @@ class TestExtractForwardingEmailConfirmation:
                 f"{self.FORWARDING_CANCELLATION_URL} "
                 f"For more information visit http://support.google.com/mail/bin/answer.py?answer=184973."
             ),
-        }
+        )
 
     @staticmethod
-    def _make_forwarding_email_no_link(user_email: str, email_id: str = "fwd_no_link_1") -> dict:
-        """Build a mock forwarding email without a valid confirmation link."""
-        return {
-            "id": email_id,
-            "subject": "Gmail Forwarding Confirmation",
-            "from": "forwarding-noreply@google.com",
-            "to": "jam.scraper@example.com",
-            "date": dt.datetime(2025, 1, 1),
-            "platform": "gmail",
-            "body": f"{user_email} has requested to forward mail. No valid links here.",
-        }
+    def _make_forwarding_email_no_link(user_email: str, email_id: str = "fwd_no_link_1") -> EmailData:
+        """Build a mock forwarding EmailData without a valid confirmation link."""
+        return EmailData(
+            id=email_id,
+            message_id="",
+            subject="Gmail Forwarding Confirmation",
+            from_email="forwarding-noreply@google.com",
+            to_email="jam.scraper@example.com",
+            date=dt.datetime(2025, 1, 1),
+            body=f"{user_email} has requested to forward mail. No valid links here.",
+        )
 
     def test_success_creates_confirmation_link(
         self, test_job_scraper, test_users, test_job_scraping_service_log, session
@@ -1050,10 +1058,11 @@ class TestExtractForwardingEmailConfirmation:
             patch.object(test_job_scraper, "get_email_data", return_value=email_data),
         ):
             test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
-            mock_ids.assert_called_once_with(from_email="forwarding-noreply@google.com", timedelta_days=365)
+            mock_ids.assert_called_once_with(from_email="forwarding-noreply@google.com", timedelta_days=1)
 
         # Verify confirmation link was created
         link = session.query(models.ForwardingConfirmationLink).first()
+        assert link
         assert link.url == self.FORWARDING_CONFIRMATION_URL
         assert link.platform == "gmail"
         assert link.owner_id == gmail_user.id
@@ -1068,7 +1077,6 @@ class TestExtractForwardingEmailConfirmation:
         email_data = self._make_forwarding_email(gmail_user.email, email_id)
 
         # Pre-create an existing entry
-        # noinspection PyArgumentList
         existing = models.ForwardingConfirmationLink(
             email_external_id=email_id,
             url="https://mail-settings.google.com/mail/vf-old",
@@ -1149,7 +1157,8 @@ class TestExtractForwardingEmailConfirmation:
         email_data_1 = self._make_forwarding_email(gmail_user.email, email_id_1)
         email_data_2 = self._make_forwarding_email(gmail_user.email, email_id_2)
 
-        def mock_get_email_data(eid: str) -> dict:
+        def mock_get_email_data(eid: str) -> EmailData:
+            """Mock get_email_data to return different EmailData objects for each email ID"""
             return {email_id_1: email_data_1, email_id_2: email_data_2}[eid]
 
         with (

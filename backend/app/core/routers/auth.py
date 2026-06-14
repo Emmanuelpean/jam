@@ -10,10 +10,16 @@ from sqlalchemy.orm import Session
 from app import utils, models, database, base_schemas
 from app.config import settings
 from app.core import schemas, oauth2
-from app.core.models import get_setting_value
-from app.core.utils import send_email_verification_email, send_password_reset_email, get_token
+from app.core.models import get_setting_value, TokenType
+from app.core.utils import (
+    send_rate_limited_tokenized_email_verification_email,
+    send_rate_limited_tokenized_password_reset_email,
+    get_token,
+    verify_captcha_token,
+)
 from app.demo.seed import seed_demo_data
 from app.emails.email_service import email_service
+
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
 
@@ -57,7 +63,10 @@ def login(
     user_email = utils.clean_email(user_credentials.username)
 
     if settings.test_mode and user_email == "crash@crash.com":
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error",
+        )
 
     # Find the user in the list based on the email provided
     user = db.query(models.User).filter(models.User.email == user_email).first()
@@ -76,7 +85,11 @@ def login(
                 first_name="Demo",
                 last_name="User",
                 last_login=dt.datetime.now(dt.timezone.utc),
-                premium={"is_active": True, "job_scraping_active": True, "job_rating_active": True},
+                premium={
+                    "is_active": True,
+                    "job_scraping_active": True,
+                    "job_rating_active": True,
+                },
             )
             demo_db.add(demo_user)
             demo_db.commit()
@@ -100,11 +113,14 @@ def login(
 
     # Check that the user is active
     if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account is not active.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User account is not active.",
+        )
 
     # Check that the user is verified
     if not user.is_verified:
-        result = send_email_verification_email(user, db)
+        result = send_rate_limited_tokenized_email_verification_email(user, db)
 
         # Raise appropriate exception based on email sending result
         if result.success:
@@ -113,10 +129,15 @@ def login(
                 detail=f"User account is not verified. A new verification email has been sent to {user.email}.",
             )
         else:
-            raise HTTPException(
-                status_code=result.error_code,
-                detail=result.message,
-            )
+            error_code = result.error_code if result.error_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+            if error_code == status.HTTP_429_TOO_MANY_REQUESTS:
+                message = (
+                    "Your account is not verified. Please check your emails for the verification link or "
+                    + result.message.lower()
+                )
+            else:
+                message = result.message
+            raise HTTPException(status_code=error_code, detail=message)
 
     # Block non-admin users from logging in during maintenance
     if not user.is_admin:
@@ -141,13 +162,17 @@ def login(
 register_router = APIRouter(prefix="/register", tags=["Register"])
 
 
-@register_router.post("/", status_code=status.HTTP_201_CREATED, response_model=base_schemas.GenericResponse)
+@register_router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=base_schemas.GenericResponse,
+)
 def create_user(
-    user: schemas.UserRegister,
+    user_register: schemas.UserRegister,
     db: Session = Depends(database.get_db),
 ) -> base_schemas.GenericResponse:
     """Create a new user
-    :param user: The user data
+    :param user_register: The user data
     :param db: The database session
     :returns: Dictionary with success status and message
     :raises HTTPException with a 400 status code if the email is already registered
@@ -155,23 +180,30 @@ def create_user(
 
     _assert_not_maintenance(db)
 
+    # Verify CAPTCHA before doing any DB / email work
+    if not verify_captcha_token(user_register.captcha_token):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="CAPTCHA verification failed. Please try again.",
+        )
+
     # Check the user can be created
     allowlist = models.get_setting_value(db, "allowlist", None)
     if allowlist is not None:
         emails_allowed = [utils.clean_email(email) for email in allowlist.split(",")]
-        if user.email not in emails_allowed:
+        if user_register.email not in emails_allowed:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="You are not allowed to sign up for now.",
             )
 
     # Check if email already exists
-    existing_user = db.query(models.User).filter(models.User.email == user.email).first()
+    existing_user = db.query(models.User).filter(models.User.email == user_register.email).first()
 
     if existing_user:
         # If user exists but is not verified, resend verification email
         if not existing_user.is_verified:
-            result = send_email_verification_email(existing_user, db)
+            result = send_rate_limited_tokenized_email_verification_email(existing_user, db)
             if result.success:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -179,27 +211,32 @@ def create_user(
                     f"A new verification email has been sent to {existing_user.email}.",
                 )
             else:
-                raise HTTPException(status_code=result.error_code, detail=result.message)
+                error_code = result.error_code if result.error_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+                raise HTTPException(status_code=error_code, detail=result.message)
         else:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
+            )
 
     # Hash the password and create the user
-    user.password = utils.hash_password(user.password)
+    user_register.password = utils.hash_password(user_register.password)
 
-    # Create user with related tables
-    user_data = user.model_dump()
-    new_user = models.User(**user_data)  # noqa
+    # Create user with related tables (captcha_token is not a user field)
+    user_data = user_register.model_dump(exclude={"captcha_token"})
+    new_user = models.User(**user_data)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
     # Send verification email
-    result = send_email_verification_email(new_user, db)
+    result = send_rate_limited_tokenized_email_verification_email(new_user, db)
     if not result.success:
         # Rollback user creation if email fails
         db.delete(new_user)
         db.commit()
-        raise HTTPException(status_code=result.error_code, detail=result.message)
+        error_code = result.error_code if result.error_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+        raise HTTPException(status_code=error_code, detail=result.message)
 
     return result
 
@@ -219,10 +256,13 @@ def verify_email(
     _assert_not_maintenance(db)
 
     verification_code = utils.hash_token(token)
-    token_entry = get_token(verification_code, "verification", db)
+    token_entry = get_token(verification_code, TokenType.EMAIL_VERIFICATION, db)
 
     if not token_entry:
-        raise HTTPException(status_code=403, detail="Invalid or expired token. Please request a new one by logging in.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid or expired token. Please request a new one by logging in.",
+        )
 
     # Check if token is expired
     if not token_entry.is_valid:
@@ -237,7 +277,7 @@ def verify_email(
     # Get the user
     user = db.query(models.User).filter(models.User.id == token_entry.owner_id).first()
     if not user:
-        raise HTTPException(status_code=403, detail="User not found.")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not found.")
 
     # Mark user as verified and delete the token
     user.is_verified = True
@@ -253,7 +293,11 @@ def verify_email(
 password_router = APIRouter(prefix="/password", tags=["Password"])
 
 
-@password_router.post("/forgot", status_code=status.HTTP_200_OK, response_model=base_schemas.GenericResponse)
+@password_router.post(
+    "/forgot",
+    status_code=status.HTTP_200_OK,
+    response_model=base_schemas.GenericResponse,
+)
 def request_password_reset(
     email_data: schemas.PasswordResetRequest,
     db: Session = Depends(database.get_db),
@@ -273,24 +317,38 @@ def request_password_reset(
     user = db.query(models.User).filter(models.User.email == email_data.email).first()
 
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this email does not exist.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User with this email does not exist.",
+        )
 
     if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account is not active.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User account is not active.",
+        )
 
     # Prevent test users from resetting password
     if user.is_demo:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Test users cannot reset their password.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Test users cannot reset their password.",
+        )
 
     # Send password reset email with rate limiting
-    result = send_password_reset_email(user, db)
+    result = send_rate_limited_tokenized_password_reset_email(user, db)
     if not result.success:
-        raise HTTPException(status_code=result.error_code, detail=result.message)
+        error_code = result.error_code if result.error_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+        raise HTTPException(status_code=error_code, detail=result.message)
     else:
         return result
 
 
-@password_router.post("/reset", status_code=status.HTTP_200_OK, response_model=base_schemas.GenericResponse)
+@password_router.post(
+    "/reset",
+    status_code=status.HTTP_200_OK,
+    response_model=base_schemas.GenericResponse,
+)
 def reset_password(
     reset_data: schemas.PasswordReset,
     db: Session = Depends(database.get_db),
@@ -309,10 +367,13 @@ def reset_password(
     password_reset_code = utils.hash_token(reset_data.token)
 
     # Find token entry with matching hash
-    token_entry = get_token(password_reset_code, "password_reset", db)
+    token_entry = get_token(password_reset_code, TokenType.PASSWORD_RESET, db)
 
     if not token_entry or not token_entry.is_valid:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired password reset token")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid or expired password reset token",
+        )
 
     # Get the user
     user = db.query(models.User).filter(models.User.id == token_entry.owner_id).first()
@@ -321,7 +382,10 @@ def reset_password(
 
     # Prevent test users from resetting password
     if user.is_demo:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Test users cannot reset their password.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Test users cannot reset their password.",
+        )
 
     # Hash the new password
     hashed_password = utils.hash_password(reset_data.new_password)
@@ -332,8 +396,11 @@ def reset_password(
         user.password = hashed_password
         db.delete(token_entry)
         db.commit()
-    except:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error resetting password")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error resetting password",
+        )
 
     return {"success": True, "message": "Password has been reset successfully"}

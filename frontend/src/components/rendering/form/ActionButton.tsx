@@ -1,5 +1,6 @@
 import React, { JSX } from "react";
-import { Button, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
+import { Button, Spinner } from "react-bootstrap";
+import { Tooltip } from "../../Tooltip/Tooltip";
 
 export type ButtonVariant =
 	| "primary"
@@ -107,7 +108,7 @@ export const ActionButton = ({
 
 	const button: JSX.Element = (
 		<div
-			tabIndex={0}
+			tabIndex={-1}
 			style={{
 				cursor: "not-allowed",
 				flex: "1 1",
@@ -140,9 +141,13 @@ export const ActionButton = ({
 	// Wrap with tooltip if provided
 	if (tooltip) {
 		return (
-			<OverlayTrigger placement={tooltipPlacement} overlay={<Tooltip id={`${id}-tooltip`}>{tooltip}</Tooltip>}>
+			<Tooltip
+				content={tooltip}
+				placement={tooltipPlacement}
+				style={{ flex: "1 1", width: fullWidth ? "100%" : "auto" }}
+			>
 				{button}
-			</OverlayTrigger>
+			</Tooltip>
 		);
 	}
 

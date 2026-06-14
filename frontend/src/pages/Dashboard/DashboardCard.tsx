@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, JSX } from "react";
 import { Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "./DashboardPage.scss";
@@ -19,8 +19,10 @@ export interface DashboardCardProps {
 	isEmpty?: boolean;
 	emptyState?: EmptyStateProps;
 	children: ReactNode;
+	id?: string;
 	className?: string;
 	bodyPadding?: boolean;
+	headerAction?: ReactNode;
 }
 
 export const DashboardCard: React.FC<DashboardCardProps> = ({
@@ -33,8 +35,10 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 	isEmpty = false,
 	emptyState,
 	children,
+	id,
 	className = "",
 	bodyPadding = true,
+	headerAction,
 }: DashboardCardProps): JSX.Element => {
 	const navigate = useNavigate();
 
@@ -55,16 +59,18 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 				<div className="mb-3">
 					<i className={`bi bi-${emptyState.icon} text-muted`} style={{ fontSize: "3.5rem" }}></i>
 				</div>
-				<h6 className="text-muted fw-semibold">{emptyState.title}</h6>
+				<h6 id={id ? `${id}-empty` : undefined} className="text-muted fw-semibold">
+					{emptyState.title}
+				</h6>
 				<p className="text-muted small mb-0">{emptyState.description}</p>
 			</div>
 		);
 	};
 
 	return (
-		<Card className={`shadow-sm border-0 h-100 d-flex flex-column ${className}`}>
+		<Card id={id} className={`shadow-sm border-0 h-100 d-flex flex-column ${className}`}>
 			<Card.Header className="table-card-header border-0 p-0">
-				<div className="d-flex align-items-center justify-content-between p-4">
+				<div className="d-flex align-items-center gap-2 p-4">
 					<div
 						className="d-flex align-items-center"
 						onClick={handleHeaderClick}
@@ -78,14 +84,33 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 							{subtitle && <small className="text-muted">{subtitle}</small>}
 						</div>
 					</div>
-					{badgeValue != null && <div className="table-count-badge">{badgeValue}</div>}
+					{badgeValue != null && (
+						<div id={id ? `${id}-badge` : undefined} className="table-count-badge">
+							{badgeValue}
+						</div>
+					)}
+					{headerAction && (
+						<div
+							className="d-flex align-items-center gap-2 table-card-header-actions"
+							style={{ height: "100%" }}
+						>
+							{headerAction}
+						</div>
+					)}
 				</div>
 			</Card.Header>
-			<Card.Body className="p-0 flex-grow-1 d-flex flex-column overflow-auto" style={{ minHeight: 0 }}>
+			<Card.Body className="p-0 flex-grow-1 d-flex flex-column" style={{ minHeight: 0 }}>
 				{isEmpty && emptyState ? renderEmptyState() : null}
 				<div
 					className={bodyPadding ? "px-3" : ""}
-					style={{ flexGrow: 1, display: isEmpty && emptyState ? "none" : "block" }}
+					style={{
+						paddingTop: isEmpty && emptyState ? 0 : "10px",
+						flexGrow: 1,
+						minHeight: 0,
+						minWidth: 0,
+						display: isEmpty && emptyState ? "none" : "flex",
+						flexDirection: "column",
+					}}
 				>
 					{children}
 				</div>
@@ -93,5 +118,3 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 		</Card>
 	);
 };
-
-export default DashboardCard;

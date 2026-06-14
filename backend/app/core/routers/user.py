@@ -5,10 +5,16 @@ import datetime as dt
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app import base_schemas
 from app import utils, models, database
+from app.base_schemas import GenericResponse
 from app.core import oauth2, schemas
-from app.core.utils import send_email_change_email
+from app.core.models import TokenType
+from app.core.schemas import CheckPendingEmailResponse
+from app.core.utils import (
+    check_token_rate_limit,
+    send_rate_limited_tokenized_email_change_email,
+    send_tokenized_password_changed_email_with_rate_limit,
+)
 from app.emails.email_service import email_service
 from app.emails.release_data import get_release_slides
 from app.payments import stripe
@@ -45,11 +51,11 @@ user_router = generate_data_table_crud_router(
 )
 
 
-@user_router.post("/invalidate-all-sessions", response_model=base_schemas.GenericResponse)
+@user_router.post("/invalidate-all-sessions")
 def invalidate_all_sessions(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(oauth2.get_current_user),
-) -> dict[str, str | bool]:
+) -> GenericResponse:
     """Invalidate all user sessions by incrementing token_version for all users.
     This will force all users to log in again.
     :param db: The database session.
@@ -62,15 +68,15 @@ def invalidate_all_sessions(
     db.query(models.User).update({models.User.token_version: models.User.token_version + 1})
     db.commit()
 
-    return {"message": "All user sessions have been invalidated.", "success": True}
+    return GenericResponse(message="All user sessions have been invalidated.", success=True)
 
 
-@user_router.post("/send-release-email/{version}", response_model=base_schemas.GenericResponse)
+@user_router.post("/send-release-email/{version}")
 def send_release_email(
     version: str,
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(oauth2.get_current_user),
-) -> dict[str, str | bool]:
+) -> GenericResponse:
     """Send a new version announcement email to all active, verified, non-demo users.
     :param version: The version string to announce (e.g. "1.2.0").
     :param db: The database session.
@@ -102,10 +108,10 @@ def send_release_email(
         except Exception as e:
             logger.error("Failed to send release email to user %s: %s", user.id, str(e))
 
-    return {
-        "message": f"Release email for v{version} sent to {sent_count}/{len(users)} users.",
-        "success": True,
-    }
+    return GenericResponse(
+        message=f"Release email for v{version} sent to {sent_count}/{len(users)} users.",
+        success=True,
+    )
 
 
 # ------------------------------------------------- USER QUALIFICATIONS ------------------------------------------------
@@ -156,18 +162,16 @@ def upsert_user_qualification(
     if entry:
         # Determine if the qualification was used to rate jobs
         if len(entry.job_ratings):
-            # noinspection PyArgumentList
             entry = models.UserQualification(
-                **qualification.model_dump(exclude_unset=True, exclude=["id"]), owner_id=user.id
+                **qualification.model_dump(exclude_unset=True, exclude={"id"}), owner_id=user.id
             )
             db.add(entry)
         else:
             for field, value in qualification.model_dump(exclude_unset=True).items():
                 setattr(entry, field, value)
     else:
-        # noinspection PyArgumentList
         entry = models.UserQualification(
-            **qualification.model_dump(exclude_unset=True, exclude=["id"]), owner_id=user.id
+            **qualification.model_dump(exclude_unset=True, exclude={"id"}), owner_id=user.id
         )
         db.add(entry)
     db.commit()
@@ -192,11 +196,11 @@ def get_current_user_profile(
     return current_user
 
 
-@current_user_router.post("/heartbeat", response_model=base_schemas.GenericResponse)
+@current_user_router.post("/heartbeat")
 def heartbeat(
     current_user: models.User = Depends(oauth2.get_current_user),
     db: Session = Depends(database.get_db),
-) -> dict[str, str | bool]:
+) -> GenericResponse:
     """Record that the user has accessed the app.
     :param current_user: The current authenticated user.
     :param db: The database session.
@@ -206,103 +210,139 @@ def heartbeat(
     current_user.last_login = dt.datetime.now(dt.timezone.utc)
     db.commit()
 
-    return {"message": "Last login updated.", "success": True}
+    return GenericResponse(message="Last login updated.", success=True)
 
 
-@current_user_router.put("/", response_model=schemas.CurrentUserUpdateResponse)
+@current_user_router.put("/")
 def update_account(
     user_update: schemas.CurrentUserUpdate,
     current_user: models.User = Depends(oauth2.get_current_user),
     db: Session = Depends(database.get_db),
-) -> dict:
-    """Update the current user's profile.
-    :param user_update: The user update data.
+) -> GenericResponse:
+    """Update the current user's non-sensitive profile fields (name, app version, preferences, premium).
+    Email and password updates have their own dedicated endpoints.
+    :param user_update: The update data.
     :param current_user: The current authenticated user.
     :param db: The database session.
-    :returns: A dictionary with the result of the update operation."""
+    :returns: A success message."""
 
-    result = {"success": True, "message": "User has been successfully updated"}
-    user_update_dict = user_update.model_dump(exclude_unset=True)
-
-    # Track if password or email changed
-    password_changed = False
-
-    # Hash password if it's being updated
-    transformed_data = transform_user_data(user_update_dict, db)
-    user_update_dict.update(transformed_data)
-
-    # Determine if the user is updating the password or email
-    requires_password_check = "password" in user_update_dict or "email" in user_update_dict
-
-    # Prevent test users from changing password or email
-    if current_user.is_demo and requires_password_check:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Test users cannot change their password or email address.",
-        )
-
-    # Update password/email
-    current_password = user_update_dict.get("current_password", "")
-    if requires_password_check and not utils.verify_password(current_password, current_user.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="The current password is incorrect.",
-        )
-
-    # Track password change
-    if "password" in user_update_dict:
-        password_changed = True
-
-    # Handle email change separately
-    if "email" in user_update_dict and user_update_dict["email"] != current_user.email:
-        new_email = user_update_dict.pop("email")  # Remove from dict to handle separately
-
-        # Validate email is not already associated with another user
-        other_users = (
-            db.query(models.User)
-            .filter(models.User.id != current_user.id)
-            .filter(models.User.email == new_email)
-            .first()
-        )
-        if other_users:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered",
-            )
-
-        # Send verification email with rate limiting
-        email_result = send_email_change_email(current_user, new_email, db)
-        if not email_result.success:
-            raise HTTPException(
-                status_code=email_result.error_code,
-                detail=email_result.message,
-            )
-        result["message"] = email_result.message
-
-    # Update other fields normally
-    for field, value in user_update_dict.items():
+    for field, value in user_update.model_dump(exclude_unset=True).items():
         if isinstance(value, dict):
             for k, v in value.items():
                 setattr(getattr(current_user, field), k, v)
         else:
             setattr(current_user, field, value)
 
-    # Increment token version if password was changed
-    if password_changed:
-        current_user.token_version += 1
-        result["message"] = "Account updated successfully. Please log in again."
-        result["logged_out"] = True
-
     db.commit()
     db.refresh(current_user)
-    return result
+
+    return GenericResponse(message="User has been successfully updated", success=True)
 
 
-@current_user_router.get("/verify-email/{token}", response_model=base_schemas.GenericResponse)
+@current_user_router.put("/password")
+def update_password(
+    payload: schemas.CurrentUserPasswordUpdate,
+    current_user: models.User = Depends(oauth2.get_current_user),
+    db: Session = Depends(database.get_db),
+) -> GenericResponse:
+    """Change the current user's password.
+    Verifies the current password, updates to the new password, invalidates existing sessions,
+    and sends a notification email to confirm the change.
+    :param payload: The current and new password.
+    :param current_user: The current authenticated user.
+    :param db: The database session.
+    :returns: A dictionary with the result of the password update."""
+
+    if current_user.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Demo users cannot change their password.",
+        )
+
+    seconds_remaining = check_token_rate_limit(TokenType.PASSWORD_CHANGE, current_user, db)
+    if seconds_remaining > 0:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"You have changed or attempted to change your password too recently. "
+            f"Please wait {seconds_remaining} seconds before retrying.",
+        )
+
+    if not utils.verify_password(payload.current_password, current_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="The current password is incorrect.",
+        )
+
+    current_user.password = utils.hash_password(payload.new_password)
+    current_user.token_version += 1
+
+    email_response = send_tokenized_password_changed_email_with_rate_limit(current_user, db)
+    if not email_response.success:
+        sta = email_response.error_code if email_response.error_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+        raise HTTPException(status_code=sta, detail=email_response.message)
+    else:
+        db.commit()
+        return GenericResponse(message=email_response.message, success=True)
+
+
+@current_user_router.put("/email")
+def update_email(
+    payload: schemas.CurrentUserEmailUpdate,
+    current_user: models.User = Depends(oauth2.get_current_user),
+    db: Session = Depends(database.get_db),
+) -> GenericResponse:
+    """Request a change of the current user's email address.
+    Sends a verification email to the new address. The actual update only happens once the
+    user clicks the link in that email (handled by /current-user/verify-email/{token}).
+    :param payload: The new email address.
+    :param current_user: The current authenticated user.
+    :param db: The database session.
+    :returns: A success message."""
+
+    if current_user.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Demo users cannot change their email address.",
+        )
+
+    if not utils.verify_password(payload.current_password, current_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="The current password is incorrect.",
+        )
+
+    new_email = payload.email
+    if new_email == current_user.email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The new email address must be different from the current one.",
+        )
+
+    seconds_remaining = check_token_rate_limit(TokenType.EMAIL_CHANGE, current_user, db)
+    if seconds_remaining > 0:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"You have changed or attempted to change your email too recently."
+            f" Please wait {seconds_remaining} seconds before retrying.",
+        )
+
+    other_user = db.query(models.User).filter(models.User.id != current_user.id, models.User.email == new_email).first()
+    if other_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+
+    email_response = send_rate_limited_tokenized_email_change_email(current_user, new_email, db)
+    if not email_response.success:
+        status_code = email_response.error_code if email_response.error_code else status.HTTP_500_INTERNAL_SERVER_ERROR
+        raise HTTPException(status_code=status_code, detail=email_response.message)
+    else:
+        return GenericResponse(message=email_response.message, success=True)
+
+
+@current_user_router.get("/verify-email/{token}")
 def verify_email_change(
     token: str,
     db: Session = Depends(database.get_db),
-) -> dict[str, str | bool]:
+) -> GenericResponse:
     """Verify email change using the provided token
     :param token: The email change verification token.
     :param db: The database session.
@@ -315,7 +355,7 @@ def verify_email_change(
         db.query(models.UserToken)
         .filter(
             models.UserToken.token == hashed_token,
-            models.UserToken.token_type == "email_change",
+            models.UserToken.token_type == TokenType.EMAIL_CHANGE,
         )
         .first()
     )
@@ -370,14 +410,17 @@ def verify_email_change(
     db.commit()
     email_service.send_email_change_notification(user.email, old_email)
 
-    return {"message": "Email address changed successfully. You can now log in with your new email.", "success": True}
+    return GenericResponse(
+        message="Email address has been successfully updated. You can now log in with your new email.",
+        success=True,
+    )
 
 
-@current_user_router.get("/check-pending-email", response_model=schemas.CheckPendingEmailResponse)
+@current_user_router.get("/check-pending-email")
 def check_email_pending(
     current_user: models.User = Depends(oauth2.get_current_user),
     db: Session = Depends(database.get_db),
-) -> dict[str, bool | str | None]:
+) -> CheckPendingEmailResponse:
     """Check if the user has a pending email change.
     :param current_user: The current authenticated user.
     :param db: The database session.
@@ -388,29 +431,43 @@ def check_email_pending(
         db.query(models.UserToken)
         .filter(
             models.UserToken.owner_id == current_user.id,
-            models.UserToken.token_type == "email_change",
+            models.UserToken.token_type == TokenType.EMAIL_CHANGE,
         )
         .first()
     )
 
     if not token_entry:
-        return {"has_pending_email": False, "pending_email": None}
+        return CheckPendingEmailResponse(has_pending_email=False)
 
     # Check if token is expired
     if not token_entry.is_valid:
         db.delete(token_entry)
         db.commit()
-        return {"has_pending_email": False, "pending_email": None}
+        return CheckPendingEmailResponse(has_pending_email=False)
 
-    return {"has_pending_email": True, "pending_email": token_entry.pending_email}
+    return CheckPendingEmailResponse(has_pending_email=True, pending_email=token_entry.pending_email)
 
 
-@current_user_router.delete("/", response_model=base_schemas.GenericResponse)
+@current_user_router.post("/verify-password")
+def verify_password_endpoint(
+    verify_request: schemas.AccountDeleteRequest,
+    current_user: models.User = Depends(oauth2.get_current_user),
+) -> GenericResponse:
+    """Verify the current user's password without making any changes."""
+    if not utils.verify_password(verify_request.password, current_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Password is incorrect.",
+        )
+    return GenericResponse(message="Password verified.", success=True)
+
+
+@current_user_router.delete("/")
 def delete_account(
     delete_request: schemas.AccountDeleteRequest,
     current_user: models.User = Depends(oauth2.get_current_user),
     db: Session = Depends(database.get_db),
-) -> dict[str, str | bool]:
+) -> GenericResponse:
     """Delete the current user's account permanently.
     :param delete_request: The account deletion request with password.
     :param current_user: The current authenticated user.
@@ -442,4 +499,4 @@ def delete_account(
     db.delete(current_user)
     db.commit()
 
-    return {"message": "Account deleted successfully.", "success": True}
+    return GenericResponse(message="Account deleted successfully.", success=True)

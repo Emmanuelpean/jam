@@ -7,12 +7,18 @@ import {
 	ViewField,
 } from "../../components/rendering/view/ViewRenders";
 import { getTableIcon } from "../../components/rendering/view/Icons";
-import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, JobData } from "../../services/schemas/DataTables";
+import {
+	EnrichedInterviewData,
+	EnrichedJobApplicationUpdateData,
+	EnrichedJobData,
+	JobData,
+} from "../../services/schemas/DataTables";
 import { formatActivityDate } from "../../utils/TimeUtils";
 import { DashboardCard } from "./DashboardCard";
+import { ConfigurableDashboardCard, WidgetSetting } from "./WidgetConfig";
 
 const getActivityColor = (type: string): string => {
-	const colorMap: { [key: string]: string } = {
+	const colorMap: Record<string, string> = {
 		Application: "bg-primary",
 		Interview: "bg-success",
 		"Job Application Update": "bg-info",
@@ -30,13 +36,58 @@ const getActivityBadge = (type: string): ((param: RenderParams) => ReactNode) =>
 };
 
 const getActivityIcon = (type: string): string => {
-	const iconMap: { [key: string]: string } = {
+	const iconMap: Record<string, string> = {
 		Application: getTableIcon("Job Applications"),
 		Interview: getTableIcon("Interviews"),
 		"Job Application Update": getTableIcon("Job Application Updates"),
 	};
 	return iconMap[type] || "bi-plus-circle-fill";
 };
+
+interface TimelineItemProps {
+	id?: string;
+	colorClass: string;
+	icon: string;
+	isLast: boolean;
+	title: ReactNode;
+	date: Date;
+	dateOnly?: boolean;
+	children: ReactNode;
+}
+
+const TimelineItem: React.FC<TimelineItemProps> = ({
+	id,
+	colorClass,
+	icon,
+	isLast,
+	title,
+	date,
+	dateOnly,
+	children,
+}: TimelineItemProps): JSX.Element => (
+	<div id={id} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
+		<div className="d-flex position-relative">
+			{!isLast && <div id={id ? `${id}-line` : undefined} className="position-absolute activity-line" />}
+			<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
+				<div
+					className={`rounded-circle d-flex align-items-center justify-content-center badge ${colorClass}`}
+					style={{ width: "31.5px", height: "31.5px" }}
+				>
+					<i className={`bi-${icon} text-white`} style={{ fontSize: "1rem" }} />
+				</div>
+			</div>
+			<div className="flex-grow-1 min-width-0">
+				<div className="activity-header d-flex align-items-start justify-content-between mb-1">
+					<div className="fw-semibold activity-title" style={{ fontSize: "1rem" }}>
+						{title}
+					</div>
+					<small className="text-muted activity-date">{formatActivityDate(date, dateOnly)}</small>
+				</div>
+				{children}
+			</div>
+		</div>
+	</div>
+);
 
 interface ActivityFeedCardProps<T> {
 	icon: string;
@@ -47,10 +98,15 @@ interface ActivityFeedCardProps<T> {
 	emptyTitle: string;
 	emptyDescription: string;
 	items: T[];
+	id?: string;
 	renderItem: (item: T, index: number, isLast: boolean) => JSX.Element;
+	settings?: WidgetSetting[];
+	isEditMode?: boolean;
+	open?: boolean;
 }
 
 export const ActivityFeedCard = <T,>({
+	id,
 	icon,
 	title,
 	subtitle,
@@ -60,83 +116,86 @@ export const ActivityFeedCard = <T,>({
 	emptyDescription,
 	items,
 	renderItem,
-}: ActivityFeedCardProps<T>): JSX.Element => (
-	<DashboardCard
-		icon={icon}
-		title={title}
-		subtitle={subtitle}
-		badgeValue={badgeValue}
-		isEmpty={items.length === 0}
-		emptyState={{
-			icon: emptyIcon,
-			title: emptyTitle,
-			description: emptyDescription,
-		}}
-		bodyPadding={false}
-	>
-		<div className="activity-timeline px-4 flex-grow-1" style={{ overflowY: "auto", height: "100%", minHeight: 0 }}>
-			{items.map((item, index) => renderItem(item, index, index === items.length - 1))}
+	settings,
+	isEditMode,
+	open,
+}: ActivityFeedCardProps<T>): JSX.Element => {
+	const emptyState = { icon: emptyIcon, title: emptyTitle, description: emptyDescription };
+	const timeline: JSX.Element = (
+		<div id={id ? `${id}-timeline` : undefined} className="activity-timeline px-4 flex-grow-1">
+			{items.map((item: T, index: number): JSX.Element => renderItem(item, index, index === items.length - 1))}
 		</div>
-	</DashboardCard>
-);
+	);
+
+	if (settings && settings.length > 0) {
+		return (
+			<ConfigurableDashboardCard
+				id={id}
+				icon={icon}
+				title={title}
+				subtitle={subtitle}
+				badgeValue={badgeValue}
+				isEmpty={items.length === 0}
+				emptyState={emptyState}
+				settings={settings}
+				isEditMode={isEditMode}
+				open={open}
+				bodyPadding={false}
+			>
+				{timeline}
+			</ConfigurableDashboardCard>
+		);
+	}
+
+	return (
+		<DashboardCard
+			id={id}
+			icon={icon}
+			title={title}
+			subtitle={subtitle}
+			badgeValue={badgeValue}
+			isEmpty={items.length === 0}
+			emptyState={emptyState}
+			bodyPadding={false}
+		>
+			{timeline}
+		</DashboardCard>
+	);
+};
 
 export interface RecentActivity {
 	data: JobData | EnrichedInterviewData | EnrichedJobApplicationUpdateData;
-	date: string | Date;
+	date: Date;
 	type: "Application" | "Interview" | "Job Application Update";
 	job_id: number | null | undefined | string;
 }
 
 export const renderRecentActivityItem = (activity: RecentActivity, index: number, isLast: boolean): JSX.Element => {
-	const getActivityNumber = (activity: RecentActivity): string => {
-		if (activity.type === "Interview" || activity.type === "Job Application Update") {
-			return `#${"number" in activity.data ? activity.data.number : ""}`;
-		} else {
-			return "";
-		}
-	};
+	const number: string =
+		activity.type === "Interview" || activity.type === "Job Application Update"
+			? ` #${"number" in activity.data ? activity.data.number : ""}`
+			: "";
 
-	const activityColor: string = getActivityColor(activity.type);
-	const activityIcon: string = getActivityIcon(activity.type);
-	const activityBadge = getActivityBadge(activity.type);
+	const badgeRenderer = getActivityBadge(activity.type);
 	const activityData = activity.type === "Application" ? activity : activity.data;
 
 	const jobField: ViewField = {
 		key: "activity-item-" + index,
-		render: (params: RenderParams): ReactNode => activityBadge(params),
+		render: (params: RenderParams): ReactNode => badgeRenderer(params),
 	};
 
 	return (
-		<div key={`activity-${index}`} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
-			<div className="d-flex position-relative">
-				{/* Timeline line */}
-				{!isLast && <div className="position-absolute activity-line"></div>}
-
-				{/* Activity icon */}
-				<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
-					<div
-						className={`rounded-circle d-flex align-items-center justify-content-center badge ${activityColor}`}
-						style={{
-							width: "31.5px",
-							height: "31.5px",
-						}}
-					>
-						<i className={`bi-${activityIcon} text-white`} style={{ fontSize: "1rem" }}></i>
-					</div>
-				</div>
-
-				{/* Activity content */}
-				<div className="flex-grow-1 min-width-0">
-					<div className="activity-header d-flex align-items-start justify-content-between mb-1">
-						<div className="fw-semibold activity-title" style={{ fontSize: "1rem" }}>
-							{activity.type} {getActivityNumber(activity)}
-						</div>
-						<small className="text-muted activity-date">{formatActivityDate(activity.date)}</small>
-					</div>
-					<RenderViewFieldWithContext field={jobField} item={activityData} id={index.toString()} />
-				</div>
-			</div>
-		</div>
+		<TimelineItem
+			key={`activity-${index}`}
+			id={`activity-item-recent_activity-${index}`}
+			colorClass={getActivityColor(activity.type)}
+			icon={getActivityIcon(activity.type)}
+			isLast={isLast}
+			title={`${activity.type}${number}`}
+			date={activity.date}
+		>
+			<RenderViewFieldWithContext field={jobField} item={activityData} id={index.toString()} />
+		</TimelineItem>
 	);
 };
 
@@ -147,39 +206,92 @@ export const renderUpcomingInterviewItem = (
 ): JSX.Element => {
 	const jobField: ViewField = {
 		key: "activity-item-" + index,
-		render: (params: RenderParams) => renderFunctions.interviewBadge(params),
+		render: (params: RenderParams): ReactNode => renderFunctions.interviewBadge(params),
 	};
-	const activityColor: string = getActivityColor("Interview");
-	const activityIcon: string = getActivityIcon("Interview");
 
 	return (
-		<div key={`interview-${index}`} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
-			<div className="d-flex position-relative">
-				{/* Timeline line */}
-				{!isLast && <div className="position-absolute activity-line"></div>}
-				{/* Interview icon */}
-				<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
-					<div
-						className={`rounded-circle d-flex align-items-center justify-content-center badge ${activityColor}`}
-						style={{
-							width: "31.5px",
-							height: "31.5px",
-						}}
-					>
-						<i className={`bi-${activityIcon} text-white`} style={{ fontSize: "1rem" }}></i>
-					</div>
-				</div>
-				{/* Interview content */}
-				<div className="flex-grow-1 min-width-0">
-					<div className="activity-header d-flex align-items-start justify-content-between mb-1">
-						<div className="fw-semibold activity-title" style={{ fontSize: "1rem" }}>
-							{interview.type} (interview #{interview.number})
-						</div>
-						<small className="text-muted activity-date">{formatActivityDate(interview.date)}</small>
-					</div>
-					<RenderViewFieldWithContext field={jobField} item={interview} id={index.toString()} />
-				</div>
-			</div>
-		</div>
+		<TimelineItem
+			key={`interview-${index}`}
+			id={`activity-item-upcoming_interviews-${index}`}
+			colorClass={getActivityColor("Interview")}
+			icon={getActivityIcon("Interview")}
+			isLast={isLast}
+			title={`${interview.type} (interview #${interview.number})`}
+			date={interview.date}
+		>
+			<RenderViewFieldWithContext field={jobField} item={interview} id={index.toString()} />
+		</TimelineItem>
+	);
+};
+
+export const renderPastInterviewItem = (
+	interview: EnrichedInterviewData,
+	index: number,
+	isLast: boolean
+): JSX.Element => {
+	const jobField: ViewField = {
+		key: "activity-item-" + index,
+		render: (params: RenderParams): ReactNode => renderFunctions.interviewBadge(params),
+	};
+
+	return (
+		<TimelineItem
+			key={`past-interview-${index}`}
+			id={`activity-item-past_interviews-${index}`}
+			colorClass="bg-secondary"
+			icon={getActivityIcon("Interview")}
+			isLast={isLast}
+			title={`${interview.type} (interview #${interview.number})`}
+			date={interview.date}
+		>
+			<RenderViewFieldWithContext field={jobField} item={interview} id={index.toString()} />
+		</TimelineItem>
+	);
+};
+
+export const renderStatusUpdateItem = (
+	update: EnrichedJobApplicationUpdateData,
+	index: number,
+	isLast: boolean
+): JSX.Element => {
+	const jobField: ViewField = {
+		key: "activity-item-" + index,
+		render: (params: RenderParams): ReactNode => renderFunctions.jobApplicationUpdateBadge(params),
+	};
+
+	return (
+		<TimelineItem
+			key={`status-update-${index}`}
+			id={`activity-item-status_updates-${index}`}
+			colorClass={getActivityColor("Job Application Update")}
+			icon={getActivityIcon("Job Application Update")}
+			isLast={isLast}
+			title={`Update #${update.number}`}
+			date={update.date}
+		>
+			<RenderViewFieldWithContext field={jobField} item={update} id={index.toString()} />
+		</TimelineItem>
+	);
+};
+
+export const renderUpcomingDeadlineItem = (job: EnrichedJobData, index: number, isLast: boolean): JSX.Element => {
+	const jobField: ViewField = {
+		key: "activity-item-" + index,
+		render: (params: RenderParams): ReactNode => renderFunctions.jobBadge(params),
+	};
+
+	return (
+		<TimelineItem
+			key={`deadline-${index}`}
+			id={`activity-item-upcoming_deadlines_timeline-${index}`}
+			colorClass="bg-warning"
+			icon="alarm"
+			dateOnly
+			isLast={isLast}
+			title={job.name}
+			date={job.deadline as Date}
+		>
+			<RenderViewFieldWithContext field={jobField} item={{ job_id: job.id }} id={index.toString()} />
+		</TimelineItem>
 	);
 };

@@ -36,30 +36,18 @@ export const findItemById = <T extends { id: number }>(objects: T[], key: number
 	return found === undefined ? null : found;
 };
 
-export function flattenArray(arr: Array<any>): Array<any> {
-	const result = [];
-	for (const item of arr) {
-		if (Array.isArray(item)) {
-			result.push(...flattenArray(item));
-		} else {
-			result.push(item);
-		}
-	}
-	return result;
-}
-
 export const getColumnClass = (count: number): string => {
 	switch (count) {
 		case 1:
-			return "col-md-12";
+			return "col-12";
 		case 2:
-			return "col-md-6";
+			return "col-6";
 		case 3:
-			return "col-md-4";
+			return "col-4";
 		case 4:
-			return "col-md-3";
+			return "col-3";
 		default:
-			return "col-md-6";
+			return "col-6";
 	}
 };
 

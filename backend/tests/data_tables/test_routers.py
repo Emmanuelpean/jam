@@ -8,11 +8,16 @@ from CRUDTestBase to ensure consistent testing of standard CRUD operations, incl
 validation, and error handling. Additional custom endpoint tests are included where applicable.
 """
 
+import base64
+
+from starlette import status
+
+from app.base_schemas import COLUMN_LIMITS
 from app.data_tables import schemas
+from app.data_tables.models import Geolocation
 from tests.conftest import CRUDTestBase
 from tests.utils.test_data import (
     COMPANY_DATA,
-    LOCATION_DATA,
     PERSON_DATA,
     AGGREGATOR_DATA,
     KEYWORD_DATA,
@@ -37,6 +42,7 @@ class TestKeywordCRUD(CRUDTestBase):
         "id": 1,
         "name": "Updated Python",
     }
+    too_long_create_data = {"name": "x" * (COLUMN_LIMITS.name + 1)}
 
 
 class TestAggregatorCRUD(CRUDTestBase):
@@ -50,6 +56,7 @@ class TestAggregatorCRUD(CRUDTestBase):
         "url": "https://updated-linkedin.com",
         "id": 1,
     }
+    too_long_create_data = {"name": "x" * (COLUMN_LIMITS.name + 1)}
 
 
 class TestCompanyCRUD(CRUDTestBase):
@@ -62,6 +69,7 @@ class TestCompanyCRUD(CRUDTestBase):
         "name": "OXPV",
         "id": 1,
     }
+    too_long_create_data = {"name": "x" * (COLUMN_LIMITS.name + 1)}
 
     def test_get_all_specific_company(self, authorised_clients, test_companies) -> None:
         response = authorised_clients[0].get(f"{self.endpoint}/?url=https://techcorp.com")
@@ -86,29 +94,79 @@ class TestCompanyCRUD(CRUDTestBase):
         assert len(response.json()) == 0
 
 
-class TestLocationCRUD(CRUDTestBase):
-    endpoint = "/locations"
-    create_schema = schemas.LocationCreate
-    out_schema = schemas.LocationOut
-    test_data_ref = "test_locations"
-    create_data = LOCATION_DATA
-    update_data = {
-        "postcode": "OX5 1HN",
-        "id": 1,
-    }
-
-
 class TestFileCRUD(CRUDTestBase):
     endpoint = "/files"
     create_schema = schemas.FileCreate
     out_schema = schemas.FileOut
     test_data_ref = "test_files"
     create_data = FILE_DATA
+    actions_to_test = ["GET", "PUT", "DELETE"]
     update_data = {
         "filename": "updated_john_doe_cv_2024.pdf",
-        "size": 2560,
         "id": 1,
     }
+
+    # ------------------------------------------------------ POST ------------------------------------------------------
+
+    def test_post_field_too_long(self, authorised_clients) -> None:
+        """Uploading a file with a filename exceeding the max length returns 422."""
+        client = self._get_authorised_client(authorised_clients)
+        data = {
+            "filename": "x" * (COLUMN_LIMITS.file_name + 1),
+            "type": "text/plain",
+            "content": base64.b64encode(b"test").decode(),
+            "size": 4,
+        }
+        response = self.post(client, data)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_post_success(self, authorised_clients, test_users) -> None:
+        """Authorised users can upload a new file and receive 201 with the file metadata."""
+        client = self._get_authorised_client(authorised_clients)
+        for create_data in self.get_user_data(test_users, self.create_data):
+            data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
+            response = self.post(client, data)
+            assert response.status_code == 201
+            self.check_output(data, response.json())
+
+    def test_post_unauthenticated(self, client) -> None:
+        """Unauthenticated upload attempts are rejected with 401."""
+        response = self.post(client, {})
+        assert response.status_code == 401
+
+    def test_post_duplicate_content_returns_existing_file(self, authorised_clients) -> None:
+        """Uploading a file whose content already exists for that user returns the existing record."""
+        client = self._get_authorised_client(authorised_clients)
+        content = base64.b64encode(b"unique duplicate test content").decode()
+        data = {"filename": "original.pdf", "content": content, "type": "application/pdf", "size": 28}
+
+        first = self.post(client, data)
+        assert first.status_code == 201
+        first_id = first.json()["id"]
+
+        second = self.post(client, {**data, "filename": "duplicate.pdf"})
+        assert second.status_code in (200, 201)
+        assert second.json()["id"] == first_id
+
+    def test_post_incorrect_user_cannot_see_uploaded_file(self, authorised_clients, test_users) -> None:
+        """A file uploaded by one user is not visible to another user."""
+        uploader = self._get_authorised_client(authorised_clients)
+        other = self._get_admin_unauthorised_client(authorised_clients)
+
+        data = {
+            "filename": "private_cv.pdf",
+            "content": base64.b64encode(b"private content").decode(),
+            "type": "application/pdf",
+            "size": 15,
+        }
+        create_response = uploader.post(self.endpoint, json=data)
+        assert create_response.status_code == 201
+        file_id = create_response.json()["id"]
+
+        get_response = other.get(f"{self.endpoint}/{file_id}")
+        assert get_response.status_code == 403
+
+    # ------------------------------------------------------ DOWNLOAD ---------------------------------------------------
 
     def test_file_download_data_url_format(self, authorised_clients, test_files) -> None:
         """Test file download with Base64 data URL format"""
@@ -176,6 +234,47 @@ class TestFileCRUD(CRUDTestBase):
         error_data = download_response.json()
         assert "File not found" in error_data["detail"]
 
+    def _create_and_download_file(self, client, filename: str):
+        """Helper: create a file with the given filename and return the download response."""
+
+        content = base64.b64encode(b"test content").decode()
+        file_data = {"filename": filename, "content": content, "type": "text/plain", "size": 12}
+        create_response = client.post(f"{self.endpoint}/", json=file_data)
+        assert create_response.status_code == 201
+        file_id = create_response.json()["id"]
+        return client.get(f"{self.endpoint}/{file_id}/download")
+
+    def test_file_download_filename_crlf_injection_stripped(self, authorised_clients) -> None:
+        """CRLF characters in filenames must not appear in Content-Disposition header."""
+
+        malicious = "evil.pdf\r\nX-Injected: header"
+        response = self._create_and_download_file(authorised_clients[0], malicious)
+        assert response.status_code == 200
+        content_disposition = response.headers["content-disposition"]
+        assert "\r" not in content_disposition
+        assert "\n" not in content_disposition
+
+    def test_file_download_filename_path_traversal_stripped(self, authorised_clients) -> None:
+        """Path traversal components must be stripped from the Content-Disposition filename."""
+
+        malicious = "../../etc/passwd"
+        response = self._create_and_download_file(authorised_clients[0], malicious)
+        assert response.status_code == 200
+        content_disposition = response.headers["content-disposition"]
+        assert 'filename="passwd"' in content_disposition
+
+    def test_file_download_filename_quote_injection_stripped(self, authorised_clients) -> None:
+        """Embedded double-quotes must be removed so they cannot break the header value."""
+
+        malicious = 'file"name.pdf'
+        response = self._create_and_download_file(authorised_clients[0], malicious)
+        assert response.status_code == 200
+        content_disposition = response.headers["content-disposition"]
+        # The header value must remain a single well-formed token — no unescaped quotes inside it
+        # e.g. 'attachment; filename="filename.pdf"'
+        inner = content_disposition.split('filename="')[1].rstrip('"')
+        assert '"' not in inner
+
     def test_file_download_empty_content(self, authorised_clients) -> None:
         """Test file download with empty/null content"""
 
@@ -208,6 +307,7 @@ class TestPersonCRUD(CRUDTestBase):
     }
     get_unauthorised_fixture = "test_persons_unauthorised"
     unauthorised_data_fixture = "persons_unauthorised_data"
+    too_long_create_data = {"first_name": "x" * (COLUMN_LIMITS.first_name + 1), "last_name": "Test"}
 
 
 class TestJobCRUD(CRUDTestBase):
@@ -217,7 +317,6 @@ class TestJobCRUD(CRUDTestBase):
     test_data_ref = "test_jobs"
     required_fixture = [
         "test_persons",
-        "test_locations",
         "test_keywords",
         "test_companies",
         "test_aggregators",
@@ -231,6 +330,7 @@ class TestJobCRUD(CRUDTestBase):
     }
     get_unauthorised_fixture = "test_jobs_unauthorised"
     unauthorised_data_fixture = "jobs_unauthorised_data"
+    too_long_create_data = {"title": "x" * (COLUMN_LIMITS.job_title + 1)}
 
 
 class TestJobApplicationUpdateCRUD(CRUDTestBase):
@@ -246,6 +346,7 @@ class TestJobApplicationUpdateCRUD(CRUDTestBase):
     }
     get_unauthorised_fixture = "test_job_application_updates_unauthorised"
     unauthorised_data_fixture = "job_application_updates_unauthorised_data"
+    too_long_create_data = {"date": "2024-01-01T00:00:00", "job_id": 1, "type": "x" * (COLUMN_LIMITS.update_type + 1)}
 
 
 class TestInterviewCRUD(CRUDTestBase):
@@ -253,7 +354,7 @@ class TestInterviewCRUD(CRUDTestBase):
     create_schema = schemas.InterviewCreate
     out_schema = schemas.InterviewOut
     test_data_ref = "test_interviews"
-    required_fixture = ["test_jobs", "test_locations", "test_persons"]
+    required_fixture = ["test_jobs", "test_persons"]
     create_data = INTERVIEW_DATA
     update_data = {
         "job_id": 1,
@@ -263,6 +364,7 @@ class TestInterviewCRUD(CRUDTestBase):
     }
     get_unauthorised_fixture = "test_interviews_unauthorised"
     unauthorised_data_fixture = "interviews_unauthorised_data"
+    too_long_create_data = {"date": "2024-01-01T00:00:00", "job_id": 1, "type": "x" * (COLUMN_LIMITS.update_type + 1)}
 
 
 class TestSpeculativeApplicationCRUD(CRUDTestBase):
@@ -276,3 +378,57 @@ class TestSpeculativeApplicationCRUD(CRUDTestBase):
         "note": "Interview went very well - positive feedback",
         "id": 1,
     }
+    too_long_create_data = {"date": "2024-01-01T00:00:00", "company_id": 1, "note": "x" * (COLUMN_LIMITS.note + 1)}
+
+
+# ------------------------------------------------- GEOLOCATION CASCADE ------------------------------------------------
+
+
+class TestGeolocationCascade:
+    """Tests for geolocation foreign key cascade behavior on Job and Interview."""
+
+    def test_deleting_job_does_not_delete_geolocation(self, session, test_jobs, test_geolocations) -> None:
+        """Deleting a job with a geolocation does not delete the geolocation."""
+        job = next(j for j in test_jobs if j.geolocation_id is not None)
+        geolocation_id = job.geolocation_id
+
+        session.delete(job)
+        session.commit()
+
+        geo = session.query(Geolocation).filter_by(id=geolocation_id).first()
+        assert geo is not None
+
+    def test_deleting_geolocation_sets_job_fk_to_null(self, session, test_jobs, test_geolocations) -> None:
+        """Deleting a geolocation sets the job's geolocation_id to NULL (ondelete=SET NULL)."""
+        job = next(j for j in test_jobs if j.geolocation_id is not None)
+        geolocation_id = job.geolocation_id
+
+        geolocation = session.query(Geolocation).filter_by(id=geolocation_id).first()
+        session.delete(geolocation)
+        session.commit()
+
+        session.refresh(job)
+        assert job.geolocation_id is None
+
+    def test_deleting_interview_does_not_delete_geolocation(self, session, test_interviews, test_geolocations) -> None:
+        """Deleting an interview with a geolocation does not delete the geolocation."""
+        interview = next(i for i in test_interviews if i.geolocation_id is not None)
+        geolocation_id = interview.geolocation_id
+
+        session.delete(interview)
+        session.commit()
+
+        geo = session.query(Geolocation).filter_by(id=geolocation_id).first()
+        assert geo is not None
+
+    def test_deleting_geolocation_sets_interview_fk_to_null(self, session, test_interviews, test_geolocations) -> None:
+        """Deleting a geolocation sets the interview's geolocation_id to NULL (ondelete=SET NULL)."""
+        interview = next(i for i in test_interviews if i.geolocation_id is not None)
+        geolocation_id = interview.geolocation_id
+
+        geolocation = session.query(Geolocation).filter_by(id=geolocation_id).first()
+        session.delete(geolocation)
+        session.commit()
+
+        session.refresh(interview)
+        assert interview.geolocation_id is None

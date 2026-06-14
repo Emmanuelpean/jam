@@ -3,7 +3,6 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
 import Login from "./pages/Auth/AuthPage";
-import LocationsPage from "./pages/DataTablePages/LocationsPage";
 import CompaniesPage from "./pages/DataTablePages/CompaniesPage";
 import JobsPage from "./pages/DataTablePages/JobsPage";
 import PersonPage from "./pages/DataTablePages/PersonPage";
@@ -15,6 +14,7 @@ import { Sidebar } from "./components/Sidebar/Sidebar";
 import JobApplicationUpdatesPage from "./pages/DataTablePages/JobApplicationUpdatesPage";
 import Dashboard from "./pages/Dashboard/DashboardPage";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
+import { ViewportProvider } from "./contexts/ViewportContext";
 import { UserManagementPage } from "./pages/DataTablePages/UserManagementPage";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 import { useToast, UseToastReturn } from "./hooks/useNotificationToast";
@@ -27,7 +27,7 @@ import ReleaseNotesPage from "./pages/About/ReleaseNotesPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.scss";
 import "./Themes.scss";
-import { AlertProvider } from "./contexts/AlertContext";
+import { AlertProvider, useAlert } from "./contexts/AlertContext";
 import SpeculativeApplicationsPage from "./pages/DataTablePages/SpeculativeApplicationsPage";
 import { ContextMenuProvider } from "./contexts/ContextMenuContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -40,6 +40,14 @@ import { MaintenanceBanner } from "./components/AppBanner/MaintenanceBanner";
 import { DemoBanner } from "./components/AppBanner/DemoBanner";
 import { WhatsNewProvider } from "./contexts/WhatsNewContext";
 import ServiceDashboards from "./pages/Services/ServiceDashboards";
+import FilesPage from "./pages/FilesPage/FilesPage";
+import CommandPalette from "./components/CommandPalette/CommandPalette";
+import { useCommandPalette } from "./components/CommandPalette/useCommandPalette";
+import { CommandPaletteProvider } from "./contexts/CommandPaletteContext";
+import { TourProvider } from "./contexts/TourContext";
+import { GuidedTour } from "./components/GuidedTour/GuidedTour";
+import { TourSelectPanel } from "./components/Tours/TourSelectPanel";
+import { StaticDataProvider } from "./contexts/StaticDataContext";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -61,7 +69,13 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	const location = useLocation();
 	const { currentUser, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
+	const { isOpen: isCommandPaletteOpen, close: closeCommandPalette } = useCommandPalette();
+	const { hideAlert } = useAlert();
 	useSwetrixPageViews();
+
+	useEffect(() => {
+		hideAlert();
+	}, [location.pathname]);
 
 	useEffect(() => {
 		if (!isAuthenticated) return;
@@ -89,38 +103,52 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 
 	return (
 		<div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+			{isLoading && (
+				<div className="global-loading-overlay">
+					<div className="d-flex flex-column justify-content-center align-items-center h-100">
+						<div className="spinner-border mb-3" role="status" id="loading-spinner">
+							<span className="visually-hidden">Loading...</span>
+						</div>
+						<p className="mb-3">{loadingMessage}</p>
+						{progress !== undefined && (
+							<div className="progress" style={{ width: "315px" }}>
+								<div
+									className="progress-bar progress-bar-striped progress-bar-animated"
+									role="progressbar"
+									style={{ width: `${progress}%` }}
+									aria-valuenow={progress}
+									aria-valuemin={0}
+									aria-valuemax={100}
+								/>
+								<span className="progress-text">{progress}%</span>
+							</div>
+						)}
+					</div>
+				</div>
+			)}
+			<CommandPalette isOpen={isCommandPaletteOpen} onClose={closeCommandPalette} />
+			{isAuthenticated && <GuidedTour />}
+			{isAuthenticated && <TourSelectPanel />}
 			<MaintenanceBanner />
 			<DemoBanner />
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-				{currentUser && <Sidebar />}
-				<div style={{ flex: 1, minWidth: 0, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+				{isAuthenticated && currentUser && <Sidebar />}
+				<div
+					className={isAuthenticated && currentUser ? "sidebar-content-offset" : ""}
+					style={{
+						flex: 1,
+						minWidth: 0,
+						overflowY: "auto",
+						display: "flex",
+						flexDirection: "column",
+						position: "relative",
+						zIndex: 1,
+					}}
+				>
 					<div
 						className={!isAuthPage ? `main-content` : ""}
 						style={isAuthPage ? { height: "100%" } : undefined}
 					>
-						{isLoading && (
-							<div className="global-loading-overlay">
-								<div className="d-flex flex-column justify-content-center align-items-center h-100">
-									<div className="spinner-border mb-3" role="status" id="loading-spinner">
-										<span className="visually-hidden">Loading...</span>
-									</div>
-									<p className="mb-3">{loadingMessage}</p>
-									{progress !== undefined && (
-										<div className="progress" style={{ width: "315px" }}>
-											<div
-												className="progress-bar progress-bar-striped progress-bar-animated"
-												role="progressbar"
-												style={{ width: `${progress}%` }}
-												aria-valuenow={progress}
-												aria-valuemin={0}
-												aria-valuemax={100}
-											/>
-											<span className="progress-text">{progress}%</span>
-										</div>
-									)}
-								</div>
-							</div>
-						)}
 						{children}
 					</div>
 				</div>
@@ -146,7 +174,13 @@ function DataProviderWrapper({ children }: { children: ReactNode }): JSX.Element
 		return <>{children}</>;
 	}
 
-	return <DataProvider token={token}>{children}</DataProvider>;
+	return (
+		<DataProvider token={token}>
+			<TourProvider>
+				<WhatsNewProvider>{children}</WhatsNewProvider>
+			</TourProvider>
+		</DataProvider>
+	);
 }
 
 interface RouteConfig {
@@ -169,7 +203,6 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/about", element: <AboutPage />, protected: true },
 	{ path: "/browser-extension", element: <ExtensionPage />, protected: true },
 	{ path: "/release-notes", element: <ReleaseNotesPage />, protected: true },
-	{ path: "/locations", element: <LocationsPage />, protected: true },
 	{ path: "/companies", element: <CompaniesPage />, protected: true },
 	{ path: "/jobs", element: <JobsPage />, protected: true },
 	{ path: "/style-guide", element: <StyleGuidePage />, protected: true, adminOnly: true },
@@ -178,12 +211,14 @@ const routeConfigs: RouteConfig[] = [
 		element: <SpeculativeApplicationsPage />,
 		protected: true,
 	},
-	{ path: "/persons", element: <PersonPage />, protected: true },
+	{ path: "/contacts", element: <PersonPage />, protected: true },
 	{ path: "/keywords", element: <KeywordsPage />, protected: true },
 	{ path: "/interviews", element: <InterviewsPage />, protected: true },
 	{ path: "/aggregators", element: <AggregatorsPage />, protected: true },
 	{ path: "/job-application-updates", element: <JobApplicationUpdatesPage />, protected: true },
-	{ path: "/scraped-jobs", element: <ScrapedJobsPage />, protected: true },
+	{ path: "/files", element: <FilesPage />, protected: true },
+	{ path: "/job-alerts/jobs", element: <ScrapedJobsPage />, protected: true },
+	{ path: "/job-alerts/emails", element: <ScrapedJobsPage />, protected: true },
 	{ path: "/dashboard", element: <Dashboard />, protected: true },
 	{ path: "/settings/:tab", element: <UserSettingsPage />, protected: true },
 	{ path: "/settings", element: <Navigate to="/settings/account" replace />, protected: true },
@@ -217,38 +252,55 @@ function AppRoutes(): JSX.Element {
 	);
 }
 
+function ScreenTooSmall(): JSX.Element {
+	return (
+		<div className="screen-too-small">
+			<i className="bi bi-phone screen-too-small-icon" />
+			<p className="screen-too-small-title">Screen too small</p>
+			<p className="screen-too-small-message">JAM requires a minimum screen width of 300px.</p>
+		</div>
+	);
+}
+
 function AppContent(): JSX.Element {
 	const toastMethods: UseToastReturn = useToast();
 
 	return (
+		<>
+		<ScreenTooSmall />
 		<BrowserRouter basename="/jam">
+			<StaticDataProvider>
 			<AuthProvider>
 				<LoadingProvider>
-					<DataProviderWrapper>
-						<ToastContext.Provider value={toastMethods}>
-							<AlertProvider>
-								<ProgressOverlayProvider>
-									<ThemeProvider>
-										<WhatsNewProvider>
-											<ContextMenuProvider>
-												<AppLayout>
-													<AppRoutes />
-												</AppLayout>
-											</ContextMenuProvider>
-										</WhatsNewProvider>
-									</ThemeProvider>
+				<ViewportProvider>
+					<ToastContext.Provider value={toastMethods}>
+						<CommandPaletteProvider>
+						<AlertProvider>
+							<ProgressOverlayProvider>
+								<ThemeProvider>
+									<DataProviderWrapper>
+										<ContextMenuProvider>
+											<AppLayout>
+												<AppRoutes />
+											</AppLayout>
+										</ContextMenuProvider>
+									</DataProviderWrapper>
 									<ToastStack
 										toasts={toastMethods.toasts}
 										onClose={toastMethods.hideToast}
 										position="top-end"
 									/>
-								</ProgressOverlayProvider>
-							</AlertProvider>
-						</ToastContext.Provider>
-					</DataProviderWrapper>
-				</LoadingProvider>
+								</ThemeProvider>
+							</ProgressOverlayProvider>
+						</AlertProvider>
+						</CommandPaletteProvider>
+					</ToastContext.Provider>
+				</ViewportProvider>
+			</LoadingProvider>
 			</AuthProvider>
+			</StaticDataProvider>
 		</BrowserRouter>
+		</>
 	);
 }
 

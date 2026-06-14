@@ -1,36 +1,41 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
 import { Alert, Col, Form, Modal, Row } from "react-bootstrap";
+import JamModal from "../../components/JamModal/JamModal";
 import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
-import { authApi, exportApi, GenericResponse, UpdateCurrentUserResponse } from "../../services/api/Users";
+import { authApi, exportApi, GenericResponse } from "../../services/api/Users";
 import { ApiResponse } from "../../services/api/Base";
+import { ApiError, handleApiError } from "../../services/api/ApiError";
 import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
-import { ModalFormField } from "../../components/rendering/form/FormRenders";
+import { EmailValidation, ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { useNavigate } from "react-router-dom";
 import { useConfig } from "../../contexts/ConfigContext";
 
 interface AccountFormData {
-	email?: string;
-	current_password?: string;
-	new_password?: string;
-	confirm_password?: string;
 	first_name?: string;
 	last_name?: string;
 	delete_password?: string;
 }
 
+interface EmailFormData {
+	email?: string;
+	current_password?: string;
+}
+
+interface PasswordFormData {
+	current_password?: string;
+	new_password?: string;
+	confirm_password?: string;
+}
+
 export const AccountTab: React.FC = (): JSX.Element => {
 	const { config } = useConfig();
-	const { currentUser, token, updateCurrentUser, logout } = useAuth();
+	const { currentUser, token, updateCurrentUser, fetchUserInfo, logout } = useAuth();
 	const { showToastSuccess, showToastError, showApiError } = useGlobalToast();
 	const navigate = useNavigate();
 	const [formData, setFormData] = useState<AccountFormData>(() => ({
-		email: currentUser?.email || "",
-		current_password: "",
-		new_password: "",
-		confirm_password: "",
 		first_name: currentUser?.first_name || "",
 		last_name: currentUser?.last_name || "",
 		delete_password: "",
@@ -45,16 +50,32 @@ export const AccountTab: React.FC = (): JSX.Element => {
 			formInitialized.current = true;
 			setFormData((prev) => ({
 				...prev,
-				email: currentUser.email || "",
 				first_name: currentUser.first_name || "",
 				last_name: currentUser.last_name || "",
 			}));
 		}
 	}, [currentUser]);
 	const [showConfirmModal, setShowConfirmModal] = useState(false);
+	const [verifying, setVerifying] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 	const [downloadingData, setDownloadingData] = useState(false);
 	const hasPendingEmail: boolean = !!currentUser?.pending_email_change;
+
+	// Email change modal
+	const [showEmailModal, setShowEmailModal] = useState(false);
+	const [emailFormData, setEmailFormData] = useState<EmailFormData>({ email: "" });
+	const [emailErrors, setEmailErrors] = useState<ValidationErrors>({});
+	const [changingEmail, setChangingEmail] = useState(false);
+
+	// Password change modal
+	const [showPasswordModal, setShowPasswordModal] = useState(false);
+	const [passwordFormData, setPasswordFormData] = useState<PasswordFormData>({
+		current_password: "",
+		new_password: "",
+		confirm_password: "",
+	});
+	const [passwordErrors, setPasswordErrors] = useState<ValidationErrors>({});
+	const [changingPassword, setChangingPassword] = useState(false);
 
 	useEffect(() => {
 		const checkPending = async (): Promise<void> => {
@@ -116,10 +137,20 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		setFormData((prev: AccountFormData): AccountFormData => ({ ...prev, delete_password: "" }));
 	};
 
-	const proceedToConfirmation = (): void => {
-		if (!formData.delete_password) return;
-		setShowDeleteModal(false);
-		setShowConfirmModal(true);
+	const proceedToConfirmation = async (): Promise<void> => {
+		if (!formData.delete_password || !token) return;
+		setVerifying(true);
+		try {
+			await authApi.verifyPassword(formData.delete_password, token);
+			setShowDeleteModal(false);
+			setShowConfirmModal(true);
+		} catch (error) {
+			setErrors(
+				(prev: ValidationErrors): ValidationErrors => ({ ...prev, delete_password: "Password is incorrect." })
+			);
+		} finally {
+			setVerifying(false);
+		}
 	};
 
 	const closeConfirmModal = (): void => {
@@ -130,163 +161,248 @@ export const AccountTab: React.FC = (): JSX.Element => {
 	const handleInputChange = (e: SyntheticEvent): void => {
 		const { name, value } = e.target;
 		setFormData((prev: AccountFormData): AccountFormData => ({ ...prev, [name]: value }));
-		if (errors[name]) {
-			setErrors((prev: ValidationErrors): ValidationErrors => ({ ...prev, [name]: "" }));
-		}
+		setErrors((prev: ValidationErrors): ValidationErrors => {
+			const next = { ...prev };
+			if (next[name]) delete next[name];
+			return next;
+		});
 	};
 
-	const validateForm = (): boolean => {
-		const newErrors: ValidationErrors = {};
-		const hasAccountChanges: boolean = !!(
-			formData.email !== currentUser?.email ||
-			formData.new_password ||
-			formData.confirm_password
-		);
+	const handleEmailInputChange = (e: SyntheticEvent): void => {
+		const { name, value } = e.target;
+		setEmailFormData((prev: EmailFormData): EmailFormData => ({ ...prev, [name]: value }));
+		setEmailErrors((prev: ValidationErrors): ValidationErrors => {
+			const next = { ...prev };
+			if (next[name]) delete next[name];
+			return next;
+		});
+	};
 
-		if (hasAccountChanges && !formData.current_password) {
-			newErrors.current_password = "Current password is required to update email or password";
-		}
-
-		if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-			newErrors.email = "Email format is invalid";
-		}
-
-		if (formData.new_password || formData.confirm_password) {
-			if (formData.new_password && formData.new_password.length < config.min_password_length) {
-				newErrors.new_password = `New password must be at least ${config.min_password_length} characters long`;
-			}
-			if (formData.new_password !== formData.confirm_password) {
-				newErrors.confirm_password = "Passwords do not match";
-			}
-		}
-
-		setErrors(newErrors);
-		return Object.keys(newErrors).length === 0;
+	const handlePasswordInputChange = (e: SyntheticEvent): void => {
+		const { name, value } = e.target;
+		setPasswordFormData((prev: PasswordFormData): PasswordFormData => ({ ...prev, [name]: value }));
+		setPasswordErrors((prev: ValidationErrors): ValidationErrors => {
+			const next = { ...prev };
+			if (next[name]) delete next[name];
+			if (name === "new_password" && next.confirm_password) delete next.confirm_password;
+			return next;
+		});
 	};
 
 	const handleSubmit = async (e: React.FormEvent): Promise<void> => {
 		e.preventDefault();
-		if (!validateForm() || !token) return;
+		if (!token) return;
 		setSubmitting(true);
 
 		try {
-			const updateData: any = {};
-			const emailChanged: boolean = !!(formData.email && formData.email !== currentUser?.email);
-
-			if (formData.current_password) {
-				updateData.current_password = formData.current_password;
-				if (emailChanged) updateData.email = formData.email;
-				if (formData.new_password) updateData.password = formData.new_password;
-			}
-
-			if (formData.first_name !== undefined) updateData.first_name = formData.first_name;
-			if (formData.last_name !== undefined) updateData.last_name = formData.last_name;
-
-			const response: ApiResponse<UpdateCurrentUserResponse> | null = await updateCurrentUser(updateData);
-			if (!response) return;
-
-			const responseData: UpdateCurrentUserResponse = response.data;
-
-			if (emailChanged) {
-				if (responseData.success) {
-					showToastSuccess(responseData.message, "Email Change Pending");
-					setFormData(
-						(prev: AccountFormData): AccountFormData => ({
-							...prev,
-							email: currentUser?.email || "",
-							current_password: "",
-						})
-					);
-				} else {
-					showToastError(responseData.message, "Error Updating Settings");
-				}
-			} else if (responseData.logged_out) {
-				showToastSuccess("Password updated successfully. Please log in again.", "Password Changed");
-			} else {
-				showToastSuccess("Account settings updated successfully.");
-			}
-
-			if (formData.new_password) {
-				setFormData(
-					(prev: AccountFormData): AccountFormData => ({
-						...prev,
-						new_password: "",
-						confirm_password: "",
-						current_password: "",
-					})
-				);
-			}
+			await updateCurrentUser({
+				first_name: formData.first_name,
+				last_name: formData.last_name,
+			});
+			showToastSuccess("Account settings updated successfully.");
 		} catch (error) {
 			showApiError(
 				error,
 				"Account Update Failed",
-				"An unknown error occured while trying to update your account details."
+				"An unknown error occurred while trying to update your account details."
 			);
 		} finally {
 			setSubmitting(false);
 		}
 	};
 
-	const emailField: ModalFormField = {
-		name: "email",
-		label: "Email Address",
-		type: "text",
-		placeholder: "Enter your email address",
-		helpText: currentUser?.is_demo
-			? "This is a test account. Email changes are disabled."
-			: hasPendingEmail
-				? `Email change pending verification. Check ${currentUser?.pending_email_change} for verification link.`
-				: undefined,
-		isDisabled: currentUser?.is_demo,
+	// ----- Email change modal handlers -----
+
+	const openEmailModal = (): void => {
+		setEmailFormData({ email: "", current_password: "" });
+		setEmailErrors({});
+		setShowEmailModal(true);
 	};
 
-	const currentPasswordField: ModalFormField = {
-		name: "current_password",
-		type: "password",
-		label: "Current Password",
-		placeholder: "Enter your current password",
-		helpText: currentUser?.is_demo
-			? "This is a test account. Email and password change are disabled."
-			: "Required to change your email or password",
-		isDisabled: currentUser?.is_demo,
+	const closeEmailModal = (): void => {
+		setShowEmailModal(false);
+		setEmailFormData({ email: "", current_password: "" });
+		setEmailErrors({});
 	};
 
-	const newPasswordField: ModalFormField = {
-		name: "new_password",
-		type: "password",
-		label: "New Password",
-		placeholder: "Enter new password",
-		isDisabled: currentUser?.is_demo,
-		helpText: currentUser?.is_demo ? "This is a test account. Password change is disabled." : null,
+	const handleEmailSubmit = async (): Promise<void> => {
+		if (!token) return;
+		const newEmail = (emailFormData.email || "").trim();
+		const validationError = newEmail ? EmailValidation(newEmail) : "Email is required";
+		if (validationError) {
+			setEmailErrors({ email: validationError });
+			return;
+		}
+		if (newEmail === currentUser?.email) {
+			setEmailErrors({ email: "New email must be different from your current email." });
+			return;
+		}
+		if (!emailFormData.current_password) {
+			setEmailErrors({ current_password: "Current password is required" });
+			return;
+		}
+
+		setChangingEmail(true);
+		try {
+			await authApi.updateEmail(newEmail, emailFormData.current_password, token);
+			const message = `A verification email has been sent to ${newEmail}. Please check your inbox to confirm the change.`;
+			showToastSuccess(message, "Email Change Pending");
+			await fetchUserInfo(token);
+			closeEmailModal();
+		} catch (error) {
+			const { status } = handleApiError(error);
+			const detail =
+				error instanceof ApiError ? (error.data as { detail?: string } | undefined)?.detail : undefined;
+			if (status === 401) {
+				setEmailErrors({ current_password: "The current password is incorrect." });
+			} else if ((status === 400 || status === 429) && detail) {
+				setEmailErrors({ email: detail });
+			} else {
+				showApiError(
+					error,
+					"Email Change Failed",
+					"An unknown error occurred while trying to change your email."
+				);
+			}
+		} finally {
+			setChangingEmail(false);
+		}
 	};
 
-	const confirmPasswordField: ModalFormField = {
-		name: "confirm_password",
-		type: "password",
-		label: "Confirm New Password",
-		placeholder: "Confirm new password",
-		isDisabled: currentUser?.is_demo,
-		helpText: currentUser?.is_demo ? "This is a test account. Password change is disabled." : null,
+	// ----- Password change modal handlers -----
+
+	const openPasswordModal = (): void => {
+		setPasswordFormData({ current_password: "", new_password: "", confirm_password: "" });
+		setPasswordErrors({});
+		setShowPasswordModal(true);
 	};
+
+	const closePasswordModal = (): void => {
+		setShowPasswordModal(false);
+		setPasswordFormData({ current_password: "", new_password: "", confirm_password: "" });
+		setPasswordErrors({});
+	};
+
+	const validatePasswordForm = (): boolean => {
+		const newErrors: ValidationErrors = {};
+		if (!passwordFormData.current_password) {
+			newErrors.current_password = "Current password is required";
+		}
+		if (!passwordFormData.new_password) {
+			newErrors.new_password = "New password is required";
+		} else if (passwordFormData.new_password.length < config.min_password_length) {
+			newErrors.new_password = `New password must be at least ${config.min_password_length} characters long`;
+		}
+		if (passwordFormData.new_password !== passwordFormData.confirm_password) {
+			newErrors.confirm_password = "Passwords do not match";
+		}
+		setPasswordErrors(newErrors);
+		return Object.keys(newErrors).length === 0;
+	};
+
+	const handlePasswordSubmit = async (): Promise<void> => {
+		if (!token) return;
+		if (!validatePasswordForm()) return;
+
+		setChangingPassword(true);
+		try {
+			await authApi.updatePassword(
+				{
+					current_password: passwordFormData.current_password || "",
+					new_password: passwordFormData.new_password || "",
+				},
+				token
+			);
+			showToastSuccess("Password has been successfully updated. Please log in again.", "Password Changed");
+			closePasswordModal();
+			logout();
+		} catch (error) {
+			const { status } = handleApiError(error);
+			const detail =
+				error instanceof ApiError ? (error.data as { detail?: string } | undefined)?.detail : undefined;
+			if (status === 401) {
+				setPasswordErrors({ current_password: "The current password is incorrect." });
+			} else if (status === 429 && detail) {
+				setPasswordErrors({ current_password: detail });
+			} else {
+				showApiError(
+					error,
+					"Password Update Failed",
+					"An unknown error occurred while trying to update your password."
+				);
+			}
+		} finally {
+			setChangingPassword(false);
+		}
+	};
+
+	// ----- Field definitions -----
 
 	const firstNameField: ModalFormField = {
-		name: "first_name",
+		key: "first_name",
 		type: "text",
 		label: "First Name",
 		placeholder: "Enter your first name",
 	};
 
 	const lastNameField: ModalFormField = {
-		name: "last_name",
+		key: "last_name",
 		type: "text",
 		label: "Last Name",
 		placeholder: "Enter your last name",
 	};
 
+	const newEmailField: ModalFormField = {
+		key: "email",
+		type: "text",
+		label: "New Email Address",
+		placeholder: "Enter your new email address",
+		autoComplete: "off",
+		isDisabled: changingEmail,
+	};
+
+	const emailCurrentPasswordField: ModalFormField = {
+		key: "current_password",
+		type: "password",
+		label: "Current Password",
+		placeholder: "Enter your current password",
+		autoComplete: "new-password",
+		isDisabled: changingEmail,
+	};
+
+	const currentPasswordField: ModalFormField = {
+		key: "current_password",
+		type: "password",
+		label: "Current Password",
+		placeholder: "Enter your current password",
+		autoComplete: "new-password",
+		isDisabled: changingPassword,
+	};
+
+	const newPasswordField: ModalFormField = {
+		key: "new_password",
+		type: "password",
+		label: "New Password",
+		placeholder: "Enter new password",
+		autoComplete: "new-password",
+		isDisabled: changingPassword,
+	};
+
+	const confirmPasswordField: ModalFormField = {
+		key: "confirm_password",
+		type: "password",
+		label: "Confirm New Password",
+		placeholder: "Confirm new password",
+		autoComplete: "new-password",
+		isDisabled: changingPassword,
+	};
+
 	const deletePasswordField: ModalFormField = {
-		name: "delete_password",
+		key: "delete_password",
 		type: "password",
 		label: "Password",
+		autoComplete: "new-password",
+		isDisabled: verifying,
 	};
 
 	return (
@@ -308,18 +424,65 @@ export const AccountTab: React.FC = (): JSX.Element => {
 				<Col md={6}>{renderFormField(firstNameField, formData, handleInputChange, errors)}</Col>
 				<Col md={6}>{renderFormField(lastNameField, formData, handleInputChange, errors)}</Col>
 			</Row>
-			{renderFormField(emailField, formData, handleInputChange, errors)}
+			<div className="mt-3">
+				<ActionButton
+					type="submit"
+					variant="primary"
+					disabled={submitting}
+					loading={submitting}
+					defaultIcon="bi-save"
+					id={"confirm-button"}
+					defaultText={"Save Account Settings"}
+					loadingText={"Saving..."}
+				/>
+			</div>
 
 			<hr className="my-4" />
 
 			<h5 className="mb-3">
 				<i className="bi bi-lock"></i> Security
 			</h5>
-			{renderFormField(currentPasswordField, formData, handleInputChange, errors)}
-			<Row>
-				<Col md={6}>{renderFormField(newPasswordField, formData, handleInputChange, errors)}</Col>
-				<Col md={6}>{renderFormField(confirmPasswordField, formData, handleInputChange, errors)}</Col>
+			<Row className="align-items-center mb-3">
+				<Col md={4} className="fw-semibold">
+					Email Address
+				</Col>
+				<Col md={5} className="text-muted">
+					{currentUser?.email}
+				</Col>
+				<Col md={3} className="text-md-end">
+					<ActionButton
+						variant="outline-primary"
+						onClick={openEmailModal}
+						defaultIcon="bi-envelope"
+						defaultText="Change Email"
+						disabled={currentUser?.is_demo}
+						id="change-email-button"
+					/>
+				</Col>
 			</Row>
+			<Row className="align-items-center">
+				<Col md={4} className="fw-semibold">
+					Password
+				</Col>
+				<Col md={5} className="text-muted">
+					••••••••
+				</Col>
+				<Col md={3} className="text-md-end">
+					<ActionButton
+						variant="outline-primary"
+						onClick={openPasswordModal}
+						defaultIcon="bi-key"
+						defaultText="Change Password"
+						disabled={currentUser?.is_demo}
+						id="change-password-button"
+					/>
+				</Col>
+			</Row>
+			{currentUser?.is_demo && (
+				<p className="text-muted mt-2">
+					<small>This is a test account. Email and password changes are disabled.</small>
+				</p>
+			)}
 
 			<hr className="my-4" />
 
@@ -337,18 +500,6 @@ export const AccountTab: React.FC = (): JSX.Element => {
 				loadingText={"Downloading..."}
 				id="download-data-button"
 			/>
-
-			<div className="mt-4">
-				<ActionButton
-					type="submit"
-					variant="primary"
-					disabled={submitting}
-					defaultIcon="bi-save"
-					id={"confirm-button"}
-					defaultText={"Save Account Settings"}
-					loadingText={"Saving..."}
-				/>
-			</div>
 
 			<hr className="my-4" />
 
@@ -372,39 +523,168 @@ export const AccountTab: React.FC = (): JSX.Element => {
 				</p>
 			)}
 
-			<Modal show={showDeleteModal} onHide={closeDeleteModal} size={"lg"} centered id="delete-account-modal">
+			{/* ----- Change Email modal ----- */}
+			<JamModal show={showEmailModal} onHide={closeEmailModal} size={"lg"} centered id="change-email-modal">
+				<Modal.Header closeButton>
+					<Modal.Title>
+						<i className="bi bi-envelope"></i> Change Email Address
+					</Modal.Title>
+				</Modal.Header>
+				<Form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						void handleEmailSubmit();
+					}}
+				>
+					<Modal.Body>
+						<p className="text-muted">
+							We'll send a verification link to the new email address. The change only takes effect once
+							you click that link.
+						</p>
+						<p>
+							Current email: <strong>{currentUser?.email}</strong>
+						</p>
+						{renderFormField(emailCurrentPasswordField, emailFormData, handleEmailInputChange, emailErrors)}
+						{renderFormField(newEmailField, emailFormData, handleEmailInputChange, emailErrors)}
+					</Modal.Body>
+					<Modal.Footer>
+						<ActionButton
+							variant="secondary"
+							onClick={closeEmailModal}
+							defaultText="Cancel"
+							disabled={changingEmail}
+							id="cancel-email-change-button"
+						/>
+						<ActionButton
+							type="submit"
+							variant="primary"
+							disabled={changingEmail}
+							loading={changingEmail}
+							defaultIcon="bi-send"
+							defaultText="Send Verification Email"
+							loadingText="Sending..."
+							id="confirm-email-change-button"
+						/>
+					</Modal.Footer>
+				</Form>
+			</JamModal>
+
+			{/* ----- Change Password modal ----- */}
+			<JamModal
+				show={showPasswordModal}
+				onHide={closePasswordModal}
+				size={"lg"}
+				centered
+				id="change-password-modal"
+			>
+				<Modal.Header closeButton>
+					<Modal.Title>
+						<i className="bi bi-key"></i> Change Password
+					</Modal.Title>
+				</Modal.Header>
+				<Form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						void handlePasswordSubmit();
+					}}
+				>
+					<Modal.Body>
+						<p className="text-muted">
+							Once your password is updated, you'll be logged out and will need to sign in again with the
+							new password.
+						</p>
+						{renderFormField(
+							currentPasswordField,
+							passwordFormData,
+							handlePasswordInputChange,
+							passwordErrors
+						)}
+						<Row>
+							<Col md={6}>
+								{renderFormField(
+									newPasswordField,
+									passwordFormData,
+									handlePasswordInputChange,
+									passwordErrors
+								)}
+							</Col>
+							<Col md={6}>
+								{renderFormField(
+									confirmPasswordField,
+									passwordFormData,
+									handlePasswordInputChange,
+									passwordErrors
+								)}
+							</Col>
+						</Row>
+					</Modal.Body>
+					<Modal.Footer>
+						<ActionButton
+							variant="secondary"
+							onClick={closePasswordModal}
+							defaultText="Cancel"
+							disabled={changingPassword}
+							id="cancel-password-change-button"
+						/>
+						<ActionButton
+							type="submit"
+							variant="primary"
+							disabled={changingPassword}
+							loading={changingPassword}
+							defaultIcon="bi-check2"
+							defaultText="Update Password"
+							loadingText="Updating..."
+							id="confirm-password-change-button"
+						/>
+					</Modal.Footer>
+				</Form>
+			</JamModal>
+
+			<JamModal show={showDeleteModal} onHide={closeDeleteModal} size={"lg"} centered id="delete-account-modal">
 				<Modal.Header closeButton>
 					<Modal.Title>
 						<i className="bi bi-exclamation-triangle"></i> Delete Account
 					</Modal.Title>
 				</Modal.Header>
-				<Modal.Body>
-					<Alert variant="danger">
-						<strong>Warning:</strong> This action is permanent and cannot be undone. All your data will be
-						permanently deleted.
-					</Alert>
-					<p>Please enter your password to confirm account deletion:</p>
-					{renderFormField(deletePasswordField, formData, handleInputChange, errors)}
-				</Modal.Body>
-				<Modal.Footer>
-					<ActionButton
-						variant="secondary"
-						onClick={closeDeleteModal}
-						defaultText="Cancel"
-						id="cancel-delete-button"
-					/>
-					<ActionButton
-						variant="danger"
-						onClick={proceedToConfirmation}
-						disabled={!formData.delete_password}
-						defaultIcon="bi-arrow-right"
-						defaultText="Continue"
-						id="continue-delete-button"
-					/>
-				</Modal.Footer>
-			</Modal>
+				<Form
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						void proceedToConfirmation();
+					}}
+				>
+					<Modal.Body>
+						<Alert variant="danger">
+							<strong>Warning:</strong> This action is permanent and cannot be undone. All your data will
+							be permanently deleted.
+						</Alert>
+						<p>Please enter your password to confirm account deletion:</p>
+						{renderFormField(deletePasswordField, formData, handleInputChange, errors)}
+					</Modal.Body>
+					<Modal.Footer>
+						<ActionButton
+							variant="secondary"
+							onClick={closeDeleteModal}
+							defaultText="Cancel"
+							id="cancel-delete-button"
+						/>
+						<ActionButton
+							variant="danger"
+							onClick={proceedToConfirmation}
+							disabled={!formData.delete_password || verifying}
+							loading={verifying}
+							defaultIcon="bi-arrow-right"
+							defaultText="Continue"
+							loadingText="Verifying..."
+							id="continue-delete-button"
+						/>
+					</Modal.Footer>
+				</Form>
+			</JamModal>
 
-			<Modal show={showConfirmModal} onHide={closeConfirmModal} size={"lg"} centered id="confirm-delete-modal">
+			<JamModal show={showConfirmModal} onHide={closeConfirmModal} size={"lg"} centered id="confirm-delete-modal">
 				<Modal.Header closeButton>
 					<Modal.Title>
 						<i className="bi bi-exclamation-triangle-fill"></i> Final Confirmation
@@ -418,10 +698,10 @@ export const AccountTab: React.FC = (): JSX.Element => {
 						</p>
 						<ul className="mt-2 mb-0">
 							<li>All job applications and tracking data</li>
-							<li>Saved jobs and email alerts</li>
+							<li>Interview records and job application updates</li>
+							<li>All contact and company records</li>
 							<li>User preferences and settings</li>
-							<li>Interview records and notes</li>
-							<li>All contacts and companies</li>
+							<li>Saved jobs and email alerts</li>
 							{currentUser?.premium?.is_active && (
 								<li className="fw-bold">
 									Your active premium subscription (will be cancelled immediately)
@@ -465,7 +745,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 						id="final-delete-button"
 					/>
 				</Modal.Footer>
-			</Modal>
+			</JamModal>
 		</Form>
 	);
 };

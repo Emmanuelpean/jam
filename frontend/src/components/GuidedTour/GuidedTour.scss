@@ -1,0 +1,233 @@
+/* Transparent blocking panels — prevent interaction outside the spotlight hole */
+.tour-block {
+	position: fixed;
+	z-index: 1400;
+	pointer-events: all;
+}
+
+/* Shown on steps with no targetId — plain full-screen dark overlay */
+.tour-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 1401;
+	background: rgb(0 0 0 / 75%);
+	pointer-events: none;
+}
+
+/* Shown on steps with a targetId — box-shadow creates the overlay, element itself is transparent */
+.tour-spotlight {
+	position: fixed;
+	z-index: 1401;
+	border-radius: 6px;
+	pointer-events: none;
+	box-shadow: 0 0 0 9999px rgb(0 0 0 / 75%);
+	outline: 4px solid rgb(255 255 255 / 70%);
+	outline-offset: 1px;
+	transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+
+.tour-popover {
+	position: fixed;
+	z-index: 1402;
+	width: 450px; /* default; last step overrides to POP_W_LAST (550px) via inline style */
+	overflow: hidden;
+	background: var(--bs-body-bg);
+	border: 1px solid var(--bs-card-border-color);
+	border-radius: 10.8px;
+	padding: 0;
+	box-shadow: 0 20px 60px rgb(0 0 0 / 50%);
+	animation: tour-popover-in 0.18s ease forwards;
+
+	&::before {
+		content: "";
+		position: absolute;
+		top: 0;
+		right: 0;
+		left: 0;
+		height: 3px;
+		background: var(--primary-gradient);
+	}
+
+	&.tour-popover-center {
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+	}
+}
+
+.tour-popover-body {
+	padding: 20px;
+	overflow-y: auto;
+	max-height: calc(100vh - 32px);
+
+	&::-webkit-scrollbar { width: 3.6px; }
+
+	&::-webkit-scrollbar-thumb {
+		background: var(--bs-border-color);
+		border-radius: 2px;
+	}
+}
+
+@keyframes tour-popover-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px) scale(0.98);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes tour-popover-center-in {
+	from {
+		opacity: 0;
+		transform: translate(-50%, calc(-50% + 8px)) scale(0.98);
+	}
+
+	to {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1);
+	}
+}
+
+.tour-popover-center {
+	animation-name: tour-popover-center-in;
+}
+
+.tour-popover-header {
+	position: relative;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-bottom: 12px;
+	margin-bottom: 14px;
+
+	&::after {
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		height: 1.8px;
+		content: "";
+		opacity: 0.85;
+		background: var(--primary-gradient);
+	}
+}
+
+.tour-step-counter {
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: var(--bs-secondary-color);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.tour-skip-btn {
+	display: inline-flex;
+	align-items: center;
+	background: var(--bs-secondary-bg);
+	border: 1px solid var(--bs-card-border-color);
+	border-radius: 4px;
+	font-size: 0.65rem;
+	font-family: inherit;
+	color: var(--bs-secondary-color);
+	cursor: pointer;
+	padding: 2px 7px;
+	transition: color 0.12s, border-color 0.12s;
+
+	&:hover {
+		color: var(--bs-body-color);
+		border-color: var(--bs-secondary-color);
+	}
+}
+
+.tour-popover-title {
+	font-size: 1rem;
+	font-weight: 600;
+	margin-bottom: 6px;
+	color: var(--bs-body-color);
+}
+
+.tour-popover-content {
+	font-size: 0.875rem;
+	color: var(--bs-secondary-color);
+	line-height: 1.55;
+	margin-bottom: 18px;
+}
+
+.tour-choices {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 18px;
+}
+
+.tour-choice-btn {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	background: var(--bs-secondary-bg);
+	border: 1px solid var(--bs-card-border-color);
+	border-radius: 7px;
+	padding: 9px 14px;
+	font-size: 0.875rem;
+	font-family: inherit;
+	color: var(--bs-body-color);
+	cursor: pointer;
+	text-align: left;
+	transition: background 0.12s ease, border-color 0.12s ease;
+
+	&:hover {
+		background: var(--bs-tertiary-bg);
+		border-color: var(--bs-secondary-color);
+	}
+}
+
+.tour-popover-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+}
+
+.tour-btn-primary {
+	background: var(--primary-gradient);
+	color: white;
+	border: none;
+	border-radius: 6.5px;
+	padding: 6px 18px;
+	font-size: 0.875rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: filter 0.15s ease;
+
+	&:hover {
+		filter: brightness(1.08);
+	}
+
+	&:active {
+		filter: brightness(0.95);
+	}
+
+	&:disabled {
+		opacity: 0.7;
+		cursor: default;
+	}
+}
+
+.tour-btn-secondary {
+	background: transparent;
+	color: var(--bs-secondary-color);
+	border: 1px solid var(--bs-card-border-color);
+	border-radius: 6.5px;
+	padding: 6px 14px;
+	font-size: 0.875rem;
+	cursor: pointer;
+	transition: background 0.12s ease, color 0.12s ease;
+
+	&:hover {
+		background: var(--bs-border-color);
+		color: var(--bs-body-color);
+	}
+}

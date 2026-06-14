@@ -1,7 +1,7 @@
 """Tests for the VeganJobs email parser."""
 
 from app.job_email_scraping.email_parsers.veganjobs import parse_veganjobs_email, extract_alert_name
-from tests.job_email_scraping.resources import VEGANJOBS_EMAIL_2, VEGANJOBS_EMAIL_3
+from tests.utils.job_email_resources import VEGANJOBS_EMAIL_2, VEGANJOBS_EMAIL_3
 
 
 class TestParseIndeedJobEmail:

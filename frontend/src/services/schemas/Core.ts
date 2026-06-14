@@ -16,18 +16,35 @@ export interface SettingData extends BaseOut {
 	is_active: boolean;
 }
 
+export interface SettingCreate {
+	name: string;
+	value: string;
+	description?: string | null;
+	is_active?: boolean;
+}
+
 // -------------------------------------------------- USER PREFERENCES -------------------------------------------------
 
 export type ThemeMode = "dark" | "light" | "system";
 
+export type Direction = "asc" | "desc";
+
+export interface SortConfig {
+	key: string;
+	direction: Direction;
+}
+
+export type TableSortConfigs = Record<string, SortConfig>;
+
 export interface UserPreferences {
 	theme: string;
 	dark_mode: ThemeMode;
-	chase_threshold: number;
-	deadline_threshold: number;
-	update_limit: number;
 	default_currency: string;
 	extension_banner_dismissed: boolean;
+	completed_tours: string[] | null;
+	dashboard_layout: string | null;
+	table_columns: Record<string, string[]> | null;
+	table_sort: TableSortConfigs | null;
 }
 
 export type UserPreferencesUpdate = Partial<UserPreferences>;
@@ -63,14 +80,25 @@ export interface UserDataTransform {
 }
 
 export interface UserDataUpdate {
-	email?: string | null;
-	password?: string | null;
-	current_password?: string | null;
 	first_name?: string | null;
 	last_name?: string | null;
 	app_version?: string | null;
 	premium?: PremiumDetailsUpdate | null;
 	preferences?: UserPreferencesUpdate | null;
+}
+
+export interface UserCreate {
+	email: string;
+	password: string;
+	first_name?: string | null;
+	last_name?: string | null;
+	is_active?: boolean;
+	is_admin?: boolean;
+	premium?: {
+		is_active?: boolean;
+		job_scraping_active?: boolean;
+		job_rating_active?: boolean;
+	};
 }
 
 export interface UserData extends OwnedOut {
@@ -79,8 +107,8 @@ export interface UserData extends OwnedOut {
 	is_active: boolean;
 	is_demo: boolean;
 	is_verified: boolean;
-	last_login: Date | string | null;
-	previous_login: Date | string | null;
+	last_login: Date | null;
+	previous_login: Date | null;
 	app_version: string | null;
 	first_name: string | null;
 	last_name: string | null;

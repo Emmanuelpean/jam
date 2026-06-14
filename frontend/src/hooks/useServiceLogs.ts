@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DateRange } from "../utils/TimeUtils";
 import { useAuth } from "../contexts/AuthContext";
 import { ApiResponse } from "../services/api/Base";
@@ -19,6 +19,7 @@ export const useServiceLogs = <T>(
 	const [latestServiceLog, setLatestServiceLog] = useState<T | null>(null);
 	const [serviceLogError, setServiceLogError] = useState<string | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
+	const fetchSeqRef = useRef<number>(0);
 
 	const fetchLatestServiceLog = async (): Promise<void> => {
 		if (!token) return;
@@ -33,19 +34,22 @@ export const useServiceLogs = <T>(
 
 	const fetchLatestLogs = async (): Promise<void> => {
 		if (!token) return;
+		const seq = ++fetchSeqRef.current;
 		setLoading(true);
 		try {
 			const logs: ApiResponse<T[]> = await logApi.getAll(token, {
 				start_date: new Date(dateRange.start).toISOString(),
 				end_date: new Date(dateRange.end).toISOString(),
 			});
+			if (seq !== fetchSeqRef.current) return;
 			setPreviousServiceLogs(logs.data);
 			onLogsLoaded?.(logs.data);
 		} catch (err: any) {
+			if (seq !== fetchSeqRef.current) return;
 			setServiceLogError(err.message || "An error occurred while fetching the logs.");
 			console.error("Failed to fetch latest logs:", err);
 		} finally {
-			setLoading(false);
+			if (seq === fetchSeqRef.current) setLoading(false);
 		}
 	};
 

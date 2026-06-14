@@ -28,3 +28,12 @@
 .leaflet-container a.leaflet-popup-close-button:hover {
     color: var(--primary-mid);
 }
+
+/* Prevent white flash while tiles load by matching CartoDB tile backgrounds */
+.leaflet-container {
+    background: #f2f0ed;
+}
+
+body[data-mode="dark"] .leaflet-container {
+    background: #1a1a2e;
+}

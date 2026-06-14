@@ -13,10 +13,19 @@ export interface LoginResponse {
 }
 
 export interface UpdateCurrentUserResponse {
-	user: UserData;
 	success: boolean;
 	message: string;
-	logged_out: boolean;
+	error_code: number | null;
+}
+
+export interface UpdatePasswordRequest {
+	current_password: string;
+	new_password: string;
+}
+
+export interface UpdatePasswordResponse {
+	success: boolean;
+	message: string;
 }
 
 export interface RegisterData {
@@ -24,6 +33,7 @@ export interface RegisterData {
 	password: string;
 	first_name: string;
 	last_name: string;
+	captcha_token: string;
 }
 
 export const userApi: CrudApi<UserData> & {
@@ -42,12 +52,15 @@ export interface AuthApi {
 	register: (registerData: RegisterData) => ApiResponsePromise<GenericResponse>;
 	getCurrentUser: (token: string) => ApiResponsePromise<UserData>;
 	updateCurrentUser: (data: UserDataUpdate, token: string) => ApiResponsePromise<UpdateCurrentUserResponse>;
+	updatePassword: (data: UpdatePasswordRequest, token: string) => ApiResponsePromise<UpdatePasswordResponse>;
+	updateEmail: (email: string, currentPassword: string, token: string) => ApiResponsePromise<GenericResponse>;
 	heartbeat: (token: string) => ApiResponsePromise<GenericResponse>;
 	verifyEmail: (token: string) => ApiResponsePromise<GenericResponse>;
 	verifyNewEmail: (token: string) => ApiResponsePromise<GenericResponse>;
 	checkPendingEmail: (token: string) => ApiResponsePromise<boolean>;
 	requestPasswordReset: (email: string) => ApiResponsePromise<GenericResponse>;
 	resetPassword: (token: string, newPassword: string) => ApiResponsePromise<GenericResponse>;
+	verifyPassword: (password: string, token: string) => ApiResponsePromise<GenericResponse>;
 	deleteAccount: (password: string, token: string) => ApiResponsePromise<GenericResponse>;
 	demoCleanup: (token: string) => ApiResponsePromise<GenericResponse>;
 }
@@ -76,6 +89,14 @@ export const authApi: AuthApi = {
 		return baseApi.put("current-user/", data, token);
 	},
 
+	updatePassword: async (data: UpdatePasswordRequest, token: string): ApiResponsePromise<UpdatePasswordResponse> => {
+		return baseApi.put("current-user/password", data, token);
+	},
+
+	updateEmail: async (email: string, currentPassword: string, token: string): ApiResponsePromise<GenericResponse> => {
+		return baseApi.put("current-user/email", { email, current_password: currentPassword }, token);
+	},
+
 	checkPendingEmail: async (token: string): ApiResponsePromise<boolean> => {
 		return baseApi.get("current-user/check-pending-email/", token);
 	},
@@ -97,6 +118,10 @@ export const authApi: AuthApi = {
 			token,
 			new_password: newPassword,
 		});
+	},
+
+	verifyPassword: async (password: string, token: string): ApiResponsePromise<GenericResponse> => {
+		return baseApi.post("current-user/verify-password", { password }, token);
 	},
 
 	deleteAccount: async (password: string, token: string): ApiResponsePromise<GenericResponse> => {

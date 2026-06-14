@@ -97,3 +97,11 @@ def create_scraping_filters(db, users: list[models.User]) -> list[models.Scrapin
     data = override_properties(job_scraping.SCRAPING_FILTER_DATA, ("owner_id", users))
     print(f"Creating {len(data)} Scraping Filters...")
     return create_db_entries(db, models.ScrapingExclusionFilter, data)
+
+
+def create_scraping_favourite_filters(db, users: list[models.User]) -> list[models.ScrapingFavouriteFilter]:
+    """Create sample favourite job filters"""
+
+    data = override_properties(job_scraping.SCRAPING_FAVOURITE_FILTER_DATA, ("owner_id", users))
+    print(f"Creating {len(data)} Scraping Favourite Filters...")
+    return create_db_entries(db, models.ScrapingFavouriteFilter, data)

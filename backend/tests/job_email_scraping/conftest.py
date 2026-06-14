@@ -7,10 +7,11 @@ from unittest import mock
 import pytest
 
 from app import models
+from app.emails.schemas import EmailData
 from app.job_email_scraping.email_parsers import Platform
 from app.job_email_scraping.email_parsers import indeed
 from app.job_email_scraping.email_scraper import JobEmailScraper
-from tests.job_email_scraping import resources
+from tests.utils import job_email_resources as resources
 from tests.job_email_scraping.mock_job_scrapers import (
     MockVeganJobsBrightdataJobScraper,
     MockIndeedBrightdataJobScraper,
@@ -71,7 +72,6 @@ def mock_job_scrapers() -> Generator[dict, Any, None]:
 def test_job_scraping_service_log(session) -> models.JobEmailScrapingServiceLog:
     """Create a test JobEmailScrapingServiceLog record"""
 
-    # noinspection PyArgumentList
     service_log = models.JobEmailScrapingServiceLog(run_datetime=dt.datetime.now())
     session.add(service_log)
     session.commit()
@@ -82,7 +82,6 @@ def test_job_scraping_service_log(session) -> models.JobEmailScrapingServiceLog:
 def test_job_scraper(session) -> JobEmailScraper:
     """Create a JobScraper instance for testing with mocked file dependencies."""
 
-    # noinspection PyArgumentList
     entry = models.Setting(name="indeed_scraper", value="brightapi")
     session.add(entry)
     session.commit()
@@ -93,7 +92,6 @@ def test_job_scraper(session) -> JobEmailScraper:
 def job_scraper_with_brightapi_skip(session) -> JobEmailScraper:
     """Create a JobScraper instance with BrightAPI skip enabled for indeed jobs."""
 
-    # noinspection PyArgumentList
     entry = models.Setting(name="indeed_scraper", value="email")
     session.add(entry)
     session.commit()
@@ -117,7 +115,6 @@ def email_record_factory(session, test_users, test_job_scraping_service_log) -> 
             service_log_id=test_job_scraping_service_log.id,
         )
 
-        # noinspection PyArgumentList
         email_record = models.JobEmail(**email_data, owner_id=test_users[user_index].id)
         session.add(email_record)
         session.commit()
@@ -131,7 +128,11 @@ def email_record_factory(session, test_users, test_job_scraping_service_log) -> 
 def mock_get_email_data() -> Generator[mock.MagicMock, Any, None]:
     """Auto-applied mock for get_email_data across all tests in module"""
 
+    def _email_data_from_dict(eid: str) -> EmailData:
+        d = resources.TEST_EMAILS[eid]
+        return EmailData(id=d["id"], message_id=d.get("message_id", ""), subject=d["subject"], from_email=d["from"], to_email=d["to"], date=d["date"], body=d["body"])
+
     with mock.patch(
-        "app.emails.email_service.EmailService.get_email_data", side_effect=lambda eid: resources.TEST_EMAILS[eid]
+        "app.emails.email_service.EmailService.get_email_data", side_effect=_email_data_from_dict
     ) as email_mock:
         yield email_mock

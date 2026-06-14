@@ -2,6 +2,8 @@
 
 from email.utils import parseaddr
 
+from sqlalchemy.orm import Session
+
 from app import models
 
 
@@ -17,7 +19,7 @@ def clean_email_address(sender_field: str) -> str:
     return email.lower().strip() if email else sanitized_field.lower().strip()
 
 
-def get_user_id_from_email(email: str, db) -> None | int:
+def get_user_id_from_email(email: str, db: Session) -> None | int:
     """Get user id from email"""
 
     entry = db.query(models.User).filter(models.User.email == email).first()

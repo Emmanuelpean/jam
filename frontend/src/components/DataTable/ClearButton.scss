@@ -1,0 +1,35 @@
+.clear-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--bs-secondary-color);
+    cursor: pointer;
+    line-height: 1;
+    font-weight: 700;
+    border-radius: 4px;
+    transition: background-color 0.15s, color 0.15s;
+
+    &:hover {
+        color: var(--bs-body-color);
+        background-color: var(--bs-tertiary-bg);
+    }
+}
+
+.clear-btn--md {
+    padding: 0.3rem;
+    font-size: 1rem;
+    position: absolute;
+    top: 50%;
+    right: 0.7rem;
+    transform: translateY(-50%);
+}
+
+.clear-btn--sm {
+    padding: 0.15rem;
+    font-size: 0.85rem;
+    width: 1.1rem;
+    height: 1.1rem;
+}

@@ -60,6 +60,7 @@ class TestGeocodeLocation:
         geo = create_db_entries(session, Geolocation, data)[0]
         result = geocode_location(geo.query, session)
 
+        assert result
         assert result.id == geo.id
         assert mock_nominatim_get.call_count == 0
 
@@ -72,25 +73,11 @@ class TestGeocodeLocation:
         assert result.latitude == 51.5074456
         assert result.longitude == -0.1277653
 
-    def test_creates_geolocation_from_dict_query(self, session, mock_nominatim_get) -> None:
-        """Creates geolocation with a stable sorted cache key when given a dict query."""
-
-        result = geocode_location({"postcode": "10001", "city": "New York", "country": "United States"}, session)
-        assert result is not None
-        cached = session.query(Geolocation).filter_by(query="10001, New York, United States").first()
-        assert cached is not None
-
     def test_decodes_html_entities_in_string_query(self, session, mock_nominatim_get) -> None:
         """Decodes HTML entities in string queries before calling the API."""
 
         geocode_location("London UK &amp;", session)
         assert mock_nominatim_get.call_args[1]["params"]["q"] == "London UK &"
-
-    def test_decodes_html_entities_in_dict_query(self, session, mock_nominatim_get) -> None:
-        """Decodes HTML entities in dict query values before calling the API."""
-
-        geocode_location({"city": "Caf&eacute; City", "country": "UK"}, session)
-        assert mock_nominatim_get.call_args[1]["params"]["q"] == "Café City, UK"
 
     def test_returns_empty_geolocation_when_no_results(self, session) -> None:
         """Returns an empty Geolocation record when the API finds no results, to avoid repeat API calls."""
@@ -108,22 +95,6 @@ class TestGeocodeLocation:
         result = geocode_location("SomePlace", session)
         assert result is None
         assert session.query(Geolocation).filter_by(query="SomePlace").first() is None
-
-    def test_none_in_dict(self, session) -> None:
-        """Check that the sanitation works even if None is in the dictionary"""
-
-        result = geocode_location({"postcode": None, "city": "London", "country": None}, session)
-        assert result is not None
-        assert result.latitude is not None
-        assert result.longitude is not None
-
-    def test_all_none_in_dict(self, session) -> None:
-        """Check that the sanitation works even if None is in the dictionary"""
-
-        result = geocode_location({"postcode": None, "city": None, "country": None}, session)
-        assert result is not None
-        assert result.latitude is None
-        assert result.longitude is None
 
 
 class TestRateLimiting:
@@ -150,6 +121,8 @@ class TestRateLimiting:
         original_get = geolocation_module.requests.get
 
         def tracking_get(*args, **kwargs):
+            """Thread-safe wrapper around requests.get that tracks call times."""
+
             with lock:
                 call_times.append(time.monotonic())
             return original_get(*args, **kwargs)
@@ -169,35 +142,3 @@ class TestRateLimiting:
         for i in range(1, len(call_times)):
             gap = call_times[i] - call_times[i - 1]
             assert gap >= 0.9, f"Gap between call {i - 1} and {i} was only {gap:.3f}s"
-
-
-class TestGeolocationCascade:
-    """Tests for geolocation foreign key cascade behavior."""
-
-    def test_deleting_location_does_not_delete_geolocation(self, session, test_locations, test_geolocations) -> None:
-        """Deleting a location with a geolocation sets geolocation_id to NULL but does not delete the geolocation."""
-
-        location = test_locations[0]
-        geolocation_id = location.geolocation_id
-        assert geolocation_id is not None
-
-        session.delete(location)
-        session.commit()
-
-        # Geolocation should still exist
-        geo = session.query(Geolocation).filter_by(id=geolocation_id).first()
-        assert geo is not None
-
-    def test_deleting_geolocation_sets_location_fk_to_null(self, session, test_locations, test_geolocations) -> None:
-        """Deleting a geolocation sets the location's geolocation_id to NULL (ondelete=SET NULL)."""
-
-        location = test_locations[0]
-        geolocation_id = location.geolocation_id
-        assert geolocation_id is not None
-
-        geolocation = session.query(Geolocation).filter_by(id=geolocation_id).first()
-        session.delete(geolocation)
-        session.commit()
-
-        session.refresh(location)
-        assert location.geolocation_id is None

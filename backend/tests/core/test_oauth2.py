@@ -204,7 +204,7 @@ class TestGetCurrentUser:
             oauth2.get_current_user(token=invalid_token, db=session)
 
         assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
-        assert "could not validate credentials" in exc_info.value.detail.lower()
+        assert exc_info.value.detail and "could not validate credentials" in exc_info.value.detail.lower()
 
     def test_get_current_user_nonexistent_user(self, session) -> None:
         """Test get_current_user raises exception when user doesn't exist."""
@@ -216,7 +216,7 @@ class TestGetCurrentUser:
             oauth2.get_current_user(token=token, db=session)
 
         assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
-        assert "could not validate credentials" in exc_info.value.detail.lower()
+        assert exc_info.value.detail and "could not validate credentials" in exc_info.value.detail.lower()
 
     def test_get_current_user_token_version_mismatch(self, test_regular_user, session) -> None:
         """Test get_current_user rejects token with outdated version."""
@@ -232,8 +232,8 @@ class TestGetCurrentUser:
             oauth2.get_current_user(token=token, db=session)
 
         assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
-        assert "revoked" in exc_info.value.detail.lower()
-        assert "log in again" in exc_info.value.detail.lower()
+        assert exc_info.value.detail and "revoked" in exc_info.value.detail.lower()
+        assert exc_info.value.detail and "log in again" in exc_info.value.detail.lower()
 
     def test_get_current_user_token_version_matches(self, test_regular_user, session) -> None:
         """Test get_current_user succeeds when token version matches."""
@@ -277,6 +277,7 @@ class TestGetCurrentUser:
         with pytest.raises(HTTPException) as exc_info:
             oauth2.get_current_user(token=invalid_token, db=session)
 
+        assert isinstance(exc_info.value.headers, dict)
         assert "WWW-Authenticate" in exc_info.value.headers
         assert exc_info.value.headers["WWW-Authenticate"] == "Bearer"
 
@@ -295,6 +296,7 @@ class TestGetCurrentUser:
         user1 = oauth2.get_current_user(token=user1_token, db=session)
         user2 = oauth2.get_current_user(token=user2_token, db=session)
 
+        assert user1 and user2
         assert user1.id == test_users[0].id
         assert user2.id == test_users[1].id
         assert user1.email == test_users[0].email
@@ -335,7 +337,7 @@ class TestTokenVersioning:
             oauth2.get_current_user(token=token, db=session)
 
         assert exc_info.value.status_code == 401
-        assert "revoked" in exc_info.value.detail.lower()
+        assert exc_info.value.detail and "revoked" in exc_info.value.detail.lower()
 
     def test_new_token_works_after_version_increment(self, test_regular_user, session) -> None:
         """Test that new token with updated version works after increment."""
@@ -395,6 +397,7 @@ class TestIntegrationScenarios:
 
         # 3. Get current user
         user = oauth2.get_current_user(token=token, db=session)
+        assert user
         assert user.id == test_regular_user.id
         assert user.email == test_regular_user.email
 
@@ -418,7 +421,7 @@ class TestIntegrationScenarios:
         # 4. Old token no longer works
         with pytest.raises(HTTPException) as exc_info:
             oauth2.get_current_user(token=old_token, db=session)
-        assert "revoked" in exc_info.value.detail.lower()
+        assert exc_info.value.detail and "revoked" in exc_info.value.detail.lower()
 
         # 5. User logs in again with new token
         new_token = oauth2.create_access_token(

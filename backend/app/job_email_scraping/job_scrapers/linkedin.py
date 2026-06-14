@@ -20,12 +20,12 @@ class LinkedinBrightdataJobScraper(BrightdataJobScraper):
         min_amount = max_amount = None
         salary_currency = None
         base_salary = job_data.get("base_salary")
-        if base_salary:
+        if isinstance(base_salary, dict):
             currency = base_salary.get("currency")
             payment_period = base_salary.get("payment_period")
 
             # Only extract salary if it's yearly
-            if payment_period and payment_period.lower() == "yr":
+            if isinstance(payment_period, str) and payment_period.lower() == "yr":
                 min_amount = base_salary.get("min_amount")
                 max_amount = base_salary.get("max_amount")
                 salary_currency = currency
@@ -49,6 +49,6 @@ class LinkedinBrightdataJobScraper(BrightdataJobScraper):
 
 
 if __name__ == "__main__":
-    scraper = LinkedinBrightdataJobScraper(["4313361652"])
+    scraper = LinkedinBrightdataJobScraper(["4384261503"])
     job_data1 = scraper.scrape_job()
-    print(job_data1[0])
+    # print(job_data1[0])

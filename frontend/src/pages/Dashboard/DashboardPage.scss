@@ -1,3 +1,19 @@
+@use "../../variables" as *;
+.widget-picker-group-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--bs-secondary-color);
+    margin-bottom: 0.45rem;
+    padding-left: 0.1rem;
+}
+
+.widget-picker-card:not(:disabled):hover {
+    border-color: var(--primary-mid) !important;
+    background: color-mix(in srgb, var(--primary-mid) 8%, transparent) !important;
+}
+
 .table-card-header {
     position: relative;
     background: var(--bs-body-bg) !important;
@@ -41,6 +57,8 @@
     color: white;
     border-radius: 127.8px;
     background: var(--primary-gradient);
+    /* Default: pushed to the far right of the header */
+    margin-left: auto;
 }
 
 .activity-count-badge {
@@ -59,6 +77,14 @@
 .activity-timeline {
     padding-top: 0.5rem;
     padding-bottom: 1rem;
+    overflow-y: auto;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+
+    @media (width <= $mobile-breakpoint) {
+        overflow-x: hidden;
+    }
 }
 
 .activity-item:first-child {
@@ -80,23 +106,231 @@
     background-color: #e5e7eb;
 }
 
-.table-column,
-.activity-column {
-    height: 450px;
-    min-height: 0;
+.dashboard-grid-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease, border-radius 0.2s ease;
 }
 
-.toast-table {
+.grid-item-content {
+    flex: 1;
     min-height: 0;
-    max-height: 630px;
+    height: 100%;
 }
 
-@media (width <= 991px) {
-    .table-column,
-    .activity-column {
-        height: auto;
-        min-height: 360px;
+.grid-item-content > * {
+    height: 100%;
+}
+
+/* Drag handle — absolutely positioned so it doesn't consume widget height */
+.drag-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    cursor: grab;
+    color: var(--bs-secondary);
+    font-size: 1.25rem;
+    opacity: 0.4;
+    transition: opacity 0.15s;
+
+    &:hover {
+        opacity: 1;
     }
+
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+.widget-config-btn,
+.widget-remove-btn {
+    position: absolute;
+    top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px !important;
+    height: 26px !important;
+    padding: 0 !important;
+    line-height: 1;
+    border-width: 1px;
+    border-radius: 50% !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    z-index: 999;
+
+    // Hidden by default; the buttons stay mounted so they can animate in/out with edit mode.
+    opacity: 0;
+    transform: scale(0.7);
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+
+    // Center the icon glyph itself: flexing the <i> removes Bootstrap Icons'
+    // `vertical-align: -.125em`, which otherwise shifts the glyph down as font-size grows.
+    i {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+    }
+}
+
+.dashboard-edit-mode {
+    .widget-config-btn,
+    .widget-remove-btn {
+        opacity: 1;
+        transform: scale(1);
+        visibility: visible;
+        pointer-events: auto;
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s;
+    }
+}
+
+.widget-remove-btn {
+    right: 4px;
+    font-size: 20px !important;
+}
+
+.widget-config-btn {
+    right: 34px;
+    font-size: 14px !important;
+}
+
+/* Edit mode styles */
+.dashboard-edit-mode {
+    padding-bottom: 120px;
+
+    .dashboard-grid-item {
+        border: 2px dashed var(--bs-border-color);
+        border-radius: 0.5rem;
+    }
+
+    .react-grid-placeholder {
+        background: var(--bs-primary);
+        opacity: 0.15;
+        border-radius: 0.5rem;
+    }
+
+    /* In edit mode, place the badge beside the label and push header actions right,
+       keeping the top-right corner clear for the overlaid config/remove buttons. */
+    .table-count-badge {
+        margin-left: 0;
+    }
+
+    .table-card-header-actions {
+        margin-left: auto;
+    }
+}
+/* Dashboard layout */
+.dashboard-wrapper {
+    min-height: 0;
+    width: 100%;
+    max-width: 100%;
+}
+
+.dashboard-main {
+    width: 100%;
+    overflow-x: clip;
+}
+
+/* Floating edit toolbar */
+.dashboard-edit-toolbar {
+    position: fixed;
+    top: 4rem;
+    right: 0;
+    z-index: 0;
+}
+
+.dashboard-edit-toolbar-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem 0 0 0.75rem;
+    box-shadow: -2px 4px 16px rgba(0, 0, 0, 0.12);
+
+    // Animate only the action buttons (2nd child onwards)
+    > *:not(:first-child) {
+        animation: toolbar-item-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    @for $i from 2 through 6 {
+        > *:nth-child(#{$i}) {
+            animation-delay: #{($i - 2) * 0.05}s;
+        }
+    }
+}
+
+.dashboard-edit-trigger-inline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--bs-secondary-color);
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    transition: color 0.15s, border-color 0.15s;
+
+    &:hover {
+        color: var(--primary-mid);
+        border-color: var(--bs-border-color);
+    }
+}
+
+
+@keyframes toolbar-item-in {
+    from {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+
+.sidebar-icon-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    font-size: 1rem;
+    border-radius: 0.5rem;
+
+    // ActionButton wraps content in a div — ensure it fills the button height
+    > div {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* Resize handle */
+.react-resizable-handle {
+    z-index: 10;
+}
+
+.dashboard-edit-mode .react-resizable-handle::after {
+    border-color: var(--bs-secondary) !important;
 }
 
 @media (width <= 1200px) {
@@ -109,5 +343,226 @@
         margin-top: 1.8px;
         margin-bottom: 1.8px;
         margin-left: 0 !important;
+    }
+}
+
+.min-width-0 {
+    min-width: 0;
+}
+
+/* Map widget — granularity toggle: suppress global hover translate */
+.map-granularity-toggle .btn:hover {
+    transform: none;
+}
+
+/* Map widget jobs panel */
+.map-jobs-panel {
+    position: relative;
+    z-index: 2; // paint above the (positioned) map wrapper so the map can't cover the panel
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 300px;
+    background: var(--bs-card-bg);
+    border-left: 1px solid var(--bs-border-color);
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12);
+    animation: panel-slide-in 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    &-header {
+        position: relative;
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.875rem 1rem;
+        background: var(--bs-body-bg);
+
+        &::after {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            content: "";
+            background: var(--primary-gradient);
+        }
+    }
+
+    &-location {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        min-width: 0;
+    }
+
+    &-location-icon-wrapper {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        font-size: 0.95rem;
+        color: white;
+        border-radius: 9px;
+        background: var(--primary-gradient);
+    }
+
+    &-location-text {
+        min-width: 0;
+    }
+
+    &-location-name {
+        overflow: hidden;
+        font-size: 0.9rem;
+        font-weight: 700;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        color: var(--bs-body-color);
+        line-height: 1.25;
+    }
+
+    &-location-count {
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: var(--bs-secondary-color);
+        margin-top: 2px;
+        letter-spacing: 0.01em;
+    }
+
+    &-close {
+        flex-shrink: 0;
+        font-size: 0.65rem;
+        opacity: 0.5;
+        transition: opacity 0.12s;
+
+        &:hover { opacity: 1; }
+    }
+
+    &-keywords {
+        display: flex;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        gap: 5px;
+        padding: 0.65rem 0.9rem;
+        border-bottom: 1px solid var(--bs-border-color);
+        background: color-mix(in srgb, var(--primary-mid) 4%, var(--bs-card-bg));
+    }
+
+    &-list {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 0.35rem 0;
+
+        &::-webkit-scrollbar { width: 4px; }
+        &::-webkit-scrollbar-track { background: transparent; }
+        &::-webkit-scrollbar-thumb {
+            border-radius: 4px;
+            background: color-mix(in srgb, var(--primary-mid) 30%, transparent);
+        }
+    }
+}
+
+.map-keyword-badge {
+    padding: 2px 9px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    border: 1px solid color-mix(in srgb, var(--primary-mid) 30%, transparent);
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--primary-mid) 10%, transparent);
+    color: var(--primary-mid);
+}
+
+.map-job-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.6rem 0.9rem 0.6rem 1rem;
+    cursor: pointer;
+    text-align: left;
+    border: none;
+    border-left: 3px solid transparent;
+    background: transparent;
+    transition: background 0.12s, border-color 0.12s;
+    gap: 0.5rem;
+
+    &:hover {
+        background: color-mix(in srgb, var(--primary-mid) 6%, var(--bs-card-bg));
+        border-left-color: var(--primary-mid);
+
+        .map-job-title { color: var(--primary-mid); }
+        .map-job-chevron { opacity: 0.6; transform: translateX(2px); }
+    }
+}
+
+.map-job-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.map-job-chevron {
+    flex-shrink: 0;
+    font-size: 0.65rem;
+    color: var(--bs-secondary-color);
+    opacity: 0;
+    transition: opacity 0.12s, transform 0.12s;
+}
+
+.map-job-title {
+    overflow: hidden;
+    font-size: 0.84rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--bs-body-color);
+    transition: color 0.12s;
+    line-height: 1.3;
+}
+
+.map-job-meta {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    margin-top: 4px;
+    font-size: 0.73rem;
+}
+
+.map-job-company {
+    display: flex;
+    gap: 0.28rem;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--bs-secondary-color);
+
+    i { font-size: 0.68rem; }
+}
+
+.map-job-status {
+    flex-shrink: 0;
+    padding: 1px 7px;
+    font-size: 0.67rem;
+    font-weight: 600;
+    border-radius: 20px;
+    letter-spacing: 0.01em;
+
+    &--primary   { background: color-mix(in srgb, var(--bs-primary) 15%, transparent);   color: var(--bs-primary); }
+    &--info      { background: color-mix(in srgb, var(--bs-info) 15%, transparent);      color: var(--bs-info); }
+    &--success   { background: color-mix(in srgb, var(--bs-success) 15%, transparent);   color: var(--bs-success); }
+    &--danger    { background: color-mix(in srgb, var(--bs-danger) 15%, transparent);    color: var(--bs-danger); }
+    &--secondary { background: color-mix(in srgb, var(--bs-secondary) 15%, transparent); color: var(--bs-secondary-color); }
+    &--warning   { background: color-mix(in srgb, var(--bs-warning) 15%, transparent);   color: var(--bs-warning); }
+}
+
+@keyframes panel-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
     }
 }

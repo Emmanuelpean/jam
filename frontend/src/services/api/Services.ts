@@ -1,5 +1,4 @@
 import {
-	AiSystemPromptData,
 	ForwardingConfirmationLinkData,
 	JobEmailData,
 	JobRatingData,
@@ -11,9 +10,20 @@ import { ApiResponsePromise, baseApi, serviceApi } from "./Base";
 import { createCrudApi, CrudApi } from "./Crud";
 
 // Scraped Job API
+export interface ScrapedJobPlatformStat {
+	platform: string;
+	alert_name: string | null;
+	scraped_count: number;
+	imported_count: number;
+	applied_count: number;
+}
+
 export interface ScrapedJobCrudApi extends CrudApi<ScrapedJobData> {
 	getByFilterId: (filterId: number, token: string) => ApiResponsePromise<ScrapedJobData[]>;
 	getByEmailId: (emailId: number, token: string) => ApiResponsePromise<ScrapedJobData[]>;
+	platformStats: (token: string) => ApiResponsePromise<ScrapedJobPlatformStat[]>;
+	getExpired: (token: string) => ApiResponsePromise<ScrapedJobData[]>;
+	createTourDemo: (token: string) => ApiResponsePromise<ScrapedJobData>;
 }
 
 export const scrapedJobApi: ScrapedJobCrudApi = {
@@ -22,6 +32,11 @@ export const scrapedJobApi: ScrapedJobCrudApi = {
 		baseApi.get(`scraped-jobs/filtered-by-filter/${filterId}`, token),
 	getByEmailId: (emailId: number, token: string): ApiResponsePromise<ScrapedJobData[]> =>
 		baseApi.get(`scraped-jobs/by-email/${emailId}`, token),
+	platformStats: (token: string): ApiResponsePromise<ScrapedJobPlatformStat[]> =>
+		baseApi.get("scraped-jobs/platform-stats", token),
+	getExpired: (token: string): ApiResponsePromise<ScrapedJobData[]> => baseApi.get("scraped-jobs/expired", token),
+	createTourDemo: (token: string): ApiResponsePromise<ScrapedJobData> =>
+		baseApi.post("scraped-jobs/tour-demo", {}, token),
 };
 
 // Job Rating APIs
@@ -129,8 +144,6 @@ export const jobRatingServiceRunnerApi: JobRatingServiceRunnerApi = {
 		return serviceApi.post("job-rating-service-runner/start", data, token);
 	},
 };
-
-export const aiSystemPromptsApi: CrudApi<AiSystemPromptData> = createCrudApi("ai-system-prompts");
 
 // Job Email API
 export interface JobEmailCrudApi extends CrudApi<JobEmailData> {

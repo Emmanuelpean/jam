@@ -13,7 +13,7 @@ export interface CurrentUser extends UserData {
 export interface AuthContextType {
 	currentUser: CurrentUser | null;
 	token: string | null;
-	login: (email: string, password: string) => Promise<GenericResponse>;
+	login: (email: string, password: string, rememberMe?: boolean) => Promise<GenericResponse>;
 	updateCurrentUser: (userData: UserDataUpdate) => Promise<ApiResponse<UpdateCurrentUserResponse> | null>;
 	fetchUserInfo: (authToken: string) => Promise<void>;
 	logout: () => void;
@@ -45,10 +45,10 @@ export function useAuth(): AuthContextType {
 export function AuthProvider({ children }: AuthProviderProps) {
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 	const [token, setToken] = useState<string | null>(() => {
-		return localStorage.getItem("token");
+		return localStorage.getItem("token") || sessionStorage.getItem("token");
 	});
 	const [userFetched, setUserFetched] = useState<boolean>(false);
-	const hadTokenOnMount = useRef<boolean>(!!localStorage.getItem("token"));
+	const hadTokenOnMount = useRef<boolean>(!!(localStorage.getItem("token") || sessionStorage.getItem("token")));
 	const navigate = useNavigate();
 
 	const fetchUserInfo = useCallback(
@@ -68,6 +68,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 				// Invalid token — log out user
 				if (status === 401 || status === 403) {
 					localStorage.removeItem("token");
+					sessionStorage.removeItem("token");
 					setToken(null);
 					setCurrentUser(null);
 				} else {
@@ -85,10 +86,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	): Promise<ApiResponse<UpdateCurrentUserResponse> | null> => {
 		if (!token) return null;
 		const response: ApiResponse<UpdateCurrentUserResponse> = await authApi.updateCurrentUser(userData, token);
-		if (response.data.logged_out) {
-			logout();
-			return response;
-		}
 		const userResponse: ApiResponse<UserData> = await authApi.getCurrentUser(token);
 		setCurrentUser((prev: CurrentUser | null): CurrentUser | null =>
 			prev ? { ...prev, ...userResponse.data } : prev
@@ -108,17 +105,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 	}, [token, userFetched, fetchUserInfo]);
 
-	// Record last login only for returning users (token already in localStorage on mount)
+	// Record last login only for returning users (token already in localStorage/sessuinStorage on mount)
 	useEffect((): void => {
 		if (hadTokenOnMount.current && token) {
 			authApi.heartbeat(token).catch(() => null);
 		}
 	}, []);
 
-	const login = async (email: string, password: string): Promise<GenericResponse> => {
+	const login = async (email: string, password: string, rememberMe: boolean = false): Promise<GenericResponse> => {
 		const data: ApiResponse<LoginResponse> = await authApi.login(email, password);
 		if (data.data.access_token) {
-			localStorage.setItem("token", data.data.access_token);
+			if (rememberMe) {
+				localStorage.setItem("token", data.data.access_token);
+			} else {
+				sessionStorage.setItem("token", data.data.access_token);
+			}
 			setToken(data.data.access_token);
 			setUserFetched(false);
 			await fetchUserInfo(data.data.access_token);
@@ -133,6 +134,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 
 		localStorage.removeItem("token");
+		sessionStorage.removeItem("token");
 		setToken(null);
 		setCurrentUser(null);
 		setUserFetched(false);

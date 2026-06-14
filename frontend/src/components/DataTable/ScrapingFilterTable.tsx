@@ -1,14 +1,18 @@
 import React, { JSX, useLayoutEffect, useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
+import JamModal from "../JamModal/JamModal";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapingFilterModal } from "../DataModal/ScrapingFilterModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
-import { ScrapingFilterData } from "../../services/schemas/Services";
+import { FilterVariant, ScrapingFilterData } from "../../services/schemas/Services";
+import { ActionButton } from "../rendering/form/ActionButton";
+import { useTour } from "../../contexts/TourContext";
 
 interface ScrapingFilterTableProps extends DataTableProps {
 	show: boolean;
 	onHide: () => void;
+	variant?: FilterVariant;
 }
 
 type tabKeys = "active" | "inactive";
@@ -17,30 +21,31 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	columns = [],
 	show,
 	onHide,
+	variant = "exclusion",
 }: ScrapingFilterTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
+	const { allowedContextMenuActions } = useTour();
 	const [activeTab, setActiveTab] = useState<tabKeys>("active");
 	const [containerHeight, setContainerHeight] = useState("auto");
 	const contentRef = useRef<HTMLDivElement>(null);
+	const isExclusion: boolean = variant === "exclusion";
 
-	const defaultColumns: TableColumn[] =
+	const defaultColumns: TableColumn<ScrapingFilterData>[] =
 		columns.length > 0
-			? columns
+			? (columns as TableColumn<ScrapingFilterData>[])
 			: [
-					tableColumns.filterTypeColumn(),
-					tableColumns.filterOperatorColumn(),
-					tableColumns.valueColumn({ type: "text" }),
-					tableColumns.caseSensitiveColumn(),
-					tableColumns.filteredJobCountColumn(),
+					tableColumns.filterTypeColumn<ScrapingFilterData>(),
+					tableColumns.filterOperatorColumn<ScrapingFilterData>(),
+					tableColumns.valueColumn<ScrapingFilterData>(),
+					tableColumns.caseSensitiveColumn<ScrapingFilterData>(),
+					...(isExclusion ? [tableColumns.filteredJobCountColumn<ScrapingFilterData>()] : []),
 				];
 
-	const activeFilters: ScrapingFilterData[] = dataContext.scrapingFilters.filter(
-		(filter: ScrapingFilterData): boolean => filter.is_active
-	);
-
-	const deactivatedFilters: ScrapingFilterData[] = dataContext.scrapingFilters.filter(
-		(filter: ScrapingFilterData): boolean => !filter.is_active
-	);
+	const filters: ScrapingFilterData[] = isExclusion
+		? dataContext.scrapingExclusionFilters
+		: dataContext.scrapingFavouriteFilters;
+	const activeFilters: ScrapingFilterData[] = filters.filter((f: ScrapingFilterData): boolean => f.is_active);
+	const deactivatedFilters: ScrapingFilterData[] = filters.filter((f: ScrapingFilterData): boolean => !f.is_active);
 
 	const tabs: { key: tabKeys; title: string }[] = [
 		{ key: "active" as const, title: `Active (${activeFilters.length})` },
@@ -48,19 +53,13 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	];
 
 	const menuItems = (item: ScrapingFilterData): string[] => {
-		if (item.filtered_jobs.length > 0) {
-			if (item.is_active) {
-				return ["view", "deactivate"];
-			} else {
-				return ["view", "activate"];
-			}
+		let all: string[];
+		if (isExclusion && item.filtered_jobs.length > 0) {
+			all = item.is_active ? ["view", "deactivate"] : ["view", "activate"];
 		} else {
-			if (item.is_active) {
-				return ["view", "edit", "deactivate", "delete"];
-			} else {
-				return ["view", "edit", "activate", "delete"];
-			}
+			all = item.is_active ? ["view", "edit", "deactivate", "delete"] : ["view", "edit", "activate", "delete"];
 		}
+		return allowedContextMenuActions ? all.filter((a) => allowedContextMenuActions.includes(a)) : all;
 	};
 
 	const renderBodyContent = (): JSX.Element => {
@@ -72,11 +71,12 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 				<div className="modal-content-animated-inner">
 					<div ref={contentRef} style={{ paddingTop: "4px" }}>
 						<DataTable
-							entityType="scrapingFilter"
+							entityType={isExclusion ? "scrapingExclusionFilter" : "scrapingFavouriteFilter"}
 							data={data}
 							columns={defaultColumns}
 							initialSortConfig={{ key: "type", direction: "asc" }}
 							Modal={ScrapingFilterModal}
+							modalProps={{ variant }}
 							modalSize="lg"
 							showAllEntries={true}
 							compact={true}
@@ -119,7 +119,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	}, [activeTab, show]);
 
 	const renderTabs = (): JSX.Element => (
-		<>
+		<div id={isExclusion ? "scraping-filters-tables" : "favourite-filters-tables"}>
 			<div className="custom-tab-nav">
 				{tabs.map(
 					(tab): JSX.Element => (
@@ -136,32 +136,44 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 				)}
 			</div>
 			<div className="custom-tab-content">{renderBodyContent()}</div>
-		</>
+		</div>
 	);
 
 	return (
-		<Modal
+		<JamModal
 			show={show}
 			onHide={onHide}
 			size="xl"
 			centered={true}
 			backdrop={true}
 			keyboard={true}
-			id={"scraping-filters-modal"}
+			className="data-modal"
 		>
-			<Modal.Header closeButton>
-				<Modal.Title>Scraped Job Filters</Modal.Title>
-			</Modal.Header>
+			<div id={isExclusion ? "scraping-filters-modal" : "favourite-filters-modal"}>
+				<JamModal.Header onClose={onHide}>
+					<Modal.Title>{isExclusion ? "Job Alert Filters" : "Favourite Filters"}</Modal.Title>
+				</JamModal.Header>
 
-			<Modal.Body>
-				<i style={{ margin: "0 9px 9px 9px", display: "block" }}>
-					Filters allow you to filter out specific jobs from your job alerts. For example, if you do not want
-					to view jobs from company "ABC Corp", you can create a filter with Type "Company", Operator
-					"Equals", and Value "ABC Corp".
-				</i>
-				{renderTabs()}
-			</Modal.Body>
-		</Modal>
+				<Modal.Body>
+					<i style={{ margin: "0 9px 9px 9px", display: "block" }}>
+						{isExclusion
+							? 'Filters allow you to filter out specific jobs from your job alerts. For example, if you do not want to view jobs from company "ABC Corp", you can create a filter with Type "Company", Operator "Equals", and Value "ABC Corp".'
+							: "Favourite filters pin matching job alerts to this widget. Jobs matching any active filter will appear here."}
+					</i>
+					{renderTabs()}
+				</Modal.Body>
+				<Modal.Footer>
+					<div className="modal-buttons-container">
+						<ActionButton
+							id="scraping-filter-modal-close-btn"
+							variant="secondary"
+							onClick={onHide}
+							defaultText="Close"
+						/>
+					</div>
+				</Modal.Footer>
+			</div>
+		</JamModal>
 	);
 };
 

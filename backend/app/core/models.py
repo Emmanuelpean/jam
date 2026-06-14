@@ -4,10 +4,12 @@ import datetime as dt
 import math
 from typing import Any
 
-from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, CheckConstraint, event
+from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, CheckConstraint, JSON, Text, event
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
+
+from enum import Enum
 
 from app.base_models import CommonBase, Owned
 from app.config import settings
@@ -102,7 +104,6 @@ class User(CommonBase, Base):
         # Handle preferences - create an instance if dict provided or if not already set
         if preferences_data:
             if isinstance(preferences_data, dict):
-                # noinspection PyArgumentList
                 self.preferences = UserPreferences(**preferences_data)
             else:
                 self.preferences = preferences_data
@@ -112,7 +113,6 @@ class User(CommonBase, Base):
         # Handle stripe_details - create an instance if dict provided or if not already set
         if stripe_details_data:
             if isinstance(stripe_details_data, dict):
-                # noinspection PyArgumentList
                 self.stripe_details = StripeDetails(**stripe_details_data)
             else:
                 self.stripe_details = stripe_details_data
@@ -122,7 +122,6 @@ class User(CommonBase, Base):
         # Handle premium - create instance if dict provided or if not already set
         if premium_data:
             if isinstance(premium_data, dict):
-                # noinspection PyArgumentList
                 self.premium = PremiumSettings(**premium_data)
             else:
                 self.premium = premium_data
@@ -142,7 +141,7 @@ class User(CommonBase, Base):
         """Check if there is a pending email change token"""
 
         for token in self.tokens:
-            if token.token_type == "email_change":
+            if token.token_type == TokenType.EMAIL_CHANGE:
                 return token.pending_email
         return None
 
@@ -154,18 +153,21 @@ class UserPreferences(Owned, Base):
     -----------
     - `theme` (str): The theme of the application.
     - `dark_mode` (bool): Indicates whether dark mode is enabled.
-    - `chase_threshold` (int): The threshold for chasing jobs in the dashboard.
-    - `deadline_threshold` (int): The threshold for deadlines in the dashboard.
-    - `update_limit` (int): Max number updates displayed in the dashboard.
-    - `default_currency` (str): The default currency for salary fields."""
+    - `default_currency` (str): The default currency for salary fields.
+    - `dashboard_layout` (str, optional): The layout of the dashboard.
+    - `table_columns` (dict, optional): The table column configurations.
+    - `table_sort` (dict, optional): The sort configuration for tables.
+    - `extension_banner_dismissed` (bool): Indicates whether the extension banner has been dismissed.
+    - `completed_tours` (list, optional): A list of completed guided tours.`"""
 
     theme = Column(String, nullable=False, server_default="mixed-berry")
     dark_mode = Column(String, nullable=False, server_default="system")
-    chase_threshold = Column(Integer, nullable=False, server_default="14")
-    deadline_threshold = Column(Integer, nullable=False, server_default="7")
-    update_limit = Column(Integer, nullable=False, server_default="10")
     default_currency = Column(String, nullable=False, server_default="GBP")
+    dashboard_layout = Column(Text, nullable=True)
+    table_columns = Column(JSON, nullable=True)
+    table_sort = Column(JSON, nullable=True)
     extension_banner_dismissed = Column(Boolean, nullable=False, server_default="false")
+    completed_tours = Column(JSON, nullable=True)
 
 
 class StripeDetails(Owned, Base):
@@ -198,13 +200,22 @@ class PremiumSettings(Owned, Base):
     job_rating_active = Column(Boolean, nullable=False, server_default=expression.true())
 
 
+class TokenType(str, Enum):
+    """User token type enum."""
+
+    EMAIL_VERIFICATION = "email_verification"
+    PASSWORD_RESET = "password_reset"
+    EMAIL_CHANGE = "email_change"
+    PASSWORD_CHANGE = "password_change"
+
+
 class UserToken(Owned, Base):
     """Authentication and verification tokens.
 
     Attributes:
     -----------
     - `token` (str, unique): The actual token string.
-    - `token_type` (str): Type of token (verification, password_reset, email_change).
+    - `token_type` (str): Type of token (TokenType enum).
     - `pending_email` (str, optional): For email_change tokens, the new email address.
     - `is_valid` (bool): Computed property to check if the token is valid."""
 
@@ -218,9 +229,10 @@ class UserToken(Owned, Base):
 
         # Define expiration times based on the token type
         expiration_minutes = {
-            "verification": settings.verification_token_expiration_minutes,
-            "password_reset": settings.password_reset_token_expiration_minutes,
-            "email_change": settings.email_change_token_expiration_minutes,
+            TokenType.EMAIL_VERIFICATION: settings.verification_token_expiration_minutes,
+            TokenType.PASSWORD_RESET: settings.password_reset_token_expiration_minutes,
+            TokenType.EMAIL_CHANGE: settings.email_change_token_expiration_minutes,
+            TokenType.PASSWORD_CHANGE: settings.password_reset_token_expiration_minutes,
         }
 
         # noinspection PyTypeChecker

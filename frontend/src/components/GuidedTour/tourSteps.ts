@@ -1,0 +1,1595 @@
+export interface TourStep {
+	id: string;
+	targetId?: string | null;
+	title: string;
+	content: string;
+	route?: string | null;
+	placement: "top" | "bottom" | "left" | "right" | "center";
+	/** Auto-advance when this selector APPEARS in the DOM */
+	waitForSelector?: string;
+	/** Auto-advance when this selector DISAPPEARS from the DOM */
+	waitForSelectorGone?: string;
+	/** Auto-advance when this input has a non-empty value */
+	waitForInput?: string;
+	/** Disable Next while the matched input has content that is not a valid email (empty = allowed) */
+	waitForValidEmailIfFilled?: string;
+	/** Disable Next while the matched input has content that does not contain "linkedin" (empty = allowed) */
+	waitForValidLinkedInIfFilled?: string;
+	/** If this selector is absent from the DOM when the step activates, skip the step (forward or backward) */
+	skipIfSelectorAbsent?: string;
+	/** Auto-focus this selector when the step activates (no effect on Next button) */
+	autoFocusSelector?: string;
+	/** When watchSelector gets input, fill fillSelector with fillValue via React's native setter */
+	autoFill?: {
+		watchSelector: string;
+		fillSelector: string;
+		fillValue: string;
+	};
+	/** Hide the Next button - step advances automatically or by user action */
+	hideNextButton?: boolean;
+	/** Show a Back button even when hideNextButton is true */
+	showBack?: boolean;
+	/** Prevent left-clicks on the highlighted target (right-clicks still work for context menus) */
+	blockLeftClick?: boolean;
+	/** When set, the context menu on the target will only show these actions */
+	allowedContextMenuActions?: string[];
+	/** When Back is clicked, jump to this step id instead of step - 1 */
+	backStepId?: string;
+	/** When Back is clicked, click this selector before navigating (e.g. close an open modal) */
+	backActionSelector?: string;
+	/** Render choice buttons that jump to a specific step by id */
+	choices?: Array<{ label: string; icon: string; targetStepId: string }>;
+	/** After Next is clicked, jump to this step id instead of the next index */
+	nextStepId?: string;
+	/** When the waitForSelector/waitForSelectorGone condition fires (auto-advance), jump to this step id instead of nextStepId */
+	autoAdvanceStepId?: string;
+	/** Click this selector automatically when the step becomes active (e.g. switch a tab) */
+	clickSelector?: string;
+	/** Click this selector when the Next button is clicked (before advancing), e.g. to close a modal */
+	nextActionSelector?: string;
+}
+
+export interface TourDefinition {
+	id: string;
+	title: string;
+	description: string;
+	icon: string;
+	steps: TourStep[];
+	/** Not yet implemented - shown in the panel as disabled with a "Soon" badge */
+	comingSoon?: boolean;
+	/** Premium-only tour — hidden for non-premium users and shown with a badge */
+	premium?: boolean;
+	/** Skip the keep-data toggle on the last step — tour always ends without cleanup prompt */
+	noKeepData?: boolean;
+}
+
+const APP_OVERVIEW_STEPS: TourStep[] = [
+	{
+		id: "intro",
+		title: "Welcome to JAM!",
+		content: "Let's take a quick tour of YOUR Job Application Manager. It'll only take a minute.",
+		route: "dashboard",
+		placement: "center",
+	},
+	{
+		id: "dashboard-overview",
+		targetId: "dashboard-main",
+		title: "Your Dashboard",
+		route: "dashboard",
+		content:
+			"This is your personal dashboard - allowing you to keep an eye on your job application progress at a glance.",
+		placement: "center",
+	},
+	{
+		id: "dashboard-customise",
+		targetId: "dashboard-edit-btn",
+		title: "Customise Your Dashboard",
+		route: "dashboard",
+		content:
+			"Click here to enter edit mode. Add, remove, reorder, and resize widgets to build a dashboard that suits YOU.",
+		placement: "bottom",
+	},
+	{
+		id: "sidebar",
+		targetId: "nav-jobs",
+		title: "Jobs",
+		route: "jobs",
+		content:
+			"Use the sidebar to move between sections. Jobs is your central hub - log applications, track every updates and interviews.",
+		placement: "right",
+	},
+	{
+		id: "premium",
+		title: "Go Further with Premium",
+		route: "settings/premium",
+		content:
+			"Land your dream job faster with JAM Premium - automatically scrape jobs from LinkedIn, Indeed, and more " +
+			"straight into JAM, then let AI rate each one against your profile so the best matches rise to the top.",
+		targetId: "premium-tab",
+		placement: "center",
+	},
+	{
+		id: "command-palette",
+		title: "Navigate in Seconds",
+		content:
+			"Press Ctrl+K (or Cmd+K on Mac) to open the command palette - jump to any page or trigger any action " +
+			"without touching the mouse.",
+		placement: "center",
+	},
+];
+
+const FIRST_JOB_STEPS: TourStep[] = [
+	{
+		id: "first-job-intro",
+		targetId: null,
+		title: "Let's Log Your First Job",
+		content:
+			"This tour walks you through adding a job from start to finish. We'll clean up any test data when you're done.",
+		route: "/jobs",
+		placement: "center",
+	},
+	{
+		id: "open-job-modal",
+		targetId: "add-job-button",
+		title: "Add a Job Application",
+		content: 'Click the "Add Job" button to open the job form.',
+		placement: "bottom",
+		waitForSelector: '.modal.show input[name="title"]',
+		hideNextButton: true,
+	},
+	{
+		id: "job-title",
+		targetId: "title",
+		title: "Enter a Job Title",
+		content: "Type any job title to continue.",
+		placement: "bottom",
+		waitForInput: '.modal.show input[name="title"]',
+	},
+	{
+		id: "add-company",
+		targetId: "company_id-form-group",
+		title: "Company",
+		content: "Select the company this job is at, or click + to add a new one on the fly. Click Next to skip.",
+		placement: "right",
+		waitForSelector: "#modal-edit-company",
+		autoAdvanceStepId: "company-filling",
+		nextStepId: "job-url",
+		showBack: true,
+	},
+	{
+		id: "company-filling",
+		targetId: "#modal-edit-company .modal-content",
+		title: "Fill in the Company Details",
+		content: "Enter a name and any other details, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-company",
+		hideNextButton: true,
+		autoAdvanceStepId: "add-company",
+		showBack: true,
+		backStepId: "add-company",
+		backActionSelector: "#modal-edit-company-cancel-button",
+	},
+	{
+		id: "job-url",
+		targetId: "url-form-group",
+		title: "Job URL",
+		content: "Paste the link to the original job listing here or click Next to skip.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "job-attendance",
+		targetId: "attendance_type-form-group",
+		title: "Attendance Type",
+		content: "Select whether this role is Remote, Hybrid, or On-site, or click Next to skip.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "job-location",
+		targetId: "location-form-group",
+		title: "Location",
+		content:
+			"Enter the location where this role is based. JAM will automatically place it on the map to help you find " +
+			"it if you are not familiar with that location. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+		skipIfSelectorAbsent: "#location-form-group",
+	},
+	{
+		id: "job-salary-min",
+		targetId: "salary_min-form-group",
+		title: "Minimum Salary",
+		content:
+			"Enter the minimum advertised salary. The currency follows your preferred setting in User Settings. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "job-salary-max",
+		targetId: "salary_max-form-group",
+		title: "Maximum Salary",
+		content: "Enter the maximum advertised salary. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "job-personal-rating",
+		targetId: "personal_rating-form-group",
+		title: "Personal Rating",
+		content:
+			"Rate this role from 1 to 5 stars based on how excited you are about it. Use it to quickly prioritise the jobs that matter most. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "job-favourite",
+		targetId: "is_favourite-form-group",
+		title: "Favourite",
+		content:
+			"Star this job to mark it as a top pick. Favourited jobs are easy to filter for so you never lose sight of the roles you care about most. ",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "job-deadline",
+		targetId: "deadline-form-group",
+		title: "Application Deadline",
+		content:
+			"Set the closing date for this application. JAM highlights upcoming deadlines on your dashboard if you have " +
+			"the upcoming deadlines widget enabled. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "job-source",
+		targetId: "source_type-form-group",
+		title: "How Did You Find It?",
+		content:
+			"Log where you found the job — a job board, recruiter, LinkedIn, or elsewhere. Tracking your sources helps you " +
+			"see which channels land interviews. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "job-source-aggregator",
+		targetId: "source_aggregator_id-form-group",
+		title: "Job Board / Aggregator",
+		content:
+			"Select the job board or aggregator where you found this listing, or click + to add a new one on the fly. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+		skipIfSelectorAbsent: "#source_aggregator_id-form-group",
+		waitForSelector: "#modal-edit-aggregator",
+		autoAdvanceStepId: "job-source-aggregator-filling",
+		nextStepId: "job-source-recruiter",
+	},
+	{
+		id: "job-source-aggregator-filling",
+		targetId: "#modal-edit-aggregator .modal-content",
+		title: "Add a Job Board",
+		content: "Enter the name and URL of the job board, then click Confirm to save. Click Next to skip.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-aggregator",
+		hideNextButton: true,
+		autoAdvanceStepId: "job-source-aggregator",
+		showBack: true,
+		backStepId: "job-source-aggregator",
+		backActionSelector: "#modal-edit-aggregator-cancel-button",
+		skipIfSelectorAbsent: "#modal-edit-aggregator",
+	},
+	{
+		id: "job-source-recruiter",
+		targetId: "recruiter_id-form-group",
+		title: "Recruiter",
+		content:
+			"Link the contact who shared this opportunity with you, or click + to add a new contact on the fly. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+		skipIfSelectorAbsent: "#recruiter_id-form-group",
+		waitForSelector: "#modal-edit-person",
+		autoAdvanceStepId: "job-source-recruiter-filling",
+		nextStepId: "job-source-company",
+	},
+	{
+		id: "job-source-recruiter-filling",
+		targetId: "#modal-edit-person .modal-content",
+		title: "Add the Recruiter",
+		content: "Enter the contact's details, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-person",
+		hideNextButton: true,
+		autoAdvanceStepId: "job-source-recruiter",
+		showBack: true,
+		backStepId: "job-source-recruiter",
+		backActionSelector: "#modal-edit-person-cancel-button",
+		skipIfSelectorAbsent: "#modal-edit-person",
+	},
+	{
+		id: "job-source-company",
+		targetId: "recruitment_company_id-form-group",
+		title: "Recruitment Company",
+		content:
+			"Select the recruitment company that put you forward for this role, or click + to add a new one on the fly. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+		skipIfSelectorAbsent: "#recruitment_company_id-form-group",
+		waitForSelector: "#modal-edit-company",
+		autoAdvanceStepId: "job-source-company-filling",
+		nextStepId: "job-tags",
+	},
+	{
+		id: "job-source-company-filling",
+		targetId: "#modal-edit-company .modal-content",
+		title: "Add the Recruitment Company",
+		content: "Enter the company's details, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-company",
+		hideNextButton: true,
+		autoAdvanceStepId: "job-source-company",
+		showBack: true,
+		backStepId: "job-source-company",
+		backActionSelector: "#modal-edit-company-cancel-button",
+		skipIfSelectorAbsent: "#modal-edit-company",
+	},
+	{
+		id: "job-tags",
+		targetId: "keywords-form-group",
+		title: "Tags",
+		content:
+			"Add tags to categorise your applications — select from existing tags or click + to create a new one on the fly. Click Next to skip.",
+		placement: "right",
+		waitForSelector: "#modal-edit-keyword",
+		autoAdvanceStepId: "job-tag-filling",
+		nextStepId: "job-contacts",
+		showBack: true,
+	},
+	{
+		id: "job-tag-filling",
+		targetId: "#modal-edit-keyword .modal-content",
+		title: "Create a Tag",
+		content: "Enter a tag name and click Confirm to save. Tags help you categorise and filter your applications.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-keyword",
+		hideNextButton: true,
+		autoAdvanceStepId: "job-tags",
+		showBack: true,
+		backStepId: "job-tags",
+		backActionSelector: "#modal-edit-keyword-cancel-button",
+	},
+	{
+		id: "job-contacts",
+		targetId: "contacts-form-group",
+		title: "Contacts",
+		content:
+			"Link people to this job — select from existing contacts or click + to add a new one on the fly. Click Next to skip.",
+		placement: "right",
+		waitForSelector: "#modal-edit-person",
+		autoAdvanceStepId: "job-contact-filling",
+		nextStepId: "job-description",
+		showBack: true,
+	},
+	{
+		id: "job-contact-filling",
+		targetId: "#modal-edit-person .modal-content",
+		title: "Fill in the Contact Details",
+		content: "Enter a name and any other details, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-person",
+		hideNextButton: true,
+		autoAdvanceStepId: "job-contacts",
+		showBack: true,
+		backStepId: "job-contacts",
+		backActionSelector: "#modal-edit-person-cancel-button",
+	},
+	{
+		id: "job-description",
+		targetId: "description-form-group",
+		title: "Job Description",
+		content:
+			"Paste the job description here. Having it saved in JAM means you can reference it at any time — handy when preparing for interviews.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "job-notes",
+		targetId: "note-form-group",
+		title: "Notes",
+		content:
+			"Add any personal notes about this role — impressions from a call, questions to ask, or anything that helps you stay on top of the application.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "save-job",
+		targetId: "modal-edit-job-confirm-button",
+		title: "Save the Job",
+		content: "Everything looks great! Click to save the job details.",
+		placement: "top",
+		waitForSelectorGone: '.modal.show input[name="title"]',
+		hideNextButton: true,
+		showBack: true,
+	},
+	{
+		id: "show-job-in-table",
+		targetId: "[demo-job-row]",
+		title: "Job Saved!",
+		content:
+			"Your new job entry now appears in the table. Use the columns to track status, deadline, and last activity at a glance.",
+		placement: "bottom",
+		blockLeftClick: true,
+		allowedContextMenuActions: [],
+	},
+	{
+		id: "done",
+		targetId: null,
+		title: "You're All Set!",
+		content:
+			"You've added your first job application - great work! Choose below whether to keep it or delete it along " +
+			"with any other data you created during this tour.",
+		route: null,
+		placement: "center",
+		showBack: false,
+	},
+];
+
+const FOLLOW_UP_EMAIL_STEPS: TourStep[] = [
+	{
+		id: "follow-up-intro",
+		targetId: null,
+		title: "Follow-up Email Generator",
+		content:
+			"JAM can draft a personalised follow-up email for any job application in seconds. This can be done via?",
+		route: "/jobs",
+		placement: "center",
+		hideNextButton: true,
+		choices: [
+			{ label: "Right-click a job entry", icon: "bi-table", targetStepId: "follow-up-open-via-table" },
+			{
+				label: "Right-click a contact badge",
+				icon: "bi-person-badge-fill",
+				targetStepId: "follow-up-open-via-badge-1",
+			},
+			{
+				label: "Button in the Application tab",
+				icon: "bi-send-fill",
+				targetStepId: "follow-up-open-via-button-1",
+			},
+		],
+	},
+	// ── Method 1: right-click job row ────────────────────────────────────────
+	{
+		id: "follow-up-open-via-table",
+		targetId: "[demo-job-row]",
+		title: "Right-click the Job Entry",
+		content: "Right-click this job entry and select Follow-up Email.",
+		route: "/jobs",
+		placement: "top",
+		waitForSelector: "#follow-up-modal",
+		hideNextButton: true,
+		nextStepId: "follow-up-contact",
+		blockLeftClick: true,
+		allowedContextMenuActions: ["followup"],
+	},
+	// ── Method 2: right-click contact badge ──────────────────────────────────
+	{
+		id: "follow-up-open-via-badge-1",
+		targetId: "[demo-job-row]",
+		title: "Open the Job",
+		content: "Click this job row to open the job details.",
+		route: "/jobs",
+		placement: "top",
+		waitForSelector: "#job-tab",
+		hideNextButton: true,
+		nextStepId: "follow-up-open-via-badge-2",
+		allowedContextMenuActions: ["view"],
+	},
+	{
+		id: "follow-up-open-via-badge-2",
+		targetId: "modal-view-job-person-0",
+		title: "Right-click the Contact Badge",
+		content: "Right-click this contact badge and select Follow-up Email.",
+		placement: "bottom",
+		waitForSelector: "#follow-up-modal",
+		hideNextButton: true,
+		nextStepId: "follow-up-contact",
+		blockLeftClick: true,
+		allowedContextMenuActions: ["followup"],
+	},
+	// ── Method 3: button in Application tab ──────────────────────────────────
+	{
+		id: "follow-up-open-via-button-1",
+		targetId: "[demo-job-row]",
+		title: "Open the Job",
+		content: "Click this job row to open the job details.",
+		route: "/jobs",
+		placement: "top",
+		waitForSelector: "#application-tab",
+		hideNextButton: true,
+		nextStepId: "follow-up-open-via-button-2",
+		allowedContextMenuActions: ["view"],
+	},
+	{
+		id: "follow-up-open-via-button-2",
+		targetId: "application-tab",
+		title: "Switch to the Application Tab",
+		content: "Click the Application tab to see your application details.",
+		placement: "bottom",
+		waitForSelector: "#job-modal-follow-up-button",
+		hideNextButton: true,
+		nextStepId: "follow-up-open-via-button-3",
+	},
+	{
+		id: "follow-up-open-via-button-3",
+		targetId: "job-modal-follow-up-button",
+		title: "Click Follow-up Email",
+		content: "Click this button to open the Follow-up Email Generator.",
+		placement: "top",
+		waitForSelector: "#follow-up-modal",
+		hideNextButton: true,
+		nextStepId: "follow-up-contact",
+	},
+	{
+		id: "follow-up-contact",
+		targetId: "contactId-form-group",
+		title: "Select a Contact",
+		content:
+			"Choose who you want to email. Switching contacts updates the greeting in the email body and pre-fills their email address.",
+		placement: "right",
+	},
+	{
+		id: "follow-up-subject",
+		targetId: "subject-form-group",
+		title: "Email Subject",
+		content: "The subject is pre-filled based on the job title. Edit it if you'd like a different subject line.",
+		placement: "right",
+	},
+	{
+		id: "follow-up-body",
+		targetId: "body-form-group",
+		title: "Email Body",
+		content:
+			"A professional follow-up message is generated automatically. Personalise it before sending - especially " +
+			"the opening line if you haven't selected a contact.",
+		placement: "right",
+	},
+	{
+		id: "follow-up-send",
+		targetId: "email-service-dropdown",
+		title: "Send Your Email",
+		content: "Click Send Email to open your default email client.",
+		placement: "top",
+		hideNextButton: true,
+		waitForSelector: "#confirm-alert-modal-buttons",
+		showBack: true,
+	},
+	{
+		id: "follow-up-log-update",
+		targetId: "confirm-alert-modal-dialog",
+		title: "Log the Email",
+		content:
+			"After clicking Send, JAM asks if you want to record the email as a job application update. " +
+			"Click Yes to keep a full history of your follow-ups, or No to skip.",
+		placement: "top",
+		hideNextButton: true,
+		waitForSelectorGone: "#confirm-alert-modal-dialog",
+	},
+	{
+		id: "follow-up-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"That's the Follow-up Email Generator! Use it to stay on top of your applications and keep your job history complete.",
+		placement: "center",
+	},
+];
+
+const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
+	{
+		id: "scraped-intro",
+		targetId: null,
+		title: "Job Alert Scraping",
+		content:
+			"TOAST (JAM Premium) automatically scans your email alert subscriptions from LinkedIn, Indeed, and similar platforms -" +
+			"pulling matching jobs straight into JAM so you never miss an opportunity. " +
+			"We've added a demo alert so you can try it out.",
+		route: "/job-alerts/jobs",
+		placement: "center",
+	},
+	{
+		id: "scraped-table",
+		targetId: "scrapedJob-data-table",
+		title: "Your Job Alerts",
+		content:
+			'Every job scraped from your alert emails lands here. Entries added since your last login are tagged "NEW", ' +
+			"and unread jobs show a blue dot. Use the search bar and column headers to filter and sort.",
+		route: "/job-alerts/jobs",
+		placement: "center",
+		blockLeftClick: true,
+		allowedContextMenuActions: [],
+	},
+	{
+		id: "scraped-ai-score",
+		targetId: "table-header-job_rating.overall_score",
+		title: "AI Score",
+		content:
+			"JAM rates each alert against your profile - skills, experience, and preferences. " +
+			"Higher scores mean a stronger match. Set up your profile in User Settings to tune the ratings.",
+		route: "/job-alerts/jobs",
+		placement: "bottom",
+	},
+	{
+		id: "scraped-filters",
+		targetId: "scraping-filters-button",
+		title: "Alert Filters",
+		content:
+			"Click here to configure what gets scraped - include or exclude keywords, locations, and platforms. " +
+			"Only alerts matching your active filters will appear in the table.",
+		route: "/job-alerts/jobs",
+		placement: "bottom",
+		waitForSelector: "#scraping-filters-modal",
+		autoAdvanceStepId: "scraped-filters-tour-hint",
+		nextStepId: "scraped-emails-tab",
+	},
+	{
+		id: "scraped-filters-tour-hint",
+		targetId: "scraping-filters-modal",
+		title: "There's a Tour for This!",
+		content:
+			'Alert Filters have their own dedicated tour — "Creating & Managing Alert Filters" — ' +
+			"that walks you through building and testing a filter step by step. " +
+			"Click Next to close this panel and continue the current tour.",
+		route: "/job-alerts/jobs",
+		placement: "center",
+		showBack: true,
+		backStepId: "scraped-filters",
+		backActionSelector: "#scraping-filter-modal-close-btn",
+		nextActionSelector: "#scraping-filter-modal-close-btn",
+		nextStepId: "scraped-emails-tab",
+	},
+	{
+		id: "scraped-emails-tab",
+		targetId: "job-emails-header",
+		title: "Job Emails",
+		content:
+			"There is also a Job Emails tab that shows the raw alert emails behind each scraping run. " +
+			"Click it to explore them.",
+		route: "/job-alerts/jobs",
+		placement: "bottom",
+		hideNextButton: true,
+		waitForSelector: "#job-emails-header.page-header-active",
+	},
+	{
+		id: "scraped-open-email",
+		targetId: "[demo-job-email-row]",
+		title: "Open the Demo Email",
+		content: "Click this email to see the jobs that were scraped from it.",
+		route: "/job-alerts/emails",
+		placement: "top",
+		hideNextButton: true,
+		waitForSelector: "#modal-view-jobEmail",
+	},
+	{
+		id: "scraped-email-modal-content",
+		targetId: "#modal-view-jobEmail .modal-content",
+		title: "Inside the Job Email",
+		content:
+			"This view shows the raw alert email: sender, platform, alert name, and how many jobs were found. " +
+			"Expand the Job Alerts section to see every job that was pulled from this email — " +
+			"and the Email Content section to read the original message.",
+		route: "/job-alerts/emails",
+		placement: "center",
+		showBack: true,
+		backStepId: "scraped-open-email",
+		backActionSelector: "#modal-view-jobEmail-cancel-button",
+		nextActionSelector: "#modal-view-jobEmail-cancel-button",
+	},
+	{
+		id: "scraped-back-to-alerts",
+		targetId: "scraped-jobs-header",
+		title: "Back to Job Alerts",
+		content: "Now click Job Alerts to return to the job alerts table — we'll import the demo alert next.",
+		route: "/job-alerts/emails",
+		placement: "bottom",
+		hideNextButton: true,
+		waitForSelector: "#scraped-jobs-header.page-header-active",
+	},
+	{
+		id: "scraped-open-row",
+		targetId: "[demo-scraped-job-row]",
+		title: "Open the Demo Alert",
+		content: "Click this demo job alert to open the import form.",
+		route: "/job-alerts/jobs",
+		placement: "top",
+		waitForSelector: "#modal-import-scrapedJob",
+		hideNextButton: true,
+		allowedContextMenuActions: ["import"],
+	},
+	{
+		id: "scraped-review-form",
+		targetId: "#modal-import-scrapedJob .modal-content",
+		title: "Review the Import Form",
+		content:
+			"The scraped data is pre-filled - title, company, salary, location, and more. " +
+			"Edit any field before importing. When you're happy, click Import.",
+		placement: "left",
+	},
+	{
+		id: "scraped-company-location",
+		targetId: "company_id-form-group",
+		title: "Check Company & Location",
+		content:
+			"JAM automatically tries to match the scraped company to one you've already created. " +
+			"The field is highlighted when a match is found - always verify it's correct before importing.",
+		placement: "right",
+	},
+	{
+		id: "scraped-import-btn",
+		targetId: "modal-import-scrapedJob-import-button",
+		title: "Import the Job",
+		content:
+			"Click Import to add this job to your applications. " +
+			"The demo data will be cleaned up automatically when the tour ends.",
+		placement: "top",
+		waitForSelectorGone: "#modal-import-scrapedJob",
+		hideNextButton: true,
+		showBack: true,
+	},
+	{
+		id: "scraped-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"The job is now in your job list. JAM will keep pulling in new alerts automatically -" +
+			"just visit Job Alerts whenever you want to review and import the latest matches.",
+		placement: "center",
+	},
+];
+
+const SCRAPING_FILTER_STEPS: TourStep[] = [
+	{
+		id: "sf-intro",
+		targetId: null,
+		title: "Alert Filters",
+		content:
+			"Alert filters let you control exactly which job alerts get pulled into JAM. " +
+			"Exclusion filters silently drop alerts that match - keeping your table free of irrelevant results. " +
+			"This tour walks you through creating and testing one.",
+		route: "/job-alerts/jobs",
+		placement: "center",
+	},
+	{
+		id: "sf-open",
+		targetId: "scraping-filters-button",
+		title: "Open the Filter Panel",
+		content: "Click the Alert Filters button to open the filter manager.",
+		route: "/job-alerts/jobs",
+		placement: "bottom",
+		waitForSelector: "#scraping-filters-modal",
+		hideNextButton: true,
+	},
+	{
+		id: "sf-overview",
+		targetId: "scraping-filters-tables",
+		title: "The Filter Panel",
+		content:
+			"This panel lists all your exclusion filters. Active filters run automatically during each scrape - " +
+			"any alert that matches is silently dropped before it reaches your table.",
+		placement: "left",
+		hideNextButton: false,
+	},
+	{
+		id: "sf-tabs",
+		targetId: "active-tab",
+		title: "Active & Inactive Filters",
+		content:
+			"Filters have two states: Active filters are applied on every scrape. " +
+			"Switch to the Inactive tab to see filters you have paused - deactivate a filter to temporarily stop it without deleting it.",
+		placement: "bottom",
+	},
+	{
+		id: "sf-add",
+		targetId: "add-scrapingExclusionFilter-button",
+		title: "Create a Filter",
+		content: "Click here to open the filter form and create your first filter.",
+		placement: "bottom",
+		waitForSelector: "#modal-edit-scrapingExclusionFilter",
+		hideNextButton: true,
+	},
+	{
+		id: "sf-type",
+		targetId: "type-form-group",
+		title: "Filter Type",
+		content:
+			"Choose what part of the job alert to match against - for example Title, Company, or Location. " +
+			"Selecting Title will check the job title of every incoming alert.",
+		placement: "right",
+		waitForInput: "#type-form-group .jam-select__input",
+	},
+	{
+		id: "sf-operator",
+		targetId: "operator-form-group",
+		title: "Operator",
+		content:
+			"Pick how the match is performed. Contains checks for a substring anywhere in the field; " +
+			"Equals requires an exact match; Starts With and Ends With match the beginning or end.",
+		placement: "right",
+		waitForInput: "#operator-form-group .jam-select__input",
+	},
+	{
+		id: "sf-value",
+		targetId: "value-form-group",
+		title: "Filter Value",
+		content: "Type the word or phrase to match against. For example, enter 'Senior' to exclude senior-level roles.",
+		placement: "right",
+		waitForInput: "#modal-edit-scrapingExclusionFilter input[name='value']",
+	},
+	{
+		id: "sf-test",
+		targetId: "scraping-filter-test-btn",
+		title: "Test the Filter",
+		content:
+			"Before saving, click Test to preview which existing job alerts this filter would match. " +
+			"A table of matching alerts appears below - if it looks right, go ahead and save.",
+		placement: "top",
+	},
+	{
+		id: "sf-save",
+		targetId: "modal-edit-scrapingExclusionFilter-confirm-button",
+		title: "Save the Filter",
+		content: "Happy with the filter? Click Save to activate it. It will be applied on the next scraping run.",
+		placement: "top",
+		waitForSelectorGone: "#modal-edit-scrapingExclusionFilter",
+		hideNextButton: true,
+	},
+	{
+		id: "sf-manage",
+		targetId: "[demo-scraping-filter-row]",
+		title: "Managing Filters",
+		content:
+			"Your new filter now appears in the table. Right-click any row to edit, deactivate, or delete a filter. " +
+			"The filter created during this tour will be removed automatically when you click Done.",
+		placement: "top",
+		blockLeftClick: true,
+		allowedContextMenuActions: [],
+	},
+	{
+		id: "sf-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"You know how to create and manage alert filters. " +
+			"Use them to keep irrelevant alerts out of your table and surface only the roles that matter to you.",
+		placement: "center",
+	},
+];
+
+const LOG_APPLICATION_STEPS: TourStep[] = [
+	{
+		id: "log-application-intro",
+		targetId: null,
+		title: "Logging a Job Application",
+		content:
+			"Once you've applied for a job, JAM lets you record the details - when you applied, the status, and how you submitted. " +
+			"We've added a demo job so you can try it now.",
+		route: "/jobs",
+		placement: "center",
+	},
+	{
+		id: "log-application-open-job",
+		targetId: "[demo-job-row]",
+		title: "Open the Job",
+		content: "Click this job row to open the details.",
+		route: "/jobs",
+		placement: "top",
+		waitForSelector: "#application-tab",
+		hideNextButton: true,
+		allowedContextMenuActions: ["view"],
+	},
+	{
+		id: "log-application-tab",
+		targetId: "application-tab",
+		title: "Switch to the Job Application Tab",
+		content: "Click here to see the application section for this job.",
+		placement: "bottom",
+		waitForSelector: "#add-interview-button",
+		hideNextButton: true,
+	},
+	{
+		id: "log-application-edit",
+		targetId: "modal-view-job-edit-button",
+		title: "Edit the Job",
+		content: "Click Edit to fill in your application details.",
+		placement: "top",
+		waitForSelector: "#application_date-form-group",
+		hideNextButton: true,
+	},
+	{
+		id: "log-application-date",
+		targetId: "application_date-form-group",
+		title: "Application Date",
+		content:
+			"Record when you submitted the application. JAM uses this for your dashboard timeline and to calculate days since last activity.",
+		placement: "right",
+		waitForInput: '.modal.show input[name="application_date"]',
+	},
+	{
+		id: "log-application-status",
+		targetId: "application_status-form-group",
+		title: "Application Status",
+		content:
+			"Set the current status - Applied, Under Review, Rejected, Offer Received, and more. This feeds your " +
+			"dashboard stats and highlights stalled applications.",
+		placement: "right",
+		waitForInput: "#application_status-form-group .jam-select__input",
+		showBack: true,
+	},
+	{
+		id: "log-application-via",
+		targetId: "applied_via-form-group",
+		title: "How Did You Apply?",
+		content:
+			"Log how you submitted - directly on the company site, via a job board, LinkedIn, or through a recruiter. " +
+			"Tracking this helps you see which channels get the best results. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "log-application-aggregator",
+		targetId: "application_aggregator_id-form-group",
+		title: "Job Board / Aggregator",
+		content:
+			"Select the job board or platform you applied through, or click + to add a new one on the fly. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+		skipIfSelectorAbsent: "#application_aggregator_id-form-group",
+		waitForSelector: "#modal-edit-aggregator",
+		autoAdvanceStepId: "log-application-aggregator-filling",
+		nextStepId: "log-application-url",
+	},
+	{
+		id: "log-application-aggregator-filling",
+		targetId: "#modal-edit-aggregator .modal-content",
+		title: "Add a Job Board",
+		content: "Enter the name and URL of the job board, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-aggregator",
+		hideNextButton: true,
+		autoAdvanceStepId: "log-application-aggregator",
+		showBack: true,
+		backStepId: "log-application-aggregator",
+		backActionSelector: "#modal-edit-aggregator-cancel-button",
+		skipIfSelectorAbsent: "#modal-edit-aggregator",
+	},
+	{
+		id: "log-application-url",
+		targetId: "application_url-form-group",
+		title: "Application URL",
+		content: "Paste the link to your application confirmation. Useful if you need to refer back to it later.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "log-application-cv",
+		targetId: "cv_id-form-group",
+		title: "CV",
+		content:
+			"Upload the CV you submitted with this application. JAM stores it alongside the job so you can refer to it " +
+			"any time. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "log-application-cover-letter",
+		targetId: "cover_letter_id-form-group",
+		title: "Cover Letter",
+		content:
+			"Upload the cover letter you submitted, or click the pencil icon to write one directly in JAM. Click Next to skip.",
+		placement: "right",
+		waitForSelector: "#cover-letter-text-modal",
+		autoAdvanceStepId: "log-application-cover-letter-writing",
+		nextStepId: "log-application-note",
+		showBack: true,
+	},
+	{
+		id: "log-application-cover-letter-writing",
+		targetId: "#cover-letter-text-modal .modal-content",
+		title: "Write Your Cover Letter",
+		content: "Write or paste your cover letter text here, then click Save to store it with the application.",
+		placement: "left",
+		waitForSelectorGone: "#cover-letter-text-modal",
+		hideNextButton: true,
+		autoAdvanceStepId: "log-application-cover-letter",
+		showBack: true,
+		backStepId: "log-application-cover-letter",
+		backActionSelector: "#cover-letter-text-modal-cancel-button",
+		skipIfSelectorAbsent: "#cover-letter-text-modal",
+	},
+	{
+		id: "log-application-note",
+		targetId: "application_note-form-group",
+		title: "Application Notes",
+		content:
+			"Add anything worth remembering - cover letter highlights, the recruiter's name, or a reminder to follow up.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "log-application-save",
+		targetId: "modal-edit-job-confirm-button",
+		title: "Save the Application",
+		content:
+			"Click Update to save your application details. The Job Application tab will show the status badge once saved.",
+		placement: "top",
+		waitForSelectorGone: '.modal.show input[name="application_date"]',
+		hideNextButton: true,
+		showBack: true,
+	},
+	{
+		id: "log-application-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"You've logged your application details. Keep updating the status as things progress - your dashboard will " +
+			"always reflect where you really stand. The demo job will be removed when you click Done.",
+		placement: "center",
+	},
+];
+
+const LOG_INTERVIEW_STEPS: TourStep[] = [
+	{
+		id: "interview-intro",
+		targetId: null,
+		title: "Logging an Interview",
+		content:
+			"Once you've heard back about an interview, JAM lets you record every detail - type, date, location, and " +
+			"who you spoke with. We've added a demo application so you can try it now.",
+		route: "/jobs",
+		placement: "center",
+	},
+	{
+		id: "interview-open-job",
+		targetId: "[demo-job-row]",
+		title: "Open the Application",
+		content: "Click this job row to open the job.",
+		route: "/jobs",
+		placement: "top",
+		waitForSelector: "#application-tab",
+		hideNextButton: true,
+		allowedContextMenuActions: ["view"],
+	},
+	{
+		id: "interview-application-tab",
+		targetId: "application-tab",
+		title: "Switch to the Application Tab",
+		content: "Click here to see your application details.",
+		placement: "bottom",
+		waitForSelector: "#add-interview-button",
+		hideNextButton: true,
+	},
+	{
+		id: "interview-add",
+		targetId: "add-interview-button",
+		title: "Add an Interview",
+		content: "Click this button to log a new interview.",
+		placement: "bottom",
+		waitForSelector: "#modal-edit-interview",
+		hideNextButton: true,
+	},
+	{
+		id: "interview-date",
+		targetId: "date-form-group",
+		title: "Date & Time",
+		content: "Set when the interview took place (or is scheduled). JAM uses this to keep your timeline in order.",
+		placement: "right",
+		waitForInput: '.modal.show input[name="date"]',
+	},
+	{
+		id: "interview-type",
+		targetId: "type-form-group",
+		title: "Interview Type",
+		content: "Record the format - phone call, video call, technical, or on-site.",
+		placement: "right",
+		waitForInput: "#type-form-group .jam-select__input",
+	},
+	{
+		id: "interview-attendance",
+		targetId: "attendance_type-form-group",
+		title: "Attendance",
+		content: "Log whether the interview is remote or on-site. Click Next to skip.",
+		placement: "right",
+	},
+	{
+		id: "interview-location",
+		targetId: "location-form-group",
+		title: "Location",
+		content: "Enter the location of the interview. Click Next to skip.",
+		placement: "right",
+		skipIfSelectorAbsent: "#location-form-group",
+	},
+	{
+		id: "interview-interviewers",
+		targetId: "interviewers-form-group",
+		title: "Interviewers",
+		content:
+			"Link the people who interviewed you. Contacts already in JAM appear here - or add someone new on the fly. Click Next to skip.",
+		placement: "right",
+		waitForSelector: "#modal-edit-person",
+		autoAdvanceStepId: "interview-interviewer-filling",
+		nextStepId: "interview-note",
+	},
+	{
+		id: "interview-interviewer-filling",
+		targetId: "#modal-edit-person .modal-content",
+		title: "Add an Interviewer",
+		content: "Enter the interviewer's details, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-person",
+		hideNextButton: true,
+		autoAdvanceStepId: "interview-interviewers",
+		showBack: true,
+		backStepId: "interview-interviewers",
+		backActionSelector: "#modal-edit-person-cancel-button",
+		skipIfSelectorAbsent: "#modal-edit-person",
+	},
+	{
+		id: "interview-note",
+		targetId: "note-form-group",
+		title: "Notes",
+		content:
+			"Capture anything worth remembering - questions asked, impressions, or things to follow up on. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "interview-save",
+		targetId: "modal-edit-interview-confirm-button",
+		title: "Save the Interview",
+		content:
+			"Click Save to record the interview. It'll appear in the application timeline and feed into your dashboard stats.",
+		placement: "top",
+		waitForSelectorGone: "#modal-edit-interview",
+		hideNextButton: true,
+		showBack: true,
+	},
+	{
+		id: "interview-show-in-table",
+		targetId: "interview-data-table",
+		title: "Interview Logged!",
+		content: "Your interview now appears in the timeline.",
+		placement: "top",
+		blockLeftClick: true,
+		allowedContextMenuActions: [],
+	},
+	{
+		id: "interview-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"You've logged your first interview. The demo application will be cleaned up automatically when you click Done.",
+		placement: "center",
+	},
+];
+
+const LOG_UPDATE_STEPS: TourStep[] = [
+	{
+		id: "update-intro",
+		targetId: null,
+		title: "Logging an Application Update",
+		content:
+			"Got a reply, sent a follow-up, or had a call? Log it as an update to keep a full timeline of every " +
+			"application — so nothing slips through the cracks.",
+		route: "/jobs",
+		placement: "center",
+	},
+	{
+		id: "update-open-job",
+		targetId: "[demo-job-row]",
+		title: "Open the Application",
+		content: "Click this job row to open the job.",
+		route: "/jobs",
+		placement: "top",
+		waitForSelector: "#application-tab",
+		hideNextButton: true,
+		allowedContextMenuActions: ["view"],
+	},
+	{
+		id: "update-application-tab",
+		targetId: "application-tab",
+		title: "Switch to the Application Tab",
+		content: "Click here to see your application details.",
+		placement: "bottom",
+		waitForSelector: "#add-jobApplicationUpdate-button",
+		hideNextButton: true,
+	},
+	{
+		id: "update-add",
+		targetId: "add-jobApplicationUpdate-button",
+		title: "Log an Update",
+		content: "Click this button to record a new update.",
+		placement: "bottom",
+		waitForSelector: "#modal-edit-jobApplicationUpdate",
+		hideNextButton: true,
+	},
+	{
+		id: "update-date",
+		targetId: "date-form-group",
+		title: "Date",
+		content:
+			"When did you receive this update? JAM uses this to order your timeline and calculate days since last activity.",
+		placement: "right",
+		waitForInput: '.modal.show input[name="date"]',
+	},
+	{
+		id: "update-type",
+		targetId: "type-form-group",
+		title: "Update Type",
+		content: "Choose whether you sent or received the update.",
+		placement: "right",
+		waitForInput: "#type-form-group .jam-select__input",
+	},
+	{
+		id: "update-note",
+		targetId: "note-form-group",
+		title: "Notes",
+		content: "Add any details - feedback received, next steps, or a reminder for yourself. Click Next to skip.",
+		placement: "right",
+	},
+	{
+		id: "update-save",
+		targetId: "modal-edit-jobApplicationUpdate-confirm-button",
+		title: "Save the Update",
+		content:
+			"Click Save to record it. The update appears in the application timeline and updates the job's last activity date.",
+		placement: "top",
+		waitForSelectorGone: "#modal-edit-jobApplicationUpdate",
+		hideNextButton: true,
+	},
+	{
+		id: "update-show-in-table",
+		targetId: "jobApplicationUpdate-data-table",
+		title: "Update Logged!",
+		content: "Your update now appears in the application timeline.",
+		placement: "top",
+		blockLeftClick: true,
+		allowedContextMenuActions: [],
+	},
+	{
+		id: "update-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"Keep logging updates as they come in and your dashboard will always reflect where you really stand. " +
+			"The demo application will be removed when you click Done.",
+		placement: "center",
+	},
+];
+
+const ADD_CONTACT_STEPS: TourStep[] = [
+	{
+		id: "contact-intro",
+		targetId: null,
+		title: "Adding a Contact",
+		content:
+			"Contacts in JAM are the people behind your job search - hiring managers, recruiters, and anyone you've spoken to." +
+			" Linking them to jobs makes it easy to track relationships and generate follow-up emails. ",
+		route: "/contacts",
+		placement: "center",
+	},
+	{
+		id: "contact-add-btn",
+		targetId: "add-person-button",
+		title: "Add a Contact",
+		content: 'Click the "Add Contact" button to open the contact form.',
+		route: "/contacts",
+		placement: "bottom",
+		waitForSelector: "#modal-edit-person",
+		hideNextButton: true,
+	},
+	{
+		id: "contact-first-name",
+		targetId: "first_name-form-group",
+		title: "First Name",
+		content: "Enter the contact's first name.",
+		placement: "bottom",
+		waitForInput: '.modal.show input[name="first_name"]',
+	},
+	{
+		id: "contact-last-name",
+		targetId: "last_name-form-group",
+		title: "Last Name",
+		content: "Enter the contact's last name.",
+		placement: "bottom",
+		waitForInput: '.modal.show input[name="last_name"]',
+	},
+	{
+		id: "contact-company",
+		targetId: "company_id-form-group",
+		title: "Company",
+		content:
+			"Link the contact to a company you've already created. Click + to add a new company on the fly, or click Next to skip.",
+		placement: "right",
+		waitForSelector: "#modal-edit-company",
+		autoAdvanceStepId: "contact-company-filling",
+		nextStepId: "contact-role",
+	},
+	{
+		id: "contact-company-filling",
+		targetId: "#modal-edit-company .modal-content",
+		title: "Fill in the Company Details",
+		content: "Enter a name and any other details, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-company",
+		hideNextButton: true,
+		autoAdvanceStepId: "contact-company",
+		showBack: true,
+		backStepId: "contact-company",
+		backActionSelector: "#modal-edit-company-cancel-button",
+	},
+	{
+		id: "contact-role",
+		targetId: "role-form-group",
+		title: "Role",
+		content: "Add their job title - Hiring Manager, Recruiter, Engineering Lead, or whatever fits.",
+		placement: "right",
+		autoFocusSelector: '.modal.show input[name="role"]',
+		showBack: true,
+	},
+	{
+		id: "contact-email",
+		targetId: "email-form-group",
+		title: "Email Address",
+		content: "If you have their email, add it here. JAM uses it to generate follow-up emails.",
+		placement: "right",
+		waitForValidEmailIfFilled: '.modal.show input[name="email"]',
+		showBack: true,
+	},
+	{
+		id: "contact-phone",
+		targetId: "phone-form-group",
+		title: "Phone Number",
+		content: "Add the contact's phone number or click Next to skip.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "contact-linkedin",
+		targetId: "linkedin_url-form-group",
+		title: "LinkedIn Profile",
+		content: "Add their LinkedIn profile URL.",
+		placement: "right",
+		showBack: true,
+		waitForValidLinkedInIfFilled: '.modal.show input[name="linkedin_url"]',
+	},
+	{
+		id: "contact-recruiter",
+		targetId: "is_recruiter-form-group",
+		title: "Is Recruiter",
+		content:
+			"Check this if the contact is a recruiter. JAM uses this to filter and identify your recruiter relationships.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "contact-save",
+		targetId: "modal-edit-person-confirm-button",
+		title: "Save the Contact",
+		content: "Click Confirm to save. The contact is now available to link to any job.",
+		placement: "top",
+		waitForSelectorGone: '.modal.show input[name="first_name"]',
+		hideNextButton: true,
+		showBack: true,
+		backStepId: "contact-recruiter",
+	},
+	{
+		id: "contact-done",
+		targetId: null,
+		title: "All Done!",
+		content:
+			"Your contact is saved. Open any job, go to the Tags & Contacts section, and add them - " +
+			"they'll appear as a badge you can right-click for quick actions. Choose below whether to keep the contact or delete it.",
+		placement: "center",
+	},
+];
+
+const SPECULATIVE_APPLICATIONS_STEPS: TourStep[] = [
+	{
+		id: "speculative-intro",
+		title: "Speculative Applications",
+		content:
+			"A speculative or spontaneous application is a proactive outreach to a company that hasn't posted a specific vacancy. " +
+			"JAM tracks these separately so you can follow up and stay organised.",
+		route: "/speculative-applications",
+		placement: "center",
+	},
+	{
+		id: "speculative-add",
+		targetId: "add-speculativeApplication-button",
+		title: "Log an Application",
+		content: 'Click the "Add Speculative Application" button to log a new speculative outreach.',
+		placement: "bottom",
+		waitForSelector: "#modal-edit-speculativeApplication",
+		hideNextButton: true,
+	},
+	{
+		id: "speculative-company",
+		targetId: "company_id-form-group",
+		title: "Company",
+		content:
+			"Select the company you're reaching out to — this is the only required field. Click + to create a new company on the fly.",
+		placement: "left",
+		waitForInput: "#company_id-form-group .jam-select__input",
+		waitForSelector: "#modal-edit-company",
+		autoAdvanceStepId: "speculative-company-filling",
+		nextStepId: "speculative-date",
+	},
+	{
+		id: "speculative-company-filling",
+		targetId: "#modal-edit-company .modal-content",
+		title: "Fill in the Company Details",
+		content: "Enter a name and any other details, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-company",
+		hideNextButton: true,
+		autoAdvanceStepId: "speculative-company",
+		showBack: true,
+		backStepId: "speculative-company",
+		backActionSelector: "#modal-edit-company-cancel-button",
+	},
+	{
+		id: "speculative-date",
+		targetId: "date-form-group",
+		title: "Date",
+		content: "Log when you sent the application or made contact.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "speculative-email",
+		targetId: "contact_email-form-group",
+		title: "Contact Email",
+		content: "If you sent your application to a specific email address, add it here. Click Next to skip.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "speculative-contacts",
+		targetId: "contacts-form-group",
+		title: "Contacts",
+		content:
+			"Link contacts to this application — select an existing contact or click + to add a new one on the fly. Click Next to skip.",
+		placement: "right",
+		waitForSelector: "#modal-edit-person",
+		autoAdvanceStepId: "speculative-contact-filling",
+		nextStepId: "speculative-note",
+		showBack: true,
+	},
+	{
+		id: "speculative-contact-filling",
+		targetId: "#modal-edit-person .modal-content",
+		title: "Fill in the Contact Details",
+		content: "Enter a name and any other details, then click Confirm to save.",
+		placement: "left",
+		waitForSelectorGone: "#modal-edit-person",
+		hideNextButton: true,
+		autoAdvanceStepId: "speculative-contacts",
+		showBack: true,
+		backStepId: "speculative-contacts",
+		backActionSelector: "#modal-edit-person-cancel-button",
+	},
+	{
+		id: "speculative-note",
+		targetId: "note-form-group",
+		title: "Notes",
+		content: "Record what you sent, who you addressed it to, or any response you received.",
+		placement: "right",
+		showBack: true,
+	},
+	{
+		id: "speculative-save",
+		targetId: "modal-edit-speculativeApplication-confirm-button",
+		title: "Save",
+		content: "Click Confirm to log the speculative application.",
+		placement: "top",
+		waitForSelectorGone: "#modal-edit-speculativeApplication",
+		hideNextButton: true,
+		showBack: true,
+	},
+	{
+		id: "speculative-done",
+		targetId: null,
+		title: "All Done!",
+		content: "The application is logged.",
+		placement: "center",
+	},
+];
+
+// ── Tour registry ─────────────────────────────────────────────────────────────
+
+export const TOUR_STRUCTURE: TourDefinition[] = [
+	{
+		id: "app-overview",
+		title: "App Overview",
+		description: "Get a quick tour of JAM's main features - the sidebar, dashboard, and command palette.",
+		icon: "compass",
+		steps: APP_OVERVIEW_STEPS,
+	},
+	{
+		id: "first-job",
+		title: "Adding Your First Job",
+		description: "A step-by-step walkthrough for logging your first job application.",
+		icon: "briefcase",
+		steps: FIRST_JOB_STEPS,
+	},
+	{
+		id: "log-application",
+		title: "Logging a Job Application",
+		description:
+			"Walk through filling in your application details - when you applied, the status, and how you submitted.",
+		icon: "send",
+		steps: LOG_APPLICATION_STEPS,
+	},
+	{
+		id: "log-interview",
+		title: "Logging an Interview",
+		description: "Walk through recording an interview - type, date, location, and who you spoke with.",
+		icon: "camera-video",
+		steps: LOG_INTERVIEW_STEPS,
+	},
+	{
+		id: "log-update",
+		title: "Logging an Application Update",
+		description:
+			"Learn how to log a status change - rejection, offer, under review - to keep your application history complete.",
+		icon: "arrow-repeat",
+		steps: LOG_UPDATE_STEPS,
+	},
+	{
+		id: "follow-up-email",
+		title: "Generating Follow-up Emails",
+		description: "Learn how to generate and send a personalised follow-up email for a job application.",
+		icon: "envelope",
+		steps: FOLLOW_UP_EMAIL_STEPS,
+	},
+	{
+		id: "add-contact",
+		title: "Adding a Contact",
+		description:
+			"Walk through creating a contact - hiring manager, recruiter, or anyone you've spoken to - and linking them to a job.",
+		icon: "person-plus",
+		steps: ADD_CONTACT_STEPS,
+	},
+	{
+		id: "speculative-applications",
+		title: "Speculative Applications",
+		description:
+			"Learn how to log and track proactive outreach to companies that haven't posted a specific vacancy.",
+		icon: "megaphone",
+		steps: SPECULATIVE_APPLICATIONS_STEPS,
+	},
+	{
+		id: "import-scraped-job",
+		title: "Overview & Importing Job Alerts",
+		description:
+			"See how JAM scrapes job alerts from your emails, rates them with AI, and lets you import them in one click.",
+		icon: "envelope-arrow-down",
+		steps: IMPORT_SCRAPED_JOB_STEPS,
+		premium: true,
+		noKeepData: true,
+	},
+	{
+		id: "scraping-filters",
+		title: "Creating & Managing Alert Filters",
+		description: "Learn how to set up filters to control which job alerts get scraped into JAM.",
+		icon: "funnel",
+		steps: SCRAPING_FILTER_STEPS,
+		premium: true,
+	},
+];
+
+/** Flat list of every tour (including coming-soon). Used by getTourById. */
+export const TOURS: TourDefinition[] = TOUR_STRUCTURE;
+
+export function getTourById(id: string): TourDefinition | undefined {
+	return TOURS.find((t: TourDefinition): boolean => t.id === id);
+}

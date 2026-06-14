@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
+import JamLogo from "../../assets/Logo.svg?react";
 import "./MaintenancePage.scss";
 
 export function MaintenancePage(): JSX.Element {

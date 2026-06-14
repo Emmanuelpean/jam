@@ -3,37 +3,38 @@ import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobEmailModal } from "../DataModal/JobEmailModal";
 import { renderFunctions, RenderParams } from "../rendering/view/ViewRenders";
+import { JobEmailData } from "../../services/schemas/Services";
 
 const JobEmailTableReadOnly: React.FC<DataTableProps> = ({
 	data = [],
 	columns = [],
 	modalProps,
 }: DataTableProps): JSX.Element => {
-	const defaultColumns: TableColumn[] =
+	const defaultColumns: TableColumn<JobEmailData>[] =
 		columns.length > 0
-			? columns
+			? (columns as TableColumn<JobEmailData>[])
 			: [
-					tableColumns.titleColumn({ key: "subject", label: "Subject" }),
-					{ key: "sender", label: "Sender", sortable: true, searchable: true, type: "text" } as TableColumn,
-					tableColumns.platformColumn(),
+					tableColumns.subjectColumn<JobEmailData>(),
+					{ key: "sender", label: "Sender", sortable: true, searchable: true, type: "text" } as TableColumn<JobEmailData>,
+					tableColumns.platformColumn<JobEmailData>(),
 					{
 						key: "alert_name",
 						label: "Alert Name",
 						sortable: true,
 						searchable: true,
 						type: "text",
-					} as TableColumn,
+					} as TableColumn<JobEmailData>,
 					{
 						key: "date_received",
 						label: "Date Received",
 						sortable: true,
 						type: "date",
 						render: (params: RenderParams) => renderFunctions._date(params, "date_received"),
-					} as TableColumn,
+					} as TableColumn<JobEmailData>,
 				];
 
 	return (
-		<DataTable
+		<DataTable<JobEmailData>
 			entityType="jobEmail"
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date_received", direction: "desc" }}

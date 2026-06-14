@@ -78,7 +78,7 @@ class JobEmail(Owned, Base):
     jobs = relationship("ScrapedJob", secondary=jobemail_scrapedjob_mapping, back_populates="emails")
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="emails")
 
-    __table_args__ = (UniqueConstraint("external_email_id", "owner_id", name="unique_email_per_owner"),)
+    __table_args__ = (UniqueConstraint("external_email_id", "is_tour", "owner_id", name="unique_email_per_owner"),)
 
 
 class ScrapedJob(Owned, Base):
@@ -110,10 +110,7 @@ class ScrapedJob(Owned, Base):
     - `raw_url` (str, optional): Raw URL to the job posting.
     - `deadline` (datetime, optional): Deadline for the job.
     - `company` (str, optional): Company name of the job.
-    - `location_postcode` (str, optional): Postcode of the job location.
-    - `location_city` (str, optional): City of the job location.
-    - `location_country` (str, optional): Country of the job location.
-    - `parsed_location` (str, optional): Parsed location of the job posting.
+    - `location` (str, optional): Parsed location of the job posting.
     - `attendance_type` (str, optional): Attendance type of the job (e.g., remote, on-site).
     - `is_closed` (bool): Indicates whether the job is closed.
 
@@ -144,6 +141,7 @@ class ScrapedJob(Owned, Base):
     is_imported = Column(Boolean, nullable=False, server_default=expression.false())
     retry_count = Column(Integer, nullable=False, server_default="0")
     next_retry_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    read_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     # Job data
     title = Column(String, nullable=True)
@@ -155,11 +153,8 @@ class ScrapedJob(Owned, Base):
     raw_url = Column(String, nullable=True)
     deadline = Column(TIMESTAMP(timezone=True), nullable=True)
     company = Column(String, nullable=True)
+    raw_location = Column(String, nullable=True)
     location = Column(String, nullable=True)
-    location_postcode = Column(String, nullable=True)
-    location_city = Column(String, nullable=True)
-    location_country = Column(String, nullable=True)
-    parsed_location = Column(String, nullable=True)
     attendance_type = Column(String, nullable=True)
     is_closed = Column(Boolean, nullable=False, default=expression.false())
 
@@ -170,9 +165,6 @@ class ScrapedJob(Owned, Base):
     exclusion_filter_id = Column(
         Integer, ForeignKey("scraping_exclusion_filter.id", ondelete="SET NULL"), nullable=True
     )
-    favourite_filter_id = Column(
-        Integer, ForeignKey("scraping_favourite_filter.id", ondelete="SET NULL"), nullable=True
-    )
     geolocation_id = Column(Integer, ForeignKey("geolocation.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
@@ -180,7 +172,7 @@ class ScrapedJob(Owned, Base):
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="scraped_jobs")
     job_rating = relationship("JobRating", back_populates="scraped_job", uselist=False)
     exclusion_filter = relationship("ScrapingExclusionFilter", back_populates="filtered_jobs")
-    favourite_filter = relationship("ScrapingFavouriteFilter", back_populates="filtered_jobs")
+    job = relationship("Job", back_populates="scraped_job")
     geolocation = relationship("Geolocation")
 
     # Constraints
@@ -192,6 +184,7 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
 
     Attributes:
     -----------
+    - `is_tour` (bool, false): whether the entry is for tours
     - `user_found_ids` (list of int): List of user IDs found during the service run.
     - `user_processed_ids` (list of int): List of user IDs processed during the service run.
     - `email_found_n` (int): Number of emails found during the service run.
@@ -212,6 +205,8 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
     - `job_found_n` (int): Total jobs found (copied + skipped) across all platforms.
     - `email_saved_n` (int): Total emails saved across all platforms.
     - `email_skipped_n` (int): Total emails skipped across all platforms."""
+
+    is_tour = Column(Boolean, nullable=False, server_default=expression.false())
 
     # Users
     user_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
@@ -406,7 +401,7 @@ class Filter(object):
     # Constraints
     __table_args__ = (
         CheckConstraint(
-            "type IN ('title', 'company', 'location', 'location_city', 'location_country', 'salary_min', 'salary_max', 'attendance_type')",
+            "type IN ('title', 'company', 'location', 'salary_min', 'salary_max', 'attendance_type')",
             name="valid_filter_type",
         ),
         CheckConstraint(
@@ -432,7 +427,7 @@ class ScrapingExclusionFilter(Filter, Owned, Base):
 class ScrapingFavouriteFilter(Filter, Owned, Base):
     """Represents user-defined rules to filter favourite scraped jobs."""
 
-    filtered_jobs = relationship("ScrapedJob", back_populates="favourite_filter")
+    pass
 
 
 class ForwardingConfirmationLink(Owned, Base):

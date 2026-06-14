@@ -1,16 +1,17 @@
 import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, ValidationErrors } from "./DataModal";
-import { formFields } from "../rendering/form/FormRenders";
+import { useFormFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { KeywordData, KeywordDataTransform } from "../../services/schemas/DataTables";
 
-export const KeywordModal = forwardRef<DataModalHandle, JamDataModalProps>(
+export const KeywordModal = forwardRef<DataModalHandle<KeywordData>, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
+		const ff = useFormFields();
 
 		const fields = {
-			form: [formFields.name({ required: true, placeholder: "Software development" })],
+			form: [ff.nameField({ required: true, placeholder: "Software development" })],
 			view: [modalViewFields.name({ isTitle: true })],
 		};
 
@@ -26,11 +27,11 @@ export const KeywordModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			};
 		};
 
-		const customValidation = async (formData: KeywordData): Promise<ValidationErrors> => {
+		const customValidation = (formData: KeywordData): ValidationErrors => {
 			const errors: ValidationErrors = {};
 			const nameDuplicates: KeywordData[] = dataContext.keywords.filter(
 				(keyword: KeywordData): boolean =>
-					keyword.name.toLowerCase() === formData.name.trim().toLowerCase() && keyword.id !== formData?.id
+					keyword.name.toLowerCase() === formData.name?.trim().toLowerCase() && keyword.id !== formData?.id
 			);
 			if (nameDuplicates.length > 0) {
 				errors.name = `A tag with this name already exists`;
@@ -39,7 +40,7 @@ export const KeywordModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		};
 
 		return (
-			<DataModal
+			<DataModal<KeywordData>
 				ref={ref}
 				size={size}
 				fields={fields}

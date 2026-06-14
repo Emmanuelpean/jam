@@ -1,18 +1,18 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useState, JSX } from "react";
 import { DataContextValue, JamData, useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../DataTable/InterviewTable";
 import JobApplicationUpdateTable from "../../DataTable/JobApplicationUpdateTable";
 import LocationMap from "../../Maps/LocationMap";
-import JobRatingCard from "./JobRatingCard";
 import {
 	AggregatorData,
 	CompanyData,
+	EnrichedInterviewData,
+	EnrichedJobApplicationUpdateData,
 	EnrichedJobData,
 	InterviewData,
 	JobApplicationUpdateData,
 	JobData,
 	KeywordData,
-	LocationData,
 	PersonData,
 } from "../../../services/schemas/DataTables";
 import JobsTable from "../../DataTable/JobTable";
@@ -22,6 +22,7 @@ import { formatTimedelta, toDdMmYyyy, toDdMmYyyyHhMm } from "../../../utils/Time
 import {
 	getAdminIcon,
 	getApplicationStatusBadgeClass,
+	getLocationIcon,
 	getTableIcon,
 	getTrueFalseBadge,
 	getUpdateTypeIcon,
@@ -38,7 +39,10 @@ import {
 	sourceTypeOptions,
 	updateTypeOptions,
 } from "../form/FormOptions";
+import { filesApi } from "../../../services/api/DataTables";
 import { jobEmailApi, scrapedJobApi } from "../../../services/api/Services";
+import { useDelayedLoading } from "../../../hooks/useDelayedLoading";
+import { canPreviewFile, formatFileSize } from "../../../utils/FileUtils";
 import { useAuth } from "../../../contexts/AuthContext";
 import ScrapedJobsTableReadOnly from "../../DataTable/ScrapedJobTableReadOnly";
 import JobEmailTableReadOnly from "../../DataTable/JobEmailTableReadOnly";
@@ -46,6 +50,7 @@ import LoadingSpinner from "../../Spinner/Spinner";
 import {
 	AggregatorBadge,
 	CompanyBadge,
+	FileBadge,
 	InterviewBadge,
 	JobApplicationUpdateBadge,
 	JobBadge,
@@ -53,12 +58,14 @@ import {
 	LocationBadge,
 	PersonBadge,
 } from "./DataBadge";
-import { JobEmailData, JobRatingData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
+import { JobEmailData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
 import JobRatingSection from "./JobRatingSection";
 import EmailBody from "./EmailBody";
 import { Currency } from "../../../services/schemas/Others";
+import { useStaticData } from "../../../contexts/StaticDataContext";
 import { Accordion } from "../../Accordion/Accordion";
 import { HelpBubble } from "../../HelpBubble/HelpBubble";
+import { Button } from "react-bootstrap";
 
 // Parameters passed to the view render functions
 export interface RenderParams {
@@ -68,6 +75,7 @@ export interface RenderParams {
 	columns?: TableColumn[]; // columns for rendered tables
 	helpText?: string; // help text
 	dataContext: DataContextValue; // data context
+	currencies: Currency[];
 	token: string | null;
 	label?: string;
 }
@@ -120,6 +128,34 @@ export const getScrapingFilterName = (scrapingFilter: ScrapingFilterData): strin
 	return type + " " + operator + ' "' + scrapingFilter.value + '"';
 };
 
+export const getInterviewCount = (data: JamData, dataContext: DataContextValue): number => {
+	const interviews: EnrichedInterviewData[] = filterByKey(dataContext.interviews, "job_id", data.id);
+	return interviews.length;
+};
+
+export const getJobApplicationUpdateCount = (data: JamData, dataContext: DataContextValue): number => {
+	const interviews: EnrichedJobApplicationUpdateData[] = filterByKey(
+		dataContext.jobApplicationUpdates,
+		"job_id",
+		data.id
+	);
+	return interviews.length;
+};
+
+export const getTotalInterviewCount = (dataContext: DataContextValue): number => {
+	const numbers: number[] = dataContext.interviews.map(
+		(interview: EnrichedInterviewData): number => interview.number
+	);
+	return numbers.length === 0 ? 0 : Math.max(...numbers);
+};
+
+export const getTotalJobApplicationUpdateCount = (dataContext: DataContextValue): number => {
+	const numbers: number[] = dataContext.jobApplicationUpdates.map(
+		(update: EnrichedJobApplicationUpdateData): number => update.number
+	);
+	return numbers.length === 0 ? 0 : Math.max(...numbers);
+};
+
 export const renderFunctions = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
@@ -129,9 +165,9 @@ export const renderFunctions = {
 			if (param.view) {
 				return <p style={{ whiteSpace: "pre-line" }}>{text}</p>;
 			} else {
-				const words = text.split(" ");
-				const truncated = words.slice(0, 12).join(" ");
-				const needsEllipsis = words.length > 12;
+				const words: string[] = text.split(" ");
+				const truncated: string = words.slice(0, 12).join(" ");
+				const needsEllipsis: boolean = words.length > 12;
 
 				return (
 					<div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -159,7 +195,7 @@ export const renderFunctions = {
 	htmlBody: (param: RenderParams, key: string): ReactNode => {
 		const body: string | undefined | null = (param.item as JobEmailData)?.[key as keyof JobEmailData] as string;
 		if (!body) return null;
-		const isHtml = /<[a-z][\s\S]*>/i.test(body);
+		const isHtml: boolean = /<[a-z][\s\S]*>/i.test(body);
 		return isHtml ? <EmailBody html={body} /> : <p style={{ whiteSpace: "pre-line" }}>{body}</p>;
 	},
 
@@ -172,7 +208,7 @@ export const renderFunctions = {
 			updateTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]?.label ||
 			null;
 		if (updateType) {
-			const icon = getUpdateTypeIcon(updateType);
+			const icon: string = getUpdateTypeIcon(updateType);
 			return (
 				<span>
 					{icon && <i className={`${icon} me-1`}></i>}
@@ -194,6 +230,22 @@ export const renderFunctions = {
 		return param.item?.job_rating?.overall_score;
 	},
 
+	technicalScore: (param: RenderParams): number | null => {
+		return param.item?.job_rating?.technical_score;
+	},
+
+	experienceScore: (param: RenderParams): number | null => {
+		return param.item?.job_rating?.experience_score;
+	},
+
+	educationalScore: (param: RenderParams): number | null => {
+		return param.item?.job_rating?.educational_score;
+	},
+
+	interestScore: (param: RenderParams): number | null => {
+		return param.item?.job_rating?.interest_score;
+	},
+
 	filterType: (param: RenderParams): ReactNode => {
 		return getScrapingFilterTypeLabel(param.item);
 	},
@@ -204,6 +256,14 @@ export const renderFunctions = {
 
 	scrapingFilterName: (param: RenderParams): ReactNode => {
 		return getScrapingFilterName(param.item);
+	},
+
+	attendanceType: (param: RenderParams): ReactNode => {
+		const attendanceType: string | null = param.item.attendance_type;
+		return (
+			attendanceTypeOptions.filter((option: SelectOption): boolean => option.value === attendanceType)[0]
+				?.label || null
+		);
 	},
 
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
@@ -232,6 +292,18 @@ export const renderFunctions = {
 
 	applicationUrl: (param: RenderParams): ReactNode => {
 		return renderFunctions._url(param, "application_url");
+	},
+
+	cvBadge: (param: RenderParams): ReactNode => {
+		const file = param.dataContext.files.find((f) => f.id === param.item?.cv_id);
+		if (!file) return null;
+		return <FileBadge item={file} badgeId={`cv-badge-${param.item?.id}`} />;
+	},
+
+	coverLetterBadge: (param: RenderParams): ReactNode => {
+		const file = param.dataContext.files.find((f) => f.id === param.item?.cover_letter_id);
+		if (!file) return null;
+		return <FileBadge item={file} badgeId={`cover-letter-badge-${param.item?.id}`} />;
 	},
 
 	_email: (param: RenderParams, key: string): ReactNode => {
@@ -276,9 +348,8 @@ export const renderFunctions = {
 	},
 
 	datetime: (param: RenderParams): string | null => {
-		const date = param.item?.date ? new Date(param.item.date) : null;
-		if (!date) return null;
-		return toDdMmYyyyHhMm(date);
+		if (!param.item?.date) return null;
+		return toDdMmYyyyHhMm(param.item?.date);
 	},
 
 	// ----------------------------------------------------- OTHER -----------------------------------------------------
@@ -326,6 +397,19 @@ export const renderFunctions = {
 		return getTrueFalseBadge(param.item?.is_recruiter);
 	},
 
+	isFavourite: (param: RenderParams): ReactNode => {
+		const isFav: boolean = Boolean(param.item?.is_favourite);
+		return (
+			<i
+				className={`bi ${isFav ? "bi-star-fill" : "bi-star"}`}
+				style={{
+					fontSize: param.view ? "1.4rem" : "1rem",
+					color: isFav ? "#f5c518" : "var(--bs-secondary-color)",
+				}}
+			/>
+		);
+	},
+
 	caseSensitive: (param: RenderParams): ReactNode => {
 		return getTrueFalseBadge(param.item?.case_sensitive);
 	},
@@ -334,8 +418,7 @@ export const renderFunctions = {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
 		const salaryCurrency: string | undefined | null =
-			param.dataContext.currencies.find((currency: Currency) => currency.code === param.item?.salary_currency)
-				?.symbol || "";
+			param.currencies.find((currency: Currency) => currency.code === param.item?.salary_currency)?.symbol || "";
 		if (!salary_min && !salary_max) {
 			return null;
 		}
@@ -357,15 +440,15 @@ export const renderFunctions = {
 
 			return (
 				<div className="star-rating-container" style={{ height: "auto" }}>
-					{[...Array(5)].map((_, index) => {
-						const starNumber = index + 1;
+					{[...Array(5)].map((_, index: number): JSX.Element => {
+						const starNumber: number = index + 1;
 						const starClass = starNumber <= rating ? "bi-star-fill" : "bi-star";
 
 						return (
 							<i
 								key={starNumber}
 								className={`star-rating-star ${starClass}`}
-								style={{ fontSize: "1rem", cursor: "auto" }}
+								style={{ fontSize: param.view ? "1.4rem" : "1rem", cursor: "auto" }}
 							/>
 						);
 					})}
@@ -394,14 +477,21 @@ export const renderFunctions = {
 		}
 	},
 
-	locationMap: (param: RenderParams): ReactNode => {
-		const location: LocationData = param.item;
-		const locations: LocationData[] = location ? [location] : [];
-		return <LocationMap locations={locations} />;
+	locationMap: (param: RenderParams, scrollWheelZoom = true): ReactNode => {
+		return <LocationMap geolocatedEntry={[param.item]} scrollWheelZoom={scrollWheelZoom} />;
 	},
 
-	scrapedLocationMap: (param: RenderParams): ReactNode => {
-		return <LocationMap locations={[param.item]} scrollWheelZoom={false} />;
+	locationAttendance: (param: RenderParams): ReactNode => {
+		const attendanceLabel: string | null =
+			attendanceTypeOptions.find((o: SelectOption): boolean => o.value === param.item.attendance_type)?.label ??
+			null;
+		if (!attendanceLabel) return param.item.location ?? null;
+		return (
+			<>
+				{param.item.location}
+				<br />({attendanceLabel})
+			</>
+		);
 	},
 
 	lastUpdateDays: (params: RenderParams): ReactNode => {
@@ -414,12 +504,6 @@ export const renderFunctions = {
 		if (seconds) {
 			return <span className={"text-danger"}>{formatTimedelta(seconds)}</span>;
 		}
-	},
-
-	jobRating: (param: RenderParams): ReactNode => {
-		const job_rating: JobRatingData | undefined | null = param.item?.job_rating;
-		if (!job_rating) return null;
-		return <JobRatingCard jobRating={job_rating} />;
 	},
 
 	jobRatingSection: (param: RenderParams): ReactNode => {
@@ -438,20 +522,33 @@ export const renderFunctions = {
 
 	scrapingStatus: (param: RenderParams): ReactNode => {
 		if (!param.item) return null;
-		if (param.item.is_failed) return <span className="badge bg-danger">Failed</span>;
+		if (param.item.is_failed)
+			return (
+				<span id="scraping-status-badge" className="badge bg-danger">
+					Failed
+				</span>
+			);
 		if (!param.item.is_processed && param.item.scrape_error?.length) {
-			return <span className="badge bg-warning text-dark">Retrying ({param.item.retry_count}/3)</span>;
+			return (
+				<span id="scraping-status-badge" className="badge bg-warning text-dark">
+					Retrying ({param.item.retry_count}/3)
+				</span>
+			);
 		}
-		if (!param.item.is_processed) return <span className="badge bg-secondary">Pending</span>;
-		return <span className="badge bg-success">Scraped</span>;
+		if (!param.item.is_processed)
+			return (
+				<span id="scraping-status-badge" className="badge bg-secondary">
+					Pending
+				</span>
+			);
+		return (
+			<span id="scraping-status-badge" className="badge bg-success">
+				Scraped
+			</span>
+		);
 	},
 
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
-
-	_interviewCount: (param: RenderParams, key: keyof InterviewData): number => {
-		const ctx: DataContextValue = param.dataContext;
-		return filterByKey(ctx.interviews, key, param.item?.id).length;
-	},
 
 	_jobCount: (param: RenderParams, key: keyof JobData): number => {
 		const ctx: DataContextValue = param.dataContext;
@@ -470,6 +567,14 @@ export const renderFunctions = {
 
 	filteredJobCount: (param: RenderParams): number => {
 		return param.item?.filtered_jobs?.length || 0;
+	},
+
+	interviewCount: (param: RenderParams): number => {
+		return getInterviewCount(param.item, param.dataContext);
+	},
+
+	jobApplicationUpdateCount: (param: RenderParams): number => {
+		return getJobApplicationUpdateCount(param.item, param.dataContext);
 	},
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
@@ -503,40 +608,22 @@ export const renderFunctions = {
 		}
 	},
 
-	LocationBadge: (param: RenderParams): ReactNode => {
-		const ctx: DataContextValue = param.dataContext;
-		const location: LocationData | undefined = getJamData(ctx.locations, param.item?.location_id);
-		const attendanceType: string | null = param.item?.attendance_type;
-
-		let icon: string;
-		if (attendanceType === "on-site") {
-			icon = "building";
-		} else if (attendanceType === "hybrid") {
-			icon = "house-door";
-		} else {
-			icon = "house";
-		}
-
-		let attendanceString: string | null =
-			attendanceTypeOptions.filter((option: SelectOption): boolean => option.value === attendanceType)[0]
-				?.label || null;
-
-		let displayText: string | null = null;
-		if (location && attendanceString) {
-			displayText = `${location.name} (${attendanceString})`;
-		} else if (location) {
-			displayText = location.name;
-		} else if (attendanceString) {
-			displayText = attendanceString;
-		} else {
-			return null;
-		}
-
-		if (displayText) {
-			return <LocationBadge item={location} badgeId={param.id} icon={icon} displayText={displayText} />;
-		} else {
-			return null;
-		}
+	locationBadge: (param: RenderParams): ReactNode => {
+		const locationString: string | null = param.item?.location;
+		if (!locationString && !param.item?.attendance_type) return null;
+		const attendanceLabel: string | null =
+			attendanceTypeOptions.find((o: SelectOption): boolean => o.value === param.item.attendance_type)?.label ??
+			null;
+		let displayText: string = locationString || attendanceLabel || "";
+		if (locationString && attendanceLabel) displayText = `${locationString} (${attendanceLabel})`;
+		return (
+			<LocationBadge
+				item={param.item}
+				badgeId={param.id}
+				displayText={displayText}
+				icon={getLocationIcon(param.item.attendance_type)}
+			/>
+		);
 	},
 
 	CompanyBadge: (param: RenderParams): ReactNode => {
@@ -588,12 +675,14 @@ export const renderFunctions = {
 
 		if (keywords.length > 0) {
 			return (
-				<div className="badge-group">
-					{keywords.map((keyword, index) => (
-						<span key={keyword.id || index} className="me-1">
-							<KeywordBadge item={keyword} badgeId={`${param.id}-${index}`} />
-						</span>
-					))}
+				<div className="badge-group" style={param.view ? { rowGap: "0.35rem" } : { rowGap: "0.15rem" }}>
+					{keywords.map(
+						(keyword: KeywordData, index: number): JSX.Element => (
+							<span key={keyword.id || index} className="me-1">
+								<KeywordBadge item={keyword} badgeId={`${param.id}-${index}`} />
+							</span>
+						)
+					)}
 				</div>
 			);
 		}
@@ -606,19 +695,31 @@ export const renderFunctions = {
 
 		if (persons.length > 0) {
 			return (
-				<div className="badge-group">
-					{persons.map((person: PersonData, index: number) => (
-						<span key={person.id || index} className="me-1">
-							<PersonBadge
-								item={person}
-								badgeId={`${param.id}-${index}`}
-								menuItemKeys={menuItemKeys}
-								parentItem={parent}
-							/>
-						</span>
-					))}
+				<div className="badge-group" style={param.view ? { rowGap: "0.35rem" } : { rowGap: "0.15rem" }}>
+					{persons.map(
+						(person: PersonData, index: number): JSX.Element => (
+							<span key={person.id || index} className="me-1">
+								<PersonBadge
+									item={person}
+									badgeId={`${param.id}-${index}`}
+									menuItemKeys={menuItemKeys}
+									parentItem={parent}
+								/>
+							</span>
+						)
+					)}
 				</div>
 			);
+		}
+		return null;
+	},
+
+	_personBadge: (param: RenderParams, idKey: keyof JobData): ReactNode => {
+		const ctx: DataContextValue = param.dataContext;
+		const person: PersonData | undefined = getJamData(ctx.persons, param.item?.[idKey]);
+
+		if (person) {
+			return <PersonBadge item={person} badgeId={param.id} />;
 		}
 		return null;
 	},
@@ -732,9 +833,9 @@ export const renderFunctions = {
 		if (persons.length > 0) {
 			return (
 				<AccordionTable
-					title={param.label || "Persons"}
+					title={param.label || "Contacts"}
 					data={persons}
-					icon={getTableIcon("People")}
+					icon={getTableIcon("Contacts")}
 					helpText={param.helpText}
 				>
 					{(data: PersonData[]) => <PersonTable data={data} columns={param.columns} />}
@@ -752,37 +853,100 @@ export const renderFunctions = {
 	emailScrapedJobTableReadOnly: (param: RenderParams) => <EmailScrapedJobTable param={param} viewOnly={true} />,
 
 	scrapedJobEmailTable: (param: RenderParams) => <ScrapedJobEmailTable param={param} />,
+
+	accordionJobTableFile: (param: RenderParams): ReactNode => {
+		const ctx: DataContextValue = param.dataContext;
+		const fileId: number = param.item?.id;
+		const jobs: EnrichedJobData[] = ctx.jobs.filter((j) => j.cv_id === fileId || j.cover_letter_id === fileId);
+		if (!jobs.length) return "";
+		return (
+			<AccordionTable title="Jobs" data={jobs} icon={getTableIcon("Jobs")} helpText={param.helpText}>
+				{(data: EnrichedJobData[]) => <JobsTable data={data} columns={param.columns} />}
+			</AccordionTable>
+		);
+	},
+
+	fileSize: (param: RenderParams): ReactNode => {
+		const size = param.item?.size;
+		return size != null ? <span>{formatFileSize(size)}</span> : null;
+	},
+
+	fileActions: (param: RenderParams): ReactNode => {
+		const file = param.item;
+		if (!file) return null;
+		return (
+			<div className="d-flex gap-2">
+				{canPreviewFile(file.type) && (
+					<Button
+						className="flex-fill"
+						variant="outline-secondary"
+						onClick={(): Promise<void> => filesApi.preview(file.id, param.token || "")}
+					>
+						<i className="bi bi-eye me-2" />
+						Preview
+					</Button>
+				)}
+				<Button
+					className="flex-fill"
+					variant="outline-primary"
+					onClick={(): Promise<void> => filesApi.download(file.id, file.filename, param.token || "")}
+				>
+					<i className="bi bi-download me-2" />
+					Download
+				</Button>
+			</div>
+		);
+	},
+
+	fileUsages: (param: RenderParams): ReactNode => {
+		const fileId: number = param.item?.id;
+		const count = param.dataContext.jobs.filter((j) => j.cv_id === fileId || j.cover_letter_id === fileId).length;
+		if (!count) return <span className="text-muted">—</span>;
+		return <span>{count}</span>;
+	},
 };
+
+function buildRenderParams(
+	item: any,
+	id: string,
+	field: ViewField,
+	dataContext: DataContextValue,
+	currencies: Currency[],
+	token: string | null,
+	view: boolean = false
+): RenderParams {
+	return {
+		item,
+		view,
+		id: `${id}-${field.key}`,
+		columns: field.columns,
+		helpText: field.helpText,
+		dataContext,
+		currencies,
+		token,
+	};
+}
+
+function renderFieldValue(field: ViewField, item: any, params: RenderParams): ReactNode {
+	return field.render ? field.render(params) : item?.[field.key];
+}
 
 export const RenderViewFieldWithContext: React.FC<{
 	field: ViewField;
 	item: any;
 	id: string;
-}> = ({ field, item, id }) => {
+	view?: boolean;
+}> = ({ field, item, id, view = false }) => {
 	const context: DataContextValue = useDataContext();
 	const { token } = useAuth();
+	const { currencies } = useStaticData();
 
-	let rendered: ReactNode;
-	if (field.render) {
-		const renderParams: RenderParams = {
-			item: item,
-			view: false,
-			id: `${id}-${field.key}`,
-			columns: field.columns,
-			helpText: field.helpText,
-			dataContext: context,
-			token: token,
-		};
-		rendered = field.render(renderParams);
-	} else {
-		rendered = item?.[field.key];
-	}
-
-	if (rendered !== null && rendered !== undefined) {
-		return <>{rendered}</>;
-	} else {
-		return <span className="text-muted">Not Provided</span>;
-	}
+	const rendered = renderFieldValue(
+		field,
+		item,
+		buildRenderParams(item, id, field, context, currencies, token, view)
+	);
+	return rendered != null ? <>{rendered}</> : <span className="text-muted">Not Provided</span>;
 };
 
 export const IsViewNull = (
@@ -792,22 +956,7 @@ export const IsViewNull = (
 	item: any,
 	id: string
 ): boolean => {
-	let rendered: ReactNode;
-	if (field.render) {
-		const renderParams: RenderParams = {
-			item: item,
-			view: false,
-			id: `${id}-${field.key}`,
-			columns: field.columns,
-			helpText: field.helpText,
-			dataContext: dataContext,
-			token: token,
-		};
-		rendered = field.render(renderParams);
-	} else {
-		rendered = item?.[field.key];
-	}
-
+	const rendered = renderFieldValue(field, item, buildRenderParams(item, id, field, dataContext, [], token));
 	return rendered == null;
 };
 
@@ -840,7 +989,7 @@ export const AccordionTable = <T,>({
 				</>
 			}
 		>
-			{children(data)}
+			<div className={"mt-2"}>{children(data)}</div>
 		</Accordion>
 	);
 };
@@ -848,6 +997,7 @@ export const AccordionTable = <T,>({
 const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 	const [data, setData] = useState<ScrapedJobData[] | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
+	const visibleLoading = useDelayedLoading(loading);
 
 	useEffect(() => {
 		const fetchData = async (): Promise<void> => {
@@ -867,7 +1017,7 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 		fetchData().then();
 	}, [param.item.id, param.token]);
 
-	if (loading) {
+	if (visibleLoading) {
 		return <LoadingSpinner size={"sm"} />;
 	}
 
@@ -879,8 +1029,8 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 		<AccordionTable
 			title="Filtered Jobs"
 			data={data}
-			icon={getTableIcon("Scraped Jobs")}
-			helpText="Scraped Jobs that were filtered by this filter."
+			icon={getTableIcon("Job Alerts")}
+			helpText="Job Alerts that were filtered by this filter."
 		>
 			{(rows: ScrapedJobData[]) => <ScrapedJobsTableReadOnly data={rows} columns={param.columns} />}
 		</AccordionTable>
@@ -890,6 +1040,7 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 const EmailScrapedJobTable: React.FC<{ param: RenderParams; viewOnly?: boolean }> = ({ param, viewOnly = false }) => {
 	const [data, setData] = useState<ScrapedJobData[] | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
+	const visibleLoading = useDelayedLoading(loading);
 	const [reloadTick, setReloadTick] = useState<number>(0);
 
 	useEffect(() => {
@@ -910,7 +1061,7 @@ const EmailScrapedJobTable: React.FC<{ param: RenderParams; viewOnly?: boolean }
 		fetchData().then();
 	}, [param.item.id, param.token, reloadTick]);
 
-	if (loading) return <LoadingSpinner size={"sm"} />;
+	if (visibleLoading) return <LoadingSpinner size={"sm"} />;
 	if (!data?.length) return null;
 
 	return (
@@ -926,6 +1077,7 @@ const EmailScrapedJobTable: React.FC<{ param: RenderParams; viewOnly?: boolean }
 const ScrapedJobEmailTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 	const [data, setData] = useState<JobEmailData[] | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
+	const visibleLoading: boolean = useDelayedLoading(loading);
 
 	useEffect(() => {
 		const fetchData = async (): Promise<void> => {
@@ -945,7 +1097,7 @@ const ScrapedJobEmailTable: React.FC<{ param: RenderParams }> = ({ param }) => {
 		fetchData().then();
 	}, [param.item.id, param.token]);
 
-	if (loading) return <LoadingSpinner size={"sm"} />;
+	if (visibleLoading) return <LoadingSpinner size={"sm"} />;
 	if (!data?.length) return null;
 	return <JobEmailTableReadOnly data={data} modalProps={{ scrapedJobsReadOnly: true }} />;
 };

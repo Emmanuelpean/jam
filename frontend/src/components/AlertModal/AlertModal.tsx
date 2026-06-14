@@ -1,5 +1,6 @@
-import React, { JSX, useState } from "react";
+import React, { JSX, ReactNode, useState } from "react";
 import { Modal } from "react-bootstrap";
+import JamModal from "../JamModal/JamModal";
 import { ActionButton, ButtonVariant } from "../rendering/form/ActionButton";
 
 export type AlertType = "success" | "warning" | "error" | "info" | "danger" | "primary";
@@ -14,7 +15,7 @@ export interface AlertState {
 	show: boolean;
 	type?: AlertType;
 	title?: string;
-	message?: string;
+	message?: string | ReactNode;
 	icon?: string | null;
 	size?: ModalSize;
 	id?: string | null;
@@ -76,11 +77,13 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 	};
 
 	return (
-		<Modal show={alertState.show} onHide={hideAlert} centered size={getModalSize(alertState.size)} id={modalId}>
-			<Modal.Header closeButton>
+		<JamModal show={alertState.show} onHide={hideAlert} centered size={getModalSize(alertState.size)} id={modalId}>
+			{/* Transparent sentinel that fills .modal-content — used by the guided tour to spotlight this dialog */}
+			<div id={`${modalId}-dialog`} style={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
+			<JamModal.Header onClose={hideAlert}>
 				{iconClass && <i className={`bi ${iconClass} me-2`} />}
 				<Modal.Title>{alertState.title}</Modal.Title>
-			</Modal.Header>
+			</JamModal.Header>
 			<Modal.Body>
 				{typeof alertState.message === "string" ? (
 					<p className="mb-0">{alertState.message}</p>
@@ -89,7 +92,7 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 				)}
 			</Modal.Body>
 			<Modal.Footer>
-				<div className="modal-buttons-container">
+				<div className="modal-buttons-container" id={`${modalId}-buttons`}>
 					{alertState.cancelText && (
 						<ActionButton
 							id={`${modalId}-cancel-button`}
@@ -112,7 +115,7 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 					)}
 				</div>
 			</Modal.Footer>
-		</Modal>
+		</JamModal>
 	);
 };
 

@@ -30,8 +30,7 @@ export function getTableIcon(title: string): string {
 	const iconMap: Record<string, string> = {
 		Jobs: getEntityIcon("job"),
 		Companies: getEntityIcon("company"),
-		People: getEntityIcon("person"),
-		Locations: getEntityIcon("location"),
+		Contacts: getEntityIcon("person"),
 		Tags: getEntityIcon("keyword"),
 		"Job Application Updates": getEntityIcon("jobApplicationUpdate"),
 		Interviews: getEntityIcon("interview"),
@@ -52,9 +51,10 @@ export function getTableIcon(title: string): string {
 		Other: "three-dots",
 		"Release Notes": "file-earmark-text",
 		"Browser Extension": "puzzle-fill",
-		"About JAM": "info-circle",
+		"About JAM": "window-sidebar",
 		"Service Dashboards": "stack",
 		"App Management": "terminal",
+		Files: "folder2-open",
 	};
 	return iconMap[title] || "bi-table";
 }
@@ -75,6 +75,7 @@ export function getEntityIcon(entityType: EntityType): string {
 		scrapedJob: "inboxes",
 		scrapingFilter: "funnel",
 		jobEmail: "envelope-open",
+		file: "files-alt",
 	};
 	return iconMap[entityType] || "";
 }
@@ -93,4 +94,11 @@ export const getTrueFalseBadge = (value: boolean): ReactNode => {
 	} else {
 		return <i className="bi bi-x-circle text-danger"></i>;
 	}
+};
+
+export const getLocationIcon = (attendanceType: string | null): string => {
+	if (attendanceType === "on-site") return "building";
+	if (attendanceType === "hybrid") return "house-door";
+	if (attendanceType === "remote") return "house";
+	return "";
 };

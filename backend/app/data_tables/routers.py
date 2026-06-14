@@ -1,11 +1,14 @@
 """Module for generating CRUD routers for the JAM data tables"""
 
 import base64
+import hashlib
+import os
 
 from fastapi import Depends, status, HTTPException, Response
 from sqlalchemy.orm import Session
 
 from app import models, database
+from app.config import settings
 from app.core import oauth2
 from app.data_tables import schemas
 from app.geolocation.geolocation import geocode_location
@@ -44,37 +47,6 @@ company_router = generate_data_table_crud_router(
 )
 
 
-# Location router
-def transform_location(location_data: dict, db: Session, entry_data: dict | None = None) -> dict:
-    """Geolocate the location data before creating/updating the record.
-    :param location_data: The location data dictionary.
-    :param db: The database session.
-    :param entry_data: optional original data of the entry
-    :return: The transformed location data dictionary with geolocation_id set."""
-
-    if entry_data:
-        location_data = location_data.copy()
-        location_data.update(entry_data)
-    params = {
-        "postcode": location_data.get("postcode"),
-        "city": location_data.get("city"),
-        "country": location_data.get("country"),
-    }
-    geolocation = geocode_location(params, db) if params else None
-    return {"geolocation_id": geolocation.id if geolocation else None}
-
-
-location_router = generate_data_table_crud_router(
-    table_model=models.Location,
-    create_schema=schemas.LocationCreate,
-    update_schema=schemas.LocationUpdate,
-    out_schema=schemas.LocationOut,
-    endpoint="locations",
-    not_found_msg="Location not found",
-    transform=transform_location,
-)
-
-
 # File router
 file_router = generate_data_table_crud_router(
     table_model=models.File,
@@ -83,7 +55,58 @@ file_router = generate_data_table_crud_router(
     out_schema=schemas.FileOut,
     endpoint="files",
     not_found_msg="File not found",
+    allowed_actions=["get", "put", "delete"],
 )
+
+
+@file_router.get("/{file_id}/content", response_model=schemas.FileWithContentOut)
+def get_file_content(
+    file_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    """Get a single file including its base64 content."""
+    file_record = (
+        db.query(models.File).filter(models.File.id == file_id, models.File.owner_id == current_user.id).first()
+    )
+    if not file_record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+    return file_record
+
+
+@file_router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.FileOut)
+def create_file(
+    item: schemas.FileCreate,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    """Create a file, reusing an existing record if the same content was already uploaded."""
+
+    max_bytes = settings.max_file_size_mb * 1024 * 1024
+    if item.size > max_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File exceeds the maximum allowed size of {settings.max_file_size_mb} MB.",
+        )
+
+    content = item.content
+    # Strip data URL prefix for hashing (e.g. "data:application/pdf;base64,...")
+    raw_content = content.split(",", 1)[1] if content.startswith("data:") else content
+    content_hash = hashlib.sha256(raw_content.encode()).hexdigest()
+
+    existing = (
+        db.query(models.File)
+        .filter(models.File.owner_id == current_user.id, models.File.content_hash == content_hash)
+        .first()
+    )
+    if existing:
+        return existing
+
+    new_file = models.File(**item.model_dump(), owner_id=current_user.id, content_hash=content_hash)
+    db.add(new_file)
+    db.commit()
+    db.refresh(new_file)
+    return new_file
 
 
 @file_router.get("/{file_id}/download")
@@ -124,17 +147,33 @@ def download_file(
 
     content_type = file_record.type if file_record.type else "application/octet-stream"
 
+    safe_filename = os.path.basename(file_record.filename).replace('"', "").replace("\r", "").replace("\n", "")
+
     return Response(
         content=file_content,
         media_type=content_type,
         headers={
-            "Content-Disposition": f'attachment; filename="{file_record.filename}"',
+            "Content-Disposition": f'attachment; filename="{safe_filename}"',
             "Content-Length": str(len(file_content)),
         },
     )
 
 
 # --------------------------------------------------- COMPLEX TABLES ---------------------------------------------------
+
+
+def geocode_entry_location(entry: dict, db: Session, entry_data: dict | None = None) -> dict:
+    """Geocode the location string on Job create/update.
+    :param entry: The entry data dictionary.
+    :param db: The database session.
+    :param entry_data: optional original data of the entry
+    :return: Dictionary with geolocation_id set."""
+
+    location = entry.get("location") or (entry_data or {}).get("location")
+    if isinstance(location, str) and location.strip():
+        geolocation = geocode_location(location.strip(), db)
+        return {"geolocation_id": geolocation.id if geolocation else None}
+    return {"geolocation_id": None}
 
 
 # Person router
@@ -155,6 +194,7 @@ job_router = generate_data_table_crud_router(
     out_schema=schemas.JobOut,
     endpoint="jobs",
     not_found_msg="Job not found",
+    transform=geocode_entry_location,
     many_to_many_fields={
         "keywords": {
             "table": models.job_keyword_mapping,
@@ -179,6 +219,7 @@ interview_router = generate_data_table_crud_router(
     out_schema=schemas.InterviewOut,
     endpoint="interviews",
     not_found_msg="Interview not found",
+    transform=geocode_entry_location,
     many_to_many_fields={
         "interviewers": {
             "table": models.interview_interviewer_mapping,

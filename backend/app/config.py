@@ -85,9 +85,11 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str
     stripe_toast_price_id: str
 
-    model_config = SettingsConfigDict(
-        env_file=Path(__file__).parent.parent / ".env",
-    )
+    # Cloudflare Turnstile
+    turnstile_site_key: str
+    turnstile_secret_key: str
+
+    model_config = SettingsConfigDict(env_file=Path(__file__).parent.parent / ".env", extra="allow")
 
 
 settings = Settings()  # type: ignore[call-arg]

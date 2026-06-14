@@ -106,6 +106,8 @@ class ScrapedJobRater:
             # Get latest system and job prompt templates
             system_prompt = db.query(models.AiSystemPrompt).order_by(models.AiSystemPrompt.id.desc()).first()
             job_prompt = db.query(models.AiJobPromptTemplate).order_by(models.AiJobPromptTemplate.id.desc()).first()
+            if not system_prompt or not job_prompt:
+                raise Exception("No system or job prompt templates found")
 
             # Process each user
             for user in users:

@@ -85,7 +85,7 @@ class Keyword(Owned, Base):
     jobs = relationship("Job", secondary=job_keyword_mapping, back_populates="keywords")
 
     # Constraints
-    __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_owner_keyword_name"),)
+    __table_args__ = (UniqueConstraint("owner_id", "name", "is_tour", name="uq_owner_keyword_name"),)
 
 
 class Aggregator(Owned, Base):
@@ -115,7 +115,7 @@ class Aggregator(Owned, Base):
     )
 
     # Constraints
-    __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_owner_aggregator_name"),)
+    __table_args__ = (UniqueConstraint("owner_id", "name", "is_tour", name="uq_owner_aggregator_name"),)
 
 
 class Company(Owned, Base):
@@ -149,63 +149,7 @@ class Company(Owned, Base):
     )
 
     # Constraints
-    __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_owner_company_name"),)
-
-
-class Location(Owned, Base):
-    """Represents geographical locations.
-
-    Attributes:
-    -----------
-    - `postcode` (str, optional): Postcode of the location.
-    - `city` (str, optional): City of the location.
-    - `country` (str, optional): Country where the location resides.
-    - `name` (str): Computed property combining city, country, and postcode
-
-    Relationships:
-    --------------
-    - `jobs` (list of Job): List of jobs associated with the location.
-    - `interviews` (list of Interview): List of interviews associated with the location.
-
-    Constraints:
-    ------------
-    - At least one of postcode, city, or country must be provided.
-    - Combination of owner_id, city, postcode, and country must be unique to prevent duplicate locations for the same user.
-    """
-
-    postcode = Column(String, nullable=True)
-    city = Column(String, nullable=True)
-    country = Column(String, nullable=True)
-
-    # Foreign keys
-    geolocation_id = Column(Integer, ForeignKey("geolocation.id", ondelete="SET NULL"), nullable=True)
-
-    # Relationships
-    jobs = relationship("Job", back_populates="location")
-    interviews = relationship("Interview", back_populates="location")
-    geolocation = relationship("Geolocation")
-
-    @hybrid_property
-    def name(self) -> str:
-        """Computed property that combines city, country, and postcode into a readable location name"""
-
-        parts = []
-        if self.city:
-            parts.append(self.city)
-        if self.country:
-            parts.append(self.country)
-        if self.postcode:
-            parts.append(self.postcode)
-
-        return ", ".join(parts)
-
-    __table_args__ = (
-        CheckConstraint(
-            "postcode IS NOT NULL OR city IS NOT NULL OR country IS NOT NULL",
-            name=f"location_data_required",
-        ),
-        UniqueConstraint("owner_id", "city", "postcode", "country", name="uq_owner_location_unique"),
-    )
+    __table_args__ = (UniqueConstraint("owner_id", "name", "is_tour", name="uq_owner_company_name"),)
 
 
 class Geolocation(Base, CommonBase):
@@ -237,12 +181,16 @@ class File(Owned, Base):
     - `filename` (str): Name of the file.
     - `content` (bytes): Content of the file.
     - `type` (str): MIME type of the file.
-    - `size` (int): Size of the file in bytes."""
+    - `size` (int): Size of the file in bytes.
+    - `file_type` (str): Semantic category of the file (e.g. 'cv', 'cover_letter').
+    - `content_hash` (str): hashed content of the file."""
 
     filename = Column(String, nullable=False)
     content = Column(String, nullable=False)
     type = Column(String, nullable=False)
     size = Column(Integer, nullable=False)
+    file_type = Column(String, nullable=True)
+    content_hash = Column(String, nullable=True, index=True)
 
 
 class Person(Owned, Base):
@@ -317,11 +265,12 @@ class Job(Owned, Base):
     - `application_status` (str, optional): Current status of the job application
     - `applied_via` (str, optional): Method used to apply for the job.
     - `application_note` (str, optional): Additional note about the job application.
+    - `location` (str, optional): Free-text location string for the job.
 
     Foreign keys:
     -------------
+    - `geolocation_id` (int, optional): Identifier for the geolocation derived from the location string.
     - `company_id` (int, optional): Identifier for the company offering the job.
-    - `location_id` (int, optional): Identifier for the geographical location where the job is located.
     - `duplicate_id` (int, optional): Identifier for a duplicate job posting.
     - `source_aggregator_id` (int, optional): Identifier for the aggregator website where the job was posted.
     - `application_aggregator_id` (int, optional): Identifier for the aggregator website used to apply for the job.
@@ -331,7 +280,7 @@ class Job(Owned, Base):
     Relationships:
     --------------
     - `company` (Company): Company object associated with the job posting.
-    - `location` (Location): Location object associated with the job posting.
+    - `geolocation` (Geolocation): Geolocation object derived from the location string.
     - `keywords` (list of Keyword): List of keywords associated with the job posting.
     - `contacts` (list of Person): List of people linked to the company that may be interested in the job posting.
     - `source_aggregator` (Aggregator): Source of the job posting (e.g. LinkedIn, Indeed, etc.).
@@ -361,6 +310,9 @@ class Job(Owned, Base):
     followup_snooze_datetime = Column(TIMESTAMP(timezone=True), nullable=True)
     attendance_type = Column(String, nullable=True)
     source_type = Column(String, nullable=True)
+    location = Column(String, nullable=True)
+
+    is_favourite = Column(Boolean, nullable=False, server_default=expression.false())
 
     # Application-specific fields
     application_date = Column(TIMESTAMP(timezone=True), nullable=True)
@@ -371,12 +323,13 @@ class Job(Owned, Base):
 
     # Foreign keys
     company_id = Column(Integer, ForeignKey("company.id", ondelete="SET NULL"), nullable=True, index=True)
-    location_id = Column(Integer, ForeignKey("location.id", ondelete="SET NULL"), nullable=True, index=True)
+    geolocation_id = Column(Integer, ForeignKey("geolocation.id", ondelete="SET NULL"), nullable=True, index=True)
     duplicate_id = Column(Integer, ForeignKey("job.id", ondelete="SET NULL"), nullable=True, index=True)
     source_aggregator_id = Column(Integer, ForeignKey("aggregator.id", ondelete="SET NULL"), nullable=True, index=True)
     application_aggregator_id = Column(
         Integer, ForeignKey("aggregator.id", ondelete="SET NULL"), nullable=True, index=True
     )
+    scraped_job_id = Column(Integer, ForeignKey("scraped_job.id", ondelete="SET NULL"), nullable=True, index=True)
     recruiter_id = Column(Integer, ForeignKey("person.id", ondelete="SET NULL"), nullable=True, index=True)
     recruitment_company_id = Column(Integer, ForeignKey("company.id", ondelete="SET NULL"), nullable=True, index=True)
     cv_id = Column(Integer, ForeignKey("file.id", ondelete="SET NULL"), nullable=True, index=True)
@@ -384,7 +337,7 @@ class Job(Owned, Base):
 
     # Relationships
     company = relationship("Company", back_populates="jobs", foreign_keys=[company_id])
-    location = relationship("Location", back_populates="jobs")
+    geolocation = relationship("Geolocation", foreign_keys=[geolocation_id], lazy="selectin")
     keywords = relationship("Keyword", secondary=job_keyword_mapping, back_populates="jobs", lazy="selectin")
     contacts = relationship("Person", secondary=job_contact_mapping, back_populates="jobs", lazy="selectin")
     source_aggregator = relationship("Aggregator", foreign_keys=[source_aggregator_id], back_populates="jobs")
@@ -399,6 +352,42 @@ class Job(Owned, Base):
     )
     application_cv = relationship("File", foreign_keys=[cv_id], lazy="select")
     application_cover_letter = relationship("File", foreign_keys=[cover_letter_id], lazy="select")
+    scraped_job = relationship("ScrapedJob", foreign_keys=[scraped_job_id], lazy="select")
+
+    @hybrid_property
+    def has_application(self) -> bool:
+        """True if any application field is populated."""
+        return any([self.application_status, self.application_date, self.applied_via, self.application_url])
+
+    @has_application.expression
+    def has_application(cls):
+        """True if any application field is populated for SQL queries"""
+        return (
+            cls.application_status.isnot(None)
+            | cls.application_date.isnot(None)
+            | cls.applied_via.isnot(None)
+            | cls.application_url.isnot(None)
+        )
+
+    @hybrid_property
+    def has_active_application(self) -> bool:
+        """True if there is an application and it has not been rejected or withdrawn."""
+        return self.has_application and self.application_status not in ("rejected", "withdrawn")
+
+    @has_active_application.expression
+    def has_active_application(cls):
+        """True if there is an application, and it has not been rejected or withdrawn for SQL queries."""
+        return cls.has_application & cls.application_status.notin_(("rejected", "withdrawn"))
+
+    @hybrid_property
+    def has_open_application(self) -> bool:
+        """True if there is an application that is not closed (not rejected, withdrawn, or offered)."""
+        return self.has_application and self.application_status not in ("rejected", "withdrawn", "offer")
+
+    @has_open_application.expression
+    def has_open_application(cls):
+        """True if there is an application that is not closed for SQL queries."""
+        return cls.has_application & cls.application_status.notin_(("rejected", "withdrawn", "offer"))
 
     __table_args__ = (
         CheckConstraint("personal_rating >= 1 AND personal_rating <= 5", name=f"valid_rating_range"),
@@ -424,17 +413,18 @@ class Interview(Owned, Base):
     - `type` (str): Type of the interview (HR, technical, management, ...)
     - `note` (str, optional): Additional notes or comments about the interview.
     - `attendance_type` (str, optional): The attendance type of the interview (on-site, remote).
+    - `location` (str, optional): The location of the interview.
 
     Foreign keys:
     -------------
-    - `location_id` (int): Identifier for the location of the interview.
+    - `geolocation_id` (int, optional): Identifier for the geolocation derived from the location string.
     - `job_id` (int): Identifier for the job application associated with the interview.
 
     Relationships:
     --------------
     - `job` (Job): Job object related to the interview.
     - `interviewers` (list of Person): List of people who participated in the interview.
-    - `location` (Location): Location object related to the interview.
+    - `geolocation` (Geolocation): Geolocation object derived from the location string.
 
     Constraints:
     ------------
@@ -444,15 +434,18 @@ class Interview(Owned, Base):
     type = Column(String, nullable=False)
     note = Column(String, nullable=True)
     attendance_type = Column(String, nullable=True)
+    location = Column(String, nullable=True)
 
     # Foreign keys
-    location_id = Column(Integer, ForeignKey("location.id", ondelete="SET NULL"), nullable=True, index=True)
+    geolocation_id = Column(Integer, ForeignKey("geolocation.id", ondelete="SET NULL"), nullable=True, index=True)
     job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Relationships
-    location = relationship("Location", back_populates="interviews")
+    geolocation = relationship("Geolocation", foreign_keys=[geolocation_id], lazy="selectin")
     job = relationship("Job", back_populates="interviews")
-    interviewers = relationship("Person", secondary=interview_interviewer_mapping, back_populates="interviews")
+    interviewers = relationship(
+        "Person", secondary=interview_interviewer_mapping, back_populates="interviews", lazy="selectin"
+    )
 
     __table_args__ = (CheckConstraint("attendance_type IN ('on-site', 'remote')", name="valid_attendance_type_values"),)
 
@@ -483,7 +476,7 @@ class JobApplicationUpdate(Owned, Base):
     type = Column(String, nullable=False)
 
     # Foreign keys
-    job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False)
+    job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Relationships
     job = relationship("Job", back_populates="updates")

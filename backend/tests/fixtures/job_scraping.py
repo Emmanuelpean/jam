@@ -10,6 +10,7 @@ from tests.utils.create_data.job_scraping import (
     create_job_scraping_service_errors,
     create_job_alert_emails,
     create_scraping_filters,
+    create_scraping_favourite_filters,
 )
 
 
@@ -51,3 +52,9 @@ def test_job_alert_emails(session, test_users, test_job_scraping_service_logs) -
 def test_scraping_filters(session, test_users) -> list[models.ScrapingExclusionFilter]:
     """Create test scraped job filter data"""
     return create_scraping_filters(session, test_users)
+
+
+@pytest.fixture
+def test_scraping_favourite_filters(session, test_users) -> list[models.ScrapingFavouriteFilter]:
+    """Create test scraped job favourite filter data"""
+    return create_scraping_favourite_filters(session, test_users)

@@ -7,15 +7,6 @@ from pydantic import BaseModel
 from app.base_schemas import Out
 
 
-# --------------------------------------------------- AI SYSTEM PROMPT ---------------------------------------------------
-
-
-class AiSystemPromptOut(Out):
-    """AI System Prompt output schema"""
-
-    prompt: str
-
-
 # ----------------------------------------------------- JOB RATING -----------------------------------------------------
 
 
@@ -61,4 +52,4 @@ class JobRatingServiceLogOut(Out):
 class JobRatingServiceLogStartRequest(BaseModel):
     """Job Rating Service Log start request schema"""
 
-    period_hours: int | None = 3
+    period_hours: int = 3

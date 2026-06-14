@@ -7,6 +7,7 @@ interface TableHeaderProps {
 	subtitle?: string;
 	count?: number;
 	icon: string;
+	className?: string;
 	id?: string;
 	onClick?: () => void;
 	active?: boolean;
@@ -17,6 +18,7 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 	count,
 	icon,
 	subtitle,
+	className = "",
 	id,
 	onClick,
 	active = false,
@@ -24,17 +26,17 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 	return (
 		<div
 			id={id}
-			className={`mb-4 page-header ${onClick ? "page-header-clickable" : ""} ${onClick && active ? "page-header-active" : ""} flex-fill`}
+			className={`mb-4 page-header ${onClick ? "page-header-clickable" : ""} ${onClick && active ? "page-header-active" : ""} ${className}`}
 			onClick={onClick}
 		>
 			<Card className="h-100 shadow-sm border-0 rounded-3">
-				<div className="d-flex align-items-center justify-content-between p-4">
+				<div className="d-flex align-items-center justify-content-between" style={{ padding: "1rem 1.5rem" }}>
 					<div className="d-flex align-items-center">
-						<div className="header-icon-wrapper me-3">
+						<div className="header-icon-wrapper me-2">
 							<i className={`bi bi-${icon}`}></i>
 						</div>
 						<div>
-							<h4 className="mb-0 fw-bold">{title}</h4>
+							<h4 className="mb-0 fw-bold mx-2 me-3">{title}</h4>
 							{subtitle && <small className="text-muted">{subtitle}</small>}
 						</div>
 					</div>

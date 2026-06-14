@@ -11,7 +11,7 @@ import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAlert } from "../../contexts/AlertContext";
 import { useDataContext } from "../../contexts/DataContext";
 import { ApiResponse } from "../../services/api/Base";
-import { UserData } from "../../services/schemas/Core";
+import { SettingData, UserData } from "../../services/schemas/Core";
 import { LAST_VERSION } from "../../releaseNotes/versions";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import PageHeader from "../PageHeader/PageHeader";
@@ -38,23 +38,23 @@ export const UserManagementPage: React.FC = () => {
 	const [usersReload, setUsersReload] = useState<number>(0);
 	const [settingsReload, setSettingsReload] = useState<number>(0);
 
-	const userColumns: TableColumn[] = [
-		tableColumns.idColumn(),
-		tableColumns.nameColumn(),
-		tableColumns.emailColumn(),
-		tableColumns.lastLoginColumn(),
-		tableColumns.isAdminColumn(),
-		tableColumns.isEnabledColumn(),
-		tableColumns.toastActiveColumn(),
-		tableColumns.createdAtColumn(),
+	const userColumns: TableColumn<UserData>[] = [
+		tableColumns.idColumn<UserData>(),
+		tableColumns.nameColumn<UserData>(),
+		tableColumns.emailColumn<UserData>(),
+		tableColumns.lastLoginColumn<UserData>(),
+		tableColumns.isAdminColumn<UserData>(),
+		tableColumns.isActiveColumn<UserData>(),
+		tableColumns.toastActiveColumn<UserData>(),
+		tableColumns.createdAtColumn<UserData>(),
 	];
 
-	const settingColumns: TableColumn[] = [
-		tableColumns.nameColumn(),
-		tableColumns.valueColumn(),
-		tableColumns.descriptionColumn(),
-		tableColumns.isEnabledColumn(),
-		tableColumns.createdAtColumn(),
+	const settingColumns: TableColumn<SettingData>[] = [
+		tableColumns.nameColumn<SettingData>(),
+		tableColumns.valueColumn<SettingData>(),
+		tableColumns.descriptionColumn<SettingData>(),
+		tableColumns.isActiveColumn<SettingData>(),
+		tableColumns.createdAtColumn<SettingData>(),
 	];
 
 	const handleLogoutAllUsers = async (): Promise<void> => {
@@ -144,6 +144,7 @@ export const UserManagementPage: React.FC = () => {
 		<div>
 			<div className="d-flex gap-3">
 				<PageHeader
+					className="flex-fill"
 					title="Users"
 					icon={getTableIcon("Users")}
 					count={usersCount}
@@ -154,6 +155,7 @@ export const UserManagementPage: React.FC = () => {
 					active={activeTab === "users"}
 				/>
 				<PageHeader
+					className="flex-fill"
 					title="Settings"
 					icon={getTableIcon("Settings")}
 					count={settingsCount}
@@ -164,6 +166,7 @@ export const UserManagementPage: React.FC = () => {
 					active={activeTab === "settings"}
 				/>
 				<PageHeader
+					className="flex-fill"
 					title="Email Templates"
 					icon={getTableIcon("Email Templates")}
 					onClick={(): void => {
@@ -174,7 +177,7 @@ export const UserManagementPage: React.FC = () => {
 			</div>
 
 			<div style={{ display: activeTab === "users" ? "block" : "none" }}>
-				<DataTable
+				<DataTable<UserData>
 					entityType="user"
 					initialSortConfig={{ key: "id", direction: "asc" }}
 					columns={userColumns}
@@ -182,10 +185,11 @@ export const UserManagementPage: React.FC = () => {
 					toolbarAddon={toolbarAddon}
 					onTotalCountChange={setUsersCount}
 					reloadTrigger={usersReload}
+					enableColumnConfig={true}
 				/>
 			</div>
 			<div style={{ display: activeTab === "settings" ? "block" : "none" }}>
-				<DataTable
+				<DataTable<SettingData>
 					entityType="setting"
 					initialSortConfig={{ key: "name", direction: "asc" }}
 					columns={settingColumns}
@@ -193,6 +197,7 @@ export const UserManagementPage: React.FC = () => {
 					initialData={{ is_active: true }}
 					onTotalCountChange={setSettingsCount}
 					reloadTrigger={settingsReload}
+					enableColumnConfig={true}
 				/>
 			</div>
 			{activeTab === "email-templates" && <EmailTemplatesContent />}

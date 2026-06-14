@@ -12,6 +12,8 @@ import { HelpBubble } from "../../HelpBubble/HelpBubble";
 import { UrlInput } from "./UrlInput";
 import { CurrentUser } from "../../../contexts/AuthContext";
 import { Toggle } from "./Toggle";
+import { FavouriteStar } from "./FavouriteStar";
+import { FileUploadWidget } from "./FileUploadWidget";
 import get from "lodash/get";
 import { toKey } from "../../../utils/StringUtils";
 
@@ -37,6 +39,7 @@ export interface WidgetProps {
 	currentUser?: CurrentUser | null;
 	previewConfig?: SelectWidgetPreviewConfig | null;
 	data?: any;
+	onUploadingChange?: (uploading: boolean) => void;
 }
 
 export const displayError = (errorMessage: string | null): JSX.Element[] | null => {
@@ -46,21 +49,19 @@ export const displayError = (errorMessage: string | null): JSX.Element[] | null 
 
 export const DefaultInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
 	return (
-		<>
-			<Form.Control
-				id={toKey(field.name)}
-				type={field.type || "text"}
-				name={toKey(field.name)}
-				key={toKey(field.name)}
-				value={value || ""}
-				onChange={handleChange}
-				placeholder={field.placeholder}
-				isInvalid={!!error}
-				step={field.step}
-				autoComplete={field.autoComplete}
-				disabled={field.isDisabled}
-			/>
-		</>
+		<Form.Control
+			id={toKey(field.key)}
+			type={field.type || "text"}
+			name={toKey(field.key)}
+			key={toKey(field.key)}
+			value={value || ""}
+			onChange={handleChange}
+			placeholder={field.placeholder}
+			isInvalid={!!error}
+			step={field.step}
+			autoComplete={field.autoComplete}
+			disabled={field.isDisabled}
+		/>
 	);
 };
 
@@ -69,52 +70,90 @@ export const renderFormField = (
 	formData: any,
 	handleChange: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,
 	errors: Errors,
-	currentUser?: CurrentUser | null
+	currentUser?: CurrentUser | null,
+	onUploadingChange?: (uploading: boolean) => void,
+	onError?: (key: string, message: string | null) => void
 ) => {
-	const value: any = get(formData, field.name);
-	const secondaryValue: any = field.secondaryName ? get(formData, field.secondaryName) : null;
-	const error: string | null | undefined = get(errors, field.name);
+	const value: any = get(formData, field.key);
+	const secondaryValue: any = field.secondaryKey ? get(formData, field.secondaryKey) : null;
+	const error: string | null | undefined = get(errors, field.key);
 	const previewConfig = field.previewConfig;
+
+	const wrappedHandleChange =
+		onError && field.maxChars && typeof field.key === "string"
+			? (e: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => {
+					handleChange(e);
+					const newValue = e.target.value;
+					if (typeof newValue === "string") {
+						onError(
+							field.key as string,
+							newValue.length > field.maxChars!
+								? `Must be at most ${field.maxChars} characters long (current: ${newValue.length})`
+								: null
+						);
+					}
+				}
+			: handleChange;
+
+	const isOverLimit: boolean = !!(field.maxChars && typeof value === "string" && value.length > field.maxChars);
 
 	const widgetProps: WidgetProps = {
 		field,
 		value,
-		handleChange,
+		handleChange: wrappedHandleChange,
 		error,
 		secondaryValue,
 		currentUser,
 		previewConfig,
 		data: formData,
+		onUploadingChange,
 	};
 
-	if (field.type === "checkbox") {
-		return (
-			<Form.Group className="mb-3" id={`${field.name}-form-group`}>
-				<Checkbox {...widgetProps} />
-				{error && (
-					<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
-						{displayError(error)}
-					</div>
-				)}
-			</Form.Group>
-		);
-	}
-	if (field.type === "toggle") {
-		return (
-			<Form.Group className="mb-3" id={`${field.name}-form-group`}>
-				<Toggle {...widgetProps} />
-				{error && (
-					<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
-						{displayError(error)}
-					</div>
-				)}
-			</Form.Group>
-		);
-	}
+	// Checkbox and toggle render their own label internally
+	const hasOwnLabel = field.type === "checkbox" || field.type === "toggle";
+
+	const renderWidget = (): JSX.Element => {
+		switch (field.type) {
+			case "checkbox":
+				return <Checkbox {...widgetProps} />;
+			case "toggle":
+				return <Toggle {...widgetProps} />;
+			case "textarea":
+				return <Textarea {...widgetProps} />;
+			case "select":
+			case "multiselect":
+				return <SelectInput {...widgetProps} />;
+			case "datetime-local":
+				return <LocalDatetimeInput {...widgetProps} inputType="datetime-local" />;
+			case "date":
+				return <LocalDatetimeInput {...widgetProps} inputType="date" />;
+			case "password":
+				return <PasswordInput {...widgetProps} />;
+			case "salary":
+				return <SalaryInput {...widgetProps} />;
+			case "rating":
+				return <StarRating {...widgetProps} />;
+			case "url":
+				return <UrlInput {...widgetProps} />;
+			case "star_toggle":
+				return <FavouriteStar {...widgetProps} />;
+			case "cover_letter":
+				return <FileUploadWidget {...widgetProps} textEditable />;
+			case "file_upload":
+				return <FileUploadWidget {...widgetProps} />;
+			default:
+				return <DefaultInput {...widgetProps} />;
+		}
+	};
+
+	const showCharCounter = isOverLimit && field.maxChars && field.type !== "textarea" && !onError;
 
 	return (
-		<Form.Group className="mb-3" id={`${field.name}-form-group`}>
-			{field.label && (
+		<Form.Group
+			className={`mb-3${field.highlight ? " field-highlight" : ""}`}
+			id={`${toKey(field.key)}-form-group`}
+		>
+			{field.label && !hasOwnLabel && (
 				<Form.Label>
 					{field.icon && <i className={`${field.icon} me-2 text-muted`} aria-hidden="true" />}
 					{field.label}
@@ -122,39 +161,14 @@ export const renderFormField = (
 					{field.helpText && <HelpBubble helpText={field.helpText} />}
 				</Form.Label>
 			)}
-			{(() => {
-				switch (field.type) {
-					case "textarea":
-						return <Textarea {...widgetProps} />;
-
-					case "select":
-					case "multiselect":
-						return <SelectInput {...widgetProps} />;
-
-					case "datetime-local":
-						return <LocalDatetimeInput {...widgetProps} inputType="datetime-local" />;
-
-					case "date":
-						return <LocalDatetimeInput {...widgetProps} inputType="date" />;
-
-					case "password":
-						return <PasswordInput {...widgetProps} />;
-
-					case "salary":
-						return <SalaryInput {...widgetProps} />;
-
-					case "rating":
-						return <StarRating {...widgetProps} />;
-
-					case "url":
-						return <UrlInput {...widgetProps} />;
-
-					default:
-						return <DefaultInput {...widgetProps} />;
-				}
-			})()}
+			{renderWidget()}
+			{showCharCounter && (
+				<Form.Text className="text-danger">
+					{(value || "").length} / {field.maxChars} characters
+				</Form.Text>
+			)}
 			{error && (
-				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
+				<div className="invalid-feedback d-block" id={`${toKey(field.key)}-error-message`}>
 					{displayError(error)}
 				</div>
 			)}

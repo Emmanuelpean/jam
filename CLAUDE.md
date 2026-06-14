@@ -69,17 +69,17 @@ cd frontend && npm run build
 
 FastAPI app with modules organized by domain:
 
-| Module | Purpose                                                           |
-|--------|-------------------------------------------------------------------|
-| `core/` | Auth (JWT), user management, settings                             |
-| `data_tables/` | Core entities: Company, Job, Person, Interview, Location, Keyword |
+| Module                | Purpose                                                           |
+|-----------------------|-------------------------------------------------------------------|
+| `core/`               | Auth (JWT), user management, settings                             |
+| `data_tables/`        | Core entities: Company, Job, Person, Interview, Location, Keyword |
 | `job_email_scraping/` | Email/web scraping from Indeed, LinkedIn, NHS, VeganJobs          |
-| `job_rating/` | AI-powered job rating via Anthropic                               |
-| `demo/` | Demo schema isolation — setup, seeding, cleanup                   |
-| `payments/` | Stripe integration — checkout, webhooks, customer management      |
-| `emails/` | SMTP email service, release notes, templates                      |
-| `service_runner/` | Background job scheduler                                          |
-| `routers/` | Export endpoints, misc config                                     |
+| `job_rating/`         | AI-powered job rating via Anthropic                               |
+| `demo/`               | Demo schema isolation — setup, seeding, cleanup                   |
+| `payments/`           | Stripe integration — checkout, webhooks, customer management      |
+| `emails/`             | SMTP email service, release notes, templates                      |
+| `service_runner/`     | Background job scheduler                                          |
+| `routers/`            | Export endpoints, misc config                                     |
 
 Key files:
 - `main.py` — FastAPI app setup, CORS, middleware, all router registrations, lifespan hooks
@@ -90,7 +90,7 @@ Key files:
 
 ### Frontend (`frontend/src/`)
 
-React + TypeScript app (Create React App):
+React + TypeScript app (Vite):
 
 - `App.tsx` — routing and top-level layout
 - `components/DataModal/` — CRUD modals for each entity (Job, Company, Person, Interview, etc.)
@@ -147,3 +147,11 @@ Frontend reads from `frontend/.env` (typically just the API base URL).
 - Python: Black formatter, 120-char line length
 - TypeScript: Prettier (see `.prettierrc`), Stylelint for SCSS
 - SCSS variables in `frontend/src/_variables.scss`, themes in `Themes.scss`
+
+## Editing Files on Windows
+
+Frontend files (`.tsx`, `.ts`, `.scss`) use **CRLF line endings** (`\r\n`) but linters (Prettier, Stylelint) may reformat them to **LF** (`\n`) during a session. The Edit tool fails silently when the line endings in the file don't match the string being searched.
+
+## Running Shell Commands on Windows
+
+This is a **native Windows environment** — never use `/mnt/c/...` paths. The Bash tool does not have WSL access here. Always use the **PowerShell tool** with Windows-style paths (e.g., `C:\Users\Emmanuel\WebstormProjects\jam`) for all shell commands.

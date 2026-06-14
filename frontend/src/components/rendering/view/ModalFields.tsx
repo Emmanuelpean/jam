@@ -1,6 +1,5 @@
 import React, { ReactNode } from "react";
 import { renderFunctions, RenderParams, RenderViewFieldWithContext, ViewField } from "./ViewRenders";
-import { ScrapedJobData } from "../../../services/schemas/Services";
 
 export interface ModalViewField extends ViewField {
 	label?: string;
@@ -14,20 +13,27 @@ export type ModalViewFields = (ModalViewField | ModalViewField[])[];
 
 interface ModalViewFieldOverride extends Partial<ModalViewField> {}
 
-export const renderModalViewField = (field: ModalViewField, item: any, id: string): ReactNode => {
-	const output = <RenderViewFieldWithContext field={field} item={item} id={id} />;
+export const ModalViewFieldRenderer = ({
+	field,
+	item,
+	id,
+}: {
+	field: ModalViewField;
+	item: any;
+	id: string;
+}): ReactNode => {
+	const output = <RenderViewFieldWithContext field={field} item={item} id={id} view={true} />;
 
 	if (field.isTitle) {
 		return (
-			<>
-				<div className="text-center p-1">
-					<h2 className="display-6 fw-bold mt-4 mb-4" style={{ color: "var(--primary-mid)" }}>
-						{output}
-					</h2>
-				</div>
-			</>
+			<div className="text-center p-1">
+				<h2 className="display-6 fw-bold mt-4 mb-4" style={{ color: "var(--primary-mid)" }}>
+					{output}
+				</h2>
+			</div>
 		);
-	} else if (field.label) {
+	}
+	if (field.label) {
 		return (
 			<>
 				<h6 className="mb-2 fw-bold">
@@ -37,9 +43,8 @@ export const renderModalViewField = (field: ModalViewField, item: any, id: strin
 				<div className="mb-3">{output}</div>
 			</>
 		);
-	} else {
-		return output;
 	}
+	return <div className="mb-3">{output}</div>;
 };
 
 export const modalViewFields = {
@@ -48,6 +53,12 @@ export const modalViewFields = {
 	name: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "name",
 		label: "Name",
+		...overrides,
+	}),
+
+	filename: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "filename",
+		label: "Filename",
 		...overrides,
 	}),
 
@@ -66,6 +77,8 @@ export const modalViewFields = {
 	location: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location",
 		label: "Location",
+		render: renderFunctions.locationAttendance,
+		displayCondition: (item: any) => !!item.location,
 		...overrides,
 	}),
 
@@ -79,27 +92,27 @@ export const modalViewFields = {
 	value: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "value",
 		label: "Value",
-		render: (params: RenderParams) => renderFunctions.value({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.value({ ...params }),
 		...overrides,
 	}),
 
 	description: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "description",
 		label: "Description",
-		render: (params: RenderParams) => renderFunctions.description({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.description({ ...params }),
 		...overrides,
 	}),
 
 	note: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "note",
 		label: "Notes",
-		render: (params: RenderParams) => renderFunctions.note({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.note({ ...params }),
 		...overrides,
 	}),
 
 	applicationNote: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_note",
-		render: (params: RenderParams) => renderFunctions.applicationNote({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.applicationNote({ ...params }),
 		...overrides,
 	}),
 
@@ -141,18 +154,24 @@ export const modalViewFields = {
 	city: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "city",
 		label: "City",
+		render: (param: RenderParams) => param.item?.geolocation?.city ?? param.item?.city ?? null,
+		displayCondition: (item: any) => !!(item.geolocation?.city ?? item.city),
 		...overrides,
 	}),
 
 	postcode: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "postcode",
 		label: "Postcode",
+		render: (param: RenderParams) => param.item?.geolocation?.postcode ?? param.item?.postcode ?? null,
+		displayCondition: (item: any) => !!(item.geolocation?.postcode ?? item.postcode),
 		...overrides,
 	}),
 
 	country: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "country",
 		label: "Country",
+		render: (param: RenderParams) => param.item?.geolocation?.country ?? param.item?.country ?? null,
+		displayCondition: (item: any) => !!(item.geolocation?.country ?? item.country),
 		...overrides,
 	}),
 
@@ -188,42 +207,56 @@ export const modalViewFields = {
 	url: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "url",
 		label: "Website",
-		render: (params: RenderParams) => renderFunctions.url({ ...params, view: true }),
+		render: renderFunctions.url,
 		...overrides,
 	}),
 
 	jobUrl: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job_url",
 		label: "Job URL",
-		render: (params: RenderParams) => renderFunctions.url({ ...params, view: true }),
+		render: renderFunctions.url,
 		...overrides,
 	}),
 
 	applicationUrl: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_url",
 		label: "Application URL",
-		render: (params: RenderParams) => renderFunctions.applicationUrl({ ...params, view: true }),
+		render: renderFunctions.applicationUrl,
+		...overrides,
+	}),
+
+	applicationCvBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "cv_id",
+		label: "CV",
+		render: renderFunctions.cvBadge,
+		...overrides,
+	}),
+
+	applicationCoverLetterBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "cover_letter_id",
+		label: "Cover Letter",
+		render: renderFunctions.coverLetterBadge,
 		...overrides,
 	}),
 
 	email: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "email",
 		label: "Email",
-		render: (params: RenderParams) => renderFunctions.email({ ...params, view: true }),
+		render: renderFunctions.email,
 		...overrides,
 	}),
 
 	contactEmail: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "contact_email",
 		label: "Contact Email",
-		render: (params: RenderParams) => renderFunctions.contactEmail({ ...params, view: true }),
+		render: renderFunctions.contactEmail,
 		...overrides,
 	}),
 
 	linkedinUrl: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "linkedin_url",
 		label: "LinkedIn Profile",
-		render: (params: RenderParams) => renderFunctions.linkedinUrl({ ...params, view: true }),
+		render: renderFunctions.linkedinUrl,
 		...overrides,
 	}),
 
@@ -238,7 +271,7 @@ export const modalViewFields = {
 	locationBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location",
 		label: "Location",
-		render: (params: RenderParams) => renderFunctions.LocationBadge({ ...params, view: true }),
+		render: renderFunctions.locationBadge,
 		...overrides,
 	}),
 
@@ -252,7 +285,7 @@ export const modalViewFields = {
 	keywordBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "keywords",
 		label: "Tags",
-		render: (params: RenderParams) => renderFunctions.KeywordBadges({ ...params, view: true }),
+		render: renderFunctions.KeywordBadges,
 		...overrides,
 	}),
 
@@ -273,14 +306,14 @@ export const modalViewFields = {
 	interviewerBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "person",
 		label: "Interviewers",
-		render: (params: RenderParams) => renderFunctions.InterviewerBadges({ ...params, view: true }),
+		render: renderFunctions.InterviewerBadges,
 		...overrides,
 	}),
 
 	appliedViaBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "applied_via",
 		label: "Applied Via",
-		render: (params: RenderParams) => renderFunctions.AppliedViaBadge({ ...params, view: true }),
+		render: renderFunctions.AppliedViaBadge,
 		...overrides,
 	}),
 
@@ -307,55 +340,54 @@ export const modalViewFields = {
 
 	// ----------------------------------------------------- OTHER -----------------------------------------------------
 
-	locationMap: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	geolocationMap: (scrollWheelZoom = true, overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location_map",
 		label: "Location on Map",
 		type: "custom",
-		render: renderFunctions.locationMap,
-		...overrides,
-	}),
-
-	scrapedLocationMap: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "location_map",
-		label: "Location on Map",
-		type: "custom",
-		render: renderFunctions.scrapedLocationMap,
-		displayCondition: (item) => "location" in item && !!item.location,
+		render: (param) => renderFunctions.locationMap(param, scrollWheelZoom),
+		displayCondition: (item): boolean => !!item.location && item.attendance_type !== "remote",
 		...overrides,
 	}),
 
 	phone: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "phone",
 		label: "Phone",
-		render: (params: RenderParams) => renderFunctions.phone({ ...params, view: true }),
+		render: renderFunctions.phone,
 		...overrides,
 	}),
 
 	salaryRange: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "salary_range",
 		label: "Salary Range",
-		render: (params: RenderParams) => renderFunctions.salaryRange({ ...params, view: true }),
+		render: renderFunctions.salaryRange,
 		...overrides,
 	}),
 
 	personalRating: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "personal_rating",
 		label: "Personal Rating",
-		render: (params: RenderParams) => renderFunctions.personalRating({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.personalRating({ ...params }),
+		...overrides,
+	}),
+
+	isFavourite: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "is_favourite",
+		label: "Favourite",
+		render: renderFunctions.isFavourite,
 		...overrides,
 	}),
 
 	applicationStatus: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_status",
 		label: "Status",
-		render: (params: RenderParams) => renderFunctions.applicationStatus({ ...params, view: true }),
+		render: renderFunctions.applicationStatus,
 		...overrides,
 	}),
 
 	isActive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "is_active",
 		label: "Active",
-		render: (params: RenderParams) => renderFunctions.isActive({ ...params, view: true }),
+		render: renderFunctions.isActive,
 		...overrides,
 	}),
 
@@ -369,14 +401,7 @@ export const modalViewFields = {
 	caseSensitive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "case_sensitive",
 		label: "Case Sensitive",
-		render: (params: RenderParams) => renderFunctions.caseSensitive({ ...params, view: true }),
-		...overrides,
-	}),
-
-	jobRating: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "job_rating",
-		render: (params: RenderParams) => renderFunctions.jobRating({ ...params, view: true }),
-		displayCondition: (item: ScrapedJobData): boolean => item.job_rating?.is_success === true,
+		render: renderFunctions.caseSensitive,
 		...overrides,
 	}),
 
@@ -400,12 +425,6 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	accordionInterviewTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "interviews",
-		render: (param) => renderFunctions.AccordionInterviewTable(param, "location_id"),
-		...overrides,
-	}),
-
 	accordionInterviewTablePerson: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "interviews",
 		render: (param) => renderFunctions.AccordionInterviewTable(param, "interviewers"),
@@ -426,14 +445,14 @@ export const modalViewFields = {
 
 	accordionRecruitedJobTablePerson: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "recruited_jobs",
-		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "recruiter_id", "Recruited Jobs"),
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "recruiter_id", "Submitted Jobs"),
 		...overrides,
 	}),
 
 	accordionRecruitedJobTableCompany: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "recruited_jobs",
 		render: (param: RenderParams) =>
-			renderFunctions._accordionJobTable(param, "recruitment_company_id", "Recruited Jobs"),
+			renderFunctions._accordionJobTable(param, "recruitment_company_id", "Submitted Jobs"),
 		...overrides,
 	}),
 
@@ -446,12 +465,6 @@ export const modalViewFields = {
 	accordionJobTableKeyword: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "jobs",
 		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "keywords"),
-		...overrides,
-	}),
-
-	accordionJobTableLocation: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "jobs",
-		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "location_id"),
 		...overrides,
 	}),
 
@@ -563,6 +576,25 @@ export const modalViewFields = {
 		key: "emails",
 		render: (params: RenderParams) => renderFunctions.scrapedJobEmailTable(params),
 		displayCondition: (item) => Array.isArray(item.emails) && item.emails.length > 0,
+		...overrides,
+	}),
+
+	fileSize: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "size",
+		label: "File Size",
+		render: (params: RenderParams) => renderFunctions.fileSize(params),
+		...overrides,
+	}),
+
+	fileActions: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "file_actions",
+		render: (params: RenderParams) => renderFunctions.fileActions(params),
+		...overrides,
+	}),
+
+	accordionJobTableFile: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "jobs",
+		render: (params: RenderParams) => renderFunctions.accordionJobTableFile(params),
 		...overrides,
 	}),
 };
