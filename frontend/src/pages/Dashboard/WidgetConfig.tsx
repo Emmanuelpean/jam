@@ -60,6 +60,9 @@ interface ConfigurableDashboardCardProps {
 	// Horizontal padding around the content. Disable for content that manages its own
 	// padding and should scroll flush to the widget edge (e.g. timelines).
 	bodyPadding?: boolean;
+	// Custom sidebar controls rendered in place of the default numeric settings sidebar
+	// (e.g. the graph widget's source/field/chart-type selects).
+	sidebarContent?: ReactNode;
 	children: ReactNode;
 }
 
@@ -76,9 +79,10 @@ export const ConfigurableDashboardCard: React.FC<ConfigurableDashboardCardProps>
 	isEditMode = false,
 	open = false,
 	bodyPadding = true,
+	sidebarContent,
 	children,
 }: ConfigurableDashboardCardProps): JSX.Element => {
-	const showConfig = isEditMode && settings.length > 0;
+	const showConfig = isEditMode && (sidebarContent != null || settings.length > 0);
 
 	const renderEmptyState = (): ReactNode => {
 		if (!emptyState) return null;
@@ -109,7 +113,14 @@ export const ConfigurableDashboardCard: React.FC<ConfigurableDashboardCardProps>
 				<div className={`widget-config-main ${bodyPadding ? "px-3" : ""}`}>
 					{isEmpty && emptyState ? renderEmptyState() : children}
 				</div>
-				{showConfig && <WidgetConfigSidebar open={open} settings={settings} idPrefix={id} />}
+				{showConfig &&
+					(sidebarContent != null ? (
+						<div className={`widget-config-sidebar ${open ? "open" : ""}`}>
+							<div className="widget-config-sidebar-content">{sidebarContent}</div>
+						</div>
+					) : (
+						<WidgetConfigSidebar open={open} settings={settings} idPrefix={id} />
+					))}
 			</div>
 		</DashboardCard>
 	);

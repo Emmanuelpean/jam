@@ -628,6 +628,8 @@ export function buildWidgetSettings(
 
 // Whether a widget exposes any configurable settings (i.e. should show the config button).
 export function widgetHasSettings(config: WidgetConfig): boolean {
+	// Graphs are always configurable (source, field, chart type, …) via their own sidebar controls.
+	if (config.type === "graph") return true;
 	return (WIDGET_VARIANT_SETTINGS[configToVariantKey(config)] ?? []).length > 0;
 }
 

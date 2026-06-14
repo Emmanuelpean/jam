@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Tooltip as UiTooltip, TITLE_TOOLTIP_DELAY } from "../../components/Tooltip/Tooltip";
 import { CustomSelect } from "../../components/rendering/widgets/CustomSelect";
-import { Button } from "react-bootstrap";
 import {
 	ResponsiveContainer,
 	LineChart,
@@ -21,7 +19,7 @@ import { GraphConfig, GraphSource } from "./widgetRegistry";
 import { aggregateGraphData, ChartDataPoint, getFieldMeta, GRAPH_SOURCES } from "./graphAggregations";
 import { SelectOption } from "../../components/rendering/form/FormOptions";
 import { PieChart } from "../../components/Chart/PieChart";
-import { DashboardCard } from "./DashboardCard";
+import { ConfigurableDashboardCard } from "./WidgetConfig";
 import "./GraphWidget.scss";
 
 const CHART_COLORS: string[] = [
@@ -46,6 +44,7 @@ interface GraphWidgetProps {
 	config: GraphConfig;
 	onConfigChange: (updated: GraphConfig) => void;
 	isEditMode?: boolean;
+	open?: boolean;
 }
 
 const CustomTooltip = ({ active, payload, label, suffix = "" }: any) => {
@@ -171,15 +170,10 @@ const renderBarChart = (data: ChartDataPoint[], suffix = "", xLabel?: string, yL
 	</ResponsiveContainer>
 );
 
-const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEditMode }) => {
+const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEditMode, open }) => {
 	const dataContext = useDataContext();
 	const { token } = useAuth();
-	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const [rawPlatformStats, setRawPlatformStats] = useState<ScrapedJobPlatformStat[]>([]);
-
-	useEffect(() => {
-		if (!isEditMode) setSidebarOpen(false);
-	}, [isEditMode]);
 
 	useEffect(() => {
 		if (config.source !== "scraped_jobs" || !token) return;
@@ -287,8 +281,118 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 		}
 	};
 
+	const sidebarContent = (
+		<>
+			<div className="widget-config-field">
+				<label className="widget-config-label" htmlFor="graph-source">
+					Source
+				</label>
+				<CustomSelect
+					id="graph-source"
+					value={sourceOptions.find((o: SelectOption): boolean => o.value === config.source) ?? null}
+					onChange={(opt) => opt && !Array.isArray(opt) && handleSourceChange(opt.value as GraphSource)}
+					options={sourceOptions}
+					isSearchable={false}
+					isClearable={false}
+					size="sm"
+				/>
+			</div>
+
+			<div className="widget-config-field">
+				<label className="widget-config-label" htmlFor="graph-field">
+					Display
+				</label>
+				<CustomSelect
+					id="graph-field"
+					value={fieldOptions.find((o: SelectOption): boolean => o.value === config.field) ?? null}
+					onChange={(opt) =>
+						opt &&
+						!Array.isArray(opt) &&
+						onConfigChange({
+							type: "graph",
+							source: config.source,
+							field: opt.value as GraphConfig["field"],
+						})
+					}
+					options={fieldOptions}
+					isSearchable={false}
+					isClearable={false}
+					size="sm"
+				/>
+			</div>
+
+			{config.source === "scraped_jobs" && (
+				<div className="widget-config-field">
+					<label className="widget-config-label" htmlFor="graph-group-by">
+						Group By
+					</label>
+					<CustomSelect
+						id="graph-group-by"
+						value={groupByOptions.find((o: SelectOption): boolean => o.value === effectiveGroupBy) ?? null}
+						onChange={(opt) =>
+							opt &&
+							!Array.isArray(opt) &&
+							onConfigChange({ ...config, groupBy: opt.value as GraphConfig["groupBy"] })
+						}
+						options={groupByOptions}
+						isSearchable={false}
+						isClearable={false}
+						size="sm"
+					/>
+				</div>
+			)}
+
+			{fieldMeta && fieldMeta.supportedChartTypes.length > 1 && (
+				<div className="widget-config-field">
+					<label className="widget-config-label" htmlFor="graph-chart-type">
+						Chart
+					</label>
+					<CustomSelect
+						id="graph-chart-type"
+						value={
+							chartTypeOptions.find((o: SelectOption): boolean => o.value === effectiveChartType) ?? null
+						}
+						onChange={(opt) =>
+							opt &&
+							!Array.isArray(opt) &&
+							onConfigChange({ ...config, chartType: opt.value as GraphConfig["chartType"] })
+						}
+						options={chartTypeOptions}
+						isSearchable={false}
+						isClearable={false}
+						size="sm"
+					/>
+				</div>
+			)}
+
+			{fieldMeta?.supportsGranularity && (
+				<div className="widget-config-field">
+					<label className="widget-config-label" htmlFor="graph-granularity">
+						Period
+					</label>
+					<CustomSelect
+						id="graph-granularity"
+						value={granularityOptions.find((o) => o.value === effectiveGranularity) ?? null}
+						onChange={(opt) =>
+							opt &&
+							!Array.isArray(opt) &&
+							onConfigChange({
+								...config,
+								granularity: opt.value as GraphConfig["granularity"],
+							})
+						}
+						options={granularityOptions}
+						isSearchable={false}
+						isClearable={false}
+						size="sm"
+					/>
+				</div>
+			)}
+		</>
+	);
+
 	return (
-		<DashboardCard
+		<ConfigurableDashboardCard
 			icon={fieldMeta?.icon ?? "bar-chart-line"}
 			title={fieldMeta?.label ?? "Graph"}
 			isEmpty={data.length === 0}
@@ -297,130 +401,13 @@ const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEdi
 				title: "No data available",
 				description: "Add some data to see this chart",
 			}}
-			bodyPadding={false}
-			headerAction={
-				isEditMode ? (
-					<div style={{ paddingRight: "1rem" }}>
-						<UiTooltip content="Configure" delay={TITLE_TOOLTIP_DELAY}>
-							<Button
-								className="graph-sidebar-toggle"
-								variant={`${sidebarOpen ? "primary" : "outline-primary"}`}
-								onClick={(): void => setSidebarOpen((prev: boolean): boolean => !prev)}
-							>
-								<i className={`bi bi-gear`}></i>
-							</Button>
-						</UiTooltip>
-					</div>
-				) : undefined
-			}
+			settings={[]}
+			isEditMode={isEditMode}
+			open={open}
+			sidebarContent={sidebarContent}
 		>
-			<div className="graph-body">
-				<div className="graph-chart-container">{renderChart()}</div>
-				<div className={`graph-sidebar ${sidebarOpen ? "open" : ""}`}>
-					<div className="graph-sidebar-content">
-						<label className="graph-sidebar-label">Source</label>
-						<CustomSelect
-							id="graph-source"
-							value={sourceOptions.find((o: SelectOption): boolean => o.value === config.source) ?? null}
-							onChange={(opt) =>
-								opt && !Array.isArray(opt) && handleSourceChange(opt.value as GraphSource)
-							}
-							options={sourceOptions}
-							isSearchable={false}
-							isClearable={false}
-							size="sm"
-						/>
-
-						<label className="graph-sidebar-label">Display</label>
-						<CustomSelect
-							id="graph-field"
-							value={fieldOptions.find((o: SelectOption): boolean => o.value === config.field) ?? null}
-							onChange={(opt) =>
-								opt &&
-								!Array.isArray(opt) &&
-								onConfigChange({
-									type: "graph",
-									source: config.source,
-									field: opt.value as GraphConfig["field"],
-								})
-							}
-							options={fieldOptions}
-							isSearchable={false}
-							isClearable={false}
-							size="sm"
-						/>
-
-						{config.source === "scraped_jobs" && (
-							<>
-								<label className="graph-sidebar-label">Group By</label>
-								<CustomSelect
-									id="graph-group-by"
-									value={
-										groupByOptions.find(
-											(o: SelectOption): boolean => o.value === effectiveGroupBy
-										) ?? null
-									}
-									onChange={(opt) =>
-										opt &&
-										!Array.isArray(opt) &&
-										onConfigChange({ ...config, groupBy: opt.value as GraphConfig["groupBy"] })
-									}
-									options={groupByOptions}
-									isSearchable={false}
-									isClearable={false}
-									size="sm"
-								/>
-							</>
-						)}
-
-						{fieldMeta && fieldMeta.supportedChartTypes.length > 1 && (
-							<>
-								<label className="graph-sidebar-label">Chart</label>
-								<CustomSelect
-									id="graph-chart-type"
-									value={
-										chartTypeOptions.find(
-											(o: SelectOption): boolean => o.value === effectiveChartType
-										) ?? null
-									}
-									onChange={(opt) =>
-										opt &&
-										!Array.isArray(opt) &&
-										onConfigChange({ ...config, chartType: opt.value as GraphConfig["chartType"] })
-									}
-									options={chartTypeOptions}
-									isSearchable={false}
-									isClearable={false}
-									size="sm"
-								/>
-							</>
-						)}
-
-						{fieldMeta?.supportsGranularity && (
-							<>
-								<label className="graph-sidebar-label">Period</label>
-								<CustomSelect
-									id="graph-granularity"
-									value={granularityOptions.find((o) => o.value === effectiveGranularity) ?? null}
-									onChange={(opt) =>
-										opt &&
-										!Array.isArray(opt) &&
-										onConfigChange({
-											...config,
-											granularity: opt.value as GraphConfig["granularity"],
-										})
-									}
-									options={granularityOptions}
-									isSearchable={false}
-									isClearable={false}
-									size="sm"
-								/>
-							</>
-						)}
-					</div>
-				</div>
-			</div>
-		</DashboardCard>
+			<div className="graph-chart-container">{renderChart()}</div>
+		</ConfigurableDashboardCard>
 	);
 };
 

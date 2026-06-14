@@ -620,6 +620,7 @@ const Dashboard: React.FC = () => {
 						config={config}
 						onConfigChange={(updated: GraphConfig): void => handleUpdateWidgetConfig(widgetId, updated)}
 						isEditMode={isEditMode}
+						open={open}
 					/>
 				);
 			case "map":
