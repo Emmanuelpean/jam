@@ -65,6 +65,7 @@ export interface Config {
 	scrape_max_retry: number;
 	max_file_size_mb: number;
 	monthly_scrape_quota: number;
+	turnstile_site_key: string;
 	column_limits: ColumnLimits;
 }
 

@@ -17,6 +17,7 @@ import { DEFAULT_THEME } from "../../utils/Theme";
 import { ApiError } from "../../services/api/ApiError";
 import { useConfig } from "../../contexts/ConfigContext";
 import { useViewport } from "../../contexts/ViewportContext";
+import TurnstileWidget from "./TurnstileWidget";
 
 type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "verifyEmail" | "verifyNewEmail";
 
@@ -57,6 +58,7 @@ function AuthForm(): JSX.Element {
 	const [formData, setFormData] = useState<FormData>(defaultFormData);
 	const [resetToken, setResetToken] = useState<string>("");
 	const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
+	const [acceptedPrivacy, setAcceptedPrivacy] = useState<boolean>(false);
 	const [showTerms, setShowTerms] = useState<boolean>(false);
 	const [showPrivacy, setShowPrivacy] = useState<boolean>(false);
 	const [rememberMe, setRememberMe] = useState<boolean>(false);
@@ -64,6 +66,7 @@ function AuthForm(): JSX.Element {
 	const [demoLoading, setDemoLoading] = useState<boolean>(false);
 	const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
 	const [fieldErrors, setFieldErrors] = useState<Errors>({});
+	const [captchaToken, setCaptchaToken] = useState<string>("");
 	const hasFieldErrors: boolean = Object.values(fieldErrors).some((e) => !!e);
 	const { logout, login, isAuthenticated } = useAuth();
 	const { showToastSuccess, showToastError, showApiError } = useGlobalToast();
@@ -199,9 +202,11 @@ function AuthForm(): JSX.Element {
 	const resetForm = (): void => {
 		setFormData(defaultFormData);
 		setAcceptedTerms(false);
+		setAcceptedPrivacy(false);
 		setFieldErrors({});
 		setResetToken("");
 		setRegistrationStep(1);
+		setCaptchaToken("");
 	};
 
 	const switchToRegister = (): void => {
@@ -245,10 +250,6 @@ function AuthForm(): JSX.Element {
 				} else if (formData.password !== formData.confirmPassword) {
 					errors.confirmPassword = "Passwords do not match.";
 				}
-
-				if (!acceptedTerms) {
-					errors.terms = "You must accept the Terms and Conditions and Privacy Policy to register.";
-				}
 			} else if (step === 2) {
 				if (!formData.firstName || formData.firstName.trim().length === 0) {
 					errors.firstName = "First name is required.";
@@ -256,6 +257,18 @@ function AuthForm(): JSX.Element {
 
 				if (!formData.lastName || formData.lastName.trim().length === 0) {
 					errors.lastName = "Last name is required.";
+				}
+			} else if (step === 3) {
+				if (!acceptedTerms) {
+					errors.terms = "You must accept the Terms and Conditions to register.";
+				}
+
+				if (!acceptedPrivacy) {
+					errors.privacy = "You must accept the Privacy Policy to register.";
+				}
+
+				if (!captchaToken) {
+					errors.captcha = "Please complete the CAPTCHA to continue.";
 				}
 			}
 
@@ -319,11 +332,11 @@ function AuthForm(): JSX.Element {
 
 		if (Object.keys(errors).length > 0) return;
 
-		setRegistrationStep(2);
+		setRegistrationStep(registrationStep + 1);
 	};
 
 	const handlePreviousStep = (): void => {
-		setRegistrationStep(1);
+		setRegistrationStep((prev: number): number => Math.max(1, prev - 1));
 		setFieldErrors({});
 	};
 
@@ -343,6 +356,7 @@ function AuthForm(): JSX.Element {
 				password: formData.password,
 				first_name: formData.firstName,
 				last_name: formData.lastName,
+				captcha_token: captchaToken,
 			});
 
 			if (result.data.success) {
@@ -353,9 +367,14 @@ function AuthForm(): JSX.Element {
 				);
 			} else {
 				showToastError(result.data.message, errorTitle);
+				setCaptchaToken("");
+				setRegistrationStep(3);
 			}
 		} catch (error) {
 			showApiError(error, errorTitle, "An unknown error occurred during registration.");
+			// Turnstile tokens are single-use — clear so the user re-solves on the next attempt
+			setCaptchaToken("");
+			setRegistrationStep(1);
 		} finally {
 			setLoading(false);
 			setButtonDisabled(false);
@@ -434,7 +453,7 @@ function AuthForm(): JSX.Element {
 		} else if (mode === "login") {
 			handleLogin().then();
 		} else if (mode === "register") {
-			if (registrationStep === 1) {
+			if (registrationStep < 3) {
 				handleNextStep();
 			} else {
 				handleRegister().then();
@@ -446,6 +465,13 @@ function AuthForm(): JSX.Element {
 		setAcceptedTerms(e.target.checked);
 		if (fieldErrors.terms) {
 			setFieldErrors((prev: Errors): Errors => ({ ...prev, terms: "" }));
+		}
+	};
+
+	const handlePrivacyCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+		setAcceptedPrivacy(e.target.checked);
+		if (fieldErrors.privacy) {
+			setFieldErrors((prev: Errors): Errors => ({ ...prev, privacy: "" }));
 		}
 	};
 
@@ -520,7 +546,9 @@ function AuthForm(): JSX.Element {
 					? "Login"
 					: displayedStep === 1
 						? "Get Started"
-						: "Tell Us About Yourself";
+						: displayedStep === 2
+							? "Tell Us About Yourself"
+							: "Almost There";
 
 	const termsField: ModalFormField = {
 		key: "terms",
@@ -531,7 +559,16 @@ function AuthForm(): JSX.Element {
 				<button type="button" onClick={handleShowTerms} className="btn-link" style={{ cursor: "pointer" }}>
 					Terms and Conditions
 				</button>
-				{" and the "}
+			</span>
+		),
+	};
+
+	const privacyField: ModalFormField = {
+		key: "privacy",
+		type: "checkbox",
+		label: (
+			<span>
+				I agree to the{" "}
 				<button type="button" onClick={handleShowPrivacy} className="btn-link" style={{ cursor: "pointer" }}>
 					Privacy Policy
 				</button>
@@ -649,8 +686,8 @@ function AuthForm(): JSX.Element {
 								{displayedMode === "register" && (
 									<div className="mb-3">
 										<div className="d-flex justify-content-between align-items-center mb-2">
-											<small className="text-muted">Step {displayedStep} of 2</small>
-											{displayedStep === 2 && (
+											<small className="text-muted">Step {displayedStep} of 3</small>
+											{displayedStep > 1 && (
 												<button
 													type="button"
 													onClick={handlePreviousStep}
@@ -665,8 +702,8 @@ function AuthForm(): JSX.Element {
 											<div
 												className="progress-bar"
 												role="progressbar"
-												style={{ width: `${(displayedStep / 2) * 100}%` }}
-												aria-valuenow={(displayedStep / 2) * 100}
+												style={{ width: `${(displayedStep / 3) * 100}%` }}
+												aria-valuenow={(displayedStep / 3) * 100}
 												aria-valuemin={0}
 												aria-valuemax={100}
 											></div>
@@ -717,13 +754,6 @@ function AuthForm(): JSX.Element {
 												undefined,
 												handleFieldError
 											)}
-											{renderFormField(
-												termsField,
-												{ terms: acceptedTerms },
-												// @ts-ignore
-												handleTermsCheckboxChange,
-												fieldErrors
-											)}
 										</>
 									)}
 
@@ -748,6 +778,53 @@ function AuthForm(): JSX.Element {
 												undefined,
 												handleFieldError
 											)}
+										</>
+									)}
+
+									{/* Registration Step 3 */}
+									{displayedMode === "register" && displayedStep === 3 && (
+										<>
+											<span className="step3-label">
+												<i className="bi bi-file-earmark-text"></i>
+												Review our T&amp;C and Privacy Policy
+											</span>
+											{renderFormField(
+												termsField,
+												{ terms: acceptedTerms },
+												// @ts-ignore
+												handleTermsCheckboxChange,
+												fieldErrors
+											)}
+											{renderFormField(
+												privacyField,
+												{ privacy: acceptedPrivacy },
+												// @ts-ignore
+												handlePrivacyCheckboxChange,
+												fieldErrors
+											)}
+
+											<div className="captcha-section mb-3">
+												<span className="step3-label">
+													<i className="bi bi-shield-check"></i>
+													Just checking that you are not a robot
+												</span>
+												<TurnstileWidget
+													siteKey={config.turnstile_site_key}
+													onVerify={(token: string) => {
+														setCaptchaToken(token);
+														setFieldErrors(
+															(prev: Errors): Errors => ({ ...prev, captcha: "" })
+														);
+													}}
+													onExpire={() => setCaptchaToken("")}
+													onError={() => setCaptchaToken("")}
+												/>
+												{fieldErrors.captcha && (
+													<div className="invalid-feedback d-block text-center mt-2">
+														{fieldErrors.captcha}
+													</div>
+												)}
+											</div>
 										</>
 									)}
 
@@ -836,7 +913,7 @@ function AuthForm(): JSX.Element {
 									)}
 
 									{/* Action buttons */}
-									<div className="d-grid gap-2">
+									<div className="d-grid gap-2 pt-1">
 										<ActionButton
 											type="submit"
 											id="confirm-button"
@@ -850,7 +927,7 @@ function AuthForm(): JSX.Element {
 														? "Sending..."
 														: displayedMode === "login"
 															? "Signing in..."
-															: displayedStep === 1
+															: displayedStep < 3
 																? "Please wait..."
 																: "Creating Account..."
 											}
@@ -861,7 +938,7 @@ function AuthForm(): JSX.Element {
 														? "Send Reset Link"
 														: displayedMode === "login"
 															? "Sign In"
-															: displayedStep === 1
+															: displayedStep < 3
 																? "Continue"
 																: "Create Account"
 											}
@@ -872,7 +949,7 @@ function AuthForm(): JSX.Element {
 														? "bi bi-envelope-paper"
 														: displayedMode === "login"
 															? "bi bi-box-arrow-in-right"
-															: displayedStep === 1
+															: displayedStep < 3
 																? "bi bi-arrow-right"
 																: "bi bi-person-plus"
 											}

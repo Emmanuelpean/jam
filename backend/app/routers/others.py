@@ -48,6 +48,7 @@ def get_config(
         "scrape_max_retry": settings.scrape_max_retry,
         "max_file_size_mb": settings.max_file_size_mb,
         "monthly_scrape_quota": settings.monthly_scrape_quota,
+        "turnstile_site_key": settings.turnstile_site_key,
         "column_limits": COLUMN_LIMITS,
     }
 

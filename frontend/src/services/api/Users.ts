@@ -33,6 +33,7 @@ export interface RegisterData {
 	password: string;
 	first_name: string;
 	last_name: string;
+	captcha_token: string;
 }
 
 export const userApi: CrudApi<UserData> & {

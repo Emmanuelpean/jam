@@ -1,8 +1,10 @@
 """Utility functions for token management and email verification."""
 
+import logging
 import secrets
 from typing import Callable
 
+import requests
 from sqlalchemy.orm import Session
 from starlette import status
 
@@ -11,6 +13,26 @@ from app.config import settings
 from app.core.models import TokenType
 from app.emails.email_service import email_service
 from app.base_schemas import GenericResponse
+
+
+def verify_captcha_token(token: str) -> bool:
+    """Verify a Cloudflare Turnstile token with the siteverify endpoint.
+    :param token: Token produced by the Turnstile widget on the client.
+    :return: True if Cloudflare confirms the token is valid, False otherwise."""
+
+    if not token:
+        return False
+
+    try:
+        response = requests.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data={"secret": settings.turnstile_secret_key, "response": token},
+            timeout=5,
+        )
+        response.raise_for_status()
+        return bool(response.json().get("success"))
+    except (requests.RequestException, ValueError):
+        return False
 
 
 def get_token(

@@ -25,18 +25,18 @@ class AuthentificationUtils(BaseUtils):
     def go_to_login(self) -> None:
         """Go to the login page"""
 
-        self.go_to_page(f"login")
+        self.go_to_page("login")
 
     def go_to_register(self) -> None:
         """Go to the register page"""
 
-        self.go_to_page(f"register")
+        self.go_to_page("register")
         time.sleep(0.5)  # animation
 
     def go_to_forgot_password(self) -> None:
         """Go to the forgot password page"""
 
-        self.go_to_page(f"forgot-password")
+        self.go_to_page("forgot-password")
         time.sleep(0.5)  # animation
 
     @property
@@ -70,6 +70,27 @@ class AuthentificationUtils(BaseUtils):
 
         self.get_element("terms").click()
 
+    def set_privacy(self) -> None:
+        """Set the accept privacy policy checkbox to True"""
+
+        self.get_element("privacy").click()
+
+    def wait_for_captcha(self, timeout: float = 10.0) -> None:
+        """Wait for the Cloudflare Turnstile widget to auto-solve.
+
+        Selenium tests use Cloudflare's always-pass test site key, which fires its
+        success callback shortly after the widget renders. On success Turnstile fills
+        a hidden ``cf-turnstile-response`` input inside the widget container — we poll
+        for that instead of a blind sleep so slow CI runners don't flake."""
+
+        WebDriverWait(self.driver, timeout).until(
+            lambda d: any(
+                el.get_attribute("value")
+                for el in d.find_elements(By.CSS_SELECTOR, "input[name='cf-turnstile-response']")
+            ),
+            "Turnstile widget did not auto-solve within timeout",
+        )
+
     def set_remember_me(self) -> None:
         """Check the remember me checkbox"""
 
@@ -92,16 +113,22 @@ class AuthentificationUtils(BaseUtils):
         first_name: str = "First Name",
         last_name: str = "Last Name",
     ) -> None:
-        """Register a new user"""
+        """Register a new user through the three-step register flow."""
 
         self.go_to_register()
+        # Step 1 — credentials
         self.set_email(email)
         self.set_password(password)
         self.set_confirm_password(password)
-        self.set_terms()
         self.confirm()
+        # Step 2 — name
         self.set_first_name(first_name)
         self.set_last_name(last_name)
+        self.confirm()
+        # Step 3 — consent + CAPTCHA
+        self.set_terms()
+        self.set_privacy()
+        self.wait_for_captcha()
         self.confirm()
 
     def login_user(self, email: str, password: str) -> None:
@@ -140,6 +167,11 @@ class AuthentificationUtils(BaseUtils):
         """Assert that the given error message is displayed on the page"""
 
         self._assert_message("terms-", error_message)
+
+    def assert_accept_privacy_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("privacy-", error_message)
 
     def assert_no_email_error_message(self) -> None:
         """Assert that the email error message is not displayed on the page"""

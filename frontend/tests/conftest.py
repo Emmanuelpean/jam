@@ -167,6 +167,9 @@ def test_backend_server(database_url, worker_id, frontend_url, engine) -> Genera
     env["TEST_MODE"] = "true"
     env["LOG_DIRECTORY"] = settings.log_directory
     env["FRONTEND_URL"] = frontend_url + "/jam"
+    # Cloudflare Turnstile test keys — site key auto-solves; secret key always returns success
+    env["TURNSTILE_SITE_KEY"] = "1x00000000000000000000AA"
+    env["TURNSTILE_SECRET_KEY"] = "1x0000000000000000000000000000000AA"
     print(f"Using database URL: {database_url}")
     print(f"Backend path: {backend_path}")
 
@@ -179,12 +182,24 @@ def test_backend_server(database_url, worker_id, frontend_url, engine) -> Genera
     backend_log_file = settings.log_directory + f"/backend_server_{worker_id}.log"
     backend_error_file = settings.log_directory + f"/backend_errors_{worker_id}.log"
 
-    with open(backend_log_file, "w") as log_out, open(backend_error_file, "w") as log_err:
+    with (
+        open(backend_log_file, "w") as log_out,
+        open(backend_error_file, "w") as log_err,
+    ):
         print(f"Backend logs will be saved to: {backend_log_file}")
 
         # Start backend with worker-specific port
         process = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", str(port)],
+            [
+                sys.executable,
+                "-m",
+                "uvicorn",
+                "app.main:app",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                str(port),
+            ],
             cwd=backend_path,
             env=env,
             stdout=log_out,
@@ -205,7 +220,7 @@ def test_backend_server(database_url, worker_id, frontend_url, engine) -> Genera
                     error_content = f.read()
                 print(f"❌ Backend process died! Return code: {process.poll()}")
                 print(f"Last error output:\n{error_content[-1000:]}")
-                raise Exception(f"Backend server process terminated unexpectedly")
+                raise Exception("Backend server process terminated unexpectedly")
 
             try:
                 response = requests.get(f"{api_url}/health", timeout=3)
@@ -230,7 +245,7 @@ def test_backend_server(database_url, worker_id, frontend_url, engine) -> Genera
             print(f"Backend STDOUT:\n{stdout_content[-1000:]}")
             print(f"Backend STDERR:\n{stderr_content[-1000:]}")
             kill_process_tree(process.pid)
-            raise Exception(f"Backend server failed to start")
+            raise Exception("Backend server failed to start")
 
         print(f"✅ Backend server startup completed successfully on port {port}!")
         yield api_url
@@ -261,7 +276,7 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     env = os.environ.copy()
     env["VITE_API_BASE_URL"] = test_backend_server  # Use worker-specific backend
     env["VITE_API_SERVICE_URL"] = test_backend_server  # Scheduler routes also served by test backend
-    print(f"Environment variables:")
+    print("Environment variables:")
     print(f"  VITE_API_BASE_URL: {env['VITE_API_BASE_URL']}")
     print(f"  VITE_API_SERVICE_URL: {env['VITE_API_SERVICE_URL']}")
 
@@ -330,7 +345,7 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
             print("Recent output:")
             for line in remaining_output[-10:]:
                 print(f"  {line}")
-            raise Exception(f"Frontend server process terminated unexpectedly")
+            raise Exception("Frontend server process terminated unexpectedly")
 
         recent_lines = []
         while not output_queue.empty():
@@ -341,7 +356,7 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
                 compiled = True
                 print(f"\u2705 Frontend ready: {line}")
             elif "error" in line.lower() and ("failed" in line.lower() or "cannot" in line.lower()):
-                print(f"❌ Frontend compilation failed!")
+                print("❌ Frontend compilation failed!")
                 print("Recent output before failure:")
                 for prev_line in recent_lines[-20:]:
                     print(f"  {prev_line}")

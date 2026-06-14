@@ -47,6 +47,7 @@ class UserRegister(BaseModel):
     password: str = Field(max_length=COLUMN_LIMITS.password)
     first_name: str = Field(max_length=COLUMN_LIMITS.first_name)
     last_name: str = Field(max_length=COLUMN_LIMITS.last_name)
+    captcha_token: str = Field(default="", max_length=4096)
 
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
@@ -296,4 +297,5 @@ class ConfigOut(BaseModel):
     scrape_max_retry: int
     max_file_size_mb: int
     monthly_scrape_quota: int
+    turnstile_site_key: str
     column_limits: ColumnLimits

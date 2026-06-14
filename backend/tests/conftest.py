@@ -48,6 +48,14 @@ def enable_test_mode():
 
 
 @pytest.fixture(autouse=True)
+def mock_captcha_verification():
+    """Bypass Cloudflare Turnstile network calls in tests; production verification stays intact."""
+
+    with patch("app.core.routers.auth.verify_captcha_token", return_value=True):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_nominatim_get():
     """Auto-mock Nominatim HTTP calls using MOCK_GEOCODING_RESPONSES.
     Known queries return a real-shaped Nominatim response; unknown queries return []
