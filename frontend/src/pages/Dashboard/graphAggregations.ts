@@ -194,7 +194,7 @@ export const GRAPH_SOURCES: Record<GraphSource, GraphSourceMeta> = {
 		fields: [
 			{
 				key: "scraped_count",
-				label: "Jobs Scraped",
+				label: "Job Alerts Received",
 				icon: "inbox",
 				supportedChartTypes: ["bar", "pie"],
 				defaultChartType: "bar",

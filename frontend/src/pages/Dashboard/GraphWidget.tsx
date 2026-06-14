@@ -71,6 +71,45 @@ const CustomTooltip = ({ active, payload, label, suffix = "" }: any) => {
 
 const AXIS_LABEL_STYLE = { fill: "var(--bs-secondary-color)", fontSize: 11 };
 
+// X-axis tick wrapping: long category labels are broken onto multiple lines instead of
+// being clipped. Used for bar charts with few categories (dense charts rotate instead).
+const TICK_MAX_CHARS = 12;
+const TICK_MAX_LINES = 3;
+const TICK_LINE_HEIGHT = 13;
+
+const wrapLabel = (text: string, maxChars: number = TICK_MAX_CHARS): string[] => {
+	const lines: string[] = [];
+	let current = "";
+	for (const word of String(text).split(" ")) {
+		current = current ? `${current} ${word}` : word;
+		// Hard-break a single word that is itself longer than a line.
+		while (current.length > maxChars) {
+			const head = current.slice(0, current.includes(" ") ? current.lastIndexOf(" ") : maxChars);
+			lines.push(head.trimEnd());
+			current = current.slice(head.length).trimStart();
+		}
+	}
+	if (current) lines.push(current);
+	if (lines.length > TICK_MAX_LINES) {
+		const truncated = lines.slice(0, TICK_MAX_LINES);
+		truncated[TICK_MAX_LINES - 1] = `${truncated[TICK_MAX_LINES - 1]!.slice(0, maxChars - 1)}…`;
+		return truncated;
+	}
+	return lines;
+};
+
+const WrappedAxisTick = ({ x, y, payload }: any) => (
+	<g transform={`translate(${x},${y})`}>
+		<text textAnchor="middle" fill="var(--bs-body-color)" fontSize={13}>
+			{wrapLabel(payload.value).map((line: string, i: number) => (
+				<tspan key={i} x={0} dy={i === 0 ? 14 : TICK_LINE_HEIGHT}>
+					{line}
+				</tspan>
+			))}
+		</text>
+	</g>
+);
+
 const renderLineChart = (data: ChartDataPoint[], suffix = "", xLabel?: string, yLabel?: string) => (
 	<ResponsiveContainer width="100%" height="100%">
 		<LineChart data={data} margin={{ top: 5, right: 20, left: yLabel ? 10 : 0, bottom: xLabel ? 20 : 5 }}>
@@ -116,59 +155,65 @@ const renderLineChart = (data: ChartDataPoint[], suffix = "", xLabel?: string, y
 	</ResponsiveContainer>
 );
 
-const renderBarChart = (data: ChartDataPoint[], suffix = "", xLabel?: string, yLabel?: string) => (
-	<ResponsiveContainer width="100%" height="100%">
-		<BarChart
-			data={data}
-			margin={{ top: 5, right: 20, left: yLabel ? 10 : 0, bottom: data.length > 8 ? 60 : xLabel ? 20 : 5 }}
-		>
-			<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
-			<XAxis
-				dataKey="name"
-				tick={{ fontSize: 13, fill: "var(--bs-body-color)" }}
-				stroke="var(--bs-border-color)"
-				interval={0}
-				angle={data.length > 8 ? -45 : 0}
-				textAnchor={data.length > 8 ? "end" : "middle"}
-				height={data.length > 8 ? 60 : xLabel ? 40 : 30}
-				label={
-					xLabel && data.length <= 8
-						? { value: xLabel, position: "insideBottom", offset: -10, style: AXIS_LABEL_STYLE }
-						: undefined
-				}
-			/>
-			<YAxis
-				tick={{ fontSize: 13, fill: "var(--bs-body-color)" }}
-				stroke="var(--bs-border-color)"
-				allowDecimals={false}
-				tickFormatter={(v) => `${v}${suffix}`}
-				label={
-					yLabel
-						? {
-								value: yLabel,
-								angle: -90,
-								position: "insideLeft",
-								offset: 15,
-								style: { ...AXIS_LABEL_STYLE, textAnchor: "middle" },
-							}
-						: undefined
-				}
-			/>
-			<Tooltip content={<CustomTooltip suffix={suffix} />} />
-			<Bar
-				dataKey="value"
-				isAnimationActive={false}
-				shape={(props: any) => (
-					<Rectangle
-						{...props}
-						fill={CHART_COLORS[props.index % CHART_COLORS.length]}
-						radius={[4, 4, 0, 0]}
-					/>
-				)}
-			/>
-		</BarChart>
-	</ResponsiveContainer>
-);
+const renderBarChart = (data: ChartDataPoint[], suffix = "", xLabel?: string, yLabel?: string) => {
+	// Dense charts rotate their labels; sparse charts wrap long labels onto multiple lines.
+	const isDense = data.length > 8;
+	const maxLines = isDense ? 1 : Math.max(1, ...data.map((d) => wrapLabel(d.name).length));
+	const axisHeight = isDense ? 60 : maxLines * TICK_LINE_HEIGHT + 8 + (xLabel ? 18 : 0);
+	return (
+		<ResponsiveContainer width="100%" height="100%">
+			<BarChart
+				data={data}
+				margin={{ top: 5, right: 20, left: yLabel ? 10 : 0, bottom: isDense ? 60 : xLabel ? 20 : 5 }}
+			>
+				<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
+				<XAxis
+					dataKey="name"
+					tick={isDense ? { fontSize: 13, fill: "var(--bs-body-color)" } : <WrappedAxisTick />}
+					stroke="var(--bs-border-color)"
+					interval={0}
+					angle={isDense ? -45 : 0}
+					textAnchor={isDense ? "end" : "middle"}
+					height={axisHeight}
+					label={
+						xLabel && !isDense
+							? { value: xLabel, position: "insideBottom", offset: -10, style: AXIS_LABEL_STYLE }
+							: undefined
+					}
+				/>
+				<YAxis
+					tick={{ fontSize: 13, fill: "var(--bs-body-color)" }}
+					stroke="var(--bs-border-color)"
+					allowDecimals={false}
+					tickFormatter={(v) => `${v}${suffix}`}
+					label={
+						yLabel
+							? {
+									value: yLabel,
+									angle: -90,
+									position: "insideLeft",
+									offset: 15,
+									style: { ...AXIS_LABEL_STYLE, textAnchor: "middle" },
+								}
+							: undefined
+					}
+				/>
+				<Tooltip content={<CustomTooltip suffix={suffix} />} />
+				<Bar
+					dataKey="value"
+					isAnimationActive={false}
+					shape={(props: any) => (
+						<Rectangle
+							{...props}
+							fill={CHART_COLORS[props.index % CHART_COLORS.length]}
+							radius={[4, 4, 0, 0]}
+						/>
+					)}
+				/>
+			</BarChart>
+		</ResponsiveContainer>
+	);
+};
 
 const GraphWidget: React.FC<GraphWidgetProps> = ({ config, onConfigChange, isEditMode, open }) => {
 	const dataContext = useDataContext();

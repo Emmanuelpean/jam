@@ -64,14 +64,14 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle<ScrapingFilterData
 		const canEdit = isExclusion
 			? (formData: ScrapingFilterData): string =>
 					formData?.filtered_jobs?.length > 0
-						? "Filters that have been applied to scraped jobs cannot be edited."
+						? "Filters that have been applied to job alerts cannot be edited."
 						: ""
 			: undefined;
 
 		const canDelete = isExclusion
 			? (formData: ScrapingFilterData): string =>
 					formData?.filtered_jobs?.length > 0
-						? "Filters that have been applied to scraped jobs cannot be deleted."
+						? "Filters that have been applied to job alerts cannot be deleted."
 						: ""
 			: undefined;
 

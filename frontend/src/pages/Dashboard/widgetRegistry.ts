@@ -503,7 +503,7 @@ export const WIDGET_TYPE_DEFS: WidgetTypeDef[] = [
 			},
 			{
 				key: "scraped_count",
-				label: "Jobs Scraped",
+				label: "Job Alerts Received",
 				icon: "inbox",
 				description: "Total job alerts by platform or alert",
 				premiumOnly: true,

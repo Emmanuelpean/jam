@@ -49,12 +49,12 @@ export default `<h4>Version 1.2.0</h4>
     <li>You can now update your first and last name directly in the user settings page.</li>
     <li>A new option has been added to the person details page, allowing you to mark individual contacts as recruiters.</li>
     <li>Badge data (e.g. company) can now be edited or deleted directly via right-click</li>
-    <li>Data export in the user settings now exports speculative application data and scraped job data.</li>
+    <li>Data export in the user settings now exports speculative application data and job alert data.</li>
     <li>The source of a job can now be specified as Recruiter, Recruitment Company, Aggregator, Aggregator Email, or Other.</li>
     <li>Error messages have been improved. Right-clicking on error toast messages allows the user to send an email to JAM support.</li>
     <li>Dark mode has been added.</li>
     <li>The user settings have been reworked.</li>
-    <li>The AI prompt used to rate scraped jobs is now displayed in the scraped job modal.</li>
+    <li>The AI prompt used to rate job alerts is now displayed in the job alert modal.</li>
     <li>User accounts can now be deleted in the user settings.</li>
     <li>Jobs with a Rejected, Offered, or Withdrawn application status are not shown in the Needs Chase table</li>
 </ul>
@@ -71,18 +71,18 @@ export default `<h4>Version 1.2.0</h4>
 
 <h5>TOAST Improvements</h5>
 <ul>
-    <li>Added length limits on scraped job title, company, and description fields to improve AI rating consistency and limit token usage.</li>
-    <li>Improved status feedback in the Scraped Job modal, giving clearer information about the scraping and rating state of each job.</li>
+    <li>Added length limits on job alert title, company, and description fields to improve AI rating consistency and limit token usage.</li>
+    <li>Improved status feedback in the Job Alert modal, giving clearer information about the scraping and rating state of each job.</li>
     <li>Switched from OpenAI gpt-4.1-mini to Anthropic Claude-Haiku 4.5 model for job rating.</li>
-	<li>Scraped jobs sourced from NHS Jobs now detect whether the listing has been closed at the time of scraping.</li>
-	<li>Closed scraped jobs or with past deadline are now highlighted.</li>
-    <li>Scraped jobs with a past deadline or that have been marked as closed now display a message indicating the listing is no longer active.</li>
+	<li>Job alerts sourced from NHS Jobs now detect whether the listing has been closed at the time of scraping.</li>
+	<li>Closed job alerts or with past deadline are now highlighted.</li>
+    <li>Job alerts with a past deadline or that have been marked as closed now display a message indicating the listing is no longer active.</li>
     <li>The scraper will now automatically retry up to a configurable number of times if an attempt fails, improving reliability.</li>
-    <li>The scraped job page now displays the job alert emails associated with each scraped job.</li>
+    <li>The job alert page now displays the alert emails associated with each job alert.</li>
 </ul>
 
 <h5>Bug Fixes</h5>
 <ul>
-    <li>Fixed a bug where the scraped job location was not displayed correctly for demo users.</li>
+    <li>Fixed a bug where the job alert location was not displayed correctly for demo users.</li>
 </ul>
 `;

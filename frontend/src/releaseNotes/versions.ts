@@ -221,7 +221,7 @@ export const RELEASE_SLIDES: Record<version, ReleaseSlide[]> = {
 			title: "Customisable Tables & Advanced Filtering",
 			description:
 				"All data tables now support column customisation — show or hide columns to focus on what matters, with preferences saved per table. " +
-				"Use the new filter sidebar to narrow results by any field, and multi-select scraped jobs to perform bulk actions like deleting expired ones.",
+				"Use the new filter sidebar to narrow results by any field, and multi-select job alerts to perform bulk actions like deleting expired ones.",
 		},
 		{
 			icon: "star-fill",

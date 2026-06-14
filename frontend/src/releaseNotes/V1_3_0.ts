@@ -19,13 +19,13 @@ export default `<h4>Version 1.3.0</h4>
 <h5>Customisable Tables & Advanced Filtering</h5>
 <ul>
     <li>All data tables now support column customisation. Click the settings icon in the table toolbar to show or hide individual columns — your preferences are saved per table.</li>
-    <li>Table data can now be filtered using the filter sidebar. Access it via the filter icon in the table toolbar to narrow results by any available field. For example, on the Scraped Jobs table you can filter by AI rating to show only jobs with rating higher than 8.</li>
-    <li>Scraped jobs now support multi-select. Use the checkboxes to select multiple jobs at once and perform bulk actions such as deleting them or deleting expired jobs.</li>
+    <li>Table data can now be filtered using the filter sidebar. Access it via the filter icon in the table toolbar to narrow results by any available field. For example, on the Job Alerts table you can filter by AI rating to show only jobs with rating higher than 8.</li>
+    <li>Job alerts now support multi-select. Use the checkboxes to select multiple jobs at once and perform bulk actions such as deleting them or deleting expired jobs.</li>
 </ul>
 
-<h5>Favourite Filters for Scraped Jobs</h5>
+<h5>Favourite Filters for Job Alerts</h5>
 <ul>
-    <li>You can now save favourite filter configurations on the Job Alerts page. Saved filter sets can be applied with a single click, making it faster to switch between different views of your scraped jobs.</li>
+    <li>You can now save favourite filter configurations on the Job Alerts page. Saved filter sets can be applied with a single click, making it faster to switch between different views of your job alerts.</li>
     <li>A dedicated <strong>Favourite Job Alerts</strong> dashboard widget displays jobs that match your saved favourite filters at a glance.</li>
 </ul>
 
