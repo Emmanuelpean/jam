@@ -212,7 +212,7 @@ class BaseTest(BaseUtils):
                 try:
                     self._save_browser_logs(failed=True)
                     self.driver.quit()
-                except:
+                except Exception:
                     pass
             raise
         yield  # This allows the test to run
@@ -263,7 +263,7 @@ class BaseTest(BaseUtils):
             perf_log_file = settings.log_directory + f"/{safe_test_name}_{status_string}_{timestamp}_network.log"
             with open(perf_log_file, "w") as f:
                 f.write(f"Test: {self._test_name}\n")
-                f.write(f"Network Performance Logs\n")
+                f.write("Network Performance Logs\n")
                 f.write("=" * 80 + "\n\n")
 
                 for entry in performance_logs:
@@ -272,7 +272,7 @@ class BaseTest(BaseUtils):
                         # Filter for network events
                         if "Network" in log_entry.get("message", {}).get("method", ""):
                             f.write(json.dumps(log_entry, indent=2) + "\n")
-                    except:
+                    except Exception:
                         pass
 
             print(f"✅ Saved browser logs to {browser_log_file}")
