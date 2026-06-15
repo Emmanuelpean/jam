@@ -11,6 +11,7 @@ import { DEFAULT_THEME } from "../../utils/Theme";
 import { UserData } from "../../services/schemas/Core";
 import { useAlert } from "../../contexts/AlertContext";
 import { useViewport } from "../../contexts/ViewportContext";
+import { useConfig } from "../../contexts/ConfigContext";
 
 interface NavigationItem {
 	path?: string;
@@ -40,6 +41,7 @@ export const Sidebar = (): JSX.Element => {
 	const { isMobile } = useViewport();
 	const { toggleTourSelect, closeTourSelect, isTourActive, completedTourIds } = useTour();
 	const { showLogout } = useAlert();
+	const { config } = useConfig();
 	const isPremium = currentUser?.premium.is_active ?? false;
 	const implementedTours = TOURS.filter(
 		(t) => !t.comingSoon && (isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id))
@@ -152,6 +154,16 @@ export const Sidebar = (): JSX.Element => {
 				{ path: "/about", text: "About JAM" },
 				{ path: "/browser-extension", text: "Browser Extension" },
 				{ path: "/release-notes", text: "Release Notes" },
+				{
+					text: "Contact Support",
+					icon: "envelope",
+					id: "nav-contact-support",
+					onClick: (): void => {
+						if (config?.support_email) {
+							window.location.href = `mailto:${config.support_email}`;
+						}
+					},
+				},
 			],
 		},
 		{
