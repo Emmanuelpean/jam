@@ -5,6 +5,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
+from app import models
 from app.external_service_monitoring.anthropic.fetch import (
     sum_bucket_amount,
     fetch_anthropic_daily_usage,
@@ -181,3 +182,32 @@ class TestFetchAnthropic:
 
         with pytest.raises(RuntimeError, match="boom"):
             fetch_anthropic_daily_usage()
+
+    @patch("app.external_service_monitoring.anthropic.fetch.requests.get")
+    def test_persists_rows_when_db_passed(
+        self, mock_get, mock_settings_and_window, anthropic_payload, session
+    ) -> None:
+        """Passing a db session upserts into the AnthropicDailyUsage ORM table."""
+
+        mock_get.return_value = MagicMock(json=MagicMock(return_value=anthropic_payload))
+
+        fetch_anthropic_daily_usage(session)
+
+        rows = session.query(models.AnthropicDailyUsage).order_by(models.AnthropicDailyUsage.date).all()
+        assert [r.date for r in rows] == [dt.date(2026, 6, 1), dt.date(2026, 6, 2), dt.date(2026, 6, 3)]
+        assert rows[0].usage_usd == pytest.approx(0.016385)
+
+    @patch("app.external_service_monitoring.anthropic.fetch.requests.get")
+    def test_upsert_overwrites_existing_day(self, mock_get, mock_settings_and_window, session) -> None:
+        """Re-running for the same day overwrites the prior row rather than duplicating it."""
+
+        first = {"data": [_bucket("2026-06-01", "100")], "has_more": False, "next_page": None}
+        mock_get.return_value = MagicMock(json=MagicMock(return_value=first))
+        fetch_anthropic_daily_usage(session)
+
+        second = {"data": [_bucket("2026-06-01", "500")], "has_more": False, "next_page": None}
+        mock_get.return_value = MagicMock(json=MagicMock(return_value=second))
+        fetch_anthropic_daily_usage(session)
+
+        rows = session.query(models.AnthropicDailyUsage).all()
+        assert [(r.date, r.usage_usd) for r in rows] == [(dt.date(2026, 6, 1), pytest.approx(5.0))]

@@ -5,6 +5,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
+from app import models
 from app.external_service_monitoring.apify.fetch import (
     ApifyBalance,
     ApifyDailyUsage,
@@ -134,6 +135,18 @@ class TestFetchApifyBalance:
         with pytest.raises(RuntimeError, match="boom"):
             fetch_apify_balance(None)
 
+    @patch("app.external_service_monitoring.apify.fetch.requests.get")
+    def test_persists_snapshot_when_db_passed(self, mock_get, mock_settings, user_payload, session) -> None:
+        """Passing a db session writes an ApifyBalance snapshot row."""
+
+        mock_get.return_value = MagicMock(json=MagicMock(return_value=user_payload))
+
+        fetch_apify_balance(session)
+
+        rows = session.query(models.ApifyBalance).all()
+        assert len(rows) == 1
+        assert rows[0].limit_usd == pytest.approx(50.0)
+
 
 class TestFetchApifyDailyUsage:
     @patch("app.external_service_monitoring.apify.fetch.requests.get")
@@ -193,3 +206,35 @@ class TestFetchApifyDailyUsage:
 
         with pytest.raises(RuntimeError, match="boom"):
             fetch_apify_daily_usage(None)
+
+    @patch("app.external_service_monitoring.apify.fetch.requests.get")
+    def test_persists_rows_when_db_passed(self, mock_get, mock_settings, usage_payload, session) -> None:
+        """Passing a db session upserts into the ApifyDailyUsage ORM table."""
+
+        mock_get.return_value = MagicMock(json=MagicMock(return_value=usage_payload))
+
+        fetch_apify_daily_usage(session)
+
+        rows = session.query(models.ApifyDailyUsage).order_by(models.ApifyDailyUsage.date).all()
+        assert [r.date for r in rows] == [dt.date(2026, 5, 23), dt.date(2026, 5, 24), dt.date(2026, 6, 16)]
+
+    @patch("app.external_service_monitoring.apify.fetch.requests.get")
+    def test_upsert_overwrites_existing_day(self, mock_get, mock_settings, session) -> None:
+        """Re-running for the same day overwrites the prior row rather than duplicating it."""
+
+        def _payload(amount: float) -> dict:
+            return {
+                "data": {
+                    "dailyServiceUsages": [
+                        {"date": "2026-06-02T00:00:00.000Z", "serviceUsage": {}, "totalUsageCreditsUsd": amount}
+                    ]
+                }
+            }
+
+        mock_get.return_value = MagicMock(json=MagicMock(return_value=_payload(0.1)))
+        fetch_apify_daily_usage(session)
+        mock_get.return_value = MagicMock(json=MagicMock(return_value=_payload(0.9)))
+        fetch_apify_daily_usage(session)
+
+        rows = session.query(models.ApifyDailyUsage).all()
+        assert [(r.date, r.usage_usd) for r in rows] == [(dt.date(2026, 6, 2), pytest.approx(0.9))]

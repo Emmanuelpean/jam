@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.payments import stripe
 from pydantic import BaseModel
 
+from app.external_service_monitoring.stripe import models
 from app.utilities.datetime import current_month_window
 from app.utilities.database import upsert
 
@@ -58,5 +59,5 @@ def fetch_stripe_daily_income(db: Session | None = None) -> list[StripeDailyInco
         for day in days
     ]
     if db:
-        upsert(db, StripeDailyIncome, entries, ["date"])
+        upsert(db, models.StripeDailyIncome, entries, ["date"])
     return entries

@@ -5,6 +5,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
+from app import models
 from app.external_service_monitoring.brightdata.fetch import (
     BrightdataBalance,
     fetch_brightdata_balance,
@@ -114,6 +115,19 @@ class TestFetchBrightdataBalance:
 
         with pytest.raises(RuntimeError, match="boom"):
             fetch_brightdata_balance()
+
+    @patch("app.external_service_monitoring.brightdata.fetch.requests.get")
+    def test_persists_snapshot_when_db_passed(self, mock_get, mock_settings, balance_payload, session) -> None:
+        """Passing a db session writes a BrightdataBalance snapshot row."""
+
+        mock_get.return_value = MagicMock(json=MagicMock(return_value=balance_payload))
+
+        fetch_brightdata_balance(session)
+
+        rows = session.query(models.BrightdataBalance).all()
+        assert len(rows) == 1
+        assert rows[0].balance_usd == pytest.approx(42.75)
+        assert rows[0].pending_costs_usd == pytest.approx(1.2)
 
 
 class TestFetchBrightdataDailyUsage:
@@ -242,3 +256,34 @@ class TestFetchBrightdataDailyUsage:
 
         with pytest.raises(RuntimeError, match="boom"):
             fetch_brightdata_daily_usage()
+
+    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    def test_persists_rows_when_db_passed(
+        self, mock_post, mock_settings, mock_dataset_labels, costs_payload, session
+    ) -> None:
+        """Passing a db session upserts into the BrightdataDailyUsage ORM table."""
+
+        mock_post.return_value = MagicMock(json=MagicMock(return_value=costs_payload))
+
+        fetch_brightdata_daily_usage(session)
+
+        rows = session.query(models.BrightdataDailyUsage).all()
+        triples = {(r.date, r.dataset, r.usage_usd) for r in rows}
+        assert triples == {
+            (dt.date(2026, 6, 2), "LinkedIn", 0.0075),
+            (dt.date(2026, 6, 7), "LinkedIn", 0.003),
+            (dt.date(2026, 6, 7), "Indeed", 0.0075),
+            (dt.date(2026, 6, 16), "LinkedIn", 0.009),
+        }
+
+    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    def test_upsert_overwrites_existing_date_dataset(self, mock_post, mock_settings, mock_dataset_labels, session) -> None:
+        """Re-running for the same (date, dataset) overwrites the prior row rather than duplicating it."""
+
+        mock_post.return_value = MagicMock(json=MagicMock(return_value={"2026-06-02": {LINKEDIN_DATASET_ID: 0.01}}))
+        fetch_brightdata_daily_usage(session)
+        mock_post.return_value = MagicMock(json=MagicMock(return_value={"2026-06-02": {LINKEDIN_DATASET_ID: 0.05}}))
+        fetch_brightdata_daily_usage(session)
+
+        rows = session.query(models.BrightdataDailyUsage).all()
+        assert [(r.date, r.dataset, r.usage_usd) for r in rows] == [(dt.date(2026, 6, 2), "LinkedIn", 0.05)]

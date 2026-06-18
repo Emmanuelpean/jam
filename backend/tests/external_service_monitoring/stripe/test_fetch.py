@@ -5,6 +5,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
+from app import models
 from app.external_service_monitoring.stripe.fetch import (
     StripeDailyIncome,
     fetch_stripe_daily_income,
@@ -189,3 +190,30 @@ class TestFetchStripe:
         dates = [r.date for r in fetch_stripe_daily_income(None)]
 
         assert dates == [dt.date(2026, 6, 2), dt.date(2026, 6, 5), dt.date(2026, 6, 10)]
+
+    @patch("app.external_service_monitoring.stripe.fetch.stripe")
+    def test_persists_rows_when_db_passed(self, mock_stripe, mock_window, session) -> None:
+        """Passing a db session upserts into the StripeDailyIncome ORM table (not the schema)."""
+
+        charges = [_txn(created=_ts(dt.datetime(2026, 6, 2, 10, 0)), amount=1000, net=970)]
+        mock_stripe.BalanceTransaction.list = _patch_balance_txn_lists({"charge": charges, "refund": []})
+
+        fetch_stripe_daily_income(session)
+
+        rows = session.query(models.StripeDailyIncome).all()
+        assert [(r.date, r.gross_gbp, r.net_gbp) for r in rows] == [(dt.date(2026, 6, 2), 10.0, 9.7)]
+
+    @patch("app.external_service_monitoring.stripe.fetch.stripe")
+    def test_upsert_overwrites_existing_day(self, mock_stripe, mock_window, session) -> None:
+        """Re-running for the same day overwrites the prior row rather than duplicating it."""
+
+        first = [_txn(created=_ts(dt.datetime(2026, 6, 2, 10, 0)), amount=1000, net=970)]
+        mock_stripe.BalanceTransaction.list = _patch_balance_txn_lists({"charge": first, "refund": []})
+        fetch_stripe_daily_income(session)
+
+        second = [_txn(created=_ts(dt.datetime(2026, 6, 2, 12, 0)), amount=5000, net=4850)]
+        mock_stripe.BalanceTransaction.list = _patch_balance_txn_lists({"charge": second, "refund": []})
+        fetch_stripe_daily_income(session)
+
+        rows = session.query(models.StripeDailyIncome).all()
+        assert [(r.date, r.gross_gbp, r.net_gbp) for r in rows] == [(dt.date(2026, 6, 2), 50.0, 48.5)]
