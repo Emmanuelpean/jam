@@ -1,6 +1,5 @@
 """Utility functions for token management and email verification."""
 
-import logging
 import secrets
 from typing import Callable
 
@@ -8,11 +7,12 @@ import requests
 from sqlalchemy.orm import Session
 from starlette import status
 
-from app import utils, models
+from app import models
+from app.base_schemas import GenericResponse
 from app.config import settings
 from app.core.models import TokenType
 from app.emails.email_service import email_service
-from app.base_schemas import GenericResponse
+from app.utilities import security
 
 
 def verify_captcha_token(token: str) -> bool:
@@ -77,7 +77,7 @@ def generate_token(
 
     # Generate new token
     plain_token = secrets.token_urlsafe(32)
-    hashed_token = utils.hash_token(plain_token)
+    hashed_token = security.hash_token(plain_token)
 
     new_token = models.UserToken(
         owner_id=user_id,

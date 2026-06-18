@@ -257,7 +257,9 @@ class TestSendEmailChangeWithRateLimit:
 class TestSendPasswordChangedWithRateLimit:
 
     @patch("app.core.routers.auth.email_service.send_password_changed_notification")
-    def test_send_tokenized_password_changed_email_with_rate_limit(self, mock_email, test_regular_user, session) -> None:
+    def test_send_tokenized_password_changed_email_with_rate_limit(
+        self, mock_email, test_regular_user, session
+    ) -> None:
         """Test sending of password changed notification email."""
 
         result = send_tokenized_password_changed_email_with_rate_limit(test_regular_user, session)

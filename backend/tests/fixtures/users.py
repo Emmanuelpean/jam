@@ -5,7 +5,7 @@ import datetime as dt
 import pytest
 
 from app import models
-from app.utils import hash_token
+from app.utilities.security import hash_token
 from app.core.models import TokenType
 from tests.utils import test_data as td
 from tests.utils.create_data.core import create_users, create_user_qualifications

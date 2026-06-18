@@ -1,86 +1,10 @@
-"""Module containing utility functions."""
-
-import hashlib
-import json
 import logging
 import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Optional
 
-import bcrypt
-from pydantic import EmailStr
-
 from app.config import settings
-
-
-def hash_password(password: str, rounds: int = 12) -> str:
-    """Hash a password for storing.
-    :param password: password to hash
-    :param rounds: number of bcrypt rounds (default: 12)
-    :return: hashed password"""
-
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=rounds)).decode("utf-8")
-
-
-def verify_password(password: str, hashed: str) -> bool:
-    """Verify a stored password against one provided by the user.
-    :param password: raw password to check
-    :param hashed: hashed password from the database
-    :return: boolean indicating whether the passwords matched"""
-
-    return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
-
-
-def hash_token(token: str) -> str:
-    """Hash a token for secure storage.
-    :param token: token to hash
-    :return: hashed token"""
-
-    return hashlib.sha256(token.encode()).hexdigest()
-
-
-def clean_email(email: EmailStr | str) -> str:
-    """Normalise the email address by stripping whitespace and converting to lowercase.
-    :param email: The email address to be cleaned
-    :return: Cleaned email address"""
-
-    return str(email).strip().lower()
-
-
-def open_json(filepath: str) -> list[dict]:
-    """Open a file and return its content
-    :param filepath: The json file to open
-    :return: The contents of the file"""
-
-    base_dir = str(os.path.dirname(__file__))
-    path = os.path.join(base_dir, "..", filepath)
-    with open(path, "r", encoding="utf8") as ofile:
-        return json.load(ofile)
-
-
-def super_getattr(obj: object, attr: str) -> object:
-    """Get nested attributes from an object using dot notation.
-    :param obj: The object to get attributes from
-    :param attr: The attribute path in dot notation"""
-
-    attrs = attr.split(".")
-    for a in attrs:
-        obj = getattr(obj, a)
-    return obj
-
-
-def super_hasattr(obj: object, attr: str) -> bool:
-    """Check if nested attributes exist in an object using dot notation.
-    :param obj: The object to check attributes from
-    :param attr: The attribute path in dot notation"""
-
-    attrs = attr.split(".")
-    for a in attrs:
-        if not hasattr(obj, a):
-            return False
-        obj = getattr(obj, a)
-    return True
 
 
 class AppLogger:

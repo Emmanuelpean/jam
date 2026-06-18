@@ -130,7 +130,15 @@ def mock_get_email_data() -> Generator[mock.MagicMock, Any, None]:
 
     def _email_data_from_dict(eid: str) -> EmailData:
         d = resources.TEST_EMAILS[eid]
-        return EmailData(id=d["id"], message_id=d.get("message_id", ""), subject=d["subject"], from_email=d["from"], to_email=d["to"], date=d["date"], body=d["body"])
+        return EmailData(
+            id=d["id"],
+            message_id=d.get("message_id", ""),
+            subject=d["subject"],
+            from_email=d["from"],
+            to_email=d["to"],
+            date=d["date"],
+            body=d["body"],
+        )
 
     with mock.patch(
         "app.emails.email_service.EmailService.get_email_data", side_effect=_email_data_from_dict

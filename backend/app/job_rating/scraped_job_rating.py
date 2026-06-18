@@ -5,12 +5,13 @@ import traceback
 
 from sqlalchemy.orm import Session
 
-from app import models, utils
+from app import models
 from app.config import settings
 from app.database import get_db
 from app.job_rating.claude import MODEL as CLAUDE_MODEL, claude_query
 from app.job_rating.prompts import create_job_only_prompt, create_system_prompt_with_profile
 from app.service_runner.service_runner import ServiceRunner
+from app.utilities.logger import AppLogger
 
 SERVICE_NAME = "job_rating_service"
 
@@ -81,7 +82,7 @@ class ScrapedJobRater:
     def __init__(self) -> None:
         """Initialise the job rater."""
 
-        self.logger = utils.AppLogger.create_service_logger(SERVICE_NAME, "INFO")
+        self.logger = AppLogger.create_service_logger(SERVICE_NAME, "INFO")
 
     def run(self, db: Session | None = None) -> models.JobRatingServiceLog:
         """Score all scraped jobs using AI.

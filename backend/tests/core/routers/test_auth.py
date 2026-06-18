@@ -11,7 +11,7 @@ from app.base_schemas import COLUMN_LIMITS
 from app.config import settings
 from app.core import schemas
 from app.core.models import Setting
-from app.utils import hash_token
+from app.utilities.security import hash_token
 from tests.utils.create_data.utils import create_db_entries
 
 

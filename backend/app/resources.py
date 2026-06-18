@@ -1,5 +1,5 @@
 """JAM resources such as currencies"""
 
-from app import utils
+from app.utilities.files import open_json
 
-CURRENCIES = utils.open_json("app/data/currencies.json")
+CURRENCIES = open_json("app/data/currencies.json")

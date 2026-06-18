@@ -10,12 +10,13 @@ from unittest.mock import patch
 import pytest
 
 import app.job_rating.models as job_rating_models
-from app import models, utils
+from app import models
 from app.base_schemas import COLUMN_LIMITS
 from app.core import schemas, oauth2
 from app.core.models import TokenType
 from app.core.utils import generate_token
 from tests.conftest import CRUDTestBase
+from app.utilities import security
 
 
 class TestUsersCRUD(CRUDTestBase):
@@ -183,7 +184,7 @@ class TestUpdateCurrentUserPassword:
 
         # Verify password changed
         updated_user = self.get_user(test_regular_user.id, session)
-        assert utils.verify_password(update_data["new_password"], updated_user.password)
+        assert security.verify_password(update_data["new_password"], updated_user.password)
 
         # Verify token version incremented
         assert updated_user.token_version == initial_token_version + 1
@@ -447,7 +448,7 @@ class TestEmailVerification:
 
         # Create expired token
         token = "expired_token_123"
-        hashed_token = utils.hash_token(token)
+        hashed_token = security.hash_token(token)
         expired_time = datetime.now(timezone.utc) - timedelta(hours=25)
 
         token_entry = models.UserToken(

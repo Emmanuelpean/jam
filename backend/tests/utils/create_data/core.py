@@ -1,9 +1,10 @@
 """Functions for creating core test data (settings, users, AI prompts)."""
 
-from app import models, utils
+from app import models
 from app.job_rating.prompts import seed_ai_prompts
 from tests.utils.create_data.utils import create_db_entries, override_properties
 from tests.utils.test_data import core
+from app.utilities import security
 
 
 def create_settings(db) -> list[models.Setting]:
@@ -35,7 +36,7 @@ def create_users(db, user_data: list[dict] | None = None, rounds: int = 4) -> li
     for user in user_data:
         user_dict = {k: v for k, v in user.items() if k != "premium_active"}
         original_passwords.append(user_dict["password"])  # Store original password
-        user_dict["password"] = utils.hash_password(user_dict["password"], rounds)
+        user_dict["password"] = security.hash_password(user_dict["password"], rounds)
         users.append(user_dict)
 
     users = create_db_entries(db, models.User, users)

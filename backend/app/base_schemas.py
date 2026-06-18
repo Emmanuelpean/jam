@@ -5,7 +5,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, EmailStr, BeforeValidator, Field
 
-from app.utils import clean_email
+from app.utilities.strings import clean_email
 
 
 # --------------------------------------------------- COLUMN LIMITS ----------------------------------------------------

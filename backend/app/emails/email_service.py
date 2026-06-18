@@ -13,7 +13,7 @@ from app.config import settings
 from app.emails.schemas import EmailData
 from app.emails.templates import email_templates
 from app.emails.utils import clean_email_address, build_multi_from_query
-from app.utils import AppLogger
+from app.utilities.logger import AppLogger
 
 
 class EmailService(object):

@@ -3,6 +3,7 @@
 Provides a factory function to generate FastAPI routers with standard CRUD endpoints,
 including user ownership validation, query filtering, and many-to-many relationship handling."""
 
+import datetime as dt
 import json
 from typing import Any, Callable
 
@@ -14,15 +15,28 @@ from starlette import status
 from starlette.requests import Request
 
 from app import models
-from app.core import oauth2
 from app.config import settings
+from app.core import oauth2
 from app.database import Base, get_db
-
 
 NOT_ALLOWED_EXCEPTION = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
     detail="Not authorised to perform requested action",
 )
+
+
+def filter_by_date(query: Query, table, start_date: dt.date | None, end_date: dt.date | None) -> Query:
+    """Apply optional [start_date, end_date] filters (both inclusive).
+    :param query: The SQLAlchemy query object.
+    :param table: The SQLAlchemy table object.
+    :param start_date: Optional start date (inclusive).
+    :param end_date: Optional end date (inclusive)."""
+
+    if start_date is not None:
+        query = query.filter(table.date >= start_date)
+    if end_date is not None:
+        query = query.filter(table.date <= end_date)
+    return query.order_by(table.date.asc())
 
 
 def _owned_fk_columns(table_model) -> dict[str, Any]:
