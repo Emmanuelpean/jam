@@ -23,6 +23,7 @@ import {
 	BrightdataDailyUsageData,
 	StripeDailyIncomeData,
 } from "../../services/schemas/Services";
+import { getTableIcon } from "../../components/rendering/view/Icons";
 
 const SERVICE_ICONS: Record<string, string> = {
 	anthropic: "stars",
@@ -95,7 +96,7 @@ const ServiceCard = ({
 						target="_blank"
 						rel="noreferrer"
 						variant={"outline-secondary"}
-						className="btn-sm py-2 px-3"
+						className="btn-sm"
 						title={`Open ${label} dashboard`}
 					>
 						<i className="bi bi-box-arrow-up-right me-1" />
@@ -277,11 +278,7 @@ const UsagePage = (): JSX.Element => {
 
 	return (
 		<div className="scraped-jobs-page">
-			<PageHeader
-				title="External Service Monitoring"
-				subtitle="Daily third-party API spend and Stripe income"
-				icon="speedometer2"
-			/>
+			<PageHeader title="External Service Monitoring" icon={getTableIcon("ESM")} />
 
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
@@ -308,14 +305,23 @@ const UsagePage = (): JSX.Element => {
 				onStart={handleStart}
 				onStop={handleStop}
 				serviceLabel="Monitoring Service"
+				inlineIndicators
 			/>
 
-			<div id="history-filters" className="status-card mt-4">
-				<h2 className="card-title">
-					<i className="bi bi-funnel me-2" />
-					History Filters
-				</h2>
-				<TimeSelection onDateRangeChange={setDateRange} defaultMode="period" />
+			<div id="history-filters" className="status-card filter-card mt-4">
+				<div className="d-flex align-items-center gap-3 flex-wrap">
+					<span className="filter-card-label">
+						<i className="bi bi-funnel me-2" />
+						Filters
+					</span>
+					<TimeSelection
+						onDateRangeChange={setDateRange}
+						defaultMode="period"
+						defaultAmount={1}
+						defaultUnit="months"
+						defaultIntervalSeconds={3600}
+					/>
+				</div>
 			</div>
 
 			<Row className="g-3 mt-1">

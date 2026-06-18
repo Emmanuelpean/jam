@@ -14,6 +14,8 @@ import {
 interface SharedServiceStatusCardProps extends ServiceStatusCardProps {
 	serviceLabel?: string;
 	renderFields?: (status: ServiceStatus) => React.ReactNode;
+	// Render the two status indicators side by side on one line instead of stacked.
+	inlineIndicators?: boolean;
 }
 
 export const ServiceStatusCard = ({
@@ -24,6 +26,7 @@ export const ServiceStatusCard = ({
 	onStop,
 	serviceLabel = "Service",
 	renderFields,
+	inlineIndicators = false,
 }: SharedServiceStatusCardProps): JSX.Element => {
 	return (
 		<div className="status-card">
@@ -33,7 +36,7 @@ export const ServiceStatusCard = ({
 			</h2>
 			{status ? (
 				<div className="status-content">
-					<div className="status-indicators">
+					<div className={`status-indicators${inlineIndicators ? " status-indicators--inline" : ""}`}>
 						<div className="indicator-item">
 							<span className="indicator-label">Service Runner</span>
 							<span

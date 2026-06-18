@@ -17,71 +17,66 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-# Common columns provided by CommonBase — id PK, created_at, modified_at — plus the
-# daily `date` column shared by every history table.
+# Columns provided by CommonBase — id PK, created_at, modified_at — shared by every table.
 def _common_columns() -> list:
     return [
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.TIMESTAMP(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("modified_at", sa.TIMESTAMP(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("date", sa.Date(), nullable=False),
     ]
 
 
 def upgrade() -> None:
     op.create_table(
-        "anthropic_usage_history",
+        "anthropic_daily_usage",
         *_common_columns(),
+        sa.Column("date", sa.Date(), nullable=False),
         sa.Column("usage_usd", sa.Float(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("date", name="anthropic_usage_history_date_uq"),
     )
     op.create_table(
-        "apify_usage_history",
+        "apify_daily_usage",
         *_common_columns(),
+        sa.Column("date", sa.Date(), nullable=False),
         sa.Column("usage_usd", sa.Float(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("date", name="apify_usage_history_date_uq"),
     )
     op.create_table(
-        "apify_balance_snapshot",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("modified_at", sa.TIMESTAMP(timezone=True), server_default=sa.func.now(), nullable=False),
+        "apify_balance",
+        *_common_columns(),
         sa.Column("limit_usd", sa.Float(), nullable=True),
-        sa.Column("used_usd", sa.Float(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
-        "brightdata_usage_history",
+        "brightdata_daily_usage",
         *_common_columns(),
+        sa.Column("date", sa.Date(), nullable=False),
         sa.Column("dataset", sa.String(), nullable=False),
         sa.Column("usage_usd", sa.Float(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("date", "dataset", name="brightdata_usage_history_date_dataset_uq"),
     )
     op.create_table(
-        "brightdata_balance_snapshot",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("modified_at", sa.TIMESTAMP(timezone=True), server_default=sa.func.now(), nullable=False),
+        "brightdata_balance",
+        *_common_columns(),
         sa.Column("balance_usd", sa.Float(), nullable=True),
         sa.Column("pending_costs_usd", sa.Float(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
-        "stripe_income_history",
+        "stripe_daily_income",
         *_common_columns(),
+        sa.Column("date", sa.Date(), nullable=False),
         sa.Column("gross_gbp", sa.Float(), nullable=False),
         sa.Column("net_gbp", sa.Float(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("date", name="stripe_income_history_date_uq"),
     )
     op.create_table(
-        "service_monitoring_service_log",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("modified_at", sa.TIMESTAMP(timezone=True), server_default=sa.func.now(), nullable=False),
+        "external_service_monitoring_service_log",
+        *_common_columns(),
         sa.Column("run_duration", sa.Float(), nullable=True),
         sa.Column("run_datetime", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("is_success", sa.Boolean(), nullable=True),
@@ -91,10 +86,10 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_table("service_monitoring_service_log")
-    op.drop_table("stripe_income_history")
-    op.drop_table("brightdata_balance_snapshot")
-    op.drop_table("brightdata_usage_history")
-    op.drop_table("apify_balance_snapshot")
-    op.drop_table("apify_usage_history")
-    op.drop_table("anthropic_usage_history")
+    op.drop_table("external_service_monitoring_service_log")
+    op.drop_table("stripe_daily_income")
+    op.drop_table("brightdata_balance")
+    op.drop_table("brightdata_daily_usage")
+    op.drop_table("apify_balance")
+    op.drop_table("apify_daily_usage")
+    op.drop_table("anthropic_daily_usage")

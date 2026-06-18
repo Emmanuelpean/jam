@@ -9,6 +9,9 @@ type SelectionMode = "period" | "dateRange";
 interface TimeSelectionProps {
 	onDateRangeChange?: (dateRange: DateRange) => void;
 	defaultMode?: SelectionMode;
+	defaultAmount?: number;
+	defaultUnit?: TimeUnit;
+	defaultIntervalSeconds?: number;
 }
 
 interface SelectOption {
@@ -23,10 +26,16 @@ const timeUnitOptions: SelectOption[] = [
 	{ value: "years", label: "Years" },
 ];
 
-const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaultMode = "period" }) => {
+const TimeSelection: React.FC<TimeSelectionProps> = ({
+	onDateRangeChange,
+	defaultMode = "period",
+	defaultAmount = 1,
+	defaultUnit = "weeks",
+	defaultIntervalSeconds = 60,
+}) => {
 	const [mode, setMode] = useState<SelectionMode>(defaultMode);
-	const [amount, setAmount] = useState<number>(1);
-	const [unit, setUnit] = useState<TimeUnit>("weeks");
+	const [amount, setAmount] = useState<number>(defaultAmount);
+	const [unit, setUnit] = useState<TimeUnit>(defaultUnit);
 	const [startDate, setStartDate] = useState<string>("");
 	const [endDate, setEndDate] = useState<string>("");
 
@@ -37,11 +46,11 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 		onDateRangeChange?.(range);
 	};
 
-	// Update every minute when in period mode
+	// Refresh the range on the configured interval while in period mode
 	useEffect(() => {
 		if (mode === "period") {
 			updateDateRange();
-			const intervalId = setInterval(updateDateRange, 60000);
+			const intervalId = setInterval(updateDateRange, defaultIntervalSeconds * 1000);
 			return () => clearInterval(intervalId);
 		}
 	}, [mode, amount, unit]);
@@ -85,46 +94,41 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 		options: timeUnitOptions,
 		placeholder: "Select unit",
 		isClearable: false,
+		size: "sm",
 	};
 
 	return (
 		<div className="time-selection-container">
 			<div className="d-flex align-items-center gap-3 flex-wrap">
-				<div className="radio-group">
-					<label className="custom-radio">
-						<input
-							type="radio"
-							name="selectionMode"
-							value="period"
-							checked={mode === "period"}
-							onChange={() => handleModeChange("period")}
-						/>
-						<span className="radio-label">Time Period</span>
-					</label>
-					<label className="custom-radio">
-						<input
-							type="radio"
-							name="selectionMode"
-							value="dateRange"
-							checked={mode === "dateRange"}
-							onChange={() => handleModeChange("dateRange")}
-						/>
-						<span className="radio-label">Date Range</span>
-					</label>
+				<div className="btn-group btn-group-sm" role="group" aria-label="Selection mode">
+					<button
+						type="button"
+						className={`btn ${mode === "period" ? "btn-primary" : "btn-outline-secondary"}`}
+						onClick={() => handleModeChange("period")}
+					>
+						Time Period
+					</button>
+					<button
+						type="button"
+						className={`btn ${mode === "dateRange" ? "btn-primary" : "btn-outline-secondary"}`}
+						onClick={() => handleModeChange("dateRange")}
+					>
+						Date Range
+					</button>
 				</div>
 
 				{mode === "period" && (
 					<>
 						<input
 							type="number"
-							className="form-control"
-							style={{ width: "90px", height: "46.8px" }}
+							className="form-control form-control-sm"
+							style={{ width: "70px" }}
 							min="1"
 							value={amount}
 							onChange={handleAmountChange}
 							placeholder="Amount"
 						/>
-						<div style={{ minWidth: "135px" }}>
+						<div style={{ minWidth: "120px" }}>
 							<SelectInput
 								field={timeUnitField}
 								value={unit}
@@ -142,16 +146,16 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 					<>
 						<input
 							type="datetime-local"
-							className="form-control"
-							style={{ width: "180px", height: "46.8px" }}
+							className="form-control form-control-sm"
+							style={{ width: "165px" }}
 							value={startDate}
 							onChange={handleStartDateChange}
 						/>
 						<span className="text-muted fw-bold">to</span>
 						<input
 							type="datetime-local"
-							className="form-control"
-							style={{ width: "180px", height: "46.8px" }}
+							className="form-control form-control-sm"
+							style={{ width: "165px" }}
 							value={endDate}
 							onChange={handleEndDateChange}
 						/>

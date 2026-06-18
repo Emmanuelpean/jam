@@ -147,12 +147,14 @@ const JobRatingDashboard = (): JSX.Element => {
 				serviceStatus={serviceStatus}
 			/>
 
-			<div id="history-filters" className="status-card mt-4">
-				<h2 className="card-title">
-					<i className="bi bi-funnel me-2"></i>
-					History Filters
-				</h2>
-				<TimeSelection onDateRangeChange={setDateRange} defaultMode="period" />
+			<div id="history-filters" className="status-card filter-card mt-4">
+				<div className="d-flex align-items-center gap-3 flex-wrap">
+					<span className="filter-card-label">
+						<i className="bi bi-funnel me-2" />
+						Filters
+					</span>
+					<TimeSelection onDateRangeChange={setDateRange} defaultMode="period" />
+				</div>
 			</div>
 
 			<RunHistoryChart
