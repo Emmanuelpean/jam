@@ -1,6 +1,6 @@
 """Base Selenium test class and shared test helpers.
 
-The page/component utility classes live in the `utilities` package and are wired
+The page/component utility classes live in the `helpers` package and are wired
 onto BaseTest below. Test modules import BaseTest, MaintenanceTestBase, models and
 the helper functions from this module.
 """
@@ -21,18 +21,18 @@ from app import models
 from app.config import settings
 from app.core.oauth2 import create_access_token
 
-from utilities.base_utils import BaseUtils
-from utilities.data_modal_utils import DataModalUtils
-from utilities.data_table_utils import DataTableUtils
-from utilities.auth_utils import AuthentificationUtils
-from utilities.user_settings_utils import UserSettingsUtils
-from utilities.followup_email_modal_utils import FollowUpEmailModalUtils
-from utilities.alert_modal_utils import ConfirmModalUtils, DeleteModalUtils, LogoutModalUtils
-from utilities.premium_settings_utils import PremiumSettingsUtils
-from utilities.tour_utils import TourUtils
+from helpers.base_utils import BaseUtils
+from helpers.data_modal_utils import DataModalUtils
+from helpers.data_table_utils import DataTableUtils
+from helpers.auth_utils import AuthentificationUtils
+from helpers.user_settings_utils import UserSettingsUtils
+from helpers.followup_email_modal_utils import FollowUpEmailModalUtils
+from helpers.alert_modal_utils import ConfirmModalUtils, DeleteModalUtils, LogoutModalUtils
+from helpers.premium_settings_utils import PremiumSettingsUtils
+from helpers.tour_utils import TourUtils
 
 # Re-exported for tests that import these helpers from base_test.
-from utilities.formatting import format_file_size, contiguous_subdicts, format_field
+from helpers.formatting import format_file_size, contiguous_subdicts, format_field
 
 __all__ = ["BaseTest", "MaintenanceTestBase", "models", "format_file_size", "contiguous_subdicts", "format_field"]
 

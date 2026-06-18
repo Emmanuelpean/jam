@@ -3,7 +3,7 @@
 from selenium.webdriver.remote.webelement import WebElement
 
 from select_utils import Select
-from utilities.base_utils import BaseUtils
+from helpers.base_utils import BaseUtils
 
 
 class UserSettingsUtils(BaseUtils):

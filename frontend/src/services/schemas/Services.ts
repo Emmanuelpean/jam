@@ -165,3 +165,36 @@ export interface ForwardingConfirmationLinkData extends OwnedOut {
 	platform: string;
 	is_used: boolean;
 }
+
+// -------------------------------------------- EXTERNAL SERVICE MONITORING --------------------------------------------
+
+export interface AnthropicDailyUsageData extends BaseOut {
+	date: string;
+	usage_usd: number;
+}
+
+export interface ApifyDailyUsageData extends BaseOut {
+	date: string;
+	usage_usd: number;
+}
+
+export interface ApifyBalanceData extends BaseOut {
+	limit_usd: number | null;
+}
+
+export interface BrightdataDailyUsageData extends BaseOut {
+	date: string;
+	dataset: string;
+	usage_usd: number;
+}
+
+export interface BrightdataBalanceData extends BaseOut {
+	balance_usd: number | null;
+	pending_costs_usd: number | null;
+}
+
+export interface StripeDailyIncomeData extends BaseOut {
+	date: string;
+	gross_gbp: number;
+	net_gbp: number;
+}

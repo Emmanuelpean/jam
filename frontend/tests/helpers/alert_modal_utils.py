@@ -2,7 +2,7 @@
 
 from selenium.webdriver.remote.webelement import WebElement
 
-from utilities.base_utils import BaseUtils
+from helpers.base_utils import BaseUtils
 
 
 class AlertModalUtils(BaseUtils):

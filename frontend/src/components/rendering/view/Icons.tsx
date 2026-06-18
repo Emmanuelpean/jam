@@ -55,6 +55,7 @@ export function getTableIcon(title: string): string {
 		"Service Dashboards": "stack",
 		"App Management": "terminal",
 		Files: "folder2-open",
+		ESM: "bank",
 	};
 	return iconMap[title] || "bi-table";
 }

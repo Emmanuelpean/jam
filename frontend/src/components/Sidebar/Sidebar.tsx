@@ -177,6 +177,7 @@ export const Sidebar = (): JSX.Element => {
 					text: "App Management",
 					alsoActiveFor: ["/app/settings", "/app/email-templates"],
 				},
+				{ path: "/admin/usage", text: "ESM" },
 			],
 		},
 		...(!allToursCompleted

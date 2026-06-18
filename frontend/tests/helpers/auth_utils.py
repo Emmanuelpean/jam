@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.wait import WebDriverWait
 
-from utilities.base_utils import BaseUtils
+from helpers.base_utils import BaseUtils
 
 
 class AuthentificationUtils(BaseUtils):

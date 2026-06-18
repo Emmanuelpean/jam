@@ -40,6 +40,7 @@ import { MaintenanceBanner } from "./components/AppBanner/MaintenanceBanner";
 import { DemoBanner } from "./components/AppBanner/DemoBanner";
 import { WhatsNewProvider } from "./contexts/WhatsNewContext";
 import ServiceDashboards from "./pages/Services/ServiceDashboards";
+import UsagePage from "./pages/Admin/UsagePage";
 import FilesPage from "./pages/FilesPage/FilesPage";
 import CommandPalette from "./components/CommandPalette/CommandPalette";
 import { useCommandPalette } from "./components/CommandPalette/useCommandPalette";
@@ -227,6 +228,7 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/app/email-templates", element: <UserManagementPage />, protected: true, adminOnly: true },
 	{ path: "/services/job-scraping", element: <ServiceDashboards />, protected: true, adminOnly: true },
 	{ path: "/services/job-rating", element: <ServiceDashboards />, protected: true, adminOnly: true },
+	{ path: "/admin/usage", element: <UsagePage />, protected: true, adminOnly: true },
 	{ path: "*", element: <NotFoundPage /> },
 ];
 

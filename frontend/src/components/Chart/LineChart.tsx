@@ -76,10 +76,19 @@ export const LineChart = ({
 		);
 	}
 
+	// Convert each x value to a millisecond timestamp so Recharts can use a numeric/time scale
+	// and space points by their real date distance, not as evenly-spaced categories.
+	const toMs = (value: number | string | Date): number => {
+		if (value instanceof Date) return value.getTime();
+		if (typeof value === "number") return value;
+		const parsed: Date = new Date(value);
+		return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+	};
+
 	const transformedData =
 		data[0]?.data.map((_, index) => {
 			const point: Record<string, any> = {
-				x: data[0]!.data[index]!.x,
+				x: toMs(data[0]!.data[index]!.x),
 			};
 			data.forEach((series) => {
 				point[series.id] = series.data[index]?.y;
@@ -100,6 +109,8 @@ export const LineChart = ({
 		});
 	};
 
+	const formatTick = (value: any): string => xAxisFormatter(new Date(value));
+
 	const CustomTooltip = ({ active, payload, label }: any) => {
 		if (!active || !payload || !payload.length) return null;
 		return (
@@ -113,7 +124,7 @@ export const LineChart = ({
 				}}
 			>
 				<p style={{ margin: 0, fontWeight: "bold", color: "var(--bs-body-color)" }}>
-					{xAxisLabel}: {xAxisFormatter(label)}
+					{xAxisLabel}: {formatTick(label)}
 				</p>
 				{payload.map((entry: any) => (
 					<p key={entry.dataKey} style={{ margin: 0, color: entry.color }}>
@@ -130,7 +141,10 @@ export const LineChart = ({
 				<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
 				<XAxis
 					dataKey="x"
-					tickFormatter={xAxisFormatter}
+					type="number"
+					scale="time"
+					domain={["dataMin", "dataMax"]}
+					tickFormatter={formatTick}
 					tick={{ fontSize: fontsize, fill: "var(--bs-body-color)" }}
 					stroke="var(--bs-border-color)"
 				>
