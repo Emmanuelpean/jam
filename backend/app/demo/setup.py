@@ -1,4 +1,4 @@
-"""Demo schema setup and initialization."""
+"""Demo schema setup and initialisation."""
 
 import datetime as dt
 
