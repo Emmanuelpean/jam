@@ -10,6 +10,7 @@ interface TableHeaderProps {
 	id?: string;
 	onClick?: () => void;
 	active?: boolean;
+	statusContent?: React.ReactNode;
 }
 
 const PageHeader: React.FC<TableHeaderProps> = ({
@@ -20,6 +21,7 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 	id,
 	onClick,
 	active = false,
+	statusContent,
 }: TableHeaderProps): JSX.Element => {
 	return (
 		<div
@@ -38,6 +40,7 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 						</div>
 					</div>
 					{count !== undefined && <div className="table-count-badge">{count}</div>}
+					{statusContent}
 				</div>
 			</Card>
 		</div>

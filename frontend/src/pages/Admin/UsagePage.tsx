@@ -9,11 +9,17 @@ import {
 } from "../../services/api/ExternalServiceMonitoring";
 import { LineChart, SeriesData } from "../../components/Chart/LineChart";
 import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
-import { useGlobalToast } from "../../hooks/useNotificationToast";
-import { ServiceStatusCard } from "../Services/ServiceStatusCard";
+import { Popover } from "../../components/Popover/Popover";
 import TimeSelection from "../../components/TimeSelection/TimeSelection";
 import { DateRange } from "../../utils/TimeUtils";
-import { formatErrorMessage } from "../Services/ServiceUtils";
+import {
+	failureColor,
+	formatErrorMessage,
+	renderControl,
+	renderStatusIcons,
+	successColor,
+	useServiceControl,
+} from "../Services/ServiceUtils";
 import "../Services/Service.scss";
 import {
 	AnthropicDailyUsageData,
@@ -41,6 +47,10 @@ const DASHBOARD_URLS: Record<string, string> = {
 
 // Distinct colours so multi-series (Bright Data datasets, Stripe gross/net) are distinguishable.
 const SERIES_PALETTE: string[] = ["var(--bs-primary)", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#06b6d4"];
+
+// Spend services bill in USD, Stripe income is in GBP. Fixed rate used to express the
+// net balance in a single currency (GBP). Update if the rate drifts significantly.
+const USD_TO_GBP = 0.79;
 
 const toIsoDate = (d: Date | string): string => {
 	if (typeof d === "string") return d.slice(0, 10);
@@ -97,7 +107,7 @@ const ServiceCard = ({
 						rel="noreferrer"
 						variant={"outline-secondary"}
 						className="btn-sm"
-						title={`Open ${label} dashboard`}
+						style={{ fontSize: "0.95rem" }}
 					>
 						<i className="bi bi-box-arrow-up-right me-1" />
 						Dashboard
@@ -133,13 +143,45 @@ const ServiceCard = ({
 	);
 };
 
+interface SummaryCardProps {
+	icon: string;
+	label: string;
+	value: string;
+	caption?: string | string[];
+	valueColor?: string;
+}
+
+const SummaryCard = ({ icon, label, value, caption, valueColor }: SummaryCardProps): JSX.Element => {
+	const captions: string[] = caption === undefined ? [] : Array.isArray(caption) ? caption : [caption];
+	return (
+		<div className="status-card usage-summary-card h-100">
+			<div className="usage-summary-top">
+				<i className={`bi bi-${icon} usage-summary-icon`} />
+				<span className="usage-summary-label">{label}</span>
+			</div>
+			<div className="usage-summary-value" style={valueColor ? { color: valueColor } : undefined}>
+				{value}
+			</div>
+			{captions.map((c) => (
+				<div key={c} className="usage-summary-caption">
+					{c}
+				</div>
+			))}
+		</div>
+	);
+};
+
 const UsagePage = (): JSX.Element => {
 	const { token } = useAuth();
-	const { showToastSuccess } = useGlobalToast();
 	const { serviceStatus, remainingTime, fetchStatus, statusError } = useServiceRunnerStatus(
 		externalServiceMonitoringRunnerApi
 	);
-	const [loading, setLoading] = useState<boolean>(false);
+	const control = useServiceControl(
+		token,
+		fetchStatus,
+		(t: string) => externalServiceMonitoringRunnerApi.start(t),
+		(t: string) => externalServiceMonitoringRunnerApi.stop(t)
+	);
 
 	const [dateRange, setDateRange] = useState<DateRange>({ start: new Date(), end: new Date() });
 
@@ -183,34 +225,6 @@ const UsagePage = (): JSX.Element => {
 	useEffect((): void => {
 		void fetchHistory();
 	}, [fetchHistory]);
-
-	const handleStart = async (): Promise<void> => {
-		if (!token) return;
-		setLoading(true);
-		try {
-			await externalServiceMonitoringRunnerApi.start(token);
-			await fetchStatus();
-			showToastSuccess("Monitoring service started");
-		} catch (err: any) {
-			console.log(err.message || "Failed to start monitoring service");
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	const handleStop = async (): Promise<void> => {
-		if (!token) return;
-		setLoading(true);
-		try {
-			await externalServiceMonitoringRunnerApi.stop(token);
-			await fetchStatus();
-			showToastSuccess("Monitoring service stopped");
-		} catch (err: any) {
-			console.log(err.message || "Failed to stop monitoring service");
-		} finally {
-			setLoading(false);
-		}
-	};
 
 	// ---- Build per-service card props ----
 	const anthropicSeries: SeriesData[] = useMemo(
@@ -263,13 +277,15 @@ const UsagePage = (): JSX.Element => {
 		[stripe]
 	);
 
-	const brightdataTotalByDataset = useMemo(() => {
-		const totals: Record<string, number> = {};
-		brightdata.forEach((r) => {
-			totals[r.dataset] = (totals[r.dataset] || 0) + r.usage_usd;
-		});
-		return totals;
-	}, [brightdata]);
+	// Period totals for the summary cards (period follows the filter above).
+	const summary = useMemo(() => {
+		const anthropicUsd = sumByDay(anthropic, (r) => r.usage_usd);
+		const apifyUsd = sumByDay(apify, (r) => r.usage_usd);
+		const brightdataUsd = sumByDay(brightdata, (r) => r.usage_usd);
+		const stripeNetGbp = sumByDay(stripe, (r) => r.net_gbp);
+		const totalSpendGbp = (anthropicUsd + apifyUsd + brightdataUsd) * USD_TO_GBP;
+		return { anthropicUsd, apifyUsd, brightdataUsd, stripeNetGbp, netGbp: stripeNetGbp - totalSpendGbp };
+	}, [anthropic, apify, brightdata, stripe]);
 
 	const collectedErrors = [
 		{ key: "status", label: "Service status", value: statusError },
@@ -278,7 +294,32 @@ const UsagePage = (): JSX.Element => {
 
 	return (
 		<div className="scraped-jobs-page">
-			<PageHeader title="External Service Monitoring" icon={getTableIcon("ESM")} />
+			<PageHeader
+				title="External Service Monitoring"
+				icon={getTableIcon("ESM")}
+				statusContent={
+					<Popover
+						trigger={renderStatusIcons(serviceStatus, remainingTime)}
+						ariaLabel="Monitoring service controls"
+					>
+						{(close) =>
+							renderControl(
+								serviceStatus,
+								null,
+								control.loading,
+								() => {
+									close();
+									control.handleStart();
+								},
+								() => {
+									close();
+									control.handleStop();
+								}
+							)
+						}
+					</Popover>
+				}
+			/>
 
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
@@ -298,16 +339,6 @@ const UsagePage = (): JSX.Element => {
 				</div>
 			)}
 
-			<ServiceStatusCard
-				status={serviceStatus}
-				remainingTime={remainingTime}
-				loading={loading}
-				onStart={handleStart}
-				onStop={handleStop}
-				serviceLabel="Monitoring Service"
-				inlineIndicators
-			/>
-
 			<div id="history-filters" className="status-card filter-card mt-4">
 				<div className="d-flex align-items-center gap-3 flex-wrap">
 					<span className="filter-card-label">
@@ -325,6 +356,60 @@ const UsagePage = (): JSX.Element => {
 			</div>
 
 			<Row className="g-3 mt-1">
+				<Col xs={12} sm={6} lg={4} xl={true}>
+					<SummaryCard
+						icon={SERVICE_ICONS.anthropic || "cpu"}
+						label="Anthropic spend"
+						value={formatMoney(summary.anthropicUsd, "$")}
+					/>
+				</Col>
+				<Col xs={12} sm={6} lg={4} xl={true}>
+					<SummaryCard
+						icon={SERVICE_ICONS.apify || "cpu"}
+						label="Apify spend"
+						value={formatMoney(summary.apifyUsd, "$")}
+						caption={
+							apifyBalance?.limit_usd != null
+								? `Cycle limit: ${formatMoney(apifyBalance.limit_usd, "$")}`
+								: undefined
+						}
+					/>
+				</Col>
+				<Col xs={12} sm={6} lg={4} xl={true}>
+					<SummaryCard
+						icon={SERVICE_ICONS.brightdata || "cpu"}
+						label="Bright Data spend"
+						value={formatMoney(summary.brightdataUsd, "$")}
+						caption={
+							[
+								...(brightdataBalance?.balance_usd != null
+									? [`Balance: ${formatMoney(brightdataBalance.balance_usd, "$")}`]
+									: []),
+								...(brightdataBalance?.pending_costs_usd != null
+									? [`Pending: ${formatMoney(brightdataBalance.pending_costs_usd, "$")}`]
+									: []),
+							].join(" · ") || undefined
+						}
+					/>
+				</Col>
+				<Col xs={12} sm={6} lg={4} xl={true}>
+					<SummaryCard
+						icon={SERVICE_ICONS.stripe || "cpu"}
+						label="Stripe income"
+						value={formatMoney(summary.stripeNetGbp, "£")}
+					/>
+				</Col>
+				<Col xs={12} sm={6} lg={4} xl={true}>
+					<SummaryCard
+						icon="cash-stack"
+						label="Net balance"
+						value={formatMoney(summary.netGbp, "£")}
+						valueColor={summary.netGbp >= 0 ? successColor : failureColor}
+					/>
+				</Col>
+			</Row>
+
+			<Row className="g-3 mt-1">
 				<Col md={6}>
 					<ServiceCard
 						service="anthropic"
@@ -333,16 +418,7 @@ const UsagePage = (): JSX.Element => {
 						dashboardUrl={DASHBOARD_URLS.anthropic}
 						loading={historyLoading}
 						error={null}
-						totalLine={[
-							{
-								label: "Total in period",
-								value: formatMoney(
-									sumByDay(anthropic, (r) => r.usage_usd),
-									"$"
-								),
-							},
-							{ label: "Days", value: String(anthropic.length) },
-						]}
+						totalLine={[]}
 						chartData={anthropicSeries}
 						yAxisLabel="Spend ($)"
 						currencyPrefix="$"
@@ -356,24 +432,7 @@ const UsagePage = (): JSX.Element => {
 						dashboardUrl={DASHBOARD_URLS.apify}
 						loading={historyLoading}
 						error={null}
-						totalLine={[
-							...(apifyBalance?.limit_usd != null
-								? [
-										{
-											label: "Cycle limit",
-											value: formatMoney(apifyBalance.limit_usd, "$"),
-										},
-									]
-								: []),
-							{
-								label: "Total in period",
-								value: formatMoney(
-									sumByDay(apify, (r) => r.usage_usd),
-									"$"
-								),
-							},
-							{ label: "Days", value: String(apify.length) },
-						]}
+						totalLine={[]}
 						chartData={apifySeries}
 						yAxisLabel="Usage ($)"
 						currencyPrefix="$"
@@ -387,28 +446,7 @@ const UsagePage = (): JSX.Element => {
 						dashboardUrl={DASHBOARD_URLS.brightdata}
 						loading={historyLoading}
 						error={null}
-						totalLine={[
-							...(brightdataBalance?.balance_usd != null
-								? [
-										{
-											label: "Account balance",
-											value: formatMoney(brightdataBalance.balance_usd, "$"),
-										},
-									]
-								: []),
-							...(brightdataBalance?.pending_costs_usd != null
-								? [
-										{
-											label: "Pending charges",
-											value: formatMoney(brightdataBalance.pending_costs_usd, "$"),
-										},
-									]
-								: []),
-							...Object.entries(brightdataTotalByDataset).map(([ds, total]) => ({
-								label: `${ds} total`,
-								value: formatMoney(total, "$"),
-							})),
-						]}
+						totalLine={[]}
 						chartData={brightdataSeries}
 						yAxisLabel="Spend ($)"
 						currencyPrefix="$"
@@ -422,22 +460,7 @@ const UsagePage = (): JSX.Element => {
 						dashboardUrl={DASHBOARD_URLS.stripe}
 						loading={historyLoading}
 						error={null}
-						totalLine={[
-							{
-								label: "Gross in period",
-								value: formatMoney(
-									sumByDay(stripe, (r) => r.gross_gbp),
-									"£"
-								),
-							},
-							{
-								label: "Net in period",
-								value: formatMoney(
-									sumByDay(stripe, (r) => r.net_gbp),
-									"£"
-								),
-							},
-						]}
+						totalLine={[]}
 						chartData={stripeSeries}
 						yAxisLabel="Income (£)"
 						currencyPrefix="£"
