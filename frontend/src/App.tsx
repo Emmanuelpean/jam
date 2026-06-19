@@ -23,7 +23,6 @@ import TermsPage from "./pages/Auth/TermsPage";
 import PrivacyPolicyPage from "./pages/Auth/PrivacyPolicyPage";
 import AboutPage from "./pages/About/AboutPage";
 import ExtensionPage from "./pages/About/ExtensionPage";
-import ReleaseNotesPage from "./pages/About/ReleaseNotesPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.scss";
 import "./Themes.scss";
@@ -203,7 +202,6 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/privacy", element: <PrivacyPolicyPage /> },
 	{ path: "/about", element: <AboutPage />, protected: true },
 	{ path: "/browser-extension", element: <ExtensionPage />, protected: true },
-	{ path: "/release-notes", element: <ReleaseNotesPage />, protected: true },
 	{ path: "/companies", element: <CompaniesPage />, protected: true },
 	{ path: "/jobs", element: <JobsPage />, protected: true },
 	{ path: "/style-guide", element: <StyleGuidePage />, protected: true, adminOnly: true },

@@ -153,7 +153,6 @@ export const Sidebar = (): JSX.Element => {
 			submenu: [
 				{ path: "/about", text: "About JAM" },
 				{ path: "/browser-extension", text: "Browser Extension" },
-				{ path: "/release-notes", text: "Release Notes" },
 				{
 					text: "Contact Support",
 					icon: "envelope",
@@ -180,7 +179,7 @@ export const Sidebar = (): JSX.Element => {
 				{ path: "/admin/usage", text: "ESM" },
 			],
 		},
-		...(!allToursCompleted
+		...(!allToursCompleted && !isMobile
 			? [
 					{
 						icon: "map",
