@@ -7,8 +7,8 @@ from starlette import status
 from app import models
 from app.config import settings
 from app.core import oauth2
-from app.routers.utility import assert_admin
 from app.emails.templates import email_templates
+from app.routers.utility import assert_admin
 
 email_template_router = APIRouter(prefix="/email-templates", tags=["email-templates"])
 

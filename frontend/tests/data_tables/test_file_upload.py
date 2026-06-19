@@ -218,9 +218,9 @@ class TestFileUpload(BaseTest):
         self._upload_file("cover_letter_id", b"%PDF-1.4 fake pdf content", "cover_letter.pdf")
         self._wait_for_has_file("cover_letter_id")
 
-        assert not self.check_element_exists("cover_letter_id-write-btn"), (
-            "Edit button must not appear when the uploaded cover letter is not a plain-text file"
-        )
+        assert not self.check_element_exists(
+            "cover_letter_id-write-btn"
+        ), "Edit button must not appear when the uploaded cover letter is not a plain-text file"
 
     def test_cover_letter_write_then_edit(self) -> None:
         """User writes a cover letter via the text editor, saves the job, then reopens and edits it."""
@@ -251,8 +251,7 @@ class TestFileUpload(BaseTest):
 
         # Wait for the previously saved content to load from the API
         WebDriverWait(self.driver, 10).until(
-            lambda d: initial_text[:20]
-            in (d.find_element(By.ID, "cover_letter_text").get_attribute("value") or "")
+            lambda d: initial_text[:20] in (d.find_element(By.ID, "cover_letter_text").get_attribute("value") or "")
         )
 
         updated_text = "Dear Hiring Manager, Updated cover letter content."

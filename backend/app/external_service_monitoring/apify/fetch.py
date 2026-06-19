@@ -3,11 +3,12 @@
 import datetime as dt
 
 import requests
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
 from app.config import settings
 from app.external_service_monitoring.apify import models
 from app.utilities.database import upsert
-from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
 
 
 class ApifyDailyUsage(BaseModel):

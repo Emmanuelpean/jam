@@ -1,8 +1,9 @@
 """Start / stop / status / log endpoints for the external service-monitoring runner."""
 
+import datetime as dt
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-import datetime as dt
 
 from app import models
 from app.core.oauth2 import get_current_user

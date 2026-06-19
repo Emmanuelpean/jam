@@ -7,7 +7,6 @@ import pytest
 from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
 from app.job_email_scraping.schemas import JobResult
 
-
 # -------------------------------------------------- FIXTURES --------------------------------------------------
 
 FULL_JOB_DATA = {

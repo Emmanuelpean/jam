@@ -32,7 +32,6 @@ import time
 from app import models
 from base_test import BaseTest
 
-
 TOUR_ID = "import-scraped-job"
 
 

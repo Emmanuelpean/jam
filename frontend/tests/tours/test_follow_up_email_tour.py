@@ -255,13 +255,11 @@ class TestFollowUpEmailTour(BaseTest):
 
         # During the tour only the demo job row is visible
         visible_rows = self.job_table_utils.table_rows
-        assert len(visible_rows) == 1, (
-            f"Expected exactly 1 demo job row during the tour, got {len(visible_rows)}"
-        )
+        assert len(visible_rows) == 1, f"Expected exactly 1 demo job row during the tour, got {len(visible_rows)}"
         row_texts = [r.text for r in visible_rows]
-        assert not any("Pre-Existing" in t for t in row_texts), (
-            f"Pre-existing job must not appear during the tour; visible rows: {row_texts}"
-        )
+        assert not any(
+            "Pre-Existing" in t for t in row_texts
+        ), f"Pre-existing job must not appear during the tour; visible rows: {row_texts}"
 
         self.tour_utils.click_skip()
         self.tour_utils.wait_for_popover_gone()

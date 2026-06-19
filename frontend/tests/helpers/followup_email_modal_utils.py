@@ -2,8 +2,8 @@
 
 from selenium.webdriver.remote.webelement import WebElement
 
-from select_utils import Select
 from helpers.base_utils import BaseUtils
+from select_utils import Select
 
 
 class FollowUpEmailModalUtils(BaseUtils):

@@ -19,8 +19,8 @@ from app.emails.email_service import email_service
 from app.emails.release_data import get_release_slides
 from app.payments import stripe
 from app.routers.utility import generate_data_table_crud_router, assert_admin
-from app.utilities.logger import AppLogger
 from app.utilities import security
+from app.utilities.logger import AppLogger
 
 
 # -------------------------------------------------------- USERS -------------------------------------------------------

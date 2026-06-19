@@ -184,9 +184,7 @@ class TestFetchAnthropic:
             fetch_anthropic_daily_usage()
 
     @patch("app.external_service_monitoring.anthropic.fetch.requests.get")
-    def test_persists_rows_when_db_passed(
-        self, mock_get, mock_settings_and_window, anthropic_payload, session
-    ) -> None:
+    def test_persists_rows_when_db_passed(self, mock_get, mock_settings_and_window, anthropic_payload, session) -> None:
         """Passing a db session upserts into the AnthropicDailyUsage ORM table."""
 
         mock_get.return_value = MagicMock(json=MagicMock(return_value=anthropic_payload))

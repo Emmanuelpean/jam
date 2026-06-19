@@ -15,8 +15,8 @@ from app.base_schemas import COLUMN_LIMITS
 from app.core import schemas, oauth2
 from app.core.models import TokenType
 from app.core.utils import generate_token
-from tests.conftest import CRUDTestBase
 from app.utilities import security
+from tests.conftest import CRUDTestBase
 
 
 class TestUsersCRUD(CRUDTestBase):

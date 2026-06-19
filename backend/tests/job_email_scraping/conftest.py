@@ -11,13 +11,13 @@ from app.emails.schemas import EmailData
 from app.job_email_scraping.email_parsers import Platform
 from app.job_email_scraping.email_parsers import indeed
 from app.job_email_scraping.email_scraper import JobEmailScraper
-from tests.utils import job_email_resources as resources
 from tests.job_email_scraping.mock_job_scrapers import (
     MockVeganJobsBrightdataJobScraper,
     MockIndeedBrightdataJobScraper,
     MockLinkedinBrightdataJobScraper,
     MockNhsBrightdataJobScraper,
 )
+from tests.utils import job_email_resources as resources
 
 
 @pytest.fixture(autouse=True)

@@ -6,9 +6,9 @@ from sqlalchemy.orm import Session
 from app import models
 from app.core.oauth2 import get_current_user
 from app.database import get_db
+from app.external_service_monitoring import external_service_monitoring_history_router
 from app.external_service_monitoring.anthropic.schemas import AnthropicDailyUsageOut
 from app.routers.utility import assert_admin, filter_by_date
-from app.external_service_monitoring import external_service_monitoring_history_router
 
 
 @external_service_monitoring_history_router.get("/anthropic", response_model=list[AnthropicDailyUsageOut])

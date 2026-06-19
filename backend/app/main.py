@@ -14,12 +14,11 @@ from app.data_tables import routers as data_table_routers
 from app.demo import routers as demo_routers
 from app.demo.setup import setup_demo_schema
 from app.emails import routers as email_routers
-
+from app.external_service_monitoring import routers as external_service_monitoring_routers
 from app.geolocation import routers as geolocation_routers
 from app.job_email_scraping import routers as job_email_scraping_routers
 from app.job_rating import routers as job_rating_routers
 from app.payments import routers as payment_routers
-from app.external_service_monitoring import routers as external_service_monitoring_routers
 
 
 @asynccontextmanager

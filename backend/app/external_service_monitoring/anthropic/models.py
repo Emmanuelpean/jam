@@ -1,6 +1,7 @@
+from sqlalchemy import Column, Date, Float, UniqueConstraint
+
 from app.base_models import CommonBase
 from app.database import Base
-from sqlalchemy import Column, Date, Float, UniqueConstraint
 
 
 class AnthropicDailyUsage(CommonBase, Base):

@@ -1,6 +1,7 @@
 """Module to interact with react-select components using Selenium"""
 
 import time
+
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement

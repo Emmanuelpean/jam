@@ -2,14 +2,13 @@
 
 import datetime as dt
 
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.payments import stripe
-from pydantic import BaseModel
-
 from app.external_service_monitoring.stripe import models
-from app.utilities.datetime import current_month_window
+from app.payments import stripe
 from app.utilities.database import upsert
+from app.utilities.datetime import current_month_window
 
 STRIPE_INCOME_CURRENCY = "gbp"
 STRIPE_INCOME_TXN_TYPES = ("charge", "refund")

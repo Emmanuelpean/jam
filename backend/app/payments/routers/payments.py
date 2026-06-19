@@ -15,7 +15,6 @@ from app.payments.checkout import build_checkout_params
 from app.payments.customer import get_or_create_stripe_customer
 from app.payments.webhooks import process_subscription_event
 
-
 payment_router = APIRouter(prefix="/payments", tags=["payments"])
 
 

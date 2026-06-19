@@ -1,6 +1,7 @@
+from sqlalchemy import Column, Date, Float, String, UniqueConstraint
+
 from app.base_models import CommonBase
 from app.database import Base
-from sqlalchemy import Column, Date, Float, String, UniqueConstraint
 
 
 class BrightdataDailyUsage(CommonBase, Base):

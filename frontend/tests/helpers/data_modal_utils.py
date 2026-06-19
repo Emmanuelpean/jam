@@ -5,9 +5,9 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.wait import WebDriverWait
 
 from app import models
-from select_utils import Select
 from helpers.base_utils import BaseUtils
 from helpers.formatting import format_field
+from select_utils import Select
 
 
 class DataModalUtils(BaseUtils):

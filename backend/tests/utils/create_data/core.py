@@ -2,9 +2,9 @@
 
 from app import models
 from app.job_rating.prompts import seed_ai_prompts
+from app.utilities import security
 from tests.utils.create_data.utils import create_db_entries, override_properties
 from tests.utils.test_data import core
-from app.utilities import security
 
 
 def create_settings(db) -> list[models.Setting]:

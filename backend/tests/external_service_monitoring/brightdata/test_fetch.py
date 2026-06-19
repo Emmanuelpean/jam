@@ -277,7 +277,9 @@ class TestFetchBrightdataDailyUsage:
         }
 
     @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
-    def test_upsert_overwrites_existing_date_dataset(self, mock_post, mock_settings, mock_dataset_labels, session) -> None:
+    def test_upsert_overwrites_existing_date_dataset(
+        self, mock_post, mock_settings, mock_dataset_labels, session
+    ) -> None:
         """Re-running for the same (date, dataset) overwrites the prior row rather than duplicating it."""
 
         mock_post.return_value = MagicMock(json=MagicMock(return_value={"2026-06-02": {LINKEDIN_DATASET_ID: 0.01}}))

@@ -14,7 +14,6 @@ from selenium.webdriver.common.by import By
 
 from base_test import BaseTest
 
-
 TOUR_ID = "app-overview"
 TOTAL_STEPS = 6
 
