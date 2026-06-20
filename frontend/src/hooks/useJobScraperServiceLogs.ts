@@ -6,7 +6,7 @@ import { DateRange } from "../utils/TimeUtils";
 import { capitalise } from "../utils/StringUtils";
 import { useServiceLogs } from "./useServiceLogs";
 
-export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: DateRange) => {
+export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: DateRange | null) => {
 	const [platformOptions, setPlatformOptions] = useState<SelectOption[]>([]);
 
 	const result = useServiceLogs<JobScrapingServiceLogData>(

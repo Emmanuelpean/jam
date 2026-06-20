@@ -13,15 +13,6 @@ export const successColor = "#22c55e";
 export const failureColor = "#ef4444";
 export const infoColor = "#0d38e3";
 
-// Service runner status lifted from the service page (e.g. JobScrapingPage) and
-// passed down to its dashboard so it is only polled once per service.
-export interface LiftedServiceStatusProps {
-	serviceStatus: ServiceStatus | null;
-	remainingTime: number | null;
-	fetchStatus: () => Promise<void>;
-	statusError: string | null;
-}
-
 export const formatErrorMessage = (err: unknown): string => {
 	if (!err) return "";
 	if (typeof err === "string") return err;
