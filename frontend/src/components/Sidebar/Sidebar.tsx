@@ -166,18 +166,10 @@ export const Sidebar = (): JSX.Element => {
 			],
 		},
 		{
+			path: "/admin",
 			text: "Admin",
 			condition: (user: UserData): boolean => user.is_admin,
 			position: "bottom",
-			submenu: [
-				{ path: "/services/job-scraping", text: "Service Dashboards", alsoActiveFor: ["/services/job-rating"] },
-				{
-					path: "/app/users",
-					text: "App Management",
-					alsoActiveFor: ["/app/settings", "/app/email-templates"],
-				},
-				{ path: "/admin/usage", text: "ESM" },
-			],
 		},
 		...(!allToursCompleted && !isMobile
 			? [

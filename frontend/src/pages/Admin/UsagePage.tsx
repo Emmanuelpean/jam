@@ -1,7 +1,9 @@
-import React, { JSX, useCallback, useEffect, useMemo, useState } from "react";
+import React, { JSX, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { Col, Row } from "react-bootstrap";
 import PageHeader from "../PageHeader/PageHeader";
 import { useAuth } from "../../contexts/AuthContext";
+import { ModalHeaderSlotContext } from "../../contexts/ModalHeaderSlotContext";
 import { Button } from "react-bootstrap";
 import {
 	externalServiceMonitoringApi,
@@ -184,10 +186,12 @@ const UsagePage = (): JSX.Element => {
 		(t: string) => externalServiceMonitoringRunnerApi.start(t),
 		(t: string) => externalServiceMonitoringRunnerApi.stop(t)
 	);
-	const { expanded: logsExpanded, setExpanded: setLogsExpanded, open: openLogViewer } =
-		useLogViewerToggle("usage-log-viewer");
-
-	const [dateRange, setDateRange] = useState<DateRange>({ start: new Date(), end: new Date() });
+	const {
+		expanded: logsExpanded,
+		setExpanded: setLogsExpanded,
+		open: openLogViewer,
+	} = useLogViewerToggle("usage-log-viewer");
+	const [dateRange, setDateRange] = useState<DateRange | null>(null);
 
 	const [anthropic, setAnthropic] = useState<AnthropicDailyUsageData[]>([]);
 	const [apify, setApify] = useState<ApifyDailyUsageData[]>([]);
@@ -200,7 +204,7 @@ const UsagePage = (): JSX.Element => {
 	const [historyError, setHistoryError] = useState<string | null>(null);
 
 	const fetchHistory = useCallback(async (): Promise<void> => {
-		if (!token) return;
+		if (!token || !dateRange) return;
 		setHistoryLoading(true);
 		setHistoryError(null);
 		try {
@@ -296,34 +300,38 @@ const UsagePage = (): JSX.Element => {
 		{ key: "history", label: "Usage history", value: historyError },
 	].filter((e) => e.value);
 
+	const headerSlot: HTMLElement | null = useContext(ModalHeaderSlotContext);
+	const statusControl: JSX.Element = (
+		<Popover trigger={renderStatusIcons(serviceStatus, remainingTime)} ariaLabel="Monitoring service controls">
+			{(close) =>
+				renderControl(
+					serviceStatus,
+					null,
+					control.loading,
+					() => {
+						close();
+						void control.handleStart();
+					},
+					() => {
+						close();
+						void control.handleStop();
+					}
+				)
+			}
+		</Popover>
+	);
+
 	return (
 		<div className="scraped-jobs-page">
-			<PageHeader
-				title="External Service Monitoring"
-				icon={getTableIcon("ESM")}
-				statusContent={
-					<Popover
-						trigger={renderStatusIcons(serviceStatus, remainingTime)}
-						ariaLabel="Monitoring service controls"
-					>
-						{(close) =>
-							renderControl(
-								serviceStatus,
-								null,
-								control.loading,
-								() => {
-									close();
-									control.handleStart();
-								},
-								() => {
-									close();
-									control.handleStop();
-								}
-							)
-						}
-					</Popover>
-				}
-			/>
+			{headerSlot ? (
+				createPortal(statusControl, headerSlot)
+			) : (
+				<PageHeader
+					title="External Service Monitoring"
+					icon={getTableIcon("ESM")}
+					statusContent={statusControl}
+				/>
+			)}
 
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
@@ -343,7 +351,7 @@ const UsagePage = (): JSX.Element => {
 				</div>
 			)}
 
-			<div className="d-flex align-items-center gap-3 mt-4 service-filter-row">
+			<div className="d-flex align-items-center gap-3 service-filter-row">
 				<LastLogBar serviceStatus={serviceStatus} onClick={openLogViewer} />
 				<div className="ms-auto">
 					<TimeFilterPopover

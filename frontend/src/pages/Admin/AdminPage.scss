@@ -1,0 +1,103 @@
+.admin-card {
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+
+	&:hover,
+	&:focus-visible {
+		box-shadow: 0 3.6px 14.4px rgb(0 0 0 / 14%);
+		outline: none;
+	}
+
+	&:hover .admin-card-arrow,
+	&:hover .card-title {
+		color: var(--primary-mid);
+	}
+}
+
+.admin-card .card-title {
+	transition: color 0.15s ease;
+}
+
+.admin-card-arrow {
+	font-size: 18px;
+	color: var(--bs-secondary-color);
+	transition: color 0.15s ease;
+}
+
+.admin-card-body {
+	display: flex;
+	flex-direction: column;
+	gap: 3.6px;
+}
+
+.admin-card-primary {
+	font-size: 32.4px;
+	font-weight: 700;
+	line-height: 1.1;
+	margin-bottom: 5.4px;
+	color: var(--bs-body-color);
+}
+
+.admin-card-caption {
+	font-size: 12.6px;
+	font-weight: 600;
+	letter-spacing: 0.02rem;
+	text-transform: uppercase;
+	margin-top: -3.6px;
+	margin-bottom: 5.4px;
+	color: var(--bs-secondary-color);
+}
+
+.admin-card-stat {
+	font-size: 13.5px;
+}
+
+.admin-card-status-value {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.admin-card-status-value .service-status-icon {
+	font-size: 1.25rem;
+}
+
+.admin-card-status-value .service-next-run {
+	display: inline-flex;
+	align-items: center;
+	font-size: 12.6px;
+	font-weight: 600;
+	color: var(--bs-secondary-color);
+}
+
+// Large near-fullscreen modal used to host a full admin page.
+.admin-page-modal-dialog {
+	width: 95vw;
+	max-width: 1400px;
+}
+
+// The modal header is built directly: icon + title on the left, the open page's
+// status control plus the close button on the right.
+.admin-page-modal .modal-header {
+	align-items: center;
+	padding: 9px 14.4px;
+}
+
+.admin-page-modal-title {
+	display: flex;
+	flex: 1;
+	min-width: 0;
+	align-items: center;
+}
+
+.admin-page-modal-status {
+	margin-right: 14px;
+	display: flex;
+	align-items: center;
+}
+
+// The header lives in the modal header, so the body is just page content.
+.admin-page-modal-body {
+	padding: 14.4px 18px 18px;
+}

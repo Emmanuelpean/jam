@@ -13,8 +13,8 @@ export const successColor = "#22c55e";
 export const failureColor = "#ef4444";
 export const infoColor = "#0d38e3";
 
-// Service runner status lifted from the parent (ServiceDashboards) and passed
-// down to each dashboard so it is only polled once per service.
+// Service runner status lifted from the service page (e.g. JobScrapingPage) and
+// passed down to its dashboard so it is only polled once per service.
 export interface LiftedServiceStatusProps {
 	serviceStatus: ServiceStatus | null;
 	remainingTime: number | null;
@@ -147,7 +147,9 @@ export const renderStatusIcons = (status: ServiceStatus | null, remainingTime: n
 	const showCountdown: boolean = status?.service_runner_status === "started" && !serviceRunning;
 	return (
 		<div className="service-status-icons">
-			<Tooltip content={`Service runner: ${status ? serviceRunnerStatusLabels[status.service_runner_status] : "…"}`}>
+			<Tooltip
+				content={`Service runner: ${status ? serviceRunnerStatusLabels[status.service_runner_status] : "…"}`}
+			>
 				<i
 					className={`bi bi-cpu-fill service-status-icon service-status-icon--runner ${runnerActive ? "is-on" : "is-off"} ${isStopping ? "is-stopping" : ""}`}
 				/>

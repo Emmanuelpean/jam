@@ -49,7 +49,7 @@ import { SettingData, UserData } from "../services/schemas/Core";
 import { JobEmailData, ScrapedJobData, ScrapingFilterData } from "../services/schemas/Services";
 import { ApiError } from "../services/api/ApiError";
 import { GeoLocationData } from "../services/schemas/Base";
-import { tourApi } from "../services/api/Others";
+import { emailApi, EmailTemplate, tourApi } from "../services/api/Others";
 import {
 	AggregatorCreate,
 	CompanyCreate,
@@ -227,6 +227,18 @@ interface TypedFetchOperation<T> {
 	label: string;
 }
 
+// Prefetch all email templates (label + rendered HTML) in a single request. Wrapped
+// to resolve to an ApiResponse so it slots into the same tracked-promise pipeline as
+// the other admin fetches. A failure is swallowed (empty list) so it never aborts the
+// rest of the admin data load.
+const fetchEmailTemplates = async (token: string): Promise<ApiResponse<EmailTemplate[]>> => {
+	try {
+		return { data: await emailApi.fetchAllTemplates(token), status: 200 };
+	} catch {
+		return { data: [], status: 200 };
+	}
+};
+
 export interface DataContextValue {
 	// Data arrays
 	jobs: EnrichedJobData[];
@@ -242,6 +254,7 @@ export interface DataContextValue {
 	scrapingFavouriteFilters: ScrapingFilterData[];
 	users: UserData[];
 	files: FileData[];
+	emailTemplates: EmailTemplate[];
 
 	error: ApiError | null;
 
@@ -281,6 +294,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [scrapingFavouriteFilters, setScrapingFavouriteFilters] = useState<ScrapingFilterData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
 	const [files, setFiles] = useState<FileData[]>([]);
+	const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
 	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
 
@@ -447,7 +461,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		if (currentUser?.is_admin) {
 			fetchOperations.push(
 				{ promise: settingsApi.getAll(token), label: "Settings" } as TypedFetchOperation<SettingData[]>,
-				{ promise: userApi.getAll(token), label: "Users" } as TypedFetchOperation<UserData[]>
+				{ promise: userApi.getAll(token), label: "Users" } as TypedFetchOperation<UserData[]>,
+				{
+					promise: fetchEmailTemplates(token),
+					label: "Email Templates",
+				} as TypedFetchOperation<EmailTemplate[]>
 			);
 		}
 
@@ -499,6 +517,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			if (currentUser?.is_admin) {
 				setSettings(adminData[0].data || []);
 				setUsers(adminData[1].data || []);
+				setEmailTemplates(adminData[2].data || []);
 			}
 		} catch (e: any) {
 			setError(e);
@@ -677,6 +696,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				...visibleData,
 				settings,
 				users,
+				emailTemplates,
 				error,
 				setIsInTour,
 				updateEntity,

@@ -1,9 +1,8 @@
-import React, { JSX, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { JSX, useContext, useState } from "react";
 import { Dropdown } from "react-bootstrap";
+import { ModalHeaderSlotContext } from "../../contexts/ModalHeaderSlotContext";
 import DataTable from "../../components/DataTable/DataTable";
 import { UserModal } from "../../components/DataModal/UserModal";
-import { SettingModal } from "../../components/DataModal/SettingModal";
 import { TableColumn, tableColumns } from "../../components/rendering/view/TableColumns";
 import { GenericResponse, userApi } from "../../services/api/Users";
 import { useAuth } from "../../contexts/AuthContext";
@@ -11,32 +10,19 @@ import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAlert } from "../../contexts/AlertContext";
 import { useDataContext } from "../../contexts/DataContext";
 import { ApiResponse } from "../../services/api/Base";
-import { SettingData, UserData } from "../../services/schemas/Core";
+import { UserData } from "../../services/schemas/Core";
 import { LAST_VERSION } from "../../releaseNotes/versions";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import PageHeader from "../PageHeader/PageHeader";
-import { EmailTemplatesContent } from "../Admin/EmailTemplatesPage";
 
-type ActiveTab = "users" | "settings" | "email-templates";
-
-export const UserManagementPage: React.FC = () => {
+export const UsersPage: React.FC = (): JSX.Element => {
 	const { token } = useAuth();
 	const { showToastSuccess, showToastError, showApiError } = useGlobalToast();
 	const { showAlert } = useAlert();
 	const { users } = useDataContext();
-	const location = useLocation();
-	const navigate = useNavigate();
+	const headerSlot: HTMLElement | null = useContext(ModalHeaderSlotContext);
 	const [sendingEmail, setSendingEmail] = useState<boolean>(false);
-	const activeTab: ActiveTab =
-		location.pathname === "/app/settings"
-			? "settings"
-			: location.pathname === "/app/email-templates"
-				? "email-templates"
-				: "users";
 	const [usersCount, setUsersCount] = useState<number>(0);
-	const [settingsCount, setSettingsCount] = useState<number>(0);
-	const [usersReload, setUsersReload] = useState<number>(0);
-	const [settingsReload, setSettingsReload] = useState<number>(0);
 
 	const userColumns: TableColumn<UserData>[] = [
 		tableColumns.idColumn<UserData>(),
@@ -47,14 +33,6 @@ export const UserManagementPage: React.FC = () => {
 		tableColumns.isActiveColumn<UserData>(),
 		tableColumns.toastActiveColumn<UserData>(),
 		tableColumns.createdAtColumn<UserData>(),
-	];
-
-	const settingColumns: TableColumn<SettingData>[] = [
-		tableColumns.nameColumn<SettingData>(),
-		tableColumns.valueColumn<SettingData>(),
-		tableColumns.descriptionColumn<SettingData>(),
-		tableColumns.isActiveColumn<SettingData>(),
-		tableColumns.createdAtColumn<SettingData>(),
 	];
 
 	const handleLogoutAllUsers = async (): Promise<void> => {
@@ -142,65 +120,18 @@ export const UserManagementPage: React.FC = () => {
 
 	return (
 		<div>
-			<div className="d-flex gap-3">
-				<PageHeader
-					className="flex-fill"
-					title="Users"
-					icon={getTableIcon("Users")}
-					count={usersCount}
-					onClick={(): void => {
-						navigate("/app/users");
-						setUsersReload((n) => n + 1);
-					}}
-					active={activeTab === "users"}
-				/>
-				<PageHeader
-					className="flex-fill"
-					title="Settings"
-					icon={getTableIcon("Settings")}
-					count={settingsCount}
-					onClick={(): void => {
-						navigate("/app/settings");
-						setSettingsReload((n) => n + 1);
-					}}
-					active={activeTab === "settings"}
-				/>
-				<PageHeader
-					className="flex-fill"
-					title="Email Templates"
-					icon={getTableIcon("Email Templates")}
-					onClick={(): void => {
-						navigate("/app/email-templates");
-					}}
-					active={activeTab === "email-templates"}
-				/>
-			</div>
-
-			<div style={{ display: activeTab === "users" ? "block" : "none" }}>
-				<DataTable<UserData>
-					entityType="user"
-					initialSortConfig={{ key: "id", direction: "asc" }}
-					columns={userColumns}
-					Modal={UserModal}
-					toolbarAddon={toolbarAddon}
-					onTotalCountChange={setUsersCount}
-					reloadTrigger={usersReload}
-					enableColumnConfig={true}
-				/>
-			</div>
-			<div style={{ display: activeTab === "settings" ? "block" : "none" }}>
-				<DataTable<SettingData>
-					entityType="setting"
-					initialSortConfig={{ key: "name", direction: "asc" }}
-					columns={settingColumns}
-					Modal={SettingModal}
-					initialData={{ is_active: true }}
-					onTotalCountChange={setSettingsCount}
-					reloadTrigger={settingsReload}
-					enableColumnConfig={true}
-				/>
-			</div>
-			{activeTab === "email-templates" && <EmailTemplatesContent />}
+			{!headerSlot && <PageHeader title="Users" icon={getTableIcon("Users")} count={usersCount} />}
+			<DataTable<UserData>
+				entityType="user"
+				initialSortConfig={{ key: "id", direction: "asc" }}
+				columns={userColumns}
+				Modal={UserModal}
+				toolbarAddon={toolbarAddon}
+				onTotalCountChange={setUsersCount}
+				enableColumnConfig={true}
+			/>
 		</div>
 	);
 };
+
+export default UsersPage;
