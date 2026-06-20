@@ -1,6 +1,6 @@
 import React, { JSX, useState } from "react";
 import { Form, InputGroup } from "react-bootstrap";
-import { ServiceStatus, ThreadStatus } from "../../services/api/Services";
+import { ServiceStatus } from "../../services/api/Services";
 import { SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { formatDuration } from "../../utils/TimeUtils";
 import { HelpBubble } from "../../components/HelpBubble/HelpBubble";

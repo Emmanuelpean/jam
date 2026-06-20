@@ -1,11 +1,17 @@
-import React, { JSX, ReactNode, useCallback, useEffect, useState } from "react";
+import React, { JSX, ReactNode, useEffect, useMemo, useState } from "react";
 import { Col, Modal, Row } from "react-bootstrap";
 import PageHeader from "../PageHeader/PageHeader";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDataContext } from "../../contexts/DataContext";
 import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
-import { jobRatingServiceRunnerApi, jobScraperServiceApi, ServiceStatus } from "../../services/api/Services";
+import {
+	jobRatingServiceLogApi,
+	jobRatingServiceRunnerApi,
+	jobScraperServiceApi,
+	jobScraperServiceLogApi,
+	ServiceStatus,
+} from "../../services/api/Services";
 import {
 	externalServiceMonitoringApi,
 	externalServiceMonitoringRunnerApi,
@@ -14,6 +20,7 @@ import { failureColor, serviceRunnerStatusLabels, successColor } from "../Servic
 import { ServiceConfigField, ServiceStatusControl } from "../Services/ServiceStatusControl";
 import { formatDuration } from "../../utils/TimeUtils";
 import { UserData } from "../../services/schemas/Core";
+import { Sparkline, SparklinePoint } from "../../components/Chart/Sparkline";
 import JamModal from "../../components/JamModal/JamModal";
 import { UsersPage } from "./UsersPage";
 import { AppSettingsPage } from "./AppSettingsPage";
@@ -105,13 +112,56 @@ const toIsoDate = (d: Date): string => d.toISOString().slice(0, 10);
 
 const formatMoney = (value: number, prefix: string): string => `${prefix}${value.toFixed(2)}`;
 
-interface DailyRow {
-	usage_usd?: number;
-	net_gbp?: number;
-}
+// Window covered by the per-service card graphs.
+const RANGE_DAYS = 30;
 
-const sumBy = <T extends DailyRow>(rows: T[], picker: (r: T) => number): number =>
-	rows.reduce((acc: number, r: T): number => acc + picker(r), 0);
+// The trailing N calendar days (UTC) as YYYY-MM-DD, oldest first — the buckets the
+// card graphs aggregate into.
+const lastNDays = (n: number): string[] => {
+	const days: string[] = [];
+	const today = new Date();
+	for (let i = n - 1; i >= 0; i--) {
+		const d = new Date(today);
+		d.setUTCDate(today.getUTCDate() - i);
+		days.push(d.toISOString().slice(0, 10));
+	}
+	return days;
+};
+
+// Sum a per-run metric into one point per day over the window.
+const dailySeriesFromLogs = <T extends { run_datetime: Date }>(
+	logs: T[],
+	getValue: (log: T) => number
+): SparklinePoint[] => {
+	const totals = new Map<string, number>(lastNDays(RANGE_DAYS).map((d) => [d, 0]));
+	logs.forEach((log: T): void => {
+		const day: string = new Date(log.run_datetime).toISOString().slice(0, 10);
+		if (totals.has(day)) totals.set(day, totals.get(day)! + getValue(log));
+	});
+	return Array.from(totals, ([day, y]): SparklinePoint => ({ x: new Date(`${day}T00:00:00Z`), y }));
+};
+
+// Net balance per day = Stripe net (GBP) minus spend (USD → GBP), over the window.
+const dailyBalanceSeries = (
+	spend: { date: string; usage_usd: number }[],
+	stripe: { date: string; net_gbp: number }[]
+): SparklinePoint[] => {
+	const days: string[] = lastNDays(RANGE_DAYS);
+	const spendByDay = new Map<string, number>(days.map((d) => [d, 0]));
+	spend.forEach((r): void => {
+		if (spendByDay.has(r.date)) spendByDay.set(r.date, spendByDay.get(r.date)! + r.usage_usd);
+	});
+	const netByDay = new Map<string, number>(days.map((d) => [d, 0]));
+	stripe.forEach((r): void => {
+		if (netByDay.has(r.date)) netByDay.set(r.date, r.net_gbp);
+	});
+	return days.map(
+		(d: string): SparklinePoint => ({
+			x: new Date(`${d}T00:00:00Z`),
+			y: (netByDay.get(d) ?? 0) - (spendByDay.get(d) ?? 0) * USD_TO_GBP,
+		})
+	);
+};
 
 interface AdminCardProps {
 	id?: string;
@@ -258,37 +308,49 @@ const AdminPage = (): JSX.Element => {
 		usage: monitoring,
 	};
 
-	const [netBalance, setNetBalance] = useState<number | null>(null);
-	const [balanceError, setBalanceError] = useState<boolean>(false);
+	// Daily-value series for the past week, embedded as a sparkline in each service card.
+	const [scrapedSeries, setScrapedSeries] = useState<SparklinePoint[]>([]);
+	const [ratedSeries, setRatedSeries] = useState<SparklinePoint[]>([]);
+	const [balanceSeries, setBalanceSeries] = useState<SparklinePoint[]>([]);
+	const [sparklinesLoading, setSparklinesLoading] = useState<boolean>(true);
 
-	// Net balance over the trailing 30 days, mirroring UsagePage's computation.
-	const fetchNetBalance = useCallback(async (): Promise<void> => {
+	useEffect((): (() => void) | void => {
 		if (!token) return;
-		setBalanceError(false);
-		try {
-			const end = new Date();
-			const start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
-			const range = { start_date: toIsoDate(start), end_date: toIsoDate(end) };
-			const [anthropic, apify, brightdata, stripe] = await Promise.all([
-				externalServiceMonitoringApi.getAnthropicHistory(range, token),
-				externalServiceMonitoringApi.getApifyHistory(range, token),
-				externalServiceMonitoringApi.getBrightdataHistory(range, token),
-				externalServiceMonitoringApi.getStripeHistory(range, token),
-			]);
-			const spendUsd =
-				sumBy(anthropic, (r) => r.usage_usd ?? 0) +
-				sumBy(apify, (r) => r.usage_usd ?? 0) +
-				sumBy(brightdata, (r) => r.usage_usd ?? 0);
-			const stripeNetGbp = sumBy(stripe, (r) => r.net_gbp ?? 0);
-			setNetBalance(stripeNetGbp - spendUsd * USD_TO_GBP);
-		} catch {
-			setBalanceError(true);
-		}
+		let cancelled = false;
+		const load = async (): Promise<void> => {
+			setSparklinesLoading(true);
+			try {
+				const end = new Date();
+				const start = new Date(end.getTime() - (RANGE_DAYS - 1) * 24 * 60 * 60 * 1000);
+				const isoRange = { start_date: toIsoDate(start), end_date: toIsoDate(end) };
+				const dtRange = { start_date: start.toISOString(), end_date: end.toISOString() };
+				const [scrapeLogs, ratingLogs, anthropic, apify, brightdata, stripe] = await Promise.all([
+					jobScraperServiceLogApi.getAll(token, dtRange),
+					jobRatingServiceLogApi.getAll(token, dtRange),
+					externalServiceMonitoringApi.getAnthropicHistory(isoRange, token),
+					externalServiceMonitoringApi.getApifyHistory(isoRange, token),
+					externalServiceMonitoringApi.getBrightdataHistory(isoRange, token),
+					externalServiceMonitoringApi.getStripeHistory(isoRange, token),
+				]);
+				if (cancelled) return;
+				setScrapedSeries(dailySeriesFromLogs(scrapeLogs.data, (l) => l.job_scrape_succeeded_n));
+				setRatedSeries(dailySeriesFromLogs(ratingLogs.data, (l) => l.job_succeeded_ids.length));
+				setBalanceSeries(dailyBalanceSeries([...anthropic, ...apify, ...brightdata], stripe));
+			} catch {
+				// Leave the series empty on error; the sparklines show "No data".
+			} finally {
+				if (!cancelled) setSparklinesLoading(false);
+			}
+		};
+		void load();
+		return (): void => {
+			cancelled = true;
+		};
 	}, [token]);
 
-	useEffect((): void => {
-		void fetchNetBalance();
-	}, [fetchNetBalance]);
+	const scrapedTotal: number = useMemo(() => scrapedSeries.reduce((acc, p) => acc + p.y, 0), [scrapedSeries]);
+	const ratedTotal: number = useMemo(() => ratedSeries.reduce((acc, p) => acc + p.y, 0), [ratedSeries]);
+	const netBalance: number = useMemo(() => balanceSeries.reduce((acc, p) => acc + p.y, 0), [balanceSeries]);
 
 	const totalUsers: number = users.length;
 	const activeUsers: number = users.filter(isActiveUser).length;
@@ -348,6 +410,13 @@ const AdminPage = (): JSX.Element => {
 						onClick={(): void => openModal("scraping")}
 					>
 						<ServiceStatusBody status={scraping.serviceStatus} remainingTime={scraping.remainingTime} />
+						<div className="admin-card-sparkline">
+							<div className="d-flex justify-content-between admin-card-stat">
+								<span className="text-muted">Jobs scraped ({RANGE_DAYS}d)</span>
+								<span className="fw-bold">{sparklinesLoading ? "…" : scrapedTotal}</span>
+							</div>
+							<Sparkline data={scrapedSeries} loading={sparklinesLoading} />
+						</div>
 					</AdminCard>
 				</Col>
 
@@ -359,6 +428,13 @@ const AdminPage = (): JSX.Element => {
 						onClick={(): void => openModal("rating")}
 					>
 						<ServiceStatusBody status={rating.serviceStatus} remainingTime={rating.remainingTime} />
+						<div className="admin-card-sparkline">
+							<div className="d-flex justify-content-between admin-card-stat">
+								<span className="text-muted">Jobs rated ({RANGE_DAYS}d)</span>
+								<span className="fw-bold">{sparklinesLoading ? "…" : ratedTotal}</span>
+							</div>
+							<Sparkline data={ratedSeries} loading={sparklinesLoading} />
+						</div>
 					</AdminCard>
 				</Col>
 
@@ -370,18 +446,26 @@ const AdminPage = (): JSX.Element => {
 						onClick={(): void => openModal("usage")}
 					>
 						<ServiceStatusBody status={monitoring.serviceStatus} remainingTime={monitoring.remainingTime} />
-						<div className="d-flex justify-content-between admin-card-stat mt-2">
-							<span className="text-muted">Net balance (30d)</span>
-							<span
-								className="fw-bold"
-								style={
-									netBalance === null
-										? undefined
-										: { color: netBalance >= 0 ? successColor : failureColor }
-								}
-							>
-								{balanceError ? "—" : netBalance === null ? "…" : formatMoney(netBalance, "£")}
-							</span>
+						<div className="admin-card-sparkline">
+							<div className="d-flex justify-content-between admin-card-stat">
+								<span className="text-muted">Net balance ({RANGE_DAYS}d)</span>
+								<span
+									className="fw-bold"
+									style={
+										sparklinesLoading
+											? undefined
+											: { color: netBalance >= 0 ? successColor : failureColor }
+									}
+								>
+									{sparklinesLoading ? "…" : formatMoney(netBalance, "£")}
+								</span>
+							</div>
+							<Sparkline
+								data={balanceSeries}
+								loading={sparklinesLoading}
+								valueFormatter={(y) => formatMoney(y, "£")}
+								allowNegative
+							/>
 						</div>
 					</AdminCard>
 				</Col>
@@ -401,12 +485,16 @@ const AdminPage = (): JSX.Element => {
 				{openPage && (
 					<>
 						<JamModal.Header onClose={() => setShowModal(false)} className="admin-page-modal-header">
-							<div className="admin-page-modal-title">
-								<div className="header-icon-wrapper me-2">
-									<i className={`bi bi-${ADMIN_PAGES[openPage].icon}`} />
-								</div>
-								<h4 className="mb-0 fw-bold">{ADMIN_PAGES[openPage].title}</h4>
-							</div>
+							<Modal.Title>
+								<span style={{ display: "flex", alignItems: "center" }}>
+									<i
+										className={`bi bi-${ADMIN_PAGES[openPage].icon} me-2`}
+										style={{ fontSize: "1.05em" }}
+									/>
+
+									<span>{ADMIN_PAGES[openPage].title}</span>
+								</span>
+							</Modal.Title>
 							{pageStatus[openPage] && SERVICE_CONTROLS[openPage] && (
 								<div className="admin-page-modal-status">
 									<ServiceStatusControl

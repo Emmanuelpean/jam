@@ -188,6 +188,8 @@
 /* Service-runner / service status icons shown in the service page tab headers.
    Distinct icons per indicator; colour reflects whether each is on or off. */
 .service-status-icons {
+    --service-off-color: #878787;
+
     display: inline-flex;
     align-items: center;
     gap: 12.6px;
@@ -203,7 +205,7 @@
 }
 
 .service-status-icon.is-off {
-    color: var(--bs-secondary-color, #9ca3af);
+    color: var(--service-off-color);
 }
 
 /* The service runner being inactive is notable, so flag it in red. */
@@ -256,7 +258,7 @@
     align-items: center;
     font-size: 14.4px;
     font-weight: 600;
-    color: var(--bs-secondary-color);
+    color: var(--service-off-color);
 }
 
 /* The filter row reserves a fixed height so the last-log bar appearing/disappearing
