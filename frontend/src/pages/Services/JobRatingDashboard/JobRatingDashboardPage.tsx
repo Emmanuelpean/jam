@@ -1,6 +1,7 @@
 import React, { JSX, useState } from "react";
 import { jobRatingServiceRunnerApi } from "../../../services/api/Services";
-import LogViewer from "../LogViewer/LogViewer";
+import LogViewer, { useLogViewerToggle } from "../LogViewer/LogViewer";
+import { LastLogBar } from "../LogViewer/LastLogBar";
 import { LatestRunProgress } from "./LatestRunProgress";
 import { RunHistoryChart } from "./RunHistoryChart";
 import { ErrorSummaryCard } from "./ErrorSummaryCard";
@@ -13,6 +14,8 @@ import "../Service.scss";
 
 const JobRatingDashboard = ({ serviceStatus, statusError }: LiftedServiceStatusProps): JSX.Element => {
 	const [dateRange, setDateRange] = useState<DateRange>({ start: new Date(), end: new Date() });
+	const { expanded: logsExpanded, setExpanded: setLogsExpanded, open: openLogViewer } =
+		useLogViewerToggle("rating-log-viewer");
 
 	const {
 		previousServiceLogs,
@@ -59,17 +62,23 @@ const JobRatingDashboard = ({ serviceStatus, statusError }: LiftedServiceStatusP
 				</div>
 			)}
 
+			<div className="d-flex align-items-center gap-3 mb-4 service-filter-row">
+				<LastLogBar serviceStatus={serviceStatus} onClick={openLogViewer} />
+				<div className="ms-auto">
+					<TimeFilterPopover id="history-filters" onDateRangeChange={setDateRange} defaultMode="period" />
+				</div>
+			</div>
+
 			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.service_running || false} />
 
 			<LogViewer
+				id="rating-log-viewer"
 				api={jobRatingServiceRunnerApi}
 				isServiceRunning={serviceStatus?.service_running || false}
 				serviceStatus={serviceStatus}
+				expanded={logsExpanded}
+				onExpandedChange={setLogsExpanded}
 			/>
-
-			<div className="d-flex justify-content-end mt-4">
-				<TimeFilterPopover id="history-filters" onDateRangeChange={setDateRange} defaultMode="period" />
-			</div>
 
 			<RunHistoryChart
 				serviceLogData={previousServiceLogs}

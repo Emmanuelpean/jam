@@ -117,6 +117,8 @@ export const RunHistoryChart = ({
 		label: "Platform",
 		options: platformOptions,
 		isClearable: false,
+		size: "sm",
+		fitContentWidth: true,
 	};
 
 	return (
@@ -127,7 +129,7 @@ export const RunHistoryChart = ({
 					Run History
 					{isRunning && <span className="live-indicator ms-2"></span>}
 				</h2>
-				<div style={{ minWidth: "225px" }}>
+				<div className="history-chart-controls">
 					<SelectInput
 						field={platformField}
 						value={selectedPlatform}

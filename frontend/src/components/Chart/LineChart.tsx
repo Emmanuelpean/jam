@@ -137,7 +137,7 @@ export const LineChart = ({
 
 	return (
 		<ResponsiveContainer width={"100%"} height={height}>
-			<RechartsLineChart data={transformedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+			<RechartsLineChart data={transformedData} margin={{ top: 5, right: 30, left: 20, bottom: 24 }}>
 				<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
 				<XAxis
 					dataKey="x"

@@ -10,7 +10,8 @@ import {
 import { LineChart, SeriesData } from "../../components/Chart/LineChart";
 import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
 import { Popover } from "../../components/Popover/Popover";
-import LogViewer from "../Services/LogViewer/LogViewer";
+import LogViewer, { useLogViewerToggle } from "../Services/LogViewer/LogViewer";
+import { LastLogBar } from "../Services/LogViewer/LastLogBar";
 import { TimeFilterPopover } from "../../components/TimeSelection/TimeFilterPopover";
 import { DateRange } from "../../utils/TimeUtils";
 import {
@@ -183,16 +184,8 @@ const UsagePage = (): JSX.Element => {
 		(t: string) => externalServiceMonitoringRunnerApi.start(t),
 		(t: string) => externalServiceMonitoringRunnerApi.stop(t)
 	);
-	const [logsExpanded, setLogsExpanded] = useState<boolean>(false);
-
-	const openLogViewer = (): void => {
-		setLogsExpanded(true);
-		// Wait for the expand animation (0.25s) to finish so the page has grown
-		// enough to scroll the bottom widget fully into view.
-		window.setTimeout(() => {
-			document.getElementById("usage-log-viewer")?.scrollIntoView({ behavior: "smooth", block: "start" });
-		}, 300);
-	};
+	const { expanded: logsExpanded, setExpanded: setLogsExpanded, open: openLogViewer } =
+		useLogViewerToggle("usage-log-viewer");
 
 	const [dateRange, setDateRange] = useState<DateRange>({ start: new Date(), end: new Date() });
 
@@ -350,24 +343,8 @@ const UsagePage = (): JSX.Element => {
 				</div>
 			)}
 
-			<div className="d-flex align-items-center gap-3 mt-4 usage-filter-row">
-				{serviceStatus?.service_running && serviceStatus.last_log && (
-					<div
-						className="usage-last-log"
-						role="button"
-						tabIndex={0}
-						onClick={openLogViewer}
-						onKeyDown={(e) => {
-							if (e.key === "Enter" || e.key === " ") {
-								e.preventDefault();
-								openLogViewer();
-							}
-						}}
-					>
-						<span className="live-indicator" />
-						<span className="usage-last-log-text">{serviceStatus.last_log}</span>
-					</div>
-				)}
+			<div className="d-flex align-items-center gap-3 mt-4 service-filter-row">
+				<LastLogBar serviceStatus={serviceStatus} onClick={openLogViewer} />
 				<div className="ms-auto">
 					<TimeFilterPopover
 						id="history-filters"
@@ -376,6 +353,7 @@ const UsagePage = (): JSX.Element => {
 						defaultAmount={1}
 						defaultUnit="months"
 						defaultIntervalSeconds={3600}
+						availableUnits={["weeks", "months", "years"]}
 					/>
 				</div>
 			</div>

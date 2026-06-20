@@ -19,8 +19,8 @@
     font-weight: 600;
     display: flex;
     align-items: center;
-    margin-bottom: 10.8px;
-    padding-bottom: 9px;
+    margin-bottom: 9px;
+    padding-bottom: 7.2px;
     color: var(--bs-body-color);
     border-bottom: 1.8px solid var(--bs-border-color);
 }
@@ -29,8 +29,8 @@
 // selector), the underline should span the full card width, not just the
 // title text. Move the border to the header row and clear it on the title.
 .status-card .history-chart-header {
-    margin-bottom: 10.8px;
-    padding-bottom: 9px;
+    margin-bottom: 9px;
+    padding-bottom: 7.2px;
     border-bottom: 1.8px solid var(--bs-border-color);
 }
 
@@ -38,6 +38,18 @@
     margin-bottom: 0;
     padding-bottom: 0;
     border-bottom: none;
+}
+
+/* Keep the header compact: the controls (platform select / Filters button) are
+   taller than the title text, so pull them in with negative vertical margins.
+   The controls keep their normal size but no longer add height to the header row,
+   which then matches the text-only card headers. */
+.status-card .history-chart-header .history-chart-controls {
+    display: flex;
+    align-items: center;
+    gap: 7.2px;
+    margin-top: -5px;
+    margin-bottom: -5px;
 }
 
 /* Compact Service Status card: status badges share the header row with the
@@ -250,13 +262,14 @@
 /* The filter row reserves a fixed height so the last-log bar appearing/disappearing
    never shifts the layout below. The height is taller than both the Filters button
    and the bar. */
-.usage-filter-row {
+.service-filter-row {
     min-height: 40px;
 }
 
-/* Usage page: last service-log line shown next to the time filter while running.
-   Stretches to the reserved row height instead of dictating it. */
-.usage-last-log {
+/* Last service-log line shown while a service is running (Usage page filter row and the
+   scraping / rating dashboards). The flex rules let it share the Usage filter row; when it
+   stands alone it simply fills the available width. */
+.service-last-log {
     display: flex;
     flex: 1 1 auto;
     align-self: stretch;
@@ -272,11 +285,11 @@
     transition: border-color 0.2s ease;
 }
 
-.usage-last-log:hover {
+.service-last-log:hover {
     border-color: var(--primary-mid);
 }
 
-.usage-last-log .usage-last-log-text {
+.service-last-log .service-last-log-text {
     overflow: hidden;
     font-family: monospace;
     text-overflow: ellipsis;

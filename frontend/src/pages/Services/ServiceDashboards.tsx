@@ -176,15 +176,14 @@ const ServiceDashboards = (): JSX.Element => {
 				/>
 			</div>
 
-			{activeTab === "rating" && (
+			{activeTab === "rating" ? (
 				<JobRatingDashboard
 					serviceStatus={rating.serviceStatus}
 					remainingTime={rating.remainingTime}
 					fetchStatus={rating.fetchStatus}
 					statusError={rating.statusError}
 				/>
-			)}
-			{activeTab === "scraping" && (
+			) : (
 				<JobScraperDashboard
 					serviceStatus={scraping.serviceStatus}
 					remainingTime={scraping.remainingTime}

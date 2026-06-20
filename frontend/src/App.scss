@@ -256,6 +256,22 @@ textarea.form-control {
     min-width: 0;
 }
 
+/* Off-screen sizer: stacks every option label so the values area can be fixed to
+   the widest one. It inherits the control font so the measurement matches. */
+.jam-select__size-sizer {
+    position: absolute;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.jam-select__size-sizer > .jam-select__single-value {
+    display: block;
+    max-width: none;
+    white-space: nowrap;
+}
+
 .jam-select__control {
     display: flex;
     flex-wrap: nowrap;
@@ -743,8 +759,13 @@ textarea.form-control {
     background: var(--primary-gradient);
 }
 
-.btn-group > .btn-primary {
-    border: 2px solid;
+.btn-primary.active,
+.btn-primary:first-child:active,
+:not(.btn-check) + .btn-primary:active,
+.btn-outline-primary.active,
+.btn-outline-primary:first-child:active,
+:not(.btn-check) + .btn-outline-primary:active {
+    border: 0;
 }
 
 .btn-primary:hover {

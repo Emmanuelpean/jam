@@ -1,9 +1,61 @@
-import React, { JSX, useEffect, useRef, useState } from "react";
+import React, { JSX, useCallback, useEffect, useRef, useState } from "react";
 import { BaseServiceApi, LogResponse, ServiceStatus } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../components/Spinner/Spinner";
 import "./LogViewer.scss";
 import { ApiResponse } from "../../../services/api/Base";
+
+/**
+ * Controls a (controlled) LogViewer: tracks its expanded state and exposes `open`, which
+ * expands the viewer and scrolls it into view once the expand animation has finished.
+ */
+export const useLogViewerToggle = (
+	logViewerId: string
+): { expanded: boolean; setExpanded: (value: boolean) => void; open: () => void } => {
+	const [expanded, setExpanded] = useState<boolean>(false);
+	const open = useCallback((): void => {
+		setExpanded(true);
+		// Wait for the expand animation (0.25s) so the page has grown enough to scroll
+		// the bottom widget fully into view.
+		window.setTimeout(() => {
+			document.getElementById(logViewerId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+		}, 300);
+	}, [logViewerId]);
+	return { expanded, setExpanded, open };
+};
+
+type LogLevel = "debug" | "info" | "warning" | "error" | "critical" | "";
+
+interface ClassifiedLine {
+	line: string;
+	level: LogLevel;
+}
+
+const LEVEL_RE = /\s-\s(DEBUG|INFO|WARNING|ERROR|CRITICAL)\s-\s/;
+const TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}/;
+
+/**
+ * Tag each log line with its level so it can be coloured. The backend file format is
+ * `timestamp - name - LEVEL - func:line - message`. Multi-line tracebacks have no level
+ * prefix, so a continuation line (no leading timestamp) inherits the preceding level.
+ */
+const classifyLogLines = (lines: string[]): ClassifiedLine[] => {
+	let current: LogLevel = "";
+	return lines.map((line: string): ClassifiedLine => {
+		const match = line.match(LEVEL_RE);
+		if (match) {
+			current = match[1]!.toLowerCase() as LogLevel;
+			return { line, level: current };
+		}
+		// A new timestamped line with an unrecognised level resets the context.
+		if (TIMESTAMP_RE.test(line)) {
+			current = "";
+			return { line, level: "" };
+		}
+		// Continuation line (e.g. a traceback) inherits the current level.
+		return { line, level: current };
+	});
+};
 
 interface LogViewerProps {
 	api: BaseServiceApi;
@@ -75,7 +127,7 @@ const LogViewer = ({
 	}, [logsExpanded, token, logLines, isServiceRunning]);
 
 	return (
-		<div className="log-section" id={id}>
+		<div className="log-section status-card" id={id}>
 			<button
 				className="log-toggle"
 				onClick={() => {
@@ -87,11 +139,8 @@ const LogViewer = ({
 					<i className="bi bi-chevron-right" />
 				</span>
 				View Log File
-				{logs && (
-					<>
-						<span className="log-count"> ({logs.total_lines} total lines)</span>
-						{serviceStatus?.last_log && <span className="log-preview"> - {serviceStatus?.last_log}</span>}
-					</>
+				{logs && serviceStatus?.last_log && (
+					<span className="log-preview"> - {serviceStatus?.last_log}</span>
 				)}
 			</button>
 
@@ -126,15 +175,20 @@ const LogViewer = ({
 									)}
 								</div>
 								<pre className="log-content">
-									{[...logs.lines].reverse().map((line: string, idx: number): JSX.Element => {
-										const lineNumber: number = logs.total_lines - idx;
-										return (
-											<div key={idx} className="log-line">
-												<span className="log-line-number">{lineNumber}</span>
-												<span className="log-line-content">{line}</span>
-											</div>
-										);
-									})}
+									{classifyLogLines(logs.lines)
+										.reverse()
+										.map((entry: ClassifiedLine, idx: number): JSX.Element => {
+											const lineNumber: number = logs.total_lines - idx;
+											return (
+												<div
+													key={idx}
+													className={`log-line${entry.level ? ` log-line--${entry.level}` : ""}`}
+												>
+													<span className="log-line-number">{lineNumber}</span>
+													<span className="log-line-content">{entry.line}</span>
+												</div>
+											);
+										})}
 								</pre>
 							</>
 						) : (

@@ -12,6 +12,8 @@ interface TimeSelectionProps {
 	unit: TimeUnit;
 	startDate: string;
 	endDate: string;
+	/** Restrict the selectable time units; defaults to all units. */
+	availableUnits?: TimeUnit[];
 	onModeChange: (mode: SelectionMode) => void;
 	onAmountChange: (amount: number) => void;
 	onUnitChange: (unit: TimeUnit) => void;
@@ -42,21 +44,25 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
 	unit,
 	startDate,
 	endDate,
+	availableUnits,
 	onModeChange,
 	onAmountChange,
 	onUnitChange,
 	onStartDateChange,
 	onEndDateChange,
 }) => {
+	const options: SelectOption[] = availableUnits
+		? timeUnitOptions.filter((o) => availableUnits.includes(o.value))
+		: timeUnitOptions;
+
 	const timeUnitField: ModalFormField = {
 		key: "timeUnit",
 		type: "select",
 		label: "Unit",
-		options: timeUnitOptions,
+		options,
 		placeholder: "Select unit",
 		isClearable: false,
 		size: "sm",
-		fitContentWidth: true,
 	};
 
 	return (
@@ -90,15 +96,17 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
 							onChange={(e: React.ChangeEvent<HTMLInputElement>) => onAmountChange(parseInt(e.target.value, 10))}
 							placeholder="Amount"
 						/>
-						<SelectInput
-							field={timeUnitField}
-							value={unit}
-							error={null}
-							handleChange={(event: any) => {
-								// SelectInput emits SyntheticEvent with target.value being the selected option's value
-								if (event?.target?.value) onUnitChange(event.target.value as TimeUnit);
-							}}
-						/>
+						<div className="time-unit-select">
+							<SelectInput
+								field={timeUnitField}
+								value={unit}
+								error={null}
+								handleChange={(event: any) => {
+									// SelectInput emits SyntheticEvent with target.value being the selected option's value
+									if (event?.target?.value) onUnitChange(event.target.value as TimeUnit);
+								}}
+							/>
+						</div>
 					</>
 				)}
 

@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useState } from "react";
 import { Popover } from "../Popover/Popover";
 import TimeSelection, { SelectionMode } from "./TimeSelection";
-import { DateRange, getDateRange, TimeUnit } from "../../utils/TimeUtils";
+import { DateRange, getDateRange, TimeUnit, toDateTimeLocalString } from "../../utils/TimeUtils";
 
 interface TimeFilterPopoverProps {
 	onDateRangeChange?: (dateRange: DateRange) => void;
@@ -9,6 +9,8 @@ interface TimeFilterPopoverProps {
 	defaultAmount?: number;
 	defaultUnit?: TimeUnit;
 	defaultIntervalSeconds?: number;
+	/** Restrict the selectable time units; defaults to all units. */
+	availableUnits?: TimeUnit[];
 	id?: string;
 }
 
@@ -24,6 +26,7 @@ export const TimeFilterPopover = ({
 	defaultAmount = 1,
 	defaultUnit = "weeks",
 	defaultIntervalSeconds = 60,
+	availableUnits,
 }: TimeFilterPopoverProps): JSX.Element => {
 	const [mode, setMode] = useState<SelectionMode>(defaultMode);
 	const [amount, setAmount] = useState<number>(defaultAmount);
@@ -33,8 +36,8 @@ export const TimeFilterPopover = ({
 
 	const updateDateRange = (): void => {
 		const range: DateRange = getDateRange(amount, unit);
-		setStartDate(new Date(range.start).toISOString().slice(0, 16));
-		setEndDate(new Date(range.end).toISOString().slice(0, 16));
+		setStartDate(toDateTimeLocalString(new Date(range.start)));
+		setEndDate(toDateTimeLocalString(new Date(range.end)));
 		onDateRangeChange?.(range);
 	};
 
@@ -85,6 +88,7 @@ export const TimeFilterPopover = ({
 				unit={unit}
 				startDate={startDate}
 				endDate={endDate}
+				availableUnits={availableUnits}
 				onModeChange={handleModeChange}
 				onAmountChange={handleAmountChange}
 				onUnitChange={setUnit}

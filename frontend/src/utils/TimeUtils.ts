@@ -82,6 +82,19 @@ export interface DateRange {
 	end: Date | string;
 }
 
+/**
+ * Format a Date as a `YYYY-MM-DDTHH:mm` string in the user's *local* time, as
+ * expected by `<input type="datetime-local">`. Using `toISOString()` here would
+ * show UTC/GMT instead of the user's wall-clock time.
+ */
+export const toDateTimeLocalString = (date: Date): string => {
+	const pad = (n: number): string => String(n).padStart(2, "0");
+	return (
+		`${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+		`T${pad(date.getHours())}:${pad(date.getMinutes())}`
+	);
+};
+
 export const getDateRange = (amount: number, unit: TimeUnit): DateRange => {
 	const days: number = periodToDays(amount, unit);
 

@@ -115,8 +115,13 @@ export const CustomSelect = ({
 	const controlRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const menuRef = useRef<HTMLDivElement>(null);
+	const sizerRef = useRef<HTMLSpanElement>(null);
+	const valuesRef = useRef<HTMLDivElement>(null);
 	const isClickingOptionRef = useRef(false);
 	const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	// Width (px) of the widest option label, used when fitContentWidth is set.
+	const [optionsWidth, setOptionsWidth] = useState<number>(0);
 
 	const effectiveCloseMenuOnSelect = closeMenuOnSelect ?? !isMulti;
 
@@ -130,6 +135,15 @@ export const CustomSelect = ({
 		const lower = inputValue.toLowerCase();
 		return all.filter((o) => o.label.toLowerCase().includes(lower));
 	}, [options, inputValue, isSearchable, isGrouped]);
+
+	// Every option label (unfiltered) — used to size the control to the widest option
+	// when fitContentWidth is set, so its width stays constant as the selection changes.
+	const allLabels = useMemo(() => {
+		const all = isGrouped
+			? (options as GroupedSelectOption[]).flatMap((g) => g.options)
+			: (options as SelectOption[]);
+		return all.map((o) => o.label);
+	}, [options, isGrouped]);
 
 	const hasValue = isMulti
 		? Array.isArray(value) && (value as SelectOption[]).length > 0
@@ -192,6 +206,26 @@ export const CustomSelect = ({
 		},
 		[]
 	);
+
+	// Measure the widest option label so the control can be fixed to that width.
+	// The sizer measures raw text width, so add the values box's horizontal padding
+	// plus a small buffer for the inline (collapsed) search input.
+	useLayoutEffect(() => {
+		if (!fitContentWidth || !sizerRef.current) return;
+		const measure = (): void => {
+			if (!sizerRef.current) return;
+			let pad = 0;
+			if (valuesRef.current) {
+				const cs = getComputedStyle(valuesRef.current);
+				pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+			}
+			setOptionsWidth(sizerRef.current.offsetWidth + pad + 4);
+		};
+		measure();
+		const ro = new ResizeObserver(measure);
+		ro.observe(sizerRef.current);
+		return () => ro.disconnect();
+	}, [fitContentWidth, allLabels]);
 
 	// Reposition menu on open and on scroll/resize
 	useLayoutEffect(() => {
@@ -522,7 +556,20 @@ export const CustomSelect = ({
 	return (
 		<div id={id} className={containerClasses.join(" ")} ref={containerRef}>
 			<div className={controlClasses.join(" ")} ref={controlRef} onMouseDown={handleControlMouseDown}>
-				<div className={valuesClasses.join(" ")}>
+				<div
+					className={valuesClasses.join(" ")}
+					ref={valuesRef}
+					style={fitContentWidth && optionsWidth ? { minWidth: optionsWidth } : undefined}
+				>
+					{fitContentWidth && (
+						<span className="jam-select__size-sizer" aria-hidden="true" ref={sizerRef}>
+							{allLabels.map((label: string, i: number) => (
+								<span key={i} className="jam-select__single-value">
+									{label}
+								</span>
+							))}
+						</span>
+					)}
 					{isMulti &&
 						selectedValues.map((v) => (
 							<div
