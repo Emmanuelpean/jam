@@ -17,6 +17,7 @@ export interface CustomSelectProps {
 	closeMenuOnSelect?: boolean;
 	placeholder?: string;
 	size?: "sm";
+	fitContentWidth?: boolean;
 	className?: string;
 	menuPortalClassName?: string;
 	onMenuClose?: () => void;
@@ -95,6 +96,7 @@ export const CustomSelect = ({
 	className = "",
 	menuPortalClassName = "",
 	size,
+	fitContentWidth = false,
 	onMenuClose,
 	addButton,
 	parentData,
@@ -456,6 +458,7 @@ export const CustomSelect = ({
 	const containerClasses: string[] = ["jam-select"];
 	if (size === "sm") containerClasses.push("jam-select--sm");
 	if (isDisabled) containerClasses.push("jam-select--disabled");
+	if (fitContentWidth) containerClasses.push("jam-select--fit-content");
 	if (className) containerClasses.push(className);
 
 	const valuesClasses: string[] = ["jam-select__values"];

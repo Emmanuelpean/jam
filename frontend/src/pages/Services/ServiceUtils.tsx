@@ -153,7 +153,7 @@ export const renderStatusIcons = (status: ServiceStatus | null, remainingTime: n
 				/>
 			</Tooltip>
 			<Tooltip content={`Service: ${serviceRunning ? "Running" : "Idle"}`}>
-				<i className={`bi bi-activity service-status-icon ${serviceRunning ? "is-on" : "is-off"}`} />
+				<i className={`bi bi-activity service-status-icon ${serviceRunning ? "is-on is-running" : "is-off"}`} />
 			</Tooltip>
 			{showCountdown && (
 				<Tooltip content="Time until next run">

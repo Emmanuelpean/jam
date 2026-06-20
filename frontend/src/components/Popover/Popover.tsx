@@ -81,6 +81,10 @@ export const Popover = ({
 		const handlePointerDown = (event: MouseEvent): void => {
 			const target = event.target as Node;
 			if (popoverRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
+			// Ignore clicks inside portaled overlays opened from within the popover
+			// (e.g. a select menu rendered into #jam-select-portal), which live
+			// outside the popover DOM but are logically part of it.
+			if (target instanceof Element && target.closest("#jam-select-portal")) return;
 			closePopover();
 		};
 		const handleKey = (event: KeyboardEvent): void => {

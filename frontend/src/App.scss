@@ -241,6 +241,21 @@ textarea.form-control {
     width: 100%;
 }
 
+.jam-select.jam-select--fit-content {
+    width: fit-content;
+}
+
+.jam-select.jam-select--fit-content .jam-select__values {
+    flex: 0 0 auto;
+}
+
+/* Drop the fixed min-widths (e.g. the --sm variant's 175px) so the control
+   really shrinks to its content. */
+.jam-select.jam-select--fit-content.jam-select--sm .jam-select__control,
+.jam-select.jam-select--fit-content .jam-select__control {
+    min-width: 0;
+}
+
 .jam-select__control {
     display: flex;
     flex-wrap: nowrap;
@@ -726,6 +741,10 @@ textarea.form-control {
 // Primary button (e.g. submit)
 .btn-primary {
     background: var(--primary-gradient);
+}
+
+.btn-group > .btn-primary {
+    border: 2px solid;
 }
 
 .btn-primary:hover {

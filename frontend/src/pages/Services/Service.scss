@@ -9,20 +9,9 @@
     box-shadow: 0 1.8px 7.2px rgb(0 0 0 / 8%);
 }
 
-/* Compact "Filters" toolbar — slimmer than a default status-card, with the heading
-   inlined next to the controls instead of a full title + divider. */
-#history-filters.filter-card {
-    padding: 0.7rem 1rem;
-    margin-bottom: 0;
-}
-
-#history-filters.filter-card .filter-card-label {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.95rem;
-    font-weight: 600;
-    white-space: nowrap;
-    color: var(--bs-body-color);
+.jam-popover.time-filter-popover {
+    width: 610px;
+    max-width: 610px;
 }
 
 .status-card .card-title {
@@ -190,6 +179,8 @@
     display: inline-flex;
     align-items: center;
     gap: 12.6px;
+    padding: 12px 19px;
+    margin: -12px -19px;
     font-size: 19.8px;
     line-height: 1;
     user-select: none;
@@ -224,6 +215,22 @@
     animation: runner-stopping-flash 1s ease-in-out infinite;
 }
 
+/* While the service is actively running, pulse the green icon. */
+@keyframes service-running-flash {
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.35;
+    }
+}
+
+.service-status-icon.is-running {
+    animation: service-running-flash 1.5s ease-in-out infinite;
+}
+
 /* Control popover body: stacked config fields above the start/stop button. */
 .service-control {
     display: flex;
@@ -238,6 +245,43 @@
     font-size: 14.4px;
     font-weight: 600;
     color: var(--bs-secondary-color);
+}
+
+/* The filter row reserves a fixed height so the last-log bar appearing/disappearing
+   never shifts the layout below. The height is taller than both the Filters button
+   and the bar. */
+.usage-filter-row {
+    min-height: 40px;
+}
+
+/* Usage page: last service-log line shown next to the time filter while running.
+   Stretches to the reserved row height instead of dictating it. */
+.usage-last-log {
+    display: flex;
+    flex: 1 1 auto;
+    align-self: stretch;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    padding: 5.4px 14.4px;
+    font-size: 12.6px;
+    cursor: pointer;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 10.8px;
+    background-color: var(--bs-card-bg);
+    transition: border-color 0.2s ease;
+}
+
+.usage-last-log:hover {
+    border-color: var(--primary-mid);
+}
+
+.usage-last-log .usage-last-log-text {
+    overflow: hidden;
+    font-family: monospace;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--bs-body-color);
 }
 
 /* Usage page summary stat cards (per-service totals + net balance). */

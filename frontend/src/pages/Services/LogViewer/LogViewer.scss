@@ -8,6 +8,7 @@
     width: 100%;
     padding: 10.8px 14.4px;
     cursor: pointer;
+    user-select: none;
     transition: background-color 0.2s ease;
     text-align: left;
     border: 1px solid var(--bs-card-border) !important;
@@ -17,6 +18,35 @@
 
 .log-toggle:hover {
     background-color: var(--bs-tertiary-bg);
+}
+
+/* Caret rotates from pointing right (collapsed) to down (expanded). */
+.log-caret {
+    display: inline-block;
+    margin-right: 7.2px;
+    font-size: 11.7px;
+    transition: transform 0.25s ease;
+}
+
+.log-caret.expanded {
+    transform: rotate(90deg);
+}
+
+/* Expand/collapse the log content by animating its row height. The inner
+   element establishes a BFC (overflow: hidden) so it collapses cleanly. */
+.log-viewer-wrapper {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s ease;
+}
+
+.log-viewer-wrapper.open {
+    grid-template-rows: 1fr;
+}
+
+.log-viewer-inner {
+    min-height: 0;
+    overflow: hidden;
 }
 
 .log-count {

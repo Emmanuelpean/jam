@@ -10,7 +10,8 @@ import {
 import { LineChart, SeriesData } from "../../components/Chart/LineChart";
 import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
 import { Popover } from "../../components/Popover/Popover";
-import TimeSelection from "../../components/TimeSelection/TimeSelection";
+import LogViewer from "../Services/LogViewer/LogViewer";
+import { TimeFilterPopover } from "../../components/TimeSelection/TimeFilterPopover";
 import { DateRange } from "../../utils/TimeUtils";
 import {
 	failureColor,
@@ -182,6 +183,16 @@ const UsagePage = (): JSX.Element => {
 		(t: string) => externalServiceMonitoringRunnerApi.start(t),
 		(t: string) => externalServiceMonitoringRunnerApi.stop(t)
 	);
+	const [logsExpanded, setLogsExpanded] = useState<boolean>(false);
+
+	const openLogViewer = (): void => {
+		setLogsExpanded(true);
+		// Wait for the expand animation (0.25s) to finish so the page has grown
+		// enough to scroll the bottom widget fully into view.
+		window.setTimeout(() => {
+			document.getElementById("usage-log-viewer")?.scrollIntoView({ behavior: "smooth", block: "start" });
+		}, 300);
+	};
 
 	const [dateRange, setDateRange] = useState<DateRange>({ start: new Date(), end: new Date() });
 
@@ -339,13 +350,27 @@ const UsagePage = (): JSX.Element => {
 				</div>
 			)}
 
-			<div id="history-filters" className="status-card filter-card mt-4">
-				<div className="d-flex align-items-center gap-3 flex-wrap">
-					<span className="filter-card-label">
-						<i className="bi bi-funnel me-2" />
-						Filters
-					</span>
-					<TimeSelection
+			<div className="d-flex align-items-center gap-3 mt-4 usage-filter-row">
+				{serviceStatus?.service_running && serviceStatus.last_log && (
+					<div
+						className="usage-last-log"
+						role="button"
+						tabIndex={0}
+						onClick={openLogViewer}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault();
+								openLogViewer();
+							}
+						}}
+					>
+						<span className="live-indicator" />
+						<span className="usage-last-log-text">{serviceStatus.last_log}</span>
+					</div>
+				)}
+				<div className="ms-auto">
+					<TimeFilterPopover
+						id="history-filters"
 						onDateRangeChange={setDateRange}
 						defaultMode="period"
 						defaultAmount={1}
@@ -467,6 +492,15 @@ const UsagePage = (): JSX.Element => {
 					/>
 				</Col>
 			</Row>
+
+			<LogViewer
+				id="usage-log-viewer"
+				api={externalServiceMonitoringRunnerApi}
+				isServiceRunning={serviceStatus?.service_running || false}
+				serviceStatus={serviceStatus}
+				expanded={logsExpanded}
+				onExpandedChange={setLogsExpanded}
+			/>
 		</div>
 	);
 };

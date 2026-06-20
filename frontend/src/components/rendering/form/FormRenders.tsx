@@ -35,6 +35,7 @@ export interface ModalFormField {
 	isMulti?: boolean;
 	isClearable?: boolean;
 	size?: "sm";
+	fitContentWidth?: boolean;
 	step?: string;
 	maxRating?: number;
 	autoComplete?: string;

@@ -46,6 +46,7 @@ class ServiceMonitor:
         db.add(service_log)
         db.commit()
         db.refresh(service_log)
+        self.logger.info(f"Starting {SERVICE_NAME} run")
 
         errors: list[str] = []
         try:
@@ -68,6 +69,7 @@ class ServiceMonitor:
                 service_log.is_success = True
             db.commit()
             db.refresh(service_log)
+            self.logger.info(f"Finished {SERVICE_NAME} run")
         return service_log
 
 

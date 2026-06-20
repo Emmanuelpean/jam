@@ -8,7 +8,7 @@ import { useJobScraperServiceLogs } from "../../../hooks/useJobScraperServiceLog
 import { useJobScraperErrors } from "../../../hooks/useJobScraperErrors";
 import { useServiceErrors } from "../../../hooks/useServiceErrors";
 import { DateRange } from "../../../utils/TimeUtils";
-import TimeSelection from "../../../components/TimeSelection/TimeSelection";
+import { TimeFilterPopover } from "../../../components/TimeSelection/TimeFilterPopover";
 import { formatErrorMessage, LiftedServiceStatusProps } from "../ServiceUtils";
 import "../Service.scss";
 
@@ -75,14 +75,8 @@ const JobScraperDashboard = ({ serviceStatus, statusError }: LiftedServiceStatus
 				serviceStatus={serviceStatus}
 			/>
 
-			<div id="history-filters" className="status-card filter-card mt-4">
-				<div className="d-flex align-items-center gap-3 flex-wrap">
-					<span className="filter-card-label">
-						<i className="bi bi-funnel me-2" />
-						Filters
-					</span>
-					<TimeSelection onDateRangeChange={setDateRange} defaultMode="period" />
-				</div>
+			<div className="d-flex justify-content-end mt-4">
+				<TimeFilterPopover id="history-filters" onDateRangeChange={setDateRange} defaultMode="period" />
 			</div>
 
 			<RunHistoryChart
