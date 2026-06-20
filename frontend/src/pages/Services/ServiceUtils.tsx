@@ -11,7 +11,6 @@ import Spinner from "../../components/Spinner/Spinner";
 
 export const successColor = "#22c55e";
 export const failureColor = "#ef4444";
-export const infoColor = "#0d38e3";
 
 export const formatErrorMessage = (err: unknown): string => {
 	if (!err) return "";
@@ -22,13 +21,6 @@ export const formatErrorMessage = (err: unknown): string => {
 	} catch {
 		return String(err);
 	}
-};
-
-export const serviceRunnerStatusIcons: Record<ThreadStatus, string> = {
-	started: "bi-check-circle-fill",
-	stopped: "bi-x-circle-fill",
-	starting: "bi-play-circle-fill",
-	stopping: "bi-dash-circle-fill",
 };
 
 export const serviceRunnerStatusLabels: Record<string, string> = {
@@ -43,20 +35,6 @@ export const serviceRunnerButtonLabels: Record<string, string> = {
 	stopping: "Service Runner Stopping",
 	starting: "Service Runner Starting",
 	stopped: "Start Service Runner",
-};
-
-export const getServiceStatus = (isRunning: boolean): string => {
-	return isRunning ? "bi-check-circle-fill" : "bi-x-circle-fill";
-};
-
-export const getServiceStatusMessage = (status: ServiceStatus, remainingTime: number | null): string => {
-	if (status.service_runner_status === "stopped") {
-		return "Stopped";
-	}
-	if (status.service_running) {
-		return "Running";
-	}
-	return `Stopped (${formatDuration(remainingTime)} before next run)`;
 };
 
 export const RenderLabeledInput = (
@@ -86,7 +64,7 @@ export const RenderLabeledInput = (
 	);
 };
 
-export const createSeries = (logs: any[], id: string, color: string, getValue: (log: any) => number): SeriesData => ({
+export const createSeries = (logs: any[], id: string, getValue: (log: any) => number, color?: string): SeriesData => ({
 	id,
 	color,
 	data: logs
@@ -98,8 +76,6 @@ export const createSeries = (logs: any[], id: string, color: string, getValue: (
 		})),
 });
 
-// Wraps the start/stop lifecycle for a single service: triggers the action,
-// refreshes the (lifted) status, and surfaces a toast.
 export const useServiceControl = (
 	token: string | null,
 	fetchStatus: () => Promise<void>,
@@ -139,21 +115,19 @@ export const renderStatusIcons = (status: ServiceStatus | null, remainingTime: n
 	return (
 		<div className="service-status-icons">
 			<Tooltip
+				delay={500}
 				content={`Service runner: ${status ? serviceRunnerStatusLabels[status.service_runner_status] : "…"}`}
 			>
 				<i
 					className={`bi bi-cpu-fill service-status-icon service-status-icon--runner ${runnerActive ? "is-on" : "is-off"} ${isStopping ? "is-stopping" : ""}`}
 				/>
 			</Tooltip>
-			<Tooltip content={`Service: ${serviceRunning ? "Running" : "Idle"}`}>
+			<Tooltip delay={500} content={`Service: ${serviceRunning ? "Running" : "Idle"}`}>
 				<i className={`bi bi-activity service-status-icon ${serviceRunning ? "is-on is-running" : "is-off"}`} />
 			</Tooltip>
 			{showCountdown && (
-				<Tooltip content="Time until next run">
-					<span className="service-next-run">
-						<i className="bi bi-hourglass-split me-1" />
-						{formatDuration(remainingTime)}
-					</span>
+				<Tooltip delay={500} content="Time until next run">
+					<span className="service-next-run">({formatDuration(remainingTime)})</span>
 				</Tooltip>
 			)}
 		</div>

@@ -1,20 +1,6 @@
-import React, { JSX, useContext, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-import PageHeader from "../PageHeader/PageHeader";
-import { getTableIcon } from "../../components/rendering/view/Icons";
-import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
+import React, { JSX, useState } from "react";
 import { jobRatingServiceRunnerApi } from "../../services/api/Services";
-import {
-	formatErrorMessage,
-	RenderLabeledInput,
-	renderControl,
-	renderStatusIcons,
-	useServiceControl,
-} from "./ServiceUtils";
-import { Popover } from "../../components/Popover/Popover";
-import { useAuth } from "../../contexts/AuthContext";
-import { ModalHeaderSlotContext } from "../../contexts/ModalHeaderSlotContext";
-import { SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { formatErrorMessage } from "./ServiceUtils";
 import LogViewer, { useLogViewerToggle } from "./LogViewer/LogViewer";
 import { LastLogBar } from "./LogViewer/LastLogBar";
 import { LatestRunProgress } from "./JobRatingDashboard/LatestRunProgress";
@@ -22,71 +8,13 @@ import { RunHistoryChart } from "./JobRatingDashboard/RunHistoryChart";
 import { ErrorSummaryCard } from "./JobRatingDashboard/ErrorSummaryCard";
 import { useJobRatingServiceLogs } from "../../hooks/useJobRatingServiceLog";
 import { useJobRatingErrors } from "../../hooks/useJobRatingErrors";
+import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
 import { DateRange } from "../../utils/TimeUtils";
 import { TimeFilterPopover } from "../../components/TimeSelection/TimeFilterPopover";
 import "./Service.scss";
 
 const JobRatingPage = (): JSX.Element => {
-	const { token } = useAuth();
-	const { serviceStatus, remainingTime, fetchStatus, statusError } =
-		useServiceRunnerStatus(jobRatingServiceRunnerApi);
-
-	const [ratingForm, setRatingForm] = useState<{ period_hours: number }>({ period_hours: 0 });
-	useEffect((): void => {
-		setRatingForm({ period_hours: serviceStatus?.period_hours || 0 });
-	}, [serviceStatus?.period_hours]);
-
-	const onChangeField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
-		const target = event.target as HTMLInputElement;
-		const { name, value } = target;
-		setRatingForm((prev: any) => ({ ...prev, [name]: value === "" ? "" : Number(value) || 3 }));
-	};
-
-	const ratingControl = useServiceControl(
-		token,
-		fetchStatus,
-		(t: string) => jobRatingServiceRunnerApi.start(ratingForm.period_hours, t),
-		(t: string) => jobRatingServiceRunnerApi.stop(t)
-	);
-
-	const ratingDisabled: boolean = serviceStatus?.service_runner_status !== "stopped";
-	const ratingFields: React.ReactNode =
-		serviceStatus &&
-		RenderLabeledInput(
-			"period_hours",
-			"Scraping Period",
-			"Time between rating runs.",
-			ratingForm.period_hours,
-			"Hour(s)",
-			!ratingDisabled,
-			onChangeField,
-			ratingDisabled
-		);
-
-	const headerSlot: HTMLElement | null = useContext(ModalHeaderSlotContext);
-	const statusControl: JSX.Element = (
-		<Popover trigger={renderStatusIcons(serviceStatus, remainingTime)} ariaLabel="Job rating service controls">
-			{(close) =>
-				renderControl(
-					serviceStatus,
-					ratingFields,
-					ratingControl.loading,
-					() => {
-						close();
-						ratingControl.handleStart();
-					},
-					() => {
-						close();
-						ratingControl.handleStop();
-					}
-				)
-			}
-		</Popover>
-	);
-
-	// ---- Dashboard data ----
-	// Null until the TimeFilterPopover emits its real default range on mount, so we
-	// don't fire a throwaway fetch for a placeholder (today-only) window first.
+	const { serviceStatus, statusError } = useServiceRunnerStatus(jobRatingServiceRunnerApi);
 	const [dateRange, setDateRange] = useState<DateRange | null>(null);
 	const {
 		expanded: logsExpanded,
@@ -121,16 +49,6 @@ const JobRatingPage = (): JSX.Element => {
 
 	return (
 		<div className="scraped-jobs-page">
-			{headerSlot ? (
-				createPortal(statusControl, headerSlot)
-			) : (
-				<PageHeader
-					title="Job Rating"
-					icon={getTableIcon("Job Rating Dashboard")}
-					statusContent={statusControl}
-				/>
-			)}
-
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
 					<div className="d-flex align-items-start">

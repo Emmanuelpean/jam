@@ -21,9 +21,14 @@ interface DataPoint {
 
 export interface SeriesData {
 	id: string;
+	/** Optional override; when omitted, a colour is auto-assigned by cycling CHART_PALETTE. */
 	color?: string;
 	data: DataPoint[];
 }
+
+// Lines without an explicit `color` cycle through these in order, so callers don't
+// have to assign colours by hand when adding series.
+const CHART_PALETTE: string[] = ["var(--bs-primary)", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#06b6d4"];
 
 export interface LineChartProps {
 	data: SeriesData[] | null;
@@ -183,12 +188,12 @@ export const LineChart = ({
 					)}
 				/>
 				{data.map(
-					(series: SeriesData): JSX.Element => (
+					(series: SeriesData, index: number): JSX.Element => (
 						<Line
 							key={series.id}
 							type="monotone"
 							dataKey={series.id}
-							stroke={series.color}
+							stroke={series.color ?? CHART_PALETTE[index % CHART_PALETTE.length]}
 							hide={hiddenSeries.has(series.id)}
 							strokeWidth={2}
 							isAnimationActive={false}

@@ -1,10 +1,7 @@
-import React, { useContext, useState, JSX } from "react";
+import React, { useState, JSX } from "react";
 import { Col, Row } from "react-bootstrap";
 import { useDataContext } from "../../contexts/DataContext";
 import { EmailTemplate } from "../../services/api/Others";
-import { getTableIcon } from "../../components/rendering/view/Icons";
-import PageHeader from "../PageHeader/PageHeader";
-import { ModalHeaderSlotContext } from "../../contexts/ModalHeaderSlotContext";
 import "../UserSettings/UserSettingsPage.scss";
 
 const EmailTemplatesContent: React.FC = (): JSX.Element => {
@@ -72,14 +69,4 @@ const EmailTemplatesContent: React.FC = (): JSX.Element => {
 	);
 };
 
-const EmailTemplatesPage = (): JSX.Element => {
-	const headerSlot: HTMLElement | null = useContext(ModalHeaderSlotContext);
-	return (
-		<div>
-			{!headerSlot && <PageHeader title="Email Templates" icon={getTableIcon("Email Templates")} />}
-			<EmailTemplatesContent />
-		</div>
-	);
-};
-
-export default EmailTemplatesPage;
+export default EmailTemplatesContent;

@@ -1,9 +1,6 @@
-import React, { JSX, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
+import React, { JSX, useCallback, useEffect, useMemo, useState } from "react";
 import { Col, Row } from "react-bootstrap";
-import PageHeader from "../PageHeader/PageHeader";
 import { useAuth } from "../../contexts/AuthContext";
-import { ModalHeaderSlotContext } from "../../contexts/ModalHeaderSlotContext";
 import { Button } from "react-bootstrap";
 import {
 	externalServiceMonitoringApi,
@@ -11,19 +8,11 @@ import {
 } from "../../services/api/ExternalServiceMonitoring";
 import { LineChart, SeriesData } from "../../components/Chart/LineChart";
 import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
-import { Popover } from "../../components/Popover/Popover";
 import LogViewer, { useLogViewerToggle } from "../Services/LogViewer/LogViewer";
 import { LastLogBar } from "../Services/LogViewer/LastLogBar";
 import { TimeFilterPopover } from "../../components/TimeSelection/TimeFilterPopover";
 import { DateRange } from "../../utils/TimeUtils";
-import {
-	failureColor,
-	formatErrorMessage,
-	renderControl,
-	renderStatusIcons,
-	successColor,
-	useServiceControl,
-} from "../Services/ServiceUtils";
+import { failureColor, formatErrorMessage, successColor } from "../Services/ServiceUtils";
 import "../Services/Service.scss";
 import {
 	AnthropicDailyUsageData,
@@ -33,7 +22,6 @@ import {
 	BrightdataDailyUsageData,
 	StripeDailyIncomeData,
 } from "../../services/schemas/Services";
-import { getTableIcon } from "../../components/rendering/view/Icons";
 
 const SERVICE_ICONS: Record<string, string> = {
 	anthropic: "stars",
@@ -48,9 +36,6 @@ const DASHBOARD_URLS: Record<string, string> = {
 	brightdata: "https://brightdata.com/cp/billing",
 	stripe: "https://dashboard.stripe.com/payments",
 };
-
-// Distinct colours so multi-series (Bright Data datasets, Stripe gross/net) are distinguishable.
-const SERIES_PALETTE: string[] = ["var(--bs-primary)", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#06b6d4"];
 
 // Spend services bill in USD, Stripe income is in GBP. Fixed rate used to express the
 // net balance in a single currency (GBP). Update if the rate drifts significantly.
@@ -177,15 +162,7 @@ const SummaryCard = ({ icon, label, value, caption, valueColor }: SummaryCardPro
 
 const UsagePage = (): JSX.Element => {
 	const { token } = useAuth();
-	const { serviceStatus, remainingTime, fetchStatus, statusError } = useServiceRunnerStatus(
-		externalServiceMonitoringRunnerApi
-	);
-	const control = useServiceControl(
-		token,
-		fetchStatus,
-		(t: string) => externalServiceMonitoringRunnerApi.start(t),
-		(t: string) => externalServiceMonitoringRunnerApi.stop(t)
-	);
+	const { serviceStatus, statusError } = useServiceRunnerStatus(externalServiceMonitoringRunnerApi);
 	const {
 		expanded: logsExpanded,
 		setExpanded: setLogsExpanded,
@@ -239,7 +216,6 @@ const UsagePage = (): JSX.Element => {
 		() => [
 			{
 				id: "Spend",
-				color: SERIES_PALETTE[0],
 				data: anthropic.map((r) => ({ x: new Date(r.date + "T00:00:00Z"), y: r.usage_usd })),
 			},
 		],
@@ -250,7 +226,6 @@ const UsagePage = (): JSX.Element => {
 		() => [
 			{
 				id: "Usage",
-				color: SERIES_PALETTE[0],
 				data: apify.map((r) => ({ x: new Date(r.date + "T00:00:00Z"), y: r.usage_usd })),
 			},
 		],
@@ -260,9 +235,8 @@ const UsagePage = (): JSX.Element => {
 	// Bright Data: one line per dataset (the row schema is one row per (date, dataset)).
 	const brightdataSeries: SeriesData[] = useMemo(() => {
 		const datasets = Array.from(new Set(brightdata.map((r) => r.dataset))).sort();
-		return datasets.map((ds, i) => ({
+		return datasets.map((ds) => ({
 			id: ds,
-			color: SERIES_PALETTE[i % SERIES_PALETTE.length],
 			data: brightdata
 				.filter((r) => r.dataset === ds)
 				.map((r) => ({ x: new Date(r.date + "T00:00:00Z"), y: r.usage_usd })),
@@ -273,12 +247,10 @@ const UsagePage = (): JSX.Element => {
 		() => [
 			{
 				id: "Gross",
-				color: SERIES_PALETTE[0],
 				data: stripe.map((r) => ({ x: new Date(r.date + "T00:00:00Z"), y: r.gross_gbp })),
 			},
 			{
 				id: "Net",
-				color: SERIES_PALETTE[2],
 				data: stripe.map((r) => ({ x: new Date(r.date + "T00:00:00Z"), y: r.net_gbp })),
 			},
 		],
@@ -300,39 +272,8 @@ const UsagePage = (): JSX.Element => {
 		{ key: "history", label: "Usage history", value: historyError },
 	].filter((e) => e.value);
 
-	const headerSlot: HTMLElement | null = useContext(ModalHeaderSlotContext);
-	const statusControl: JSX.Element = (
-		<Popover trigger={renderStatusIcons(serviceStatus, remainingTime)} ariaLabel="Monitoring service controls">
-			{(close) =>
-				renderControl(
-					serviceStatus,
-					null,
-					control.loading,
-					() => {
-						close();
-						void control.handleStart();
-					},
-					() => {
-						close();
-						void control.handleStop();
-					}
-				)
-			}
-		</Popover>
-	);
-
 	return (
 		<div className="scraped-jobs-page">
-			{headerSlot ? (
-				createPortal(statusControl, headerSlot)
-			) : (
-				<PageHeader
-					title="External Service Monitoring"
-					icon={getTableIcon("ESM")}
-					statusContent={statusControl}
-				/>
-			)}
-
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
 					<div className="d-flex align-items-start">

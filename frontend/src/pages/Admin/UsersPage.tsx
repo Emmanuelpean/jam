@@ -1,6 +1,5 @@
-import React, { JSX, useContext, useState } from "react";
+import React, { JSX, useState } from "react";
 import { Dropdown } from "react-bootstrap";
-import { ModalHeaderSlotContext } from "../../contexts/ModalHeaderSlotContext";
 import DataTable from "../../components/DataTable/DataTable";
 import { UserModal } from "../../components/DataModal/UserModal";
 import { TableColumn, tableColumns } from "../../components/rendering/view/TableColumns";
@@ -12,17 +11,13 @@ import { useDataContext } from "../../contexts/DataContext";
 import { ApiResponse } from "../../services/api/Base";
 import { UserData } from "../../services/schemas/Core";
 import { LAST_VERSION } from "../../releaseNotes/versions";
-import { getTableIcon } from "../../components/rendering/view/Icons";
-import PageHeader from "../PageHeader/PageHeader";
 
-export const UsersPage: React.FC = (): JSX.Element => {
+export const UsersPage = (): JSX.Element => {
 	const { token } = useAuth();
 	const { showToastSuccess, showToastError, showApiError } = useGlobalToast();
 	const { showAlert } = useAlert();
 	const { users } = useDataContext();
-	const headerSlot: HTMLElement | null = useContext(ModalHeaderSlotContext);
 	const [sendingEmail, setSendingEmail] = useState<boolean>(false);
-	const [usersCount, setUsersCount] = useState<number>(0);
 
 	const userColumns: TableColumn<UserData>[] = [
 		tableColumns.idColumn<UserData>(),
@@ -120,14 +115,12 @@ export const UsersPage: React.FC = (): JSX.Element => {
 
 	return (
 		<div>
-			{!headerSlot && <PageHeader title="Users" icon={getTableIcon("Users")} count={usersCount} />}
 			<DataTable<UserData>
 				entityType="user"
 				initialSortConfig={{ key: "id", direction: "asc" }}
 				columns={userColumns}
 				Modal={UserModal}
 				toolbarAddon={toolbarAddon}
-				onTotalCountChange={setUsersCount}
 				enableColumnConfig={true}
 			/>
 		</div>

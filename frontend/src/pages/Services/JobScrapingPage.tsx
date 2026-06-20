@@ -1,20 +1,6 @@
-import React, { JSX, useContext, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import PageHeader from "../PageHeader/PageHeader";
-import { getTableIcon } from "../../components/rendering/view/Icons";
-import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
+import React, { JSX, useState } from "react";
 import { jobScraperServiceApi } from "../../services/api/Services";
-import {
-	formatErrorMessage,
-	RenderLabeledInput,
-	renderControl,
-	renderStatusIcons,
-	useServiceControl,
-} from "./ServiceUtils";
-import { Popover } from "../../components/Popover/Popover";
-import { useAuth } from "../../contexts/AuthContext";
-import { ModalHeaderSlotContext } from "../../contexts/ModalHeaderSlotContext";
-import { SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { formatErrorMessage } from "./ServiceUtils";
 import LogViewer, { useLogViewerToggle } from "./LogViewer/LogViewer";
 import { LastLogBar } from "./LogViewer/LastLogBar";
 import { LatestRunProgress } from "./JobScrapingDashboard/LatestRunProgress";
@@ -23,91 +9,14 @@ import { ErrorSummaryCard } from "./JobScrapingDashboard/ErrorSummaryCard";
 import { useJobScraperServiceLogs } from "../../hooks/useJobScraperServiceLogs";
 import { useJobScraperErrors } from "../../hooks/useJobScraperErrors";
 import { useServiceErrors } from "../../hooks/useServiceErrors";
+import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
 import { DateRange } from "../../utils/TimeUtils";
 import { TimeFilterPopover } from "../../components/TimeSelection/TimeFilterPopover";
 import "./Service.scss";
 
 const JobScrapingPage = (): JSX.Element => {
-	const { token } = useAuth();
-	const { serviceStatus, remainingTime, fetchStatus, statusError } = useServiceRunnerStatus(jobScraperServiceApi);
+	const { serviceStatus, statusError } = useServiceRunnerStatus(jobScraperServiceApi);
 
-	// Scraper config form (initialised once from the service status).
-	const [scrapingForm, setScrapingForm] = useState<{ period_hours: number; timedelta_days: number }>({
-		period_hours: 0,
-		timedelta_days: 0,
-	});
-	const scrapingFormInitialised = useRef<boolean>(false);
-	useEffect(() => {
-		if (serviceStatus && !scrapingFormInitialised.current) {
-			setScrapingForm({
-				period_hours: serviceStatus.period_hours || 0,
-				timedelta_days: serviceStatus.service_kwargs?.timedelta_days || 0,
-			});
-			scrapingFormInitialised.current = true;
-		}
-	}, [serviceStatus]);
-
-	const onChangeField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
-		const target = event.target as HTMLInputElement;
-		const { name, value } = target;
-		setScrapingForm((prev: any) => ({ ...prev, [name]: value === "" ? "" : Number(value) || 3 }));
-	};
-
-	const scrapingControl = useServiceControl(
-		token,
-		fetchStatus,
-		(t: string) => jobScraperServiceApi.start(scrapingForm.period_hours, scrapingForm.timedelta_days, t),
-		(t: string) => jobScraperServiceApi.stop(t)
-	);
-
-	const scrapingDisabled: boolean = serviceStatus?.service_runner_status !== "stopped";
-	const scrapingFields: React.ReactNode = serviceStatus && (
-		<>
-			{RenderLabeledInput(
-				"period_hours",
-				"Scraping Period",
-				"Time between scraping runs.",
-				scrapingForm.period_hours,
-				"Hour(s)",
-				!scrapingDisabled,
-				onChangeField,
-				scrapingDisabled
-			)}
-			{RenderLabeledInput(
-				"timedelta_days",
-				"Time Delta",
-				"Number of days back to scrape job postings for each run.",
-				scrapingForm.timedelta_days,
-				"Day(s)",
-				!scrapingDisabled,
-				onChangeField,
-				scrapingDisabled
-			)}
-		</>
-	);
-
-	const headerSlot: HTMLElement | null = useContext(ModalHeaderSlotContext);
-	const statusControl: JSX.Element = (
-		<Popover trigger={renderStatusIcons(serviceStatus, remainingTime)} ariaLabel="Job scraping service controls">
-			{(close) =>
-				renderControl(
-					serviceStatus,
-					scrapingFields,
-					scrapingControl.loading,
-					() => {
-						close();
-						scrapingControl.handleStart();
-					},
-					() => {
-						close();
-						scrapingControl.handleStop();
-					}
-				)
-			}
-		</Popover>
-	);
-
-	// ---- Dashboard data ----
 	// Null until the TimeFilterPopover emits its real default range on mount, so we
 	// don't fire a throwaway fetch for a placeholder (today-only) window first.
 	const [dateRange, setDateRange] = useState<DateRange | null>(null);
@@ -151,16 +60,6 @@ const JobScrapingPage = (): JSX.Element => {
 
 	return (
 		<div className="scraped-jobs-page">
-			{headerSlot ? (
-				createPortal(statusControl, headerSlot)
-			) : (
-				<PageHeader
-					title="Job Scraping"
-					icon={getTableIcon("Job Scraping Dashboard")}
-					statusContent={statusControl}
-				/>
-			)}
-
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
 					<div className="d-flex align-items-start">

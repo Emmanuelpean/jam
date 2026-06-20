@@ -1,16 +1,10 @@
-import React, { JSX, useContext, useState } from "react";
+import React, { JSX } from "react";
 import DataTable from "../../components/DataTable/DataTable";
-import { ModalHeaderSlotContext } from "../../contexts/ModalHeaderSlotContext";
 import { SettingModal } from "../../components/DataModal/SettingModal";
 import { TableColumn, tableColumns } from "../../components/rendering/view/TableColumns";
 import { SettingData } from "../../services/schemas/Core";
-import { getTableIcon } from "../../components/rendering/view/Icons";
-import PageHeader from "../PageHeader/PageHeader";
 
-export const AppSettingsPage: React.FC = (): JSX.Element => {
-	const headerSlot: HTMLElement | null = useContext(ModalHeaderSlotContext);
-	const [settingsCount, setSettingsCount] = useState<number>(0);
-
+export const AppSettingsPage = (): JSX.Element => {
 	const settingColumns: TableColumn<SettingData>[] = [
 		tableColumns.nameColumn<SettingData>(),
 		tableColumns.valueColumn<SettingData>(),
@@ -21,14 +15,12 @@ export const AppSettingsPage: React.FC = (): JSX.Element => {
 
 	return (
 		<div>
-			{!headerSlot && <PageHeader title="Settings" icon={getTableIcon("Settings")} count={settingsCount} />}
 			<DataTable<SettingData>
 				entityType="setting"
 				initialSortConfig={{ key: "name", direction: "asc" }}
 				columns={settingColumns}
 				Modal={SettingModal}
 				initialData={{ is_active: true }}
-				onTotalCountChange={setSettingsCount}
 				enableColumnConfig={true}
 			/>
 		</div>

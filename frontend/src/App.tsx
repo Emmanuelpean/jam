@@ -15,9 +15,6 @@ import JobApplicationUpdatesPage from "./pages/DataTablePages/JobApplicationUpda
 import Dashboard from "./pages/Dashboard/DashboardPage";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
 import { ViewportProvider } from "./contexts/ViewportContext";
-import { UsersPage } from "./pages/Admin/UsersPage";
-import { AppSettingsPage } from "./pages/Admin/AppSettingsPage";
-import EmailTemplatesPage from "./pages/Admin/EmailTemplatesPage";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 import { useToast, UseToastReturn } from "./hooks/useNotificationToast";
 import { ToastStack } from "./components/Toasts/Toast";
@@ -40,9 +37,6 @@ import { StatusProvider } from "./contexts/StatusContext";
 import { MaintenanceBanner } from "./components/AppBanner/MaintenanceBanner";
 import { DemoBanner } from "./components/AppBanner/DemoBanner";
 import { WhatsNewProvider } from "./contexts/WhatsNewContext";
-import JobScrapingPage from "./pages/Services/JobScrapingPage";
-import JobRatingPage from "./pages/Services/JobRatingPage";
-import UsagePage from "./pages/Admin/UsagePage";
 import AdminPage from "./pages/Admin/AdminPage";
 import FilesPage from "./pages/FilesPage/FilesPage";
 import CommandPalette from "./components/CommandPalette/CommandPalette";
@@ -226,12 +220,6 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/settings/:tab", element: <UserSettingsPage />, protected: true },
 	{ path: "/settings", element: <Navigate to="/settings/account" replace />, protected: true },
 	{ path: "/admin", element: <AdminPage />, protected: true, adminOnly: true },
-	{ path: "/app/users", element: <UsersPage />, protected: true, adminOnly: true },
-	{ path: "/app/settings", element: <AppSettingsPage />, protected: true, adminOnly: true },
-	{ path: "/app/email-templates", element: <EmailTemplatesPage />, protected: true, adminOnly: true },
-	{ path: "/services/job-scraping", element: <JobScrapingPage />, protected: true, adminOnly: true },
-	{ path: "/services/job-rating", element: <JobRatingPage />, protected: true, adminOnly: true },
-	{ path: "/admin/usage", element: <UsagePage />, protected: true, adminOnly: true },
 	{ path: "*", element: <NotFoundPage /> },
 ];
 

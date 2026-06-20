@@ -1,7 +1,6 @@
 import React, { JSX, ReactNode, useCallback, useEffect, useState } from "react";
 import { Col, Modal, Row } from "react-bootstrap";
 import PageHeader from "../PageHeader/PageHeader";
-import { ModalHeaderSlotContext } from "../../contexts/ModalHeaderSlotContext";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDataContext } from "../../contexts/DataContext";
@@ -12,6 +11,7 @@ import {
 	externalServiceMonitoringRunnerApi,
 } from "../../services/api/ExternalServiceMonitoring";
 import { failureColor, serviceRunnerStatusLabels, successColor } from "../Services/ServiceUtils";
+import { ServiceConfigField, ServiceStatusControl } from "../Services/ServiceStatusControl";
 import { formatDuration } from "../../utils/TimeUtils";
 import { UserData } from "../../services/schemas/Core";
 import JamModal from "../../components/JamModal/JamModal";
@@ -41,6 +41,59 @@ const ADMIN_PAGES: Record<AdminPageKey, { title: string; icon: string; render: (
 		title: "External Service Monitoring",
 		icon: getTableIcon("ESM"),
 		render: () => <UsagePage />,
+	},
+};
+
+// Start/stop config for the service-runner pages, shown as an interactive control in
+// the modal header. The live status is supplied separately (already polled for the cards).
+interface ServiceControlConfig {
+	ariaLabel: string;
+	configFields: ServiceConfigField[];
+	start: (values: Record<string, number>, token: string) => Promise<unknown>;
+	stop: (token: string) => Promise<unknown>;
+}
+
+const SERVICE_CONTROLS: Partial<Record<AdminPageKey, ServiceControlConfig>> = {
+	scraping: {
+		ariaLabel: "Job scraping service controls",
+		configFields: [
+			{
+				name: "period_hours",
+				label: "Scraping Period",
+				help: "Time between scraping runs.",
+				unit: "Hour(s)",
+				getValue: (s) => s.period_hours || 0,
+			},
+			{
+				name: "timedelta_days",
+				label: "Time Delta",
+				help: "Number of days back to scrape job postings for each run.",
+				unit: "Day(s)",
+				getValue: (s) => s.service_kwargs?.timedelta_days || 0,
+			},
+		],
+		start: (v, t) => jobScraperServiceApi.start(v.period_hours ?? 0, v.timedelta_days ?? 0, t),
+		stop: (t) => jobScraperServiceApi.stop(t),
+	},
+	rating: {
+		ariaLabel: "Job rating service controls",
+		configFields: [
+			{
+				name: "period_hours",
+				label: "Scraping Period",
+				help: "Time between rating runs.",
+				unit: "Hour(s)",
+				getValue: (s) => s.period_hours || 0,
+			},
+		],
+		start: (v, t) => jobRatingServiceRunnerApi.start(v.period_hours ?? 0, t),
+		stop: (t) => jobRatingServiceRunnerApi.stop(t),
+	},
+	usage: {
+		ariaLabel: "Monitoring service controls",
+		configFields: [],
+		start: (_v, t) => externalServiceMonitoringRunnerApi.start(t),
+		stop: (t) => externalServiceMonitoringRunnerApi.stop(t),
 	},
 };
 
@@ -187,8 +240,6 @@ const AdminPage = (): JSX.Element => {
 	// `showModal` drives the open/close transition; the modal stays mounted while it
 	// animates out, and `openPage` (the content) is only cleared once it has (onExited).
 	const [showModal, setShowModal] = useState<boolean>(false);
-	// The modal header's status area; the open page portals its status control here.
-	const [statusEl, setStatusEl] = useState<HTMLElement | null>(null);
 
 	const openModal = (key: AdminPageKey): void => {
 		setOpenPage(key);
@@ -198,6 +249,14 @@ const AdminPage = (): JSX.Element => {
 	const scraping = useServiceRunnerStatus(jobScraperServiceApi);
 	const rating = useServiceRunnerStatus(jobRatingServiceRunnerApi);
 	const monitoring = useServiceRunnerStatus(externalServiceMonitoringRunnerApi);
+
+	// The live status for each service page, used to drive the interactive control in
+	// the modal header. These are the same statuses already polled for the cards.
+	const pageStatus: Partial<Record<AdminPageKey, ReturnType<typeof useServiceRunnerStatus>>> = {
+		scraping,
+		rating,
+		usage: monitoring,
+	};
 
 	const [netBalance, setNetBalance] = useState<number | null>(null);
 	const [balanceError, setBalanceError] = useState<boolean>(false);
@@ -331,10 +390,7 @@ const AdminPage = (): JSX.Element => {
 			<JamModal
 				show={showModal}
 				onHide={() => setShowModal(false)}
-				onExited={() => {
-					setOpenPage(null);
-					setStatusEl(null);
-				}}
+				onExited={() => setOpenPage(null)}
 				centered
 				scrollable
 				dialogClassName="admin-page-modal-dialog"
@@ -351,13 +407,18 @@ const AdminPage = (): JSX.Element => {
 								</div>
 								<h4 className="mb-0 fw-bold">{ADMIN_PAGES[openPage].title}</h4>
 							</div>
-							<div ref={setStatusEl} className="admin-page-modal-status" />
+							{pageStatus[openPage] && SERVICE_CONTROLS[openPage] && (
+								<div className="admin-page-modal-status">
+									<ServiceStatusControl
+										status={pageStatus[openPage]!.serviceStatus}
+										remainingTime={pageStatus[openPage]!.remainingTime}
+										fetchStatus={pageStatus[openPage]!.fetchStatus}
+										{...SERVICE_CONTROLS[openPage]!}
+									/>
+								</div>
+							)}
 						</JamModal.Header>
-						<Modal.Body className="admin-page-modal-body">
-							<ModalHeaderSlotContext.Provider value={statusEl}>
-								{statusEl && ADMIN_PAGES[openPage].render()}
-							</ModalHeaderSlotContext.Provider>
-						</Modal.Body>
+						<Modal.Body className="admin-page-modal-body">{ADMIN_PAGES[openPage].render()}</Modal.Body>
 					</>
 				)}
 			</JamModal>
