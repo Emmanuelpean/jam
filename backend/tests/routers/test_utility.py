@@ -210,10 +210,12 @@ class TestParseColumnFiltersPrefixedModels:
         assert joined == set()
 
     def test_multiple_prefixed_keys_add_model_to_join_set_once(self):
-        filters = json.dumps({
-            "job_rating.overall_score": {"type": "number", "min": 5, "max": None},
-            "job_rating.technical_score": {"type": "number", "min": 6, "max": None},
-        })
+        filters = json.dumps(
+            {
+                "job_rating.overall_score": {"type": "number", "min": 5, "max": None},
+                "job_rating.technical_score": {"type": "number", "min": 6, "max": None},
+            }
+        )
         conditions, joined = parse_column_filters(
             filters, models.ScrapedJob, prefixed_models={"job_rating": models.JobRating}
         )
@@ -231,18 +233,22 @@ class TestParseColumnFiltersMultiple:
     """Multiple keys in a single call."""
 
     def test_multiple_filters_each_produce_a_condition(self):
-        filters = json.dumps({
-            "subject": {"type": "text", "value": "python"},
-            "platform": {"type": "select", "selected": ["linkedin"]},
-            "job_found_n": {"type": "number", "min": 5, "max": None},
-        })
+        filters = json.dumps(
+            {
+                "subject": {"type": "text", "value": "python"},
+                "platform": {"type": "select", "selected": ["linkedin"]},
+                "job_found_n": {"type": "number", "min": 5, "max": None},
+            }
+        )
         conditions, _ = parse_column_filters(filters, models.JobEmail)
         assert len(conditions) == 3
 
     def test_mix_of_valid_and_invalid_keys(self):
-        filters = json.dumps({
-            "subject": {"type": "text", "value": "python"},
-            "bad_column": {"type": "text", "value": "ignored"},
-        })
+        filters = json.dumps(
+            {
+                "subject": {"type": "text", "value": "python"},
+                "bad_column": {"type": "text", "value": "ignored"},
+            }
+        )
         conditions, _ = parse_column_filters(filters, models.JobEmail)
         assert len(conditions) == 1

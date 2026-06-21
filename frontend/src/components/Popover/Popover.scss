@@ -1,0 +1,35 @@
+.jam-popover-trigger {
+    display: inline-flex;
+    cursor: pointer;
+}
+
+.jam-popover {
+    position: fixed;
+    z-index: 1080;
+    min-width: 280px;
+    max-width: 360px;
+    padding: 16.2px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 10.8px;
+    background-color: var(--bs-card-bg, #fff);
+    box-shadow: 0 6px 24px rgb(0 0 0 / 15%);
+
+    /* Closed (and exit) state. Keep translateX(-100%) for right-alignment. */
+    opacity: 0;
+    transform: translateX(-100%) translateY(-6px) scale(0.98);
+    transform-origin: top right;
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease;
+}
+
+.jam-popover.is-open {
+    opacity: 1;
+    transform: translateX(-100%) translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .jam-popover {
+        transition: none;
+    }
+}

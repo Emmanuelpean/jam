@@ -49,9 +49,9 @@ def call_geocoding_api(query: str) -> tuple[float, float, dict]:
 
 
 def geocode_location(
-        query: str,
-        db: Session,
-        logger: logging.Logger | None = None,
+    query: str,
+    db: Session,
+    logger: logging.Logger | None = None,
 ) -> Geolocation | None:
     """Geocode a location or scraped job using cached results when available.
     Links the location/scraped job to a Geolocation record via foreign key.

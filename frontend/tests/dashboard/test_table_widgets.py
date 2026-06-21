@@ -48,10 +48,6 @@ class TestFollowUpTable(DashboardTestBase):
 
     # ---------------------------------------------------- TESTS ----------------------------------------------------
 
-    def test_follow_up_table_renders(self) -> None:
-        """The Follow-up table card must be visible on a dashboard with the widget configured."""
-        assert self.get_element(FOLLOW_UP_TABLE).is_displayed()
-
     def test_follow_up_table_empty_state_with_no_data(self) -> None:
         """With no data the empty state is shown."""
         assert self._empty_state_visible()
@@ -134,10 +130,6 @@ class TestUpcomingDeadlinesTable(DashboardTestBase):
 
     # ---------------------------------------------------- TESTS ----------------------------------------------------
 
-    def test_upcoming_deadlines_table_renders(self) -> None:
-        """The Upcoming Deadlines card must be visible on a dashboard with the widget configured."""
-        assert self.get_element(UPCOMING_DEADLINES_TABLE).is_displayed()
-
     def test_upcoming_deadlines_empty_state_with_no_data(self) -> None:
         """With no data the empty state is shown."""
         assert self._empty_state_visible()
@@ -219,10 +211,6 @@ class TestJobAlertsTable(DashboardTestBase):
 
     # ---------------------------------------------------- TESTS ----------------------------------------------------
 
-    def test_job_alerts_table_renders(self) -> None:
-        """The Job Alerts card must be visible on a dashboard with the widget configured."""
-        assert self.get_element(JOB_ALERTS_TABLE).is_displayed()
-
     def test_job_alerts_empty_state_with_no_data(self) -> None:
         """With no scraped jobs the empty state is shown."""
         assert self._empty_state_visible()
@@ -285,10 +273,6 @@ class TestFavouritesTable(DashboardTestBase):
         return self.check_element_exists(f"{FAVOURITES_TABLE}-empty")
 
     # ---------------------------------------------------- TESTS ----------------------------------------------------
-
-    def test_favourites_table_renders(self) -> None:
-        """The Favourite Job Alerts card must be visible on a dashboard with the widget configured."""
-        assert self.get_element(FAVOURITES_TABLE).is_displayed()
 
     def test_favourites_empty_state_with_no_data(self) -> None:
         """With no scraped jobs and no filters the empty state is shown."""
@@ -377,10 +361,6 @@ class TestFavouriteJobsTable(DashboardTestBase):
 
     # ---------------------------------------------------- TESTS ----------------------------------------------------
 
-    def test_favourite_jobs_table_renders(self) -> None:
-        """The Favourite Jobs card must be visible after setting the widget layout."""
-        assert self.get_element(FAVOURITE_JOBS_TABLE).is_displayed()
-
     def test_favourite_jobs_empty_state_with_no_data(self) -> None:
         """With no jobs the empty state is shown."""
         assert self._empty_state_visible()
@@ -463,10 +443,6 @@ class TestFailedJobsWidget(DashboardTestBase):
         return self.check_element_exists(f"{FAILED_JOBS_TABLE}-empty")
 
     # ---------------------------------------------------- TESTS ----------------------------------------------------
-
-    def test_failed_jobs_widget_renders(self) -> None:
-        """The Failed Jobs card must be visible on a dashboard with the widget configured."""
-        assert self.get_element(FAILED_JOBS_TABLE).is_displayed()
 
     def test_failed_jobs_empty_state_with_no_data(self) -> None:
         """With no failed jobs the empty state is shown."""

@@ -55,11 +55,7 @@ export interface TourDefinition {
 	description: string;
 	icon: string;
 	steps: TourStep[];
-	/** Not yet implemented - shown in the panel as disabled with a "Soon" badge */
-	comingSoon?: boolean;
-	/** Premium-only tour — hidden for non-premium users and shown with a badge */
 	premium?: boolean;
-	/** Skip the keep-data toggle on the last step — tour always ends without cleanup prompt */
 	noKeepData?: boolean;
 }
 
@@ -201,7 +197,7 @@ const FIRST_JOB_STEPS: TourStep[] = [
 		targetId: "salary_min-form-group",
 		title: "Minimum Salary",
 		content:
-			"Enter the minimum advertised salary. The currency follows your preferred setting in User Settings. Click Next to skip.",
+			"Enter the minimum advertised salary. The currency follows your preferred setting in My Account. Click Next to skip.",
 		placement: "right",
 		showBack: true,
 	},
@@ -614,7 +610,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		title: "AI Score",
 		content:
 			"JAM rates each alert against your profile - skills, experience, and preferences. " +
-			"Higher scores mean a stronger match. Set up your profile in User Settings to tune the ratings.",
+			"Higher scores mean a stronger match. Set up your profile in My Account to tune the ratings.",
 		route: "/job-alerts/jobs",
 		placement: "bottom",
 	},

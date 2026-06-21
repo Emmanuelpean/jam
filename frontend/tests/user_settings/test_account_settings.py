@@ -2,7 +2,7 @@
 
 import datetime as dt
 
-from app.utils import verify_password
+from app.utilities.security import verify_password
 from base_test import models, BaseTest
 
 
@@ -120,7 +120,9 @@ class TestAccountSettingsPageEmailChange(BaseTest):
 
         self.user_settings_utils.change_email_button.click()
         self.set_text(self.user_settings_utils.email, new_email)
-        self.set_text(self.user_settings_utils.current_password, self.user.plain_password if password is None else password)
+        self.set_text(
+            self.user_settings_utils.current_password, self.user.plain_password if password is None else password
+        )
         self.user_settings_utils.confirm_email_change_button.click()
 
     def test_change_email_success(self) -> None:

@@ -7,8 +7,3 @@ export interface Currency {
 	code: string;
 	name_plural: string;
 }
-
-export interface Country {
-	name: string;
-	code: string;
-}

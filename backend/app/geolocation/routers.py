@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from app import models, database
 from app.core import oauth2
-from app.geolocation.geolocation import geocode_location
 from app.data_tables.schemas import GeolocationOut
+from app.geolocation.geolocation import geocode_location
 
 router = APIRouter(prefix="/geolocation", tags=["geolocation"])
 

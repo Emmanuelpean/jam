@@ -87,5 +87,5 @@ class TestBuildCheckoutParams:
 
         result = await build_checkout_params("cus_test")
 
-        assert result["ui_mode"] == "hosted"
+        assert result["ui_mode"] == "hosted_page"
         assert result["locale"] == "auto"

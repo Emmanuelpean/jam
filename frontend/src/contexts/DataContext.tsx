@@ -32,37 +32,33 @@ import { CrudApi } from "../services/api/Crud";
 import { getScrapingFilterName } from "../components/rendering/view/ViewRenders";
 
 import {
+	AggregatorCreate,
 	AggregatorData,
+	CompanyCreate,
 	CompanyData,
 	EnrichedInterviewData,
 	EnrichedJobApplicationUpdateData,
 	EnrichedJobData,
+	FileCreate,
 	FileData,
+	InterviewCreate,
 	InterviewData,
+	JobApplicationUpdateCreate,
 	JobApplicationUpdateData,
+	JobCreate,
 	JobData,
+	KeywordCreate,
 	KeywordData,
+	PersonCreate,
 	PersonData,
+	SpeculativeApplicationCreate,
 	SpeculativeApplicationData,
 } from "../services/schemas/DataTables";
-import { SettingData, UserData } from "../services/schemas/Core";
-import { JobEmailData, ScrapedJobData, ScrapingFilterData } from "../services/schemas/Services";
+import { SettingCreate, SettingData, UserCreate, UserData } from "../services/schemas/Core";
+import { JobEmailData, ScrapedJobData, ScrapingFilterCreate, ScrapingFilterData } from "../services/schemas/Services";
 import { ApiError } from "../services/api/ApiError";
 import { GeoLocationData } from "../services/schemas/Base";
-import { tourApi } from "../services/api/Others";
-import {
-	AggregatorCreate,
-	CompanyCreate,
-	FileCreate,
-	InterviewCreate,
-	JobApplicationUpdateCreate,
-	JobCreate,
-	KeywordCreate,
-	PersonCreate,
-	SpeculativeApplicationCreate,
-} from "../services/schemas/DataTables";
-import { SettingCreate, UserCreate } from "../services/schemas/Core";
-import { ScrapingFilterCreate } from "../services/schemas/Services";
+import { emailApi, EmailTemplate, tourApi } from "../services/api/Others";
 
 export type EntityType =
 	| "job"
@@ -242,6 +238,7 @@ export interface DataContextValue {
 	scrapingFavouriteFilters: ScrapingFilterData[];
 	users: UserData[];
 	files: FileData[];
+	emailTemplates: EmailTemplate[];
 
 	error: ApiError | null;
 
@@ -281,6 +278,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [scrapingFavouriteFilters, setScrapingFavouriteFilters] = useState<ScrapingFilterData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
 	const [files, setFiles] = useState<FileData[]>([]);
+	const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
 	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
 
@@ -447,7 +445,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		if (currentUser?.is_admin) {
 			fetchOperations.push(
 				{ promise: settingsApi.getAll(token), label: "Settings" } as TypedFetchOperation<SettingData[]>,
-				{ promise: userApi.getAll(token), label: "Users" } as TypedFetchOperation<UserData[]>
+				{ promise: userApi.getAll(token), label: "Users" } as TypedFetchOperation<UserData[]>,
+				{ promise: emailApi.getAll(token), label: "Email Templates" } as TypedFetchOperation<EmailTemplate[]>
 			);
 		}
 
@@ -499,6 +498,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			if (currentUser?.is_admin) {
 				setSettings(adminData[0].data || []);
 				setUsers(adminData[1].data || []);
+				setEmailTemplates(adminData[2].data || []);
 			}
 		} catch (e: any) {
 			setError(e);
@@ -677,6 +677,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				...visibleData,
 				settings,
 				users,
+				emailTemplates,
 				error,
 				setIsInTour,
 				updateEntity,
@@ -695,3 +696,6 @@ export const useDataContext = (): DataContextValue => {
 	if (!context) throw new Error("useDataContext must be used within a DataProvider");
 	return context;
 };
+
+// Non-throwing variant for components that render outside the DataProvider (e.g. when logged out).
+export const useDataContextOptional = (): DataContextValue | undefined => useContext(DataContext);

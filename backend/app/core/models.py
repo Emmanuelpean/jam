@@ -2,14 +2,13 @@
 
 import datetime as dt
 import math
+from enum import Enum
 from typing import Any
 
 from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, CheckConstraint, JSON, Text, event
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
-
-from enum import Enum
 
 from app.base_models import CommonBase, Owned
 from app.config import settings

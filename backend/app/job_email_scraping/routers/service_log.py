@@ -14,7 +14,6 @@ from app.database import get_db
 from app.job_email_scraping import schemas
 from app.service_runner import routers
 
-
 job_scraping_service_log_router = APIRouter(prefix="/job-scraping-service-logs", tags=["job-scraping-service-logs"])
 
 

@@ -49,17 +49,11 @@ class TestStaleTourDataCleanup(BaseTest):
         self.db.rollback()
         uid = self.db_user.id
 
-        seeded_jobs = (
-            self.db.query(models.Job)
-            .filter(models.Job.owner_id == uid, models.Job.is_tour == True)
-            .all()
-        )
+        seeded_jobs = self.db.query(models.Job).filter(models.Job.owner_id == uid, models.Job.is_tour == True).all()
         assert len(seeded_jobs) == 1, f"Expected 1 seeded Job, got {len(seeded_jobs)}"
 
         seeded_persons = (
-            self.db.query(models.Person)
-            .filter(models.Person.owner_id == uid, models.Person.is_tour == True)
-            .all()
+            self.db.query(models.Person).filter(models.Person.owner_id == uid, models.Person.is_tour == True).all()
         )
         assert len(seeded_persons) == 2, f"Expected 2 seeded persons, got {len(seeded_persons)}"
 

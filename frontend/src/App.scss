@@ -241,6 +241,37 @@ textarea.form-control {
     width: 100%;
 }
 
+.jam-select.jam-select--fit-content {
+    width: fit-content;
+}
+
+.jam-select.jam-select--fit-content .jam-select__values {
+    flex: 0 0 auto;
+}
+
+/* Drop the fixed min-widths (e.g. the --sm variant's 175px) so the control
+   really shrinks to its content. */
+.jam-select.jam-select--fit-content.jam-select--sm .jam-select__control,
+.jam-select.jam-select--fit-content .jam-select__control {
+    min-width: 0;
+}
+
+/* Off-screen sizer: stacks every option label so the values area can be fixed to
+   the widest one. It inherits the control font so the measurement matches. */
+.jam-select__size-sizer {
+    position: absolute;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.jam-select__size-sizer > .jam-select__single-value {
+    display: block;
+    max-width: none;
+    white-space: nowrap;
+}
+
 .jam-select__control {
     display: flex;
     flex-wrap: nowrap;
@@ -511,8 +542,11 @@ textarea.form-control {
 }
 
 /* ---- Small input variant (filters, sidebars) ---- */
-
-.form-control--sm {
+/* `.form-control--sm` is the legacy custom class; `.form-control-sm` is Bootstrap's
+   standard modifier. Both are handled here because the base `.form-control` rule above
+   hardcodes large sizing that would otherwise win over Bootstrap's `.form-control-sm`. */
+.form-control--sm,
+.form-control-sm {
     min-height: 34px;
     font-size: 0.8rem;
     padding: 0.3rem 0.6rem;
@@ -696,6 +730,20 @@ textarea.form-control {
     text-shadow: 0 1px 1.8px rgb(0 0 0 / 20%);
 }
 
+/* Small button variant. The base `.btn` rule hardcodes large padding/font-size, which
+   overrides Bootstrap's variable-driven `.btn-sm` sizing, so it is restated here. */
+.btn-sm,
+.btn-group-sm > .btn {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.85rem;
+    border-radius: 0.375rem;
+}
+
+/* Buttons grouped in a btn-group act as a segmented control, so suppress the hover lift. */
+.btn-group > .btn:hover {
+    transform: none;
+}
+
 .btn-primary.active,
 .btn-primary:first-child:active,
 :not(.btn-check) + .btn-primary:active,
@@ -709,6 +757,15 @@ textarea.form-control {
 // Primary button (e.g. submit)
 .btn-primary {
     background: var(--primary-gradient);
+}
+
+.btn-primary.active,
+.btn-primary:first-child:active,
+:not(.btn-check) + .btn-primary:active,
+.btn-outline-primary.active,
+.btn-outline-primary:first-child:active,
+:not(.btn-check) + .btn-outline-primary:active {
+    border: 0;
 }
 
 .btn-primary:hover {

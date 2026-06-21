@@ -11,7 +11,7 @@ from app.base_schemas import COLUMN_LIMITS
 from app.config import settings
 from app.core import schemas
 from app.core.models import Setting
-from app.utils import hash_token
+from app.utilities.security import hash_token
 from tests.utils.create_data.utils import create_db_entries
 
 
@@ -115,8 +115,9 @@ class TestLogin:
             ("wrongemail@gmail.com", "pass123", 403),
             ("user1@email.com", "wrongpassword", 403),
             ("wrongemail@gmail.com", "wrongpassword", 403),
-            (None, "pass123", 403),
-            ("user1@email.com", None, 403),
+            # Missing username/password fail form validation (422) before reaching the handler.
+            (None, "pass123", 422),
+            ("user1@email.com", None, 422),
         ],
     )
     def test_incorrect_login(self, email, password, status_code, client) -> None:
@@ -163,7 +164,7 @@ class TestLogin:
         """Demo users cannot log in when maintenance is active."""
 
         _create_maintenance_setting(session, minutes_offset=-30)
-        data = {"username": test_demo_user.email, "password": ""}
+        data = {"username": test_demo_user.email, "password": "demo"}
         response = client.post("/login", data=data)
         assert response.status_code == 401
 

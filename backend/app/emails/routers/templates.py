@@ -1,16 +1,36 @@
 """Router to get email templates"""
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 from starlette import status
 
 from app import models
 from app.config import settings
 from app.core import oauth2
-from app.routers.utility import assert_admin
 from app.emails.templates import email_templates
+from app.routers.utility import assert_admin
 
 email_template_router = APIRouter(prefix="/email-templates", tags=["email-templates"])
+
+
+class EmailTemplatePreview(BaseModel):
+    """A previewable email template: its id, human-readable label, and rendered HTML."""
+
+    id: str
+    label: str
+    html: str
+
+
+# Human-readable labels for each template, shown in the preview UI. Keys must match _SAMPLE_DATA.
+_TEMPLATE_LABELS: dict[str, str] = {
+    "email_confirmation": "Email Confirmation",
+    "password_reset": "Password Reset",
+    "email_change": "Email Change Verification",
+    "password_changed": "Password Changed",
+    "email_changed": "Email Changed",
+    "trial_end_reminder": "Trial End Reminder",
+    "new_version": "New Version Announcement",
+}
 
 _SAMPLE_DATA: dict[str, dict] = {
     "email_confirmation": {
@@ -64,25 +84,35 @@ _SAMPLE_DATA: dict[str, dict] = {
 }
 
 
-@email_template_router.get("/preview/{template_name}", response_class=HTMLResponse)
-def preview_email_template(
-    template_name: str,
-    current_user: models.User = Depends(oauth2.get_current_user),
-) -> str:
-    """Render an email template with sample data and return it as HTML. Admin only.
+def _render_template(template_name: str) -> str:
+    """Render a single email template with its sample data.
     :param template_name: The template name (without .html extension).
-    :param current_user: The current authenticated admin user.
-    :returns: Rendered HTML content of the email template."""
-
-    assert_admin(current_user)
+    :returns: Rendered HTML content of the email template.
+    :raises HTTPException: 404 if the template is unknown, 500 if Jinja2 is not initialised."""
 
     if template_name not in _SAMPLE_DATA:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Template '{template_name}' not found")
 
-    if email_templates.env:
-        template = email_templates.env.get_template(f"{template_name}.html")
-        return template.render(**_SAMPLE_DATA[template_name])
-    else:
+    if not email_templates.env:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Jinja2 environment not initialized"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Jinja2 environment not initialised"
         )
+
+    template = email_templates.env.get_template(f"{template_name}.html")
+    return template.render(**_SAMPLE_DATA[template_name])
+
+
+@email_template_router.get("/", response_model=list[EmailTemplatePreview])
+def preview_all_email_templates(
+    current_user: models.User = Depends(oauth2.get_current_user),
+) -> list[EmailTemplatePreview]:
+    """Render every email template with sample data. Admin only.
+    :param current_user: The current authenticated admin user.
+    :returns: List of templates, each with its id, label, and rendered HTML content."""
+
+    assert_admin(current_user)
+
+    return [
+        EmailTemplatePreview(id=name, label=_TEMPLATE_LABELS[name], html=_render_template(name))
+        for name in _SAMPLE_DATA
+    ]

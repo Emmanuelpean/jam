@@ -4,8 +4,7 @@ import threading
 import time
 from typing import Callable
 
-from app.utils import AppLogger
-from app.utils import get_last_log_line
+from app.utilities.logger import AppLogger, get_last_log_line
 
 
 class ServiceRunner:

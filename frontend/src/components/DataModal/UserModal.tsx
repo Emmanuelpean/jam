@@ -40,7 +40,7 @@ export const UserModal = forwardRef<DataModalHandle<UserData>, JamDataModalProps
 			const errors: ValidationErrors = {};
 			const duplicates: UserData[] = dataContext.users.filter(
 				(user: UserData): boolean =>
-					user.email.trim().toLowerCase() === formData.email.trim().toLowerCase() && user.id !== formData?.id
+					user.email.trim().toLowerCase() === formData.email?.trim().toLowerCase() && user.id !== formData?.id
 			);
 			if (duplicates.length > 0) {
 				errors.email = `A user with this email address already exists`;

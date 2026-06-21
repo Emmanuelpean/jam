@@ -8,42 +8,42 @@
 
 {% block content %}
 <p style="margin: 0 0 25px 0; font-size: 16px; line-height: 24px; color: #333333;">
-    Hi there,
+	Hi there,
 </p>
 
 <p style="margin: 0 0 30px 0; font-size: 16px; line-height: 24px; color: #333333;">
-    We are excited to announce <strong>JAM V{{ version }}</strong>. New features include:
+	We are excited to announce <strong>JAM V{{ version }}</strong>. New features include:
 </p>
 
 <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 0 0 30px 0;">
-{% for feature in features %}
-    <tr>
-        <td style="padding: 8px 0 8px 0; vertical-align: top; width: 24px; color: #0ea5e9; font-size: 16px;">
-            &#8226;
-        </td>
-        <td style="padding: 8px 0 8px 8px; vertical-align: top;">
-            <span style="font-size: 15px; font-weight: 600; color: #1e293b;">{{ feature.title }}</span>
-            <span style="font-size: 14px; color: #475569;"> &mdash; {{ feature.description }}</span>
-        </td>
-    </tr>
-{% endfor %}
+	{% for feature in features %}
+	<tr>
+		<td style="padding: 8px 0 8px 0; vertical-align: top; width: 24px; color: #0ea5e9; font-size: 16px;">
+			&#8226;
+		</td>
+		<td style="padding: 8px 0 8px 8px; vertical-align: top;">
+			<span style="font-size: 15px; font-weight: 600; color: #1e293b;">{{ feature.title }}</span>
+			<span style="font-size: 14px; color: #475569;"> &mdash; {{ feature.description }}</span>
+		</td>
+	</tr>
+	{% endfor %}
 </table>
 
 <!-- CTA Button -->
 <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 30px 0;">
-    <tr>
-        <td align="center">
-            <a href="{{ app_url }}"
-               style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #0ea5e9 0%, #2dd4bf 100%); color: #ffffff;
+	<tr>
+		<td style="text-align: center;">
+			<a href="{{ app_url }}"
+			   style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #0ea5e9 0%, #2dd4bf 100%); color: #ffffff;
                text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600; text-align: center;">
-                Open JAM
-            </a>
-        </td>
-    </tr>
+				Open JAM
+			</a>
+		</td>
+	</tr>
 </table>
 
 <p style="margin: 20px 0 0 0; font-size: 14px; line-height: 20px; color: #999999;">
-    Thank you for using JAM. We hope these updates make your job search even more productive!
+	Thank you for using JAM. We hope these updates make your job search even more productive!
 </p>
 {% endblock %}
 

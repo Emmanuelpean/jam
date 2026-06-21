@@ -7,7 +7,7 @@ from app.job_email_scraping.job_scrapers.apify import ApifyJobScraper
 from app.job_email_scraping.schemas import Salary, JobInfo, JobResult
 
 
-class NhsJobScraper(ApifyJobScraper):
+class NhsApifyJobScraper(ApifyJobScraper):
     """Scraper for NHS job listings."""
 
     base_url = "https://beta.jobs.nhs.uk/candidate/jobadvert/"
@@ -75,6 +75,6 @@ class NhsJobScraper(ApifyJobScraper):
 
 
 if __name__ == "__main__":
-    scraper = NhsJobScraper("H9001-26-0286")
+    scraper = NhsApifyJobScraper("H9001-26-0286")
     nhsjob_data = scraper.scrape_job()
     print(nhsjob_data)

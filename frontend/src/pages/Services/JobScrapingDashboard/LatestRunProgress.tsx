@@ -19,7 +19,7 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 				Latest Run Progress
 				{isRunning && <span className="live-indicator ms-2"></span>}
 			</h2>
-			<div className="metrics-grid">
+			<div className="metrics-grid metrics-grid--wide-last">
 				<div className="metric-group">
 					<p className="metric-item">
 						<span className="status-label">Run Time:</span>
@@ -41,6 +41,9 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 					<p className="metric-item">
 						<span className="status-label">Scraping Failed:</span> {latestLog.job_scrape_failed_n}
 					</p>
+					<p className="metric-item">
+						<span className="status-label">Copied:</span> {latestLog.job_scrape_copied_n}
+					</p>
 					<p className="metric-item"></p>
 				</div>
 
@@ -54,7 +57,7 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 					<strong>Error:</strong> {latestLog.error_message}
 				</div>
 			)}
-			<div style={{ display: "flex", width: "100%", gap: "18px", marginBottom: "18px" }}>
+			<div style={{ display: "flex", width: "100%", gap: "18px" }}>
 				<ProgressBar
 					title="Users Processed"
 					current={latestLog.user_processed_ids.length}

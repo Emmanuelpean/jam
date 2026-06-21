@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app import utils, models, database, base_schemas
+from app import models, database, base_schemas
 from app.config import settings
 from app.core import schemas, oauth2
 from app.core.models import get_setting_value, TokenType
@@ -19,6 +19,8 @@ from app.core.utils import (
 )
 from app.demo.seed import seed_demo_data
 from app.emails.email_service import email_service
+from app.utilities import security
+from app.utilities.strings import clean_email
 
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
@@ -60,7 +62,7 @@ def login(
     :raises HTTPException with a 401 status code if the user is not active or not verified
     :raises HTTPException with a 429 status code if verification email rate limit is exceeded"""
 
-    user_email = utils.clean_email(user_credentials.username)
+    user_email = clean_email(user_credentials.username)
 
     if settings.test_mode and user_email == "crash@crash.com":
         raise HTTPException(
@@ -78,7 +80,7 @@ def login(
             demo_email = f"demo-{uuid.uuid4().hex[:12]}@demo.jam"
             demo_user = models.User(
                 email=demo_email,
-                password=utils.hash_password(uuid.uuid4().hex),
+                password=security.hash_password(uuid.uuid4().hex),
                 is_demo=True,
                 is_active=True,
                 is_verified=True,
@@ -108,7 +110,7 @@ def login(
             raise
 
     # Check that the user exists and verify the password
-    if user is None or not utils.verify_password(user_credentials.password, user.password):
+    if user is None or not security.verify_password(user_credentials.password, user.password):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials.")
 
     # Check that the user is active
@@ -190,7 +192,7 @@ def create_user(
     # Check the user can be created
     allowlist = models.get_setting_value(db, "allowlist", None)
     if allowlist is not None:
-        emails_allowed = [utils.clean_email(email) for email in allowlist.split(",")]
+        emails_allowed = [clean_email(email) for email in allowlist.split(",")]
         if user_register.email not in emails_allowed:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -220,7 +222,7 @@ def create_user(
             )
 
     # Hash the password and create the user
-    user_register.password = utils.hash_password(user_register.password)
+    user_register.password = security.hash_password(user_register.password)
 
     # Create user with related tables (captcha_token is not a user field)
     user_data = user_register.model_dump(exclude={"captcha_token"})
@@ -255,7 +257,7 @@ def verify_email(
 
     _assert_not_maintenance(db)
 
-    verification_code = utils.hash_token(token)
+    verification_code = security.hash_token(token)
     token_entry = get_token(verification_code, TokenType.EMAIL_VERIFICATION, db)
 
     if not token_entry:
@@ -364,7 +366,7 @@ def reset_password(
     _assert_not_maintenance(db)
 
     # Hash the token to compare with stored hash
-    password_reset_code = utils.hash_token(reset_data.token)
+    password_reset_code = security.hash_token(reset_data.token)
 
     # Find token entry with matching hash
     token_entry = get_token(password_reset_code, TokenType.PASSWORD_RESET, db)
@@ -388,7 +390,7 @@ def reset_password(
         )
 
     # Hash the new password
-    hashed_password = utils.hash_password(reset_data.new_password)
+    hashed_password = security.hash_password(reset_data.new_password)
 
     # Update user's password and mark token as used
     try:

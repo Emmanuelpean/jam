@@ -1,62 +1,16 @@
+/* Inline filter toolbar: sits next to a label with no extra vertical chrome.
+   Control sizing comes from the global .form-control-sm / .btn-group-sm rules. */
 .time-selection-container {
-    padding: 0 0 1rem;
+    padding: 0;
 }
 
-.radio-group {
-    display: flex;
-    gap: 1rem;
-    flex-shrink: 0;
+/* The unit dropdown grows to fill the remaining width of the popover row.
+   min-width: 0 lets it shrink below the select's intrinsic min-width when needed. */
+.time-selection-container .time-unit-select {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
-.custom-radio {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    padding: 0.5rem 1rem;
-    border-radius: 7.2px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    user-select: none;
-}
-
-.custom-radio:hover {
-    background: var(--bs-tertiary-bg);
-}
-
-/* Hide default radio button */
-.custom-radio input[type="radio"] {
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--bs-border-color);
-    background-color: var(--bg-tertiary);
-    border-radius: 50%;
-    position: relative;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    flex-shrink: 0;
-}
-
-.custom-radio input[type="radio"]:hover {
-    border-color: var(--primary-mid);
-}
-
-/* Radio button checked state - gradient circle */
-.custom-radio input[type="radio"]:checked {
-    border-color: var(--primary-end);
-    background: var(--primary-gradient);
-    box-shadow: 0 0 0 3.6px var(--jam-glow),
-    0 1.8px 7.2px rgb(0 0 0 / 20%);
-}
-
-/* Radio label styling */
-.radio-label {
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--bs-body-color);
-    transition: color 0.3s ease;
-}
-
-.custom-radio:hover .radio-label {
-    color: var(--primary-mid);
+.time-selection-container .time-unit-select .jam-select.jam-select--sm .jam-select__control {
+    min-width: 0;
 }

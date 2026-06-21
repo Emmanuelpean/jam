@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useState } from "react";
 import { JobRatingServiceLogData } from "../../../services/schemas/Services";
 import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
-import { createSeries, failureColor, infoColor, successColor } from "../ServiceUtils";
+import { createSeries, failureColor, skippedColor, successColor } from "../ServiceUtils";
 import { useDelayedLoading } from "../../../hooks/useDelayedLoading";
 
 interface RunHistoryChartProps {
@@ -18,7 +18,7 @@ export const RunHistoryChart = ({ serviceLogData, isRunning, loading = false }: 
 		if (!serviceLogData) return;
 
 		const durationSeries: SeriesData[] = [
-			createSeries(serviceLogData, "Run Duration (h)", infoColor, (log: JobRatingServiceLogData): number =>
+			createSeries(serviceLogData, "Run Duration (h)", (log: JobRatingServiceLogData): number =>
 				log.run_duration ? log.run_duration / 3600 : 0
 			),
 		];
@@ -27,20 +27,20 @@ export const RunHistoryChart = ({ serviceLogData, isRunning, loading = false }: 
 			createSeries(
 				serviceLogData,
 				"Successful Jobs",
-				successColor,
-				(log: JobRatingServiceLogData): number => log.job_succeeded_ids.length
+				(log: JobRatingServiceLogData): number => log.job_succeeded_ids.length,
+				successColor
 			),
 			createSeries(
 				serviceLogData,
 				"Failed Jobs",
-				failureColor,
-				(log: JobRatingServiceLogData): number => log.job_failed_ids.length
+				(log: JobRatingServiceLogData): number => log.job_failed_ids.length,
+				failureColor
 			),
 			createSeries(
 				serviceLogData,
 				"Skipped Jobs",
-				infoColor,
-				(log: JobRatingServiceLogData): number => log.job_skipped_ids.length
+				(log: JobRatingServiceLogData): number => log.job_skipped_ids.length,
+				skippedColor
 			),
 		];
 		setLogData([jobSeries, durationSeries]);
@@ -61,12 +61,8 @@ export const RunHistoryChart = ({ serviceLogData, isRunning, loading = false }: 
 				</div>
 			) : (
 				<div style={{ display: "flex" }}>
-					{logData && logData[0] && (
-						<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of jobs rated" />
-					)}
-					{logData && logData[1] && (
-						<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
-					)}
+					{logData && logData[0] && <LineChart data={logData[0]} yAxisLabel="Number of jobs rated" />}
+					{logData && logData[1] && <LineChart data={logData[1]} yAxisLabel="Run duration [h]" />}
 				</div>
 			)}
 		</div>

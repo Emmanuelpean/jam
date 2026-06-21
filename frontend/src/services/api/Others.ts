@@ -1,10 +1,15 @@
-import { ApiResponse, baseApi } from "./Base";
+import { ApiResponse, ApiResponsePromise, baseApi } from "./Base";
 import { Config, GeoLocationData, Status } from "../schemas/Base";
 
+export interface EmailTemplate {
+	id: string;
+	label: string;
+	html: string;
+}
+
 export const emailApi = {
-	fetchTemplateHtml: async (templateName: string, token: string): Promise<string> => {
-		const response: ApiResponse<string> = await baseApi.get(`email-templates/preview/${templateName}`, token);
-		return response.data;
+	getAll: async (token: string): ApiResponsePromise<EmailTemplate[]> => {
+		return await baseApi.get("email-templates/", token);
 	},
 };
 

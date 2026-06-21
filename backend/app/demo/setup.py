@@ -1,16 +1,15 @@
-"""Demo schema setup and initialization."""
+"""Demo schema setup and initialisation."""
 
 import datetime as dt
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from tests.utils.test_data import data_tables
-from tests.utils.create_data.utils import create_db_entries
 from app import models
 from app.database import Base, demo_engine, demo_session_local, engine
 from app.job_rating.prompts import seed_ai_prompts
-
+from tests.utils.create_data.utils import create_db_entries
+from tests.utils.test_data import data_tables
 
 _DEMO_SETUP_LOCK_ID = 987_654_321
 

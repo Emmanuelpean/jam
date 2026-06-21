@@ -8,8 +8,8 @@ Create Date: 2026-02-23 21:14:35.206988
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 from app.job_rating.prompts import SYSTEM_PROMPT_V2, JOB_ONLY_PROMPT_TEMPLATE_V2
@@ -28,7 +28,11 @@ def upgrade() -> None:
     op.execute("UPDATE job_rating SET llm_model = 'gpt-4.1-mini'")
     op.alter_column("job_rating", "llm_model", nullable=False)
     op.execute(sa.text("INSERT INTO ai_system_prompt (prompt) VALUES (:prompt)").bindparams(prompt=SYSTEM_PROMPT_V2))
-    op.execute(sa.text("INSERT INTO ai_job_prompt_template (prompt) VALUES (:prompt)").bindparams(prompt=JOB_ONLY_PROMPT_TEMPLATE_V2))
+    op.execute(
+        sa.text("INSERT INTO ai_job_prompt_template (prompt) VALUES (:prompt)").bindparams(
+            prompt=JOB_ONLY_PROMPT_TEMPLATE_V2
+        )
+    )
     op.add_column("job_rating", sa.Column("notes", postgresql.ARRAY(sa.String()), server_default="{}", nullable=False))
     op.alter_column("job_rating_service_log", "rated_job_found_ids", new_column_name="job_found_ids")
     op.alter_column("job_rating_service_log", "rated_job_succeeded_ids", new_column_name="job_succeeded_ids")

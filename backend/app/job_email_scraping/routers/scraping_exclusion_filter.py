@@ -15,7 +15,6 @@ from app.job_email_scraping import schemas
 from app.job_email_scraping.filtering import rule_to_sql_predicate
 from app.routers.utility import generate_data_table_crud_router, NOT_ALLOWED_EXCEPTION
 
-
 scraping_filter_router = generate_data_table_crud_router(
     table_model=models.ScrapingExclusionFilter,
     create_schema=schemas.ScrapingFilterCreate,

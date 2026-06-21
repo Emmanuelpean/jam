@@ -42,7 +42,7 @@ async def delete_all_stripe_customers() -> dict:  # pragma: no cover
             for customer in customers.data:
                 try:
                     deleted_customer = await stripe.Customer.delete_async(customer.id)
-                    if deleted_customer.get("deleted"):
+                    if getattr(deleted_customer, "deleted", False):
                         deleted_customers += 1
                         logger.info(f"Deleted Stripe customer {customer.id}")
                     else:
@@ -136,7 +136,7 @@ async def advance_test_clock(
 
             # Retrieve customer to get their test clock
             customer = await stripe.Customer.retrieve_async(current_user.stripe_details.customer_id)
-            test_clock_id = customer.get("test_clock")
+            test_clock_id = getattr(customer, "test_clock", None)
 
             if not test_clock_id:
                 raise HTTPException(

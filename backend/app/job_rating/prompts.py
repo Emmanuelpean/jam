@@ -6,7 +6,6 @@ from app.job_rating.chatgpt import openai_query
 from app.job_rating.claude import claude_query
 from app.job_rating.models import AiSystemPrompt, AiJobPromptTemplate
 
-
 # -------------------------------------------------------- V1 ---------------------------------------------------------
 
 

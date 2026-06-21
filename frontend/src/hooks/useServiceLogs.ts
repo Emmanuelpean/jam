@@ -11,7 +11,7 @@ interface ServiceLogApi<T> {
 export const useServiceLogs = <T>(
 	logApi: ServiceLogApi<T>,
 	isServiceRunning: boolean,
-	dateRange: DateRange,
+	dateRange: DateRange | null,
 	onLogsLoaded?: (logs: T[]) => void
 ) => {
 	const { token } = useAuth();
@@ -33,7 +33,7 @@ export const useServiceLogs = <T>(
 	};
 
 	const fetchLatestLogs = async (): Promise<void> => {
-		if (!token) return;
+		if (!token || !dateRange) return;
 		const seq = ++fetchSeqRef.current;
 		setLoading(true);
 		try {

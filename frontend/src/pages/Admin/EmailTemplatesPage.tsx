@@ -1,51 +1,15 @@
-import React, { useEffect, useState, JSX } from "react";
-import { Col, Row, Spinner } from "react-bootstrap";
-import { useAuth } from "../../contexts/AuthContext";
-import { emailApi } from "../../services/api/Others";
+import React, { useState, JSX } from "react";
+import { Col, Row } from "react-bootstrap";
+import { useDataContext } from "../../contexts/DataContext";
+import { EmailTemplate } from "../../services/api/Others";
 import "../UserSettings/UserSettingsPage.scss";
 
-interface TemplateItem {
-	id: string;
-	label: string;
-	icon: string;
-}
+const EmailTemplatesContent: React.FC = (): JSX.Element => {
+	const { emailTemplates } = useDataContext();
+	const [selectedId, setSelectedId] = useState<string | null>(null);
 
-const TEMPLATES: TemplateItem[] = [
-	{ id: "email_confirmation", label: "Email Confirmation", icon: "envelope-check" },
-	{ id: "password_reset", label: "Password Reset", icon: "key" },
-	{ id: "email_change", label: "Email Change Verification", icon: "envelope-arrow-up" },
-	{ id: "password_changed", label: "Password Changed", icon: "lock" },
-	{ id: "email_changed", label: "Email Changed", icon: "envelope-at" },
-	{ id: "trial_end_reminder", label: "Trial End Reminder", icon: "hourglass-split" },
-	{ id: "new_version", label: "New Version Announcement", icon: "stars" },
-];
-
-export const EmailTemplatesContent: React.FC = (): JSX.Element => {
-	const { token } = useAuth();
-	const [selected, setSelected] = useState<string>(TEMPLATES[0]!.id);
-	const [html, setHtml] = useState<string>("");
-	const [loadingPreview, setLoadingPreview] = useState<boolean>(false);
-	const [error, setError] = useState<string | null>(null);
-
-	useEffect((): void => {
-		if (!selected || !token) return;
-
-		const fetchPreview = async () => {
-			setLoadingPreview(true);
-			setHtml("");
-			setError(null);
-			try {
-				const result: string = await emailApi.fetchTemplateHtml(selected, token);
-				setHtml(result);
-			} catch {
-				setError(`Failed to load preview for "${TEMPLATES.find((t) => t.id === selected)?.label}".`);
-			} finally {
-				setLoadingPreview(false);
-			}
-		};
-
-		void fetchPreview();
-	}, [selected, token]);
+	const selected: EmailTemplate | null =
+		emailTemplates.find((t: EmailTemplate): boolean => t.id === selectedId) ?? emailTemplates[0] ?? null;
 
 	return (
 		<div className="container-fluid d-flex flex-column" style={{ height: "calc(100vh - 140px)" }}>
@@ -53,17 +17,14 @@ export const EmailTemplatesContent: React.FC = (): JSX.Element => {
 				<Col md={3} lg={2} className="settings-sidebar-col" style={{ width: "360px" }}>
 					<div className="settings-sidebar">
 						<nav className="settings-nav">
-							{TEMPLATES.map(
-								(item: TemplateItem): JSX.Element => (
+							{emailTemplates.map(
+								(item: EmailTemplate): JSX.Element => (
 									<button
 										key={item.id}
 										type="button"
-										className={`settings-nav-item ${selected === item.id ? "active" : ""}`}
-										onClick={() => setSelected(item.id)}
+										className={`settings-nav-item ${selected?.id === item.id ? "active" : ""}`}
+										onClick={() => setSelectedId(item.id)}
 									>
-										<span className="settings-nav-icon">
-											<i className={`bi bi-${item.icon}`}></i>
-										</span>
 										<span className="settings-nav-label">{item.label}</span>
 									</button>
 								)
@@ -80,16 +41,10 @@ export const EmailTemplatesContent: React.FC = (): JSX.Element => {
 						className="settings-content"
 						style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}
 					>
-						{error && <div className="alert alert-danger">{error}</div>}
-
-						{loadingPreview ? (
-							<div className="d-flex justify-content-center align-items-center" style={{ flex: 1 }}>
-								<Spinner animation="border" />
-							</div>
-						) : (
+						{selected ? (
 							<iframe
-								title={selected}
-								srcDoc={html}
+								title={selected.id}
+								srcDoc={selected.html}
 								style={{
 									flex: 1,
 									width: "100%",
@@ -99,6 +54,13 @@ export const EmailTemplatesContent: React.FC = (): JSX.Element => {
 								}}
 								sandbox="allow-same-origin"
 							/>
+						) : (
+							<div
+								className="d-flex justify-content-center align-items-center text-muted"
+								style={{ flex: 1 }}
+							>
+								No email templates available.
+							</div>
 						)}
 					</div>
 				</Col>
@@ -106,3 +68,5 @@ export const EmailTemplatesContent: React.FC = (): JSX.Element => {
 		</div>
 	);
 };
+
+export default EmailTemplatesContent;

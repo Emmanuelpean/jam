@@ -1,15 +1,19 @@
 import React, { JSX, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getEntityIcon, getTableIcon } from "../rendering/view/Icons";
+import { EntityType, useDataContextOptional } from "../../contexts/DataContext";
 import "./CommandPalette.scss";
 
 interface CommandItem {
 	id: string;
 	label: string;
 	icon: string;
-	group: "Actions" | "Pages";
+	group: string;
 	action: () => void;
 }
+
+// Maximum number of matching records shown per entity group.
+const MAX_RESULTS_PER_GROUP = 5;
 
 interface CommandPaletteProps {
 	isOpen: boolean;
@@ -21,6 +25,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 	onClose,
 }: CommandPaletteProps): JSX.Element | null => {
 	const navigate = useNavigate();
+	const dataContext = useDataContextOptional();
 	const [query, setQuery] = useState("");
 	const [activeIndex, setActiveIndex] = useState(0);
 	const [isRendered, setIsRendered] = useState(isOpen);
@@ -49,6 +54,10 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 	const goTo = (path: string, state?: object): void => {
 		navigate(path, state ? { state } : undefined);
 		onClose();
+	};
+
+	const openRecord = (path: string, entityType: EntityType, id: number): void => {
+		goTo(path, { openEntityType: entityType, openEntityId: id });
 	};
 
 	const items = useMemo<CommandItem[]>(
@@ -125,8 +134,8 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 			},
 			{
 				id: "goto-settings",
-				label: "Settings",
-				icon: getTableIcon("User Settings"),
+				label: "My Account",
+				icon: getTableIcon("My Account"),
 				group: "Pages",
 				action: () => goTo("/settings"),
 			},
@@ -134,11 +143,54 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 		[navigate, onClose]
 	);
 
+	// Search results across the user's records (jobs, companies, contacts, tags, aggregators).
+	const recordResults = useMemo<CommandItem[]>(() => {
+		const q = query.trim().toLowerCase();
+		if (!q || !dataContext) return [];
+
+		const results: CommandItem[] = [];
+		const addMatches = <D extends { id: number }>(
+			rows: D[],
+			getName: (row: D) => string,
+			group: string,
+			icon: string,
+			path: string,
+			entityType: EntityType
+		): void => {
+			rows.filter((row: D): boolean => getName(row).toLowerCase().includes(q))
+				.slice(0, MAX_RESULTS_PER_GROUP)
+				.forEach((row: D): void => {
+					results.push({
+						id: `${entityType}-${row.id}`,
+						label: getName(row),
+						icon,
+						group,
+						action: () => openRecord(path, entityType, row.id),
+					});
+				});
+		};
+
+		addMatches(dataContext.jobs, (j) => j.title, "Jobs", getEntityIcon("job"), "/jobs", "job");
+		addMatches(dataContext.companies, (c) => c.name, "Companies", getEntityIcon("company"), "/companies", "company");
+		addMatches(dataContext.persons, (p) => p.name, "Contacts", getEntityIcon("person"), "/contacts", "person");
+		addMatches(dataContext.keywords, (k) => k.name, "Tags", getEntityIcon("keyword"), "/keywords", "keyword");
+		addMatches(
+			dataContext.aggregators,
+			(a) => a.name,
+			"Aggregators",
+			getEntityIcon("aggregator"),
+			"/aggregators",
+			"aggregator"
+		);
+		return results;
+	}, [query, dataContext]); // eslint-disable-line react-hooks/exhaustive-deps
+
 	const filtered = useMemo<CommandItem[]>(() => {
 		if (!query.trim()) return items;
 		const q = query.toLowerCase();
-		return items.filter((item) => item.label.toLowerCase().includes(q));
-	}, [items, query]);
+		const staticMatches = items.filter((item) => item.label.toLowerCase().includes(q));
+		return [...staticMatches, ...recordResults];
+	}, [items, query, recordResults]);
 
 	const groups = useMemo<string[]>(() => {
 		const seen = new Set<string>();
@@ -215,7 +267,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 						ref={inputRef}
 						id="cp-input"
 						className="cp-input"
-						placeholder="Search pages and actions..."
+						placeholder="Search jobs, companies, contacts, pages..."
 						value={query}
 						onChange={(e) => setQuery(e.target.value)}
 						onKeyDown={handleKeyDown}

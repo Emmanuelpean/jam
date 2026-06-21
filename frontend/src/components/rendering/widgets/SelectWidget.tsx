@@ -153,6 +153,8 @@ export const SelectInput = ({
 				onMenuClose={handleMenuClose}
 				options={field.options || []}
 				closeMenuOnSelect={!isMulti}
+				size={field.size}
+				fitContentWidth={field.fitContentWidth}
 				placeholder={field.placeholder || `Select ${field.label}`}
 				isSearchable={field.isSearchable !== false}
 				isClearable={field.isClearable !== false}

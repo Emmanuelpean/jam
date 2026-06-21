@@ -22,7 +22,7 @@ async def build_checkout_params(customer_id: str) -> dict:
         ],
         "mode": "subscription",
         "locale": "auto",
-        "ui_mode": "hosted",
+        "ui_mode": "hosted_page",
         "allow_promotion_codes": True,
         "success_url": f"{settings.frontend_url}/settings/premium?success=true",
         "cancel_url": f"{settings.frontend_url}/settings/premium?canceled=true",

@@ -82,6 +82,14 @@ export interface DateRange {
 	end: Date | string;
 }
 
+export const toDateTimeLocalString = (date: Date): string => {
+	const pad = (n: number): string => String(n).padStart(2, "0");
+	return (
+		`${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+		`T${pad(date.getHours())}:${pad(date.getMinutes())}`
+	);
+};
+
 export const getDateRange = (amount: number, unit: TimeUnit): DateRange => {
 	const days: number = periodToDays(amount, unit);
 

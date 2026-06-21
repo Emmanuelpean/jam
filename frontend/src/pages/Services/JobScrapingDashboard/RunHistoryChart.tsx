@@ -2,7 +2,7 @@ import React, { JSX, useEffect, useState } from "react";
 import { JobScrapingServiceLogData, PlatformStat } from "../../../services/schemas/Services";
 import { SelectOption } from "../../../components/rendering/form/FormOptions";
 import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
-import { createSeries } from "../ServiceUtils";
+import { copiedColor, createSeries, failureColor, skippedColor, successColor } from "../ServiceUtils";
 import { ModalFormField } from "../../../components/rendering/form/FormRenders";
 import { SelectInput } from "../../../components/rendering/widgets/SelectWidget";
 import { useDelayedLoading } from "../../../hooks/useDelayedLoading";
@@ -16,26 +16,22 @@ interface RunHistoryChartProps {
 	loading?: boolean;
 }
 
-const successColor = "#22c55e";
-const failureColor = "#ef4444";
-const infoColor = "#0d38e3";
-
-const getPlatformStat = (log: JobScrapingServiceLogData, platform: string, key: string): number => {
+const getPlatformStat = (log: JobScrapingServiceLogData, platform: string, key: keyof PlatformStat): number => {
 	const stat: PlatformStat | undefined = log.platform_stats.find((p: PlatformStat): boolean => p.name === platform);
 	if (!stat) return 0;
 
-	const value = (stat as any)[key];
+	const value = stat[key];
 
 	if (Array.isArray(value)) {
 		return value.length;
 	}
 
 	if (typeof value === "string") {
-		const parsed = Number(value);
+		const parsed: number = Number(value);
 		return isNaN(parsed) ? 0 : parsed;
 	}
 
-	return typeof value === "number" ? value : 0;
+	return value;
 };
 
 export const RunHistoryChart = ({
@@ -53,7 +49,7 @@ export const RunHistoryChart = ({
 		if (!serviceLogData) return;
 
 		const durationSeries: SeriesData[] = [
-			createSeries(serviceLogData, "Run Duration (h)", infoColor, (log: JobScrapingServiceLogData): number =>
+			createSeries(serviceLogData, "Run Duration (h)", (log: JobScrapingServiceLogData): number =>
 				log.run_duration ? log.run_duration / 3600 : 0
 			),
 		];
@@ -63,26 +59,26 @@ export const RunHistoryChart = ({
 				createSeries(
 					serviceLogData,
 					"Successful Jobs",
-					successColor,
-					(log: JobScrapingServiceLogData): number => log.job_scrape_succeeded_n
+					(log: JobScrapingServiceLogData): number => log.job_scrape_succeeded_n,
+					successColor
 				),
 				createSeries(
 					serviceLogData,
 					"Failed Jobs",
-					failureColor,
-					(log: JobScrapingServiceLogData): number => log.job_scrape_failed_n
+					(log: JobScrapingServiceLogData): number => log.job_scrape_failed_n,
+					failureColor
 				),
 				createSeries(
 					serviceLogData,
 					"Copied Jobs",
-					infoColor,
-					(log: JobScrapingServiceLogData): number => log.job_scrape_copied_n
+					(log: JobScrapingServiceLogData): number => log.job_scrape_copied_n,
+					copiedColor
 				),
 				createSeries(
 					serviceLogData,
 					"Skipped Jobs",
-					"#fbbf24",
-					(log: JobScrapingServiceLogData): number => log.job_scrape_skipped_n
+					(log: JobScrapingServiceLogData): number => log.job_scrape_skipped_n,
+					skippedColor
 				),
 			];
 			setLogData([jobSeries, durationSeries]);
@@ -90,21 +86,31 @@ export const RunHistoryChart = ({
 			const platformSeries: SeriesData[] = [
 				createSeries(
 					serviceLogData,
-					`${selectedPlatform} Jobs Found`,
-					successColor,
-					(log: JobScrapingServiceLogData): number => getPlatformStat(log, selectedPlatform, "job_found_ids")
+					"Scrape Succeeded",
+					(log: JobScrapingServiceLogData): number =>
+						getPlatformStat(log, selectedPlatform, "job_scrape_succeeded_ids"),
+					successColor
 				),
 				createSeries(
 					serviceLogData,
-					`${selectedPlatform} Jobs Scraped`,
-					failureColor,
-					(log: JobScrapingServiceLogData): number => getPlatformStat(log, selectedPlatform, "job_scraped_n")
+					"Scrape Failed",
+					(log: JobScrapingServiceLogData): number =>
+						getPlatformStat(log, selectedPlatform, "job_scrape_failed_ids"),
+					failureColor
 				),
 				createSeries(
 					serviceLogData,
-					`${selectedPlatform} Failed`,
-					infoColor,
-					(log: JobScrapingServiceLogData): number => getPlatformStat(log, selectedPlatform, "job_failed_n")
+					"Scrape Copied",
+					(log: JobScrapingServiceLogData): number =>
+						getPlatformStat(log, selectedPlatform, "job_scrape_copied_ids"),
+					copiedColor
+				),
+				createSeries(
+					serviceLogData,
+					"Scrape Skipped",
+					(log: JobScrapingServiceLogData): number =>
+						getPlatformStat(log, selectedPlatform, "job_scrape_skipped_ids"),
+					skippedColor
 				),
 			];
 			setLogData([platformSeries, durationSeries]);
@@ -117,6 +123,8 @@ export const RunHistoryChart = ({
 		label: "Platform",
 		options: platformOptions,
 		isClearable: false,
+		size: "sm",
+		fitContentWidth: true,
 	};
 
 	return (
@@ -127,7 +135,7 @@ export const RunHistoryChart = ({
 					Run History
 					{isRunning && <span className="live-indicator ms-2"></span>}
 				</h2>
-				<div style={{ minWidth: "225px" }}>
+				<div className="history-chart-controls">
 					<SelectInput
 						field={platformField}
 						value={selectedPlatform}
@@ -146,9 +154,7 @@ export const RunHistoryChart = ({
 				</div>
 			) : (
 				<div style={{ display: "flex" }}>
-					{logData && logData[0] && (
-						<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of job alerts" />
-					)}
+					{logData && logData[0] && <LineChart data={logData[0]} yAxisLabel="Number of job alerts" />}
 					{logData && logData[1] && (
 						<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
 					)}

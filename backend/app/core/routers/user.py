@@ -5,7 +5,7 @@ import datetime as dt
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app import utils, models, database
+from app import models, database
 from app.base_schemas import GenericResponse
 from app.core import oauth2, schemas
 from app.core.models import TokenType
@@ -19,7 +19,8 @@ from app.emails.email_service import email_service
 from app.emails.release_data import get_release_slides
 from app.payments import stripe
 from app.routers.utility import generate_data_table_crud_router, assert_admin
-from app.utils import AppLogger
+from app.utilities import security
+from app.utilities.logger import AppLogger
 
 
 # -------------------------------------------------------- USERS -------------------------------------------------------
@@ -34,7 +35,7 @@ def transform_user_data(data: dict, db: Session, entry_data: dict | None = None)
 
     _ = db, entry_data
     if "password" in data:
-        return {"password": utils.hash_password(data["password"])}
+        return {"password": security.hash_password(data["password"])}
     else:
         return {}
 
@@ -267,13 +268,13 @@ def update_password(
             f"Please wait {seconds_remaining} seconds before retrying.",
         )
 
-    if not utils.verify_password(payload.current_password, current_user.password):
+    if not security.verify_password(payload.current_password, current_user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="The current password is incorrect.",
         )
 
-    current_user.password = utils.hash_password(payload.new_password)
+    current_user.password = security.hash_password(payload.new_password)
     current_user.token_version += 1
 
     email_response = send_tokenized_password_changed_email_with_rate_limit(current_user, db)
@@ -305,7 +306,7 @@ def update_email(
             detail="Demo users cannot change their email address.",
         )
 
-    if not utils.verify_password(payload.current_password, current_user.password):
+    if not security.verify_password(payload.current_password, current_user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="The current password is incorrect.",
@@ -348,7 +349,7 @@ def verify_email_change(
     :param db: The database session.
     :returns: A message indicating the result of the email change verification."""
 
-    hashed_token = utils.hash_token(token)
+    hashed_token = security.hash_token(token)
 
     # Find the token entry
     token_entry = (
@@ -454,7 +455,7 @@ def verify_password_endpoint(
     current_user: models.User = Depends(oauth2.get_current_user),
 ) -> GenericResponse:
     """Verify the current user's password without making any changes."""
-    if not utils.verify_password(verify_request.password, current_user.password):
+    if not security.verify_password(verify_request.password, current_user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Password is incorrect.",
@@ -482,7 +483,7 @@ def delete_account(
         )
 
     # Verify password before deletion
-    if not utils.verify_password(delete_request.password, current_user.password):
+    if not security.verify_password(delete_request.password, current_user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Failed to delete account. Password is incorrect.",

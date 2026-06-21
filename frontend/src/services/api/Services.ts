@@ -71,7 +71,7 @@ export interface ServiceStatus {
 	last_log: string | null;
 }
 
-interface ServiceRunnerResponse {
+export interface ServiceRunnerResponse {
 	detail: string;
 }
 

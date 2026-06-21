@@ -2,32 +2,65 @@
     margin-top: 18px;
 }
 
+/* Card header–style toggle that matches the .card-title used by the other cards.
+   The surrounding .status-card supplies the border, radius, shadow and padding. */
 .log-toggle {
-    font-size: 13.5px;
+    font-size: 16.2px;
     font-weight: 600;
+    display: flex;
+    align-items: center;
     width: 100%;
-    padding: 10.8px 14.4px;
+    padding: 0;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    user-select: none;
     text-align: left;
-    border: 1px solid var(--bs-card-border) !important;
-    border-radius: 5.4px;
-    background-color: var(--bs-card-bg);
+    color: var(--bs-body-color);
+    border: none;
+    background: transparent;
 }
 
 .log-toggle:hover {
-    background-color: var(--bs-tertiary-bg);
+    background: transparent;
 }
 
-.log-count {
+/* When expanded, show the same divider the other card headers use. */
+.log-toggle:has(.log-caret.expanded) {
+    margin-bottom: 9px;
+    padding-bottom: 7.2px;
+    border-bottom: 1.8px solid var(--bs-border-color);
+}
+
+/* Caret rotates from pointing right (collapsed) to down (expanded). */
+.log-caret {
+    display: inline-block;
+    margin-right: 7.2px;
     font-size: 11.7px;
-    font-weight: 400;
-    color: var(--bs-muted-color);
+    transition: transform 0.25s ease;
+}
+
+.log-caret.expanded {
+    transform: rotate(90deg);
+}
+
+/* Expand/collapse the log content by animating its row height. The inner
+   element establishes a BFC (overflow: hidden) so it collapses cleanly. */
+.log-viewer-wrapper {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s ease;
+}
+
+.log-viewer-wrapper.open {
+    grid-template-rows: 1fr;
+}
+
+.log-viewer-inner {
+    min-height: 0;
+    overflow: hidden;
 }
 
 .log-viewer {
     overflow: hidden;
-    margin-top: 10.8px;
     border-radius: 5.4px;
     background-color: #1e1e1e;
     overscroll-behavior: contain;
@@ -78,6 +111,24 @@
 
 .log-line:hover {
     background-color: #2d2d2d;
+}
+
+/* Level-based colouring of the message text. */
+.log-line--debug .log-line-content {
+    color: #9ca3af;
+}
+
+.log-line--warning .log-line-content {
+    color: #fbbf24;
+}
+
+.log-line--error .log-line-content {
+    color: #f87171;
+}
+
+.log-line--critical .log-line-content {
+    font-weight: 700;
+    color: #f87171;
 }
 
 .log-line-number {

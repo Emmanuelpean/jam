@@ -1,7 +1,5 @@
 """Indeed Job Scrapers"""
 
-"""Indeed Job Scrapers"""
-
 import re
 
 from app.job_email_scraping.job_scrapers.apify import ApifyJobScraper

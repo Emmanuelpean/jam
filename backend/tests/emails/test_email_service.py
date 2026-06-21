@@ -2,9 +2,8 @@
 
 from unittest.mock import patch, MagicMock
 
-from jinja2 import TemplateNotFound
-
 import pytest
+from jinja2 import TemplateNotFound
 
 from app.emails.email_service import EmailService
 

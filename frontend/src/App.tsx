@@ -14,8 +14,7 @@ import { Sidebar } from "./components/Sidebar/Sidebar";
 import JobApplicationUpdatesPage from "./pages/DataTablePages/JobApplicationUpdatesPage";
 import Dashboard from "./pages/Dashboard/DashboardPage";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
-import { ViewportProvider } from "./contexts/ViewportContext";
-import { UserManagementPage } from "./pages/DataTablePages/UserManagementPage";
+import { useViewport, ViewportProvider } from "./contexts/ViewportContext";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 import { useToast, UseToastReturn } from "./hooks/useNotificationToast";
 import { ToastStack } from "./components/Toasts/Toast";
@@ -23,7 +22,6 @@ import TermsPage from "./pages/Auth/TermsPage";
 import PrivacyPolicyPage from "./pages/Auth/PrivacyPolicyPage";
 import AboutPage from "./pages/About/AboutPage";
 import ExtensionPage from "./pages/About/ExtensionPage";
-import ReleaseNotesPage from "./pages/About/ReleaseNotesPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.scss";
 import "./Themes.scss";
@@ -33,13 +31,12 @@ import { ContextMenuProvider } from "./contexts/ContextMenuContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProgressOverlayProvider } from "./contexts/useProgressOverlayContext";
 import { ScrapedJobsPage } from "./pages/DataTablePages/ScrapedJobsPage";
-import { StyleGuidePage } from "./pages/StylePage";
 import { ConfigProvider } from "./contexts/ConfigContext";
 import { StatusProvider } from "./contexts/StatusContext";
 import { MaintenanceBanner } from "./components/AppBanner/MaintenanceBanner";
 import { DemoBanner } from "./components/AppBanner/DemoBanner";
 import { WhatsNewProvider } from "./contexts/WhatsNewContext";
-import ServiceDashboards from "./pages/Services/ServiceDashboards";
+import AdminPage from "./pages/Admin/AdminPage";
 import FilesPage from "./pages/FilesPage/FilesPage";
 import CommandPalette from "./components/CommandPalette/CommandPalette";
 import { useCommandPalette } from "./components/CommandPalette/useCommandPalette";
@@ -71,6 +68,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	const navigate = useNavigate();
 	const { isOpen: isCommandPaletteOpen, close: closeCommandPalette } = useCommandPalette();
 	const { hideAlert } = useAlert();
+	const { isMobile } = useViewport();
 	useSwetrixPageViews();
 
 	useEffect(() => {
@@ -132,7 +130,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 			<MaintenanceBanner />
 			<DemoBanner />
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-				{isAuthenticated && currentUser && <Sidebar />}
+				{isAuthenticated && currentUser && !isMobile && <Sidebar />}
 				<div
 					className={isAuthenticated && currentUser ? "sidebar-content-offset" : ""}
 					style={{
@@ -202,10 +200,8 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/privacy", element: <PrivacyPolicyPage /> },
 	{ path: "/about", element: <AboutPage />, protected: true },
 	{ path: "/browser-extension", element: <ExtensionPage />, protected: true },
-	{ path: "/release-notes", element: <ReleaseNotesPage />, protected: true },
 	{ path: "/companies", element: <CompaniesPage />, protected: true },
 	{ path: "/jobs", element: <JobsPage />, protected: true },
-	{ path: "/style-guide", element: <StyleGuidePage />, protected: true, adminOnly: true },
 	{
 		path: "/speculative-applications",
 		element: <SpeculativeApplicationsPage />,
@@ -222,11 +218,7 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/dashboard", element: <Dashboard />, protected: true },
 	{ path: "/settings/:tab", element: <UserSettingsPage />, protected: true },
 	{ path: "/settings", element: <Navigate to="/settings/account" replace />, protected: true },
-	{ path: "/app/users", element: <UserManagementPage />, protected: true, adminOnly: true },
-	{ path: "/app/settings", element: <UserManagementPage />, protected: true, adminOnly: true },
-	{ path: "/app/email-templates", element: <UserManagementPage />, protected: true, adminOnly: true },
-	{ path: "/services/job-scraping", element: <ServiceDashboards />, protected: true, adminOnly: true },
-	{ path: "/services/job-rating", element: <ServiceDashboards />, protected: true, adminOnly: true },
+	{ path: "/admin", element: <AdminPage />, protected: true, adminOnly: true },
 	{ path: "*", element: <NotFoundPage /> },
 ];
 
@@ -267,39 +259,39 @@ function AppContent(): JSX.Element {
 
 	return (
 		<>
-		<ScreenTooSmall />
-		<BrowserRouter basename="/jam">
-			<StaticDataProvider>
-			<AuthProvider>
-				<LoadingProvider>
-				<ViewportProvider>
-					<ToastContext.Provider value={toastMethods}>
-						<CommandPaletteProvider>
-						<AlertProvider>
-							<ProgressOverlayProvider>
-								<ThemeProvider>
-									<DataProviderWrapper>
-										<ContextMenuProvider>
-											<AppLayout>
-												<AppRoutes />
-											</AppLayout>
-										</ContextMenuProvider>
-									</DataProviderWrapper>
-									<ToastStack
-										toasts={toastMethods.toasts}
-										onClose={toastMethods.hideToast}
-										position="top-end"
-									/>
-								</ThemeProvider>
-							</ProgressOverlayProvider>
-						</AlertProvider>
-						</CommandPaletteProvider>
-					</ToastContext.Provider>
-				</ViewportProvider>
-			</LoadingProvider>
-			</AuthProvider>
-			</StaticDataProvider>
-		</BrowserRouter>
+			<ScreenTooSmall />
+			<BrowserRouter basename="/jam">
+				<StaticDataProvider>
+					<AuthProvider>
+						<LoadingProvider>
+							<ViewportProvider>
+								<ToastContext.Provider value={toastMethods}>
+									<CommandPaletteProvider>
+										<AlertProvider>
+											<ProgressOverlayProvider>
+												<ThemeProvider>
+													<DataProviderWrapper>
+														<ContextMenuProvider>
+															<AppLayout>
+																<AppRoutes />
+															</AppLayout>
+														</ContextMenuProvider>
+													</DataProviderWrapper>
+													<ToastStack
+														toasts={toastMethods.toasts}
+														onClose={toastMethods.hideToast}
+														position="top-end"
+													/>
+												</ThemeProvider>
+											</ProgressOverlayProvider>
+										</AlertProvider>
+									</CommandPaletteProvider>
+								</ToastContext.Provider>
+							</ViewportProvider>
+						</LoadingProvider>
+					</AuthProvider>
+				</StaticDataProvider>
+			</BrowserRouter>
 		</>
 	);
 }

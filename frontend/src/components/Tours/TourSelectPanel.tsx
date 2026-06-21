@@ -53,8 +53,7 @@ export function TourSelectPanel(): JSX.Element | null {
 	}, [isTourSelectOpen]);
 
 	const visibleTours = TOURS.filter((t) => isPremium || !t.premium);
-	const implementedTours = visibleTours.filter((t) => !t.comingSoon);
-	const completedCount = implementedTours.filter((t) => completedTourIds.has(t.id)).length;
+	const completedCount = visibleTours.filter((t) => completedTourIds.has(t.id)).length;
 
 	const renderTourItem = (tour: TourDefinition): JSX.Element => {
 		const completed = completedTourIds.has(tour.id);
@@ -63,8 +62,8 @@ export function TourSelectPanel(): JSX.Element | null {
 				<button
 					id={`tsp-item-${tour.id}`}
 					className="tsp-item"
-					disabled={isTourActive || !!tour.comingSoon}
-					onClick={tour.comingSoon ? undefined : (): void => void startTour(tour.id)}
+					disabled={isTourActive}
+					onClick={(): void => void startTour(tour.id)}
 				>
 					<i
 						id={`tsp-icon-${tour.id}`}
@@ -72,7 +71,6 @@ export function TourSelectPanel(): JSX.Element | null {
 					/>
 					<span className="tsp-item-title">{tour.title}</span>
 					{tour.premium && <span className="tsp-badge tsp-badge--premium">Premium</span>}
-					{tour.comingSoon && <span className="tsp-badge tsp-badge--soon">Soon</span>}
 				</button>
 			</li>
 		);
@@ -82,34 +80,33 @@ export function TourSelectPanel(): JSX.Element | null {
 
 	return (
 		<>
-		<div
-			className={`tsp-backdrop${isClosing ? " tsp-backdrop--closing" : ""}`}
-			onClick={closeTourSelect}
-		/>
-		<div
-			ref={panelRef}
-			id="tsp-panel"
-			className={`tsp-panel${isClosing ? " tsp-panel--closing" : ""}`}
-			style={{ top: panelTop || anchorRect.top, left: anchorRect.right + 12 }}
-			role="dialog"
-			aria-label="Guided Tours"
-		>
-			<div className="tsp-header">
-				<p className="tsp-heading">
-					Guided Tours
-					<span id="tsp-progress" className="tsp-progress">{completedCount}/{implementedTours.length}</span>
-				</p>
-				<button id="tsp-close-btn" className="tsp-close-btn" onClick={closeTourSelect} aria-label="Close">
-					<i className="bi bi-x" />
-				</button>
-			</div>
-			<ul
-				className="tsp-list"
-				style={{ gridTemplateRows: `repeat(${Math.ceil(implementedTours.length / 2)}, auto)` }}
+			<div className={`tsp-backdrop${isClosing ? " tsp-backdrop--closing" : ""}`} onClick={closeTourSelect} />
+			<div
+				ref={panelRef}
+				id="tsp-panel"
+				className={`tsp-panel${isClosing ? " tsp-panel--closing" : ""}`}
+				style={{ top: panelTop || anchorRect.top, left: anchorRect.right + 12 }}
+				role="dialog"
+				aria-label="Guided Tours"
 			>
-				{implementedTours.map((tour) => renderTourItem(tour))}
-			</ul>
-		</div>
+				<div className="tsp-header">
+					<p className="tsp-heading">
+						Guided Tours
+						<span id="tsp-progress" className="tsp-progress">
+							{completedCount}/{visibleTours.length}
+						</span>
+					</p>
+					<button id="tsp-close-btn" className="tsp-close-btn" onClick={closeTourSelect} aria-label="Close">
+						<i className="bi bi-x" />
+					</button>
+				</div>
+				<ul
+					className="tsp-list"
+					style={{ gridTemplateRows: `repeat(${Math.ceil(visibleTours.length / 2)}, auto)` }}
+				>
+					{visibleTours.map((tour) => renderTourItem(tour))}
+				</ul>
+			</div>
 		</>
 	);
 }

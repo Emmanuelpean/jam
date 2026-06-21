@@ -25,6 +25,8 @@ export interface SeriesData {
 	data: DataPoint[];
 }
 
+const CHART_PALETTE: string[] = ["var(--bs-primary)", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#06b6d4"];
+
 export interface LineChartProps {
 	data: SeriesData[] | null;
 	xAxisLabel?: string;
@@ -38,8 +40,8 @@ export interface LineChartProps {
 
 export const LineChart = ({
 	data,
-	yAxisLabel = "Y-axis",
-	xAxisLabel = "X-Axis",
+	yAxisLabel,
+	xAxisLabel,
 	fontsize = 14,
 	xAxisFormatter = (value: Date): string => toDdMmYyyyHhMm(value),
 	yAxisFormatter = (value: number | null): number | null => value,
@@ -76,10 +78,17 @@ export const LineChart = ({
 		);
 	}
 
+	const toMs = (value: number | string | Date): number => {
+		if (value instanceof Date) return value.getTime();
+		if (typeof value === "number") return value;
+		const parsed: Date = new Date(value);
+		return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+	};
+
 	const transformedData =
 		data[0]?.data.map((_, index) => {
 			const point: Record<string, any> = {
-				x: data[0]!.data[index]!.x,
+				x: toMs(data[0]!.data[index]!.x),
 			};
 			data.forEach((series) => {
 				point[series.id] = series.data[index]?.y;
@@ -100,6 +109,8 @@ export const LineChart = ({
 		});
 	};
 
+	const formatTick = (value: any): string => xAxisFormatter(new Date(value));
+
 	const CustomTooltip = ({ active, payload, label }: any) => {
 		if (!active || !payload || !payload.length) return null;
 		return (
@@ -113,7 +124,7 @@ export const LineChart = ({
 				}}
 			>
 				<p style={{ margin: 0, fontWeight: "bold", color: "var(--bs-body-color)" }}>
-					{xAxisLabel}: {xAxisFormatter(label)}
+					{xAxisLabel}: {formatTick(label)}
 				</p>
 				{payload.map((entry: any) => (
 					<p key={entry.dataKey} style={{ margin: 0, color: entry.color }}>
@@ -126,15 +137,20 @@ export const LineChart = ({
 
 	return (
 		<ResponsiveContainer width={"100%"} height={height}>
-			<RechartsLineChart data={transformedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+			<RechartsLineChart data={transformedData} margin={{ top: 5, right: 30, left: 8, bottom: 12 }}>
 				<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
 				<XAxis
 					dataKey="x"
-					tickFormatter={xAxisFormatter}
+					type="number"
+					scale="time"
+					domain={["dataMin", "dataMax"]}
+					tickFormatter={formatTick}
 					tick={{ fontSize: fontsize, fill: "var(--bs-body-color)" }}
 					stroke="var(--bs-border-color)"
 				>
-					<Label value={xAxisLabel} offset={-5} position="insideBottom" fill="var(--bs-body-color)" />
+					{xAxisLabel && (
+						<Label value={xAxisLabel} offset={0} position="insideBottom" fill="var(--bs-body-color)" />
+					)}
 				</XAxis>
 				<YAxis
 					tickFormatter={(value) => String(yAxisFormatter(value) ?? "")}
@@ -155,8 +171,6 @@ export const LineChart = ({
 					wrapperStyle={{
 						cursor: "pointer",
 						color: "var(--bs-body-color)",
-						position: "relative",
-						marginTop: "18px",
 					}}
 					formatter={(value) => (
 						<span
@@ -169,12 +183,12 @@ export const LineChart = ({
 					)}
 				/>
 				{data.map(
-					(series: SeriesData): JSX.Element => (
+					(series: SeriesData, index: number): JSX.Element => (
 						<Line
 							key={series.id}
 							type="monotone"
 							dataKey={series.id}
-							stroke={series.color}
+							stroke={series.color ?? CHART_PALETTE[index % CHART_PALETTE.length]}
 							hide={hiddenSeries.has(series.id)}
 							strokeWidth={2}
 							isAnimationActive={false}

@@ -11,7 +11,6 @@ from app.database import get_db
 from app.job_rating import schemas
 from app.service_runner import routers
 
-
 job_rating_service_log_router = APIRouter(prefix="/job-rating-service-logs", tags=["job-rating-service-logs"])
 
 

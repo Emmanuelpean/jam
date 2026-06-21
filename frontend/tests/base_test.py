@@ -1,6 +1,6 @@
 """Base Selenium test class and shared test helpers.
 
-The page/component utility classes live in the `utilities` package and are wired
+The page/component utility classes live in the `helpers` package and are wired
 onto BaseTest below. Test modules import BaseTest, MaintenanceTestBase, models and
 the helper functions from this module.
 """
@@ -20,21 +20,15 @@ from selenium.webdriver.support.wait import WebDriverWait
 from app import models
 from app.config import settings
 from app.core.oauth2 import create_access_token
-
-from utilities.base_utils import BaseUtils
-from utilities.data_modal_utils import DataModalUtils
-from utilities.data_table_utils import DataTableUtils
-from utilities.auth_utils import AuthentificationUtils
-from utilities.user_settings_utils import UserSettingsUtils
-from utilities.followup_email_modal_utils import FollowUpEmailModalUtils
-from utilities.alert_modal_utils import ConfirmModalUtils, DeleteModalUtils, LogoutModalUtils
-from utilities.premium_settings_utils import PremiumSettingsUtils
-from utilities.tour_utils import TourUtils
-
-# Re-exported for tests that import these helpers from base_test.
-from utilities.formatting import format_file_size, contiguous_subdicts, format_field
-
-__all__ = ["BaseTest", "MaintenanceTestBase", "models", "format_file_size", "contiguous_subdicts", "format_field"]
+from helpers.alert_modal_utils import ConfirmModalUtils, DeleteModalUtils, LogoutModalUtils
+from helpers.auth_utils import AuthentificationUtils
+from helpers.base_utils import BaseUtils
+from helpers.data_modal_utils import DataModalUtils
+from helpers.data_table_utils import DataTableUtils
+from helpers.followup_email_modal_utils import FollowUpEmailModalUtils
+from helpers.premium_settings_utils import PremiumSettingsUtils
+from helpers.tour_utils import TourUtils
+from helpers.user_settings_utils import UserSettingsUtils
 
 
 class BaseTest(BaseUtils):
@@ -100,6 +94,10 @@ class BaseTest(BaseUtils):
     # Settings
     setting_modal_utils: DataModalUtils
     setting_table_utils: DataTableUtils
+
+    # User
+    user_modal_utils: DataModalUtils
+    user_table_utils: DataTableUtils
 
     # Others
     auth_utils: AuthentificationUtils
@@ -181,6 +179,7 @@ class BaseTest(BaseUtils):
                 "scrapingExclusionFilter",
                 "scrapingFavouriteFilter",
                 "setting",
+                "user",
             ]
 
             shared_kwargs = {
@@ -399,6 +398,20 @@ class BaseTest(BaseUtils):
         self.db.refresh(application)
         return application
 
+    def _make_keyword(self, **kwargs) -> models.Keyword:
+        """Create and persist a Keyword (tag) owned by the current test user."""
+
+        defaults = {
+            "name": "Test Keyword",
+            "owner_id": self.user.id,
+        }
+        defaults.update(kwargs)
+        keyword = models.Keyword(**defaults)
+        self.db.add(keyword)
+        self.db.commit()
+        self.db.refresh(keyword)
+        return keyword
+
     def _make_aggregator(self, **kwargs) -> models.Aggregator:
         """Create and persist an Aggregator owned by the current test user."""
 
@@ -531,6 +544,52 @@ class BaseTest(BaseUtils):
         self.db.commit()
         self.db.refresh(rating_log)
         return rating_log
+
+    # ----------------------------------------- EXTERNAL SERVICE MONITORING --------------------------------------------
+
+    def _persist(self, row):
+        """Add, commit and refresh a model instance, returning it."""
+
+        self.db.add(row)
+        self.db.commit()
+        self.db.refresh(row)
+        return row
+
+    def _make_anthropic_usage(self, **kwargs) -> models.AnthropicDailyUsage:
+        """Create and persist a day of Anthropic spend (USD)."""
+
+        defaults = {"date": datetime.now(timezone.utc).date(), "usage_usd": 10.0}
+        return self._persist(models.AnthropicDailyUsage(**{**defaults, **kwargs}))
+
+    def _make_apify_usage(self, **kwargs) -> models.ApifyDailyUsage:
+        """Create and persist a day of Apify usage (USD)."""
+
+        defaults = {"date": datetime.now(timezone.utc).date(), "usage_usd": 5.0}
+        return self._persist(models.ApifyDailyUsage(**{**defaults, **kwargs}))
+
+    def _make_apify_balance(self, **kwargs) -> models.ApifyBalance:
+        """Create and persist an Apify cycle balance snapshot."""
+
+        defaults = {"limit_usd": 100.0}
+        return self._persist(models.ApifyBalance(**{**defaults, **kwargs}))
+
+    def _make_brightdata_usage(self, **kwargs) -> models.BrightdataDailyUsage:
+        """Create and persist a day of Bright Data spend (USD) for one dataset."""
+
+        defaults = {"date": datetime.now(timezone.utc).date(), "dataset": "linkedin", "usage_usd": 3.0}
+        return self._persist(models.BrightdataDailyUsage(**{**defaults, **kwargs}))
+
+    def _make_brightdata_balance(self, **kwargs) -> models.BrightdataBalance:
+        """Create and persist a Bright Data balance snapshot (USD)."""
+
+        defaults = {"balance_usd": 50.0, "pending_costs_usd": 2.0}
+        return self._persist(models.BrightdataBalance(**{**defaults, **kwargs}))
+
+    def _make_stripe_income(self, **kwargs) -> models.StripeDailyIncome:
+        """Create and persist a day of Stripe income (GBP)."""
+
+        defaults = {"date": datetime.now(timezone.utc).date(), "gross_gbp": 100.0, "net_gbp": 80.0}
+        return self._persist(models.StripeDailyIncome(**{**defaults, **kwargs}))
 
     def _make_job_email(
         self,

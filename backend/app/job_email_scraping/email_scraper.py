@@ -32,7 +32,7 @@ from app.job_email_scraping.models import (
 from app.job_email_scraping.schemas import JobResult
 from app.resources import CURRENCIES
 from app.service_runner.service_runner import ServiceRunner
-from app.utils import AppLogger
+from app.utilities.logger import AppLogger
 
 SERVICE_NAME = "email_scraper_service"
 
