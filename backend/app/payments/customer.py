@@ -46,7 +46,7 @@ async def get_or_create_stripe_customer(
             customer = await stripe.Customer.retrieve_async(user.stripe_details.customer_id)
 
             # If a non-deleted Stripe customer was found
-            if customer and not customer.get("deleted", False):  # noqa
+            if customer and not getattr(customer, "deleted", False):  # noqa
                 # Update Stripe email if it doesn't match our database
                 if customer["email"] != user.email:
                     customer = await stripe.Customer.modify_async(user.stripe_details.customer_id, email=user.email)

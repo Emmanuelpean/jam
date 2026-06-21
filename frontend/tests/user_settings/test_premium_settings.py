@@ -4,6 +4,7 @@ import os
 import subprocess
 import threading
 import time
+from typing import Generator
 
 import pytest
 from selenium.webdriver.common.by import By
@@ -18,10 +19,11 @@ class TestPremiumSettingsPage(BaseTest):
     """Test class for the Premium Settings Page"""
 
     page_url = "settings/premium"
-    _stripe_listener = None
 
-    def setup_function(self, request) -> None:
-        """Setup function"""
+    @pytest.fixture(scope="class", autouse=True)
+    @classmethod
+    def stripe_listener(cls, test_backend_server) -> Generator[None, None, None]:
+        """Start a single Stripe listener for the whole test class and tear it down at the end."""
 
         # Kill any leftover stripe processes from previous runs
         if os.name == "nt":
@@ -30,8 +32,8 @@ class TestPremiumSettingsPage(BaseTest):
             subprocess.run("pkill -f 'stripe listen'", shell=True, capture_output=True)
 
         stripe_cmd = r'"C:\Program Files\Stripe\stripe.exe"' if os.name == "nt" else "stripe"
-        self.stripe_listener = subprocess.Popen(
-            f"{stripe_cmd} listen --forward-to {self.backend_base_url}/payments/webhooks",
+        listener = subprocess.Popen(
+            f"{stripe_cmd} listen --forward-to {test_backend_server}/payments/webhooks",
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             shell=True,
@@ -42,7 +44,7 @@ class TestPremiumSettingsPage(BaseTest):
         timeout = 30
         start_time = time.time()
         while time.time() - start_time < timeout:
-            stdout = self.stripe_listener.stdout
+            stdout = listener.stdout
             if stdout:
                 line = stdout.readline()
                 if line:
@@ -55,14 +57,24 @@ class TestPremiumSettingsPage(BaseTest):
         # Start a thread to continuously drain stdout so the buffer doesn't fill up and block
         def drain_stdout() -> None:
             """Drain the stripe listener stdout to prevent it from filling up the buffer"""
-            if self.stripe_listener.stdout:
-                for l in self.stripe_listener.stdout:
+            if listener.stdout:
+                for l in listener.stdout:
                     print(f"[STRIPE] {l.strip()}")
 
-        self._stripe_drain_thread = threading.Thread(target=drain_stdout, daemon=True)
-        self._stripe_drain_thread.start()
-        self.client.post("/test/delete_stripe_customer")
+        threading.Thread(target=drain_stdout, daemon=True).start()
 
+        yield
+
+        listener.terminate()
+        if os.name == "nt":
+            subprocess.run("taskkill /F /IM stripe.exe", shell=True, capture_output=True)
+        else:
+            subprocess.run("pkill -f 'stripe listen'", shell=True, capture_output=True)
+
+    def setup_function(self, request) -> None:
+        """Setup function"""
+
+        self.client.post("/test/delete_stripe_customer")
         self.login()
 
     def _activate_trial(self) -> None:

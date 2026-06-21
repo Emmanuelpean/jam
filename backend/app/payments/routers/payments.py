@@ -66,8 +66,8 @@ async def stripe_webhook(
     sig_header = request.headers.get("stripe-signature")
 
     if settings.test_mode:
-        # Just parse JSON directly in dev/test mode
-        event = json.loads(payload)
+        # Parse JSON directly in dev/test mode, but build a Stripe object so field access matches production
+        event = stripe.Event.construct_from(json.loads(payload), stripe.api_key)
     else:
         # Production verification
         try:
@@ -77,15 +77,17 @@ async def stripe_webhook(
         except stripe.error.SignatureVerificationError:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid signature")
 
-    obj = event["data"]["object"]
-    event_type = event.get("type")
+    obj = event.data.object
+    customer_id = getattr(obj, "customer", None)
+    if not isinstance(customer_id, str):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid customer ID")
 
     await process_subscription_event(
-        customer_id=obj.get("customer"),
-        event_type=event_type,
+        customer_id=customer_id,
+        event_type=event.type,
         db=db,
-        subscription_id=obj.get("id"),
-        trial_end=obj.get("trial_end"),
+        subscription_id=getattr(obj, "id", None),
+        trial_end=getattr(obj, "trial_end", None),
     )
     return {"status": "success"}
 

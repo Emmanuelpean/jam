@@ -6,8 +6,16 @@ import pytest
 import stripe
 from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
+from stripe import StripeObject
 
 from app.payments.customer import create_customer, get_or_create_stripe_customer
+
+
+def _stripe_customer(**fields) -> StripeObject:
+    """Build a StripeObject mimicking a real Stripe Customer response.
+    Stripe objects (stripe>=15) use attribute/item access and no longer expose ``.get()``."""
+
+    return StripeObject.construct_from(fields, "sk_test")
 
 
 class TestCreateCustomer:
@@ -80,11 +88,7 @@ class TestGetOrCreateStripeCustomer:
         mock_user.stripe_details.customer_id = "cus_existing123"
         mock_db = MagicMock()
 
-        # Use MagicMock that supports both dict-style access and attribute access
-        mock_customer = MagicMock()
-        mock_customer.id = "cus_existing123"
-        mock_customer.__getitem__ = lambda _, key: {"email": "test@example.com", "deleted": False}[key]
-        mock_customer.get = lambda key, default=None: {"email": "test@example.com", "deleted": False}.get(key, default)
+        mock_customer = _stripe_customer(id="cus_existing123", email="test@example.com")
         mock_retrieve.return_value = mock_customer
 
         result = await get_or_create_stripe_customer(mock_user, mock_db)
@@ -105,7 +109,7 @@ class TestGetOrCreateStripeCustomer:
         mock_user.stripe_details.customer_id = "cus_existing123"
         mock_db = MagicMock()
 
-        mock_customer = {"email": "old@example.com", "id": "cus_existing123"}
+        mock_customer = _stripe_customer(email="old@example.com", id="cus_existing123")
         mock_retrieve.return_value = mock_customer
         mock_modify.return_value = MagicMock(id="cus_existing123")
 
@@ -127,7 +131,7 @@ class TestGetOrCreateStripeCustomer:
         mock_db = MagicMock()
 
         # Simulate deleted customer
-        mock_customer = {"deleted": True, "id": "cus_deleted123"}
+        mock_customer = _stripe_customer(deleted=True, id="cus_deleted123")
         mock_retrieve.return_value = mock_customer
 
         mock_new_customer = MagicMock()
@@ -191,7 +195,7 @@ class TestGetOrCreateStripeCustomer:
         mock_user.stripe_details.customer_id = "cus_test"
         mock_db = MagicMock()
 
-        mock_customer = {"email": "test@example.com", "id": "cus_test", "deleted": True}
+        mock_customer = _stripe_customer(email="test@example.com", id="cus_test", deleted=True)
         mock_retrieve.return_value = mock_customer
 
         # Simulate database error during commit
