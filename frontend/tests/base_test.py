@@ -95,6 +95,10 @@ class BaseTest(BaseUtils):
     setting_modal_utils: DataModalUtils
     setting_table_utils: DataTableUtils
 
+    # User
+    user_modal_utils: DataModalUtils
+    user_table_utils: DataTableUtils
+
     # Others
     auth_utils: AuthentificationUtils
     user_settings_utils: UserSettingsUtils
@@ -175,6 +179,7 @@ class BaseTest(BaseUtils):
                 "scrapingExclusionFilter",
                 "scrapingFavouriteFilter",
                 "setting",
+                "user",
             ]
 
             shared_kwargs = {
@@ -525,6 +530,52 @@ class BaseTest(BaseUtils):
         self.db.commit()
         self.db.refresh(rating_log)
         return rating_log
+
+    # ----------------------------------------- EXTERNAL SERVICE MONITORING --------------------------------------------
+
+    def _persist(self, row):
+        """Add, commit and refresh a model instance, returning it."""
+
+        self.db.add(row)
+        self.db.commit()
+        self.db.refresh(row)
+        return row
+
+    def _make_anthropic_usage(self, **kwargs) -> models.AnthropicDailyUsage:
+        """Create and persist a day of Anthropic spend (USD)."""
+
+        defaults = {"date": datetime.now(timezone.utc).date(), "usage_usd": 10.0}
+        return self._persist(models.AnthropicDailyUsage(**{**defaults, **kwargs}))
+
+    def _make_apify_usage(self, **kwargs) -> models.ApifyDailyUsage:
+        """Create and persist a day of Apify usage (USD)."""
+
+        defaults = {"date": datetime.now(timezone.utc).date(), "usage_usd": 5.0}
+        return self._persist(models.ApifyDailyUsage(**{**defaults, **kwargs}))
+
+    def _make_apify_balance(self, **kwargs) -> models.ApifyBalance:
+        """Create and persist an Apify cycle balance snapshot."""
+
+        defaults = {"limit_usd": 100.0}
+        return self._persist(models.ApifyBalance(**{**defaults, **kwargs}))
+
+    def _make_brightdata_usage(self, **kwargs) -> models.BrightdataDailyUsage:
+        """Create and persist a day of Bright Data spend (USD) for one dataset."""
+
+        defaults = {"date": datetime.now(timezone.utc).date(), "dataset": "linkedin", "usage_usd": 3.0}
+        return self._persist(models.BrightdataDailyUsage(**{**defaults, **kwargs}))
+
+    def _make_brightdata_balance(self, **kwargs) -> models.BrightdataBalance:
+        """Create and persist a Bright Data balance snapshot (USD)."""
+
+        defaults = {"balance_usd": 50.0, "pending_costs_usd": 2.0}
+        return self._persist(models.BrightdataBalance(**{**defaults, **kwargs}))
+
+    def _make_stripe_income(self, **kwargs) -> models.StripeDailyIncome:
+        """Create and persist a day of Stripe income (GBP)."""
+
+        defaults = {"date": datetime.now(timezone.utc).date(), "gross_gbp": 100.0, "net_gbp": 80.0}
+        return self._persist(models.StripeDailyIncome(**{**defaults, **kwargs}))
 
     def _make_job_email(
         self,

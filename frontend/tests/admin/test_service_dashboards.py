@@ -52,6 +52,27 @@ class ServiceDashboardBase(BaseTest):
     def _toggle_error_view(self) -> None:
         self.get_element("errorViewToggle").click()
 
+    def _assert_log_viewer_toggles(self) -> None:
+        """The log viewer is collapsed by default and expands on click.
+
+        The viewer is always in the DOM; the wrapper's `open` class reflects whether
+        it is expanded (it collapses via a CSS grid row, not by unmounting)."""
+
+        wrapper = self.get_element("log-viewer-wrapper", selector=By.CLASS_NAME, enabled=False)
+        assert "open" not in wrapper.get_attribute("class")
+        self._expand_log_viewer()
+        self.wait.until(lambda d: "open" in d.find_element(By.CLASS_NAME, "log-viewer-wrapper").get_attribute("class"))
+
+    def _assert_error_view_toggles(self) -> None:
+        """The error view toggle defaults unchecked and flips on click."""
+
+        checkbox = self.get_element("errorViewToggle")
+        assert not checkbox.is_selected()
+        self._toggle_error_view()
+        assert checkbox.is_selected()
+        self._toggle_error_view()
+        assert not checkbox.is_selected()
+
 
 class TestJobScrapingDashboard(ServiceDashboardBase):
     """Tests for the Job Scraping dashboard modal."""
@@ -84,19 +105,8 @@ class TestJobScrapingDashboard(ServiceDashboardBase):
         """Log viewer and error view toggle work correctly."""
 
         self._open_scraping()
-
-        # Log viewer: collapsed by default, expands on click
-        assert not self.check_element_exists("log-viewer", selector=By.CLASS_NAME)
-        self._expand_log_viewer()
-        assert self.get_element("log-viewer", selector=By.CLASS_NAME, enabled=False).is_displayed()
-
-        # Error view toggle: defaults unchecked, toggles on click
-        checkbox = self.get_element("errorViewToggle")
-        assert not checkbox.is_selected()
-        self._toggle_error_view()
-        assert checkbox.is_selected()
-        self._toggle_error_view()
-        assert not checkbox.is_selected()
+        self._assert_log_viewer_toggles()
+        self._assert_error_view_toggles()
 
 
 class TestJobRatingDashboard(ServiceDashboardBase):
@@ -128,19 +138,8 @@ class TestJobRatingDashboard(ServiceDashboardBase):
         """Log viewer and error view toggle work correctly on the rating modal."""
 
         self._open_rating()
-
-        # Log viewer: collapsed by default, expands on click
-        assert not self.check_element_exists("log-viewer", selector=By.CLASS_NAME)
-        self._expand_log_viewer()
-        assert self.get_element("log-viewer", selector=By.CLASS_NAME, enabled=False).is_displayed()
-
-        # Error view toggle: defaults unchecked, toggles on click
-        checkbox = self.get_element("errorViewToggle")
-        assert not checkbox.is_selected()
-        self._toggle_error_view()
-        assert checkbox.is_selected()
-        self._toggle_error_view()
-        assert not checkbox.is_selected()
+        self._assert_log_viewer_toggles()
+        self._assert_error_view_toggles()
 
 
 class TestJobScrapingDashboardErrors(ServiceDashboardBase):

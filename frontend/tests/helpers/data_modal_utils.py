@@ -183,6 +183,8 @@ class DataModalUtils(BaseUtils):
             self.check_speculative_application_view_modal(entry)
         elif self.entry_type == "setting":
             self.check_setting_view_modal(entry)
+        elif self.entry_type == "user":
+            self.check_user_view_modal(entry)
         else:
             raise AssertionError("Not implemented")
 
@@ -493,6 +495,21 @@ class DataModalUtils(BaseUtils):
         expected += format_field("Description", entry.description)
         expected += f"Active\n" f"Close\nEdit"
         assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view").click()
+        self.wait_for_view_modal_close()
+
+    def check_user_view_modal(self, entry: models.User) -> None:
+        """Helper method to test the view modal for a user entry.
+
+        The user view shows email, name and several toggle fields rendered as
+        icons (no text), so this checks the key identifying fields rather than an
+        exact full-text match."""
+
+        modal = self.wait_for_view_modal()
+        assert "User Details" in modal.text
+        assert entry.email in modal.text
 
         # Close modal
         self.cancel_button("view").click()

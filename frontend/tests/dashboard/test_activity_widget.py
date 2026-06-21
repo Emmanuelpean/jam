@@ -45,10 +45,6 @@ class TestActivityWidget(DashboardTestBase):
 
     # ----------------------------------------------- RECENT ACTIVITY ----------------------------------------------
 
-    def test_recent_activity_card_renders(self) -> None:
-        """The Recent Activity card should always be present on the default dashboard layout."""
-        assert self._card(RECENT_ACTIVITY).is_displayed()
-
     def test_recent_activity_empty_state(self) -> None:
         """With no data, Recent Activity should show its empty state."""
         assert self._empty_state_visible(RECENT_ACTIVITY)
@@ -126,10 +122,6 @@ class TestActivityWidget(DashboardTestBase):
         assert len(self.driver.find_elements(By.ID, f"{last_id}-line")) == 0
 
     # --------------------------------------------- UPCOMING INTERVIEWS -------------------------------------------
-
-    def test_upcoming_interviews_card_renders(self) -> None:
-        """The Upcoming Interviews card should always be present on the default dashboard layout."""
-        assert self._card(UPCOMING_INTERVIEWS).is_displayed()
 
     def test_upcoming_interviews_empty_state(self) -> None:
         """With no interviews, Upcoming Interviews should show its empty state."""

@@ -12,7 +12,7 @@ import datetime as dt
 
 from selenium.webdriver.common.by import By
 
-from base_test import BaseTest, models
+from base_test import BaseTest
 
 
 class TestUsagePage(BaseTest):
@@ -32,19 +32,11 @@ class TestUsagePage(BaseTest):
         # A couple of days back keeps the rows safely inside the window regardless
         # of any browser/server timezone boundary on "today".
         day = dt.date.today() - dt.timedelta(days=2)
-        self._add(models.AnthropicDailyUsage(date=day, usage_usd=self.ANTHROPIC_USD))
-        self._add(models.ApifyDailyUsage(date=day, usage_usd=self.APIFY_USD))
-        self._add(models.BrightdataDailyUsage(date=day, dataset="linkedin", usage_usd=self.BRIGHTDATA_USD))
-        self._add(models.StripeDailyIncome(date=day, gross_gbp=100.0, net_gbp=self.STRIPE_NET_GBP))
+        self._make_anthropic_usage(date=day, usage_usd=self.ANTHROPIC_USD)
+        self._make_apify_usage(date=day, usage_usd=self.APIFY_USD)
+        self._make_brightdata_usage(date=day, usage_usd=self.BRIGHTDATA_USD)
+        self._make_stripe_income(date=day, gross_gbp=100.0, net_gbp=self.STRIPE_NET_GBP)
         self.login()
-
-    def _add(self, row):
-        """Persist an ESM usage/income row."""
-
-        self.db.add(row)
-        self.db.commit()
-        self.db.refresh(row)
-        return row
 
     def _open_usage(self) -> None:
         """Open the External Service Monitoring modal from the admin dashboard."""
@@ -106,3 +98,20 @@ class TestUsagePage(BaseTest):
         self.get_element("confirm-start-button")
         # Unlike the scraping/rating runners, ESM has no configurable period.
         assert not self.check_element_exists("period_hours", selector=By.NAME)
+
+    def test_balance_captions(self) -> None:
+        """The Apify and Bright Data summary cards show their balance captions."""
+
+        # Latest balance snapshot per service, fetched when the modal opens.
+        self._make_apify_balance(limit_usd=100.0)
+        self._make_brightdata_balance(balance_usd=50.0, pending_costs_usd=2.0)
+
+        self._open_usage()
+
+        modal = self.get_element("admin-page-modal", enabled=False)
+        self.wait.until(lambda d: "Cycle limit: $100.00" in modal.text)
+
+        text = modal.text
+        assert "Cycle limit: $100.00" in text  # Apify cycle limit
+        assert "Balance: $50.00" in text  # Bright Data balance
+        assert "Pending: $2.00" in text  # Bright Data pending costs
