@@ -9,16 +9,10 @@ interface TimeFilterPopoverProps {
 	defaultAmount?: number;
 	defaultUnit?: TimeUnit;
 	defaultIntervalSeconds?: number;
-	/** Restrict the selectable time units; defaults to all units. */
 	availableUnits?: TimeUnit[];
 	id?: string;
 }
 
-/**
- * Compact "Filters" button that reveals the time range controls in a popover.
- * Owns the range state and computation so the data range is emitted on page
- * load (and kept refreshed) even while the popover is closed.
- */
 export const TimeFilterPopover = ({
 	id,
 	onDateRangeChange,
@@ -41,8 +35,6 @@ export const TimeFilterPopover = ({
 		onDateRangeChange?.(range);
 	};
 
-	// Emit the range on mount (page load) and whenever the period selection
-	// changes; refresh it on the configured interval while in period mode.
 	useEffect(() => {
 		if (mode !== "period") return;
 		updateDateRange();
@@ -51,9 +43,6 @@ export const TimeFilterPopover = ({
 	}, [mode, amount, unit]);
 
 	const handleModeChange = (newMode: SelectionMode): void => {
-		// Switching to date-range keeps the current window (the date inputs are already
-		// populated from period mode), so there is no need to re-emit and reload data.
-		// Switching back to period recomputes a now-relative window via the effect below.
 		setMode(newMode);
 	};
 

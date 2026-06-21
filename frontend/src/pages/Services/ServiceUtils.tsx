@@ -11,6 +11,8 @@ import Spinner from "../../components/Spinner/Spinner";
 
 export const successColor = "#22c55e";
 export const failureColor = "#ef4444";
+export const skippedColor = "#007cff";
+export const copiedColor = "#bcbcbc";
 
 export const formatErrorMessage = (err: unknown): string => {
 	if (!err) return "";
@@ -104,9 +106,6 @@ export const useServiceControl = (
 	};
 };
 
-// The two status icons (service runner + service) shown in a page header, plus
-// the countdown to the next run while the runner is active and idle between runs.
-// Clicking them is wired up by wrapping this in a <Popover/> trigger.
 export const renderStatusIcons = (status: ServiceStatus | null, remainingTime: number | null): JSX.Element => {
 	const runnerActive: boolean = !!status && ["started", "starting"].includes(status.service_runner_status);
 	const isStopping: boolean = status?.service_runner_status === "stopping";
@@ -134,7 +133,6 @@ export const renderStatusIcons = (status: ServiceStatus | null, remainingTime: n
 	);
 };
 
-// The control popover body: the (optional) config fields and the start/stop button.
 export const renderControl = (
 	status: ServiceStatus | null,
 	fields: React.ReactNode,

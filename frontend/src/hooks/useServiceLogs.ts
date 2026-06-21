@@ -33,7 +33,6 @@ export const useServiceLogs = <T>(
 	};
 
 	const fetchLatestLogs = async (): Promise<void> => {
-		// Wait for a real range: the TimeFilterPopover emits its default on mount.
 		if (!token || !dateRange) return;
 		const seq = ++fetchSeqRef.current;
 		setLoading(true);

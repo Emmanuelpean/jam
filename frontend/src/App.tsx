@@ -14,7 +14,7 @@ import { Sidebar } from "./components/Sidebar/Sidebar";
 import JobApplicationUpdatesPage from "./pages/DataTablePages/JobApplicationUpdatesPage";
 import Dashboard from "./pages/Dashboard/DashboardPage";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
-import { ViewportProvider } from "./contexts/ViewportContext";
+import { useViewport, ViewportProvider } from "./contexts/ViewportContext";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 import { useToast, UseToastReturn } from "./hooks/useNotificationToast";
 import { ToastStack } from "./components/Toasts/Toast";
@@ -31,7 +31,6 @@ import { ContextMenuProvider } from "./contexts/ContextMenuContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProgressOverlayProvider } from "./contexts/useProgressOverlayContext";
 import { ScrapedJobsPage } from "./pages/DataTablePages/ScrapedJobsPage";
-import { StyleGuidePage } from "./pages/StylePage";
 import { ConfigProvider } from "./contexts/ConfigContext";
 import { StatusProvider } from "./contexts/StatusContext";
 import { MaintenanceBanner } from "./components/AppBanner/MaintenanceBanner";
@@ -69,6 +68,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	const navigate = useNavigate();
 	const { isOpen: isCommandPaletteOpen, close: closeCommandPalette } = useCommandPalette();
 	const { hideAlert } = useAlert();
+	const { isMobile } = useViewport();
 	useSwetrixPageViews();
 
 	useEffect(() => {
@@ -130,7 +130,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 			<MaintenanceBanner />
 			<DemoBanner />
 			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-				{isAuthenticated && currentUser && <Sidebar />}
+				{isAuthenticated && currentUser && !isMobile && <Sidebar />}
 				<div
 					className={isAuthenticated && currentUser ? "sidebar-content-offset" : ""}
 					style={{
@@ -202,7 +202,6 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/browser-extension", element: <ExtensionPage />, protected: true },
 	{ path: "/companies", element: <CompaniesPage />, protected: true },
 	{ path: "/jobs", element: <JobsPage />, protected: true },
-	{ path: "/style-guide", element: <StyleGuidePage />, protected: true, adminOnly: true },
 	{
 		path: "/speculative-applications",
 		element: <SpeculativeApplicationsPage />,

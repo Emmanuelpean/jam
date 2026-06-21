@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTour } from "../../contexts/TourContext";
 import { useAlert } from "../../contexts/AlertContext";
@@ -33,17 +34,12 @@ interface UseNavigationResult {
 	topItems: NavigationItem[];
 	bottomItems: NavigationItem[];
 	toggleTourSelect: () => void;
+	isMenuActive: (path: string) => boolean;
+	isSubItemActive: (item: NavigationSubItem) => boolean;
 }
 
-/**
- * Single source of truth for the app's primary navigation. Both the desktop
- * Sidebar and the mobile page-header dropdown (MobileNavMenu) consume this so
- * the two navigations never drift apart.
- *
- * Returns the full ordered `navigationItems` plus `topItems`/`bottomItems`
- * already filtered by each item's `condition` against the current user.
- */
 export const useNavigation = (): UseNavigationResult => {
+	const location = useLocation();
 	const { logout, currentUser } = useAuth();
 	const { isMobile } = useViewport();
 	const { toggleTourSelect, completedTourIds } = useTour();
@@ -52,7 +48,7 @@ export const useNavigation = (): UseNavigationResult => {
 
 	const isPremium = currentUser?.premium.is_active ?? false;
 	const implementedTours = TOURS.filter(
-		(t) => !t.comingSoon && (isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id))
+		(t) => isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id)
 	);
 	const allToursCompleted = implementedTours.length > 0 && implementedTours.every((t) => completedTourIds.has(t.id));
 
@@ -155,6 +151,22 @@ export const useNavigation = (): UseNavigationResult => {
 		},
 	];
 
+	const isMenuActive = (path: string): boolean => {
+		if (location.pathname.startsWith(path)) return true;
+		const parts = path.split("/").filter(Boolean);
+		if (parts.length > 1) {
+			const parent = "/" + parts.slice(0, -1).join("/") + "/";
+			return location.pathname.startsWith(parent);
+		}
+		return false;
+	};
+
+	const isSubItemActive = (item: NavigationSubItem): boolean => {
+		if (!item.path) return false;
+		if (location.pathname.startsWith(item.path)) return true;
+		return item.alsoActiveFor?.some((p: string): boolean => location.pathname.startsWith(p)) ?? false;
+	};
+
 	const filterByPosition = (position: "top" | "bottom"): NavigationItem[] =>
 		navigationItems
 			.filter((item: NavigationItem): boolean => item.position === position)
@@ -172,5 +184,7 @@ export const useNavigation = (): UseNavigationResult => {
 		topItems: filterByPosition("top"),
 		bottomItems: filterByPosition("bottom"),
 		toggleTourSelect,
+		isMenuActive,
+		isSubItemActive,
 	};
 };

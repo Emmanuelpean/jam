@@ -1,8 +1,4 @@
-"""Aggregates all external-service-monitoring routers under a single import.
-
-Importing this module also imports each per-service `routers.py`, which is what causes their
-`@external_service_monitoring_history_router.get(...)` decorators to run and attach endpoints
-to the history router."""
+"""Aggregates all external-service-monitoring routers under a single import."""
 
 from app.external_service_monitoring import external_service_monitoring_history_router  # noqa: F401
 from app.external_service_monitoring.anthropic import routers as _anthropic  # noqa: F401

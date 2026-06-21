@@ -21,13 +21,10 @@ interface DataPoint {
 
 export interface SeriesData {
 	id: string;
-	/** Optional override; when omitted, a colour is auto-assigned by cycling CHART_PALETTE. */
 	color?: string;
 	data: DataPoint[];
 }
 
-// Lines without an explicit `color` cycle through these in order, so callers don't
-// have to assign colours by hand when adding series.
 const CHART_PALETTE: string[] = ["var(--bs-primary)", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#06b6d4"];
 
 export interface LineChartProps {
@@ -43,8 +40,8 @@ export interface LineChartProps {
 
 export const LineChart = ({
 	data,
-	yAxisLabel = "Y-axis",
-	xAxisLabel = "X-Axis",
+	yAxisLabel,
+	xAxisLabel,
 	fontsize = 14,
 	xAxisFormatter = (value: Date): string => toDdMmYyyyHhMm(value),
 	yAxisFormatter = (value: number | null): number | null => value,
@@ -81,8 +78,6 @@ export const LineChart = ({
 		);
 	}
 
-	// Convert each x value to a millisecond timestamp so Recharts can use a numeric/time scale
-	// and space points by their real date distance, not as evenly-spaced categories.
 	const toMs = (value: number | string | Date): number => {
 		if (value instanceof Date) return value.getTime();
 		if (typeof value === "number") return value;
@@ -142,7 +137,7 @@ export const LineChart = ({
 
 	return (
 		<ResponsiveContainer width={"100%"} height={height}>
-			<RechartsLineChart data={transformedData} margin={{ top: 5, right: 30, left: 20, bottom: 24 }}>
+			<RechartsLineChart data={transformedData} margin={{ top: 5, right: 30, left: 8, bottom: 12 }}>
 				<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
 				<XAxis
 					dataKey="x"
@@ -153,7 +148,9 @@ export const LineChart = ({
 					tick={{ fontSize: fontsize, fill: "var(--bs-body-color)" }}
 					stroke="var(--bs-border-color)"
 				>
-					<Label value={xAxisLabel} offset={-5} position="insideBottom" fill="var(--bs-body-color)" />
+					{xAxisLabel && (
+						<Label value={xAxisLabel} offset={0} position="insideBottom" fill="var(--bs-body-color)" />
+					)}
 				</XAxis>
 				<YAxis
 					tickFormatter={(value) => String(yAxisFormatter(value) ?? "")}
@@ -174,8 +171,6 @@ export const LineChart = ({
 					wrapperStyle={{
 						cursor: "pointer",
 						color: "var(--bs-body-color)",
-						position: "relative",
-						marginTop: "18px",
 					}}
 					formatter={(value) => (
 						<span

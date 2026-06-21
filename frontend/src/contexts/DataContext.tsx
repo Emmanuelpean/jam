@@ -32,37 +32,33 @@ import { CrudApi } from "../services/api/Crud";
 import { getScrapingFilterName } from "../components/rendering/view/ViewRenders";
 
 import {
+	AggregatorCreate,
 	AggregatorData,
+	CompanyCreate,
 	CompanyData,
 	EnrichedInterviewData,
 	EnrichedJobApplicationUpdateData,
 	EnrichedJobData,
+	FileCreate,
 	FileData,
+	InterviewCreate,
 	InterviewData,
+	JobApplicationUpdateCreate,
 	JobApplicationUpdateData,
+	JobCreate,
 	JobData,
+	KeywordCreate,
 	KeywordData,
+	PersonCreate,
 	PersonData,
+	SpeculativeApplicationCreate,
 	SpeculativeApplicationData,
 } from "../services/schemas/DataTables";
-import { SettingData, UserData } from "../services/schemas/Core";
-import { JobEmailData, ScrapedJobData, ScrapingFilterData } from "../services/schemas/Services";
+import { SettingCreate, SettingData, UserCreate, UserData } from "../services/schemas/Core";
+import { JobEmailData, ScrapedJobData, ScrapingFilterCreate, ScrapingFilterData } from "../services/schemas/Services";
 import { ApiError } from "../services/api/ApiError";
 import { GeoLocationData } from "../services/schemas/Base";
 import { emailApi, EmailTemplate, tourApi } from "../services/api/Others";
-import {
-	AggregatorCreate,
-	CompanyCreate,
-	FileCreate,
-	InterviewCreate,
-	JobApplicationUpdateCreate,
-	JobCreate,
-	KeywordCreate,
-	PersonCreate,
-	SpeculativeApplicationCreate,
-} from "../services/schemas/DataTables";
-import { SettingCreate, UserCreate } from "../services/schemas/Core";
-import { ScrapingFilterCreate } from "../services/schemas/Services";
 
 export type EntityType =
 	| "job"
@@ -226,18 +222,6 @@ interface TypedFetchOperation<T> {
 	promise: ApiResponsePromise<T>;
 	label: string;
 }
-
-// Prefetch all email templates (label + rendered HTML) in a single request. Wrapped
-// to resolve to an ApiResponse so it slots into the same tracked-promise pipeline as
-// the other admin fetches. A failure is swallowed (empty list) so it never aborts the
-// rest of the admin data load.
-const fetchEmailTemplates = async (token: string): Promise<ApiResponse<EmailTemplate[]>> => {
-	try {
-		return { data: await emailApi.fetchAllTemplates(token), status: 200 };
-	} catch {
-		return { data: [], status: 200 };
-	}
-};
 
 export interface DataContextValue {
 	// Data arrays
@@ -462,10 +446,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			fetchOperations.push(
 				{ promise: settingsApi.getAll(token), label: "Settings" } as TypedFetchOperation<SettingData[]>,
 				{ promise: userApi.getAll(token), label: "Users" } as TypedFetchOperation<UserData[]>,
-				{
-					promise: fetchEmailTemplates(token),
-					label: "Email Templates",
-				} as TypedFetchOperation<EmailTemplate[]>
+				{ promise: emailApi.getAll(token), label: "Email Templates" } as TypedFetchOperation<EmailTemplate[]>
 			);
 		}
 

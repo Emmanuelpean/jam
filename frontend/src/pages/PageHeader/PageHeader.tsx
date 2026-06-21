@@ -62,7 +62,7 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 			onClick={clickable ? handleHeaderClick : undefined}
 		>
 			<Card className="h-100 shadow-sm border-0 rounded-3">
-				<div className="d-flex align-items-center justify-content-between" style={{ padding: "1rem 1.5rem" }}>
+				<div className="d-flex align-items-center justify-content-between" style={{ padding: "0.8rem 1.5rem" }}>
 					<div className="d-flex align-items-center">
 						<div className="header-icon-wrapper me-2">
 							<i className={`bi bi-${icon}`}></i>

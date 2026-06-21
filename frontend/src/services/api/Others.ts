@@ -1,7 +1,6 @@
-import { ApiResponse, baseApi } from "./Base";
+import { ApiResponse, ApiResponsePromise, baseApi } from "./Base";
 import { Config, GeoLocationData, Status } from "../schemas/Base";
 
-// A previewable email template: its id, human-readable label, and rendered HTML.
 export interface EmailTemplate {
 	id: string;
 	label: string;
@@ -9,9 +8,8 @@ export interface EmailTemplate {
 }
 
 export const emailApi = {
-	fetchAllTemplates: async (token: string): Promise<EmailTemplate[]> => {
-		const response: ApiResponse<EmailTemplate[]> = await baseApi.get("email-templates/", token);
-		return response.data;
+	getAll: async (token: string): ApiResponsePromise<EmailTemplate[]> => {
+		return await baseApi.get("email-templates/", token);
 	},
 };
 

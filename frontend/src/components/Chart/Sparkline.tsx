@@ -26,7 +26,6 @@ const toMs = (value: Date | string | number): number => {
 
 const formatDate = (value: Date): string => value.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
 
-// A compact line chart (with axes) for embedding a trend inside a card.
 export const Sparkline = ({
 	data,
 	color = "var(--bs-primary)",

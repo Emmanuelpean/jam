@@ -10,7 +10,7 @@ import packageJson from "../../../package.json";
 import { useWhatsNew } from "../../contexts/WhatsNewContext";
 import { useTour } from "../../contexts/TourContext";
 import { useAuth } from "../../contexts/AuthContext";
-import { TOURS } from "../../components/GuidedTour/tourSteps";
+import { TourDefinition, TOURS } from "../../components/GuidedTour/tourSteps";
 import AppFeaturesList, { Feature } from "./AppFeaturesList";
 import { releaseNotes as releaseNotesRegistry, version, VERSIONS } from "../../releaseNotes/versions";
 import { Accordion } from "../../components/Accordion/Accordion";
@@ -25,10 +25,12 @@ const AboutPage = (): JSX.Element => {
 	const { isMobile } = useViewport();
 	const [openVersion, setOpenVersion] = useState<string | null>(null);
 	const isPremium = currentUser?.premium.is_active ?? false;
-	const implementedTours = TOURS.filter(
-		(t) => !t.comingSoon && (isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id))
+	const implementedTours: TourDefinition[] = TOURS.filter(
+		(t: TourDefinition): boolean => isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id)
 	);
-	const allToursCompleted = implementedTours.length > 0 && implementedTours.every((t) => completedTourIds.has(t.id));
+	const allToursCompleted: boolean =
+		implementedTours.length > 0 &&
+		implementedTours.every((t: TourDefinition): boolean => completedTourIds.has(t.id));
 
 	const features: Feature[] = [
 		{
@@ -64,7 +66,7 @@ const AboutPage = (): JSX.Element => {
 	];
 
 	return (
-		<div style={{ flex: 1, minHeight: isMobile ? undefined : 0, overflowY: isMobile ? "visible" : "auto" }}>
+		<div style={{ flex: 1 }}>
 			{isMobile && <PageHeader title="About JAM" icon={getTableIcon("About JAM")} />}
 			<div className="about-container d-flex flex-column align-items-center justify-content-center">
 				{/* Hero Section */}

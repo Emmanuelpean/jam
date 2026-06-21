@@ -33,11 +33,6 @@ const timeUnitOptions: SelectOption[] = [
 	{ value: "years", label: "Years" },
 ];
 
-/**
- * Presentational time-range selector. State and the date-range computation are
- * owned by the parent so they keep working while this UI is unmounted (e.g.
- * hidden inside a closed popover).
- */
 const TimeSelection: React.FC<TimeSelectionProps> = ({
 	mode,
 	amount,
@@ -93,7 +88,9 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
 							style={{ width: "70px" }}
 							min="1"
 							value={amount}
-							onChange={(e: React.ChangeEvent<HTMLInputElement>) => onAmountChange(parseInt(e.target.value, 10))}
+							onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+								onAmountChange(parseInt(e.target.value, 10))
+							}
 							placeholder="Amount"
 						/>
 						<div className="time-unit-select">

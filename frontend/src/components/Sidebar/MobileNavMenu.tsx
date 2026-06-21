@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { getTableIcon } from "../rendering/view/Icons";
 import { NavigationItem, NavigationSubItem, useNavigation } from "./useNavigation";
 import "./MobileNavMenu.scss";
@@ -15,26 +15,9 @@ interface MobileNavMenuProps {
  * flattened into an indented section since a dropdown can show everything at once.
  */
 export const MobileNavMenu = ({ open, onClose }: MobileNavMenuProps): JSX.Element | null => {
-	const location = useLocation();
-	const { topItems, bottomItems } = useNavigation();
+	const { topItems, bottomItems, isMenuActive, isSubItemActive } = useNavigation();
 
 	if (!open) return null;
-
-	const isMenuActive = (path: string): boolean => {
-		if (location.pathname.startsWith(path)) return true;
-		const parts = path.split("/").filter(Boolean);
-		if (parts.length > 1) {
-			const parent = "/" + parts.slice(0, -1).join("/") + "/";
-			return location.pathname.startsWith(parent);
-		}
-		return false;
-	};
-
-	const isSubItemActive = (item: NavigationSubItem): boolean => {
-		if (!item.path) return false;
-		if (location.pathname.startsWith(item.path)) return true;
-		return item.alsoActiveFor?.some((p: string): boolean => location.pathname.startsWith(p)) ?? false;
-	};
 
 	const renderLeaf = (
 		key: string,

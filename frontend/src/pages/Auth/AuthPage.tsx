@@ -429,8 +429,6 @@ function AuthForm(): JSX.Element {
 		const errorTitle: string = "Demo Login Failed";
 
 		try {
-			// The backend ignores the password for demo accounts, but a non-empty value is
-			// required to pass the login form's field validation.
 			const result: GenericResponse = await login(config.app_demo_username, "demo");
 			if (result.success) {
 				navigate("/dashboard");

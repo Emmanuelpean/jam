@@ -136,8 +136,6 @@ export const CustomSelect = ({
 		return all.filter((o) => o.label.toLowerCase().includes(lower));
 	}, [options, inputValue, isSearchable, isGrouped]);
 
-	// Every option label (unfiltered) — used to size the control to the widest option
-	// when fitContentWidth is set, so its width stays constant as the selection changes.
 	const allLabels = useMemo(() => {
 		const all = isGrouped
 			? (options as GroupedSelectOption[]).flatMap((g) => g.options)
@@ -207,9 +205,6 @@ export const CustomSelect = ({
 		[]
 	);
 
-	// Measure the widest option label so the control can be fixed to that width.
-	// The sizer measures raw text width, so add the values box's horizontal padding
-	// plus a small buffer for the inline (collapsed) search input.
 	useLayoutEffect(() => {
 		if (!fitContentWidth || !sizerRef.current) return;
 		const measure = (): void => {

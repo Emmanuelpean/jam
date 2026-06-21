@@ -33,7 +33,7 @@ const extensionFeatures: Feature[] = [
 const ExtensionPage = (): JSX.Element => {
 	const { isMobile } = useViewport();
 	return (
-		<div style={{ flex: 1, minHeight: isMobile ? undefined : 0, overflowY: isMobile ? "visible" : "auto" }}>
+		<div style={{ flex: 1 }}>
 			{isMobile && <PageHeader title="Browser Extension" icon={getTableIcon("Browser Extension")} />}
 			<div className="about-container d-flex flex-column align-items-center justify-content-center">
 				<div className="hero-overlay">

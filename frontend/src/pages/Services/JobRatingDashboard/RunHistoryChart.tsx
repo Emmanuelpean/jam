@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useState } from "react";
 import { JobRatingServiceLogData } from "../../../services/schemas/Services";
 import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
-import { createSeries, failureColor, successColor } from "../ServiceUtils";
+import { createSeries, failureColor, skippedColor, successColor } from "../ServiceUtils";
 import { useDelayedLoading } from "../../../hooks/useDelayedLoading";
 
 interface RunHistoryChartProps {
@@ -39,7 +39,8 @@ export const RunHistoryChart = ({ serviceLogData, isRunning, loading = false }: 
 			createSeries(
 				serviceLogData,
 				"Skipped Jobs",
-				(log: JobRatingServiceLogData): number => log.job_skipped_ids.length
+				(log: JobRatingServiceLogData): number => log.job_skipped_ids.length,
+				skippedColor
 			),
 		];
 		setLogData([jobSeries, durationSeries]);
@@ -60,12 +61,8 @@ export const RunHistoryChart = ({ serviceLogData, isRunning, loading = false }: 
 				</div>
 			) : (
 				<div style={{ display: "flex" }}>
-					{logData && logData[0] && (
-						<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of jobs rated" />
-					)}
-					{logData && logData[1] && (
-						<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
-					)}
+					{logData && logData[0] && <LineChart data={logData[0]} yAxisLabel="Number of jobs rated" />}
+					{logData && logData[1] && <LineChart data={logData[1]} yAxisLabel="Run duration [h]" />}
 				</div>
 			)}
 		</div>

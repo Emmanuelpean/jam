@@ -2,7 +2,7 @@ import React, { JSX, useEffect, useState } from "react";
 import { JobScrapingServiceLogData, PlatformStat } from "../../../services/schemas/Services";
 import { SelectOption } from "../../../components/rendering/form/FormOptions";
 import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
-import { createSeries, failureColor, successColor } from "../ServiceUtils";
+import { copiedColor, createSeries, failureColor, skippedColor, successColor } from "../ServiceUtils";
 import { ModalFormField } from "../../../components/rendering/form/FormRenders";
 import { SelectInput } from "../../../components/rendering/widgets/SelectWidget";
 import { useDelayedLoading } from "../../../hooks/useDelayedLoading";
@@ -16,22 +16,22 @@ interface RunHistoryChartProps {
 	loading?: boolean;
 }
 
-const getPlatformStat = (log: JobScrapingServiceLogData, platform: string, key: string): number => {
+const getPlatformStat = (log: JobScrapingServiceLogData, platform: string, key: keyof PlatformStat): number => {
 	const stat: PlatformStat | undefined = log.platform_stats.find((p: PlatformStat): boolean => p.name === platform);
 	if (!stat) return 0;
 
-	const value = (stat as any)[key];
+	const value = stat[key];
 
 	if (Array.isArray(value)) {
 		return value.length;
 	}
 
 	if (typeof value === "string") {
-		const parsed = Number(value);
+		const parsed: number = Number(value);
 		return isNaN(parsed) ? 0 : parsed;
 	}
 
-	return typeof value === "number" ? value : 0;
+	return value;
 };
 
 export const RunHistoryChart = ({
@@ -71,12 +71,14 @@ export const RunHistoryChart = ({
 				createSeries(
 					serviceLogData,
 					"Copied Jobs",
-					(log: JobScrapingServiceLogData): number => log.job_scrape_copied_n
+					(log: JobScrapingServiceLogData): number => log.job_scrape_copied_n,
+					copiedColor
 				),
 				createSeries(
 					serviceLogData,
 					"Skipped Jobs",
-					(log: JobScrapingServiceLogData): number => log.job_scrape_skipped_n
+					(log: JobScrapingServiceLogData): number => log.job_scrape_skipped_n,
+					skippedColor
 				),
 			];
 			setLogData([jobSeries, durationSeries]);
@@ -84,19 +86,31 @@ export const RunHistoryChart = ({
 			const platformSeries: SeriesData[] = [
 				createSeries(
 					serviceLogData,
-					`${selectedPlatform} Jobs Found`,
-					(log: JobScrapingServiceLogData): number => getPlatformStat(log, selectedPlatform, "job_found_ids")
+					"Scrape Succeeded",
+					(log: JobScrapingServiceLogData): number =>
+						getPlatformStat(log, selectedPlatform, "job_scrape_succeeded_ids"),
+					successColor
 				),
 				createSeries(
 					serviceLogData,
-					`${selectedPlatform} Jobs Scraped`,
-					(log: JobScrapingServiceLogData): number => getPlatformStat(log, selectedPlatform, "job_scraped_n")
-				),
-				createSeries(
-					serviceLogData,
-					`${selectedPlatform} Failed`,
-					(log: JobScrapingServiceLogData): number => getPlatformStat(log, selectedPlatform, "job_failed_n"),
+					"Scrape Failed",
+					(log: JobScrapingServiceLogData): number =>
+						getPlatformStat(log, selectedPlatform, "job_scrape_failed_ids"),
 					failureColor
+				),
+				createSeries(
+					serviceLogData,
+					"Scrape Copied",
+					(log: JobScrapingServiceLogData): number =>
+						getPlatformStat(log, selectedPlatform, "job_scrape_copied_ids"),
+					copiedColor
+				),
+				createSeries(
+					serviceLogData,
+					"Scrape Skipped",
+					(log: JobScrapingServiceLogData): number =>
+						getPlatformStat(log, selectedPlatform, "job_scrape_skipped_ids"),
+					skippedColor
 				),
 			];
 			setLogData([platformSeries, durationSeries]);
@@ -140,9 +154,7 @@ export const RunHistoryChart = ({
 				</div>
 			) : (
 				<div style={{ display: "flex" }}>
-					{logData && logData[0] && (
-						<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of job alerts" />
-					)}
+					{logData && logData[0] && <LineChart data={logData[0]} yAxisLabel="Number of job alerts" />}
 					{logData && logData[1] && (
 						<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
 					)}

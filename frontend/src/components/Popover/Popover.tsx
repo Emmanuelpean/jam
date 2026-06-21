@@ -3,24 +3,15 @@ import { createPortal } from "react-dom";
 import "./Popover.scss";
 
 interface PopoverProps {
-	/** Element the user clicks to toggle the popover. */
 	trigger: ReactNode;
-	/** Popover body. May be a render function receiving a `close` callback. */
 	children: ReactNode | ((close: () => void) => ReactNode);
 	className?: string;
 	triggerClassName?: string;
 	ariaLabel?: string;
 }
 
-/** Gap in px between the trigger and the popover. */
 const GAP = 8;
 
-/**
- * Click-triggered popover that renders its content in a portal (so it is not
- * clipped by overflow) below and right-aligned to the trigger. It animates in
- * and out, and closes on an outside click, on Escape, and when the page is
- * scrolled or resized.
- */
 export const Popover = ({
 	trigger,
 	children,
@@ -57,19 +48,16 @@ export const Popover = ({
 		}
 	};
 
-	// Once mounted, flip to the open state on the next frame so the entry transition runs.
 	useEffect(() => {
 		if (!coords) return;
 		const id = requestAnimationFrame(() => setShown(true));
 		return (): void => cancelAnimationFrame(id);
 	}, [coords]);
 
-	// Unmount only after the exit transition has finished.
 	const handleTransitionEnd = (): void => {
 		if (!shown) setCoords(null);
 	};
 
-	// Fallback unmount in case the transition never fires (e.g. reduced motion).
 	useEffect(() => {
 		if (!mounted || shown) return;
 		const id = window.setTimeout(() => setCoords(null), 250);
@@ -81,9 +69,6 @@ export const Popover = ({
 		const handlePointerDown = (event: MouseEvent): void => {
 			const target = event.target as Node;
 			if (popoverRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
-			// Ignore clicks inside portaled overlays opened from within the popover
-			// (e.g. a select menu rendered into #jam-select-portal), which live
-			// outside the popover DOM but are logically part of it.
 			if (target instanceof Element && target.closest("#jam-select-portal")) return;
 			closePopover();
 		};

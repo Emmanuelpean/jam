@@ -1,5 +1,5 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTour } from "../../contexts/TourContext";
 import JamLogo from "../../assets/Logo.svg?react";
@@ -7,15 +7,18 @@ import { getTableIcon } from "../rendering/view/Icons";
 import { ThemeSelector } from "./ThemeSelector";
 import "./Sidebar.scss";
 import { DEFAULT_THEME } from "../../utils/Theme";
-import { useViewport } from "../../contexts/ViewportContext";
 import { NavigationItem, NavigationSubItem, useNavigation } from "./useNavigation";
 
 export const Sidebar = (): JSX.Element | null => {
-	const location = useLocation();
 	const { currentUser } = useAuth();
-	const { isMobile } = useViewport();
 	const { closeTourSelect, isTourActive } = useTour();
-	const { navigationItems, topItems: topNavigationItems, bottomItems: bottomNavigationItems } = useNavigation();
+	const {
+		navigationItems,
+		topItems: topNavigationItems,
+		bottomItems: bottomNavigationItems,
+		isMenuActive,
+		isSubItemActive,
+	} = useNavigation();
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
 	const [dropdownTop, setDropdownTop] = useState<number>(72);
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -68,24 +71,8 @@ export const Sidebar = (): JSX.Element | null => {
 		}, 300);
 	};
 
-	const isSubMenuItemActive = (item: NavigationSubItem): boolean => {
-		if (!item.path) return false;
-		if (location.pathname.startsWith(item.path)) return true;
-		return item.alsoActiveFor?.some((p: string): boolean => location.pathname.startsWith(p)) ?? false;
-	};
-
-	const isMenuActive = (path: string): boolean => {
-		if (location.pathname.startsWith(path)) return true;
-		const parts = path.split("/").filter(Boolean);
-		if (parts.length > 1) {
-			const parent = "/" + parts.slice(0, -1).join("/") + "/";
-			return location.pathname.startsWith(parent);
-		}
-		return false;
-	};
-
 	const isGroupMenuActive = (submenu: NavigationSubItem[]): boolean => {
-		return submenu.some(isSubMenuItemActive);
+		return submenu.some(isSubItemActive);
 	};
 
 	const handleGroupMenuToggle = (submenuText: string): void => {
@@ -167,7 +154,7 @@ export const Sidebar = (): JSX.Element | null => {
 									<Link
 										key={subItem.text}
 										to={subItem.path!}
-										className={`nav-item submenu-item ${isSubMenuItemActive(subItem) ? "active" : ""}`}
+										className={`nav-item submenu-item ${isSubItemActive(subItem) ? "active" : ""}`}
 										style={{ transitionDelay }}
 									>
 										{inner}
@@ -222,10 +209,6 @@ export const Sidebar = (): JSX.Element | null => {
 			);
 		});
 	};
-
-	// On mobile the sidebar is replaced entirely by the page-header dropdown menu
-	// (see MobileNavMenu / PageHeader).
-	if (isMobile) return null;
 
 	return (
 		<>

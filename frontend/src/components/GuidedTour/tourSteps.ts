@@ -55,11 +55,7 @@ export interface TourDefinition {
 	description: string;
 	icon: string;
 	steps: TourStep[];
-	/** Not yet implemented - shown in the panel as disabled with a "Soon" badge */
-	comingSoon?: boolean;
-	/** Premium-only tour — hidden for non-premium users and shown with a badge */
 	premium?: boolean;
-	/** Skip the keep-data toggle on the last step — tour always ends without cleanup prompt */
 	noKeepData?: boolean;
 }
 

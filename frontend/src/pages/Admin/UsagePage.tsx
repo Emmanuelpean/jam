@@ -117,7 +117,6 @@ const ServiceCard = ({
 					</div>
 					<LineChart
 						data={chartData}
-						xAxisLabel="Day"
 						yAxisLabel={yAxisLabel}
 						xAxisFormatter={formatDateTick}
 						yAxisFormatter={(v: number | null): number | null =>

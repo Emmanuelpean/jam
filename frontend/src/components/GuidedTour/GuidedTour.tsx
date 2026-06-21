@@ -26,9 +26,7 @@ export function GuidedTour(): JSX.Element | null {
 	} = useTour();
 	const { currentUser } = useAuth();
 	const isPremium = currentUser?.premium.is_active ?? false;
-	const visibleTours = TOURS.filter(
-		(t) => !t.comingSoon && (isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id))
-	);
+	const visibleTours = TOURS.filter((t) => isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id));
 	const currentTourIndex = visibleTours.findIndex((t) => t.id === activeTourId);
 	const nextTour = currentTourIndex !== -1 ? visibleTours[currentTourIndex + 1] : undefined;
 	const noKeepData = activeTourId ? (getTourById(activeTourId)?.noKeepData ?? false) : false;
@@ -121,12 +119,21 @@ export function GuidedTour(): JSX.Element | null {
 		advanceFromCurrentStep();
 	}, [advanceToStep, advanceFromCurrentStep]);
 
-	const { inputValid, stop: stopConditions } = useStepConditions(step, isTourActive, stepDef, onConditionMet, directionRef);
+	const { inputValid, stop: stopConditions } = useStepConditions(
+		step,
+		isTourActive,
+		stepDef,
+		onConditionMet,
+		directionRef
+	);
 	stopConditionsRef.current = stopConditions;
 
 	const [hasVisibleErrors, setHasVisibleErrors] = useState(false);
 	useEffect(() => {
-		if (!isTourActive) { setHasVisibleErrors(false); return; }
+		if (!isTourActive) {
+			setHasVisibleErrors(false);
+			return;
+		}
 		const id = setInterval(() => {
 			setHasVisibleErrors(document.querySelector(".invalid-feedback.d-block:not(:empty)") !== null);
 		}, 100);

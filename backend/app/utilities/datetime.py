@@ -10,5 +10,5 @@ def current_month_window() -> tuple[dt.datetime, dt.datetime]:
 
 
 def to_iso_z(t: dt.datetime) -> str:
-    """Format a UTC datetime as RFC3339 with trailing Z (the format the Anthropic Admin API expects)."""
+    """Format a UTC datetime as RFC3339 with trailing Z"""
     return t.strftime("%Y-%m-%dT%H:%M:%SZ")
