@@ -1,3 +1,5 @@
+@use "../../variables" as *;
+
 .about-container {
     border-radius: 18px;
     overflow: hidden;
@@ -7,6 +9,12 @@
     width: 100%;
     min-height: 100%;
     margin: 0 auto;
+}
+
+@media (width <= $mobile-breakpoint) {
+    .about-container {
+        min-height: 0;
+    }
 }
 
 .hero-overlay {

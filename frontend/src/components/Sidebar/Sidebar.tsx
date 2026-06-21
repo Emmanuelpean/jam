@@ -4,74 +4,22 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTour } from "../../contexts/TourContext";
 import JamLogo from "../../assets/Logo.svg?react";
 import { getTableIcon } from "../rendering/view/Icons";
-import { TOURS } from "../GuidedTour/tourSteps";
 import { ThemeSelector } from "./ThemeSelector";
 import "./Sidebar.scss";
 import { DEFAULT_THEME } from "../../utils/Theme";
-import { UserData } from "../../services/schemas/Core";
-import { useAlert } from "../../contexts/AlertContext";
 import { useViewport } from "../../contexts/ViewportContext";
-import { useConfig } from "../../contexts/ConfigContext";
+import { NavigationItem, NavigationSubItem, useNavigation } from "./useNavigation";
 
-interface NavigationItem {
-	path?: string;
-	icon?: string;
-	text: string;
-	submenu?: NavigationSubItem[];
-	condition?: (user: UserData) => boolean;
-	position: "top" | "bottom";
-	onClick?: () => void;
-	className?: string;
-	id?: string;
-	tourId?: string;
-}
-
-interface NavigationSubItem {
-	path?: string;
-	icon?: string;
-	text: string;
-	alsoActiveFor?: string[];
-	onClick?: () => void;
-	id?: string;
-}
-
-export const Sidebar = (): JSX.Element => {
+export const Sidebar = (): JSX.Element | null => {
 	const location = useLocation();
-	const { logout, currentUser } = useAuth();
+	const { currentUser } = useAuth();
 	const { isMobile } = useViewport();
-	const { toggleTourSelect, closeTourSelect, isTourActive, completedTourIds } = useTour();
-	const { showLogout } = useAlert();
-	const { config } = useConfig();
-	const isPremium = currentUser?.premium.is_active ?? false;
-	const implementedTours = TOURS.filter(
-		(t) => !t.comingSoon && (isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id))
-	);
-	const allToursCompleted = implementedTours.length > 0 && implementedTours.every((t) => completedTourIds.has(t.id));
+	const { closeTourSelect, isTourActive } = useTour();
+	const { navigationItems, topItems: topNavigationItems, bottomItems: bottomNavigationItems } = useNavigation();
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
 	const [dropdownTop, setDropdownTop] = useState<number>(72);
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
 	const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
-
-	const handleLogoutClick = async (): Promise<void> => {
-		if (currentUser?.is_demo) {
-			const confirmed: boolean = await showLogout({
-				title: "Log out of demo account?",
-				message:
-					"All demo data - including your jobs, companies, and settings - will be permanently deleted when you log out.",
-				cancelText: "Stay",
-				confirmText: "Log out",
-			});
-			if (confirmed) logout();
-		} else {
-			const confirmed: boolean = await showLogout({
-				title: "Log out?",
-				message: "Are you sure you want to log out?",
-				cancelText: "Stay",
-				confirmText: "Log out",
-			});
-			if (confirmed) logout();
-		}
-	};
 
 	const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -93,121 +41,6 @@ export const Sidebar = (): JSX.Element => {
 			document.removeEventListener("mousedown", handleClickOutside);
 		};
 	}, [showDropdown]);
-
-	useEffect(() => {
-		if (!isMobile || !isExpanded) return;
-		const blockEvent = (event: Event) => {
-			event.stopPropagation();
-			event.preventDefault();
-		};
-		const handleClickOutside = (event: MouseEvent) => {
-			if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-				event.stopPropagation();
-				event.preventDefault();
-				setIsExpanded(false);
-				document.addEventListener("click", blockEvent, { capture: true, once: true });
-			}
-		};
-		document.addEventListener("mousedown", handleClickOutside, { capture: true });
-		return () => document.removeEventListener("mousedown", handleClickOutside, { capture: true });
-	}, [isMobile, isExpanded]);
-
-	const handleSidebarToggle = (): void => setIsExpanded((prev: boolean): boolean => !prev);
-
-	const navigationItems: NavigationItem[] = [
-		{ path: "/dashboard", text: "Dashboard", position: "top" },
-		{ path: "/jobs", text: "Jobs", position: "top", id: "nav-jobs", tourId: "nav-jobs" },
-		{
-			path: "/job-alerts/jobs",
-			text: "Job Alerts",
-			position: "top",
-			id: "nav-scraped-jobs",
-			tourId: "nav-scraped-jobs",
-			condition: (user: UserData): boolean => user.premium.is_active,
-		},
-		{
-			path: "/speculative-applications",
-			text: "Speculative Applications",
-			position: "top",
-			id: "nav-speculative-applications",
-			tourId: "nav-speculative-applications",
-		},
-		{ path: "/contacts", text: "Contacts", position: "top" },
-		{ path: "/companies", text: "Companies", position: "top" },
-		{
-			text: "Other",
-			position: "top",
-			submenu: [
-				{ path: "/aggregators", text: "Job Aggregators" },
-				{ path: "/keywords", text: "Tags" },
-				{ path: "/interviews", text: "Interviews" },
-				{ path: "/job-application-updates", text: "Job Application Updates" },
-				{ path: "/files", text: "Files" },
-			],
-		},
-		{ path: "/settings", text: "User Settings", id: "nav-user-settings", position: "bottom" },
-		{
-			text: "About",
-			position: "bottom",
-			id: "nav-about",
-			submenu: [
-				{ path: "/about", text: "About JAM" },
-				{ path: "/browser-extension", text: "Browser Extension" },
-				{
-					text: "Contact Support",
-					icon: "envelope",
-					id: "nav-contact-support",
-					onClick: (): void => {
-						if (config?.support_email) {
-							window.location.href = `mailto:${config.support_email}`;
-						}
-					},
-				},
-			],
-		},
-		{
-			path: "/admin",
-			text: "Admin",
-			condition: (user: UserData): boolean => user.is_admin,
-			position: "bottom",
-		},
-		...(!allToursCompleted && !isMobile
-			? [
-					{
-						icon: "map",
-						text: "Take a Tour",
-						position: "bottom" as const,
-						id: "take-a-tour-btn",
-						onClick: toggleTourSelect,
-					},
-				]
-			: []),
-		{
-			icon: "box-arrow-right",
-			text: "Logout",
-			position: "bottom",
-			onClick: handleLogoutClick,
-			className: "logout-item",
-			id: "logout-btn",
-		},
-	];
-
-	const getFilteredNavigationItems = (position: string): NavigationItem[] => {
-		return navigationItems
-			.filter((item: NavigationItem): boolean => item.position === position)
-			.filter((item: NavigationItem): boolean => {
-				// If no condition exists, always include the item
-				if (!item.condition) return true;
-				// If condition exists but no user, treat as false
-				if (!currentUser) return false;
-				// If both condition and user exist, evaluate the condition
-				return item.condition(currentUser);
-			});
-	};
-
-	const topNavigationItems: NavigationItem[] = getFilteredNavigationItems("top");
-
-	const bottomNavigationItems: NavigationItem[] = getFilteredNavigationItems("bottom");
 
 	const handleThemeChange = (): void => {
 		setShowDropdown(false);
@@ -390,20 +223,18 @@ export const Sidebar = (): JSX.Element => {
 		});
 	};
 
+	// On mobile the sidebar is replaced entirely by the page-header dropdown menu
+	// (see MobileNavMenu / PageHeader).
+	if (isMobile) return null;
+
 	return (
 		<>
-			{isMobile && <div className="sidebar-chevron-spacer" />}
 			<div
 				ref={sidebarRef}
 				className={`custom-sidebar ${isExpanded ? "expanded" : "collapsed"}`}
-				onMouseEnter={!isMobile ? handleMouseEnter : undefined}
-				onMouseLeave={!isMobile ? handleMouseLeave : undefined}
+				onMouseEnter={handleMouseEnter}
+				onMouseLeave={handleMouseLeave}
 			>
-				{isMobile && (
-					<button className="sidebar-chevron-btn" onClick={handleSidebarToggle} aria-label="Toggle sidebar">
-						<i className={`bi bi-chevron-${isExpanded ? "left" : "right"}`}></i>
-					</button>
-				)}
 				<div className="sidebar-header">
 					<div ref={dropdownRef}>
 						<div

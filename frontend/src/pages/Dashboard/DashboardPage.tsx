@@ -22,7 +22,8 @@ import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
 import FavouriteJobsTable from "../../components/DataTable/FavouriteJobsTable";
 import FailedScrapedJobsTable from "../../components/DataTable/FailedScrapedJobsTable";
 import RecentUpdatesTable from "../../components/DataTable/RecentUpdatesTable";
-import { getEntityIcon } from "../../components/rendering/view/Icons";
+import { getEntityIcon, getTableIcon } from "../../components/rendering/view/Icons";
+import PageHeader from "../PageHeader/PageHeader";
 import {
 	buildWidgetSettings,
 	DashboardLayoutDataV3,
@@ -50,7 +51,7 @@ import { useAlert } from "../../contexts/AlertContext";
 import WidgetPickerModal from "./WidgetPickerModal";
 import ExtensionBanner from "./ExtensionBanner";
 import { DashboardToolbar } from "./DashboardToolbar";
-import { MOBILE_BREAKPOINT, TABLET_BREAKPOINT } from "../../contexts/ViewportContext";
+import { MOBILE_BREAKPOINT, TABLET_BREAKPOINT, useViewport } from "../../contexts/ViewportContext";
 
 function findFirstFit(existing: LayoutItem[], w: number, h: number, cols: number): { x: number; y: number } {
 	const maxY: number = existing.reduce((max: number, item: LayoutItem): number => Math.max(max, item.y + item.h), 0);
@@ -68,6 +69,7 @@ function findFirstFit(existing: LayoutItem[], w: number, h: number, cols: number
 
 const Dashboard: React.FC = () => {
 	const { currentUser, updateCurrentUser } = useAuth();
+	const { isMobile } = useViewport();
 	const { showConfirm, showDelete } = useAlert();
 	const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
 	const [debouncedWidth, setDebouncedWidth] = useState(width);
@@ -703,6 +705,7 @@ const Dashboard: React.FC = () => {
 				data-tour="dashboard-stats"
 				ref={containerRef as React.RefObject<HTMLDivElement>}
 			>
+				{isMobile && <PageHeader title="Dashboard" icon={getTableIcon("Dashboard")} />}
 				<ExtensionBanner />
 				<div
 					ref={gridWrapperRef}
@@ -771,18 +774,20 @@ const Dashboard: React.FC = () => {
 					)}
 				</div>
 			</div>
-			<DashboardToolbar
-				isEditMode={isEditMode}
-				isSaving={isSaving}
-				onEdit={(): void => {
-					captureBadgeRects();
-					setIsEditMode(true);
-				}}
-				onCancel={handleCancel}
-				onSave={handleSave}
-				onAddWidget={(): void => setShowWidgetPicker(true)}
-				onReset={handleResetLayout}
-			/>
+			{!isMobile && (
+				<DashboardToolbar
+					isEditMode={isEditMode}
+					isSaving={isSaving}
+					onEdit={(): void => {
+						captureBadgeRects();
+						setIsEditMode(true);
+					}}
+					onCancel={handleCancel}
+					onSave={handleSave}
+					onAddWidget={(): void => setShowWidgetPicker(true)}
+					onReset={handleResetLayout}
+				/>
+			)}
 			<WidgetPickerModal
 				show={showWidgetPicker}
 				onHide={(): void => setShowWidgetPicker(false)}

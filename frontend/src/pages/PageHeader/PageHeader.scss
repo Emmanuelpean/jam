@@ -17,8 +17,41 @@
 }
 
 
+.page-header {
+    position: relative;
+    user-select: none;
+}
+
 .page-header .card {
     border: 2px solid transparent !important;
+}
+
+/* Mobile-only chevron that opens the navigation dropdown. */
+.page-header-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    margin-left: 0.25rem;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--bs-secondary-color);
+    transition: transform 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+
+    i {
+        font-size: 1.1rem;
+        line-height: 1;
+        position: relative;
+        top: 2px;
+    }
+
+    &.open {
+        transform: rotate(90deg);
+    }
 }
 
 .page-headers-row {

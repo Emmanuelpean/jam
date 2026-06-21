@@ -23,6 +23,8 @@ import { SelectInput } from "../components/rendering/widgets/SelectWidget";
 import { Textarea } from "../components/rendering/widgets/TextArea";
 import { Toggle } from "../components/rendering/widgets/Toggle";
 import { UrlInput } from "../components/rendering/widgets/UrlInput";
+import { useViewport } from "../contexts/ViewportContext";
+import PageHeader from "./PageHeader/PageHeader";
 
 /* -------------------------------- THEME TOGGLE -------------------------------- */
 
@@ -63,6 +65,7 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 /* ---------------------------------- PAGE ---------------------------------- */
 
 export const StyleGuidePage: React.FC = () => {
+	const { isMobile } = useViewport();
 	const [formData, setFormData] = React.useState<any>({
 		checkbox: false,
 		password: "",
@@ -149,6 +152,7 @@ export const StyleGuidePage: React.FC = () => {
 
 	return (
 		<Container fluid className="py-4 main-content">
+			{isMobile && <PageHeader title="Style Guide" icon="palette" />}
 			<div className="d-flex justify-content-between align-items-center mb-4">
 				<h2 className="mb-0">Design System / Style Guide</h2>
 				<ThemeToggle />

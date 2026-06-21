@@ -14,11 +14,15 @@ import { TOURS } from "../../components/GuidedTour/tourSteps";
 import AppFeaturesList, { Feature } from "./AppFeaturesList";
 import { releaseNotes as releaseNotesRegistry, version, VERSIONS } from "../../releaseNotes/versions";
 import { Accordion } from "../../components/Accordion/Accordion";
+import { useViewport } from "../../contexts/ViewportContext";
+import PageHeader from "../PageHeader/PageHeader";
+import { getTableIcon } from "../../components/rendering/view/Icons";
 
 const AboutPage = (): JSX.Element => {
 	const { showWelcome } = useWhatsNew();
 	const { toggleTourSelect, completedTourIds } = useTour();
 	const { currentUser } = useAuth();
+	const { isMobile } = useViewport();
 	const [openVersion, setOpenVersion] = useState<string | null>(null);
 	const isPremium = currentUser?.premium.is_active ?? false;
 	const implementedTours = TOURS.filter(
@@ -60,7 +64,8 @@ const AboutPage = (): JSX.Element => {
 	];
 
 	return (
-		<div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+		<div style={{ flex: 1, minHeight: isMobile ? undefined : 0, overflowY: isMobile ? "visible" : "auto" }}>
+			{isMobile && <PageHeader title="About JAM" icon={getTableIcon("About JAM")} />}
 			<div className="about-container d-flex flex-column align-items-center justify-content-center">
 				{/* Hero Section */}
 				<div className="hero-overlay">

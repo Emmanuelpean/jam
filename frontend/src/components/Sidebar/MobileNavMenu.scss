@@ -1,0 +1,68 @@
+@use "../../variables" as *;
+
+@keyframes mobile-nav-menu-open {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.99);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Dropdown that replaces the sidebar on mobile. Anchored under a PageHeader. */
+.mobile-nav-menu {
+    position: absolute;
+    z-index: 1100;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    overflow-y: auto;
+    max-height: min(70vh, 560px);
+    padding: 0.4rem;
+    transform-origin: top center;
+    border: 1px solid var(--bs-card-border-color);
+    border-radius: 12px;
+    background: var(--bs-body-bg);
+    box-shadow: 0 12px 28px rgb(0 0 0 / 22%);
+    animation: mobile-nav-menu-open 0.16s ease forwards;
+
+    .nav-item {
+        position: relative;
+        margin: 0.1rem 0.1rem;
+
+        /* The sidebar slides nav text in/out; in the menu it is always visible. */
+        .nav-text {
+            transform: none;
+        }
+    }
+}
+
+.mobile-nav-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-nav-divider {
+    height: 1px;
+    margin: 0.4rem 0.5rem;
+    background-color: var(--bs-card-border-color);
+}
+
+.mobile-nav-group-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.5rem 0.75rem 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--bs-secondary-color);
+}
+
+.mobile-nav-menu .submenu-item {
+    /* Override the sidebar submenu entry/exit animation (hidden by default there). */
+    transform: none;
+    opacity: 1;
+    padding-left: 28px;
+}
