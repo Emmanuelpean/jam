@@ -10,6 +10,7 @@ import React, {
 	useState,
 } from "react";
 import { Button } from "react-bootstrap";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useViewport } from "../../contexts/ViewportContext";
 import {
@@ -377,6 +378,17 @@ function DataTableComponent<T extends JamData>(
 
 	const data: T[] = getData();
 	const { error: contextError } = dataContext;
+
+	// Open a specific record's view modal when navigated here from the command palette search.
+	const location = useLocation();
+	const navigate = useNavigate();
+	useEffect((): void => {
+		const state = location.state as { openEntityType?: EntityType; openEntityId?: number } | null;
+		if (!state?.openEntityId || state.openEntityType !== entityType) return;
+		const item: T | undefined = data.find((row: T): boolean => row.id === state.openEntityId);
+		if (item) openViewModal(item);
+		navigate(location.pathname, { replace: true, state: {} });
+	}, [location.state, data]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const handleSort = useCallback(
 		(key: string): void => {

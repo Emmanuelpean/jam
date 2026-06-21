@@ -696,3 +696,6 @@ export const useDataContext = (): DataContextValue => {
 	if (!context) throw new Error("useDataContext must be used within a DataProvider");
 	return context;
 };
+
+// Non-throwing variant for components that render outside the DataProvider (e.g. when logged out).
+export const useDataContextOptional = (): DataContextValue | undefined => useContext(DataContext);

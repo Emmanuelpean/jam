@@ -205,6 +205,143 @@ class TestCommandPalette(BaseTest):
         self.delete_modal.wait_for_modal_close()
 
 
+class TestCommandPaletteRecordSearch(BaseTest):
+    """The palette search also matches the user's records (jobs, companies, contacts, tags, aggregators)."""
+
+    user_index = 0
+    page_url = "dashboard"
+
+    def setup_function(self, request) -> None:
+        self.login()
+
+    # -------------------------------------------------- HELPERS --------------------------------------------------
+
+    def open_palette(self) -> None:
+        """Open the command palette."""
+
+        self.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.CONTROL + "k")
+        self.get_element("cp-input", timeout=5)
+
+    @property
+    def palette_input(self) -> WebElement:
+        """Get the search input in the command palette."""
+
+        return self.get_element("cp-input")
+
+    def _get_items(self) -> list[WebElement]:
+        """Get all items in the command palette."""
+
+        return self.driver.find_elements(By.CSS_SELECTOR, "[id^='cp-item-']")
+
+    def wait_for_close(self) -> None:
+        """Wait for the command palette to close."""
+
+        self.wait_for_disappear("cp-backdrop")
+
+    # --------------------------------------------------- TESTS ---------------------------------------------------
+
+    def test_search_matches_job_title(self) -> None:
+        """Typing a job title surfaces that job as a result."""
+
+        self._make_job(title="Zynapse Backend Engineer")
+        self.refresh()
+        self.open_palette()
+        self.palette_input.send_keys("Zynapse")
+        item = self.get_element("[id^='cp-item-job-']", By.CSS_SELECTOR)
+        assert item.find_element(By.CSS_SELECTOR, CP_ITEM_LABEL).text == "Zynapse Backend Engineer"
+
+    def test_enter_opens_job_view_modal(self) -> None:
+        """Selecting a job result navigates to /jobs and opens its view modal."""
+
+        job = self._make_job(title="Zynapse Platform Lead")
+        self.refresh()
+        self.open_palette()
+        self.palette_input.send_keys("Zynapse Platform Lead")
+        self.palette_input.send_keys(Keys.ENTER)
+        self.wait_for_close()
+        assert "/jobs" in self.driver.current_url
+        modal = self.job_modal_utils.wait_for_view_modal()
+        assert job.title in modal.text
+
+    def test_click_company_result_opens_view_modal(self) -> None:
+        """Clicking a company result navigates to /companies and opens its view modal."""
+
+        company = self._make_company(name="Zentech Solutions")
+        self.refresh()
+        self.open_palette()
+        self.palette_input.send_keys("Zentech")
+        self.get_element(f"cp-item-company-{company.id}").click()
+        self.wait_for_close()
+        assert "/companies" in self.driver.current_url
+        modal = self.company_modal_utils.wait_for_view_modal()
+        assert company.name in modal.text
+
+    def test_search_matches_contact_name(self) -> None:
+        """Selecting a contact result navigates to /contacts and opens its view modal."""
+
+        person = self._make_person(first_name="Zaphod", last_name="Beeblebrox")
+        self.refresh()
+        self.open_palette()
+        self.palette_input.send_keys("Zaphod")
+        self.get_element(f"cp-item-person-{person.id}").click()
+        self.wait_for_close()
+        assert "/contacts" in self.driver.current_url
+        self.person_modal_utils.wait_for_view_modal()
+
+    def test_search_matches_tag_name(self) -> None:
+        """Selecting a tag result navigates to /keywords and opens its view modal."""
+
+        keyword = self._make_keyword(name="Zigzag")
+        self.refresh()
+        self.open_palette()
+        self.palette_input.send_keys("Zigzag")
+        self.get_element(f"cp-item-keyword-{keyword.id}").click()
+        self.wait_for_close()
+        assert "/keywords" in self.driver.current_url
+        self.keyword_modal_utils.wait_for_view_modal()
+
+    def test_search_matches_aggregator_name(self) -> None:
+        """Selecting an aggregator result navigates to /aggregators and opens its view modal."""
+
+        aggregator = self._make_aggregator(name="Zephyr Jobs")
+        self.refresh()
+        self.open_palette()
+        self.palette_input.send_keys("Zephyr")
+        self.get_element(f"cp-item-aggregator-{aggregator.id}").click()
+        self.wait_for_close()
+        assert "/aggregators" in self.driver.current_url
+        self.aggregator_modal_utils.wait_for_view_modal()
+
+    def test_results_capped_per_group(self) -> None:
+        """No more than five matching records are shown per entity group."""
+
+        for i in range(7):
+            self._make_job(title=f"Zcapped Role {i}")
+        self.refresh()
+        self.open_palette()
+        self.palette_input.send_keys("Zcapped")
+        job_items = self.driver.find_elements(By.CSS_SELECTOR, "[id^='cp-item-job-']")
+        assert len(job_items) == 5
+
+    def test_record_results_grouped_by_entity(self) -> None:
+        """Matching records appear under their entity group header."""
+
+        self._make_company(name="Zgroup Industries")
+        self.refresh()
+        self.open_palette()
+        self.palette_input.send_keys("Zgroup")
+        headers = [h.text for h in self.driver.find_elements(By.CSS_SELECTOR, "[id^='cp-group-']")]
+        assert "COMPANIES" in headers
+
+    def test_no_record_match_shows_empty_state(self) -> None:
+        """A query that matches no page, action or record shows the empty state."""
+
+        self.open_palette()
+        self.palette_input.send_keys("Zznorecordmatch")
+        self.get_element("cp-empty", enabled=False)
+        assert len(self._get_items()) == 0
+
+
 class TestCommandPaletteUnauthenticated(BaseTest):
 
     def setup_function(self, request) -> None:

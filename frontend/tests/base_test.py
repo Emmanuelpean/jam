@@ -398,6 +398,20 @@ class BaseTest(BaseUtils):
         self.db.refresh(application)
         return application
 
+    def _make_keyword(self, **kwargs) -> models.Keyword:
+        """Create and persist a Keyword (tag) owned by the current test user."""
+
+        defaults = {
+            "name": "Test Keyword",
+            "owner_id": self.user.id,
+        }
+        defaults.update(kwargs)
+        keyword = models.Keyword(**defaults)
+        self.db.add(keyword)
+        self.db.commit()
+        self.db.refresh(keyword)
+        return keyword
+
     def _make_aggregator(self, **kwargs) -> models.Aggregator:
         """Create and persist an Aggregator owned by the current test user."""
 

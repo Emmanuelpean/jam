@@ -42,7 +42,7 @@ export function getTableIcon(title: string): string {
 		Settings: getEntityIcon("setting"),
 		"Job Alerts": getEntityIcon("scrapedJob"),
 		"Job Emails": getEntityIcon("jobEmail"),
-		"User Settings": "gear",
+		"My Account": "gear",
 		"Job Scraping Dashboard": "envelope-arrow-down",
 		About: "info-circle",
 		Admin: "person-gear",

@@ -57,7 +57,7 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 
 	return (
 		<div className="container-fluid d-flex flex-column settings-page-container">
-			<PageHeader title={"User Settings"} icon={getTableIcon("User Settings")} />
+			<PageHeader title={"My Account"} icon={getTableIcon("My Account")} />
 			<div className="settings-layout">
 				<div className="settings-sidebar-col">
 					<div className="settings-sidebar">

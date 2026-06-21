@@ -104,7 +104,7 @@ export const useNavigation = (): UseNavigationResult => {
 				{ path: "/files", text: "Files" },
 			],
 		},
-		{ path: "/settings", text: "User Settings", id: "nav-user-settings", position: "bottom" },
+		{ path: "/settings", text: "My Account", id: "nav-user-settings", position: "bottom" },
 		{
 			text: "About",
 			position: "bottom",
