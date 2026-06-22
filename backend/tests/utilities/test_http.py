@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from utilities.http import MAX_ATTEMPTS, request_with_retry
+from app.utilities.http import MAX_ATTEMPTS, request_with_retry
 
 
 def _resp(status_code: int) -> MagicMock:
