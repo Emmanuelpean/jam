@@ -19,6 +19,7 @@ from app.geolocation import routers as geolocation_routers
 from app.job_email_scraping import routers as job_email_scraping_routers
 from app.job_rating import routers as job_rating_routers
 from app.payments import routers as payment_routers
+from app.service_runner.error_routers import service_error_router
 
 
 @asynccontextmanager
@@ -99,6 +100,9 @@ app.include_router(job_rating_routers.job_rating_service_router)
 app.include_router(external_service_monitoring_routers.external_service_monitoring_history_router)
 app.include_router(external_service_monitoring_routers.external_service_monitoring_service_router)
 app.include_router(external_service_monitoring_routers.external_service_monitoring_service_log_router)
+
+# Service errors
+app.include_router(service_error_router)
 
 # User routers
 app.include_router(core_routers.user_router)

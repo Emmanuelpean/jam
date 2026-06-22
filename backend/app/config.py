@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     monthly_scrape_quota: int
     scrape_retry_delay_hours: float
     scrape_max_retry: int
+    rating_retry_delay_hours: float = 3.0
+    rating_max_retry: int = 3
     min_scraping_description_length: int
     max_scraping_description_length: int
     max_scraping_title_length: int

@@ -6,7 +6,6 @@ database, scrapes full job details (via platform scrapers or from email
 content), and records run statistics in an JobScrapingServiceLog."""
 
 import datetime as dt
-import traceback
 from enum import Enum
 
 from sqlalchemy import or_
@@ -27,10 +26,10 @@ from app.job_email_scraping.models import (
     ScrapedJob,
     JobEmailScrapingServiceLog,
     JobEmailScrapingPlatformStat,
-    JobEmailScrapingServiceError,
 )
 from app.job_email_scraping.schemas import JobResult
 from app.resources import CURRENCIES
+from app.service_runner.models import Error, record_error
 from app.service_runner.service_runner import ServiceRunner
 from app.utilities.logger import AppLogger
 
@@ -110,22 +109,13 @@ class JobEmailScraper(EmailService):
         self,
         service_log: JobEmailScrapingServiceLog,
         exc: Exception | str,
-    ) -> JobEmailScrapingServiceError:
-        """Create a JobEmailScrapingServiceError for a caught exception.
+    ) -> Error:
+        """Record an Error for a caught exception during the scraping run.
         :param service_log: associated JobEmailScrapingServiceLog instance
-        :param exc: the caught exception
-        :return: JobEmailScrapingServiceError instance"""
+        :param exc: the caught exception or an error message string
+        :return: Error instance"""
 
-        tb = traceback.format_exc()
-        err = JobEmailScrapingServiceError(
-            error_type=type(exc).__name__,
-            message=str(exc),
-            traceback=tb,
-            service_log_id=service_log.id,
-        )
-        self.db.add(err)
-        self.db.commit()
-        return err
+        return record_error(self.db, exc, job_email_scraping_service_log_id=service_log.id)
 
     def get_user_monthly_scrape_count(self, owner_id: int) -> int:
         """Get the count of jobs scraped by a user in the current month.
@@ -579,8 +569,8 @@ class JobEmailScraper(EmailService):
             .filter(ScrapedJob.is_processed.is_(False))
             .filter(
                 or_(
-                    ScrapedJob.next_retry_at.is_(None),
-                    ScrapedJob.next_retry_at <= now,
+                    ScrapedJob.scraping_next_retry_at.is_(None),
+                    ScrapedJob.scraping_next_retry_at <= now,
                 )
             )
             .all()
@@ -656,30 +646,35 @@ class JobEmailScraper(EmailService):
                     job_data = scraper.scrape_job()[0]
                     self.update_scraped_job_data(job_record, job_data)
                     job_record.is_processed = True
+                    job_record.scraping_next_retry_at = None
                     self.db.commit()
                     self.upsert_platform_stat(service_log, job_record.platform, job_scrape_succeeded_ids=job_record.id)
-                except:
-                    message = (
-                        f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: "
-                        f"{traceback.format_exc()}. Skipping job."
-                    )
+                except Exception as exception:
+                    message = f"Failed to scrape job data for job ID {job_record.external_job_id}. Skipping job."
                     self.logger.exception(message)
-                    job_record.scrape_error = job_record.scrape_error + [
-                        {"datetime": dt.datetime.now(dt.timezone.utc).isoformat(), "error": traceback.format_exc()}
-                    ]
-                    job_record.retry_count += 1
-                    if job_record.retry_count < 3:
-                        job_record.next_retry_at = dt.datetime.now(dt.timezone.utc) + dt.timedelta(
+                    record_error(
+                        self.db,
+                        exception,
+                        message=message,
+                        scraped_job_id=job_record.id,
+                        job_email_scraping_service_log_id=service_log.id,
+                    )
+                    job_record.scraping_retry_count += 1
+                    if job_record.scraping_retry_count < settings.scrape_max_retry:
+                        job_record.scraping_next_retry_at = dt.datetime.now(dt.timezone.utc) + dt.timedelta(
                             hours=settings.scrape_retry_delay_hours
                         )
                         self.logger.info(
-                            f"Scheduled retry {job_record.retry_count}/3 for job ID "
+                            f"Scheduled retry {job_record.scraping_retry_count}/{settings.scrape_max_retry} for job ID "
                             f"{job_record.external_job_id} in {settings.scrape_retry_delay_hours}h"
                         )
                     else:
                         job_record.is_processed = True
                         job_record.is_failed = True
-                        self.logger.info(f"Job ID {job_record.external_job_id} permanently failed after 3 attempts")
+                        self.logger.info(
+                            f"Job ID {job_record.external_job_id} permanently failed after "
+                            f"{settings.scrape_max_retry} attempts"
+                        )
                     self.db.commit()
                     self.upsert_platform_stat(service_log, job_record.platform, job_scrape_failed_ids=job_record.id)
             else:

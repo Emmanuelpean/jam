@@ -367,11 +367,83 @@ class TestScrapedJobRaterRateJob:
         )
 
         session.refresh(service_log)
+        session.refresh(scraped_job)
+
+        # First failure schedules a cross-run retry; no terminal JobRating is created yet
+        rating = session.query(models.JobRating).filter(models.JobRating.scraped_job_id == scraped_job.id).first()
+        assert rating is None
+        assert scraped_job.rating_retry_count == 1
+        assert scraped_job.rating_next_retry_at is not None
+        assert scraped_job.id in service_log.job_failed_ids
+
+        # The failure is recorded as a unified Error
+        service_error = session.query(models.Error).first()
+        assert service_error is not None
+        assert "AI service unavailable" in service_error.message
+        # The rating error is linked to the ScrapedJob it failed on and the rating run
+        assert service_error.scraped_job_id == scraped_job.id
+        assert service_error.job_rating_service_log_id == service_log.id
+
+    def test_rating_permanently_fails_after_max_retries(
+        self,
+        session,
+        test_users,
+        test_user_qualifications,
+        test_ai_prompts,
+        test_job_scraping_service_logs,
+        monkeypatch,
+    ) -> None:
+        """After settings.rating_max_retry failures a terminal failed JobRating is created."""
+
+        user = test_users[0]
+        qualification = [q for q in test_user_qualifications if q.owner_id == user.id][0]
+        system_prompt, job_prompt_template = test_ai_prompts
+        service_log = self.make_service_log(session)
+        description = "A" * (settings.min_scraping_description_length + 1)
+        scraped_job = self.make_scraped_job(session, user.id, description, test_job_scraping_service_logs[0].id)
+
+        import app.job_rating.scraped_job_rating as rating_module
+
+        def raise_error(*_args, **_kwargs):
+            """Raise an error"""
+            raise RuntimeError("AI service unavailable")
+
+        monkeypatch.setattr(rating_module, "claude_query", raise_error)
+
+        combined_system_prompt = create_system_prompt_with_profile(
+            system_prompt.prompt,
+            qualification.experience,
+            qualification.education,
+            qualification.skills,
+            qualification.qualities,
+            qualification.interests,
+        )
+
+        rater = ScrapedJobRater()
+        for _ in range(settings.rating_max_retry):
+            scraped_job.rating_next_retry_at = None  # make eligible for retry each run
+            session.commit()
+            rater._rate_job(
+                session,
+                scraped_job,
+                user.id,
+                qualification,
+                service_log,
+                system_prompt,
+                job_prompt_template,
+                combined_system_prompt,
+            )
+
+        session.refresh(scraped_job)
+        assert scraped_job.rating_retry_count == settings.rating_max_retry
+
+        # A terminal failed JobRating is recorded so the job is no longer re-queried
         rating = session.query(models.JobRating).filter(models.JobRating.scraped_job_id == scraped_job.id).first()
         assert rating is not None
         assert rating.is_success is False
-        assert "AI service unavailable" in rating.error
-        assert scraped_job.id in service_log.job_failed_ids
+
+        # Every attempt is recorded as an Error
+        assert session.query(models.Error).count() == settings.rating_max_retry
 
     def test_truncates_long_description(
         self,

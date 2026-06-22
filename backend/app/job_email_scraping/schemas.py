@@ -87,13 +87,14 @@ class ScrapedJob(BaseModel):
     is_scraped: bool = False
     is_failed: bool = False
     scrape_datetime: datetime | None = None
-    scrape_error: list[dict] = []
     is_active: bool = True
     is_imported: bool = False
     is_skipped: bool = False
     skip_reason: str | None = None
-    retry_count: int = 0
-    next_retry_at: datetime | None = None
+    scraping_retry_count: int = 0
+    scraping_next_retry_at: datetime | None = None
+    rating_retry_count: int = 0
+    rating_next_retry_at: datetime | None = None
     read_at: datetime | None = None
 
     # Job data
@@ -208,7 +209,6 @@ class JobEmailScrapingServiceLogOut(Out):
     emails: list[int]
     scraped_jobs: list[int]
     platform_stats: list["JobEmailScrapingPlatformStatOut"]
-    service_errors: list["JobEmailScrapingServiceErrorOut"]
 
     @field_validator("emails", "scraped_jobs", mode="before")
     @classmethod
@@ -238,17 +238,6 @@ class JobEmailScrapingPlatformStatOut(Out):
     email_skipped_ids: list[int] = []
 
     service_log_id: int | None = None
-
-
-# --------------------------------------------- JOB SCRAPING SERVICE ERROR ---------------------------------------------
-
-
-class JobEmailScrapingServiceErrorOut(Out):
-    """Job Email Scraping Service Error output schema"""
-
-    error_type: str
-    message: str
-    traceback: str
 
 
 # ------------------------------------------------ EMAIL SCRAPER SERVICE -----------------------------------------------

@@ -6,7 +6,6 @@ from pydantic import BaseModel
 
 from app.base_schemas import Out
 
-
 # ----------------------------------------------------- JOB RATING -----------------------------------------------------
 
 
@@ -22,7 +21,6 @@ class JobRatingOut(BaseModel):
     is_success: bool | None
     is_skipped: bool | None
     skip_reason: str | None
-    error: str | None
     scraped_job_id: int | None
     user_qualification_id: int | None
     system_prompt_id: int | None

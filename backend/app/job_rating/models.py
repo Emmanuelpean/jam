@@ -64,7 +64,6 @@ class JobRating(Owned, Base):
     - `is_skipped` (bool, optional): Indicates whether the rating process was skipped.
     - `skip_reason` (str, optional): Reason for skipping the rating process.
     - `is_success` (bool, optional): Indicates whether the rating process was successful.
-    - `error` (str, optional): Error message if the rating process failed.
     - `job_prompt` (str, optional): Job prompt used for the rating.
     - `llm_model` (str): LLM model used for the rating.
     - `notes` (List[str], optional): Additional notes or comments about the rating.
@@ -92,7 +91,6 @@ class JobRating(Owned, Base):
     is_skipped = Column(Boolean, nullable=False, server_default=expression.false())
     skip_reason = Column(String, nullable=True)
     is_success = Column(Boolean, nullable=True)
-    error = Column(String, nullable=True)
     job_prompt = Column(String, nullable=True)
     llm_model = Column(String, nullable=False)
     notes = Column(PG_ARRAY(String), server_default="{}", nullable=False)
@@ -136,6 +134,9 @@ class JobRatingServiceLog(ServiceLog, CommonBase, Base):
     job_succeeded_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_skipped_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_failed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+
+    # Relationships
+    service_errors = relationship("Error", back_populates="job_rating_service_log", cascade="all, delete-orphan")
 
     def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""

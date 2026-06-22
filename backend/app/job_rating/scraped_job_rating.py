@@ -1,8 +1,8 @@
 """Use Gemini LLM to rate how well scraped jobs match user qualifications."""
 
 import datetime as dt
-import traceback
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
@@ -10,6 +10,7 @@ from app.config import settings
 from app.database import get_db
 from app.job_rating.claude import MODEL as CLAUDE_MODEL, claude_query
 from app.job_rating.prompts import create_job_only_prompt, create_system_prompt_with_profile
+from app.service_runner.models import record_error
 from app.service_runner.service_runner import ServiceRunner
 from app.utilities.logger import AppLogger
 
@@ -61,6 +62,7 @@ def get_user_unrated_scraped_jobs(db: Session, user_id: int) -> list[models.Scra
     :param user_id: ID of the user to get jobs for
     :return: List of unrated scraped jobs"""
 
+    now = dt.datetime.now(dt.timezone.utc)
     # noinspection PyComparisonWithNone
     return (
         db.query(models.ScrapedJob)
@@ -72,6 +74,12 @@ def get_user_unrated_scraped_jobs(db: Session, user_id: int) -> list[models.Scra
         .filter(models.ScrapedJob.is_active.is_(True))
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.exclusion_filter == None)
+        .filter(
+            or_(
+                models.ScrapedJob.rating_next_retry_at.is_(None),
+                models.ScrapedJob.rating_next_retry_at <= now,
+            )
+        )
         .all()
     )
 
@@ -160,8 +168,7 @@ class ScrapedJobRater:
         service_log.job_found_ids = service_log.job_found_ids + [job.id for job in scraped_jobs]
         self.logger.info(f"Found {len(scraped_jobs)} scraped jobs to rate")
 
-        # Build the combined system prompt (instructions + candidate profile) once per user
-        # so Anthropic caches it across all jobs for this user
+        # Build the combined system prompt
         combined_system_prompt = create_system_prompt_with_profile(
             prompt_template=system_prompt.prompt,
             user_experience=user_qualification.experience,
@@ -232,44 +239,47 @@ class ScrapedJobRater:
             db.commit()
             return
 
-        # Check that the job description is not too short
-        if scraped_job.description and len(scraped_job.description) < settings.min_scraping_description_length:
-            self.logger.info(f"Skipping job ID {scraped_job.id} as its description is too short")
-            job_rating = models.JobRating(
-                is_skipped=True,
-                skip_reason=f"Job description too short (minimum length is {settings.min_scraping_description_length} characters)",
-                **job_rating_kwargs,
-            )
-            db.add(job_rating)
-            service_log.job_skipped_ids = service_log.job_skipped_ids + [scraped_job.id]
-            db.commit()
-            return
-
         # Ensure that the job has a description
+        skip_reason = None
         if not scraped_job.description:
             self.logger.info(f"Skipping job ID {scraped_job.id} as it has no description")
-            job_rating = models.JobRating(
-                is_skipped=True,
-                skip_reason="Job has no description",
-                **job_rating_kwargs,
+            skip_reason = "Job has no description"
+
+        # Check that the job description is not too short
+        elif len(scraped_job.description) < settings.min_scraping_description_length:
+            self.logger.info(f"Skipping job ID {scraped_job.id} as its description is too short")
+            skip_reason = (
+                f"Job description too short (minimum length is {settings.min_scraping_description_length} characters)"
             )
+
+        if skip_reason:
+            job_rating = models.JobRating(is_skipped=True, skip_reason=skip_reason, **job_rating_kwargs)
             db.add(job_rating)
             service_log.job_skipped_ids = service_log.job_skipped_ids + [scraped_job.id]
             db.commit()
             return
 
         description, description_note = ensure_length_limit(
-            "description", scraped_job.description, settings.max_scraping_description_length, self.logger
+            "description",
+            scraped_job.description,
+            settings.max_scraping_description_length,
+            self.logger,
         )
         if description_note:
             notes.append(description_note)
         title, title_note = ensure_length_limit(
-            "title", scraped_job.title, settings.max_scraping_title_length, self.logger
+            "title",
+            scraped_job.title,
+            settings.max_scraping_title_length,
+            self.logger,
         )
         if title_note:
             notes.append(title_note)
         company, company_note = ensure_length_limit(
-            "company", scraped_job.company, settings.max_scraping_company_length, self.logger
+            "company",
+            scraped_job.company,
+            settings.max_scraping_company_length,
+            self.logger,
         )
         if company_note:
             notes.append(company_note)
@@ -300,17 +310,35 @@ class ScrapedJobRater:
             )
             db.add(job_rating)
             service_log.job_succeeded_ids = service_log.job_succeeded_ids + [scraped_job.id]
+            scraped_job.rating_next_retry_at = None
             db.commit()
         except Exception as exception:
-            tb = traceback.format_exc()
+            message = f"Error scoring job ID {scraped_job.id}: {exception}\nRaw response is {score}"
             self.logger.exception(f"Error in rating workflow: {exception}")
-            job_rating = models.JobRating(
-                is_success=False,
-                error=f"Error scoring job: {exception}\n{tb}\nRaw response is {score}",
-                **job_rating_kwargs,
+            record_error(
+                db,
+                exception,
+                message=message,
+                scraped_job_id=scraped_job.id,
+                job_rating_service_log_id=service_log.id,
             )
-            db.add(job_rating)
+            scraped_job.rating_retry_count += 1
             service_log.job_failed_ids = service_log.job_failed_ids + [scraped_job.id]
+            if scraped_job.rating_retry_count < settings.rating_max_retry:
+                scraped_job.rating_next_retry_at = dt.datetime.now(dt.timezone.utc) + dt.timedelta(
+                    hours=settings.rating_retry_delay_hours
+                )
+                self.logger.info(
+                    f"Scheduled rating retry {scraped_job.rating_retry_count}/{settings.rating_max_retry} for "
+                    f"job ID {scraped_job.id} in {settings.rating_retry_delay_hours}h"
+                )
+            else:
+                # Permanently failed: record a terminal JobRating so the job is no longer re-queried
+                self.logger.info(
+                    f"Job ID {scraped_job.id} rating permanently failed after {settings.rating_max_retry} attempts"
+                )
+                job_rating = models.JobRating(is_success=False, **job_rating_kwargs)
+                db.add(job_rating)
             db.commit()
 
 

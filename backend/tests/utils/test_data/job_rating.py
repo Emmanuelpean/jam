@@ -90,7 +90,6 @@ JOB_RATING_DATA = [
     {
         "scraped_job_id": 6,
         "is_success": False,
-        "error": "Failed to scrape job details: Page not found",
         "user_qualification_id": 3,
         "owner_id": 2,
         "system_prompt_id": 1,
@@ -101,7 +100,6 @@ JOB_RATING_DATA = [
     {
         "scraped_job_id": 7,
         "is_success": False,
-        "error": "Failed to scrape job details: Rate limit exceeded",
         "user_qualification_id": 4,
         "owner_id": 2,
         "system_prompt_id": 1,
@@ -160,7 +158,6 @@ JOB_RATING_DATA = [
     {
         "scraped_job_id": 11,
         "is_success": False,
-        "error": "Failed to rate job: missing job description",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -187,7 +184,6 @@ JOB_RATING_DATA = [
     {
         "scraped_job_id": 13,
         "is_success": False,
-        "error": "Failed to rate job: API timeout",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -907,7 +903,6 @@ JOB_RATING_DATA = [
     {
         "scraped_job_id": 58,
         "is_success": False,
-        "error": "Failed to rate job: Page not found",
         "user_qualification_id": 1,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -918,7 +913,6 @@ JOB_RATING_DATA = [
     {
         "scraped_job_id": 59,
         "is_success": False,
-        "error": "Failed to rate job: Page not found",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -929,7 +923,6 @@ JOB_RATING_DATA = [
     {
         "scraped_job_id": 60,
         "is_success": False,
-        "error": "Failed to rate job: Connection timeout",
         "user_qualification_id": 1,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -940,7 +933,6 @@ JOB_RATING_DATA = [
     {
         "scraped_job_id": 61,
         "is_success": False,
-        "error": "Failed to rate job: Access denied",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -951,7 +943,6 @@ JOB_RATING_DATA = [
     {
         "scraped_job_id": 62,
         "is_success": False,
-        "error": "Failed to rate job: Rate limit exceeded",
         "user_qualification_id": 1,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -962,7 +953,6 @@ JOB_RATING_DATA = [
     {
         "scraped_job_id": 63,
         "is_success": False,
-        "error": "Failed to rate job: Invalid response format",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -973,7 +963,6 @@ JOB_RATING_DATA = [
     {
         "scraped_job_id": 64,
         "is_success": False,
-        "error": "Failed to rate job: Service unavailable",
         "user_qualification_id": 1,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -984,7 +973,6 @@ JOB_RATING_DATA = [
     {
         "scraped_job_id": 65,
         "is_success": False,
-        "error": "Failed to rate job: Internal server error",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,

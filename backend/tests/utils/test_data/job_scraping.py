@@ -1724,9 +1724,6 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": [
-            {"datetime": "2025-08-18T08:30:00+00:00", "error": "Page not found - job posting may have been removed"}
-        ],
         "title": "Data Engineer",
         "scrape_datetime": "2025-08-18T08:30:55.567890+00:00",
         "is_imported": True,
@@ -1740,9 +1737,6 @@ SCRAPED_JOB_DATA = [
         "owner_id": 2,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": [
-            {"datetime": "2025-09-07T11:45:00+00:00", "error": "Access denied - company blocked scraping"}
-        ],
         "title": "Sustainability Software Engineer",
         "scrape_datetime": "2025-09-07T11:45:28.456789+00:00",
         "url": "test",
@@ -1754,9 +1748,6 @@ SCRAPED_JOB_DATA = [
         "owner_id": 2,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": [
-            {"datetime": "2025-09-11T15:30:00+00:00", "error": "Rate limit exceeded - retry after 24 hours"}
-        ],
         "title": "Software Engineer",
         "scrape_datetime": "2025-09-11T15:30:42.678901+00:00",
         "url": "test",
@@ -1768,9 +1759,6 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": [
-            {"datetime": "2025-01-05T11:15:00+00:00", "error": "Page not found - job posting may have been removed"}
-        ],
         "title": "Angular Developer",
         "url": "test",
         "scrape_datetime": "2025-01-05T11:15:00.000+00:00",
@@ -1782,7 +1770,6 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": [{"datetime": "2025-01-04T14:30:00+00:00", "error": "Scraping blocked - rate limit exceeded"}],
         "title": "Data Scientist",
         "url": "test",
         "scrape_datetime": "2025-01-04T14:30:00.000+00:00",
@@ -1794,9 +1781,6 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": [
-            {"datetime": "2025-01-03T16:45:00+00:00", "error": "Access denied - company blocked scraping"}
-        ],
         "title": "AI Software Developer",
         "url": "test",
         "scrape_datetime": "2025-01-03T16:45:00.000+00:00",
@@ -1808,9 +1792,6 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": [
-            {"datetime": "2025-01-02T08:00:00+00:00", "error": "Rate limit exceeded - retry after 24 hours"}
-        ],
         "title": "iOS Developer",
         "url": "test",
         "scrape_datetime": "2025-01-02T08:00:00.000+00:00",
@@ -1822,9 +1803,6 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": [
-            {"datetime": "2025-01-01T13:20:00+00:00", "error": "Connection timeout - server not responding"}
-        ],
         "title": "Android Developer",
         "url": "test",
         "scrape_datetime": "2025-01-01T13:20:00.000+00:00",
@@ -1836,7 +1814,6 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": [{"datetime": "2024-12-06T14:15:00+00:00", "error": "Invalid job posting format"}],
         "title": "Vue.js Developer",
         "url": "test",
         "scrape_datetime": "2024-12-06T14:15:00.000+00:00",
@@ -1848,9 +1825,6 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": [
-            {"datetime": "2024-12-05T16:30:00+00:00", "error": "Page not found - job posting may have been removed"}
-        ],
         "title": "Angular Developer",
         "url": "test",
         "scrape_datetime": "2024-12-05T16:30:00.000+00:00",
@@ -1862,9 +1836,6 @@ SCRAPED_JOB_DATA = [
         "owner_id": 1,
         "is_failed": True,
         "is_processed": True,
-        "scrape_error": [
-            {"datetime": "2024-12-04T08:45:00+00:00", "error": "Connection timeout - server not responding"}
-        ],
         "title": "Data Scientist",
         "url": "test",
         "scrape_datetime": "2024-12-04T08:45:00.000+00:00",
@@ -1895,7 +1866,6 @@ SCRAPED_JOB_DATA = [
         "platform": "indeed",
         "owner_id": 1,
         "is_processed": False,
-        "scrape_error": [{"datetime": "2025-08-20T19:25:00+00:00", "error": "Scraping blocked - rate limit exceeded"}],
         "title": "ML Engineer",
         "scrape_datetime": "2025-08-20T19:25:08.678901+00:00",
         "is_active": False,
@@ -2044,10 +2014,7 @@ SCRAPED_JOB_DATA = [
         "is_closed": False,
         "is_scraped": False,
         "is_processed": False,
-        "retry_count": 1,
-        "scrape_error": [
-            {"datetime": "2025-08-18T08:30:00+00:00", "error": "Page not found - job posting may have been removed"}
-        ],
+        "scraping_retry_count": 1,
         "title": "Blockchain Developer 3",
         "description": "Join our innovative startup and help build cutting-edge solutions...",
         "company": "StartupXYZ",
