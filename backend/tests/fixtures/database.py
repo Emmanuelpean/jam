@@ -52,7 +52,7 @@ def engine(database_url, worker_id) -> Generator[Engine, Any, None]:
 
 
 @pytest.fixture(scope="function")
-def session(engine) -> Generator[orm.Session, Any, None]:
+def session(engine: Engine) -> Generator[orm.Session, Any, None]:
     """Fixture that sets up and tears down a new database session for each test function."""
     reset_database(engine, False)
     testing_session_local = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)

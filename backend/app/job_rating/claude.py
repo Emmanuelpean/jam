@@ -5,7 +5,7 @@ import logging
 import re
 from typing import Any
 
-from anthropic import Anthropic
+from anthropic import Anthropic, APIStatusError
 
 from app.config import settings
 
@@ -18,6 +18,23 @@ MODEL = "claude-haiku-4-5-20251001"
 
 class ClaudeError(Exception):
     """Raised when AI query fails."""
+
+
+class ClaudeBillingError(ClaudeError):
+    """Raised when the Anthropic account has insufficient credit / a billing problem.
+
+    This is not a per-job failure — it affects every subsequent call until credits are topped
+    up, so callers should abort the run and alert an admin rather than retry per job."""
+
+
+def _is_billing_error(exc: Exception) -> bool:
+    """Return True if the exception is an Anthropic insufficient-credit / billing error.
+    :param exc: The exception raised by the Anthropic client."""
+
+    if not isinstance(exc, APIStatusError):
+        return False
+    message = str(getattr(exc, "message", "") or exc).lower()
+    return "credit balance is too low" in message or "plans & billing" in message
 
 
 def claude_query(system_prompt: str, llm_prompt: str, max_tokens: int = 1024) -> dict[str, Any]:
@@ -56,6 +73,10 @@ def claude_query(system_prompt: str, llm_prompt: str, max_tokens: int = 1024) ->
             logger.error("Invalid JSON returned by Claude: %s", content)
             raise ClaudeError("Invalid JSON from Claude") from exc
 
+    except ClaudeError:
+        raise
     except Exception as exc:
         logger.exception("Claude query failed")
+        if _is_billing_error(exc):
+            raise ClaudeBillingError(str(exc)) from exc
         raise ClaudeError from exc

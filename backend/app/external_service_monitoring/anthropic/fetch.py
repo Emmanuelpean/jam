@@ -2,14 +2,15 @@
 
 import datetime as dt
 
-import requests
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.external_service_monitoring import logger
 from app.external_service_monitoring.anthropic import models
 from app.utilities.database import upsert
 from app.utilities.datetime import current_month_window, to_iso_z
+from app.utilities.http import request_with_retry
 
 
 class AnthropicDailyUsage(BaseModel):
@@ -55,11 +56,14 @@ def fetch_anthropic_daily_usage(db: Session | None = None) -> list[AnthropicDail
     page_token: str | None = None
     while True:
         params = {**base_params, **({"page": page_token} if page_token else {})}
-        resp = requests.get(
+        resp = request_with_retry(
+            "GET",
             "https://api.anthropic.com/v1/organizations/cost_report",
+            service="anthropic",
             headers=headers,
             params=params,
             timeout=10,
+            logger=logger,
         )
         resp.raise_for_status()
         payload = resp.json()

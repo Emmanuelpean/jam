@@ -88,7 +88,7 @@ class TestSumBucketAmount:
 
 
 class TestFetchAnthropic:
-    @patch("app.external_service_monitoring.anthropic.fetch.requests.get")
+    @patch("app.external_service_monitoring.anthropic.fetch.request_with_retry")
     def test_returns_one_entry_per_bucket(self, mock_get, mock_settings_and_window, anthropic_payload) -> None:
         mock_get.return_value = MagicMock(json=MagicMock(return_value=anthropic_payload))
 
@@ -105,14 +105,16 @@ class TestFetchAnthropic:
         assert result[1].usage_usd == pytest.approx(0.04703)
         assert result[2].usage_usd == pytest.approx(0.039048)
 
-    @patch("app.external_service_monitoring.anthropic.fetch.requests.get")
+    @patch("app.external_service_monitoring.anthropic.fetch.request_with_retry")
     def test_sends_correct_headers_and_window(self, mock_get, mock_settings_and_window, anthropic_payload) -> None:
         mock_get.return_value = MagicMock(json=MagicMock(return_value=anthropic_payload))
 
         fetch_anthropic_daily_usage()
 
         args, kwargs = mock_get.call_args
-        assert args[0] == "https://api.anthropic.com/v1/organizations/cost_report"
+        assert args[0] == "GET"
+        assert args[1] == "https://api.anthropic.com/v1/organizations/cost_report"
+        assert kwargs["service"] == "anthropic"
         assert kwargs["headers"] == {
             "x-api-key": "test-key",
             "anthropic-version": "2023-06-01",
@@ -122,7 +124,7 @@ class TestFetchAnthropic:
         assert kwargs["params"]["limit"] == 31
         assert "page" not in kwargs["params"]
 
-    @patch("app.external_service_monitoring.anthropic.fetch.requests.get")
+    @patch("app.external_service_monitoring.anthropic.fetch.request_with_retry")
     def test_follows_pagination(self, mock_get, mock_settings_and_window) -> None:
         """When `has_more=True` and `next_page` is set, the fetcher requests the next page."""
 
@@ -150,7 +152,7 @@ class TestFetchAnthropic:
         assert second_call_params["starting_at"] == "2026-06-01T00:00:00Z"
         assert [r.date for r in result] == [dt.date(2026, 6, 1), dt.date(2026, 6, 2)]
 
-    @patch("app.external_service_monitoring.anthropic.fetch.requests.get")
+    @patch("app.external_service_monitoring.anthropic.fetch.request_with_retry")
     def test_stops_paginating_when_next_page_missing(self, mock_get, mock_settings_and_window) -> None:
         """`has_more=True` but a falsy `next_page` still terminates — avoids an infinite loop."""
 
@@ -166,7 +168,7 @@ class TestFetchAnthropic:
         assert mock_get.call_count == 1
         assert len(result) == 1
 
-    @patch("app.external_service_monitoring.anthropic.fetch.requests.get")
+    @patch("app.external_service_monitoring.anthropic.fetch.request_with_retry")
     def test_returns_empty_for_no_data(self, mock_get, mock_settings_and_window) -> None:
         mock_get.return_value = MagicMock(
             json=MagicMock(return_value={"data": [], "has_more": False, "next_page": None})
@@ -174,7 +176,7 @@ class TestFetchAnthropic:
 
         assert fetch_anthropic_daily_usage() == []
 
-    @patch("app.external_service_monitoring.anthropic.fetch.requests.get")
+    @patch("app.external_service_monitoring.anthropic.fetch.request_with_retry")
     def test_raises_when_http_error(self, mock_get, mock_settings_and_window) -> None:
         response = MagicMock()
         response.raise_for_status.side_effect = RuntimeError("boom")
@@ -183,7 +185,7 @@ class TestFetchAnthropic:
         with pytest.raises(RuntimeError, match="boom"):
             fetch_anthropic_daily_usage()
 
-    @patch("app.external_service_monitoring.anthropic.fetch.requests.get")
+    @patch("app.external_service_monitoring.anthropic.fetch.request_with_retry")
     def test_persists_rows_when_db_passed(self, mock_get, mock_settings_and_window, anthropic_payload, session) -> None:
         """Passing a db session upserts into the AnthropicDailyUsage ORM table."""
 
@@ -195,7 +197,7 @@ class TestFetchAnthropic:
         assert [r.date for r in rows] == [dt.date(2026, 6, 1), dt.date(2026, 6, 2), dt.date(2026, 6, 3)]
         assert rows[0].usage_usd == pytest.approx(0.016385)
 
-    @patch("app.external_service_monitoring.anthropic.fetch.requests.get")
+    @patch("app.external_service_monitoring.anthropic.fetch.request_with_retry")
     def test_upsert_overwrites_existing_day(self, mock_get, mock_settings_and_window, session) -> None:
         """Re-running for the same day overwrites the prior row rather than duplicating it."""
 

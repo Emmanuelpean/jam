@@ -2,16 +2,15 @@
 
 import datetime as dt
 
-import requests
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.external_service_monitoring import logger
 from app.external_service_monitoring.brightdata import models
 from app.utilities.database import upsert
+from app.utilities.http import request_with_retry
 
-# JAM dataset IDs → friendly names. Unknown IDs returned by the API are dropped so the daily
-# history table only ever contains the datasets we actually use.
 DATASET_LABELS: dict[str, str] = {
     settings.brightdata_linkedin_dataset_id: "LinkedIn",
     settings.brightdata_indeed_dataset_id: "Indeed",
@@ -37,7 +36,14 @@ def fetch_brightdata_balance(db: Session | None = None) -> BrightdataBalance:
     """Hit /customer/balance and return the current account balance + pending costs."""
 
     headers = {"Authorization": f"Bearer {settings.brightdata_api_key}"}
-    resp = requests.get("https://api.brightdata.com/customer/balance", headers=headers, timeout=10)
+    resp = request_with_retry(
+        "GET",
+        "https://api.brightdata.com/customer/balance",
+        service="brightdata",
+        headers=headers,
+        timeout=10,
+        logger=logger,
+    )
     resp.raise_for_status()
     payload = resp.json() or {}
     entry = BrightdataBalance(
@@ -71,7 +77,14 @@ def fetch_brightdata_daily_usage(db: Session | None = None) -> list[BrightdataDa
         "from": start.strftime("%Y-%m-%d"),
         "to": end.strftime("%Y-%m-%d"),
     }
-    resp = requests.post("https://api.brightdata.com/costs/export/json", headers=headers, json=body, timeout=10)
+    resp = request_with_retry(
+        "POST",
+        "https://api.brightdata.com/costs/export/json",
+        service="brightdata",
+        headers=headers,
+        json=body,
+        timeout=10,
+    )
     resp.raise_for_status()
     payload = resp.json() or {}
 

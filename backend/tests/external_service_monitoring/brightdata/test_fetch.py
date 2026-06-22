@@ -65,7 +65,7 @@ def _month_window() -> tuple[str, str]:
 
 
 class TestFetchBrightdataBalance:
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.get")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_parses_balance_snapshot(self, mock_get, mock_settings, balance_payload) -> None:
         mock_get.return_value = MagicMock(json=MagicMock(return_value=balance_payload))
 
@@ -75,17 +75,18 @@ class TestFetchBrightdataBalance:
         assert balance.balance_usd == pytest.approx(42.75)
         assert balance.pending_costs_usd == pytest.approx(1.20)
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.get")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_uses_bearer_auth(self, mock_get, mock_settings, balance_payload) -> None:
         mock_get.return_value = MagicMock(json=MagicMock(return_value=balance_payload))
 
         fetch_brightdata_balance()
 
         args, kwargs = mock_get.call_args
-        assert args[0] == "https://api.brightdata.com/customer/balance"
+        assert args[1] == "https://api.brightdata.com/customer/balance"
+        assert kwargs["service"] == "brightdata"
         assert kwargs["headers"] == {"Authorization": "Bearer test-key"}
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.get")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_missing_fields_default_to_none(self, mock_get, mock_settings) -> None:
         """If the balance endpoint returns {}, both fields default to None."""
 
@@ -96,7 +97,7 @@ class TestFetchBrightdataBalance:
         assert balance.balance_usd is None
         assert balance.pending_costs_usd is None
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.get")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_null_payload_treated_as_empty(self, mock_get, mock_settings) -> None:
         """`resp.json()` returning None is coerced to {} — no AttributeError."""
 
@@ -107,7 +108,7 @@ class TestFetchBrightdataBalance:
         assert balance.balance_usd is None
         assert balance.pending_costs_usd is None
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.get")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_raises_when_http_error(self, mock_get, mock_settings) -> None:
         response = MagicMock()
         response.raise_for_status.side_effect = RuntimeError("boom")
@@ -116,7 +117,7 @@ class TestFetchBrightdataBalance:
         with pytest.raises(RuntimeError, match="boom"):
             fetch_brightdata_balance()
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.get")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_persists_snapshot_when_db_passed(self, mock_get, mock_settings, balance_payload, session) -> None:
         """Passing a db session writes a BrightdataBalance snapshot row."""
 
@@ -131,7 +132,7 @@ class TestFetchBrightdataBalance:
 
 
 class TestFetchBrightdataDailyUsage:
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_flattens_daily_buckets_into_rows_per_dataset(
         self, mock_post, mock_settings, mock_dataset_labels, costs_payload
     ) -> None:
@@ -149,7 +150,7 @@ class TestFetchBrightdataDailyUsage:
             (dt.date(2026, 6, 16), "LinkedIn", 0.009),
         }
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_skips_total_row(self, mock_post, mock_settings, mock_dataset_labels, costs_payload) -> None:
         """The summary `total` key in the payload must not become a usage entry."""
 
@@ -160,7 +161,7 @@ class TestFetchBrightdataDailyUsage:
         for r in result:
             assert isinstance(r.date, dt.date)
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_skips_unknown_dataset_ids(self, mock_post, mock_settings, mock_dataset_labels) -> None:
         """A dataset_id that doesn't match the configured LinkedIn/Indeed IDs is dropped."""
 
@@ -171,7 +172,7 @@ class TestFetchBrightdataDailyUsage:
 
         assert [(r.dataset, r.usage_usd) for r in result] == [("LinkedIn", 0.01)]
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_skips_invalid_date_keys(self, mock_post, mock_settings, mock_dataset_labels) -> None:
         """A non-date-shaped key (other than `total`) is skipped, not crashed on."""
 
@@ -185,7 +186,7 @@ class TestFetchBrightdataDailyUsage:
 
         assert [(r.date, r.usage_usd) for r in result] == [(dt.date(2026, 6, 2), 0.01)]
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_skips_non_dict_values(self, mock_post, mock_settings, mock_dataset_labels) -> None:
         """If a date key maps to something other than a dict, it's skipped."""
 
@@ -199,7 +200,7 @@ class TestFetchBrightdataDailyUsage:
 
         assert [(r.date, r.usage_usd) for r in result] == [(dt.date(2026, 6, 3), 0.01)]
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_skips_non_numeric_amounts(self, mock_post, mock_settings, mock_dataset_labels) -> None:
         """Non-numeric amounts are dropped, not coerced to 0."""
 
@@ -212,7 +213,7 @@ class TestFetchBrightdataDailyUsage:
 
         assert [(r.dataset, r.usage_usd) for r in result] == [("Indeed", 0.01)]
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_sends_correct_request_body(self, mock_post, mock_settings, mock_dataset_labels, costs_payload) -> None:
         """Verify the POST body uses the current calendar month and `web_apis` dimension."""
 
@@ -222,7 +223,9 @@ class TestFetchBrightdataDailyUsage:
 
         expected_from, expected_to = _month_window()
         args, kwargs = mock_post.call_args
-        assert args[0] == "https://api.brightdata.com/costs/export/json"
+        assert args[0] == "POST"
+        assert args[1] == "https://api.brightdata.com/costs/export/json"
+        assert kwargs["service"] == "brightdata"
         assert kwargs["headers"]["Authorization"] == "Bearer test-key"
         assert kwargs["headers"]["Content-Type"] == "application/json"
         assert kwargs["json"] == {
@@ -232,7 +235,7 @@ class TestFetchBrightdataDailyUsage:
             "to": expected_to,
         }
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_returns_empty_when_only_total_present(self, mock_post, mock_settings, mock_dataset_labels) -> None:
         """Payload with only the `total` key returns an empty list."""
 
@@ -240,7 +243,7 @@ class TestFetchBrightdataDailyUsage:
 
         assert fetch_brightdata_daily_usage() == []
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_returns_empty_when_payload_null(self, mock_post, mock_settings, mock_dataset_labels) -> None:
         """`resp.json()` returning None is coerced to {} — no AttributeError."""
 
@@ -248,7 +251,7 @@ class TestFetchBrightdataDailyUsage:
 
         assert fetch_brightdata_daily_usage() == []
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_raises_when_http_error(self, mock_post, mock_settings, mock_dataset_labels) -> None:
         response = MagicMock()
         response.raise_for_status.side_effect = RuntimeError("boom")
@@ -257,7 +260,7 @@ class TestFetchBrightdataDailyUsage:
         with pytest.raises(RuntimeError, match="boom"):
             fetch_brightdata_daily_usage()
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_persists_rows_when_db_passed(
         self, mock_post, mock_settings, mock_dataset_labels, costs_payload, session
     ) -> None:
@@ -276,7 +279,7 @@ class TestFetchBrightdataDailyUsage:
             (dt.date(2026, 6, 16), "LinkedIn", 0.009),
         }
 
-    @patch("app.external_service_monitoring.brightdata.fetch.requests.post")
+    @patch("app.external_service_monitoring.brightdata.fetch.request_with_retry")
     def test_upsert_overwrites_existing_date_dataset(
         self, mock_post, mock_settings, mock_dataset_labels, session
     ) -> None:

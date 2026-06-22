@@ -16,7 +16,6 @@ from starlette.testclient import TestClient
 
 from app import models
 
-
 # --------------------------------------------------- SERVICE ROUTER ---------------------------------------------------
 
 

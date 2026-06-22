@@ -2,13 +2,14 @@
 
 import datetime as dt
 
-import requests
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.external_service_monitoring import logger
 from app.external_service_monitoring.apify import models
 from app.utilities.database import upsert
+from app.utilities.http import request_with_retry
 
 
 class ApifyDailyUsage(BaseModel):
@@ -29,7 +30,14 @@ def fetch_apify_balance(db: Session | None = None) -> ApifyBalance:
     """Hit /v2/users/me and return the `plan` dict (used to discover the cycle limit)."""
 
     headers = {"Authorization": f"Bearer {settings.apify_api_key}"}
-    resp = requests.get("https://api.apify.com/v2/users/me", headers=headers, timeout=10)
+    resp = request_with_retry(
+        "GET",
+        "https://api.apify.com/v2/users/me",
+        service="apify",
+        headers=headers,
+        timeout=10,
+        logger=logger,
+    )
     resp.raise_for_status()
     plan = resp.json().get("data", {}).get("plan")
     if not plan:
@@ -46,7 +54,9 @@ def fetch_apify_daily_usage(db: Session | None = None) -> list[ApifyDailyUsage]:
     """Hit /v2/users/me/usage/monthly and return the `data` dict (used for daily + cycle total)."""
 
     headers = {"Authorization": f"Bearer {settings.apify_api_key}"}
-    resp = requests.get("https://api.apify.com/v2/users/me/usage/monthly", headers=headers, timeout=10)
+    resp = request_with_retry(
+        "GET", "https://api.apify.com/v2/users/me/usage/monthly", service="apify", headers=headers, timeout=10
+    )
     resp.raise_for_status()
     data = resp.json().get("data") or {}
     entries = [ApifyDailyUsage.model_validate(entry) for entry in data.get("dailyServiceUsages") or []]

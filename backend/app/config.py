@@ -76,7 +76,7 @@ class Settings(BaseSettings):
 
     # Anthropic
     anthropic_api_key: str
-    anthropic_admin_key: str | None = None
+    anthropic_admin_key: str
 
     # Apify
     apify_api_key: str

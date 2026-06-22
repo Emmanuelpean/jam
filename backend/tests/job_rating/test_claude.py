@@ -5,8 +5,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.job_rating.claude import ClaudeError, claude_query
+import httpx
+from anthropic import BadRequestError
 
+from app.job_rating.claude import ClaudeBillingError, ClaudeError, claude_query
 
 # -------------------------------------------------- HELPERS ---------------------------------------------------
 
@@ -129,6 +131,39 @@ class TestClaudeQuery:
 
         with pytest.raises(ClaudeError):
             claude_query("sys", "user")
+
+    def test_raises_billing_error_on_insufficient_credit(self, mock_anthropic_client) -> None:
+        """An Anthropic insufficient-credit 400 is classified as ClaudeBillingError (a ClaudeError
+        subclass), so callers can distinguish it from a per-job failure."""
+
+        body = {
+            "type": "error",
+            "error": {
+                "type": "invalid_request_error",
+                "message": "Your credit balance is too low to access the Anthropic API. "
+                "Please go to Plans & Billing to upgrade or purchase credits.",
+            },
+        }
+        request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        response = httpx.Response(400, request=request, json=body)
+        mock_anthropic_client.messages.create.side_effect = BadRequestError(
+            "credit balance is too low", response=response, body=body
+        )
+
+        with pytest.raises(ClaudeBillingError):
+            claude_query("sys", "user")
+
+    def test_generic_bad_request_is_not_billing_error(self, mock_anthropic_client) -> None:
+        """A non-billing 400 stays a plain ClaudeError, not a ClaudeBillingError."""
+
+        body = {"type": "error", "error": {"type": "invalid_request_error", "message": "bad model"}}
+        request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        response = httpx.Response(400, request=request, json=body)
+        mock_anthropic_client.messages.create.side_effect = BadRequestError("bad model", response=response, body=body)
+
+        with pytest.raises(ClaudeError) as exc_info:
+            claude_query("sys", "user")
+        assert not isinstance(exc_info.value, ClaudeBillingError)
 
     def test_nested_json_parsed_correctly(self, mock_anthropic_client) -> None:
         payload = {"scores": {"technical": 7, "culture": 9}, "tags": ["python", "remote"]}
