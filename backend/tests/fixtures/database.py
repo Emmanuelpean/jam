@@ -3,11 +3,21 @@
 from typing import Any, Generator
 
 import pytest
-from sqlalchemy import create_engine, orm, Engine
+from sqlalchemy import create_engine, orm, text, Engine
 from sqlalchemy_utils import database_exists, create_database, drop_database
 
-from app.database import create_db_url
+from app.database import Base, create_db_url
 from tests.utils.seed_database import reset_database
+
+
+def _truncate_all_tables(engine: Engine) -> None:
+    """Fast per-test reset: wipe all rows and reset identity sequences in a single statement."""
+
+    table_names = ", ".join(f'"{table.name}"' for table in Base.metadata.sorted_tables)
+    if not table_names:
+        return
+    with engine.begin() as conn:
+        conn.execute(text(f"TRUNCATE TABLE {table_names} RESTART IDENTITY CASCADE"))
 
 
 @pytest.fixture(scope="session")
@@ -43,6 +53,8 @@ def engine(database_url, worker_id) -> Generator[Engine, Any, None]:
 
     engine = create_engine(database_url)
 
+    reset_database(engine, False)
+
     yield engine
 
     engine.dispose()
@@ -54,7 +66,7 @@ def engine(database_url, worker_id) -> Generator[Engine, Any, None]:
 @pytest.fixture(scope="function")
 def session(engine: Engine) -> Generator[orm.Session, Any, None]:
     """Fixture that sets up and tears down a new database session for each test function."""
-    reset_database(engine, False)
+    _truncate_all_tables(engine)
     testing_session_local = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = testing_session_local()
     try:
