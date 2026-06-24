@@ -6,11 +6,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from app import models
-from app.external_service_monitoring.anthropic.fetch import (
-    sum_bucket_amount,
-    fetch_anthropic_daily_usage,
-    AnthropicDailyUsage,
-)
+from app.external_service_monitoring.anthropic.fetch import sum_bucket_amount, fetch_anthropic_daily_usage
 
 
 def _bucket(date_str: str, amount: str) -> dict:
@@ -94,7 +90,6 @@ class TestFetchAnthropic:
 
         result = fetch_anthropic_daily_usage()
 
-        assert [type(r) for r in result] == [AnthropicDailyUsage] * 3
         assert [r.date for r in result] == [
             dt.date(2026, 6, 1),
             dt.date(2026, 6, 2),

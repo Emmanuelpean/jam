@@ -4,7 +4,13 @@ from unittest.mock import patch
 
 from app import models
 from app.external_service_monitoring.service import sync
-from app.external_service_monitoring.service.sync import ServiceMonitor
+from app.external_service_monitoring.service.sync import EsmService
+from app.external_service_monitoring.service.schemas import ServiceMonitoringServiceLogOut
+
+
+def _is_success(service_log) -> bool:
+    """Derive is_success the same way the output schema does."""
+    return ServiceMonitoringServiceLogOut.model_validate(service_log, from_attributes=True).is_success
 
 
 def _boom(db) -> None:
@@ -19,25 +25,28 @@ def _ok(db) -> None:
 
 class TestServiceMonitorRun:
     def test_failed_fetcher_records_error(self, session) -> None:
-        """A failing fetcher records an Error linked to the run and marks the run unsuccessful."""
+        """A failing fetcher records an Error linked to the run. The failure is error-level (the
+        run still completes), so the derived is_success stays True."""
 
         with patch.object(sync, "EXTERNAL_SERVICES", {"test": [_boom]}):
-            service_log = ServiceMonitor.run(session)
+            service_log = EsmService.run(session)
 
-        assert service_log.is_success is False
+        assert _is_success(service_log) is True
 
         errors = session.query(models.Error).all()
         assert len(errors) == 1
         assert "boom" in errors[0].message
         assert errors[0].external_service_monitoring_service_log_id == service_log.id
+        # A single fetcher failing (run continues) is an "error"-level service error
+        assert errors[0].level == "error"
 
     def test_successful_run_records_no_error(self, session) -> None:
         """A run where every fetcher succeeds is marked successful and records no Error."""
 
         with patch.object(sync, "EXTERNAL_SERVICES", {"test": [_ok]}):
-            service_log = ServiceMonitor.run(session)
+            service_log = EsmService.run(session)
 
-        assert service_log.is_success is True
+        assert _is_success(service_log) is True
         assert session.query(models.Error).count() == 0
 
     def test_one_failure_does_not_abort_other_fetchers(self, session) -> None:
@@ -49,9 +58,10 @@ class TestServiceMonitorRun:
             calls.append("ok")
 
         with patch.object(sync, "EXTERNAL_SERVICES", {"a": [_boom], "b": [_record_ok]}):
-            service_log = ServiceMonitor.run(session)
+            service_log = EsmService.run(session)
 
         # The second fetcher still ran, and only the failing one produced an Error
         assert calls == ["ok"]
-        assert service_log.is_success is False
+        # The failure is error-level (run completes), so the derived is_success stays True
+        assert _is_success(service_log) is True
         assert session.query(models.Error).count() == 1

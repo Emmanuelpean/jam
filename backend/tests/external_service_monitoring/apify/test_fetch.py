@@ -61,6 +61,7 @@ def user_payload() -> dict:
 
 @pytest.fixture
 def mock_settings():
+    """Stub the API key used by both endpoints."""
     with patch("app.external_service_monitoring.apify.fetch.settings") as mock:
         mock.apify_api_key = "test-key"
         yield mock

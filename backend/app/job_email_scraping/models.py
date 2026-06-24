@@ -98,8 +98,6 @@ class ScrapedJob(Owned, Base):
     - `is_imported` (bool): Indicates whether the job was imported into a job.
     - `scraping_retry_count` (int): Number of times the job scrape has been retried.
     - `scraping_next_retry_at` (datetime, optional): Date and time when the next scrape retry is scheduled.
-    - `rating_retry_count` (int): Number of times the job rating has been retried.
-    - `rating_next_retry_at` (datetime, optional): Date and time when the next rating retry is scheduled.
 
     # Job data
     - `title` (str, optional): Title of the job.
@@ -141,8 +139,6 @@ class ScrapedJob(Owned, Base):
     is_imported = Column(Boolean, nullable=False, server_default=expression.false())
     scraping_retry_count = Column(Integer, nullable=False, server_default="0")
     scraping_next_retry_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    rating_retry_count = Column(Integer, nullable=False, server_default="0")
-    rating_next_retry_at = Column(TIMESTAMP(timezone=True), nullable=True)
     read_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     # Job data

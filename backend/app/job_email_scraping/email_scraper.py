@@ -29,11 +29,9 @@ from app.job_email_scraping.models import (
 )
 from app.job_email_scraping.schemas import JobResult
 from app.resources import CURRENCIES
-from app.service_runner.models import Error, record_error
+from app.service_runner.models import Error, ErrorLevel, record_error
 from app.service_runner.service_runner import ServiceRunner
-from app.utilities.logger import AppLogger
-
-SERVICE_NAME = "email_scraper_service"
+from app.service_runner.service import Service
 
 
 class EmailProvider(Enum):
@@ -47,27 +45,18 @@ FORWARDING_LINK_EXTRACTORS = {EmailProvider.GMAIL: extract_forwarding_confirmati
 ORIGINATOR_EXTRACTORS = {EmailProvider.GMAIL: extract_gmail_originator}
 
 
-class JobEmailScraper(EmailService):
+class JobEmailScrapingService(EmailService, Service[JobEmailScrapingServiceLog]):
     """Job Email Alert Scraper"""
+
+    service_name = "email_scraper_service"
 
     def __init__(self, db=None) -> None:
         """Object constructor
         :param db: optional database session for testing"""
 
         EmailService.__init__(self, settings.scraper_email_username, settings.scraper_email_password)
-
-        self.logger = AppLogger.create_service_logger(SERVICE_NAME, "INFO")
+        Service.__init__(self, JobEmailScrapingServiceLog)
         self.db = next(get_db()) if db is None else db
-
-    def create_service_log(self, **kwargs) -> JobEmailScrapingServiceLog:
-        """Create a new service log entry
-        :param kwargs: JobEmailScrapingServiceLog keyword arguments"""
-
-        service_log_entry = JobEmailScrapingServiceLog(**kwargs)
-        self.db.add(service_log_entry)
-        self.db.commit()
-        self.db.refresh(service_log_entry)
-        return service_log_entry
 
     def upsert_platform_stat(
         self,
@@ -109,13 +98,15 @@ class JobEmailScraper(EmailService):
         self,
         service_log: JobEmailScrapingServiceLog,
         exc: Exception | str,
+        level: ErrorLevel = ErrorLevel.ERROR,
     ) -> Error:
         """Record an Error for a caught exception during the scraping run.
         :param service_log: associated JobEmailScrapingServiceLog instance
         :param exc: the caught exception or an error message string
+        :param level: ErrorLevel enum value
         :return: Error instance"""
 
-        return record_error(self.db, exc, job_email_scraping_service_log_id=service_log.id)
+        return record_error(self.db, exc, job_email_scraping_service_log_id=service_log.id, level=level)
 
     def get_user_monthly_scrape_count(self, owner_id: int) -> int:
         """Get the count of jobs scraped by a user in the current month.
@@ -422,9 +413,7 @@ class JobEmailScraper(EmailService):
         """Run the email scraping workflow
         :param timedelta_days: Number of days to search for emails"""
 
-        start_time = dt.datetime.now()
-        self.logger.info("Starting email scraping workflow")
-        service_log = self.create_service_log(run_datetime=start_time)
+        service_log, self.db = self.start_run(self.db)
         self.extract_forwarding_email_confirmation(service_log, timedelta_days)
 
         try:
@@ -435,14 +424,12 @@ class JobEmailScraper(EmailService):
             self.scrape_jobs(service_log)
 
             # Log final statistics
-            service_log.run_duration = (dt.datetime.now() - start_time).total_seconds()
-            service_log.is_success = True
+            service_log.set_run_duration()
 
         except Exception as exception:
             self.logger.exception(f"Critical error in scraping workflow: {exception}")
-            service_log.run_duration = (dt.datetime.now() - start_time).total_seconds()
-            service_log.is_success = False
-            service_log.error_message = str(exception)
+            service_log.set_run_duration()
+            self.log_service_error(service_log, exception, ErrorLevel.CRITICAL)
         finally:
             self.logger.info("Finished email scraping workflow")
 
@@ -687,7 +674,7 @@ class JobEmailScraper(EmailService):
 
 
 job_scraping_service_runner = ServiceRunner(
-    service_name=SERVICE_NAME,
-    service_function=JobEmailScraper().run_scraping,
+    service_name=JobEmailScrapingService.service_name,
+    service_function=JobEmailScrapingService().run_scraping,
     service_kwargs=dict(timedelta_days=3),
 )

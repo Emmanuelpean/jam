@@ -1,6 +1,7 @@
 """Module for Stripe service monitoring."""
 
 import datetime as dt
+import logging
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -22,13 +23,17 @@ class StripeDailyIncome(BaseModel):
     net_gbp: float
 
 
-def fetch_stripe_daily_income(db: Session | None = None) -> list[StripeDailyIncome]:
+def fetch_stripe_daily_income(
+    db: Session | None = None,
+    logger: logging.Logger | None = None,
+) -> list[StripeDailyIncome]:
     """Fetch per-day Stripe income for the current calendar month.
 
     Iterates balance transactions and groups by UTC date. `gross_gbp` counts only `charge`
     amounts; `net_gbp` includes fees and refunds, matching what hits the bank. Non-GBP
     transactions are skipped to keep the chart in a single currency."""
 
+    _ = logger
     period_start, period_end = current_month_window()
     gross_pence: dict[dt.date, int] = {}
     net_pence: dict[dt.date, int] = {}

@@ -15,30 +15,30 @@ service_error_router = APIRouter(prefix="/service-errors", tags=["service-errors
 @service_error_router.get("/", response_model=list[ErrorOut])
 def list_service_errors(
     scraped_job_id: int | None = Query(None, description="Filter by ScrapedJob id"),
-    job_email_scraping_service_log_id: int | None = Query(None, description="Filter by job email scraping run id"),
-    job_rating_service_log_id: int | None = Query(None, description="Filter by job rating run id"),
-    external_service_monitoring_service_log_id: int | None = Query(
-        None, description="Filter by external service monitoring run id"
+    job_email_scraping_service_log_id: list[int] | None = Query(None, description="Filter by job email scraping run id(s)"),
+    job_rating_service_log_id: list[int] | None = Query(None, description="Filter by job rating run id(s)"),
+    external_service_monitoring_service_log_id: list[int] | None = Query(
+        None, description="Filter by external service monitoring run id(s)"
     ),
     is_acknowledged: bool | None = Query(None, description="Filter by acknowledgement status"),
     limit: int | None = Query(None, ge=1, description="Maximum number of errors to return"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """List service errors, newest first, optionally filtered by run / job / status. Admin only."""
+    """List service errors, newest first, optionally filtered by run(s) / job / status. Admin only."""
 
     assert_admin(current_user)
 
     query = db.query(Error)
     if scraped_job_id is not None:
         query = query.filter(Error.scraped_job_id == scraped_job_id)
-    if job_email_scraping_service_log_id is not None:
-        query = query.filter(Error.job_email_scraping_service_log_id == job_email_scraping_service_log_id)
-    if job_rating_service_log_id is not None:
-        query = query.filter(Error.job_rating_service_log_id == job_rating_service_log_id)
-    if external_service_monitoring_service_log_id is not None:
+    if job_email_scraping_service_log_id:
+        query = query.filter(Error.job_email_scraping_service_log_id.in_(job_email_scraping_service_log_id))
+    if job_rating_service_log_id:
+        query = query.filter(Error.job_rating_service_log_id.in_(job_rating_service_log_id))
+    if external_service_monitoring_service_log_id:
         query = query.filter(
-            Error.external_service_monitoring_service_log_id == external_service_monitoring_service_log_id
+            Error.external_service_monitoring_service_log_id.in_(external_service_monitoring_service_log_id)
         )
     if is_acknowledged is not None:
         query = query.filter(Error.is_acknowledged.is_(is_acknowledged))
@@ -48,7 +48,7 @@ def list_service_errors(
     return query.all()
 
 
-@service_error_router.patch("/acknowledge", response_model=list[ErrorOut])
+@service_error_router.put("/acknowledge", response_model=list[ErrorOut])
 def acknowledge_service_errors(
     request: ErrorAcknowledgeRequest,
     current_user: User = Depends(get_current_user),

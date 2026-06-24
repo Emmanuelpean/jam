@@ -1,12 +1,12 @@
 """Module for Apify service monitoring."""
 
 import datetime as dt
+import logging
 
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.external_service_monitoring import logger
 from app.external_service_monitoring.apify import models
 from app.utilities.database import upsert
 from app.utilities.http import request_with_retry
@@ -26,7 +26,10 @@ class ApifyBalance(BaseModel):
     limit_usd: float | None = None
 
 
-def fetch_apify_balance(db: Session | None = None) -> ApifyBalance:
+def fetch_apify_balance(
+    db: Session | None = None,
+    logger: logging.Logger | None = None,
+) -> ApifyBalance:
     """Hit /v2/users/me and return the `plan` dict (used to discover the cycle limit)."""
 
     headers = {"Authorization": f"Bearer {settings.apify_api_key}"}
@@ -35,7 +38,6 @@ def fetch_apify_balance(db: Session | None = None) -> ApifyBalance:
         "https://api.apify.com/v2/users/me",
         service="apify",
         headers=headers,
-        timeout=10,
         logger=logger,
     )
     resp.raise_for_status()
@@ -44,18 +46,26 @@ def fetch_apify_balance(db: Session | None = None) -> ApifyBalance:
         raise RuntimeError(f"Apify API returned user data without a plan: {resp.json()}")
     limit_usd = plan.get("monthlyUsageCreditsUsd") or plan.get("maxMonthlyUsageUsd")
     entry = ApifyBalance(limit_usd=limit_usd)
+
     if db:
         db.add(models.ApifyBalance(**entry.model_dump()))
         db.commit()
     return entry
 
 
-def fetch_apify_daily_usage(db: Session | None = None) -> list[ApifyDailyUsage]:
+def fetch_apify_daily_usage(
+    db: Session | None = None,
+    logger: logging.Logger | None = None,
+) -> list[ApifyDailyUsage]:
     """Hit /v2/users/me/usage/monthly and return the `data` dict (used for daily + cycle total)."""
 
     headers = {"Authorization": f"Bearer {settings.apify_api_key}"}
     resp = request_with_retry(
-        "GET", "https://api.apify.com/v2/users/me/usage/monthly", service="apify", headers=headers, timeout=10
+        "GET",
+        "https://api.apify.com/v2/users/me/usage/monthly",
+        service="apify",
+        headers=headers,
+        logger=logger,
     )
     resp.raise_for_status()
     data = resp.json().get("data") or {}

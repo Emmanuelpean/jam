@@ -1,12 +1,12 @@
 """Module for Anthropic service monitoring."""
 
 import datetime as dt
+import logging
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.external_service_monitoring import logger
 from app.external_service_monitoring.anthropic import models
 from app.utilities.database import upsert
 from app.utilities.datetime import current_month_window, to_iso_z
@@ -34,7 +34,10 @@ def sum_bucket_amount(bucket: dict) -> float:
     return total_cents / 100.0
 
 
-def fetch_anthropic_daily_usage(db: Session | None = None) -> list[AnthropicDailyUsage]:
+def fetch_anthropic_daily_usage(
+    db: Session | None = None,
+    logger: logging.Logger | None = None,
+) -> list[AnthropicDailyUsage]:
     """Fetch per-day Anthropic organisation cost for the current calendar month.
 
     The Admin API's cost_report endpoint returns daily buckets by default, so each bucket
@@ -62,7 +65,6 @@ def fetch_anthropic_daily_usage(db: Session | None = None) -> list[AnthropicDail
             service="anthropic",
             headers=headers,
             params=params,
-            timeout=10,
             logger=logger,
         )
         resp.raise_for_status()
@@ -72,13 +74,11 @@ def fetch_anthropic_daily_usage(db: Session | None = None) -> list[AnthropicDail
             break
         page_token = payload["next_page"]
 
-    entries = [
-        AnthropicDailyUsage(
-            date=dt.date.fromisoformat(bucket["starting_at"][:10]),
-            usage_usd=sum_bucket_amount(bucket),
-        )
-        for bucket in buckets
-    ]
+    entries = []
+    for bucket in buckets:
+        date = dt.date.fromisoformat(bucket["starting_at"][:10])
+        entries.append(AnthropicDailyUsage(date=date, usage_usd=sum_bucket_amount(bucket)))
+
     if db:
         upsert(db, models.AnthropicDailyUsage, entries, ["date"])
     return entries

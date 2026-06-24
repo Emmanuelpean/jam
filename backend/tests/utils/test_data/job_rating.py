@@ -988,8 +988,6 @@ JOB_RATING_SERVICE_LOG_DATA = [
     {
         "run_duration": 0.85,
         "run_datetime": "2025-01-15T12:34:56+00:00",
-        "is_success": True,
-        "error_message": None,
         "job_found_ids": [
             21,
             22,
@@ -1082,8 +1080,6 @@ JOB_RATING_SERVICE_LOG_DATA = [
     {
         "run_duration": 1.23,
         "run_datetime": "2025-02-01T09:00:00+00:00",
-        "is_success": False,
-        "error_message": "Timeout contacting rating service",
         "job_found_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
         "job_succeeded_ids": [1, 2, 3, 4, 5, 8, 9, 10, 12, 14, 15, 16, 17, 18, 19, 20],
         "job_failed_ids": [6, 7, 11, 13],
@@ -1093,8 +1089,6 @@ JOB_RATING_SERVICE_LOG_DATA = [
     {
         "run_duration": 3,
         "run_datetime": "2025-03-10T18:00:00+00:00",
-        "is_success": None,
-        "error_message": None,
         "job_found_ids": [],
         "job_succeeded_ids": [],
         "job_failed_ids": [],

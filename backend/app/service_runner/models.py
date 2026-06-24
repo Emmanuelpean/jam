@@ -1,6 +1,8 @@
 """Service runner shared models: the ServiceLog base class and the unified Error table."""
 
+import datetime as dt
 import traceback as _traceback
+from enum import StrEnum
 
 from sqlalchemy import Column, String, Float, Boolean, TIMESTAMP, Integer, ForeignKey
 from sqlalchemy.orm import Session, relationship
@@ -17,13 +19,24 @@ class ServiceLog(object):
     -----------
     - `run_duration` (float, optional): Duration of the service run.
     - `run_datetime` (datetime): Date and time of the service run.
-    - `is_success` (bool): Indicates whether the service run was successful.
-    - `error_message` (str, optional): Error message if the service run failed."""
+
+    Failures are recorded as :class:`Error` rows linked to the run (run-level failures have no
+    ``scraped_job_id``), not stored on the log itself."""
 
     run_duration = Column(Float, nullable=True)
-    run_datetime = Column(TIMESTAMP(timezone=True), nullable=False)
-    is_success = Column(Boolean, nullable=True)
-    error_message = Column(String, nullable=True)
+    run_datetime = Column(TIMESTAMP(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc))
+
+    def set_run_duration(self) -> None:
+        """Set ``run_duration`` to the seconds elapsed since ``run_datetime``."""
+
+        self.run_duration = (dt.datetime.now(self.run_datetime.tzinfo) - self.run_datetime).total_seconds()
+
+
+class ErrorLevel(StrEnum):
+    """Severity of an Error"""
+
+    CRITICAL = "critical"
+    ERROR = "error"
 
 
 class Error(CommonBase, Base):
@@ -40,11 +53,14 @@ class Error(CommonBase, Base):
     - `message` (str): Error message.
     - `traceback` (str, optional): Full traceback of the error, if available.
     - `is_acknowledged` (bool): Whether an admin has acknowledged the error.
+    - `level` (str): Severity (see :class:`ErrorLevel`); defaults to ``ERROR``.
 
     Foreign keys
     ------------
-    - `scraped_job_id` (int, optional): ScrapedJob the error relates to, for per-job failures
-      (scraping / rating). Null for run-level errors not tied to a specific job.
+    - `scraped_job_id` (int, optional): ScrapedJob the error relates to, for per-job scraping
+      failures. Null for run-level errors not tied to a specific job.
+    - `job_rating_id` (int, optional): JobRating the rating error belongs to, for per-job rating
+      failures.
     - `job_email_scraping_service_log_id` (int, optional): Job email scraping run.
     - `job_rating_service_log_id` (int, optional): Job rating run.
     - `external_service_monitoring_service_log_id` (int, optional): Monitoring run.
@@ -59,11 +75,18 @@ class Error(CommonBase, Base):
     message = Column(String, nullable=False)
     traceback = Column(String, nullable=True)
     is_acknowledged = Column(Boolean, nullable=False, server_default=expression.false())
+    level = Column(String, nullable=True, default=ErrorLevel.ERROR)
 
     # Foreign keys
     scraped_job_id = Column(
         Integer,
         ForeignKey("scraped_job.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    job_rating_id = Column(
+        Integer,
+        ForeignKey("job_rating.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
     )
@@ -88,6 +111,7 @@ class Error(CommonBase, Base):
 
     # Relationships
     scraped_job = relationship("ScrapedJob", back_populates="scraping_errors")
+    job_rating = relationship("JobRating", foreign_keys=[job_rating_id], back_populates="rating_errors")
     job_email_scraping_service_log = relationship("JobEmailScrapingServiceLog", back_populates="service_errors")
     job_rating_service_log = relationship("JobRatingServiceLog", back_populates="service_errors")
     external_service_monitoring_service_log = relationship(
@@ -99,7 +123,9 @@ def record_error(
     db: Session,
     exc: Exception | str,
     message: str | None = None,
+    level: ErrorLevel = ErrorLevel.ERROR,
     scraped_job_id: int | None = None,
+    job_rating_id: int | None = None,
     job_email_scraping_service_log_id: int | None = None,
     job_rating_service_log_id: int | None = None,
     external_service_monitoring_service_log_id: int | None = None,
@@ -110,7 +136,9 @@ def record_error(
     :param db: Database session.
     :param exc: The caught exception or an error message string.
     :param message: Optional explicit message; defaults to ``str(exc)``.
+    :param level: Error severity.
     :param scraped_job_id: ScrapedJob the error relates to, for per-job failures.
+    :param job_rating_id: JobRating the rating error belongs to, if applicable.
     :param job_email_scraping_service_log_id: Job email scraping run id, if applicable.
     :param job_rating_service_log_id: Job rating run id, if applicable.
     :param external_service_monitoring_service_log_id: Monitoring run id, if applicable.
@@ -120,7 +148,9 @@ def record_error(
         error_type=type(exc).__name__ if isinstance(exc, BaseException) else "Error",
         message=message if message is not None else str(exc),
         traceback=_traceback.format_exc(),
+        level=level,
         scraped_job_id=scraped_job_id,
+        job_rating_id=job_rating_id,
         job_email_scraping_service_log_id=job_email_scraping_service_log_id,
         job_rating_service_log_id=job_rating_service_log_id,
         external_service_monitoring_service_log_id=external_service_monitoring_service_log_id,

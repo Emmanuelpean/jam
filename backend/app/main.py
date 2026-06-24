@@ -98,8 +98,8 @@ app.include_router(job_rating_routers.job_rating_service_router)
 
 # External service monitoring routers
 app.include_router(external_service_monitoring_routers.external_service_monitoring_history_router)
-app.include_router(external_service_monitoring_routers.external_service_monitoring_service_router)
-app.include_router(external_service_monitoring_routers.external_service_monitoring_service_log_router)
+app.include_router(external_service_monitoring_routers.esm_service_router)
+app.include_router(external_service_monitoring_routers.esm_service_log_router)
 
 # Service errors
 app.include_router(service_error_router)

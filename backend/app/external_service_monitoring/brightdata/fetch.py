@@ -1,12 +1,12 @@
 """Module for Bright Data service monitoring."""
 
 import datetime as dt
+import logging
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.external_service_monitoring import logger
 from app.external_service_monitoring.brightdata import models
 from app.utilities.database import upsert
 from app.utilities.http import request_with_retry
@@ -32,7 +32,10 @@ class BrightdataBalance(BaseModel):
     pending_costs_usd: float | None = None
 
 
-def fetch_brightdata_balance(db: Session | None = None) -> BrightdataBalance:
+def fetch_brightdata_balance(
+    db: Session | None = None,
+    logger: logging.Logger | None = None,
+) -> BrightdataBalance:
     """Hit /customer/balance and return the current account balance + pending costs."""
 
     headers = {"Authorization": f"Bearer {settings.brightdata_api_key}"}
@@ -41,7 +44,6 @@ def fetch_brightdata_balance(db: Session | None = None) -> BrightdataBalance:
         "https://api.brightdata.com/customer/balance",
         service="brightdata",
         headers=headers,
-        timeout=10,
         logger=logger,
     )
     resp.raise_for_status()
@@ -56,7 +58,10 @@ def fetch_brightdata_balance(db: Session | None = None) -> BrightdataBalance:
     return entry
 
 
-def fetch_brightdata_daily_usage(db: Session | None = None) -> list[BrightdataDailyUsage]:
+def fetch_brightdata_daily_usage(
+    db: Session | None = None,
+    logger: logging.Logger | None = None,
+) -> list[BrightdataDailyUsage]:
     """Hit /costs/export/json for the current calendar month and return one row per (date, dataset).
 
     Despite the misleading name, `dimension=web_apis` is the dimension that returns a per-dataset
@@ -83,7 +88,7 @@ def fetch_brightdata_daily_usage(db: Session | None = None) -> list[BrightdataDa
         service="brightdata",
         headers=headers,
         json=body,
-        timeout=10,
+        logger=logger,
     )
     resp.raise_for_status()
     payload = resp.json() or {}

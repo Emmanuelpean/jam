@@ -10,6 +10,7 @@ from pydantic import field_validator, Field
 from app.base_schemas import BaseModel, OwnedOut, Out, serialise_relationships, OwnedCreate
 from app.data_tables.schemas import GeolocationOut
 from app.job_rating.schemas import JobRatingOut
+from app.service_runner.schemas import ErrorOut, ServiceLogOut
 
 
 class Salary(BaseModel):
@@ -93,8 +94,6 @@ class ScrapedJob(BaseModel):
     skip_reason: str | None = None
     scraping_retry_count: int = 0
     scraping_next_retry_at: datetime | None = None
-    rating_retry_count: int = 0
-    rating_next_retry_at: datetime | None = None
     read_at: datetime | None = None
 
     # Job data
@@ -126,6 +125,7 @@ class ScrapedJobOut(ScrapedJob, OwnedOut):
     emails: list[int]
     job_rating: JobRatingOut | None
     geolocation: GeolocationOut | None
+    scraping_errors: list[ErrorOut] = []
 
     @field_validator("emails", mode="before")
     @classmethod
@@ -180,13 +180,8 @@ class PlatformAlertStats(BaseModel):
 # ----------------------------------------------------- SERVICE LOG ----------------------------------------------------
 
 
-class JobEmailScrapingServiceLogOut(Out):
+class JobEmailScrapingServiceLogOut(ServiceLogOut):
     """Job Email Scraping Service Log output schema"""
-
-    run_datetime: datetime | None = None
-    run_duration: float | None = None
-    is_success: bool | None = None
-    error_message: str | None = None
 
     # Users
     user_found_ids: list[int] = []

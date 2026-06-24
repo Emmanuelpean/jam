@@ -5,10 +5,10 @@ import datetime as dt
 from app import models
 from app.config import settings
 from app.job_email_scraping.email_parsers import Platform
-from app.job_rating import scraped_job_rating
+from app.job_rating import scraped_job_rating, schemas
 from app.job_rating.prompts import create_system_prompt_with_profile
 from app.job_rating.scraped_job_rating import (
-    ScrapedJobRater,
+    ScrapedJobRatingService,
     ensure_length_limit,
     get_rating_active_users,
     get_user_unrated_scraped_jobs,
@@ -257,7 +257,7 @@ class TestScrapedJobRaterRateJob:
             qualification.interests,
         )
 
-        ScrapedJobRater()._rate_job(
+        ScrapedJobRatingService()._rate_job(
             session,
             scraped_job,
             user.id,
@@ -301,7 +301,7 @@ class TestScrapedJobRaterRateJob:
             qualification.interests,
         )
 
-        ScrapedJobRater()._rate_job(
+        ScrapedJobRatingService()._rate_job(
             session,
             scraped_job,
             user.id,
@@ -355,7 +355,7 @@ class TestScrapedJobRaterRateJob:
             qualification.interests,
         )
 
-        ScrapedJobRater()._rate_job(
+        ScrapedJobRatingService()._rate_job(
             session,
             scraped_job,
             user.id,
@@ -367,22 +367,25 @@ class TestScrapedJobRaterRateJob:
         )
 
         session.refresh(service_log)
-        session.refresh(scraped_job)
 
-        # First failure schedules a cross-run retry; no terminal JobRating is created yet
+        # First failure leaves a pending JobRating (is_success None) with a retry scheduled
         rating = session.query(models.JobRating).filter(models.JobRating.scraped_job_id == scraped_job.id).first()
-        assert rating is None
-        assert scraped_job.rating_retry_count == 1
-        assert scraped_job.rating_next_retry_at is not None
+        assert rating is not None
+        assert rating.is_success is None
+        assert rating.rating_retry_count == 1
+        assert rating.rating_next_retry_at is not None
         assert scraped_job.id in service_log.job_failed_ids
 
         # The failure is recorded as a unified Error
         service_error = session.query(models.Error).first()
         assert service_error is not None
         assert "AI service unavailable" in service_error.message
-        # The rating error is linked to the ScrapedJob it failed on and the rating run
-        assert service_error.scraped_job_id == scraped_job.id
+        # The rating error is linked to the pending JobRating and the rating run (not the ScrapedJob)
+        assert service_error.scraped_job_id is None
+        assert service_error.job_rating_id == rating.id
         assert service_error.job_rating_service_log_id == service_log.id
+        # Per-job rating errors fall to the default (non-critical) level
+        assert service_error.level == "error"
 
     def test_rating_permanently_fails_after_max_retries(
         self,
@@ -419,10 +422,8 @@ class TestScrapedJobRaterRateJob:
             qualification.interests,
         )
 
-        rater = ScrapedJobRater()
+        rater = ScrapedJobRatingService()
         for _ in range(settings.rating_max_retry):
-            scraped_job.rating_next_retry_at = None  # make eligible for retry each run
-            session.commit()
             rater._rate_job(
                 session,
                 scraped_job,
@@ -433,17 +434,29 @@ class TestScrapedJobRaterRateJob:
                 job_prompt_template,
                 combined_system_prompt,
             )
+            # Clear the scheduled retry so the next iteration re-attempts immediately
+            rating = session.query(models.JobRating).filter_by(scraped_job_id=scraped_job.id).first()
+            rating.rating_next_retry_at = None
+            session.commit()
 
         session.refresh(scraped_job)
-        assert scraped_job.rating_retry_count == settings.rating_max_retry
 
-        # A terminal failed JobRating is recorded so the job is no longer re-queried
+        # The rating fails permanently (is_success False) so the job is no longer re-queried
         rating = session.query(models.JobRating).filter(models.JobRating.scraped_job_id == scraped_job.id).first()
         assert rating is not None
         assert rating.is_success is False
+        assert rating.rating_retry_count == settings.rating_max_retry
 
         # Every attempt is recorded as an Error
         assert session.query(models.Error).count() == settings.rating_max_retry
+
+        # Rating errors surface on JobRating.rating_errors, not on ScrapedJob.scraping_errors
+        session.refresh(rating)
+        assert len(rating.rating_errors) == settings.rating_max_retry
+        assert all(e.job_rating_id == rating.id for e in rating.rating_errors)
+        assert all(e.job_rating_service_log_id is not None for e in rating.rating_errors)
+        assert all(e.level == "error" for e in rating.rating_errors)
+        assert scraped_job.scraping_errors == []
 
     def test_truncates_long_description(
         self,
@@ -471,7 +484,7 @@ class TestScrapedJobRaterRateJob:
             qualification.interests,
         )
 
-        ScrapedJobRater()._rate_job(
+        ScrapedJobRatingService()._rate_job(
             session,
             scraped_job,
             user.id,
@@ -510,7 +523,7 @@ class TestScrapedJobRaterProcessUser:
         system_prompt, job_prompt_template = test_ai_prompts
         service_log = self.create_service_log(session)
 
-        ScrapedJobRater()._process_user(session, user.id, service_log, system_prompt, job_prompt_template)
+        ScrapedJobRatingService()._process_user(session, user.id, service_log, system_prompt, job_prompt_template)
 
         session.refresh(service_log)
         assert user.id not in service_log.user_processed_ids
@@ -524,7 +537,7 @@ class TestScrapedJobRaterProcessUser:
         system_prompt, job_prompt_template = test_ai_prompts
         service_log = self.create_service_log(session)
 
-        ScrapedJobRater()._process_user(session, user.id, service_log, system_prompt, job_prompt_template)
+        ScrapedJobRatingService()._process_user(session, user.id, service_log, system_prompt, job_prompt_template)
 
         session.refresh(service_log)
         assert user.id in service_log.user_processed_ids
@@ -541,7 +554,7 @@ class TestScrapedJobRaterProcessUser:
         system_prompt, job_prompt_template = test_ai_prompts
         service_log = self.create_service_log(session)
 
-        ScrapedJobRater()._process_user(session, user.id, service_log, system_prompt, job_prompt_template)
+        ScrapedJobRatingService()._process_user(session, user.id, service_log, system_prompt, job_prompt_template)
 
         session.refresh(service_log)
         for job in expected_jobs:
@@ -559,7 +572,7 @@ class TestScoreScrapedJobs(object):
         """Test scoring scraped jobs successfully"""
 
         monkeypatch.setattr(settings, "min_scraping_description_length", 70)
-        ScrapedJobRater().run(session)
+        ScrapedJobRatingService().run(session)
         job_ratings = session.query(models.JobRating).all()
         assert len(job_ratings) == 34
         for job_rating in job_ratings:
@@ -608,17 +621,20 @@ class TestScoreScrapedJobs(object):
         job_rating = [job_rating for job_rating in job_ratings if job_rating.scraped_job.id == scraped_job.id][0]
         assert job_rating.is_skipped is False
 
-    def test_critical_error_is_recorded_in_service_log(
+    def test_critical_error_is_recorded_as_error(
         self, session, test_scraped_jobs, test_user_qualifications, test_ai_prompts, monkeypatch
     ) -> None:
-        """Test that an unexpected error in the rating workflow is recorded in the service log."""
+        """Test that an unexpected error in the rating workflow is recorded as a unified Error."""
 
         def raise_error(_):
             raise RuntimeError("DB connection lost")
 
         monkeypatch.setattr(scraped_job_rating, "get_rating_active_users", raise_error)
 
-        service_log = ScrapedJobRater().run(session)
+        service_log = ScrapedJobRatingService().run(session)
 
-        assert service_log.is_success is False
-        assert "DB connection lost" in service_log.error_message
+        assert schemas.JobRatingServiceLogOut.model_validate(service_log, from_attributes=True).is_success is False
+        error = session.query(models.Error).filter_by(job_rating_service_log_id=service_log.id).one()
+        assert "DB connection lost" in error.message
+        assert error.scraped_job_id is None
+        assert error.level == "critical"

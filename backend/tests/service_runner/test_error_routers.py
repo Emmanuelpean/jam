@@ -72,7 +72,7 @@ class TestAcknowledgeServiceErrors:
 
     def test_acknowledges_errors(self, admin_client, session, seeded_service_errors) -> None:
         ids = [seeded_service_errors[0].id, seeded_service_errors[1].id]
-        resp = admin_client.patch(self.endpoint, json={"ids": ids, "is_acknowledged": True})
+        resp = admin_client.put(self.endpoint, json={"ids": ids, "is_acknowledged": True})
         assert resp.status_code == status.HTTP_200_OK
         assert all(row["is_acknowledged"] for row in resp.json())
 
@@ -83,10 +83,10 @@ class TestAcknowledgeServiceErrors:
 
     def test_unacknowledge(self, admin_client, session, seeded_service_errors) -> None:
         already_ack = seeded_service_errors[2].id
-        resp = admin_client.patch(self.endpoint, json={"ids": [already_ack], "is_acknowledged": False})
+        resp = admin_client.put(self.endpoint, json={"ids": [already_ack], "is_acknowledged": False})
         assert resp.status_code == status.HTTP_200_OK
         assert resp.json()[0]["is_acknowledged"] is False
 
     def test_non_admin_forbidden(self, regular_user_client) -> None:
-        resp = regular_user_client.patch(self.endpoint, json={"ids": [1], "is_acknowledged": True})
+        resp = regular_user_client.put(self.endpoint, json={"ids": [1], "is_acknowledged": True})
         assert resp.status_code == status.HTTP_403_FORBIDDEN

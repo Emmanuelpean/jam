@@ -10,7 +10,7 @@ from app import models
 from app.emails.schemas import EmailData
 from app.job_email_scraping.email_parsers import Platform
 from app.job_email_scraping.email_parsers import indeed
-from app.job_email_scraping.email_scraper import JobEmailScraper
+from app.job_email_scraping.email_scraper import JobEmailScrapingService
 from tests.job_email_scraping.mock_job_scrapers import (
     MockVeganJobsBrightdataJobScraper,
     MockIndeedBrightdataJobScraper,
@@ -79,23 +79,23 @@ def test_job_scraping_service_log(session) -> models.JobEmailScrapingServiceLog:
 
 
 @pytest.fixture
-def test_job_scraper(session) -> JobEmailScraper:
+def test_job_scraper(session) -> JobEmailScrapingService:
     """Create a JobScraper instance for testing with mocked file dependencies."""
 
     entry = models.Setting(name="indeed_scraper", value="brightapi")
     session.add(entry)
     session.commit()
-    return JobEmailScraper(session)
+    return JobEmailScrapingService(session)
 
 
 @pytest.fixture
-def job_scraper_with_brightapi_skip(session) -> JobEmailScraper:
+def job_scraper_with_brightapi_skip(session) -> JobEmailScrapingService:
     """Create a JobScraper instance with BrightAPI skip enabled for indeed jobs."""
 
     entry = models.Setting(name="indeed_scraper", value="email")
     session.add(entry)
     session.commit()
-    return JobEmailScraper(session)
+    return JobEmailScrapingService(session)
 
 
 @pytest.fixture

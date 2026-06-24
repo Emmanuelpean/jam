@@ -13,7 +13,6 @@ from app import models
 from app.service_runner import routers
 from app.service_runner.service_runner import ServiceRunner
 
-
 # -------------------------------------------------- FIXTURES --------------------------------------------------
 
 
@@ -276,8 +275,6 @@ class TestGetServiceLogsByDateRange:
         log = models.JobEmailScrapingServiceLog(
             run_duration=None,
             run_datetime=dt.datetime.now(dt.timezone.utc),
-            is_success=None,
-            error_message=None,
             user_processed_ids=[],
             user_found_ids=[],
         )

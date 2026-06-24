@@ -153,27 +153,19 @@ def seeded_service_logs(session) -> list[models.ExternalServiceMonitoringService
         models.ExternalServiceMonitoringServiceLog(
             run_datetime=now - dt.timedelta(days=5),
             run_duration=1.0,
-            is_success=True,
-            error_message=None,
         ),
         models.ExternalServiceMonitoringServiceLog(
             run_datetime=now - dt.timedelta(days=2),
             run_duration=2.0,
-            is_success=True,
-            error_message=None,
         ),
         models.ExternalServiceMonitoringServiceLog(
             run_datetime=now - dt.timedelta(hours=1),
             run_duration=0.5,
-            is_success=False,
-            error_message="apify failed",
         ),
         # In-progress: must not appear in the date-range response.
         models.ExternalServiceMonitoringServiceLog(
             run_datetime=now,
             run_duration=None,
-            is_success=None,
-            error_message=None,
         ),
     ]
     session.add_all(rows)
@@ -228,8 +220,9 @@ class TestServiceLogsLatest:
         body = resp.json()
         # The fixture's most recent row is the in-progress one (run_datetime=now), and the
         # /latest endpoint is implemented as `order_by(run_datetime desc).first()` — i.e. it
-        # does NOT filter on run_duration. So we expect the in-progress row.
-        assert body["is_success"] is None
+        # does NOT filter on run_duration. So we expect the in-progress row. is_success is derived
+        # from run_datetime + critical errors, so an in-progress run with no errors reads True.
+        assert body["is_success"] is True
         assert body["run_duration"] is None
 
     def test_returns_404_when_empty(self, admin_client) -> None:

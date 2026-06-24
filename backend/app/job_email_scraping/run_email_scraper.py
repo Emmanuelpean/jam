@@ -3,7 +3,8 @@
 import argparse
 import sys
 
-from app.job_email_scraping.email_scraper import JobEmailScraper
+from app.job_email_scraping.email_scraper import JobEmailScrapingService
+from app.job_email_scraping.schemas import JobEmailScrapingServiceLogOut
 
 
 def main():
@@ -32,11 +33,11 @@ def main():
 
     print(f"Starting job email scraper for the last {args.days} day(s)...")
 
-    scraper = JobEmailScraper()
+    scraper = JobEmailScrapingService()
     result = scraper.run_scraping(timedelta_days=args.days)
 
-    if result.error_message:
-        print(f"\nError: {result.error_message}")
+    if not JobEmailScrapingServiceLogOut.model_validate(result, from_attributes=True).is_success:
+        print("\nError: scraping run failed — see the Error table for details")
         sys.exit(1)
 
     print("\nDone!")

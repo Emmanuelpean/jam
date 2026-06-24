@@ -1,13 +1,20 @@
 """Database models for job ratings and their service logs."""
 
+import datetime as dt
+
 from sqlalchemy import (
     Column,
     Integer,
     String,
     ForeignKey,
     Boolean,
+    TIMESTAMP,
+    and_,
+    or_,
+    func,
 )
 from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
@@ -63,10 +70,13 @@ class JobRating(Owned, Base):
     - `feedback` (str, optional): Additional feedback or comments about the job rating.
     - `is_skipped` (bool, optional): Indicates whether the rating process was skipped.
     - `skip_reason` (str, optional): Reason for skipping the rating process.
-    - `is_success` (bool, optional): Indicates whether the rating process was successful.
+    - `is_success` (bool, optional): Whether the rating succeeded. Null while the rating is still
+      pending / being retried; True on success; False once retries are exhausted.
     - `job_prompt` (str, optional): Job prompt used for the rating.
     - `llm_model` (str): LLM model used for the rating.
     - `notes` (List[str], optional): Additional notes or comments about the rating.
+    - `rating_retry_count` (int): Number of times the rating has been retried.
+    - `rating_next_retry_at` (datetime, optional): When the next rating retry is scheduled.
 
     Foreign keys:
     -------------
@@ -80,7 +90,8 @@ class JobRating(Owned, Base):
     - `scraped_job` (ScrapedJob): ScrapedJob object related to the rating.
     - `use_qualification` (UserQualification): UserQualification object related to the rating.
     - `system_prompt` (AiSystemPrompt, optional): AiSystemPrompt object related to the rating.
-    - `job_prompt_template` (AiJobPromptTemplate, optional): AiJobPromptTemplate object related to the rating."""
+    - `job_prompt_template` (AiJobPromptTemplate, optional): AiJobPromptTemplate object related to the rating.
+    - `rating_errors` (list of Error): Errors raised while rating this job."""
 
     overall_score = Column(Integer, nullable=True)
     technical_score = Column(Integer, nullable=True)
@@ -94,6 +105,8 @@ class JobRating(Owned, Base):
     job_prompt = Column(String, nullable=True)
     llm_model = Column(String, nullable=False)
     notes = Column(PG_ARRAY(String), server_default="{}", nullable=False)
+    rating_retry_count = Column(Integer, nullable=False, server_default="0")
+    rating_next_retry_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     # Foreign keys
     scraped_job_id = Column(Integer, ForeignKey("scraped_job.id", ondelete="CASCADE"), nullable=False)
@@ -108,12 +121,39 @@ class JobRating(Owned, Base):
     user_qualification = relationship("UserQualification", back_populates="job_ratings")
     system_prompt = relationship("AiSystemPrompt", back_populates="job_ratings")
     job_prompt_template = relationship("AiJobPromptTemplate", back_populates="job_ratings")
+    # Rating errors for this job, stamped with job_rating_id when the rating is finalised.
+    rating_errors = relationship("Error", foreign_keys="Error.job_rating_id", back_populates="job_rating")
 
     def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""
 
         kwargs.setdefault("notes", [])
         super().__init__(**kwargs)
+
+    @hybrid_property
+    def is_pending(self) -> bool:
+        """Whether the rating is still runnable: not yet finalised (``is_success`` is None — i.e.
+        neither succeeded nor failed-out), not skipped, and due for a (re)try now."""
+
+        now = dt.datetime.now(dt.timezone.utc)
+        return (
+            self.is_success is None
+            and not self.is_skipped
+            and (self.rating_next_retry_at is None or self.rating_next_retry_at <= now)
+        )
+
+    @is_pending.expression
+    def is_pending(cls):
+        """SQL form of :attr:`is_pending` for use in queries."""
+
+        return and_(
+            cls.is_success.is_(None),
+            cls.is_skipped.is_(False),
+            or_(
+                cls.rating_next_retry_at.is_(None),
+                cls.rating_next_retry_at <= func.now(),
+            ),
+        )
 
 
 class JobRatingServiceLog(ServiceLog, CommonBase, Base):

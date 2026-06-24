@@ -5,8 +5,9 @@ from fastapi import APIRouter, Depends, Query
 from app import models
 from app.core.oauth2 import get_current_user
 from app.job_rating import schemas
-from app.job_rating.scraped_job_rating import job_rating_service_runner, SERVICE_NAME
+from app.job_rating.scraped_job_rating import job_rating_service_runner
 from app.service_runner import routers
+from job_rating.scraped_job_rating import ScrapedJobRatingService
 
 job_rating_service_router = APIRouter(prefix="/job-rating-service-runner", tags=["job-rating-service-runner"])
 
@@ -52,4 +53,4 @@ def get_scraper_logs(
     :param lines: Number of lines to retrieve (default 100, max 10000)
     :param current_user: Current authenticated user"""
 
-    return routers.get_service_logs(SERVICE_NAME, lines, current_user)
+    return routers.get_service_logs(ScrapedJobRatingService.service_name, lines, current_user)
