@@ -28,7 +28,7 @@ class TestSaveEmailToDb:
 
         for email_id in resources.TEST_EMAILS:
             result_email, is_created = test_job_scraper.get_and_save_email_to_db(
-                email_id, test_users[0], test_job_scraping_service_log.id
+                session, email_id, test_users[0], test_job_scraping_service_log.id
             )
 
             assert is_created
@@ -64,7 +64,7 @@ class TestSaveEmailToDb:
 
         # Try to save it with a different user
         result_email, is_created = test_job_scraper.get_and_save_email_to_db(
-            message_id, test_users[1], test_job_scraping_service_log.id
+            session, message_id, test_users[1], test_job_scraping_service_log.id
         )
 
         assert is_created is False
@@ -87,7 +87,7 @@ class TestSaveJobBaseInfoToDb:
         """Test saving new job IDs successfully"""
 
         jobs = resources.LINKEDIN_EMAIL_4_EXTRACTED
-        result = test_job_scraper.save_job_base_info_to_db(email_record=test_job_alert_emails[0], job_results=jobs)
+        result = test_job_scraper.save_job_base_info_to_db(session, email_record=test_job_alert_emails[0], job_results=jobs)
 
         # Verify returned list has correct length
         assert len(result) == len(jobs)
@@ -117,7 +117,7 @@ class TestSaveJobBaseInfoToDb:
         session.commit()
         session.refresh(existing_job)
 
-        result = test_job_scraper.save_job_base_info_to_db(email_record=test_job_alert_emails[0], job_results=jobs)
+        result = test_job_scraper.save_job_base_info_to_db(session, email_record=test_job_alert_emails[0], job_results=jobs)
 
         # Verify returned list has correct length
         assert len(result) == len(jobs)
@@ -130,8 +130,8 @@ class TestSaveJobBaseInfoToDb:
         email = resources.LINKEDIN_EMAIL_4
         jobs = email["parsed_output"]
 
-        result_1 = test_job_scraper.save_job_base_info_to_db(email_record=test_job_alert_emails[0], job_results=jobs)
-        result_2 = test_job_scraper.save_job_base_info_to_db(email_record=test_job_alert_emails[-1], job_results=jobs)
+        result_1 = test_job_scraper.save_job_base_info_to_db(session, email_record=test_job_alert_emails[0], job_results=jobs)
+        result_2 = test_job_scraper.save_job_base_info_to_db(session, email_record=test_job_alert_emails[-1], job_results=jobs)
 
         # Verify separate job records were created for each owner
         assert len(result_1) == len(jobs)
@@ -191,7 +191,7 @@ class TestUpdateScrapedJobData:
 
         # Save job data
         test_job_scraper.update_scraped_job_data(
-            job_record=sample_scraped_job, job_result=JobResult.model_validate(sample_job_data)
+            session, job_record=sample_scraped_job, job_result=JobResult.model_validate(sample_job_data)
         )
 
         # Refresh the record from database
@@ -220,7 +220,7 @@ class TestExtractEmailData:
         """Test successful processing of LinkedIn email job ids"""
 
         email_entry, expected_jobs = email_record_factory("linkedin_3", user_index=0)
-        test_job_scraper.extract_email_data(email_record=email_entry, service_log=test_job_scraping_service_log)
+        test_job_scraper.extract_email_data(session, email_record=email_entry, service_log=test_job_scraping_service_log)
 
         # Verify jobs saved in database
         scraped_jobs = session.query(models.ScrapedJob).filter(models.ScrapedJob.owner_id == email_entry.owner_id).all()
@@ -252,7 +252,7 @@ class TestExtractEmailData:
         """Test successful processing of Indeed email jobs."""
 
         email_entry, expected_jobs = email_record_factory("indeed_3", user_index=0)
-        test_job_scraper.extract_email_data(email_record=email_entry, service_log=test_job_scraping_service_log)
+        test_job_scraper.extract_email_data(session, email_record=email_entry, service_log=test_job_scraping_service_log)
 
         # Verify jobs saved in database
         scraped_jobs = session.query(models.ScrapedJob).filter(models.ScrapedJob.owner_id == email_entry.owner_id).all()
@@ -275,7 +275,7 @@ class TestExtractEmailData:
         """Test successful processing of VeganJobs email jobs."""
 
         email_entry, expected_jobs = email_record_factory("veganjobs_3", user_index=0)
-        test_job_scraper.extract_email_data(email_record=email_entry, service_log=test_job_scraping_service_log)
+        test_job_scraper.extract_email_data(session, email_record=email_entry, service_log=test_job_scraping_service_log)
 
         # Verify jobs saved in database
         scraped_jobs = session.query(models.ScrapedJob).filter(models.ScrapedJob.owner_id == email_entry.owner_id).all()
@@ -298,7 +298,7 @@ class TestExtractEmailData:
         """Test successful processing of VeganJobs email jobs."""
 
         email_entry, expected_jobs = email_record_factory("nhs_3", user_index=0)
-        test_job_scraper.extract_email_data(email_record=email_entry, service_log=test_job_scraping_service_log)
+        test_job_scraper.extract_email_data(session, email_record=email_entry, service_log=test_job_scraping_service_log)
 
         # Verify jobs saved in database
         scraped_jobs = session.query(models.ScrapedJob).filter(models.ScrapedJob.owner_id == email_entry.owner_id).all()
@@ -322,8 +322,8 @@ class TestExtractEmailData:
 
         email_entry_1, expected_jobs = email_record_factory("linkedin_3", user_index=0)
         email_entry_2, expected_jobs = email_record_factory("linkedin_3", user_index=1)
-        test_job_scraper.extract_email_data(email_record=email_entry_1, service_log=test_job_scraping_service_log)
-        test_job_scraper.extract_email_data(email_record=email_entry_2, service_log=test_job_scraping_service_log)
+        test_job_scraper.extract_email_data(session, email_record=email_entry_1, service_log=test_job_scraping_service_log)
+        test_job_scraper.extract_email_data(session, email_record=email_entry_2, service_log=test_job_scraping_service_log)
 
         # Check that each use has a copy of the jobs
         scraped_jobs = (
@@ -352,8 +352,8 @@ class TestExtractEmailData:
         """Test successful processing of LinkedIn email for the same user with duplicate job ids"""
 
         email_entry, expected_job_ids = email_record_factory("linkedin_3", user_index=0)
-        test_job_scraper.extract_email_data(email_record=email_entry, service_log=test_job_scraping_service_log)
-        test_job_scraper.extract_email_data(email_record=email_entry, service_log=test_job_scraping_service_log)
+        test_job_scraper.extract_email_data(session, email_record=email_entry, service_log=test_job_scraping_service_log)
+        test_job_scraper.extract_email_data(session, email_record=email_entry, service_log=test_job_scraping_service_log)
 
         # Verify jobs saved in database without duplicates
         scraped_jobs = session.query(models.ScrapedJob).filter(models.ScrapedJob.owner_id == email_entry.owner_id).all()
@@ -403,7 +403,7 @@ class TestProcessEmails:
             mock_get_email_ids.side_effect = mock_get_email_ids_side_effect
 
             # Call the method
-            test_job_scraper.process_emails(timedelta_days=1, service_log=test_job_scraping_service_log)
+            test_job_scraper.process_emails(session, timedelta_days=1, service_log=test_job_scraping_service_log)
 
             # Verify service log updates
             assert len(test_job_scraping_service_log.user_processed_ids) == len(self.get_premium_users(session))
@@ -472,7 +472,7 @@ class TestProcessEmails:
             mock_get_email_ids.side_effect = mock_get_email_ids_side_effect
 
             # Call the method
-            test_job_scraper.process_emails(timedelta_days=1, service_log=test_job_scraping_service_log)
+            test_job_scraper.process_emails(session, timedelta_days=1, service_log=test_job_scraping_service_log)
 
             # Verify service log updates
             assert len(test_job_scraping_service_log.user_processed_ids) == len(self.get_premium_users(session))
@@ -544,7 +544,7 @@ class TestProcessEmails:
             mock_get_email_ids.side_effect = mock_get_email_ids_side_effect
 
             # Call the method
-            test_job_scraper.process_emails(timedelta_days=1, service_log=test_job_scraping_service_log)
+            test_job_scraper.process_emails(session, timedelta_days=1, service_log=test_job_scraping_service_log)
 
             # Verify service log updates
             n_job = len(email["parsed_output"])
@@ -651,7 +651,7 @@ class TestScrapeJobs:
     ) -> None:
         """Test successful scraping of Indeed email jobs"""
 
-        test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+        test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
         # Verify all jobs are now scraped
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
@@ -675,7 +675,7 @@ class TestScrapeJobs:
     ) -> None:
         """Test successful processing of LinkedIn email jobs"""
 
-        test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+        test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
         # Verify all jobs are now scraped
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
@@ -699,7 +699,7 @@ class TestScrapeJobs:
     ) -> None:
         """Test successful processing of VeganJobs email jobs"""
 
-        test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+        test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
         # Verify all jobs are now scraped
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
@@ -721,7 +721,7 @@ class TestScrapeJobs:
     def test_nhs_success(self, nhs_scraped_jobs, test_job_scraping_service_log, test_job_scraper, session) -> None:
         """Test successful processing of NHS email jobs"""
 
-        test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+        test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
         # Verify all jobs are now scraped
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
@@ -752,7 +752,7 @@ class TestScrapeJobs:
             wraps=test_job_scraper.copy_existing_entry,
         ) as mock_copy:
 
-            test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+            test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
             # Check how many times copy_existing_entry was called
             assert mock_copy.call_count == len(indeed_scraped_jobs_user2)
@@ -788,7 +788,7 @@ class TestScrapeJobs:
         session.add(filter_entry)
         session.commit()
         session.refresh(filter_entry)
-        test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+        test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
         # Verify all jobs are now scraped
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
@@ -838,7 +838,7 @@ class TestScrapeJobs:
             session.add(scraped_job)
             session.commit()
 
-        test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+        test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
         # Verify all jobs are skipped (not scraped)
         for job in linkedin_scraped_jobs:
@@ -896,7 +896,7 @@ class TestScrapeJobsRetry:
         """On first failure: retry_count=1, next_retry_at set, is_processed=False, is_failed=False"""
 
         with mock.patch("app.job_email_scraping.email_scraper.SCRAPERS", self._failing_scrapers()):
-            test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+            test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
         session.refresh(indeed_scraped_job)
         assert indeed_scraped_job.scraping_retry_count == 1
@@ -919,7 +919,7 @@ class TestScrapeJobsRetry:
             indeed_scraped_job.scraping_next_retry_at = None  # make eligible for retry each run
             session.commit()
             with mock.patch("app.job_email_scraping.email_scraper.SCRAPERS", self._failing_scrapers()):
-                test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+                test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
         session.refresh(indeed_scraped_job)
         assert indeed_scraped_job.scraping_retry_count == 2
@@ -936,7 +936,7 @@ class TestScrapeJobsRetry:
             indeed_scraped_job.scraping_next_retry_at = None
             session.commit()
             with mock.patch("app.job_email_scraping.email_scraper.SCRAPERS", self._failing_scrapers()):
-                test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+                test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
         session.refresh(indeed_scraped_job)
         assert indeed_scraped_job.scraping_retry_count == 3
@@ -953,7 +953,7 @@ class TestScrapeJobsRetry:
         indeed_scraped_job.scraping_retry_count = 1
         session.commit()
 
-        test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+        test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
         session.refresh(indeed_scraped_job)
         assert indeed_scraped_job.scraping_retry_count == 1  # unchanged — was not attempted
@@ -968,7 +968,7 @@ class TestScrapeJobsRetry:
         indeed_scraped_job.scraping_retry_count = 1
         session.commit()
 
-        test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+        test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
         session.refresh(indeed_scraped_job)
         assert indeed_scraped_job.is_scraped is True
@@ -985,7 +985,7 @@ class TestScrapeJobsRetry:
         session.commit()
 
         # Success run — uses default mock (no simulate_exception)
-        test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+        test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
         session.refresh(indeed_scraped_job)
         assert indeed_scraped_job.is_scraped is True
@@ -1004,7 +1004,7 @@ class TestScrapeJobsRetry:
         session.commit()
 
         # Success run — uses default mock (no simulate_exception)
-        test_job_scraper.scrape_jobs(test_job_scraping_service_log)
+        test_job_scraper.scrape_jobs(session, test_job_scraping_service_log)
 
         session.refresh(indeed_scraped_job)
         assert indeed_scraped_job.is_scraped is True
@@ -1070,7 +1070,7 @@ class TestExtractForwardingEmailConfirmation:
             patch.object(test_job_scraper, "get_email_ids", return_value=[email_id]) as mock_ids,
             patch.object(test_job_scraper, "get_email_data", return_value=email_data),
         ):
-            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+            test_job_scraper.extract_forwarding_email_confirmation(session, test_job_scraping_service_log)
             mock_ids.assert_called_once_with(from_email="forwarding-noreply@google.com", timedelta_days=1)
 
         # Verify confirmation link was created
@@ -1103,7 +1103,7 @@ class TestExtractForwardingEmailConfirmation:
             patch.object(test_job_scraper, "get_email_ids", return_value=[email_id]),
             patch.object(test_job_scraper, "get_email_data", return_value=email_data) as mock_get_data,
         ):
-            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+            test_job_scraper.extract_forwarding_email_confirmation(session, test_job_scraping_service_log)
             # get_email_data should NOT be called since the entry already exists
             mock_get_data.assert_not_called()
 
@@ -1115,7 +1115,7 @@ class TestExtractForwardingEmailConfirmation:
         """Test that when get_email_ids raises an exception, a service error is logged"""
 
         with patch.object(test_job_scraper, "get_email_ids", side_effect=Exception("IMAP error")):
-            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+            test_job_scraper.extract_forwarding_email_confirmation(session, test_job_scraping_service_log)
 
         # Verify a service error was logged
         errors = session.query(models.ServiceError).all()
@@ -1137,7 +1137,7 @@ class TestExtractForwardingEmailConfirmation:
             patch.object(test_job_scraper, "get_email_ids", return_value=[email_id]),
             patch.object(test_job_scraper, "get_email_data", return_value=email_data),
         ):
-            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+            test_job_scraper.extract_forwarding_email_confirmation(session, test_job_scraping_service_log)
 
         # Verify no confirmation links were created
         count = session.query(models.ForwardingConfirmationLink).count()
@@ -1153,7 +1153,7 @@ class TestExtractForwardingEmailConfirmation:
             patch.object(test_job_scraper, "get_email_ids", return_value=[email_id]),
             patch.object(test_job_scraper, "get_email_data", return_value=email_data),
         ):
-            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+            test_job_scraper.extract_forwarding_email_confirmation(session, test_job_scraping_service_log)
 
         # Verify no confirmation links were created
         count = session.query(models.ForwardingConfirmationLink).count()
@@ -1178,7 +1178,7 @@ class TestExtractForwardingEmailConfirmation:
             patch.object(test_job_scraper, "get_email_ids", return_value=[email_id_1, email_id_2]),
             patch.object(test_job_scraper, "get_email_data", side_effect=mock_get_email_data),
         ):
-            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+            test_job_scraper.extract_forwarding_email_confirmation(session, test_job_scraping_service_log)
 
         # Verify both confirmation links were created
         links = session.query(models.ForwardingConfirmationLink).all()
@@ -1196,8 +1196,8 @@ class TestExtractForwardingEmailConfirmation:
             patch.object(test_job_scraper, "get_email_ids", return_value=[email_id]),
             patch.object(test_job_scraper, "get_email_data", return_value=email_data),
         ):
-            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
-            test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
+            test_job_scraper.extract_forwarding_email_confirmation(session, test_job_scraping_service_log)
+            test_job_scraper.extract_forwarding_email_confirmation(session, test_job_scraping_service_log)
 
         # Verify only one confirmation link exists
         count = session.query(models.ForwardingConfirmationLink).count()

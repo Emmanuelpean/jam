@@ -3,7 +3,6 @@ from typing import Generic, TypeVar
 
 from sqlalchemy.orm import Session
 
-from app.database import get_db
 from app.service.models import ServiceLog
 from app.utilities.logger import AppLogger
 
@@ -22,16 +21,16 @@ class BaseService(Generic[ServiceLogT]):
         self.service_log_table = service_log_table
         self.logger = AppLogger.create_service_logger(self.service_name, "INFO")
 
-    def start_run(self, db: Session | None = None) -> tuple[ServiceLogT, Session]:
-        """Start a new service run
+    def start_run(self, db: Session) -> ServiceLogT:
+        """Create and persist the service-log row for a new run.
+        The caller owns the session (typically via ``with db_session() as db``) and passes it in.
         :param db: Database session
-        :return: The created service log entry and the database session"""
+        :return: The created service log entry"""
 
-        db = next(get_db()) if db is None else db
         start = dt.datetime.now(dt.timezone.utc)
         service_log = self.service_log_table(run_datetime=start)
         db.add(service_log)
         db.commit()
         db.refresh(service_log)
         self.logger.info(f"Starting {self.service_name} run")
-        return service_log, db
+        return service_log

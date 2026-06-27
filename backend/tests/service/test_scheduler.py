@@ -1,6 +1,7 @@
 """Unit tests for the database-driven service scheduler."""
 
 import datetime as dt
+from contextlib import nullcontext
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -120,7 +121,7 @@ class TestRunService:
 
         service_id = service.id
         scheduler = ServiceScheduler()
-        with patch("app.service.scheduler.get_db", side_effect=lambda: iter((session,))):
+        with patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)):
             scheduler._run_service(service_id)
 
         assert calls == [{"timedelta_days": 3}]
@@ -140,7 +141,7 @@ class TestRunService:
 
         service_id = service.id
         scheduler = ServiceScheduler()
-        with patch("app.service.scheduler.get_db", side_effect=lambda: iter((session,))):
+        with patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)):
             scheduler._run_service(service_id)
 
         updated = session.get(Service, service_id)
@@ -151,7 +152,7 @@ class TestRunService:
         """A service id that no longer exists is skipped without error."""
 
         scheduler = ServiceScheduler()
-        with patch("app.service.scheduler.get_db", side_effect=lambda: iter((session,))):
+        with patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)):
             scheduler._run_service(99999)  # no such row — must not raise
 
     def test_row_deleted_during_run_is_handled(self, session, restore_registry):
@@ -166,7 +167,7 @@ class TestRunService:
 
         _register("fake_service", delete_row)
         scheduler = ServiceScheduler()
-        with patch("app.service.scheduler.get_db", side_effect=lambda: iter((session,))):
+        with patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)):
             scheduler._run_service(service_id)  # must not raise
 
         assert session.get(Service, service_id) is None
@@ -188,7 +189,7 @@ class TestTick:
         scheduler = ServiceScheduler()
         scheduler._run_service = MagicMock()
         with (
-            patch("app.service.scheduler.get_db", side_effect=lambda: iter((session,))),
+            patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)),
             patch("app.service.scheduler.threading.Thread", _SyncThread),
         ):
             scheduler._tick()
@@ -203,7 +204,7 @@ class TestTick:
         scheduler = ServiceScheduler()
         scheduler._run_service = MagicMock()
         with (
-            patch("app.service.scheduler.get_db", side_effect=lambda: iter((session,))),
+            patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)),
             patch("app.service.scheduler.threading.Thread", _SyncThread),
         ):
             scheduler._tick()
@@ -219,7 +220,7 @@ class TestTick:
         scheduler = ServiceScheduler()
         scheduler._run_service = MagicMock()
         with (
-            patch("app.service.scheduler.get_db", side_effect=lambda: iter((session,))),
+            patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)),
             patch("app.service.scheduler.threading.Thread", _SyncThread),
         ):
             scheduler._tick()
@@ -235,7 +236,7 @@ class TestTick:
         scheduler = ServiceScheduler()
         scheduler._run_service = MagicMock()
         with (
-            patch("app.service.scheduler.get_db", side_effect=lambda: iter((session,))),
+            patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)),
             patch("app.service.scheduler.threading.Thread", _SyncThread),
         ):
             scheduler._tick()
@@ -254,7 +255,7 @@ class TestStart:
 
         scheduler = ServiceScheduler()
         with (
-            patch("app.service.scheduler.get_db", side_effect=lambda: iter((session,))),
+            patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)),
             patch.object(ServiceScheduler, "_loop", lambda self: None),
         ):
             scheduler.start()

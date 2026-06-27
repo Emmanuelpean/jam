@@ -78,8 +78,16 @@ class JobEmailOut(JobEmail, OwnedOut):
 # ----------------------------------------------------- SCRAPED JOB ----------------------------------------------------
 
 
-class ScrapedJob(BaseModel):
-    """Scraped Job base schema"""
+class ScrapedJobUpdate(BaseModel):
+    """Scraped Job update schema"""
+
+    is_active: bool | None = None
+    is_imported: bool | None = None
+    read_at: datetime | None = None
+
+
+class ScrapedJobOut(OwnedOut):
+    """Scraped Job output schema"""
 
     external_job_id: str
     platform: str
@@ -110,18 +118,7 @@ class ScrapedJob(BaseModel):
     raw_location: str | None = None
     company: str | None = None
 
-
-class ScrapedJobUpdate(BaseModel):
-    """Scraped Job update schema"""
-
-    is_active: bool | None = None
-    is_imported: bool | None = None
-    read_at: datetime | None = None
-
-
-class ScrapedJobOut(ScrapedJob, OwnedOut):
-    """Scraped Job output schema"""
-
+    # Relationships
     emails: list[int]
     job_rating: JobRatingOut | None
     geolocation: GeolocationOut | None

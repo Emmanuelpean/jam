@@ -85,7 +85,7 @@ def test_job_scraper(session) -> JobEmailScrapingService:
     entry = models.Setting(name="indeed_scraper", value="brightapi")
     session.add(entry)
     session.commit()
-    return JobEmailScrapingService(session)
+    return JobEmailScrapingService()
 
 
 @pytest.fixture
@@ -95,7 +95,7 @@ def job_scraper_with_brightapi_skip(session) -> JobEmailScrapingService:
     entry = models.Setting(name="indeed_scraper", value="email")
     session.add(entry)
     session.commit()
-    return JobEmailScrapingService(session)
+    return JobEmailScrapingService()
 
 
 @pytest.fixture

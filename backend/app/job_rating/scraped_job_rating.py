@@ -1,12 +1,14 @@
 """Use Gemini LLM to rate how well scraped jobs match user qualifications."""
 
 import datetime as dt
+from contextlib import nullcontext
 
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
 from app.config import settings
+from app.database import db_session
 from app.job_rating.claude import MODEL as CLAUDE_MODEL, claude_query
 from app.job_rating.prompts import create_job_only_prompt, create_system_prompt_with_profile
 from app.service.models import ServiceErrorLevel, record_error
@@ -92,37 +94,38 @@ class ScrapedJobRatingService(BaseService[models.JobRatingServiceLog]):
 
     def run(self, db: Session | None = None) -> models.JobRatingServiceLog:
         """Score all scraped jobs using AI.
-        :param db: Database session
+        :param db: optional session to run within; if omitted, one is created and closed for the run
         :return: Job rating service log entry"""
 
-        service_log, db = self.start_run(db)
+        with db_session() if db is None else nullcontext(db) as db:
+            service_log = self.start_run(db)
 
-        try:
-            # Get all active users with job rating active
-            users = get_rating_active_users(db)
-            self.logger.info(f"Found {len(users)} active users to process")
-            service_log.user_found_ids = [user.id for user in users]
+            try:
+                # Get all active users with job rating active
+                users = get_rating_active_users(db)
+                self.logger.info(f"Found {len(users)} active users to process")
+                service_log.user_found_ids = [user.id for user in users]
 
-            # Get latest system and job prompt templates
-            system_prompt = db.query(models.AiSystemPrompt).order_by(models.AiSystemPrompt.id.desc()).first()
-            job_prompt = db.query(models.AiJobPromptTemplate).order_by(models.AiJobPromptTemplate.id.desc()).first()
-            if not system_prompt or not job_prompt:
-                raise Exception("No system or job prompt templates found")
+                # Get latest system and job prompt templates
+                system_prompt = db.query(models.AiSystemPrompt).order_by(models.AiSystemPrompt.id.desc()).first()
+                job_prompt = db.query(models.AiJobPromptTemplate).order_by(models.AiJobPromptTemplate.id.desc()).first()
+                if not system_prompt or not job_prompt:
+                    raise Exception("No system or job prompt templates found")
 
-            # Process each user
-            for user in users:
-                self._process_user(db, user.id, service_log, system_prompt, job_prompt)
+                # Process each user
+                for user in users:
+                    self._process_user(db, user.id, service_log, system_prompt, job_prompt)
 
-        except Exception as exception:
-            self.logger.exception(f"Critical error in rating workflow: {exception}")
-            record_error(db, exception, level=ServiceErrorLevel.CRITICAL, job_rating_service_log_id=service_log.id)
-        finally:
-            self.logger.info("Finished workflow")
+            except Exception as exception:
+                self.logger.exception(f"Critical error in rating workflow: {exception}")
+                record_error(db, exception, level=ServiceErrorLevel.CRITICAL, job_rating_service_log_id=service_log.id)
+            finally:
+                self.logger.info("Finished workflow")
 
-        service_log.set_run_duration()
-        db.commit()
-        db.refresh(service_log)
-        return service_log
+            service_log.set_run_duration()
+            db.commit()
+            db.refresh(service_log)
+            return service_log
 
     def _process_user(
         self,

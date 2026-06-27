@@ -193,7 +193,7 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
     - `emails` (list of JobEmail): List of email messages associated with the service log.
     - `scraped_jobs` (list of ScrapedJob): List of scraped jobs associated with the service log.
     - `platform_stats` (list of JobEmailScrapingPlatformStat): List of platform statistics associated with the service log.
-
+    - `service_errors` (list of ServiceError): List of errors that have happened during the service run.
     Properties:
     -----------
     - `job_scrape_succeeded_n` (int): Total successfully scraped jobs across all platforms.

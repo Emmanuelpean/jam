@@ -9,10 +9,11 @@ import datetime as dt
 from enum import Enum
 
 from sqlalchemy import or_
+from sqlalchemy.orm import Session
 
 from app import models
 from app.config import settings
-from app.database import get_db
+from app.database import db_session
 from app.emails.email_service import EmailService
 from app.geolocation.geolocation import geocode_location
 from app.job_email_scraping.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
@@ -50,28 +51,28 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
 
     service_name = "email_scraper_service"
 
-    def __init__(self, db=None) -> None:
-        """Object constructor
-        :param db: optional database session for testing"""
+    def __init__(self) -> None:
+        """Object constructor"""
 
         EmailService.__init__(self, settings.scraper_email_username, settings.scraper_email_password)
         BaseService.__init__(self, JobEmailScrapingServiceLog)
-        self.db = next(get_db()) if db is None else db
 
+    @staticmethod
     def upsert_platform_stat(
-        self,
+        db: Session,
         service_log: JobEmailScrapingServiceLog,
         platform: Platform,
         **kwargs,
     ) -> JobEmailScrapingPlatformStat:
         """Create a new platform statistics entry
+        :param db: Database session
         :param service_log: associated JobEmailScrapingServiceLog instance
         :param platform: Platform enum value
         :param kwargs: PlatformStat keyword arguments"""
 
         # Check the platform_stats entry exists
         platform_stats = (
-            self.db.query(JobEmailScrapingPlatformStat)
+            db.query(JobEmailScrapingPlatformStat)
             .join(JobEmailScrapingServiceLog)
             .filter(JobEmailScrapingServiceLog.id == service_log.id)
             .filter(JobEmailScrapingPlatformStat.name == platform)
@@ -81,7 +82,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
         # Update existing entry by adding the new values
         if not platform_stats:
             platform_stats = JobEmailScrapingPlatformStat(service_log_id=service_log.id, name=platform)
-            self.db.add(platform_stats)
+            db.add(platform_stats)
 
         for key in kwargs:
             if isinstance(kwargs[key], list):
@@ -90,53 +91,55 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                 value = [kwargs[key]]
             setattr(platform_stats, key, list(set(getattr(platform_stats, key) + value)))
 
-        self.db.commit()
-        self.db.refresh(platform_stats)
+        db.commit()
+        db.refresh(platform_stats)
         return platform_stats
 
+    @staticmethod
     def log_service_error(
-        self,
+        db: Session,
         service_log: JobEmailScrapingServiceLog,
         exc: Exception | str,
         level: ServiceErrorLevel = ServiceErrorLevel.ERROR,
     ) -> ServiceError:
         """Record a ServiceError for a caught exception during the scraping run.
+        :param db: Database session
         :param service_log: associated JobEmailScrapingServiceLog instance
         :param exc: the caught exception or an error message string
         :param level: ErrorLevel enum value
         :return: ServiceError instance"""
 
-        return record_error(self.db, exc, job_email_scraping_service_log_id=service_log.id, level=level)
+        return record_error(db, exc, job_email_scraping_service_log_id=service_log.id, level=level)
 
-    def get_user_monthly_scrape_count(self, owner_id: int) -> int:
-        """Get the count of jobs scraped by a user in the current month.
+    @staticmethod
+    def is_user_over_monthly_quota(
+        db: Session,
+        owner_id: int,
+    ) -> bool:
+        """Check if a user has exceeded their monthly scrape quota.
+        :param db: Database session
         :param owner_id: User ID
-        :return: Number of jobs scraped this month"""
+        :return: True if the user has exceeded their quota"""
 
         start_of_month = dt.datetime.now(dt.timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         count = (
-            self.db.query(ScrapedJob)
+            db.query(ScrapedJob)
             .filter(ScrapedJob.owner_id == owner_id)
             .filter(ScrapedJob.is_scraped)
             .filter(ScrapedJob.is_failed.is_(False))
             .filter(ScrapedJob.scrape_datetime >= start_of_month)
             .count()
         )
-        return count
-
-    def is_user_over_monthly_quota(self, owner_id: int) -> bool:
-        """Check if a user has exceeded their monthly scrape quota.
-        :param owner_id: User ID
-        :return: True if the user has exceeded their quota"""
-
-        return self.get_user_monthly_scrape_count(owner_id) >= settings.monthly_scrape_quota
+        return count >= settings.monthly_scrape_quota
 
     def extract_forwarding_email_confirmation(
         self,
+        db: Session,
         service_log: JobEmailScrapingServiceLog,
         timedelta_days: int | float = 1,
     ) -> None:
         """Extract and save forwarding confirmation links from emails sent by different email providers
+        :param db: Database session
         :param service_log: associated JobEmailScrapingServiceLog instance
         :param timedelta_days: Number of days to search for emails"""
 
@@ -145,14 +148,14 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                 email = FORWARDING_EMAILS[email_platform]
                 email_ids = self.get_email_ids(from_email=email, timedelta_days=timedelta_days)
             except:
-                self.log_service_error(service_log, f"Failed to get email with platform {email_platform.value}.")
+                self.log_service_error(db, service_log, f"Failed to get email with platform {email_platform.value}.")
                 continue
 
             for email_id in email_ids:
                 # Try to save the email if it does not already exist
                 try:
                     existing_entry = (
-                        self.db.query(models.ForwardingConfirmationLink)
+                        db.query(models.ForwardingConfirmationLink)
                         .filter(models.ForwardingConfirmationLink.email_external_id == email_id)
                         .first()
                     )
@@ -163,7 +166,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                         email = self.get_email_data(email_id)
                 except:
                     self.log_service_error(
-                        service_log, f"Failed to read email {email_id} with platform {email_platform}."
+                        db, service_log, f"Failed to read email {email_id} with platform {email_platform}."
                     )
                     continue
 
@@ -179,7 +182,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
 
                     # Extract the user email and user details
                     user_email = ORIGINATOR_EXTRACTORS[email_platform](email.body)
-                    user = self.db.query(models.User).filter(models.User.email == user_email).first()
+                    user = db.query(models.User).filter(models.User.email == user_email).first()
                     if not user:
                         message = (
                             f"User with email {user_email} not found in database. Skipping forwarding confirmation."
@@ -194,22 +197,24 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                         platform=email_platform.value,
                         owner_id=user.id,
                     )
-                    self.db.add(confirmation)
-                    self.db.commit()
+                    db.add(confirmation)
+                    db.commit()
                 except:
                     message = f"Failed to extract forwarding confirmation link from email {email.id}"
-                    self.log_service_error(service_log, message)
+                    self.log_service_error(db, service_log, message)
 
     # ------------------------------------------------ EMAIL PROCESSING ------------------------------------------------
 
     def get_and_save_email_to_db(
         self,
+        db: Session,
         email_id: str,
         user: models.User,
         service_log_id: int,
         forwarded: bool = False,
     ) -> tuple[JobEmail | None, bool]:
         """Read and save an email to the database
+        :param db: Database session
         :param email_id: Email ID
         :param user: User entry associated with this email
         :param service_log_id: ID of the JobEmailScrapingServiceLog instance associated with this email
@@ -217,7 +222,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
         :return: JobEmails instance and whether the record was created or already existing"""
 
         # Check if the email already exists and return it if it does
-        existing_email = self.db.query(JobEmail).filter(JobEmail.external_email_id == email_id).first()
+        existing_email = db.query(JobEmail).filter(JobEmail.external_email_id == email_id).first()
 
         # Return the existing email
         if existing_email:
@@ -253,16 +258,17 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                 platform=platform,
                 alert_name=alert_name,
             )
-            self.db.add(email_record)
-            self.db.commit()
-            self.db.refresh(email_record)
+            db.add(email_record)
+            db.commit()
+            db.refresh(email_record)
 
             return email_record, True
 
     # ------------------------------------------------- JOB PROCESSING -------------------------------------------------
 
-    def process_job_result(self, job_result: JobResult) -> dict:
+    def process_job_result(self, db: Session, job_result: JobResult) -> dict:
         """Process a single JobResult and extract relevant data
+        :param db: Database session
         :param job_result: JobResult instance
         :return dictionary of extracted job data"""
 
@@ -273,7 +279,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
         result["location"], result["attendance_type"] = parse_location(result["raw_location"])
 
         if result["location"]:
-            geolocation = geocode_location(result["location"], self.db, self.logger)
+            geolocation = geocode_location(result["location"], db, self.logger)
             if geolocation:
                 result["geolocation_id"] = geolocation.id
 
@@ -302,11 +308,13 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
 
     def save_job_base_info_to_db(
         self,
+        db: Session,
         email_record: JobEmail,
         job_results: list[JobResult],
     ) -> list[ScrapedJob]:
         """Save extracted job IDs from an email to the database and link them to the email.
         If they already exist, just link them to the email.
+        :param db: Database session
         :param email_record: associated JobAlertEmail record instance
         :param job_results: list of job IDs to save
         :return: list of ScrapedJob instances created or already existing in the database"""
@@ -317,7 +325,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
 
             # Check if the job already exists for this owner
             existing_entry = (
-                self.db.query(ScrapedJob)
+                db.query(ScrapedJob)
                 .filter(ScrapedJob.external_job_id == job_result.job_id)
                 .filter(ScrapedJob.owner_id == email_record.owner_id)
                 .first()
@@ -325,7 +333,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
 
             # Create new job record if it doesn't exist
             if not existing_entry:
-                data = self.process_job_result(job_result)
+                data = self.process_job_result(db, job_result)
 
                 new_job = ScrapedJob(
                     owner_id=email_record.owner_id,
@@ -333,7 +341,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                     **data,
                 )
                 new_job.emails.append(email_record)
-                self.db.add(new_job)
+                db.add(new_job)
                 job_records.append(new_job)
 
             # Link existing job record to the email
@@ -344,24 +352,26 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                 job_records.append(existing_entry)
 
         # Commit and refresh the records
-        self.db.commit()
+        db.commit()
         for job_record in job_records:
-            self.db.refresh(job_record)
+            db.refresh(job_record)
 
         return job_records
 
     def update_scraped_job_data(
         self,
+        db: Session,
         job_record: ScrapedJob,
         job_result: JobResult | None,
     ) -> None:
         """Update the job records with the scraped data
+        :param db: Database session
         :param job_record: ScrapedJob instance
         :param job_result: scraped job data"""
 
         # Update the job data
         if job_result is not None:
-            data = self.process_job_result(job_result)
+            data = self.process_job_result(db, job_result)
             for key in data:
                 if data[key] is not None:
                     setattr(job_record, key, data[key])
@@ -370,14 +380,16 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
         job_record.scrape_datetime = dt.datetime.now()
         job_record.is_scraped = True
 
-        self.db.commit()
+        db.commit()
 
+    @staticmethod
     def copy_existing_entry(
-        self,
+        db: Session,
         job_record1: ScrapedJob,
         job_record2: ScrapedJob,
     ) -> ScrapedJob:
         """Copy the data from job_record1 to job_record2
+        :param db: Database session
         :param job_record1: Source ScrapedJob instance
         :param job_record2: Target ScrapedJob instance
         :return: Updated job_record2 instance"""
@@ -404,50 +416,56 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
         for key in columns:
             if getattr(job_record2, key) is not None:
                 setattr(job_record2, key, getattr(job_record1, key))
-        self.db.commit()
+        db.commit()
         return job_record2
 
     # ----------------------------------------------------- RUNNER -----------------------------------------------------
 
-    def run_scraping(self, timedelta_days: int | float = 1) -> JobEmailScrapingServiceLog:
+    def run_scraping(
+        self,
+        timedelta_days: int | float = 1,
+    ) -> JobEmailScrapingServiceLog:
         """Run the email scraping workflow
         :param timedelta_days: Number of days to search for emails"""
 
-        service_log, self.db = self.start_run(self.db)
-        self.extract_forwarding_email_confirmation(service_log, timedelta_days)
+        with db_session() as db:
+            service_log = self.start_run(db)
+            self.extract_forwarding_email_confirmation(db, service_log, timedelta_days)
 
-        try:
-            # Process emails for all users
-            self.process_emails(timedelta_days, service_log)
+            try:
+                # Process emails for all users
+                self.process_emails(db, timedelta_days, service_log)
 
-            # Scrape remaining jobs that haven't been scraped yet
-            self.scrape_jobs(service_log)
+                # Scrape remaining jobs that haven't been scraped yet
+                self.scrape_jobs(db, service_log)
 
-            # Log final statistics
-            service_log.set_run_duration()
+                # Log final statistics
+                service_log.set_run_duration()
 
-        except Exception as exception:
-            self.logger.exception(f"Critical error in scraping workflow: {exception}")
-            service_log.set_run_duration()
-            self.log_service_error(service_log, exception, ServiceErrorLevel.CRITICAL)
-        finally:
-            self.logger.info("Finished email scraping workflow")
+            except Exception as exception:
+                self.logger.exception(f"Critical error in scraping workflow: {exception}")
+                service_log.set_run_duration()
+                self.log_service_error(db, service_log, exception, ServiceErrorLevel.CRITICAL)
+            finally:
+                self.logger.info("Finished email scraping workflow")
 
-        self.db.commit()
-        return service_log
+            db.commit()
+            return service_log
 
     def process_emails(
         self,
+        db: Session,
         timedelta_days: int | float,
         service_log: JobEmailScrapingServiceLog,
     ) -> None:
         """For each user, get and save each new email, then extract the job ids and job data.
+        :param db: Database session
         :param timedelta_days: Number of days to search for emails
         :param service_log: JobEmailScrapingServiceLog entry"""
 
         # Get the list of active users with TOAST active
         users = (
-            self.db.query(models.User)
+            db.query(models.User)
             .filter(models.User.premium.has(is_active=True, job_scraping_active=True))
             .filter(models.User.is_active)
             .filter(models.User.is_verified)
@@ -480,7 +498,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                 service_log.email_found_n += len(email_ids)
                 self.logger.info(f"Found {len(email_ids)} emails")
             except Exception as exception:
-                self.log_service_error(service_log, exception)
+                self.log_service_error(db, service_log, exception)
                 self.logger.exception(f"Failed to search messages due to error: {exception}. Skipping user.")
                 email_ids = []
 
@@ -488,21 +506,22 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
             for email_id in email_ids:
                 self.logger.info(f"Processing email with ID: {email_id}")
                 try:
-                    email_record, is_new = self.get_and_save_email_to_db(email_id, user, service_log.id, forwarded)
+                    email_record, is_new = self.get_and_save_email_to_db(db, email_id, user, service_log.id, forwarded)
 
                     if not email_record:
                         continue
 
                     # Extract jobs if this is a new email
+                    email_kwargs = dict(db=db, service_log=service_log, platform=email_record.platform)
                     if is_new:
-                        self.upsert_platform_stat(service_log, email_record.platform, email_saved_ids=email_record.id)
-                        self.extract_email_data(email_record, service_log)
+                        self.upsert_platform_stat(email_saved_ids=email_record.id, **email_kwargs)
+                        self.extract_email_data(db, email_record, service_log)
                     else:
-                        self.upsert_platform_stat(service_log, email_record.platform, email_skipped_ids=email_record.id)
+                        self.upsert_platform_stat(email_skipped_ids=email_record.id, **email_kwargs)
                         self.logger.info("Email already exists in database. Skipping email.")
 
                 except Exception as exception:
-                    self.log_service_error(service_log, exception)
+                    self.log_service_error(db, service_log, exception)
                     self.logger.exception(
                         f"Failed to get and save email with ID {email_id} due to error: {exception}. Skipping email."
                     )
@@ -513,11 +532,13 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
 
     def extract_email_data(
         self,
+        db: Session,
         email_record: JobEmail,
         service_log: JobEmailScrapingServiceLog,
     ) -> None:
         """Extract job ids from an email and save them to the database.
         May also extract job data directly from the email for some platforms depending on settings.
+        :param db: Database session
         :param email_record: JobEmail record
         :param service_log: Service log entry
         :return: Dictionary of jobs data if the job data were directly extracted from the email"""
@@ -525,7 +546,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
         try:
             jobs = JOB_PARSERS[email_record.platform](email_record.body)
         except Exception as exception:
-            self.log_service_error(service_log, exception)
+            self.log_service_error(db, service_log, exception)
             self.logger.exception(
                 f"Failed to parse email ID {email_record.external_email_id} due to error: {exception}. Skipping email."
             )
@@ -533,26 +554,28 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
 
         # Update the email record with the number of jobs found
         email_record.job_found_n = len(jobs)
-        self.db.commit()
+        db.commit()
 
         # Save the extracted job ids to the database
         try:
-            scraped_jobs = self.save_job_base_info_to_db(email_record, jobs)
-            self.upsert_platform_stat(service_log, email_record.platform, job_found_ids=[j.id for j in scraped_jobs])
+            scraped_jobs = self.save_job_base_info_to_db(db, email_record, jobs)
+            job_found_ids = [j.id for j in scraped_jobs]
+            self.upsert_platform_stat(db, service_log, email_record.platform, job_found_ids=job_found_ids)
             self.logger.info(f"Extracted and saved {len(jobs)} job IDs from {email_record.platform}")
         except Exception as exception:
             error = f"Failed to save job IDs for email ID {email_record.external_email_id} due to error: {exception}. Skipping email."
-            self.log_service_error(service_log, error)
+            self.log_service_error(db, service_log, error)
             self.logger.exception(error)
 
-    def scrape_jobs(self, service_log: JobEmailScrapingServiceLog) -> None:
+    def scrape_jobs(self, db: Session, service_log: JobEmailScrapingServiceLog) -> None:
         """Process all unscraped jobs, including those scheduled for retry.
+        :param db: Database session
         :param service_log: Service log entry"""
 
         # List all unprocessed job records, including those whose retry window has passed
         now = dt.datetime.now(dt.timezone.utc)
         job_records = (
-            self.db.query(ScrapedJob)
+            db.query(ScrapedJob)
             .filter(ScrapedJob.is_processed.is_(False))
             .filter(
                 or_(
@@ -565,34 +588,36 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
         platforms = set([job.platform for job in job_records])
         for platform in platforms:
             job_ids = [job.id for job in job_records if job.platform == platform]
-            self.upsert_platform_stat(service_log, platform, job_to_process_ids=job_ids)
+            self.upsert_platform_stat(db, service_log, platform, job_to_process_ids=job_ids)
 
         # For each job record...
         for job_record in job_records:
 
             # Check if filtered out
             try:
-                if job_filter_rule := is_job_filtered_out(self.db, job_record):
+                if job_filter_rule := is_job_filtered_out(db, job_record):
                     self.logger.info(
                         f"Job ID {job_record.external_job_id} filtered out for user ID {job_record.owner_id} "
                         f"due to rule {job_filter_rule.name}"
                     )
                     job_record.is_processed = True
                     job_record.exclusion_filter_id = job_filter_rule.id
-                    self.db.commit()
-                    self.upsert_platform_stat(service_log, job_record.platform, job_scrape_filtered_ids=job_record.id)
+                    db.commit()
+                    self.upsert_platform_stat(
+                        db, service_log, job_record.platform, job_scrape_filtered_ids=job_record.id
+                    )
                     continue  # next job record
             except Exception as exception:
                 error = (
                     f"Failed to check filtering for job ID {job_record.external_job_id} due to error: {exception}. "
                     f"Proceeding with scraping."
                 )
-                self.log_service_error(service_log, error)
+                self.log_service_error(db, service_log, error)
                 self.logger.exception(error)
 
             # Find any existing successfully scraped job data in the database
             existing_data = (
-                self.db.query(ScrapedJob)
+                db.query(ScrapedJob)
                 .filter(ScrapedJob.external_job_id == job_record.external_job_id)
                 .filter(ScrapedJob.platform == job_record.platform)
                 .filter(ScrapedJob.is_processed)
@@ -606,14 +631,14 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                     f"Job ID {job_record.external_job_id} already has scraped data in the database. "
                     f"Copying data to unscraped record."
                 )
-                self.copy_existing_entry(existing_data, job_record)
+                self.copy_existing_entry(db, existing_data, job_record)
                 job_record.is_processed = True
-                self.db.commit()
-                self.upsert_platform_stat(service_log, job_record.platform, job_scrape_copied_ids=job_record.id)
+                db.commit()
+                self.upsert_platform_stat(db, service_log, job_record.platform, job_scrape_copied_ids=job_record.id)
                 continue  # next job record
 
             # Check if user has exceeded their monthly scrape quota
-            if self.is_user_over_monthly_quota(job_record.owner_id):
+            if self.is_user_over_monthly_quota(db, job_record.owner_id):
                 self.logger.info(
                     f"User ID {job_record.owner_id} has exceeded their monthly scrape quota of "
                     f"{settings.monthly_scrape_quota}. Skipping job ID {job_record.external_job_id}."
@@ -621,8 +646,8 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                 job_record.is_skipped = True
                 job_record.skip_reason = f"Monthly scrape quota of {settings.monthly_scrape_quota} exceeded"
                 job_record.is_processed = True
-                self.db.commit()
-                self.upsert_platform_stat(service_log, job_record.platform, job_scrape_skipped_ids=job_record.id)
+                db.commit()
+                self.upsert_platform_stat(db, service_log, job_record.platform, job_scrape_skipped_ids=job_record.id)
                 continue  # next job record
 
             # Otherwise, scrape the job data
@@ -631,16 +656,18 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                 self.logger.info(f"Scraping job ID: {job_record.external_job_id}")
                 try:
                     job_data = scraper.scrape_job()[0]
-                    self.update_scraped_job_data(job_record, job_data)
+                    self.update_scraped_job_data(db, job_record, job_data)
                     job_record.is_processed = True
                     job_record.scraping_next_retry_at = None
-                    self.db.commit()
-                    self.upsert_platform_stat(service_log, job_record.platform, job_scrape_succeeded_ids=job_record.id)
+                    db.commit()
+                    self.upsert_platform_stat(
+                        db, service_log, job_record.platform, job_scrape_succeeded_ids=job_record.id
+                    )
                 except Exception as exception:
                     message = f"Failed to scrape job data for job ID {job_record.external_job_id}. Skipping job."
                     self.logger.exception(message)
                     record_error(
-                        self.db,
+                        db,
                         exception,
                         message=message,
                         scraped_job_id=job_record.id,
@@ -662,14 +689,14 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                             f"Job ID {job_record.external_job_id} permanently failed after "
                             f"{settings.scrape_max_retry} attempts"
                         )
-                    self.db.commit()
-                    self.upsert_platform_stat(service_log, job_record.platform, job_scrape_failed_ids=job_record.id)
+                    db.commit()
+                    self.upsert_platform_stat(db, service_log, job_record.platform, job_scrape_failed_ids=job_record.id)
             else:
                 self.logger.info(f"Unknown platform for job {job_record.external_job_id}. Skipping job.")
                 job_record.is_skipped = True
                 job_record.skip_reason = f"Unknown platform {job_record.platform}"
                 job_record.is_processed = True
-                self.db.commit()
+                db.commit()
                 continue  # next job record
 
 

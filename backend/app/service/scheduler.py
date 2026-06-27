@@ -6,7 +6,7 @@ import threading
 
 from sqlalchemy import or_
 
-from app.database import get_db
+from app.database import db_session
 from app.service.models import Service
 from app.service.registry import get_service_callable, sync_services_to_db
 from app.utilities.logger import AppLogger
@@ -52,8 +52,7 @@ class ServiceScheduler:
             self.logger.warning("Scheduler already running")
             return
 
-        db = next(get_db())
-        try:
+        with db_session() as db:
             # Create rows for any newly-registered services (preserves existing rows / admin edits).
             created = sync_services_to_db(db)
             if created:
@@ -65,8 +64,6 @@ class ServiceScheduler:
             db.commit()
             if stale:
                 self.logger.warning(f"Reset {stale} stale is_running flag(s) on startup")
-        finally:
-            db.close()
 
         self.stop_event.clear()
         self._thread = threading.Thread(target=self._loop, name="service_scheduler", daemon=True)
@@ -111,8 +108,7 @@ class ServiceScheduler:
         race-free because a single poll thread does all dispatching."""
 
         now = dt.datetime.now(dt.timezone.utc)
-        db = next(get_db())
-        try:
+        with db_session() as db:
             due = (
                 db.query(Service)
                 .filter(Service.is_enabled.is_(True))
@@ -130,15 +126,12 @@ class ServiceScheduler:
                     name=f"service_{service.name}",
                     daemon=True,
                 ).start()
-        finally:
-            db.close()
 
     def _run_service(self, service_id: int) -> None:
         """Run a single service and advance its schedule.
         :param service_id: Primary key of the ``Service`` row to run."""
 
-        db = next(get_db())
-        try:
+        with db_session() as db:
             service = db.query(Service).filter(Service.id == service_id).first()
             if service is None:
                 self.logger.warning(f"Service id {service_id} no longer exists; skipping run")
@@ -161,8 +154,6 @@ class ServiceScheduler:
                     service.next_run_at = compute_next_run(service.next_run_at, now, service.run_period_hours)
                     service.is_running = False
                     db.commit()
-        finally:
-            db.close()
 
 
 service_scheduler = ServiceScheduler()
