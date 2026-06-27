@@ -377,7 +377,7 @@ class TestScrapedJobRaterRateJob:
         assert scraped_job.id in service_log.job_failed_ids
 
         # The failure is recorded as a unified Error
-        service_error = session.query(models.Error).first()
+        service_error = session.query(models.ServiceError).first()
         assert service_error is not None
         assert "AI service unavailable" in service_error.message
         # The rating error is linked to the pending JobRating and the rating run (not the ScrapedJob)
@@ -448,7 +448,7 @@ class TestScrapedJobRaterRateJob:
         assert rating.rating_retry_count == settings.rating_max_retry
 
         # Every attempt is recorded as an Error
-        assert session.query(models.Error).count() == settings.rating_max_retry
+        assert session.query(models.ServiceError).count() == settings.rating_max_retry
 
         # Rating errors surface on JobRating.rating_errors, not on ScrapedJob.scraping_errors
         session.refresh(rating)
@@ -634,7 +634,7 @@ class TestScoreScrapedJobs(object):
         service_log = ScrapedJobRatingService().run(session)
 
         assert schemas.JobRatingServiceLogOut.model_validate(service_log, from_attributes=True).is_success is False
-        error = session.query(models.Error).filter_by(job_rating_service_log_id=service_log.id).one()
+        error = session.query(models.ServiceError).filter_by(job_rating_service_log_id=service_log.id).one()
         assert "DB connection lost" in error.message
         assert error.scraped_job_id is None
         assert error.level == "critical"

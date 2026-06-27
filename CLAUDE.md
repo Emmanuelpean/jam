@@ -112,6 +112,8 @@ PostgreSQL with two schemas:
 
 Alembic manages migrations. Models in each domain module have their own `models.py`. All models inherit from `CommonBase` or `Owned`. `Base = declarative_base()` lives in `database.py`.
 
+**Note:** The local dev DB is often (re)built with `tests/utils/seed_database.py`, which drops everything and runs `Base.metadata.create_all()` straight from the models — it does **not** apply migrations or stamp `alembic_version`. So the DB has no Alembic head, and `alembic upgrade head` from base will fail on columns/tables that already exist (e.g. `column "is_verified" ... already exists`). This is expected, not a broken migration. To verify a new migration, render it offline with `alembic upgrade <prev>:<rev> --sql` rather than applying it to the seeded DB.
+
 ### Auth & Demo Mode
 
 - JWT tokens via PyJWT. Tokens for demo users include an `is_demo` claim.

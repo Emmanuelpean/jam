@@ -4,5 +4,4 @@ from app.external_service_monitoring import external_service_monitoring_history_
 from app.external_service_monitoring.anthropic import routers as _anthropic  # noqa: F401
 from app.external_service_monitoring.apify import routers as _apify  # noqa: F401
 from app.external_service_monitoring.brightdata import routers as _brightdata  # noqa: F401
-from app.external_service_monitoring.service.routers import esm_service_router, esm_service_log_router  # noqa: F401
 from app.external_service_monitoring.stripe import routers as _stripe  # noqa: F401

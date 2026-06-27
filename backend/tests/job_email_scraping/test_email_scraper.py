@@ -238,7 +238,7 @@ class TestExtractEmailData:
         assert service_log.job_found_n == len(expected_jobs)
 
         # Verify service errors
-        service_error = session.query(models.Error).first()
+        service_error = session.query(models.ServiceError).first()
         assert service_error is None
 
         # Verify email record updated
@@ -422,7 +422,7 @@ class TestProcessEmails:
             assert len(platform_stat.job_scrape_failed_ids) == 0
 
             # Verify service log errors
-            service_log_error = session.query(models.Error).first()
+            service_log_error = session.query(models.ServiceError).first()
             assert service_log_error is None
 
             # Verify email was saved to database
@@ -904,7 +904,7 @@ class TestScrapeJobsRetry:
         assert indeed_scraped_job.scraping_next_retry_at > dt.datetime.now(dt.timezone.utc)
         assert indeed_scraped_job.is_processed is False
         assert indeed_scraped_job.is_failed is False
-        service_errors = session.query(models.Error).all()
+        service_errors = session.query(models.ServiceError).all()
         assert len(service_errors) == 1
         # The scrape error is linked to the ScrapedJob it failed on and the run it failed in
         assert service_errors[0].scraped_job_id == indeed_scraped_job.id
@@ -925,7 +925,7 @@ class TestScrapeJobsRetry:
         assert indeed_scraped_job.scraping_retry_count == 2
         assert indeed_scraped_job.is_processed is False
         assert indeed_scraped_job.is_failed is False
-        assert session.query(models.Error).count() == 2
+        assert session.query(models.ServiceError).count() == 2
 
     def test_third_failure_marks_permanently_failed(
         self, indeed_scraped_job, test_job_scraping_service_log, test_job_scraper, session
@@ -942,7 +942,7 @@ class TestScrapeJobsRetry:
         assert indeed_scraped_job.scraping_retry_count == 3
         assert indeed_scraped_job.is_processed is True
         assert indeed_scraped_job.is_failed is True
-        assert session.query(models.Error).count() == 3
+        assert session.query(models.ServiceError).count() == 3
 
     def test_future_retry_at_skips_job(
         self, indeed_scraped_job, test_job_scraping_service_log, test_job_scraper, session
@@ -1118,7 +1118,7 @@ class TestExtractForwardingEmailConfirmation:
             test_job_scraper.extract_forwarding_email_confirmation(test_job_scraping_service_log)
 
         # Verify a service error was logged
-        errors = session.query(models.Error).all()
+        errors = session.query(models.ServiceError).all()
         assert len(errors) == 1
         assert "Failed to get email with platform gmail" in errors[0].message
 

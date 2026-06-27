@@ -20,7 +20,7 @@ from sqlalchemy.sql import expression
 
 from app.base_models import Owned, CommonBase
 from app.database import Base
-from app.service_runner.models import ServiceLog
+from app.service.models import ServiceLog
 
 
 class AiSystemPrompt(CommonBase, Base):
@@ -121,8 +121,7 @@ class JobRating(Owned, Base):
     user_qualification = relationship("UserQualification", back_populates="job_ratings")
     system_prompt = relationship("AiSystemPrompt", back_populates="job_ratings")
     job_prompt_template = relationship("AiJobPromptTemplate", back_populates="job_ratings")
-    # Rating errors for this job, stamped with job_rating_id when the rating is finalised.
-    rating_errors = relationship("Error", foreign_keys="Error.job_rating_id", back_populates="job_rating")
+    rating_errors = relationship("ServiceError", foreign_keys="ServiceError.job_rating_id", back_populates="job_rating")
 
     def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""
@@ -176,7 +175,7 @@ class JobRatingServiceLog(ServiceLog, CommonBase, Base):
     job_failed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
 
     # Relationships
-    service_errors = relationship("Error", back_populates="job_rating_service_log", cascade="all, delete-orphan")
+    service_errors = relationship("ServiceError", back_populates="job_rating_service_log", cascade="all, delete-orphan")
 
     def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""

@@ -12,12 +12,13 @@ from app.external_service_monitoring.apify.fetch import fetch_apify_daily_usage,
 from app.external_service_monitoring.brightdata.fetch import fetch_brightdata_daily_usage, fetch_brightdata_balance
 from app.external_service_monitoring.stripe.fetch import fetch_stripe_daily_income
 from app.models import ExternalServiceMonitoringServiceLog
-from app.service_runner.models import ErrorLevel, record_error
-from app.service_runner.service import Service
-from app.service_runner.service_runner import ServiceRunner
+from app.service.models import ServiceErrorLevel, record_error
+from app.external_service_monitoring.service.schemas import ServiceMonitoringServiceLogOut
+from app.service.registry import register_service
+from app.service.service import BaseService
 
 
-class EsmService(Service[ExternalServiceMonitoringServiceLog]):
+class EsmService(BaseService[ExternalServiceMonitoringServiceLog]):
     """Runs all fetchers in sequence and upserts each into its own daily-history table."""
 
     service_name = "service_monitoring_service"
@@ -25,7 +26,7 @@ class EsmService(Service[ExternalServiceMonitoringServiceLog]):
     def __init__(self):
         """Initialise the service"""
 
-        Service.__init__(self, ExternalServiceMonitoringServiceLog)
+        BaseService.__init__(self, ExternalServiceMonitoringServiceLog)
         self.external_services = {
             "anthropic": [fetch_anthropic_daily_usage],
             "stripe": [fetch_stripe_daily_income],
@@ -58,7 +59,12 @@ class EsmService(Service[ExternalServiceMonitoringServiceLog]):
                         )
         except Exception as exc:
             self.logger.exception(f"Critical error in {self.service_name} run: {exc}")
-            record_error(db, exc, level=ErrorLevel.CRITICAL, external_service_monitoring_service_log_id=service_log.id)
+            record_error(
+                db=db,
+                exc=exc,
+                level=ServiceErrorLevel.CRITICAL,
+                external_service_monitoring_service_log_id=service_log.id,
+            )
         service_log.set_run_duration()
         db.commit()
         db.refresh(service_log)
@@ -66,8 +72,11 @@ class EsmService(Service[ExternalServiceMonitoringServiceLog]):
         return service_log
 
 
-esm_service_runner = ServiceRunner(
-    service_name=EsmService.service_name,
-    service_function=EsmService().run,
-    period_hours=24,
+register_service(
+    EsmService.service_name,
+    EsmService().run,
+    display_name="External Service Monitoring",
+    run_period_hours=24,
+    log_model=ExternalServiceMonitoringServiceLog,
+    log_schema=ServiceMonitoringServiceLogOut,
 )

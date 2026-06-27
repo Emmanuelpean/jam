@@ -83,14 +83,14 @@ def create_job_scraping_platform_stats(db, service_logs) -> list[models.JobEmail
     return create_db_entries(db, models.JobEmailScrapingPlatformStat, data)
 
 
-def create_job_scraping_service_errors(db, service_logs) -> list[models.Error]:
+def create_job_scraping_service_errors(db, service_logs) -> list[models.ServiceError]:
     """Create sample Job Scraping service errors as unified Error rows"""
 
     data = override_properties(job_scraping.JOB_SCRAPING_SERVICE_ERROR_DATA, ("service_log_id", service_logs))
     for entry in data:
         entry["job_email_scraping_service_log_id"] = entry.pop("service_log_id")
     print(f"Creating {len(data)} Job Scraping Service Errors...")
-    return create_db_entries(db, models.Error, data)
+    return create_db_entries(db, models.ServiceError, data)
 
 
 def create_scraping_filters(db, users: list[models.User]) -> list[models.ScrapingExclusionFilter]:

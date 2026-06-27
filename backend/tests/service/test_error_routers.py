@@ -12,17 +12,17 @@ def seeded_service_errors(session, test_job_scraping_service_logs, test_job_rati
     """Seed a mix of acknowledged / unacknowledged errors across services."""
 
     rows = [
-        models.Error(
+        models.ServiceError(
             error_type="RuntimeError",
             message="scrape boom",
             job_email_scraping_service_log_id=test_job_scraping_service_logs[0].id,
         ),
-        models.Error(
+        models.ServiceError(
             error_type="ValueError",
             message="rating boom",
             job_rating_service_log_id=test_job_rating_service_logs[0].id,
         ),
-        models.Error(
+        models.ServiceError(
             error_type="TimeoutError",
             message="fetch boom",
             is_acknowledged=True,
@@ -77,7 +77,7 @@ class TestAcknowledgeServiceErrors:
         assert all(row["is_acknowledged"] for row in resp.json())
 
         for error_id in ids:
-            error = session.get(models.Error, error_id)
+            error = session.get(models.ServiceError, error_id)
             session.refresh(error)
             assert error.is_acknowledged is True
 

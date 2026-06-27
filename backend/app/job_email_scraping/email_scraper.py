@@ -27,11 +27,11 @@ from app.job_email_scraping.models import (
     JobEmailScrapingServiceLog,
     JobEmailScrapingPlatformStat,
 )
-from app.job_email_scraping.schemas import JobResult
+from app.job_email_scraping.schemas import JobResult, JobEmailScrapingServiceLogOut
 from app.resources import CURRENCIES
-from app.service_runner.models import Error, ErrorLevel, record_error
-from app.service_runner.service_runner import ServiceRunner
-from app.service_runner.service import Service
+from app.service.models import ServiceError, ServiceErrorLevel, record_error
+from app.service.registry import register_service
+from app.service.service import BaseService
 
 
 class EmailProvider(Enum):
@@ -45,7 +45,7 @@ FORWARDING_LINK_EXTRACTORS = {EmailProvider.GMAIL: extract_forwarding_confirmati
 ORIGINATOR_EXTRACTORS = {EmailProvider.GMAIL: extract_gmail_originator}
 
 
-class JobEmailScrapingService(EmailService, Service[JobEmailScrapingServiceLog]):
+class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceLog]):
     """Job Email Alert Scraper"""
 
     service_name = "email_scraper_service"
@@ -55,7 +55,7 @@ class JobEmailScrapingService(EmailService, Service[JobEmailScrapingServiceLog])
         :param db: optional database session for testing"""
 
         EmailService.__init__(self, settings.scraper_email_username, settings.scraper_email_password)
-        Service.__init__(self, JobEmailScrapingServiceLog)
+        BaseService.__init__(self, JobEmailScrapingServiceLog)
         self.db = next(get_db()) if db is None else db
 
     def upsert_platform_stat(
@@ -98,13 +98,13 @@ class JobEmailScrapingService(EmailService, Service[JobEmailScrapingServiceLog])
         self,
         service_log: JobEmailScrapingServiceLog,
         exc: Exception | str,
-        level: ErrorLevel = ErrorLevel.ERROR,
-    ) -> Error:
-        """Record an Error for a caught exception during the scraping run.
+        level: ServiceErrorLevel = ServiceErrorLevel.ERROR,
+    ) -> ServiceError:
+        """Record a ServiceError for a caught exception during the scraping run.
         :param service_log: associated JobEmailScrapingServiceLog instance
         :param exc: the caught exception or an error message string
         :param level: ErrorLevel enum value
-        :return: Error instance"""
+        :return: ServiceError instance"""
 
         return record_error(self.db, exc, job_email_scraping_service_log_id=service_log.id, level=level)
 
@@ -429,7 +429,7 @@ class JobEmailScrapingService(EmailService, Service[JobEmailScrapingServiceLog])
         except Exception as exception:
             self.logger.exception(f"Critical error in scraping workflow: {exception}")
             service_log.set_run_duration()
-            self.log_service_error(service_log, exception, ErrorLevel.CRITICAL)
+            self.log_service_error(service_log, exception, ServiceErrorLevel.CRITICAL)
         finally:
             self.logger.info("Finished email scraping workflow")
 
@@ -673,8 +673,12 @@ class JobEmailScrapingService(EmailService, Service[JobEmailScrapingServiceLog])
                 continue  # next job record
 
 
-job_scraping_service_runner = ServiceRunner(
-    service_name=JobEmailScrapingService.service_name,
-    service_function=JobEmailScrapingService().run_scraping,
-    service_kwargs=dict(timedelta_days=3),
+register_service(
+    JobEmailScrapingService.service_name,
+    JobEmailScrapingService().run_scraping,
+    display_name="Job Email Scraping",
+    run_period_hours=3,
+    log_model=JobEmailScrapingServiceLog,
+    log_schema=JobEmailScrapingServiceLogOut,
+    default_parameters={"timedelta_days": 3},
 )

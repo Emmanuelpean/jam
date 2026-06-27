@@ -1,6 +1,6 @@
 """Pydantic output schemas for the external service monitoring endpoints."""
 
-from app.service_runner.schemas import ServiceLogOut
+from app.service.schemas import ServiceLogOut
 
 
 class ServiceMonitoringServiceLogOut(ServiceLogOut):

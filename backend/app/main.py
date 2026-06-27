@@ -19,7 +19,16 @@ from app.geolocation import routers as geolocation_routers
 from app.job_email_scraping import routers as job_email_scraping_routers
 from app.job_rating import routers as job_rating_routers
 from app.payments import routers as payment_routers
-from app.service_runner.error_routers import service_error_router
+from app.service.routers.service_error import service_error_router
+from app.service.scheduler import service_scheduler
+from app.service.routers.service import service_router
+from app.service.routers.service_log import service_log_router
+from app.service.routers.scheduler import scheduler_router
+
+# Import the service modules so they register their run callables with SERVICE_REGISTRY.
+from app.job_email_scraping import email_scraper  # noqa: F401
+from app.job_rating import scraped_job_rating  # noqa: F401
+from app.external_service_monitoring.service import sync  # noqa: F401
 
 
 @asynccontextmanager
@@ -27,7 +36,11 @@ async def lifespan(_app: FastAPI):
     """Application lifespan event handler."""
 
     setup_demo_schema()
+    if settings.scheduler:
+        service_scheduler.start()
     yield
+    if settings.scheduler:
+        service_scheduler.stop()
 
 
 app = FastAPI(title="JAM", version=settings.app_version, lifespan=lifespan)
@@ -85,24 +98,21 @@ app.include_router(data_table_routers.speculative_application_update_router)
 # Job Scraping routers
 app.include_router(job_email_scraping_routers.scraped_job_router)
 app.include_router(job_email_scraping_routers.job_alert_email_router)
-app.include_router(job_email_scraping_routers.job_scraping_service_log_router)
-app.include_router(job_email_scraping_routers.email_scraper_service_router)
 app.include_router(job_email_scraping_routers.scraping_filter_router)
 app.include_router(job_email_scraping_routers.scraping_favourite_filter_router)
 app.include_router(job_email_scraping_routers.forwarding_confirmation_router)
 
 # Job Rating routers
 app.include_router(job_rating_routers.job_rating_router)
-app.include_router(job_rating_routers.job_rating_service_log_router)
-app.include_router(job_rating_routers.job_rating_service_router)
 
 # External service monitoring routers
 app.include_router(external_service_monitoring_routers.external_service_monitoring_history_router)
-app.include_router(external_service_monitoring_routers.esm_service_router)
-app.include_router(external_service_monitoring_routers.esm_service_log_router)
 
-# Service errors
+# Service errors and scheduled services
 app.include_router(service_error_router)
+app.include_router(service_router)
+app.include_router(service_log_router)
+app.include_router(scheduler_router)
 
 # User routers
 app.include_router(core_routers.user_router)

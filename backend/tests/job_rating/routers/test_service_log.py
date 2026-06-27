@@ -14,7 +14,7 @@ class TestServiceLog:
     def test_get_service_logs_no_filters(self, admin_client, test_job_rating_service_logs) -> None:
         """Test retrieving all service logs without filters"""
 
-        response = admin_client.get("/job-rating-service-logs/")
+        response = admin_client.get("/service-logs/job_rating_service/")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -27,7 +27,7 @@ class TestServiceLog:
         """Test filtering logs by start date"""
 
         start_date = (dt.datetime.now() - dt.timedelta(days=5)).isoformat()
-        response = admin_client.get("/job-rating-service-logs/", params={"start_date": start_date})
+        response = admin_client.get("/service-logs/job_rating_service/", params={"start_date": start_date})
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -40,7 +40,7 @@ class TestServiceLog:
         """Test filtering logs by end date"""
 
         end_date = (dt.datetime.now() - dt.timedelta(days=2)).isoformat()
-        response = admin_client.get("/job-rating-service-logs/", params={"end_date": end_date})
+        response = admin_client.get("/service-logs/job_rating_service/", params={"end_date": end_date})
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -56,7 +56,7 @@ class TestServiceLog:
         start_date = (dt.datetime.now() - dt.timedelta(days=7)).isoformat()
         end_date = (dt.datetime.now() - dt.timedelta(days=1)).isoformat()
         response = admin_client.get(
-            "/job-rating-service-logs/", params={"start_date": start_date, "end_date": end_date}
+            "/service-logs/job_rating_service/", params={"start_date": start_date, "end_date": end_date}
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -72,7 +72,7 @@ class TestServiceLog:
 
         start_date = (dt.datetime.now() - dt.timedelta(days=7)).isoformat()
         end_date = (dt.datetime.now() - dt.timedelta(days=1)).isoformat()
-        response = admin_client.get(f"/job-rating-service-logs/?start_date={start_date}&end_date={end_date}")
+        response = admin_client.get(f"/service-logs/job_rating_service/?start_date={start_date}&end_date={end_date}")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -86,7 +86,7 @@ class TestServiceLog:
     ) -> None:
         """Test limiting number of returned logs"""
 
-        response = admin_client.get("/job-rating-service-logs/", params={"limit": limit})
+        response = admin_client.get("/service-logs/job_rating_service/", params={"limit": limit})
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -97,7 +97,7 @@ class TestServiceLog:
     ) -> None:
         """Test combining multiple query parameters"""
 
-        response = admin_client.get("/job-rating-service-logs/", params={"delta_days": 30, "limit": 5})
+        response = admin_client.get("/service-logs/job_rating_service/", params={"delta_days": 30, "limit": 5})
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -108,53 +108,53 @@ class TestServiceLog:
     ) -> None:
         """Test that non-admin users cannot access service logs"""
 
-        response = regular_user_client.get("/job-rating-service-logs/")
+        response = regular_user_client.get("/service-logs/job_rating_service/")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_get_service_logs_unauthenticated(self, client, test_job_rating_service_logs, test_platform_stats) -> None:
         """Test that unauthenticated requests are rejected"""
 
-        response = client.get("/job-rating-service-logs/")
+        response = client.get("/service-logs/job_rating_service/")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_get_latest_log_success(self, admin_client, test_job_rating_service_logs, test_platform_stats) -> None:
         """Test retrieving the latest service log"""
 
-        response = admin_client.get("/job-rating-service-logs/latest")
+        response = admin_client.get("/service-logs/job_rating_service/latest")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "run_datetime" in data
 
         # Verify it's the most recent log
-        all_logs_response = admin_client.get("/job-rating-service-logs/")
+        all_logs_response = admin_client.get("/service-logs/job_rating_service/")
         all_logs = all_logs_response.json()
         assert data["run_datetime"] == all_logs[0]["run_datetime"]
 
     def test_get_latest_log_no_logs(self, admin_client) -> None:
         """Test retrieving latest log when no logs exist"""
 
-        response = admin_client.get("/job-rating-service-logs/latest")
+        response = admin_client.get("/service-logs/job_rating_service/latest")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "No service logs found" in response.json()["detail"]
 
     def test_get_latest_log_non_admin_forbidden(self, regular_user_client, test_job_rating_service_logs) -> None:
         """Test that non-admin users cannot access latest log"""
-        response = regular_user_client.get("/job-rating-service-logs/latest")
+        response = regular_user_client.get("/service-logs/job_rating_service/latest")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_get_latest_log_unauthenticated(self, client, test_job_rating_service_logs) -> None:
         """Test that unauthenticated requests to latest are rejected"""
 
-        response = client.get("/job-rating-service-logs/latest")
+        response = client.get("/service-logs/job_rating_service/latest")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 class TestJobRatingUndefinedMethods:
-    ENDPOINT = "/job-rating-service-logs"
+    ENDPOINT = "/service-logs/job_rating_service"
     DEFINED_ACTIONS = ["GET_ALL"]
     UNDEFINED_ACTIONS = ["PUT", "POST", "GET_ONE", "DELETE"]
 

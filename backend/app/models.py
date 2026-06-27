@@ -9,4 +9,4 @@ from app.external_service_monitoring.service.models import *  # noqa
 from app.external_service_monitoring.stripe.models import *  # noqa
 from app.job_email_scraping.models import *  # noqa
 from app.job_rating.models import *  # noqa
-from app.service_runner.models import Error  # noqa
+from app.service.models import ServiceError, Service  # noqa

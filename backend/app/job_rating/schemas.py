@@ -5,7 +5,7 @@ import datetime as dt
 from pydantic import BaseModel
 
 from app.base_schemas import Out
-from app.service_runner.schemas import ErrorOut, ServiceLogOut
+from app.service.schemas import ServiceErrorOut, ServiceLogOut
 
 # ----------------------------------------------------- JOB RATING -----------------------------------------------------
 
@@ -30,7 +30,7 @@ class JobRatingOut(BaseModel):
     notes: list[str] = []
     rating_retry_count: int = 0
     rating_next_retry_at: dt.datetime | None = None
-    rating_errors: list[ErrorOut] = []
+    rating_errors: list[ServiceErrorOut] = []
 
 
 # ----------------------------------------------- JOB RATING SERVICE LOG -----------------------------------------------

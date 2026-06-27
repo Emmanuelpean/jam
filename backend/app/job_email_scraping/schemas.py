@@ -10,7 +10,7 @@ from pydantic import field_validator, Field
 from app.base_schemas import BaseModel, OwnedOut, Out, serialise_relationships, OwnedCreate
 from app.data_tables.schemas import GeolocationOut
 from app.job_rating.schemas import JobRatingOut
-from app.service_runner.schemas import ErrorOut, ServiceLogOut
+from app.service.schemas import ServiceErrorOut, ServiceLogOut
 
 
 class Salary(BaseModel):
@@ -125,7 +125,7 @@ class ScrapedJobOut(ScrapedJob, OwnedOut):
     emails: list[int]
     job_rating: JobRatingOut | None
     geolocation: GeolocationOut | None
-    scraping_errors: list[ErrorOut] = []
+    scraping_errors: list[ServiceErrorOut] = []
 
     @field_validator("emails", mode="before")
     @classmethod

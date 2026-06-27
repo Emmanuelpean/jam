@@ -9,9 +9,10 @@ from app import models
 from app.config import settings
 from app.job_rating.claude import MODEL as CLAUDE_MODEL, claude_query
 from app.job_rating.prompts import create_job_only_prompt, create_system_prompt_with_profile
-from app.service_runner.models import ErrorLevel, record_error
-from app.service_runner.service_runner import ServiceRunner
-from app.service_runner.service import Service
+from app.service.models import ServiceErrorLevel, record_error
+from app.job_rating.schemas import JobRatingServiceLogOut
+from app.service.registry import register_service
+from app.service.service import BaseService
 
 SERVICE_NAME = "job_rating_service"
 
@@ -79,7 +80,7 @@ def get_user_unrated_scraped_jobs(db: Session, user_id: int) -> list[models.Scra
     )
 
 
-class ScrapedJobRatingService(Service[models.JobRatingServiceLog]):
+class ScrapedJobRatingService(BaseService[models.JobRatingServiceLog]):
     """Rates scraped jobs against user qualifications using AI."""
 
     service_name = "job_rating_service"
@@ -87,7 +88,7 @@ class ScrapedJobRatingService(Service[models.JobRatingServiceLog]):
     def __init__(self) -> None:
         """Initialise the job rater."""
 
-        Service.__init__(self, models.JobRatingServiceLog)
+        BaseService.__init__(self, models.JobRatingServiceLog)
 
     def run(self, db: Session | None = None) -> models.JobRatingServiceLog:
         """Score all scraped jobs using AI.
@@ -114,7 +115,7 @@ class ScrapedJobRatingService(Service[models.JobRatingServiceLog]):
 
         except Exception as exception:
             self.logger.exception(f"Critical error in rating workflow: {exception}")
-            record_error(db, exception, level=ErrorLevel.CRITICAL, job_rating_service_log_id=service_log.id)
+            record_error(db, exception, level=ServiceErrorLevel.CRITICAL, job_rating_service_log_id=service_log.id)
         finally:
             self.logger.info("Finished workflow")
 
@@ -214,7 +215,7 @@ class ScrapedJobRatingService(Service[models.JobRatingServiceLog]):
                 user_qualification_id=user_qualification.id,
             )
             db.add(job_rating)
-            db.refresh(job_rating)
+            db.flush()
 
         skip_reason = None
         # Check that the job is not closed
@@ -223,7 +224,7 @@ class ScrapedJobRatingService(Service[models.JobRatingServiceLog]):
             skip_reason = "Job is closed"
 
         # Ensure that the job has a description
-        if not scraped_job.description:
+        elif not scraped_job.description:
             self.logger.info(f"Skipping job ID {scraped_job.id} as it has no description")
             skip_reason = "Job has no description"
 
@@ -318,7 +319,11 @@ class ScrapedJobRatingService(Service[models.JobRatingServiceLog]):
             db.commit()
 
 
-job_rating_service_runner = ServiceRunner(
-    service_name=ScrapedJobRatingService.service_name,
-    service_function=ScrapedJobRatingService().run,
+register_service(
+    ScrapedJobRatingService.service_name,
+    ScrapedJobRatingService().run,
+    display_name="Job Rating",
+    run_period_hours=3,
+    log_model=models.JobRatingServiceLog,
+    log_schema=JobRatingServiceLogOut,
 )

@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     # Other settings
     log_directory: str
     test_mode: bool
+    scheduler: bool = False  # set via SCHEDULER=true on the dedicated scheduler process
 
     # Email configuration
     main_email_username: str

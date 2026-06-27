@@ -37,7 +37,7 @@ def test_platform_stats(session, test_job_scraping_service_logs) -> list[models.
 @pytest.fixture
 def test_job_scraping_service_errors(
     session, test_job_scraping_service_logs
-) -> list[models.Error]:
+) -> list[models.ServiceError]:
     """Create test job_email_scraping service errors"""
     return create_job_scraping_service_errors(session, test_job_scraping_service_logs)
 

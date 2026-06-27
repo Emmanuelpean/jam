@@ -23,7 +23,7 @@ from sqlalchemy.sql import expression
 
 from app.base_models import CommonBase, Owned
 from app.database import Base
-from app.service_runner.models import ServiceLog
+from app.service.models import ServiceLog
 
 jobemail_scrapedjob_mapping = Table(
     "jobemail_scrapedjob_mapping",
@@ -172,7 +172,7 @@ class ScrapedJob(Owned, Base):
     exclusion_filter = relationship("ScrapingExclusionFilter", back_populates="filtered_jobs")
     job = relationship("Job", back_populates="scraped_job")
     geolocation = relationship("Geolocation")
-    scraping_errors = relationship("Error", back_populates="scraped_job", cascade="all, delete-orphan")
+    scraping_errors = relationship("ServiceError", back_populates="scraped_job", cascade="all, delete-orphan")
 
     # Constraints
     __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)
@@ -218,7 +218,7 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
     scraped_jobs = relationship("ScrapedJob", back_populates="service_log")
     platform_stats = relationship("JobEmailScrapingPlatformStat", back_populates="service_log")
     service_errors = relationship(
-        "Error", back_populates="job_email_scraping_service_log", cascade="all, delete-orphan"
+        "ServiceError", back_populates="job_email_scraping_service_log", cascade="all, delete-orphan"
     )
 
     def __init__(self, **kwargs) -> None:
