@@ -8,8 +8,8 @@ Create Date: 2026-02-23 21:14:35.206988
 
 from typing import Sequence, Union
 
-import sqlalchemy as sa
 from alembic import op
+import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 from app.job_rating.prompts import SYSTEM_PROMPT_V2, JOB_ONLY_PROMPT_TEMPLATE_V2
