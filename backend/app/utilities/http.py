@@ -1,4 +1,4 @@
-"""Shared HTTP helper for external-service-monitoring fetchers.
+"""Shared HTTP helper for provider-monitoring fetchers.
 
 Providers' usage/billing endpoints (Anthropic Admin cost_report, Apify, Bright Data) are
 intermittently flaky and return transient 5xx/429s. This wraps `requests` with exponential
@@ -48,15 +48,17 @@ def request_with_retry(
 
         if logger:
             logger.warning(
-                f"{service} {method} {url} failed (attempt {attempt:d}/{MAX_ATTEMPTS:d}): {resp.status_code} {resp.text}",
+                f"{service} {method} {url} failed (attempt {attempt:d}/{MAX_ATTEMPTS:d})"
+                f": {resp.status_code} {resp.text}",
             )
         if resp.status_code not in RETRY_STATUSES or attempt == MAX_ATTEMPTS:
             break
 
         retry_after = resp.headers.get("retry-after")
-        delay = (
-            float(retry_after) if retry_after and retry_after.isdigit() else BACKOFF_BASE_SECONDS * 2 ** (attempt - 1)
-        )
+        if retry_after and retry_after.isdigit():
+            delay = float(retry_after)
+        else:
+            delay = BACKOFF_BASE_SECONDS * 2 ** (attempt - 1)
         time.sleep(delay)
 
     if not resp:

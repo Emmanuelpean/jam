@@ -14,7 +14,7 @@ from app.data_tables import routers as data_table_routers
 from app.demo import routers as demo_routers
 from app.demo.setup import setup_demo_schema
 from app.emails import routers as email_routers
-from app.external_service_monitoring import routers as external_service_monitoring_routers
+from app.provider_monitoring import routers as provider_monitoring_routers
 from app.geolocation import routers as geolocation_routers
 from app.job_email_scraping import routers as job_email_scraping_routers
 from app.job_rating import routers as job_rating_routers
@@ -28,7 +28,7 @@ from app.service.routers.scheduler import scheduler_router
 # Import the service modules so they register their run callables with SERVICE_REGISTRY.
 from app.job_email_scraping import email_scraper  # noqa: F401
 from app.job_rating import scraped_job_rating  # noqa: F401
-from app.external_service_monitoring.service import sync  # noqa: F401
+from app.provider_monitoring.service import sync  # noqa: F401
 
 
 @asynccontextmanager
@@ -106,7 +106,7 @@ app.include_router(job_email_scraping_routers.forwarding_confirmation_router)
 app.include_router(job_rating_routers.job_rating_router)
 
 # External service monitoring routers
-app.include_router(external_service_monitoring_routers.external_service_monitoring_history_router)
+app.include_router(provider_monitoring_routers.provider_monitoring_history_router)
 
 # Service errors and scheduled services
 app.include_router(service_error_router)

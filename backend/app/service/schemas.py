@@ -20,7 +20,7 @@ class ServiceErrorOut(Out):
     job_rating_id: int | None = None
     job_email_scraping_service_log_id: int | None = None
     job_rating_service_log_id: int | None = None
-    external_service_monitoring_service_log_id: int | None = None
+    provider_monitoring_service_log_id: int | None = None
 
 
 class ErrorAcknowledgeRequest(BaseModel):

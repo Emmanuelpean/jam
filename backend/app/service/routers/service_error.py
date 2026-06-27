@@ -17,7 +17,7 @@ def list_service_errors(
     scraped_job_id: int | None = Query(None, description="Filter by ScrapedJob id"),
     scraping_log_ids: list[int] | None = Query(None, alias="job_email_scraping_service_log_id"),
     rating_log_ids: list[int] | None = Query(None, alias="job_rating_service_log_id"),
-    monitoring_log_ids: list[int] | None = Query(None, alias="external_service_monitoring_service_log_id"),
+    monitoring_log_ids: list[int] | None = Query(None, alias="provider_monitoring_service_log_id"),
     acknowledged: bool | None = Query(None, alias="is_acknowledged"),
     limit: int | None = Query(None, ge=1, description="Maximum number of errors to return"),
     current_user: User = Depends(get_current_user),
@@ -35,7 +35,7 @@ def list_service_errors(
     if rating_log_ids:
         query = query.filter(ServiceError.job_rating_service_log_id.in_(rating_log_ids))
     if monitoring_log_ids:
-        query = query.filter(ServiceError.external_service_monitoring_service_log_id.in_(monitoring_log_ids))
+        query = query.filter(ServiceError.provider_monitoring_service_log_id.in_(monitoring_log_ids))
     if acknowledged is not None:
         query = query.filter(ServiceError.is_acknowledged.is_(acknowledged))
     query = query.order_by(ServiceError.created_at.desc(), ServiceError.id.desc())

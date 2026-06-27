@@ -80,14 +80,14 @@ class ServiceError(CommonBase, Base):
     - `job_rating_id` (int, optional): JobRating the rating error belongs to, for per-job rating failures.
     - `job_email_scraping_service_log_id` (int, optional): Job email scraping run.
     - `job_rating_service_log_id` (int, optional): Job rating run.
-    - `external_service_monitoring_service_log_id` (int, optional): Monitoring run.
+    - `provider_monitoring_service_log_id` (int, optional): Monitoring run.
 
     Relationships:
     --------------
     - `scraped_job` (ScrapedJob, optional): the ScrapedJob the error relates to.
     - `job_rating` (JobRating, optional): the JobRating the error belongs to.
     - `job_email_scraping_service_log` / `job_rating_service_log` /
-      `external_service_monitoring_service_log`: the run that produced the error."""
+      `provider_monitoring_service_log`: the run that produced the error."""
 
     error_type = Column(String, nullable=False)
     message = Column(String, nullable=False)
@@ -120,9 +120,9 @@ class ServiceError(CommonBase, Base):
         nullable=True,
         index=True,
     )
-    external_service_monitoring_service_log_id = Column(
+    provider_monitoring_service_log_id = Column(
         Integer,
-        ForeignKey("external_service_monitoring_service_log.id", ondelete="CASCADE"),
+        ForeignKey("provider_monitoring_service_log.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
     )
@@ -132,8 +132,8 @@ class ServiceError(CommonBase, Base):
     job_rating = relationship("JobRating", foreign_keys=[job_rating_id], back_populates="rating_errors")
     job_email_scraping_service_log = relationship("JobEmailScrapingServiceLog", back_populates="service_errors")
     job_rating_service_log = relationship("JobRatingServiceLog", back_populates="service_errors")
-    external_service_monitoring_service_log = relationship(
-        "ExternalServiceMonitoringServiceLog", back_populates="service_errors"
+    provider_monitoring_service_log = relationship(
+        "ProviderMonitoringServiceLog", back_populates="service_errors"
     )
 
 
@@ -146,7 +146,7 @@ def record_error(
     job_rating_id: int | None = None,
     job_email_scraping_service_log_id: int | None = None,
     job_rating_service_log_id: int | None = None,
-    external_service_monitoring_service_log_id: int | None = None,
+    provider_monitoring_service_log_id: int | None = None,
 ) -> ServiceError:
     """Create and persist a ServiceError for a caught exception (or a plain error string).
     Captures the current traceback via `traceback.format_exc()`, so call this from within the
@@ -159,7 +159,7 @@ def record_error(
     :param job_rating_id: JobRating the rating error belongs to, if applicable.
     :param job_email_scraping_service_log_id: Job email scraping run id, if applicable.
     :param job_rating_service_log_id: Job rating run id, if applicable.
-    :param external_service_monitoring_service_log_id: Monitoring run id, if applicable.
+    :param provider_monitoring_service_log_id: Monitoring run id, if applicable.
     :return: The persisted ServiceError instance."""
 
     error = ServiceError(
@@ -171,7 +171,7 @@ def record_error(
         job_rating_id=job_rating_id,
         job_email_scraping_service_log_id=job_email_scraping_service_log_id,
         job_rating_service_log_id=job_rating_service_log_id,
-        external_service_monitoring_service_log_id=external_service_monitoring_service_log_id,
+        provider_monitoring_service_log_id=provider_monitoring_service_log_id,
     )
     db.add(error)
     db.commit()
