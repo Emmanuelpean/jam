@@ -7,7 +7,7 @@ from app.provider_monitoring.service.schemas import ProviderMonitoringServiceLog
 
 def _is_success(service_log) -> bool:
     """Derive is_success the same way the output schema does."""
-    return ProviderMonitoringServiceLogOut.model_validate(service_log, from_attributes=True).is_success
+    return ProviderMonitoringServiceLogOut.model_validate(service_log, from_attributes=True).is_finished
 
 
 def _boom(db, logger) -> None:

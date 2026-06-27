@@ -19,11 +19,8 @@ from app.geolocation import routers as geolocation_routers
 from app.job_email_scraping import routers as job_email_scraping_routers
 from app.job_rating import routers as job_rating_routers
 from app.payments import routers as payment_routers
-from app.service.routers.service_error import service_error_router
+from app.service import routers as service_routers
 from app.service.scheduler import service_scheduler
-from app.service.routers.service import service_router
-from app.service.routers.service_log import service_log_router
-from app.service.routers.scheduler import scheduler_router
 
 # Import the service modules so they register their run callables with SERVICE_REGISTRY.
 from app.job_email_scraping import email_scraper  # noqa: F401
@@ -109,10 +106,10 @@ app.include_router(job_rating_routers.job_rating_router)
 app.include_router(provider_monitoring_routers.provider_monitoring_history_router)
 
 # Service errors and scheduled services
-app.include_router(service_error_router)
-app.include_router(service_router)
-app.include_router(service_log_router)
-app.include_router(scheduler_router)
+app.include_router(service_routers.service_error_router)
+app.include_router(service_routers.service_router)
+app.include_router(service_routers.service_log_router)
+app.include_router(service_routers.scheduler_router)
 
 # User routers
 app.include_router(core_routers.user_router)

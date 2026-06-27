@@ -77,7 +77,7 @@ def get_user_unrated_scraped_jobs(db: Session, user_id: int) -> list[models.Scra
         .filter(models.ScrapedJob.is_active.is_(True))
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.exclusion_filter == None)
-        .filter(or_(models.JobRating.id == None, models.JobRating.is_pending))  # noqa
+        .filter(or_(models.JobRating.id == None, models.JobRating.is_pending))
         .all()
     )
 

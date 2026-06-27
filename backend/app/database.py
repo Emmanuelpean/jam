@@ -50,12 +50,12 @@ def get_demo_db() -> Generator[Session, Any, None]:
 @contextmanager
 def db_session() -> Generator[Session, Any, None]:
     """Provide a database session scoped to a unit of work, closed on exit.
-
-    Uses the demo schema when the ``demo_mode`` context var is set. Use this for background services
-    and scripts (``with db_session() as db:``); request handlers use the ``get_db`` dependency.
     :return: the database session."""
 
-    db = demo_session_local() if demo_mode.get(False) else session_local()
+    if demo_mode.get(False):
+        db = demo_session_local()
+    else:
+        db = session_local()
     try:
         yield db
     finally:

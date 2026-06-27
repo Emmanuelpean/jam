@@ -633,7 +633,7 @@ class TestScoreScrapedJobs(object):
 
         service_log = ScrapedJobRatingService().run(session)
 
-        assert schemas.JobRatingServiceLogOut.model_validate(service_log, from_attributes=True).is_success is False
+        assert schemas.JobRatingServiceLogOut.model_validate(service_log, from_attributes=True).is_finished is False
         error = session.query(models.ServiceError).filter_by(job_rating_service_log_id=service_log.id).one()
         assert "DB connection lost" in error.message
         assert error.scraped_job_id is None

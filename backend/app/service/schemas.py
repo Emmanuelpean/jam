@@ -39,12 +39,17 @@ class ServiceLogOut(Out):
 
     @computed_field
     @property
-    def is_success(self) -> bool:
+    def is_finished(self) -> bool:
         """True if the run completed (has a ``run_datetime``) with no critical errors."""
 
-        if self.run_datetime is None:
-            return False  # TODO potential error
-        return not any(error.level == ServiceErrorLevel.CRITICAL for error in self.service_errors)
+        return self.run_datetime is not None
+
+    @computed_field
+    @property
+    def is_success(self) -> bool:
+        """True if the run completed (has a ``run_datetime``) without any CRITICAL error."""
+
+        return not any([error.level == ServiceErrorLevel.CRITICAL for error in self.service_errors])
 
 
 class ServiceOut(Out):
