@@ -4,6 +4,8 @@ Defines SQLAlchemy ORM models for email-based job scraping functionality.
 Includes models for job alert emails, extracted job IDs, and scraped job data
 with associated companies and locations from external sources."""
 
+import datetime as dt
+
 from sqlalchemy import (
     Column,
     String,
@@ -15,6 +17,9 @@ from sqlalchemy import (
     Table,
     UniqueConstraint,
     CheckConstraint,
+    and_,
+    or_,
+    func,
 )
 from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -176,6 +181,26 @@ class ScrapedJob(Owned, Base):
 
     # Constraints
     __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)
+
+    @hybrid_property
+    def is_pending(self) -> bool:
+        """Whether the job is still runnable: not yet finalised (``is_processed`` is False — i.e.
+        neither scraped, skipped, nor failed-out) and due for a (re)try now."""
+
+        now = dt.datetime.now(dt.timezone.utc)
+        return not self.is_processed and (self.scraping_next_retry_at is None or self.scraping_next_retry_at <= now)
+
+    @is_pending.expression
+    def is_pending(cls):
+        """SQL form of :attr:`is_pending` for use in queries."""
+
+        return and_(
+            cls.is_processed.is_(False),
+            or_(
+                cls.scraping_next_retry_at.is_(None),
+                cls.scraping_next_retry_at <= func.now(),
+            ),
+        )
 
 
 class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):

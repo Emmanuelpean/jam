@@ -5,6 +5,7 @@ import traceback as _traceback
 from enum import StrEnum
 
 from sqlalchemy import Column, String, Float, Boolean, TIMESTAMP, Integer, ForeignKey, JSON
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Session, relationship
 from sqlalchemy.sql import expression
 
@@ -30,6 +31,25 @@ class ServiceLog(object):
         """Set ``run_duration`` to the seconds elapsed since ``run_datetime``."""
 
         self.run_duration = (dt.datetime.now(self.run_datetime.tzinfo) - self.run_datetime).total_seconds()
+
+    @hybrid_property
+    def is_finished(self) -> bool:
+        """True once the run has completed (has a ``run_datetime``)."""
+
+        return self.run_datetime is not None
+
+    @is_finished.expression
+    def is_finished(cls):
+        """SQL form of :attr:`is_finished` for use in queries."""
+
+        return cls.run_datetime.isnot(None)
+
+    @hybrid_property
+    def is_success(self) -> bool:
+        """True if the run produced no CRITICAL error. Derived from the ``service_errors``
+        relationship defined on each concrete service-log subclass."""
+
+        return not any(error.level == ServiceErrorLevel.CRITICAL for error in self.service_errors)
 
 
 class Service(CommonBase, Base):
@@ -132,9 +152,7 @@ class ServiceError(CommonBase, Base):
     job_rating = relationship("JobRating", foreign_keys=[job_rating_id], back_populates="rating_errors")
     job_email_scraping_service_log = relationship("JobEmailScrapingServiceLog", back_populates="service_errors")
     job_rating_service_log = relationship("JobRatingServiceLog", back_populates="service_errors")
-    provider_monitoring_service_log = relationship(
-        "ProviderMonitoringServiceLog", back_populates="service_errors"
-    )
+    provider_monitoring_service_log = relationship("ProviderMonitoringServiceLog", back_populates="service_errors")
 
 
 def record_error(

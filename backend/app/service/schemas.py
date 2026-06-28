@@ -2,10 +2,9 @@
 
 import datetime as dt
 
-from pydantic import Field, computed_field
+from pydantic import Field
 
 from app.base_schemas import Out, BaseModel
-from app.service.models import ServiceErrorLevel
 
 
 class ServiceErrorOut(Out):
@@ -36,20 +35,8 @@ class ServiceLogOut(Out):
     run_datetime: dt.datetime | None = None
     run_duration: float | None = None
     service_errors: list[ServiceErrorOut] = Field(default=[], exclude=True)
-
-    @computed_field
-    @property
-    def is_finished(self) -> bool:
-        """True if the run completed (has a ``run_datetime``) with no critical errors."""
-
-        return self.run_datetime is not None
-
-    @computed_field
-    @property
-    def is_success(self) -> bool:
-        """True if the run completed (has a ``run_datetime``) without any CRITICAL error."""
-
-        return not any([error.level == ServiceErrorLevel.CRITICAL for error in self.service_errors])
+    is_finished: bool
+    is_success: bool
 
 
 class ServiceOut(Out):

@@ -8,7 +8,6 @@ content), and records run statistics in an JobScrapingServiceLog."""
 import datetime as dt
 from enum import Enum
 
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
@@ -573,18 +572,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
         :param service_log: Service log entry"""
 
         # List all unprocessed job records, including those whose retry window has passed
-        now = dt.datetime.now(dt.timezone.utc)
-        job_records = (
-            db.query(ScrapedJob)
-            .filter(ScrapedJob.is_processed.is_(False))
-            .filter(
-                or_(
-                    ScrapedJob.scraping_next_retry_at.is_(None),
-                    ScrapedJob.scraping_next_retry_at <= now,
-                )
-            )
-            .all()
-        )
+        job_records = db.query(ScrapedJob).filter(ScrapedJob.is_pending).all()
         platforms = set([job.platform for job in job_records])
         for platform in platforms:
             job_ids = [job.id for job in job_records if job.platform == platform]

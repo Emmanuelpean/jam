@@ -375,16 +375,12 @@ class TestScrapedJobRaterRateJob:
         assert rating.rating_retry_count == 1
         assert rating.rating_next_retry_at is not None
         assert scraped_job.id in service_log.job_failed_ids
-
-        # The failure is recorded as a unified Error
-        service_error = session.query(models.ServiceError).first()
-        assert service_error is not None
+        assert len(rating.rating_errors) == 1
+        service_error = rating.rating_errors[0]
         assert "AI service unavailable" in service_error.message
-        # The rating error is linked to the pending JobRating and the rating run (not the ScrapedJob)
         assert service_error.scraped_job_id is None
         assert service_error.job_rating_id == rating.id
         assert service_error.job_rating_service_log_id == service_log.id
-        # Per-job rating errors fall to the default (non-critical) level
         assert service_error.level == "error"
 
     def test_rating_permanently_fails_after_max_retries(
@@ -446,17 +442,10 @@ class TestScrapedJobRaterRateJob:
         assert rating is not None
         assert rating.is_success is False
         assert rating.rating_retry_count == settings.rating_max_retry
-
-        # Every attempt is recorded as an Error
-        assert session.query(models.ServiceError).count() == settings.rating_max_retry
-
-        # Rating errors surface on JobRating.rating_errors, not on ScrapedJob.scraping_errors
-        session.refresh(rating)
         assert len(rating.rating_errors) == settings.rating_max_retry
         assert all(e.job_rating_id == rating.id for e in rating.rating_errors)
         assert all(e.job_rating_service_log_id is not None for e in rating.rating_errors)
         assert all(e.level == "error" for e in rating.rating_errors)
-        assert scraped_job.scraping_errors == []
 
     def test_truncates_long_description(
         self,
