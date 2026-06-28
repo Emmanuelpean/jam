@@ -41,6 +41,13 @@ _LOGS = [
     ("provider_monitoring_service_log", "provider_monitoring_service_log_id"),
 ]
 
+# Service-log tables that gain ``is_tour`` now that it lives on the shared ServiceLog base
+# (``job_email_scraping_service_log`` already has it, added by 84de93787471).
+_LOGS_NEEDING_IS_TOUR = [
+    "job_rating_service_log",
+    "provider_monitoring_service_log",
+]
+
 
 # Columns provided by CommonBase — id PK, created_at, modified_at — shared by every table.
 def _common_columns() -> list:
@@ -99,6 +106,10 @@ def upgrade() -> None:
     op.alter_column("scraped_job", "next_retry_at", new_column_name="scraping_next_retry_at")
     op.add_column("job_rating", sa.Column("rating_retry_count", sa.Integer(), server_default="0", nullable=False))
     op.add_column("job_rating", sa.Column("rating_next_retry_at", sa.TIMESTAMP(timezone=True), nullable=True))
+
+    # --- Add is_tour to the service-log tables that don't yet have it ---
+    for table in _LOGS_NEEDING_IS_TOUR:
+        op.add_column(table, sa.Column("is_tour", sa.Boolean(), server_default=sa.text("false"), nullable=False))
 
     # --- Migrate run-level scraping errors (not tied to a specific job) ---
     op.execute("""
@@ -204,6 +215,9 @@ def downgrade() -> None:
         """)
     op.drop_column("job_rating", "rating_next_retry_at")
     op.drop_column("job_rating", "rating_retry_count")
+
+    for table in _LOGS_NEEDING_IS_TOUR:
+        op.drop_column(table, "is_tour")
 
     # --- Recreate the legacy job email scraping error store ---
     op.create_table(

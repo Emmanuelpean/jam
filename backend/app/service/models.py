@@ -38,9 +38,9 @@ class ServiceLog(CommonBase):
 
     @hybrid_property
     def is_finished(self) -> bool:
-        """True once the run has completed (has a ``run_datetime``)."""
+        """True once the run has completed."""
 
-        return self.run_datetime is not None
+        return self.run_duration is not None
 
     @hybrid_property
     def is_success(self) -> bool:

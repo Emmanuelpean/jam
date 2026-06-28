@@ -5,7 +5,7 @@ import datetime as dt
 from app import models
 from app.config import settings
 from app.job_email_scraping.email_parsers import Platform
-from app.job_rating import scraped_job_rating, schemas
+from app.job_rating import scraped_job_rating
 from app.job_rating.prompts import create_system_prompt_with_profile
 from app.job_rating.scraped_job_rating import (
     ScrapedJobRatingService,
