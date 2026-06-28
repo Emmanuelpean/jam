@@ -5,10 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import httpx
-from anthropic import BadRequestError
-
-from app.job_rating.claude import ClaudeBillingError, ClaudeError, claude_query
+from app.job_rating.claude import ClaudeError, claude_query
 
 # -------------------------------------------------- HELPERS ---------------------------------------------------
 

@@ -5,6 +5,7 @@ import pytest
 from app import models
 from tests.utils.create_data.job_scraping import (
     create_scraped_jobs,
+    create_scraped_job_errors,
     create_job_scraping_service_logs,
     create_job_scraping_platform_stats,
     create_job_scraping_service_errors,
@@ -40,6 +41,12 @@ def test_job_scraping_service_errors(
 ) -> list[models.ServiceError]:
     """Create test job_email_scraping service errors"""
     return create_job_scraping_service_errors(session, test_job_scraping_service_logs)
+
+
+@pytest.fixture
+def test_scraped_job_errors(session, test_scraped_jobs) -> list[models.ServiceError]:
+    """Create test per-job scraping errors"""
+    return create_scraped_job_errors(session, test_scraped_jobs)
 
 
 @pytest.fixture

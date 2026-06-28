@@ -203,7 +203,7 @@ class ScrapedJob(Owned, Base):
         )
 
 
-class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
+class JobEmailScrapingServiceLog(ServiceLog, Base):
     """Represents logs of service operations and their status.
 
     Attributes:
@@ -228,8 +228,6 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
     - `job_found_n` (int): Total jobs found (copied + skipped) across all platforms.
     - `email_saved_n` (int): Total emails saved across all platforms.
     - `email_skipped_n` (int): Total emails skipped across all platforms."""
-
-    is_tour = Column(Boolean, nullable=False, server_default=expression.false())
 
     # Users
     user_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)

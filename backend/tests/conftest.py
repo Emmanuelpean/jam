@@ -33,6 +33,7 @@ pytest_plugins = [
     "tests.fixtures.test_data",
     "tests.fixtures.job_scraping",
     "tests.fixtures.job_rating",
+    "tests.fixtures.provider_monitoring",
 ]
 
 

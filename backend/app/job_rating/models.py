@@ -155,7 +155,7 @@ class JobRating(Owned, Base):
         )
 
 
-class JobRatingServiceLog(ServiceLog, CommonBase, Base):
+class JobRatingServiceLog(ServiceLog, Base):
     """Represents service logs for job ratings.
 
     Attributes:

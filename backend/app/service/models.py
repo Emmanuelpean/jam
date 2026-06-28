@@ -13,7 +13,7 @@ from app.base_models import CommonBase
 from app.database import Base
 
 
-class ServiceLog(object):
+class ServiceLog(CommonBase):
     """Base class for service logs.
 
     Attributes:
@@ -22,10 +22,14 @@ class ServiceLog(object):
     - `run_datetime` (datetime): Date and time of the service run.
 
     Failures are recorded as :class:`ServiceError` rows linked to the run (run-level failures have no
-    ``scraped_job_id``), not stored on the log itself."""
+    ``scraped_job_id``), not stored on the log itself. Concrete subclasses must define the ``service_errors``
+    relationship (the back-reference FK differs per table)."""
 
+    is_tour = Column(Boolean, nullable=False, server_default=expression.false())
     run_duration = Column(Float, nullable=True)
     run_datetime = Column(TIMESTAMP(timezone=True), nullable=False, default=lambda: dt.datetime.now(dt.timezone.utc))
+
+    service_errors: list["ServiceError"] = []
 
     def set_run_duration(self) -> None:
         """Set ``run_duration`` to the seconds elapsed since ``run_datetime``."""
@@ -38,16 +42,10 @@ class ServiceLog(object):
 
         return self.run_datetime is not None
 
-    @is_finished.expression
-    def is_finished(cls):
-        """SQL form of :attr:`is_finished` for use in queries."""
-
-        return cls.run_datetime.isnot(None)
-
     @hybrid_property
     def is_success(self) -> bool:
-        """True if the run produced no CRITICAL error. Derived from the ``service_errors``
-        relationship defined on each concrete service-log subclass."""
+        """True if the run produced no CRITICAL error. Derived from the ``service_errors`` relationship defined on each
+        concrete service-log subclass."""
 
         return not any(error.level == ServiceErrorLevel.CRITICAL for error in self.service_errors)
 

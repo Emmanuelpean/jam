@@ -5,6 +5,7 @@ import pytest
 from app import models
 from tests.utils.create_data.job_rating import (
     create_job_rating_service_logs,
+    create_job_rating_service_errors,
     create_job_ratings,
 )
 
@@ -23,3 +24,11 @@ def test_job_ratings(
     return create_job_ratings(
         session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs, test_ai_prompts
     )
+
+
+@pytest.fixture
+def test_job_rating_service_errors(
+    session, test_job_rating_service_logs, test_job_ratings
+) -> list[models.ServiceError]:
+    """Create test job rating service errors"""
+    return create_job_rating_service_errors(session, test_job_rating_service_logs, test_job_ratings)

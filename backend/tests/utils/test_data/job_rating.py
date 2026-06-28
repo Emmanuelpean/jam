@@ -1099,3 +1099,32 @@ JOB_RATING_SERVICE_LOG_DATA = [
 SERVICE_LOG_DATETIME = [CURRENT_DATE - dt.timedelta(days=i) for i in range(len(JOB_RATING_SERVICE_LOG_DATA))]
 for service_log, date in zip(JOB_RATING_SERVICE_LOG_DATA, SERVICE_LOG_DATETIME):
     service_log["run_datetime"] = date.strftime(DATETIME_FORMAT)
+
+
+# ---------------------------------------------- JOB RATING SERVICE ERRORS ----------------------------------------------
+
+# Errors raised during rating, restored as unified ServiceError rows. ``job_rating_id`` is the 1-based position of the
+# rating in ``JOB_RATING_DATA`` (which equals its ``scraped_job_id``). The single run-level failure is recorded as a
+# CRITICAL error linked to the service log run so that ``JobRatingServiceLog.is_success`` derives to False.
+JOB_RATING_SERVICE_ERROR_DATA = [
+    # Run-level critical failure on the second service-log run ("Timeout contacting rating service").
+    {
+        "error_type": "Exception",
+        "message": "Timeout contacting rating service",
+        "level": "critical",
+        "job_rating_service_log_id": 2,
+    },
+    # Per-rating failures (linked to the JobRating only).
+    {"error_type": "Exception", "message": "Failed to scrape job details: Page not found", "job_rating_id": 6},
+    {"error_type": "Exception", "message": "Failed to scrape job details: Rate limit exceeded", "job_rating_id": 7},
+    {"error_type": "Exception", "message": "Failed to rate job: missing job description", "job_rating_id": 11},
+    {"error_type": "Exception", "message": "Failed to rate job: API timeout", "job_rating_id": 13},
+    {"error_type": "Exception", "message": "Failed to rate job: Page not found", "job_rating_id": 58},
+    {"error_type": "Exception", "message": "Failed to rate job: Page not found", "job_rating_id": 59},
+    {"error_type": "Exception", "message": "Failed to rate job: Connection timeout", "job_rating_id": 60},
+    {"error_type": "Exception", "message": "Failed to rate job: Access denied", "job_rating_id": 61},
+    {"error_type": "Exception", "message": "Failed to rate job: Rate limit exceeded", "job_rating_id": 62},
+    {"error_type": "Exception", "message": "Failed to rate job: Invalid response format", "job_rating_id": 63},
+    {"error_type": "Exception", "message": "Failed to rate job: Service unavailable", "job_rating_id": 64},
+    {"error_type": "Exception", "message": "Failed to rate job: Internal server error", "job_rating_id": 65},
+]

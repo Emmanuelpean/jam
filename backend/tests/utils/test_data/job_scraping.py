@@ -646,6 +646,25 @@ json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)""",
 MemoryError: Unable to allocate 2.5 GiB for an array with shape (50000, 100) and data type object""",
         "service_log_id": 7,
     },
+    # Run-level critical failures: these aborted the whole run, so the run's derived ``is_success`` is False.
+    {
+        "error_type": "Exception",
+        "message": "Rate limit exceeded after 30 requests",
+        "level": "critical",
+        "service_log_id": 3,
+    },
+    {
+        "error_type": "Exception",
+        "message": "SMTP server connection timeout",
+        "level": "critical",
+        "service_log_id": 6,
+    },
+    {
+        "error_type": "Exception",
+        "message": "PDF parsing library crashed on corrupted file",
+        "level": "critical",
+        "service_log_id": 8,
+    },
 ]
 
 # -------------------------------------------------- SCRAPING FILTERS --------------------------------------------------
@@ -2027,6 +2046,36 @@ SCRAPED_JOB_SCRAPED = find_index(is_scraped=True)
 SCRAPED_JOB_NOT_PROCESSED_INDEX = find_index(is_processed=False)
 SCRAPED_JOB_FAILED_INDEX = find_index(is_failed=True)
 SCRAPED_JOB_SKIPPED_INDEX = find_index(is_skipped=True)
+
+
+# ---------------------------------------------- SCRAPED JOB SCRAPING ERRORS --------------------------------------------
+
+# Per-job scraping failures, restored as unified ServiceError rows linked to the ScrapedJob. Keyed by ``external_job_id``
+# so the link survives reordering of ``SCRAPED_JOB_DATA``; resolved to the 1-based position used by ``override_properties``.
+_SCRAPED_JOB_ERROR_SPECS = [
+    ("2468135790", "Page not found - job posting may have been removed"),
+    ("cvlib_678901", "Access denied - company blocked scraping"),
+    ("soft123456789", "Rate limit exceeded - retry after 24 hours"),
+    ("job_1120", "Page not found - job posting may have been removed"),
+    ("job_1121", "Scraping blocked - rate limit exceeded"),
+    ("job_1122", "Access denied - company blocked scraping"),
+    ("job_1123", "Rate limit exceeded - retry after 24 hours"),
+    ("job_1124", "Connection timeout - server not responding"),
+    ("job_1150", "Invalid job posting format"),
+    ("job_1151", "Page not found - job posting may have been removed"),
+    ("job_1152", "Connection timeout - server not responding"),
+    ("9988776655", "Scraping blocked - rate limit exceeded"),
+    ("job_11sefwfw59rg", "Page not found - job posting may have been removed"),
+]
+
+SCRAPED_JOB_ERROR_DATA = [
+    {
+        "error_type": "Exception",
+        "message": message,
+        "scraped_job_id": find_index(external_job_id=external_job_id) + 1,
+    }
+    for external_job_id, message in _SCRAPED_JOB_ERROR_SPECS
+]
 
 EMAIL_SCRAPEDJOB_MAPPINGS = [
     # owner_id=1 emails -> owner_id=1 jobs (ids: 1-5, 10-48, 51-68)

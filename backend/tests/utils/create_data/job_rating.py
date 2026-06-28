@@ -13,6 +13,20 @@ def create_job_rating_service_logs(db) -> list[models.JobRatingServiceLog]:
     return create_db_entries(db, models.JobRatingServiceLog, data)
 
 
+def create_job_rating_service_errors(db, service_logs, job_ratings) -> list[models.ServiceError]:
+    """Create sample job rating errors as unified ServiceError rows.
+
+    Per-rating failures link to their JobRating; the run-level failure is a CRITICAL error linked to the service log."""
+
+    data = override_properties(
+        job_rating.JOB_RATING_SERVICE_ERROR_DATA,
+        ("job_rating_service_log_id", service_logs),
+        ("job_rating_id", job_ratings),
+    )
+    print(f"Creating {len(data)} Job Rating Service Errors...")
+    return create_db_entries(db, models.ServiceError, data)
+
+
 def create_job_ratings(db, users, use_qualifications, scraped_jobs, service_logs, ai_prompts) -> list[models.JobRating]:
     """Create sample job ratings"""
 

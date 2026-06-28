@@ -27,6 +27,7 @@ from tests.utils.create_data.data_tables import (
 )
 from tests.utils.create_data.job_rating import (
     create_job_rating_service_logs,
+    create_job_rating_service_errors,
     create_job_ratings,
 )
 from tests.utils.create_data.job_scraping import (
@@ -37,6 +38,11 @@ from tests.utils.create_data.job_scraping import (
     create_scraping_filters,
     create_scraping_favourite_filters,
     create_scraped_jobs,
+    create_scraped_job_errors,
+)
+from tests.utils.create_data.provider_monitoring import (
+    create_provider_monitoring_service_logs,
+    create_provider_monitoring_service_errors,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -209,6 +215,9 @@ def create_database_data(db, includes=None, excludes=None, **kwargs) -> None:
     else:
         scraped_jobs = None
 
+    if should_create("scraped_job_errors") and "scraped_job_errors" not in kwargs and scraped_jobs:
+        create_scraped_job_errors(db, scraped_jobs)
+
     # Job Rating data
     if "job_rating_service_logs" in kwargs:
         job_rating_service_logs = kwargs["job_rating_service_logs"]
@@ -222,7 +231,27 @@ def create_database_data(db, includes=None, excludes=None, **kwargs) -> None:
         and "job_ratings" not in kwargs
         and all([users, scraped_jobs, user_qualifications, job_rating_service_logs, ai_prompts])
     ):
-        create_job_ratings(db, users, scraped_jobs, user_qualifications, job_rating_service_logs, ai_prompts)
+        job_ratings = create_job_ratings(
+            db, users, scraped_jobs, user_qualifications, job_rating_service_logs, ai_prompts
+        )
+
+        if should_create("job_rating_service_errors") and "job_rating_service_errors" not in kwargs:
+            create_job_rating_service_errors(db, job_rating_service_logs, job_ratings)
+
+    # Provider monitoring data
+    if "provider_monitoring_service_logs" in kwargs:
+        provider_monitoring_service_logs = kwargs["provider_monitoring_service_logs"]
+    elif should_create("provider_monitoring_service_logs"):
+        provider_monitoring_service_logs = create_provider_monitoring_service_logs(db)
+    else:
+        provider_monitoring_service_logs = None
+
+    if (
+        should_create("provider_monitoring_service_errors")
+        and "provider_monitoring_service_errors" not in kwargs
+        and provider_monitoring_service_logs
+    ):
+        create_provider_monitoring_service_errors(db, provider_monitoring_service_logs)
 
 
 def seed_database() -> None:

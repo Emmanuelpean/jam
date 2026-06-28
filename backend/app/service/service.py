@@ -1,4 +1,3 @@
-import datetime as dt
 from typing import Generic, TypeVar
 
 from sqlalchemy.orm import Session
@@ -27,8 +26,7 @@ class BaseService(Generic[ServiceLogT]):
         :param db: Database session
         :return: The created service log entry"""
 
-        start = dt.datetime.now(dt.timezone.utc)
-        service_log = self.service_log_table(run_datetime=start)
+        service_log = self.service_log_table()
         db.add(service_log)
         db.commit()
         db.refresh(service_log)
