@@ -195,7 +195,7 @@ def seed_ai_prompts(db: Session) -> tuple[AiSystemPrompt, AiJobPromptTemplate]:
     return system_prompt, job_template
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     title = "Software Engineer"
     company = "Tech Corp"
     description = "We are looking for a Software Engineer with experience in Python and web development."
