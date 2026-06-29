@@ -148,6 +148,42 @@ class TestProcessSubscriptionEvent:
         assert response.status_code == 200
 
 
+class TestWebhookEndpointGuards:
+    """Tests for the webhook endpoint's request-validation branches."""
+
+    def test_missing_customer_returns_400(self, client: TestClient) -> None:
+        """An event whose object has no customer id is rejected with 400."""
+
+        payload = {"type": "customer.subscription.created", "data": {"object": {"id": "sub_x"}}}
+        response = client.post(WEBHOOK_URL, json=payload)
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid customer ID"
+
+    @patch("app.payments.routers.payments.settings.test_mode", False)
+    @patch("app.payments.routers.payments.stripe.Webhook.construct_event", side_effect=ValueError("bad payload"))
+    def test_invalid_payload_returns_400(self, _mock_construct, client: TestClient) -> None:
+        """A payload that cannot be parsed in production mode returns 400."""
+
+        response = client.post(WEBHOOK_URL, content=b"{}", headers={"stripe-signature": "sig"})
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid payload"
+
+    @patch("app.payments.routers.payments.settings.test_mode", False)
+    @patch(
+        "app.payments.routers.payments.stripe.Webhook.construct_event",
+        side_effect=stripe.error.SignatureVerificationError("bad sig", "sig"),
+    )
+    def test_invalid_signature_returns_400(self, _mock_construct, client: TestClient) -> None:
+        """A signature that fails verification in production mode returns 400."""
+
+        response = client.post(WEBHOOK_URL, content=b"{}", headers={"stripe-signature": "sig"})
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid signature"
+
+
 class TestGetSubscriptionStatus:
     """Tests for get_subscription_status via the webhook flow."""
 

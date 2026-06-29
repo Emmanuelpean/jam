@@ -41,6 +41,9 @@ class TestApplyRuleToValues:
             ("85000", "90000", "greater_than", False, False),
             # None / invalid numeric
             ("not-a-number", "100000", "less_than", False, False),
+            ("90000", "not-a-number", "greater_than", False, False),
+            # unknown operator falls through to False
+            ("anything", "anything", "unknown_op", False, False),
         ],
     )
     def test_apply_rule_to_values(self, value, rule_val, op, case_sensitive, expected) -> None:
@@ -79,6 +82,76 @@ class TestRuleToSqlPredicate:
         )
         predicate = rule_to_sql_predicate(rule)
         assert str(predicate) == "scraped_job.salary_min IS NOT NULL AND scraped_job.salary_min < :salary_min_1"
+
+    @pytest.mark.parametrize(
+        "type_,operator,value,case_sensitive,expected",
+        [
+            (
+                "title",
+                "not_contains",
+                "python",
+                False,
+                "lower(scraped_job.title) IS NOT NULL AND "
+                "(lower(scraped_job.title) NOT LIKE '%' || :lower_1 || '%')",
+            ),
+            (
+                "title",
+                "equals",
+                "python",
+                False,
+                "lower(scraped_job.title) IS NOT NULL AND lower(scraped_job.title) = :lower_1",
+            ),
+            (
+                "title",
+                "not_equals",
+                "python",
+                False,
+                "lower(scraped_job.title) IS NOT NULL AND lower(scraped_job.title) != :lower_1",
+            ),
+            (
+                "title",
+                "starts_with",
+                "python",
+                False,
+                "lower(scraped_job.title) IS NOT NULL AND (lower(scraped_job.title) LIKE :lower_1 || '%')",
+            ),
+            (
+                "title",
+                "ends_with",
+                "python",
+                False,
+                "lower(scraped_job.title) IS NOT NULL AND (lower(scraped_job.title) LIKE '%' || :lower_1)",
+            ),
+            (
+                "title",
+                "contains",
+                "Python",
+                True,
+                "scraped_job.title IS NOT NULL AND (scraped_job.title LIKE '%' || :title_1 || '%')",
+            ),
+            (
+                "salary_min",
+                "greater_than",
+                "90000",
+                False,
+                "scraped_job.salary_min IS NOT NULL AND scraped_job.salary_min > :salary_min_1",
+            ),
+        ],
+    )
+    def test_operator_predicates(self, type_, operator, value, case_sensitive, expected) -> None:
+        """Each supported operator compiles to the expected SQL predicate."""
+
+        rule = ScrapingExclusionFilter(
+            type=type_, operator=operator, value=value, case_sensitive=case_sensitive
+        )
+        assert str(rule_to_sql_predicate(rule)) == expected
+
+    def test_unsupported_operator_raises(self) -> None:
+        """A numeric-path operator that isn't recognised raises ValueError."""
+
+        rule = ScrapingExclusionFilter(type="salary_min", operator="between", value="5", case_sensitive=False)
+        with pytest.raises(ValueError, match="Unsupported operator: between"):
+            rule_to_sql_predicate(rule)
 
 
 class TestJobMatchesRulePython:

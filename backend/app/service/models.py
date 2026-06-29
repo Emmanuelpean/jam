@@ -11,6 +11,7 @@ from sqlalchemy.sql import expression
 
 from app.base_models import CommonBase
 from app.database import Base
+from app.utilities.logger import AppLogger
 
 
 class ServiceLog(CommonBase):
@@ -72,6 +73,12 @@ class Service(CommonBase, Base):
     is_running = Column(Boolean, nullable=False, server_default=expression.false())
     last_run_at = Column(TIMESTAMP(timezone=True), nullable=True)
     next_run_at = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    @property
+    def last_log(self) -> str | None:
+        """The last line of this service's log file, or None if it has no log yet."""
+
+        return AppLogger.read_logger(str(self.name)).get_last_log_line()
 
 
 class ServiceErrorLevel(StrEnum):

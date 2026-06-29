@@ -50,6 +50,7 @@ class ServiceOut(Out):
     is_running: bool
     last_run_at: dt.datetime | None = None
     next_run_at: dt.datetime | None = None
+    last_log: str | None = None
 
 
 class ServiceUpdate(BaseModel):
