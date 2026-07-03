@@ -11,7 +11,7 @@ from app.utilities.datetime import current_month_window, to_iso_z
 
 
 def _freeze(frozen: dt.datetime):
-    """Patch the module's ``dt`` so ``dt.datetime.now(tz)`` returns ``frozen`` (kept tz-aware)."""
+    """Patch the module's dt so dt.datetime.now(tz) returns frozen (kept tz-aware)."""
 
     class FrozenDateTime(dt.datetime):
         @classmethod

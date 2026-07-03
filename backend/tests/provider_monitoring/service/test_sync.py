@@ -1,7 +1,7 @@
 """Tests for the ServiceMonitor run behaviour and Error recording."""
 
 from app import models
-from app.provider_monitoring.service.sync import ProviderMonitoringService
+from app.provider_monitoring.service.service import ProviderMonitoringService
 from app.provider_monitoring.service.schemas import ProviderMonitoringServiceLogOut
 
 

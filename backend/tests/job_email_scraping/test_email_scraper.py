@@ -1201,3 +1201,54 @@ class TestExtractForwardingEmailConfirmation:
         # Verify only one confirmation link exists
         count = session.query(models.ForwardingConfirmationLink).count()
         assert count == 1
+
+
+class TestComputeLookbackDays:
+    """Test class for JobEmailScrapingService.compute_lookback_days"""
+
+    @staticmethod
+    def _make_log(session, run_datetime: dt.datetime, is_tour: bool = False) -> models.JobEmailScrapingServiceLog:
+        """Persist a JobEmailScrapingServiceLog with the given run datetime."""
+        log = models.JobEmailScrapingServiceLog(run_datetime=run_datetime, is_tour=is_tour)
+        session.add(log)
+        session.commit()
+        return log
+
+    def test_first_run_uses_max(self, session) -> None:
+        """With no prior run, the window is the maximum."""
+        service = JobEmailScrapingService()
+        current = self._make_log(session, dt.datetime.now())
+        assert service.compute_lookback_days(session, current, 1, 10) == 10
+
+    def test_gap_within_bounds_uses_elapsed(self, session) -> None:
+        """A gap between the bounds returns the elapsed days."""
+        service = JobEmailScrapingService()
+        now = dt.datetime.now()
+        self._make_log(session, now - dt.timedelta(days=4))
+        current = self._make_log(session, now)
+        assert service.compute_lookback_days(session, current, 1, 10) == pytest.approx(4, abs=1e-6)
+
+    def test_small_gap_clamped_to_min(self, session) -> None:
+        """A gap below the minimum is clamped up to the minimum."""
+        service = JobEmailScrapingService()
+        now = dt.datetime.now()
+        self._make_log(session, now - dt.timedelta(hours=3))
+        current = self._make_log(session, now)
+        assert service.compute_lookback_days(session, current, 1, 10) == 1
+
+    def test_large_gap_clamped_to_max(self, session) -> None:
+        """A gap above the maximum is clamped down to the maximum."""
+        service = JobEmailScrapingService()
+        now = dt.datetime.now()
+        self._make_log(session, now - dt.timedelta(days=30))
+        current = self._make_log(session, now)
+        assert service.compute_lookback_days(session, current, 1, 10) == 10
+
+    def test_tour_runs_are_ignored(self, session) -> None:
+        """Tour runs are not treated as the previous run."""
+        service = JobEmailScrapingService()
+        now = dt.datetime.now()
+        self._make_log(session, now - dt.timedelta(days=2))
+        self._make_log(session, now - dt.timedelta(hours=1), is_tour=True)
+        current = self._make_log(session, now)
+        assert service.compute_lookback_days(session, current, 1, 10) == pytest.approx(2, abs=1e-6)

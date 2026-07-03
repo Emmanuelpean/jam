@@ -131,7 +131,7 @@ class JobRating(Owned, Base):
 
     @hybrid_property
     def is_pending(self) -> bool:
-        """Whether the rating is still runnable: not yet finalised (``is_success`` is None — i.e.
+        """Whether the rating is still runnable: not yet finalised (is_success is None — i.e.
         neither succeeded nor failed-out), not skipped, and due for a (re)try now."""
 
         now = dt.datetime.now(dt.timezone.utc)

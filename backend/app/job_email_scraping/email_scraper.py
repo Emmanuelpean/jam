@@ -420,32 +420,62 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
 
     # ----------------------------------------------------- RUNNER -----------------------------------------------------
 
-    def run_scraping(
+    @staticmethod
+    def compute_lookback_days(
+        db: Session,
+        service_log: JobEmailScrapingServiceLog,
+        min_timedelta_days: int | float,
+        max_timedelta_days: int | float,
+    ) -> float | int:
+        """Compute the email lookback window from the gap since the previous run.
+        Returns the number of days elapsed since the most recent prior run, clamped to
+        [min_timedelta_days, max_timedelta_days]. Uses max_timedelta_days on the first run
+        (no prior run). Basing the window on the actual gap means a scheduler that was down for a few
+        days automatically looks further back to catch up, without replaying weeks of old emails.
+        :param db: Database session
+        :param service_log: The current run's service log (excluded from the lookup)
+        :param min_timedelta_days: Lower bound for the lookback window, in days
+        :param max_timedelta_days: Upper bound for the lookback window, in days
+        :return: The lookback window in days"""
+
+        last_run = (
+            db.query(JobEmailScrapingServiceLog)
+            .filter(JobEmailScrapingServiceLog.id != service_log.id)
+            .filter(JobEmailScrapingServiceLog.is_tour.is_(False))
+            .order_by(JobEmailScrapingServiceLog.run_datetime.desc())
+            .first()
+        )
+        if last_run is None:
+            return max_timedelta_days
+
+        elapsed_days = (service_log.run_datetime - last_run.run_datetime).total_seconds() / 86400
+        return max(min_timedelta_days, min(max_timedelta_days, elapsed_days))
+
+    def run(
         self,
-        timedelta_days: int | float = 1,
+        min_timedelta_days: int | float = 1,
+        max_timedelta_days: int | float = 10,
     ) -> JobEmailScrapingServiceLog:
-        """Run the email scraping workflow
-        :param timedelta_days: Number of days to search for emails"""
+        """Run the email scraping workflow.
+        The email lookback window is derived from the gap since the previous run, clamped to
+        [min_timedelta_days, max_timedelta_days].
+        :param min_timedelta_days: Minimum number of days to search for emails
+        :param max_timedelta_days: Maximum number of days to search for emails"""
 
         with db_session() as db:
             service_log = self.start_run(db)
+            timedelta_days = self.compute_lookback_days(db, service_log, min_timedelta_days, max_timedelta_days)
+            self.logger.info(f"Using an email lookback window of {timedelta_days:.2f} day(s)")
             self.extract_forwarding_email_confirmation(db, service_log, timedelta_days)
 
             try:
-                # Process emails for all users
                 self.process_emails(db, timedelta_days, service_log)
-
-                # Scrape remaining jobs that haven't been scraped yet
                 self.scrape_jobs(db, service_log)
-
-                # Log final statistics
-                service_log.set_run_duration()
-
             except Exception as exception:
                 self.logger.exception(f"Critical error in scraping workflow: {exception}")
-                service_log.set_run_duration()
                 self.log_service_error(db, service_log, exception, ServiceErrorLevel.CRITICAL)
             finally:
+                service_log.set_run_duration()
                 self.logger.info("Finished email scraping workflow")
 
             db.commit()
@@ -690,10 +720,10 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
 
 register_service(
     JobEmailScrapingService.service_name,
-    JobEmailScrapingService().run_scraping,
+    JobEmailScrapingService().run,
     display_name="Job Email Scraping",
     run_period_hours=3,
     log_model=JobEmailScrapingServiceLog,
     log_schema=JobEmailScrapingServiceLogOut,
-    default_parameters={"timedelta_days": 3},
+    default_parameters={"min_timedelta_days": 1, "max_timedelta_days": 10},
 )

@@ -1103,9 +1103,9 @@ for service_log, date in zip(JOB_RATING_SERVICE_LOG_DATA, SERVICE_LOG_DATETIME):
 
 # ---------------------------------------------- JOB RATING SERVICE ERRORS ----------------------------------------------
 
-# Errors raised during rating, restored as unified ServiceError rows. ``job_rating_id`` is the 1-based position of the
-# rating in ``JOB_RATING_DATA`` (which equals its ``scraped_job_id``). The single run-level failure is recorded as a
-# CRITICAL error linked to the service log run so that ``JobRatingServiceLog.is_success`` derives to False.
+# Errors raised during rating, restored as unified ServiceError rows. job_rating_id is the 1-based position of the
+# rating in JOB_RATING_DATA (which equals its scraped_job_id). The single run-level failure is recorded as a
+# CRITICAL error linked to the service log run so that JobRatingServiceLog.is_success derives to False.
 JOB_RATING_SERVICE_ERROR_DATA = [
     # Run-level critical failure on the second service-log run ("Timeout contacting rating service").
     {

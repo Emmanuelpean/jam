@@ -2,7 +2,7 @@
 Each fetcher is run independently — one failure doesn't abort the others. Transient failures are
 absorbed by the HTTP-level retries in request_with_retry, and the next daily run re-fetches the
 full window anyway, so there is no cross-run retry here. Every failure is recorded as an Error so
-admins can spot partial failures (a run's derived ``is_success`` only flips to False on a critical
+admins can spot partial failures (a run's derived is_success only flips to False on a critical
 error)."""
 
 from contextlib import nullcontext

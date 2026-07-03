@@ -11,19 +11,19 @@ from app.service.models import Service
 from app.service.registry import get_service_callable, sync_services_to_db
 from app.utilities.logger import AppLogger
 
-# Logger / log-file name for the scheduler itself.
-SCHEDULER_LOG_NAME = "service_scheduler"
 
-
-def compute_next_run(base: dt.datetime | None, now: dt.datetime, period_hours: float) -> dt.datetime:
-    """Return the next scheduled run strictly after ``now``, phase-aligned to ``base``.
-
-    Advances ``base`` in whole ``period_hours`` steps until the result is in the future, so missed
+def compute_next_run(
+    base: dt.datetime | None,
+    now: dt.datetime,
+    period_hours: float | int,
+) -> dt.datetime:
+    """Return the next scheduled run strictly after now, phase-aligned to base.
+    Advances base in whole period_hours steps until the result is in the future, so missed
     slots (e.g. while the scheduler was down) are skipped rather than replayed.
-    :param base: The slot that just fired (its ``next_run_at``); ``now`` is used if ``None``.
+    :param base: The slot that just fired (its next_run_at); now is used if None.
     :param now: Current time.
     :param period_hours: Interval between runs, in hours.
-    :return: The next ``next_run_at``, strictly greater than ``now``."""
+    :return: The next next_run_at, strictly greater than now."""
 
     period = dt.timedelta(hours=period_hours)
     if base is None:
@@ -33,17 +33,19 @@ def compute_next_run(base: dt.datetime | None, now: dt.datetime, period_hours: f
     return base + steps * period
 
 
-class ServiceScheduler:
-    """Polls the ``Service`` table and runs due services on worker threads."""
+class ServiceScheduler(object):
+    """Polls the Service table and runs due services on worker threads."""
+
+    service_name = "service_scheduler"
 
     def __init__(self, poll_interval_seconds: float = 30.0) -> None:
         """Initialise the scheduler.
-        :param poll_interval_seconds: How often to poll the ``Service`` table for due runs."""
+        :param poll_interval_seconds: How often to poll the Service table for due runs."""
 
         self.poll_interval_seconds = poll_interval_seconds
         self.stop_event = threading.Event()
         self._thread: threading.Thread | None = None
-        self.logger = AppLogger.create_service_logger(SCHEDULER_LOG_NAME, "INFO")
+        self.logger = AppLogger.create_service_logger(self.service_name, "INFO")
 
     def start(self) -> None:
         """Start the scheduler poll loop in a daemon thread."""
@@ -80,9 +82,9 @@ class ServiceScheduler:
     def status(self) -> dict:
         """Return the scheduler's runtime status.
 
-        Only meaningful on the process that runs the scheduler (``SCHEDULER=true``); elsewhere the
-        loop never starts, so ``running`` is False.
-        :return: ``{"running": bool, "poll_interval_seconds": float, "last_log": str | None}``."""
+        Only meaningful on the process that runs the scheduler (SCHEDULER=true); elsewhere the
+        loop never starts, so running is False.
+        :return: {"running": bool, "poll_interval_seconds": float, "last_log": str | None}."""
 
         return {
             "running": self._thread is not None and self._thread.is_alive(),
@@ -103,7 +105,7 @@ class ServiceScheduler:
     def _tick(self) -> None:
         """Dispatch every enabled service that is due and not already running.
 
-        ``is_running`` is the overlap guard: it is committed before the worker is dispatched, so the
+        is_running is the overlap guard: it is committed before the worker is dispatched, so the
         next tick filters the service out until its run finishes (and clears the flag). This is
         race-free because a single poll thread does all dispatching."""
 
@@ -129,7 +131,7 @@ class ServiceScheduler:
 
     def _run_service(self, service_id: int) -> None:
         """Run a single service and advance its schedule.
-        :param service_id: Primary key of the ``Service`` row to run."""
+        :param service_id: Primary key of the Service row to run."""
 
         with db_session() as db:
             service = db.query(Service).filter(Service.id == service_id).first()

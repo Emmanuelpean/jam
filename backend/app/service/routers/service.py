@@ -22,7 +22,7 @@ def _get_service_by_name(db: Session, name: str) -> Service:
     """Fetch a service by name.
     :param db: Database session.
     :param name: Service registry key.
-    :return: The matching ``Service`` row."""
+    :return: The matching Service row."""
 
     service = db.query(Service).filter(Service.name == name).first()
     if service is None:
@@ -49,7 +49,7 @@ def update_service(
     db: Session = Depends(get_db),
 ):
     """Update a service's configuration (enable/disable, period, parameters). Admin only.
-    Enabling a service with no scheduled run (or one in the past) seeds ``next_run_at`` to now so it
+    Enabling a service with no scheduled run (or one in the past) seeds next_run_at to now so it
     runs on the scheduler's next poll."""
 
     assert_admin(current_user)
@@ -77,7 +77,7 @@ def run_service_now(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Schedule a service to run on the scheduler's next poll by setting ``next_run_at`` to now.
+    """Schedule a service to run on the scheduler's next poll by setting next_run_at to now.
     The service must be enabled for the scheduler to pick it up. Admin only."""
 
     assert_admin(current_user)
@@ -91,12 +91,12 @@ def run_service_now(
 @service_router.get("/{name}/logs")
 def get_logs(
     name: str,
-    lines: int = Query(100, ge=1, le=10000),
+    lines: int = Query(100, ge=1),
     current_user: User = Depends(get_current_user),
 ) -> dict:
     """Get the last N lines of a service's log file. Admin only.
     :param name: Service registry key (also the log file / logger name).
-    :param lines: Number of lines to retrieve (default 100, max 10000).
+    :param lines: Number of lines to retrieve (default 100).
     :param current_user: Current authenticated user."""
 
     assert_admin(current_user)

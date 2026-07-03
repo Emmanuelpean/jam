@@ -25,7 +25,7 @@ from app.service.scheduler import service_scheduler
 # Import the service modules so they register their run callables with SERVICE_REGISTRY.
 from app.job_email_scraping import email_scraper  # noqa: F401
 from app.job_rating import scraped_job_rating  # noqa: F401
-from app.provider_monitoring.service import sync  # noqa: F401
+from app.provider_monitoring.service import service  # noqa: F401
 
 
 @asynccontextmanager

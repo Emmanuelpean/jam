@@ -7,7 +7,7 @@ from tests.utils.test_data.utils import CURRENT_DATE, DATETIME_FORMAT
 # ------------------------------------------ PROVIDER MONITORING SERVICE LOGS -------------------------------------------
 
 # The ProviderMonitoringServiceLog has no extra columns of its own; a run is just a timestamp and a duration. Its
-# ``is_success`` is derived purely from whether any linked ServiceError is CRITICAL.
+# is_success is derived purely from whether any linked ServiceError is CRITICAL.
 PROVIDER_MONITORING_SERVICE_LOG_DATA = [
     {
         "run_duration": 4.2,
@@ -35,8 +35,8 @@ for service_log, date in zip(PROVIDER_MONITORING_SERVICE_LOG_DATA, SERVICE_LOG_D
 # ----------------------------------------- PROVIDER MONITORING SERVICE ERRORS ------------------------------------------
 
 # Per-fetcher failures are ERROR level (one fetcher failing does not fail the run); a run-level abort is CRITICAL and
-# drives the run's derived ``is_success`` to False. ``provider_monitoring_service_log_id`` is the 1-based position of the
-# run in ``PROVIDER_MONITORING_SERVICE_LOG_DATA``.
+# drives the run's derived is_success to False. provider_monitoring_service_log_id is the 1-based position of the
+# run in PROVIDER_MONITORING_SERVICE_LOG_DATA.
 PROVIDER_MONITORING_SERVICE_ERROR_DATA = [
     # Run 2: a single fetcher failed, the rest of the run completed (is_success stays True).
     {

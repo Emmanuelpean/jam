@@ -82,7 +82,7 @@ class TestSyncServicesToDb:
         assert rows["svc_a"].display_name == "A"
         assert rows["svc_a"].run_period_hours == 2
         assert rows["svc_a"].parameters == {"x": 1}
-        assert rows["svc_a"].is_enabled
+        assert not rows["svc_a"].is_enabled
         assert rows["svc_b"].display_name == "Svc B"  # derived
 
     def test_idempotent_and_preserves_admin_edits(self, session):

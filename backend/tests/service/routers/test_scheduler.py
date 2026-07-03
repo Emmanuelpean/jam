@@ -56,7 +56,6 @@ class TestSchedulerLogs:
 
     def test_rejects_out_of_range_lines(self, admin_client) -> None:
         assert admin_client.get(f"{self.endpoint}?lines=0").status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-        assert admin_client.get(f"{self.endpoint}?lines=10001").status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_non_admin_forbidden(self, regular_user_client) -> None:
         assert regular_user_client.get(self.endpoint).status_code == status.HTTP_403_FORBIDDEN

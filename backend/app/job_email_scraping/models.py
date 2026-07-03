@@ -184,7 +184,7 @@ class ScrapedJob(Owned, Base):
 
     @hybrid_property
     def is_pending(self) -> bool:
-        """Whether the job is still runnable: not yet finalised (``is_processed`` is False — i.e.
+        """Whether the job is still runnable: not yet finalised (is_processed is False — i.e.
         neither scraped, skipped, nor failed-out) and due for a (re)try now."""
 
         now = dt.datetime.now(dt.timezone.utc)

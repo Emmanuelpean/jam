@@ -22,7 +22,7 @@ class BaseService(Generic[ServiceLogT]):
 
     def start_run(self, db: Session) -> ServiceLogT:
         """Create and persist the service-log row for a new run.
-        The caller owns the session (typically via ``with db_session() as db``) and passes it in.
+        The caller owns the session (typically via with db_session() as db) and passes it in.
         :param db: Database session
         :return: The created service log entry"""
 

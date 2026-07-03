@@ -69,21 +69,23 @@ cd frontend && npm run build
 
 FastAPI app with modules organized by domain:
 
-| Module                | Purpose                                                           |
-|-----------------------|-------------------------------------------------------------------|
-| `core/`               | Auth (JWT), user management, settings                             |
-| `data_tables/`        | Core entities: Company, Job, Person, Interview, Location, Keyword |
-| `job_email_scraping/` | Email/web scraping from Indeed, LinkedIn, NHS, VeganJobs          |
-| `job_rating/`         | AI-powered job rating via Anthropic                               |
-| `demo/`               | Demo schema isolation — setup, seeding, cleanup                   |
-| `payments/`           | Stripe integration — checkout, webhooks, customer management      |
-| `emails/`             | SMTP email service, release notes, templates                      |
-| `service_runner/`     | Background job scheduler                                          |
-| `routers/`            | Export endpoints, misc config                                     |
+| Module                 | Purpose                                                                 |
+|------------------------|-------------------------------------------------------------------------|
+| `core/`                | Auth (JWT), user management, settings                                   |
+| `data_tables/`         | Core entities: Company, Job, Person, Interview, Location, Keyword       |
+| `job_email_scraping/`  | Email/web scraping from Indeed, LinkedIn, NHS, VeganJobs                |
+| `job_rating/`          | AI-powered job rating via Anthropic                                     |
+| `demo/`                | Demo schema isolation — setup, seeding, cleanup                         |
+| `payments/`            | Stripe integration — checkout, webhooks, customer management            |
+| `emails/`              | SMTP email service, release notes, templates                            |
+| `service/`             | Background service framework — registry, scheduler, service logs/errors |
+| `provider_monitoring/` | Daily usage/cost monitoring for Anthropic, Apify, BrightData, Stripe    |
+| `geolocation/`         | Location lookup/geocoding                                               |
+| `routers/`             | Export endpoints, misc config                                           |
 
 Key files:
 - `main.py` — FastAPI app setup, CORS, middleware, all router registrations, lifespan hooks
-- `database.py` — SQLAlchemy engines, `demo_mode` ContextVar, `get_db()` dependency
+- `database.py` — SQLAlchemy engines, `demo_mode` ContextVar, `db_session()` context manager and `get_db()` dependency
 - `config.py` — Pydantic `Settings` class reading from `.env`
 - `base_models.py` — `CommonBase` (id, created_at, modified_at) and `Owned` (adds owner_id with CASCADE delete)
 - `models.py` — imports all models to ensure Alembic sees them
@@ -149,6 +151,7 @@ Frontend reads from `frontend/.env` (typically just the API base URL).
 - Python: Black formatter, 120-char line length
 - TypeScript: Prettier (see `.prettierrc`), Stylelint for SCSS
 - SCSS variables in `frontend/src/_variables.scss`, themes in `Themes.scss`
+- Never write implementation history in comments or docstrings (e.g. "changed from X to Y", "this used to...", "previously..."). Describe what the code does now, not how it evolved — history belongs in commit messages.
 
 ## Editing Files on Windows
 

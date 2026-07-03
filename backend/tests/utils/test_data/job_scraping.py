@@ -646,7 +646,7 @@ json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)""",
 MemoryError: Unable to allocate 2.5 GiB for an array with shape (50000, 100) and data type object""",
         "service_log_id": 7,
     },
-    # Run-level critical failures: these aborted the whole run, so the run's derived ``is_success`` is False.
+    # Run-level critical failures: these aborted the whole run, so the run's derived is_success is False.
     {
         "error_type": "Exception",
         "message": "Rate limit exceeded after 30 requests",
@@ -2050,8 +2050,8 @@ SCRAPED_JOB_SKIPPED_INDEX = find_index(is_skipped=True)
 
 # ---------------------------------------------- SCRAPED JOB SCRAPING ERRORS --------------------------------------------
 
-# Per-job scraping failures, restored as unified ServiceError rows linked to the ScrapedJob. Keyed by ``external_job_id``
-# so the link survives reordering of ``SCRAPED_JOB_DATA``; resolved to the 1-based position used by ``override_properties``.
+# Per-job scraping failures, restored as unified ServiceError rows linked to the ScrapedJob. Keyed by external_job_id
+# so the link survives reordering of SCRAPED_JOB_DATA; resolved to the 1-based position used by override_properties.
 _SCRAPED_JOB_ERROR_SPECS = [
     ("2468135790", "Page not found - job posting may have been removed"),
     ("cvlib_678901", "Access denied - company blocked scraping"),

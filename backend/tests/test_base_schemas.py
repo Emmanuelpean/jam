@@ -9,7 +9,7 @@ class DummyObject:
 
 
 class TestSerialiseRelationships:
-    """Tests for ``serialise_relationships`` utility function."""
+    """Tests for serialise_relationships utility function."""
 
     def test_empty_list(self) -> None:
         """An empty list should return an empty list."""

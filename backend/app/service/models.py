@@ -23,7 +23,7 @@ class ServiceLog(CommonBase):
     - `run_datetime` (datetime): Date and time of the service run.
 
     Failures are recorded as :class:`ServiceError` rows linked to the run (run-level failures have no
-    ``scraped_job_id``), not stored on the log itself. Concrete subclasses must define the ``service_errors``
+    scraped_job_id), not stored on the log itself. Concrete subclasses must define the service_errors
     relationship (the back-reference FK differs per table)."""
 
     is_tour = Column(Boolean, nullable=False, server_default=expression.false())
@@ -33,7 +33,7 @@ class ServiceLog(CommonBase):
     service_errors: list["ServiceError"] = []
 
     def set_run_duration(self) -> None:
-        """Set ``run_duration`` to the seconds elapsed since ``run_datetime``."""
+        """Set run_duration to the seconds elapsed since run_datetime."""
 
         self.run_duration = (dt.datetime.now(self.run_datetime.tzinfo) - self.run_datetime).total_seconds()
 
@@ -45,7 +45,7 @@ class ServiceLog(CommonBase):
 
     @hybrid_property
     def is_success(self) -> bool:
-        """True if the run produced no CRITICAL error. Derived from the ``service_errors`` relationship defined on each
+        """True if the run produced no CRITICAL error. Derived from the service_errors relationship defined on each
         concrete service-log subclass."""
 
         return not any(error.level == ServiceErrorLevel.CRITICAL for error in self.service_errors)
@@ -56,7 +56,7 @@ class Service(CommonBase, Base):
 
     Attributes:
     -----------
-    - `name` (str): Registry key; matches the service's ``service_name``.
+    - `name` (str): Registry key; matches the service's service_name.
     - `display_name` (str): Human-readable name for the UI.
     - `run_period_hours` (float): Interval between scheduled runs, in hours.
     - `parameters` (dict): Keyword arguments passed to the service callable.
@@ -97,7 +97,7 @@ class ServiceError(CommonBase, Base):
     - `message` (str): Error message.
     - `traceback` (str, optional): Full traceback of the error, if available.
     - `is_acknowledged` (bool): Whether an admin has acknowledged the error.
-    - `level` (str): Severity (see :class:`ErrorLevel`); defaults to ``ERROR``.
+    - `level` (str): Severity (see :class:`ErrorLevel`); defaults to ERROR.
 
     Foreign keys
     ------------
@@ -176,7 +176,7 @@ def record_error(
     `except` block that handled the error. Pass the service-log id for the originating service.
     :param db: Database session.
     :param exc: The caught exception or an error message string.
-    :param message: Optional explicit message; defaults to ``str(exc)``.
+    :param message: Optional explicit message; defaults to str(exc).
     :param level: Error severity.
     :param scraped_job_id: ScrapedJob the error relates to, for per-job failures.
     :param job_rating_id: JobRating the rating error belongs to, if applicable.

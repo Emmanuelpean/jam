@@ -10,20 +10,20 @@ from app.config import settings
 
 
 class AppLoggerInstance(logging.Logger):
-    """A ``logging.Logger`` extended with helpers to read back its own log file."""
+    """A logging.Logger extended with helpers to read back its own log file."""
 
     def _log_file_path(self) -> str:
-        """Return the path of this logger's log file (``{name}.log`` under the log directory)."""
+        """Return the path of this logger's log file ({name}.log under the log directory)."""
 
         return os.path.join(settings.log_directory, self.name + ".log")
 
     def read_log_tail(self, lines: int) -> dict:
-        """Return the last ``lines`` lines of this logger's log file plus the file's total line count.
+        """Return the last lines lines of this logger's log file plus the file's total line count.
 
         Reads the whole file for small files; for files over 1 MB it seeks from the end in chunks to
         avoid loading the entire file into memory.
         :param lines: Number of trailing lines to return.
-        :return: ``{"lines": list[str], "total_lines": int}``."""
+        :return: {"lines": list[str], "total_lines": int}."""
 
         log_file_path = self._log_file_path()
 
@@ -218,10 +218,7 @@ class AppLogger:
 
     @classmethod
     def read_logger(cls, name: str) -> AppLoggerInstance:
-        """Return a read-only logger handle for ``name`` — no handlers, no file created.
-
-        Use this (rather than :meth:`get_logger`) when you only need to read a log file's tail, so a
-        read never registers a global logger or opens/creates the underlying file.
+        """Return a read-only logger handle for name — no handlers, no file created.
         :param name: Logger / log-file name."""
 
         return AppLoggerInstance(name)

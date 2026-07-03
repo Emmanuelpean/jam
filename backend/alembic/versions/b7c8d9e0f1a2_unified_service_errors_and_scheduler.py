@@ -1,20 +1,20 @@
 """unified service errors and scheduler
 
 Consolidated migration for the service-error / scheduler rework (replaces the four step migrations
-``b1c2d3e4f5a6`` -> ``e7f8a9b0c1d2`` -> ``f3b9c2d1e0a4`` -> ``a1b2c3d4e5f6``). Net effect over a
-database at ``a7b8c9d0e1f2``:
+b1c2d3e4f5a6 -> e7f8a9b0c1d2 -> f3b9c2d1e0a4 -> a1b2c3d4e5f6). Net effect over a
+database at a7b8c9d0e1f2:
 
-* Replaces the per-service error stores (``job_email_scraping_service_error``,
-  ``scraped_job.scrape_error``, ``job_rating.error`` and the ``error_message`` columns on the
-  service-log tables) with a single ``service_error`` table. Existing errors are migrated across.
-* ``service_error.level`` records severity; run-level failures are ``service_error`` rows (with a
-  ``*_service_log_id`` set) rather than ``error_message`` / ``is_success`` on the log, which are
+* Replaces the per-service error stores (job_email_scraping_service_error,
+  scraped_job.scrape_error, job_rating.error and the error_message columns on the
+  service-log tables) with a single service_error table. Existing errors are migrated across.
+* service_error.level records severity; run-level failures are service_error rows (with a
+  *_service_log_id set) rather than error_message / is_success on the log, which are
   dropped (success is now derived).
-* Rating errors are owned by their JobRating via ``service_error.job_rating_id``; the rating retry
-  bookkeeping (``rating_retry_count`` / ``rating_next_retry_at``) lives on ``job_rating``.
-* Renames the scrape retry fields on ``scraped_job`` (``retry_count`` -> ``scraping_retry_count``,
-  ``next_retry_at`` -> ``scraping_next_retry_at``).
-* Adds the ``service`` table that drives the database-backed scheduler (rows are created at runtime).
+* Rating errors are owned by their JobRating via service_error.job_rating_id; the rating retry
+  bookkeeping (rating_retry_count / rating_next_retry_at) lives on job_rating.
+* Renames the scrape retry fields on scraped_job (retry_count -> scraping_retry_count,
+  next_retry_at -> scraping_next_retry_at).
+* Adds the service table that drives the database-backed scheduler (rows are created at runtime).
 
 Revision ID: b7c8d9e0f1a2
 Revises: a7b8c9d0e1f2
@@ -41,8 +41,8 @@ _LOGS = [
     ("provider_monitoring_service_log", "provider_monitoring_service_log_id"),
 ]
 
-# Service-log tables that gain ``is_tour`` now that it lives on the shared ServiceLog base
-# (``job_email_scraping_service_log`` already has it, added by 84de93787471).
+# Service-log tables that gain is_tour now that it lives on the shared ServiceLog base
+# (job_email_scraping_service_log already has it, added by 84de93787471).
 _LOGS_NEEDING_IS_TOUR = [
     "job_rating_service_log",
     "provider_monitoring_service_log",

@@ -13,7 +13,7 @@ from app.payments.customer import create_customer, get_or_create_stripe_customer
 
 def _stripe_customer(**fields) -> StripeObject:
     """Build a StripeObject mimicking a real Stripe Customer response.
-    Stripe objects (stripe>=15) use attribute/item access and no longer expose ``.get()``."""
+    Stripe objects (stripe>=15) use attribute/item access and no longer expose .get()."""
 
     return StripeObject.construct_from(fields, "sk_test")
 

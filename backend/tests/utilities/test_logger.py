@@ -11,10 +11,10 @@ from app.utilities.logger import AppLogger, AppLoggerInstance
 
 @pytest.fixture
 def log_dir(tmp_path):
-    """Patch ``settings.log_directory`` to a temp dir and clean up any loggers/handlers created.
+    """Patch settings.log_directory to a temp dir and clean up any loggers/handlers created.
 
-    Closing file handlers on teardown is required on Windows so ``tmp_path`` can be removed, and
-    restoring ``AppLogger._loggers`` keeps the module-level cache from leaking between tests."""
+    Closing file handlers on teardown is required on Windows so tmp_path can be removed, and
+    restoring AppLogger._loggers keeps the module-level cache from leaking between tests."""
 
     cache_before = dict(AppLogger._loggers)
     names_before = set(logging.Logger.manager.loggerDict.keys())
