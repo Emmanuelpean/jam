@@ -4,6 +4,7 @@ from typing import Any, Generator
 
 import pytest
 from sqlalchemy import create_engine, orm, text, Engine
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import database_exists, create_database, drop_database
 
 from app.database import Base, create_db_url
@@ -66,12 +67,27 @@ def engine(database_url: str, worker_id: str) -> Generator[Engine, Any, None]:
 
 @pytest.fixture
 def session(engine: Engine) -> Generator[orm.Session, Any, None]:
-    """Fixture that sets up and tears down a new database session for each test function."""
+    """Per-test session bound to a single connection inside an outer transaction that is rolled back
+    on teardown, so tests never touch committed state. ``join_transaction_mode="create_savepoint"``
+    makes every ``session.commit()`` (including those inside API endpoints under test) release and
+    reopen a SAVEPOINT rather than committing the outer transaction, keeping tests isolated.
 
-    truncate_all_tables(engine)
-    testing_session_local = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    db = testing_session_local()
+    Note: the whole test runs in one transaction, so PostgreSQL ``now()`` (``created_at``/``modified_at``
+    defaults) is frozen for its duration. Rows created in the same test share a timestamp - order such
+    queries by a tiebreaker (e.g. ``id``) rather than relying on ``created_at`` alone."""
+
+    connection = engine.connect()
+    transaction = connection.begin()
+
+    session = sessionmaker(
+        bind=connection,
+        autoflush=False,
+        join_transaction_mode="create_savepoint",
+    )
+    db = session()
     try:
         yield db
     finally:
         db.close()
+        transaction.rollback()
+        connection.close()

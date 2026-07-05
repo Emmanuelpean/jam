@@ -106,7 +106,7 @@ def check_token_rate_limit(
         db.query(models.UserToken)
         .filter(models.UserToken.owner_id == user.id)
         .filter(models.UserToken.token_type == token_type)
-        .order_by(models.UserToken.created_at.desc())
+        .order_by(models.UserToken.created_at.desc(), models.UserToken.id.desc())
         .first()
     )
     if existing_token:

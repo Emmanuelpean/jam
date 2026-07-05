@@ -33,4 +33,8 @@ def get_apify_balance(
     """Latest Apify cycle balance snapshot (or null if the sync hasn't run yet)."""
 
     assert_admin(current_user)
-    return db.query(models.ApifyBalance).order_by(models.ApifyBalance.created_at.desc()).first()
+    return (
+        db.query(models.ApifyBalance)
+        .order_by(models.ApifyBalance.created_at.desc(), models.ApifyBalance.id.desc())
+        .first()
+    )

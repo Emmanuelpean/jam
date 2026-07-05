@@ -146,7 +146,7 @@ class ScrapedJobRatingService(BaseService[models.JobRatingServiceLog]):
         user_qualification = (
             db.query(models.UserQualification)
             .filter(models.UserQualification.owner_id == user_id)
-            .order_by(models.UserQualification.modified_at.desc())
+            .order_by(models.UserQualification.modified_at.desc(), models.UserQualification.id.desc())
             .first()
         )
         if not user_qualification:

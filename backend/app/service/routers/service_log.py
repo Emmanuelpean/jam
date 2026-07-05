@@ -51,7 +51,7 @@ def list_service_logs(
     if delta_days:
         query = query.filter(model.run_datetime >= dt.datetime.now() - dt.timedelta(days=delta_days))
 
-    query = query.order_by(model.run_datetime.desc())
+    query = query.order_by(model.run_datetime.desc(), model.id.desc())
     if limit:
         query = query.limit(limit)
 
@@ -69,7 +69,7 @@ def latest_service_log(
     assert_admin(current_user)
     model, schema = _resolve_service_log_view(service_name)
 
-    row = db.query(model).order_by(model.run_datetime.desc()).first()
+    row = db.query(model).order_by(model.run_datetime.desc(), model.id.desc()).first()
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No service logs found")
     return schema.model_validate(row, from_attributes=True)

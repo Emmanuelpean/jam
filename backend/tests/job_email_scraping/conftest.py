@@ -52,7 +52,7 @@ def patch_get_indeed_redirected_url(monkeypatch: MonkeyPatch) -> None:
             return f"https://uk.indeed.com/rc/clk/dl?jk={jk}"
         return url
 
-    monkeypatch.setattr(indeed, "get_indeed_redirected_url", mock_get_indeed_redirected_url, raising=False)
+    monkeypatch.setattr(indeed, "get_indeed_redirected_url", mock_get_indeed_redirected_url)
 
 
 @pytest.fixture(scope="session", autouse=True)

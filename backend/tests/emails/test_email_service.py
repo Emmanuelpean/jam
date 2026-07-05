@@ -1,5 +1,6 @@
 """Tests for email service."""
 
+import smtplib
 from unittest.mock import patch, MagicMock
 
 import pytest
@@ -61,19 +62,21 @@ class TestEmailService:
             sender=custom_sender,
         )
 
-        # Verify custom sender is used
+        # The SMTP envelope still uses the authenticated username, but the message's From header
+        # carries the custom sender.
         call_args = mock_server.sendmail.call_args[0]
-        assert call_args[0] == email_svc.email_username  # Still logs in with main sender
-        # But message shows custom sender in the From field
+        assert call_args[0] == email_svc.email_username  # envelope sender / login
+        assert call_args[1] == "test@example.com"  # recipient
+        assert f"From: {custom_sender}" in call_args[2]  # message From header
 
     @patch("app.config.settings.test_mode", False)
     @patch("smtplib.SMTP")
     def test_send_email_smtp_failure(self, mock_smtp: MagicMock, email_svc: EmailService) -> None:
         """Test handling of SMTP connection failure."""
 
-        mock_smtp.side_effect = Exception("SMTP connection failed")
+        mock_smtp.side_effect = smtplib.SMTPException("SMTP connection failed")
 
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(smtplib.SMTPException) as exc_info:
             email_svc.send_email(
                 recipient="test@example.com",
                 subject="Test",
@@ -111,9 +114,9 @@ class TestEmailServiceIMAP:
     def test_connect_imap_failure(self, mock_imap: MagicMock, email_svc: EmailService) -> None:
         """Test IMAP connection failure."""
 
-        mock_imap.side_effect = Exception("Connection failed")
+        mock_imap.side_effect = OSError("Connection failed")
 
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(OSError) as exc_info:
             email_svc._connect_imap()
         assert "Connection failed" in str(exc_info.value)
 
@@ -371,7 +374,7 @@ class TestEmailServiceIMAP:
         # Encoded UTF-8 string
         encoded = "=?utf-8?b?VGVzdCBTdWJqZWN0?="
         result = email_svc._decode_header(encoded)
-        assert "Test Subject" in result or result != ""
+        assert result == "Test Subject"
 
     def test_decode_header_empty(self, email_svc: EmailService) -> None:
         """Test decoding empty header."""

@@ -332,19 +332,19 @@ class TestStaleDemoUserCleanup:
         self,
         engine: Engine,
         demo_engine: Engine,
-        demo_session_raw: Session,
+        demo_session_untracked: Session,
         demo_session_factory_raw: orm.sessionmaker,
     ) -> None:
         """setup_demo_schema must remove stale demo users as part of its startup routine."""
 
         # Insert a stale user directly
-        old_user = create_demo_user(demo_session_raw)
+        old_user = create_demo_user(demo_session_untracked)
         old_user_id = old_user.id
         cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=25)
-        demo_session_raw.query(models.User).filter(models.User.id == old_user_id).update(
+        demo_session_untracked.query(models.User).filter(models.User.id == old_user_id).update(
             {"created_at": cutoff}, synchronize_session=False
         )
-        demo_session_raw.commit()
+        demo_session_untracked.commit()
 
         with (
             patch("app.demo.setup.engine", engine),
@@ -353,7 +353,7 @@ class TestStaleDemoUserCleanup:
         ):
             setup_demo_schema()
 
-        demo_session_raw.expire_all()
+        demo_session_untracked.expire_all()
         assert (
-            demo_session_raw.query(models.User).filter(models.User.id == old_user_id).first() is None
+            demo_session_untracked.query(models.User).filter(models.User.id == old_user_id).first() is None
         ), "setup_demo_schema must delete demo users older than 24 h"

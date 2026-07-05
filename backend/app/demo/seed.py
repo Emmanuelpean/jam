@@ -145,6 +145,7 @@ def seed_demo_data(db: Session, user: models.User) -> None:
         ("application_aggregator_id", aggregators),
         ("recruiter_id", persons),
         ("recruitment_company_id", companies),
+        ("geolocation_id", geolocations),
     )
     jobs = create_db_entries(db, models.Job, job_data)
 
@@ -175,6 +176,7 @@ def seed_demo_data(db: Session, user: models.User) -> None:
     interview_data = override_properties(
         _filter_owner(data_tables.INTERVIEW_DATA, owner_id),
         ("job_id", jobs),
+        ("geolocation_id", geolocations),
     )
     interviews = create_db_entries(db, models.Interview, interview_data)
 

@@ -442,7 +442,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
             db.query(JobEmailScrapingServiceLog)
             .filter(JobEmailScrapingServiceLog.id != service_log.id)
             .filter(JobEmailScrapingServiceLog.is_tour.is_(False))
-            .order_by(JobEmailScrapingServiceLog.run_datetime.desc())
+            .order_by(JobEmailScrapingServiceLog.run_datetime.desc(), JobEmailScrapingServiceLog.id.desc())
             .first()
         )
         if last_run is None:

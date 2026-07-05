@@ -33,4 +33,8 @@ def get_brightdata_balance(
     """Latest Bright Data balance snapshot (or null if the sync hasn't run yet)."""
 
     assert_admin(current_user)
-    return db.query(models.BrightdataBalance).order_by(models.BrightdataBalance.created_at.desc()).first()
+    return (
+        db.query(models.BrightdataBalance)
+        .order_by(models.BrightdataBalance.created_at.desc(), models.BrightdataBalance.id.desc())
+        .first()
+    )

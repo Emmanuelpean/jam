@@ -107,9 +107,7 @@ class TestProcessJobData:
     def test_description_whitespace_only_gives_none(self, scraper) -> None:
         data = {**FULL_JOB_DATA, "job_summary": "   "}
         result = scraper._process_job_data(data)
-        # strip("Show more Show less") on whitespace still leaves whitespace, which is truthy
-        # but we're just verifying it doesn't crash
-        assert result.job.description is not None or result.job.description is None
+        assert result.job.description is None
 
 
 # ----------------------------------------------- SALARY MAPPING ----------------------------------------------

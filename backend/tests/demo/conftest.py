@@ -13,30 +13,69 @@ from app.main import app
 from tests.utils.create_data.data_tables import create_geolocations
 
 
-@pytest.fixture(scope="session")
-def demo_engine(engine):
-    """Engine targeting a 'demo' schema inside the test database."""
+def _recreate_demo_schema(engine) -> None:
+    """Drop and recreate an empty 'demo' schema in the test database."""
 
     with engine.connect() as conn:
         conn.exec_driver_sql("DROP SCHEMA IF EXISTS demo CASCADE")
         conn.exec_driver_sql("CREATE SCHEMA demo")
         conn.commit()
 
+
+@pytest.fixture(scope="session")
+def demo_engine(engine):
+    """Engine targeting a 'demo' schema inside the test database, created once with all tables.
+    Per-test isolation is handled by transaction rollback in ``demo_session_raw`` rather than by
+    recreating the schema, so the expensive DDL runs a single time per worker session."""
+
+    _recreate_demo_schema(engine)
     demo_eng = create_engine(engine.url, connect_args={"options": "-c search_path=demo"})
+    Base.metadata.create_all(bind=demo_eng)
     yield demo_eng
     demo_eng.dispose()
 
 
 @pytest.fixture
-def demo_session_raw(engine, demo_engine):
-    """Clean demo schema session — drops and recreates the demo schema each test."""
+def demo_session_raw(demo_engine):
+    """Per-test demo schema session bound to a single connection inside an outer transaction that is
+    rolled back on teardown - the demo-schema counterpart of the public ``session`` fixture. See its
+    docstring for the ``join_transaction_mode`` savepoint mechanics and the frozen-``now()`` caveat."""
 
-    with engine.connect() as conn:
-        conn.exec_driver_sql("DROP SCHEMA IF EXISTS demo CASCADE")
-        conn.exec_driver_sql("CREATE SCHEMA demo")
-        conn.commit()
+    connection = demo_engine.connect()
+    transaction = connection.begin()
+
+    session = orm.sessionmaker(
+        bind=connection,
+        autoflush=False,
+        join_transaction_mode="create_savepoint",
+    )
+    db = session()
+    try:
+        yield db
+    finally:
+        db.close()
+        transaction.rollback()
+        connection.close()
+
+
+@pytest.fixture
+def demo_session(demo_session_raw):
+    """Demo session pre-seeded with geolocations and AI prompts, mirroring setup_demo_schema in production.
+    Seeds are rolled back with the rest of the test's transaction."""
+
+    create_geolocations(demo_session_raw)
+    seed_ai_prompts(demo_session_raw)
+    return demo_session_raw
+
+
+@pytest.fixture
+def demo_session_untracked(engine, demo_engine):
+    """Non-transactional demo session that commits for real, for tests that exercise the DDL lifecycle
+    (setup_demo_schema drops/recreates the schema and so cannot run inside the rollback fixture).
+    Recreates the schema on entry so the test starts clean and leaves a valid schema for later tests."""
+
+    _recreate_demo_schema(engine)
     Base.metadata.create_all(bind=demo_engine)
-
     session_factory = orm.sessionmaker(autocommit=False, autoflush=False, bind=demo_engine)
     db = session_factory()
     try:
@@ -46,19 +85,9 @@ def demo_session_raw(engine, demo_engine):
 
 
 @pytest.fixture
-def demo_session(demo_session_raw):
-    """Clean session on the demo test DB, with all tables dropped and recreated.
-    Seeds geolocations and AI prompts to mirror what setup_demo_schema does in production."""
-
-    create_geolocations(demo_session_raw)
-    seed_ai_prompts(demo_session_raw)
-    return demo_session_raw
-
-
-@pytest.fixture
-def demo_session_factory_raw(demo_engine, demo_session_raw):
+def demo_session_factory_raw(demo_engine):
     """Session factory for the demo test DB without pre-seeded data.
-    Use with demo_session_raw for tests that call setup_demo_schema."""
+    Use with demo_session_untracked for tests that call setup_demo_schema."""
 
     return orm.sessionmaker(autocommit=False, autoflush=False, bind=demo_engine)
 

@@ -1,6 +1,7 @@
 """HTTP-level tests for the Apify history endpoints (usage history + balance snapshot)."""
 
 import datetime as dt
+import time
 
 import pytest
 from sqlalchemy.orm import Session
@@ -32,6 +33,7 @@ def seeded_apify_balances(session: Session) -> list[models.ApifyBalance]:
     rows = [models.ApifyBalance(limit_usd=50.0), models.ApifyBalance(limit_usd=100.0)]
     for row in rows:
         session.add(row)
+        time.sleep(0.01)
         session.commit()
     return rows
 
@@ -64,7 +66,9 @@ class TestApifyBalance(BaseTest):
     endpoint = "/provider-monitoring-history/apify/balance"
 
     def test_returns_most_recent_snapshot(
-        self, seeded_apify_balances: list[models.ApifyBalance], test_admin_user: FixtureUser
+        self,
+        seeded_apify_balances: list[models.ApifyBalance],
+        test_admin_user: FixtureUser,
     ) -> None:
         resp = test_admin_user.client.get(self.endpoint)
         assert resp.status_code == status.HTTP_200_OK

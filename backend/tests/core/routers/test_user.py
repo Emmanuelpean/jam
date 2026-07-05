@@ -764,10 +764,11 @@ class TestUserQualificationsCRUD(BaseTest):
         # Without an ID
         response = test_regular_user.client.post(f"{self.endpoint}", json={"experience": "Some stuff"})
         assert response.status_code == 200
+        new_id = response.json()["id"]
         assert session.query(models.UserQualification).count() == 1
 
         # With an ID
-        response = test_regular_user.client.post(f"{self.endpoint}", json={"experience": "Some stuff", "id": 1})
+        response = test_regular_user.client.post(f"{self.endpoint}", json={"experience": "Some stuff", "id": new_id})
         assert response.status_code == 200
         assert session.query(models.UserQualification).count() == 1
 

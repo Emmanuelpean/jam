@@ -124,7 +124,7 @@ def claude_query_mock(system_prompt: str, llm_prompt: str, max_tokens: int = 102
 def mock_ai_score(monkeypatch: MonkeyPatch) -> None:
     """Mock claude_query for all tests"""
 
-    monkeypatch.setattr(rating, "claude_query", claude_query_mock, raising=False)
+    monkeypatch.setattr(rating, "claude_query", claude_query_mock)
 
 
 @pytest.fixture

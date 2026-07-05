@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 from app.job_email_scraping.job_scrapers.veganjobs import VeganJobsJobScraper
 
@@ -16,7 +17,7 @@ def make_response(html: str, status_code: int = 200) -> MagicMock:
     mock.content = html.encode("utf-8")
     mock.raise_for_status = MagicMock()
     if status_code >= 400:
-        mock.raise_for_status.side_effect = Exception(f"HTTP {status_code}")
+        mock.raise_for_status.side_effect = requests.HTTPError(f"HTTP {status_code}")
     return mock
 
 
@@ -209,7 +210,7 @@ class TestScrapeJobListing:
 
     def test_http_error_propagates(self, scraper_factory) -> None:
         scraper, mock_session = scraper_factory("slug", status_code=404)
-        with pytest.raises(Exception):
+        with pytest.raises(requests.HTTPError):
             scraper.scrape_job_listing("https://veganjobs.com/job/slug")
 
 

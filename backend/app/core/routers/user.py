@@ -131,7 +131,7 @@ def get_latest_user_qualification(
     entry = (
         db.query(models.UserQualification)
         .filter(models.UserQualification.owner_id == user.id)
-        .order_by(models.UserQualification.modified_at.desc())
+        .order_by(models.UserQualification.modified_at.desc(), models.UserQualification.id.desc())
         .first()
     )
     if not entry:

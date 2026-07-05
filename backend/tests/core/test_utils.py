@@ -110,7 +110,9 @@ class TestSendVerificationWithRateLimit:
         }
 
         # Check that a verification token was created
-        verification_token = session.query(models.UserToken).filter(models.UserToken.id == test_regular_user.id).first()
+        verification_token = (
+            session.query(models.UserToken).filter(models.UserToken.owner_id == test_regular_user.id).first()
+        )
         assert verification_token is not None
         assert verification_token.token is not None
         assert verification_token.created_at is not None
