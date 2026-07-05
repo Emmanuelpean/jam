@@ -1,5 +1,7 @@
 """Tests for Job Scraping routers."""
 
+import uuid
+
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.testclient import TestClient
@@ -8,20 +10,20 @@ from app import models
 from app.job_email_scraping import schemas
 from tests.conftest import CRUDTestBase
 from tests.fixtures.users import FixtureUser
-from tests.utils.test_data.job_scraping import SCRAPING_FILTER_DATA
 
 
-class TestScrapingFilters(CRUDTestBase):
+class TestScrapingFilters(CRUDTestBase[models.ScrapingExclusionFilter]):
     endpoint = "/scraping-exclusion-filters"
     out_schema = schemas.ScrapingFilterOut
-    test_data_ref = "test_scraping_filters"
-    create_data = SCRAPING_FILTER_DATA
-    update_data = {
-        "id": 1,
-        "type": "title",
-    }
-    required_fixture = ["test_scraped_jobs"]
+    update_data = {"type": "title"}
     actions_to_test = ["get_all", "get_one", "post"]
+
+    def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.ScrapingExclusionFilter:
+        overrides.setdefault("value", f"kw-{uuid.uuid4()}")
+        return self.create_scraping_exclusion_filter(session, owner, **overrides)
+
+    def create_payload(self, session: Session, owner: FixtureUser) -> dict:
+        return {"type": "title", "operator": "contains", "value": f"kw-{uuid.uuid4()}"}
 
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 

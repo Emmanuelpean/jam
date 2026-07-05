@@ -66,20 +66,30 @@ class TestScrapedJobsByEmail(BaseTest):
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-class TestScrapedJobCRUDRegularUser(CRUDTestBase):
+class TestScrapedJobCRUDRegularUser(CRUDTestBase[models.ScrapedJob]):
     endpoint = "/scraped-jobs"
     out_schema = schemas.ScrapedJobOut
-    test_data_ref = "test_scraped_jobs"
-    update_data = {
-        "id": 1,
-        "is_imported": True,
-    }
+    update_data = {"is_imported": True}
     actions_to_test = ["put"]
 
-    def test_get_all(self, authorised_user: FixtureUser, test_scraped_jobs: list[models.ScrapedJob]) -> None:
+    def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.ScrapedJob:
+        return self.create_scraped_job(session, owner, **overrides)
+
+    @staticmethod
+    def _seed_scraped_jobs(user: FixtureUser, total: int = 50, past_deadline: int = 3) -> None:
+        """Create `total` active, un-imported scraped jobs for the user, `past_deadline` of which have a
+        deadline in the past (so they are filtered out unless show_past_deadline is set)."""
+
+        past = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)
+        for _ in range(total - past_deadline):
+            user.create_scraped_job()
+        for _ in range(past_deadline):
+            user.create_scraped_job(deadline=past)
+
+    def test_get_all(self, authorised_user: FixtureUser) -> None:
         """Test retrieving all scraped jobs for the authorised user that are scraped, not imported, active"""
 
-        self.get_user_data(authorised_user, test_scraped_jobs)
+        self._seed_scraped_jobs(authorised_user)
         client = authorised_user.client
         response = client.get(self.endpoint + "/paged/?page=1&page_size=5&show_past_deadline=true")
         assert response.status_code == status.HTTP_200_OK
@@ -87,12 +97,10 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         assert scraped_jobs["total"] == 50
         assert len(scraped_jobs["items"]) == 5
 
-    def test_get_all_no_past_deadlines(
-        self, authorised_user: FixtureUser, test_scraped_jobs: list[models.ScrapedJob]
-    ) -> None:
+    def test_get_all_no_past_deadlines(self, authorised_user: FixtureUser) -> None:
         """Test retrieving all scraped jobs for the authorised user that are scraped, not imported, active"""
 
-        self.get_user_data(authorised_user, test_scraped_jobs)
+        self._seed_scraped_jobs(authorised_user)
         client = authorised_user.client
         response = client.get(self.endpoint + "/paged/?page=1&page_size=5")
         assert response.status_code == status.HTTP_200_OK
@@ -138,10 +146,10 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["total"] == 3
 
-    def test_get_all_ids_only(self, authorised_user: FixtureUser, test_scraped_jobs: list[models.ScrapedJob]) -> None:
+    def test_get_all_ids_only(self, authorised_user: FixtureUser) -> None:
         """Test ids_only=true returns just a list of integer IDs instead of full objects"""
 
-        self.get_user_data(authorised_user, test_scraped_jobs)
+        self._seed_scraped_jobs(authorised_user)
         client = authorised_user.client
         response = client.get(self.endpoint + "/paged/?page=0&page_size=10&show_past_deadline=true&ids_only=true")
         assert response.status_code == status.HTTP_200_OK
@@ -632,12 +640,14 @@ class TestFavouritesOnly:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-class TestScrapedJobCRUDAdminUser(CRUDTestBase):
+class TestScrapedJobCRUDAdminUser(CRUDTestBase[models.ScrapedJob]):
     endpoint = "/scraped-jobs"
     out_schema = schemas.ScrapedJobOut
-    test_data_ref = "test_scraped_jobs"
     actions_to_test = ["get_all"]
     admin_only = True
+
+    def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.ScrapedJob:
+        return self.create_scraped_job(session, owner, **overrides)
 
 
 class TestScrapedJobRegularUserUndefinedMethods:

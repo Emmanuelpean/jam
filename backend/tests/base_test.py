@@ -95,6 +95,15 @@ class BaseTest:
         return create_db_entries(session, models.Company, data)[0]
 
     @staticmethod
+    def create_geolocation(session, **kwargs) -> models.Geolocation:
+        """Create a geolocation cache row (not user-owned; `query` is unique).
+        :param session: database session
+        :param kwargs: additional Geolocation fields (e.g. query, latitude, longitude, city)"""
+
+        data = {"query": f"Location {uuid.uuid4()}", **kwargs}
+        return create_db_entries(session, models.Geolocation, data)[0]
+
+    @staticmethod
     def create_aggregator(session, owner, **kwargs) -> models.Aggregator:
         """Create an aggregator owned by the given user.
         :param session: database session
@@ -352,7 +361,7 @@ class BaseTest:
         self,
         test_data: Any,
         response_data: list[dict] | dict,
-        out_schema,
+        out_schema=None,
     ):
         """Check that the output of a test matches the test data."""
         if isinstance(test_data, list) and isinstance(response_data, list):
@@ -372,7 +381,7 @@ class BaseTest:
             if key[0] != "_" and key in response_data:
                 response_value = getattr(response_data, key)
                 if isinstance(value, models.Base) or isinstance(value, list):
-                    self.check_output(value, response_value)
+                    self.check_output(value, response_value, out_schema)
                 elif key == "date" and isinstance(value, str):
                     if isinstance(response_value, dt.datetime):
                         parsed_value = dt.datetime.fromisoformat(value)

@@ -1,19 +1,23 @@
 """Tests for Job Raring routers."""
 
 import pytest
+from sqlalchemy.orm import Session
 
+from app import models
 from app.job_rating import schemas
 from tests.fixtures.users import FixtureUser
 from tests.conftest import CRUDTestBase, make_undefined_method_params
 
 
-class TestJobRatingCRUDAdminUser(CRUDTestBase):
+class TestJobRatingCRUDAdminUser(CRUDTestBase[models.JobRating]):
 
     endpoint = "/job-ratings"
     out_schema = schemas.JobRatingOut
-    test_data_ref = "test_job_ratings"
     actions_to_test = ["get_all"]
     admin_only = True
+
+    def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.JobRating:
+        return self.create_job_rating(session, owner, **overrides)
 
 
 class TestJobRatingUndefinedMethods:

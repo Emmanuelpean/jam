@@ -4,6 +4,7 @@ and authentication workflows in the application. These tests ensure that the API
 operations behave as expected under various scenarios, including successful requests and erroneous cases.
 """
 
+import uuid
 from datetime import datetime, timezone, timedelta
 from unittest.mock import Mock
 
@@ -19,16 +20,27 @@ from app.core.schemas import UserQualificationOut, UserOut
 from app.utilities import security
 from tests.base_test import BaseTest
 from tests.conftest import CRUDTestBase
+from tests.fixtures.users import FixtureUser
 
 
-class TestUsersCRUD(CRUDTestBase):
+class TestUsersCRUD(CRUDTestBase[models.User]):
     endpoint = "/users"
     admin_only = True
     create_schema = schemas.UserCreate
     out_schema = schemas.UserOut
-    test_data_ref = "test_users"
-    create_data = [{"email": "test1@test.com", "password": "testpassword1", "premium": {"job_scraping_active": False}}]
-    update_data = {"id": 1, "email": "newemail@test.com", "premium": {"job_scraping_active": False}}
+    update_data = {"email": "newemail@test.com", "premium": {"job_scraping_active": False}}
+
+    def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.User:
+        overrides.setdefault("email", f"user_{uuid.uuid4().hex}@test.com")
+        overrides.setdefault("password", "testpassword1")
+        return self.create_user(session, **overrides)
+
+    def create_payload(self, session: Session, owner: FixtureUser) -> dict:
+        return {
+            "email": f"user_{uuid.uuid4().hex}@test.com",
+            "password": "testpassword1",
+            "premium": {"job_scraping_active": False},
+        }
 
     def test_update_admin_incorrect_email_format(
         self, test_regular_user: models.User, test_admin_user: models.User

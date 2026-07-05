@@ -1,17 +1,13 @@
 """User fixtures for testing."""
 
-import datetime as dt
 from typing import TYPE_CHECKING, cast
 
 import pytest
 
 from app import models
-from app.core.models import TokenType
-from app.utilities.security import hash_token
 from tests.base_test import BaseTest
 from tests.utils import test_data as td
-from tests.utils.create_data.core import create_users, create_user_qualifications
-from tests.utils.create_data.utils import owner_aligned
+from tests.utils.create_data.core import create_users
 
 if TYPE_CHECKING:
     from starlette.testclient import TestClient
@@ -209,49 +205,6 @@ def test_toast_user_2(session, request) -> "FixtureUser":
 def test_gmail_user(session, request) -> "FixtureUser":
     """Fixture for a registered user with a gmail address (e.g. a forwarding-email originator)."""
     return _single_user(session, request, {"email": "test@gmail.com", "password": "test123"})
-
-
-@pytest.fixture
-def test_users(test_regular_user, test_admin_user) -> list["FixtureUser"]:
-    """Positional user list for the job-scraping suite (indexed and iterated by the scraper tests)."""
-    return [test_regular_user, test_admin_user]
-
-
-@pytest.fixture
-def test_unverified_token_user(session) -> "FixtureUser":
-    """Fixture to create an unverified user with a verification token."""
-    plain_token = "testtoken"
-    hashed_token = hash_token(plain_token)
-
-    user_data = dict(
-        email="unverified@test.com",
-        password="password",
-        is_verified=False,
-        is_active=True,
-    )
-
-    user = create_users(session, [user_data])[0]
-
-    verification_token = models.UserToken(
-        owner_id=user.id,
-        token=hashed_token,
-        token_type=TokenType.EMAIL_VERIFICATION,
-        created_at=dt.datetime.now(dt.timezone.utc),
-    )
-    session.add(verification_token)
-    session.commit()
-
-    user.plain_verification_token = plain_token
-    return cast("FixtureUser", user)
-
-
-@pytest.fixture
-def test_user_qualifications(
-    session, test_regular_user, test_admin_user, test_toast_user_1, test_toast_user_2
-) -> list[models.UserQualification]:
-    """Create test user qualifications (owned by owner_ids 1, 2, 6, 7)."""
-    users = owner_aligned({1: test_regular_user, 2: test_admin_user, 6: test_toast_user_1, 7: test_toast_user_2})
-    return create_user_qualifications(session, users)
 
 
 @pytest.fixture
