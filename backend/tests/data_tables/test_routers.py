@@ -36,7 +36,7 @@ class TestKeywordCRUD(CRUDTestBase[models.Keyword]):
 
     def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.Keyword:
         overrides.setdefault("name", f"Keyword {uuid.uuid4()}")
-        return self.create_keyword(session, owner, **overrides)
+        return owner.create_keyword(**overrides)
 
     def create_payload(self, session: Session, owner: FixtureUser) -> dict:
         return {"name": f"New Keyword {uuid.uuid4()}"}
@@ -54,7 +54,7 @@ class TestAggregatorCRUD(CRUDTestBase[models.Aggregator]):
 
     def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.Aggregator:
         overrides.setdefault("name", f"Aggregator {uuid.uuid4()}")
-        return self.create_aggregator(session, owner, **overrides)
+        return owner.create_aggregator(**overrides)
 
     def create_payload(self, session: Session, owner: FixtureUser) -> dict:
         return {"name": f"New Aggregator {uuid.uuid4()}", "url": "https://new-aggregator.com"}
@@ -69,13 +69,13 @@ class TestCompanyCRUD(CRUDTestBase[models.Company]):
 
     def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.Company:
         overrides.setdefault("name", f"Company {uuid.uuid4()}")
-        return self.create_company(session, owner, **overrides)
+        return owner.create_company(**overrides)
 
     def create_payload(self, session: Session, owner: FixtureUser) -> dict:
         return {"name": f"New Company {uuid.uuid4()}"}
 
     def test_get_all_specific_company(self, session: Session, test_regular_user: FixtureUser) -> None:
-        self.create_company(session, test_regular_user, name="Tech Corp", url="https://techcorp.com")
+        test_regular_user.create_company(name="Tech Corp", url="https://techcorp.com")
         response = test_regular_user.client.get(f"{self.endpoint}/?url=https://techcorp.com")
         assert response.status_code == 200
         companies = response.json()
@@ -94,7 +94,7 @@ class TestCompanyCRUD(CRUDTestBase[models.Company]):
     def test_get_all_specific_id_not_owned(
         self, session: Session, test_regular_user: FixtureUser, test_admin_user: FixtureUser
     ) -> None:
-        company = self.create_company(session, test_regular_user)
+        company = test_regular_user.create_company()
         response = test_admin_user.client.get(f"{self.endpoint}/?id={company.id}")
         assert response.status_code == 200
         assert len(response.json()) == 0
@@ -110,7 +110,7 @@ class TestFileCRUD(CRUDTestBase[models.File]):
     def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.File:
         overrides.setdefault("filename", f"cv_{uuid.uuid4()}.pdf")
         overrides.setdefault("content", base64.b64encode(b"test content").decode())
-        return self.create_file(session, owner, **overrides)
+        return owner.create_file(**overrides)
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
@@ -314,14 +314,14 @@ class TestPersonCRUD(CRUDTestBase[models.Person]):
     too_long_create_data = {"first_name": "x" * (COLUMN_LIMITS.first_name + 1), "last_name": "Test"}
 
     def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.Person:
-        return self.create_person(session, owner, **overrides)
+        return owner.create_person(**overrides)
 
     def create_payload(self, session: Session, owner: FixtureUser) -> dict:
-        company = self.create_company(session, owner)
+        company = owner.create_company()
         return {"first_name": "New", "last_name": "Person", "company_id": company.id}
 
     def create_unauthorised_payload(self, session: Session, owner: FixtureUser, other: FixtureUser) -> dict:
-        company = self.create_company(session, other)
+        company = other.create_company()
         return {"first_name": "New", "last_name": "Person", "company_id": company.id}
 
 
@@ -337,14 +337,14 @@ class TestJobCRUD(CRUDTestBase[models.Job]):
 
     def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.Job:
         overrides.setdefault("title", f"Job {uuid.uuid4()}")
-        return self.create_job(session, owner, **overrides)
+        return owner.create_job(**overrides)
 
     def create_payload(self, session: Session, owner: FixtureUser) -> dict:
-        company = self.create_company(session, owner)
+        company = owner.create_company()
         return {"title": "New Job", "company_id": company.id}
 
     def create_unauthorised_payload(self, session: Session, owner: FixtureUser, other: FixtureUser) -> dict:
-        company = self.create_company(session, other)
+        company = other.create_company()
         return {"title": "New Job", "company_id": company.id}
 
 
@@ -356,15 +356,15 @@ class TestJobApplicationUpdateCRUD(CRUDTestBase[models.JobApplicationUpdate]):
     too_long_create_data = {"date": "2024-01-01T00:00:00", "job_id": 1, "type": "x" * (COLUMN_LIMITS.update_type + 1)}
 
     def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.JobApplicationUpdate:
-        job = self.create_job(session, owner)
-        return self.create_job_application_update(session, owner, job, **overrides)
+        job = owner.create_job()
+        return owner.create_job_application_update(job, **overrides)
 
     def create_payload(self, session: Session, owner: FixtureUser) -> dict:
-        job = self.create_job(session, owner)
+        job = owner.create_job()
         return {"job_id": job.id, "type": "received", "date": "2024-01-01T00:00:00"}
 
     def create_unauthorised_payload(self, session: Session, owner: FixtureUser, other: FixtureUser) -> dict:
-        job = self.create_job(session, other)
+        job = other.create_job()
         return {"job_id": job.id, "type": "received", "date": "2024-01-01T00:00:00"}
 
 
@@ -383,15 +383,15 @@ class TestInterviewCRUD(CRUDTestBase[models.Interview]):
     }
 
     def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.Interview:
-        job = self.create_job(session, owner)
-        return self.create_interview(session, owner, job, **overrides)
+        job = owner.create_job()
+        return owner.create_interview(job, **overrides)
 
     def create_payload(self, session: Session, owner: FixtureUser) -> dict:
-        job = self.create_job(session, owner)
+        job = owner.create_job()
         return {"job_id": job.id, "type": "technical", "date": "2024-01-20T10:00:00"}
 
     def create_unauthorised_payload(self, session: Session, owner: FixtureUser, other: FixtureUser) -> dict:
-        job = self.create_job(session, other)
+        job = other.create_job()
         return {"job_id": job.id, "type": "technical", "date": "2024-01-20T10:00:00"}
 
 
@@ -403,15 +403,15 @@ class TestSpeculativeApplicationCRUD(CRUDTestBase[models.SpeculativeApplication]
     too_long_create_data = {"date": "2024-01-01T00:00:00", "company_id": 1, "note": "x" * (COLUMN_LIMITS.note + 1)}
 
     def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.SpeculativeApplication:
-        company = self.create_company(session, owner, name=f"Company {uuid.uuid4()}")
-        return self.create_speculative_application(session, owner, company, **overrides)
+        company = owner.create_company(name=f"Company {uuid.uuid4()}")
+        return owner.create_speculative_application(company, **overrides)
 
     def create_payload(self, session: Session, owner: FixtureUser) -> dict:
-        company = self.create_company(session, owner, name=f"Company {uuid.uuid4()}")
+        company = owner.create_company(name=f"Company {uuid.uuid4()}")
         return {"company_id": company.id}
 
     def create_unauthorised_payload(self, session: Session, owner: FixtureUser, other: FixtureUser) -> dict:
-        company = self.create_company(session, other, name=f"Company {uuid.uuid4()}")
+        company = other.create_company(name=f"Company {uuid.uuid4()}")
         return {"company_id": company.id}
 
 
@@ -424,7 +424,7 @@ class TestGeolocationCascade(BaseTest):
     def test_deleting_job_does_not_delete_geolocation(self, session: Session, test_regular_user: FixtureUser) -> None:
         """Deleting a job with a geolocation does not delete the geolocation."""
         geolocation = self.create_geolocation(session)
-        job = self.create_job(session, test_regular_user, geolocation_id=geolocation.id)
+        job = test_regular_user.create_job(geolocation_id=geolocation.id)
 
         session.delete(job)
         session.commit()
@@ -435,7 +435,7 @@ class TestGeolocationCascade(BaseTest):
     def test_deleting_geolocation_sets_job_fk_to_null(self, session: Session, test_regular_user: FixtureUser) -> None:
         """Deleting a geolocation sets the job's geolocation_id to NULL (ondelete=SET NULL)."""
         geolocation = self.create_geolocation(session)
-        job = self.create_job(session, test_regular_user, geolocation_id=geolocation.id)
+        job = test_regular_user.create_job(geolocation_id=geolocation.id)
 
         session.delete(geolocation)
         session.commit()
@@ -448,8 +448,8 @@ class TestGeolocationCascade(BaseTest):
     ) -> None:
         """Deleting an interview with a geolocation does not delete the geolocation."""
         geolocation = self.create_geolocation(session)
-        job = self.create_job(session, test_regular_user)
-        interview = self.create_interview(session, test_regular_user, job, geolocation_id=geolocation.id)
+        job = test_regular_user.create_job()
+        interview = test_regular_user.create_interview(job, geolocation_id=geolocation.id)
 
         session.delete(interview)
         session.commit()
@@ -462,8 +462,8 @@ class TestGeolocationCascade(BaseTest):
     ) -> None:
         """Deleting a geolocation sets the interview's geolocation_id to NULL (ondelete=SET NULL)."""
         geolocation = self.create_geolocation(session)
-        job = self.create_job(session, test_regular_user)
-        interview = self.create_interview(session, test_regular_user, job, geolocation_id=geolocation.id)
+        job = test_regular_user.create_job()
+        interview = test_regular_user.create_interview(job, geolocation_id=geolocation.id)
 
         session.delete(geolocation)
         session.commit()

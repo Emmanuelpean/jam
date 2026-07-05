@@ -73,7 +73,7 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase[models.ScrapedJob]):
     actions_to_test = ["put"]
 
     def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.ScrapedJob:
-        return self.create_scraped_job(session, owner, **overrides)
+        return owner.create_scraped_job(**overrides)
 
     @staticmethod
     def _seed_scraped_jobs(user: FixtureUser, total: int = 50, past_deadline: int = 3) -> None:
@@ -647,7 +647,7 @@ class TestScrapedJobCRUDAdminUser(CRUDTestBase[models.ScrapedJob]):
     admin_only = True
 
     def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.ScrapedJob:
-        return self.create_scraped_job(session, owner, **overrides)
+        return owner.create_scraped_job(**overrides)
 
 
 class TestScrapedJobRegularUserUndefinedMethods:

@@ -348,7 +348,7 @@ class TestEmailVerification(BaseTest):
         assert verified_user.is_verified is True
 
         # The verification token was consumed
-        assert self.get_token(session, verified_user, TokenType.EMAIL_VERIFICATION) is None
+        assert verified_user.get_token(TokenType.EMAIL_VERIFICATION) is None
 
     def test_verify_email_invalid_token(self, client: TestClient) -> None:
         """Test email verification with invalid token."""

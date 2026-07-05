@@ -17,7 +17,7 @@ class TestJobRatingCRUDAdminUser(CRUDTestBase[models.JobRating]):
     admin_only = True
 
     def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.JobRating:
-        return self.create_job_rating(session, owner, **overrides)
+        return owner.create_job_rating(**overrides)
 
 
 class TestJobRatingUndefinedMethods:

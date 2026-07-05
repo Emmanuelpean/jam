@@ -7,18 +7,12 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app import models
-from app.core.models import TokenType
-from app.core.utils import generate_token
 from tests.utils.create_data.core import create_users
 from tests.utils.create_data.utils import create_db_entries
 
 
 class BaseTest:
-    """Base class for all backend tests.
-
-    Provides utility methods to create database entries directly, so individual tests can set up
-    only the data they need instead of relying on shared fixtures.
-    """
+    """Base class for all backend tests"""
 
     @staticmethod
     def create_user(session, **kwargs) -> models.User:
@@ -29,7 +23,7 @@ class BaseTest:
         return create_users(session, [kwargs])[0]
 
     @staticmethod
-    def get_by_id(session, model, entry_id: int):
+    def get_by_id(session: Session, model, entry_id: int):
         """Get an entry of the given model by id, or None if not found.
         :param session: database session
         :param model: model class to query (e.g. models.Job)
@@ -56,45 +50,6 @@ class BaseTest:
         return create_db_entries(session, models.Setting, {"name": name, "value": value, **kwargs})[0]
 
     @staticmethod
-    def create_user_qualification(session, owner, **kwargs) -> models.UserQualification:
-        """Create a user qualification owned by the given user.
-        :param session: database session
-        :param owner: user that owns the qualification
-        :param kwargs: additional UserQualification fields (e.g. education, experience)"""
-
-        return create_db_entries(session, models.UserQualification, {"owner_id": owner.id, **kwargs})[0]
-
-    @staticmethod
-    def create_job(session, owner, **kwargs) -> models.Job:
-        """Create a job owned by the given user.
-        :param session: database session
-        :param owner: user that owns the job
-        :param kwargs: additional Job fields (e.g. title, company_id)"""
-
-        data = {"owner_id": owner.id, "title": "Test Job", **kwargs}
-        return create_db_entries(session, models.Job, data)[0]
-
-    @staticmethod
-    def create_person(session, owner, **kwargs) -> models.Person:
-        """Create a person owned by the given user.
-        :param session: database session
-        :param owner: user that owns the person
-        :param kwargs: additional Person fields (e.g. first_name, last_name, email)"""
-
-        data = {"owner_id": owner.id, "first_name": "John", "last_name": "Doe", **kwargs}
-        return create_db_entries(session, models.Person, data)[0]
-
-    @staticmethod
-    def create_company(session, owner, **kwargs) -> models.Company:
-        """Create a company owned by the given user.
-        :param session: database session
-        :param owner: user that owns the company
-        :param kwargs: additional Company fields (e.g. name, url, description)"""
-
-        data = {"owner_id": owner.id, "name": "Acme Corp", **kwargs}
-        return create_db_entries(session, models.Company, data)[0]
-
-    @staticmethod
     def create_geolocation(session, **kwargs) -> models.Geolocation:
         """Create a geolocation cache row (not user-owned; `query` is unique).
         :param session: database session
@@ -104,94 +59,7 @@ class BaseTest:
         return create_db_entries(session, models.Geolocation, data)[0]
 
     @staticmethod
-    def create_aggregator(session, owner, **kwargs) -> models.Aggregator:
-        """Create an aggregator owned by the given user.
-        :param session: database session
-        :param owner: user that owns the aggregator
-        :param kwargs: additional Aggregator fields (e.g. name, url)"""
-
-        data = {"owner_id": owner.id, "name": "LinkedIn", "url": "https://linkedin.com", **kwargs}
-        return create_db_entries(session, models.Aggregator, data)[0]
-
-    @staticmethod
-    def create_keyword(session, owner, name: str = "Python", **kwargs) -> models.Keyword:
-        """Create a keyword owned by the given user.
-        :param session: database session
-        :param owner: user that owns the keyword
-        :param name: keyword name
-        :param kwargs: additional Keyword fields"""
-
-        data = {"owner_id": owner.id, "name": name, **kwargs}
-        return create_db_entries(session, models.Keyword, data)[0]
-
-    @staticmethod
-    def create_interview(session, owner, job, **kwargs) -> models.Interview:
-        """Create an interview for the given job.
-        :param session: database session
-        :param owner: user that owns the interview
-        :param job: Job the interview belongs to
-        :param kwargs: additional Interview fields (e.g. type, note, date)"""
-
-        data = {"owner_id": owner.id, "job_id": job.id, "type": "technical", **kwargs}
-        return create_db_entries(session, models.Interview, data)[0]
-
-    @staticmethod
-    def create_job_application_update(session, owner, job, **kwargs) -> models.JobApplicationUpdate:
-        """Create a job application update for the given job.
-        :param session: database session
-        :param owner: user that owns the update
-        :param job: Job the update belongs to
-        :param kwargs: additional JobApplicationUpdate fields (e.g. type, note, date)"""
-
-        data = {"owner_id": owner.id, "job_id": job.id, "type": "received", **kwargs}
-        return create_db_entries(session, models.JobApplicationUpdate, data)[0]
-
-    @staticmethod
-    def create_speculative_application(session, owner, company, **kwargs) -> models.SpeculativeApplication:
-        """Create a speculative application against the given company.
-        :param session: database session
-        :param owner: user that owns the application
-        :param company: Company the application targets
-        :param kwargs: additional SpeculativeApplication fields (e.g. note, contact_email, date)"""
-
-        data = {"owner_id": owner.id, "company_id": company.id, **kwargs}
-        return create_db_entries(session, models.SpeculativeApplication, data)[0]
-
-    @staticmethod
-    def create_file(session, owner, **kwargs) -> models.File:
-        """Create a file (e.g. CV or cover letter) owned by the given user.
-        :param session: database session
-        :param owner: user that owns the file
-        :param kwargs: additional File fields (e.g. filename, content, type, size, file_type)"""
-
-        data = {
-            "owner_id": owner.id,
-            "filename": "cv.pdf",
-            "content": "base64content",
-            "type": "application/pdf",
-            "size": 1024,
-            **kwargs,
-        }
-        return create_db_entries(session, models.File, data)[0]
-
-    @staticmethod
-    def create_forwarding_confirmation_link(session, owner, **kwargs) -> models.ForwardingConfirmationLink:
-        """Create a forwarding confirmation link owned by the given user.
-        :param session: database session
-        :param owner: user that owns the link
-        :param kwargs: additional ForwardingConfirmationLink fields (e.g. url, platform, is_used)"""
-
-        data = {
-            "owner_id": owner.id,
-            "email_external_id": "ext_123",
-            "url": "https://example.com/confirm",
-            "platform": "gmail",
-            **kwargs,
-        }
-        return create_db_entries(session, models.ForwardingConfirmationLink, data)[0]
-
-    @staticmethod
-    def create_service_log(session, **kwargs) -> models.JobEmailScrapingServiceLog:
+    def create_email_scraping_service_log(session, **kwargs) -> models.JobEmailScrapingServiceLog:
         """Create a job email scraping service log.
         :param session: database session
         :param kwargs: additional JobEmailScrapingServiceLog fields (e.g. run_duration, run_datetime)"""
@@ -226,7 +94,10 @@ class BaseTest:
 
     @staticmethod
     def create_service_error(
-        session, error_type: str = "RuntimeError", message: str = "boom", **kwargs
+        session,
+        error_type: str = "RuntimeError",
+        message: str = "boom",
+        **kwargs,
     ) -> models.ServiceError:
         """Create a unified service-error row (not user-owned).
         :param session: database session
@@ -237,116 +108,6 @@ class BaseTest:
 
         data = {"error_type": error_type, "message": message, **kwargs}
         return create_db_entries(session, models.ServiceError, data)[0]
-
-    @classmethod
-    def create_job_email(cls, session, owner, service_log=None, **kwargs) -> models.JobEmail:
-        """Create a job alert email owned by the given user.
-        :param session: database session
-        :param owner: user that owns the job email
-        :param service_log: JobEmailScrapingServiceLog the email belongs to; created if not given
-        :param kwargs: additional JobEmail fields (e.g. subject, sender, platform)"""
-
-        if service_log is None:
-            service_log = cls.create_service_log(session)
-        data = {
-            "owner_id": owner.id,
-            "service_log_id": service_log.id,
-            "external_email_id": str(uuid.uuid4()),
-            "subject": "Test Job Alert",
-            "sender": "jobs@linkedin.com",
-            "date_received": dt.datetime.now(dt.timezone.utc),
-            "platform": "linkedin",
-            "body": "Test email body",
-            **kwargs,
-        }
-        return create_db_entries(session, models.JobEmail, data)[0]
-
-    @classmethod
-    def create_scraped_job(cls, session, owner, service_log=None, **kwargs) -> models.ScrapedJob:
-        """Create a scraped job owned by the given user.
-        :param session: database session
-        :param owner: user that owns the scraped job
-        :param service_log: JobEmailScrapingServiceLog the job belongs to; created if not given
-        :param kwargs: additional ScrapedJob fields (e.g. title, platform, external_job_id)"""
-
-        if service_log is None:
-            service_log = cls.create_service_log(session)
-        data = {
-            "owner_id": owner.id,
-            "service_log_id": service_log.id,
-            "external_job_id": str(uuid.uuid4()),
-            "platform": "linkedin",
-            **kwargs,
-        }
-        return create_db_entries(session, models.ScrapedJob, data)[0]
-
-    @classmethod
-    def create_job_rating(cls, session, owner, scraped_job=None, user_qualification=None, **kwargs) -> models.JobRating:
-        """Create a job rating owned by the given user for a scraped job and user qualification.
-        :param session: database session
-        :param owner: user that owns the job rating
-        :param scraped_job: ScrapedJob being rated; created if not given
-        :param user_qualification: UserQualification used to rate the job; created if not given
-        :param kwargs: additional JobRating fields (e.g. overall_score, llm_model)"""
-
-        if scraped_job is None:
-            scraped_job = cls.create_scraped_job(session, owner)
-        if user_qualification is None:
-            user_qualification = cls.create_user_qualification(session, owner, experience="Test")
-        data = {
-            "owner_id": owner.id,
-            "scraped_job_id": scraped_job.id,
-            "user_qualification_id": user_qualification.id,
-            "llm_model": "claude",
-            **kwargs,
-        }
-        return create_db_entries(session, models.JobRating, data)[0]
-
-    @staticmethod
-    def create_scraping_exclusion_filter(session, owner, **kwargs) -> models.ScrapingExclusionFilter:
-        """Create a scraping exclusion filter owned by the given user.
-        :param session: database session
-        :param owner: user that owns the filter
-        :param kwargs: additional filter fields (e.g. type, operator, value, is_active)"""
-
-        data = {"owner_id": owner.id, "type": "title", "operator": "contains", "value": "Some", **kwargs}
-        return create_db_entries(session, models.ScrapingExclusionFilter, data)[0]
-
-    @staticmethod
-    def create_scraping_favourite_filter(session, owner, **kwargs) -> models.ScrapingFavouriteFilter:
-        """Create a scraping favourite filter owned by the given user.
-        :param session: database session
-        :param owner: user that owns the filter
-        :param kwargs: additional filter fields (e.g. type, operator, value, is_active)"""
-
-        data = {"owner_id": owner.id, "type": "title", "operator": "contains", "value": "Python", **kwargs}
-        return create_db_entries(session, models.ScrapingFavouriteFilter, data)[0]
-
-    @staticmethod
-    def get_token(session, owner, token_type) -> models.UserToken | None:
-        """Get the most recent token of the given type for the given user.
-        :param session: database session
-        :param owner: user that owns the token
-        :param token_type: TokenType to filter by"""
-
-        return (
-            session.query(models.UserToken)
-            .filter(models.UserToken.owner_id == owner.id)
-            .filter(models.UserToken.token_type == token_type)
-            .order_by(models.UserToken.created_at.desc())
-            .first()
-        )
-
-    @staticmethod
-    def create_token(session, owner, token_type: TokenType, **kwargs) -> tuple[str, models.UserToken]:
-        """Generate a token of the given type for the given user (replaces existing tokens of that type).
-        :param session: database session
-        :param owner: user that owns the token
-        :param token_type: TokenType to generate
-        :param kwargs: additional generate_token args (e.g. pending_email)
-        :return: tuple of (plain_token, UserToken)"""
-
-        return generate_token(owner.id, token_type, session, **kwargs)
 
     @staticmethod
     def _create_maintenance_setting(session: Session, minutes_offset: int) -> models.Setting:

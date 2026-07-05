@@ -15,7 +15,7 @@ def _create_tour_entities(user: FixtureUser, session: Session) -> dict:
     """Create a minimal set of is_tour=True entities for the given user.
     Returns a dict of created objects keyed by type."""
 
-    service_log = BaseTest.create_service_log(session, is_tour=True)
+    service_log = BaseTest.create_email_scraping_service_log(session, is_tour=True)
     email = user.create_job_email(service_log=service_log, is_tour=True)
     scraped_job = user.create_scraped_job(
         service_log=service_log, is_processed=True, is_scraped=True, title="Tour Job", is_tour=True

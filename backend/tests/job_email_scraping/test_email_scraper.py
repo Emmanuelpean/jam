@@ -30,7 +30,7 @@ class TestSaveEmailToDb(BaseTest):
         """Test saving a new email successfully"""
 
         service = JobEmailScrapingService()
-        service_log = self.create_service_log(session)
+        service_log = self.create_email_scraping_service_log(session)
 
         for email_id in resources.TEST_EMAILS:
             result_email, is_created = service.get_and_save_email_to_db(
@@ -1109,7 +1109,7 @@ class TestExtractForwardingEmailConfirmation(BaseTest):
         """Test successful extraction and saving of a forwarding confirmation link"""
 
         service = JobEmailScrapingService()
-        service_log = self.create_service_log(session)
+        service_log = self.create_email_scraping_service_log(session)
 
         email_id = "fwd_confirm_1"
         email_data = self._make_forwarding_email(test_gmail_user.email, email_id)
@@ -1134,7 +1134,7 @@ class TestExtractForwardingEmailConfirmation(BaseTest):
         """Test that an already-processed email is skipped without creating duplicates"""
 
         service = JobEmailScrapingService()
-        service_log = self.create_service_log(session)
+        service_log = self.create_email_scraping_service_log(session)
 
         email_id = "fwd_confirm_existing"
         email_data = self._make_forwarding_email(test_gmail_user.email, email_id)
@@ -1164,7 +1164,7 @@ class TestExtractForwardingEmailConfirmation(BaseTest):
     def test_no_emails_found_logs_error(self, session: Session) -> None:
         """Test that when get_email_ids raises an exception, a service error is logged"""
         service = JobEmailScrapingService()
-        service_log = self.create_service_log(session)
+        service_log = self.create_email_scraping_service_log(session)
 
         with patch.object(service, "get_email_ids", side_effect=Exception("IMAP error")):
             service.extract_forwarding_email_confirmation(session, service_log)
@@ -1181,7 +1181,7 @@ class TestExtractForwardingEmailConfirmation(BaseTest):
     def test_no_link_in_body_skips(self, test_gmail_user: FixtureUser, session: Session) -> None:
         """Test that an email without a valid confirmation link is skipped"""
         service = JobEmailScrapingService()
-        service_log = self.create_service_log(session)
+        service_log = self.create_email_scraping_service_log(session)
 
         email_id = "fwd_no_link"
         email_data = self._make_forwarding_email_no_link(test_gmail_user.email, email_id)
@@ -1199,7 +1199,7 @@ class TestExtractForwardingEmailConfirmation(BaseTest):
     def test_user_not_found_skips(self, session: Session) -> None:
         """Test that when the gmail originator is not a registered user, the link is skipped"""
         service = JobEmailScrapingService()
-        service_log = self.create_service_log(session)
+        service_log = self.create_email_scraping_service_log(session)
 
         email_id = "fwd_unknown_user"
         email_data = self._make_forwarding_email("unknown_user@gmail.com", email_id)
@@ -1217,7 +1217,7 @@ class TestExtractForwardingEmailConfirmation(BaseTest):
     def test_multiple_emails_processed(self, test_gmail_user: FixtureUser, session: Session) -> None:
         """Test that multiple forwarding confirmation emails are all processed"""
         service = JobEmailScrapingService()
-        service_log = self.create_service_log(session)
+        service_log = self.create_email_scraping_service_log(session)
 
         email_id_1 = "fwd_multi_1"
         email_id_2 = "fwd_multi_2"
@@ -1242,7 +1242,7 @@ class TestExtractForwardingEmailConfirmation(BaseTest):
     def test_idempotent_on_rerun(self, test_gmail_user: FixtureUser, session: Session) -> None:
         """Test that running extraction twice does not create duplicate entries"""
         service = JobEmailScrapingService()
-        service_log = self.create_service_log(session)
+        service_log = self.create_email_scraping_service_log(session)
 
         email_id = "fwd_idempotent"
         email_data = self._make_forwarding_email(test_gmail_user.email, email_id)
@@ -1265,38 +1265,38 @@ class TestComputeLookbackDays(BaseTest):
     def test_first_run_uses_max(self, session: Session) -> None:
         """With no prior run, the window is the maximum."""
         service = JobEmailScrapingService()
-        current = self.create_service_log(session, run_datetime=dt.datetime.now())
+        current = self.create_email_scraping_service_log(session, run_datetime=dt.datetime.now())
         assert service.compute_lookback_days(session, current, 1, 10) == 10
 
     def test_gap_within_bounds_uses_elapsed(self, session: Session) -> None:
         """A gap between the bounds returns the elapsed days."""
         service = JobEmailScrapingService()
         now = dt.datetime.now()
-        self.create_service_log(session, run_datetime=now - dt.timedelta(days=4))
-        current = self.create_service_log(session, run_datetime=now)
+        self.create_email_scraping_service_log(session, run_datetime=now - dt.timedelta(days=4))
+        current = self.create_email_scraping_service_log(session, run_datetime=now)
         assert service.compute_lookback_days(session, current, 1, 10) == pytest.approx(4, abs=1e-6)
 
     def test_small_gap_clamped_to_min(self, session: Session) -> None:
         """A gap below the minimum is clamped up to the minimum."""
         service = JobEmailScrapingService()
         now = dt.datetime.now()
-        self.create_service_log(session, run_datetime=now - dt.timedelta(hours=3))
-        current = self.create_service_log(session, run_datetime=now)
+        self.create_email_scraping_service_log(session, run_datetime=now - dt.timedelta(hours=3))
+        current = self.create_email_scraping_service_log(session, run_datetime=now)
         assert service.compute_lookback_days(session, current, 1, 10) == 1
 
     def test_large_gap_clamped_to_max(self, session: Session) -> None:
         """A gap above the maximum is clamped down to the maximum."""
         service = JobEmailScrapingService()
         now = dt.datetime.now()
-        self.create_service_log(session, run_datetime=now - dt.timedelta(days=30))
-        current = self.create_service_log(session, run_datetime=now)
+        self.create_email_scraping_service_log(session, run_datetime=now - dt.timedelta(days=30))
+        current = self.create_email_scraping_service_log(session, run_datetime=now)
         assert service.compute_lookback_days(session, current, 1, 10) == 10
 
     def test_tour_runs_are_ignored(self, session: Session) -> None:
         """Tour runs are not treated as the previous run."""
         service = JobEmailScrapingService()
         now = dt.datetime.now()
-        self.create_service_log(session, run_datetime=now - dt.timedelta(days=2))
-        self.create_service_log(session, run_datetime=now - dt.timedelta(hours=1), is_tour=True)
-        current = self.create_service_log(session, run_datetime=now)
+        self.create_email_scraping_service_log(session, run_datetime=now - dt.timedelta(days=2))
+        self.create_email_scraping_service_log(session, run_datetime=now - dt.timedelta(hours=1), is_tour=True)
+        current = self.create_email_scraping_service_log(session, run_datetime=now)
         assert service.compute_lookback_days(session, current, 1, 10) == pytest.approx(2, abs=1e-6)

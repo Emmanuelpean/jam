@@ -20,7 +20,7 @@ class TestScrapingFilters(CRUDTestBase[models.ScrapingExclusionFilter]):
 
     def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> models.ScrapingExclusionFilter:
         overrides.setdefault("value", f"kw-{uuid.uuid4()}")
-        return self.create_scraping_exclusion_filter(session, owner, **overrides)
+        return owner.create_scraping_exclusion_filter(**overrides)
 
     def create_payload(self, session: Session, owner: FixtureUser) -> dict:
         return {"type": "title", "operator": "contains", "value": f"kw-{uuid.uuid4()}"}

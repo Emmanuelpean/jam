@@ -14,7 +14,7 @@ from tests.fixtures.users import FixtureUser
 def seeded_service_errors(session: Session) -> list[models.ServiceError]:
     """Seed a mix of acknowledged / unacknowledged errors across services."""
 
-    scraping_log = BaseTest.create_service_log(session)
+    scraping_log = BaseTest.create_email_scraping_service_log(session)
     rating_log = BaseTest.create_job_rating_service_log(session)
 
     return [
