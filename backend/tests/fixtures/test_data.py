@@ -3,6 +3,7 @@
 import datetime as dt
 
 import pytest
+from sqlalchemy.orm import Session
 
 from app import models
 from tests.utils.create_data.core import create_settings, create_ai_prompts
@@ -38,7 +39,7 @@ def test_settings(session) -> list[models.Setting]:
 
 
 @pytest.fixture
-def test_ai_prompts(session) -> tuple[models.AiSystemPrompt, models.AiJobPromptTemplate]:
+def test_ai_prompts(session: Session) -> tuple[models.AiSystemPrompt, models.AiJobPromptTemplate]:
     """Create test AI prompts for job rating"""
     return create_ai_prompts(session)
 
@@ -47,15 +48,21 @@ def test_ai_prompts(session) -> tuple[models.AiSystemPrompt, models.AiJobPromptT
 
 
 @pytest.fixture
-def test_keywords(session, test_users) -> list[models.Keyword]:
-    """Create test keyword data"""
-    return create_keywords(session, test_users)
+def owner_users(test_regular_user, test_admin_user) -> list[models.User]:
+    """Positional owner list for the data factories (owner_id 1 = regular, 2 = admin)."""
+    return [test_regular_user, test_admin_user]
 
 
 @pytest.fixture
-def test_aggregators(session, test_users) -> list[models.Aggregator]:
+def test_keywords(session, owner_users) -> list[models.Keyword]:
+    """Create test keyword data"""
+    return create_keywords(session, owner_users)
+
+
+@pytest.fixture
+def test_aggregators(session, owner_users) -> list[models.Aggregator]:
     """Create test aggregator data"""
-    return create_aggregators(session, test_users)
+    return create_aggregators(session, owner_users)
 
 
 @pytest.fixture
@@ -65,15 +72,15 @@ def test_geolocations(session) -> list[models.Geolocation]:
 
 
 @pytest.fixture
-def test_companies(session, test_users) -> list[models.Company]:
+def test_companies(session, owner_users) -> list[models.Company]:
     """Create test company data"""
-    return create_companies(session, test_users)
+    return create_companies(session, owner_users)
 
 
 @pytest.fixture
-def test_persons(session, test_users, test_companies) -> list[models.Person]:
+def test_persons(session, owner_users, test_companies) -> list[models.Person]:
     """Create test person data"""
-    return create_people(session, test_users, test_companies)
+    return create_people(session, owner_users, test_companies)
 
 
 @pytest.fixture
@@ -86,23 +93,23 @@ def persons_unauthorised_data(test_companies) -> tuple[list[dict], int]:
 
 @pytest.fixture
 def test_persons_unauthorised(
-    session, test_users, test_companies, persons_unauthorised_data
+    session, owner_users, test_companies, persons_unauthorised_data
 ) -> tuple[list[models.Person], int]:
     """Create test person data with incorrect company_id for access control testing"""
     data, owner_id = persons_unauthorised_data
-    return create_people(session, test_users, test_companies, data), owner_id
+    return create_people(session, owner_users, test_companies, data), owner_id
 
 
 @pytest.fixture
-def test_files(session, test_users) -> list[models.File]:
+def test_files(session, owner_users) -> list[models.File]:
     """Create test files for job applications"""
-    return create_files(session, test_users)
+    return create_files(session, owner_users)
 
 
 @pytest.fixture
 def test_jobs(
     session,
-    test_users,
+    owner_users,
     test_companies,
     test_keywords,
     test_persons,
@@ -115,7 +122,7 @@ def test_jobs(
         session,
         test_keywords,
         test_persons,
-        test_users,
+        owner_users,
         test_companies,
         test_aggregators,
         test_files,
@@ -125,7 +132,7 @@ def test_jobs(
 
 @pytest.fixture
 def jobs_unauthorised_data(
-    session, test_users, test_companies, test_keywords, test_persons, test_aggregators, test_files
+    session, owner_users, test_companies, test_keywords, test_persons, test_aggregators, test_files
 ) -> tuple[list[dict], int, list[dict], list[dict]]:
     """Create test person data with incorrect company_id, keyword ids and person ids for access control testing"""
     owner_id = 1
@@ -145,7 +152,7 @@ def jobs_unauthorised_data(
 @pytest.fixture
 def test_jobs_unauthorised(
     session,
-    test_users,
+    owner_users,
     test_companies,
     test_keywords,
     test_persons,
@@ -159,7 +166,7 @@ def test_jobs_unauthorised(
         session,
         test_keywords,
         test_persons,
-        test_users,
+        owner_users,
         test_companies,
         test_aggregators,
         test_files,
@@ -172,13 +179,13 @@ def test_jobs_unauthorised(
 
 
 @pytest.fixture
-def test_interviews(session, test_users, test_jobs, test_persons, test_geolocations) -> list[models.Interview]:
+def test_interviews(session, owner_users, test_jobs, test_persons, test_geolocations) -> list[models.Interview]:
     """Create test interview data"""
-    return create_interviews(session, test_persons, test_users, test_jobs, test_geolocations)
+    return create_interviews(session, test_persons, owner_users, test_jobs, test_geolocations)
 
 
 @pytest.fixture
-def interviews_unauthorised_data(session, test_users, test_jobs, test_persons) -> tuple[list[dict], int, list[dict]]:
+def interviews_unauthorised_data(session, owner_users, test_jobs, test_persons) -> tuple[list[dict], int, list[dict]]:
     """Create test interview data with incorrect job_id for access control testing"""
     owner_id = 1
     job_id = find_non_owned_entry(test_jobs, owner_id)
@@ -189,14 +196,14 @@ def interviews_unauthorised_data(session, test_users, test_jobs, test_persons) -
 
 @pytest.fixture
 def test_interviews_unauthorised(
-    session, test_users, test_jobs, test_persons, interviews_unauthorised_data
+    session, owner_users, test_jobs, test_persons, interviews_unauthorised_data
 ) -> tuple[list[models.Interview], int]:
     """Create test interview data with incorrect job_id for access control testing"""
     data, owner_id, interview_interviewer_mappings = interviews_unauthorised_data
     interviews = create_interviews(
         session,
         test_persons,
-        test_users,
+        owner_users,
         test_jobs,
         [],
         data,
@@ -206,13 +213,13 @@ def test_interviews_unauthorised(
 
 
 @pytest.fixture
-def test_job_application_updates(session, test_users, test_jobs) -> list[models.JobApplicationUpdate]:
+def test_job_application_updates(session, owner_users, test_jobs) -> list[models.JobApplicationUpdate]:
     """Create test job application update data"""
-    return create_job_application_updates(session, test_users, test_jobs)
+    return create_job_application_updates(session, owner_users, test_jobs)
 
 
 @pytest.fixture
-def job_application_updates_unauthorised_data(session, test_users, test_jobs) -> tuple[list[dict], int]:
+def job_application_updates_unauthorised_data(session, owner_users, test_jobs) -> tuple[list[dict], int]:
     """Create test job application update data with incorrect job_id for access control testing"""
     owner_id = 1
     job_id = find_non_owned_entry(test_jobs, owner_id)
@@ -230,17 +237,17 @@ def job_application_updates_unauthorised_data(session, test_users, test_jobs) ->
 
 @pytest.fixture
 def test_job_application_updates_unauthorised(
-    session, test_users, test_jobs, job_application_updates_unauthorised_data
+    session, owner_users, test_jobs, job_application_updates_unauthorised_data
 ) -> tuple[list[models.JobApplicationUpdate], int]:
     """Create test job application update data with incorrect job_id for access control testing"""
     data, owner_id = job_application_updates_unauthorised_data
-    updates = create_job_application_updates(session, test_users, test_jobs, data)
+    updates = create_job_application_updates(session, owner_users, test_jobs, data)
     return updates, owner_id
 
 
 @pytest.fixture
 def test_speculative_applications(
-    session, test_users, test_persons, test_companies
+    session, owner_users, test_persons, test_companies
 ) -> list[models.SpeculativeApplication]:
     """Create test speculative application data"""
-    return create_speculative_applications(session, test_users, test_persons)
+    return create_speculative_applications(session, owner_users, test_persons)

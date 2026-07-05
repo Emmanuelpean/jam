@@ -1,6 +1,6 @@
 """Tests for LinkedinBrightdataJobScraper._process_job_data and LinkedIn-specific init."""
 
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -27,15 +27,9 @@ FULL_JOB_DATA = {
 
 
 @pytest.fixture
-def scraper():
-    """A LinkedinBrightdataJobScraper with mocked settings."""
-    with (
-        patch("app.job_email_scraping.job_scrapers.brightdata.settings") as mock_settings,
-        patch("app.job_email_scraping.job_scrapers.brightdata.requests"),
-    ):
-        mock_settings.brightdata_api_key = "test_api_key"
-        mock_settings.brightdata_linkedin_dataset_id = "ds_linkedin"
-        yield LinkedinBrightdataJobScraper(["4384261503"])
+def scraper(mock_brightdata):
+    """A LinkedinBrightdataJobScraper with BrightData requests/settings patched (via mock_brightdata)."""
+    return LinkedinBrightdataJobScraper(["4384261503"])
 
 
 # ---------------------------------------------------- INIT ----------------------------------------------------
@@ -55,17 +49,11 @@ class TestInit:
     def test_api_key_loaded_from_settings(self, scraper) -> None:
         assert scraper.api_key == "test_api_key"
 
-    def test_dataset_id_loaded_from_settings(self, scraper) -> None:
-        assert scraper.dataset_id == "ds_linkedin"
+    def test_dataset_id_set_on_class(self, scraper) -> None:
+        assert scraper.dataset_id == "gd_lpfll7v5hcqtkxl6l"
 
-    def test_max_attempts_scaled_by_job_count(self) -> None:
-        with (
-            patch("app.job_email_scraping.job_scrapers.brightdata.settings") as mock_settings,
-            patch("app.job_email_scraping.job_scrapers.brightdata.requests"),
-        ):
-            mock_settings.brightdata_api_key = "key"
-            mock_settings.brightdata_linkedin_dataset_id = "ds"
-            scraper = LinkedinBrightdataJobScraper(["id1", "id2", "id3"])
+    def test_max_attempts_scaled_by_job_count(self, mock_brightdata) -> None:
+        scraper = LinkedinBrightdataJobScraper(["id1", "id2", "id3"])
         assert scraper.max_attempts == 60 * 3
 
 
@@ -236,31 +224,25 @@ class TestMissingFields:
 class TestScrapeJob:
 
     @patch("app.job_email_scraping.job_scrapers.brightdata.time.sleep")
-    def test_scrape_job_returns_job_results(self, _mock_sleep) -> None:
+    def test_scrape_job_returns_job_results(self, _mock_sleep, mock_brightdata) -> None:
         """scrape_job chains snapshot → wait → retrieve → process and returns JobResults."""
-        with (
-            patch("app.job_email_scraping.job_scrapers.brightdata.settings") as mock_settings,
-            patch("app.job_email_scraping.job_scrapers.brightdata.requests") as mock_requests,
-        ):
-            mock_settings.brightdata_api_key = "key"
-            mock_settings.brightdata_linkedin_dataset_id = "ds"
 
-            def mock_response(status_code, json_data=None, text=""):
-                """Returns a mock response object with the given status code and data."""
-                r = __import__("unittest.mock", fromlist=["MagicMock"]).MagicMock()
-                r.status_code = status_code
-                r.json.return_value = json_data
-                r.text = text
-                return r
+        def mock_response(status_code, json_data=None, text=""):
+            """Returns a mock response object with the given status code and data."""
+            r = MagicMock()
+            r.status_code = status_code
+            r.json.return_value = json_data
+            r.text = text
+            return r
 
-            mock_requests.post.return_value = mock_response(200, {"snapshot_id": "snap_1"})
-            mock_requests.get.side_effect = [
-                mock_response(200, {"status": "ready"}),
-                mock_response(200, [FULL_JOB_DATA]),
-            ]
+        mock_brightdata.post.return_value = mock_response(200, {"snapshot_id": "snap_1"})
+        mock_brightdata.get.side_effect = [
+            mock_response(200, {"status": "ready"}),
+            mock_response(200, [FULL_JOB_DATA]),
+        ]
 
-            scraper = LinkedinBrightdataJobScraper(["4384261503"])
-            results = scraper.scrape_job()
+        scraper = LinkedinBrightdataJobScraper(["4384261503"])
+        results = scraper.scrape_job()
 
         assert len(results) == 1
         assert isinstance(results[0], JobResult)

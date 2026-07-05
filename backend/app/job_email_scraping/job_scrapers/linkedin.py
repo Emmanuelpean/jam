@@ -9,6 +9,7 @@ class LinkedinBrightdataJobScraper(BrightdataJobScraper):
 
     base_url = "https://www.linkedin.com/jobs/view/"
     name = "linkedin"
+    dataset_id = "gd_lpfll7v5hcqtkxl6l"
     poll_interval: int | float = 2
     max_attempts: int = 60
 

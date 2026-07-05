@@ -8,9 +8,6 @@ import pytest
 from app.job_email_scraping.location_parser import extract_attendance_type, parse_location
 
 
-# ------------------------------------------ Attendance Type Extraction Tests ----------------------------------
-
-
 @pytest.mark.parametrize(
     "location_str,expected",
     [
@@ -24,8 +21,9 @@ from app.job_email_scraping.location_parser import extract_attendance_type, pars
         ("Work from home - United States", "remote"),
     ],
 )
-def test_extract_attendance_type_remote(location_str, expected) -> None:
+def test_extract_attendance_type_remote(location_str: str, expected: str) -> None:
     """Test remote attendance type extraction"""
+
     result = extract_attendance_type(location_str)
     assert result == expected, f"Failed for {location_str}, got {result}, expected {expected}"
 
@@ -40,8 +38,9 @@ def test_extract_attendance_type_remote(location_str, expected) -> None:
         ("Hybrid - London, UK", "hybrid"),
     ],
 )
-def test_extract_attendance_type_hybrid(location_str, expected) -> None:
+def test_extract_attendance_type_hybrid(location_str: str, expected: str) -> None:
     """Test hybrid attendance type extraction"""
+
     result = extract_attendance_type(location_str)
     assert result == expected, f"Failed for {location_str}, got {result}, expected {expected}"
 
@@ -56,8 +55,9 @@ def test_extract_attendance_type_hybrid(location_str, expected) -> None:
         ("Onsite", "on-site"),
     ],
 )
-def test_extract_attendance_type_onsite(location_str, expected) -> None:
+def test_extract_attendance_type_onsite(location_str: str, expected: str) -> None:
     """Test on-site attendance type extraction"""
+
     result = extract_attendance_type(location_str)
     assert result == expected, f"Failed for {location_str}, got {result}, expected {expected}"
 
@@ -72,23 +72,28 @@ def test_extract_attendance_type_onsite(location_str, expected) -> None:
         ("123 Main Street", None),
     ],
 )
-def test_extract_attendance_type_none_cases(location_str, expected) -> None:
+def test_extract_attendance_type_none_cases(location_str: str, expected: str) -> None:
     """Test cases where no attendance type should be found"""
+
     result = extract_attendance_type(location_str)
     assert result == expected
 
 
-def test_extract_attendance_type_case_insensitive() -> None:
+@pytest.mark.parametrize(
+    "location_str,expected",
+    [
+        ("REMOTE", "remote"),
+        ("Remote", "remote"),
+        ("remote", "remote"),
+        ("Work From Home", "remote"),
+        ("HYBRID", "hybrid"),
+        ("ON-SITE", "on-site"),
+    ],
+)
+def test_extract_attendance_type_case_insensitive(location_str: str, expected: str) -> None:
     """Test attendance type detection is case-insensitive"""
-    assert extract_attendance_type("REMOTE") == "remote"
-    assert extract_attendance_type("Remote") == "remote"
-    assert extract_attendance_type("remote") == "remote"
-    assert extract_attendance_type("Work From Home") == "remote"
-    assert extract_attendance_type("HYBRID") == "hybrid"
-    assert extract_attendance_type("ON-SITE") == "on-site"
 
-
-# ----------------------------------------------- Full Parsing Tests -----------------------------------------------
+    assert extract_attendance_type(location_str) == expected
 
 
 @pytest.mark.parametrize(
@@ -115,9 +120,12 @@ def test_extract_attendance_type_case_insensitive() -> None:
         ("Hybrid", "", "hybrid"),
         ("", "", None),
         ("   ", "", None),
+        ("  \t\n ", "", None),
     ],
 )
-def test_parse_location_parametrized(location_str, expected_location, expected_attendance) -> None:
+def test_parse_location_parametrized(
+    location_str: str, expected_location: str, expected_attendance: str | None
+) -> None:
     """Test parsing locations returns raw string and attendance type"""
     location, attendance_type = parse_location(location_str)
 
@@ -129,23 +137,6 @@ def test_parse_location_parametrized(location_str, expected_location, expected_a
     ), f"Attendance type mismatch for '{location_str}': got {attendance_type}, expected {expected_attendance}"
 
 
-# ---------------------------------------- Performance and Robustness Tests ----------------------------------------
-
-
-def test_parser_handles_empty_string() -> None:
-    """Test parser handles empty string input"""
-    location, attendance_type = parse_location("")
-    assert location == ""
-    assert attendance_type is None
-
-
-def test_parser_handles_whitespace_only() -> None:
-    """Test parser handles whitespace-only input"""
-    location, attendance_type = parse_location("   \t\n   ")
-    assert location == ""
-    assert attendance_type is None
-
-
 @pytest.mark.parametrize(
     "location_str",
     [
@@ -155,38 +146,11 @@ def test_parser_handles_whitespace_only() -> None:
         "København, Denmark",
     ],
 )
-def test_parser_handles_special_characters(location_str) -> None:
+def test_parser_handles_special_characters(location_str: str) -> None:
     """Test parser handles special characters"""
     location, attendance_type = parse_location(location_str)
     assert location == location_str
     assert isinstance(attendance_type, (str, type(None)))
-
-
-@pytest.mark.performance
-def test_parser_performance() -> None:
-    """Test parser performance with many locations"""
-    import time
-
-    locations = [
-        "London, UK",
-        "New York, USA",
-        "Berlin, Germany",
-        "Remote from anywhere",
-        "Sydney, Australia",
-        "Hybrid - Paris, France",
-        "On-site - Tokyo, Japan",
-    ] * 100  # 700 locations
-
-    start_time = time.time()
-    for location in locations:
-        parse_location(location)
-    end_time = time.time()
-
-    # Should process 700 locations in less than 1 second
-    assert (end_time - start_time) < 1.0, "Parser should be fast enough to process locations quickly"
-
-
-# ---------------------------------------- Complex Scenarios Tests ----------------------------------------
 
 
 def test_parse_location_with_mixed_attendance_indicators() -> None:

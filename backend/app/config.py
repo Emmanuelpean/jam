@@ -71,8 +71,6 @@ class Settings(BaseSettings):
 
     # BrightData
     brightdata_api_key: str
-    brightdata_linkedin_dataset_id: str
-    brightdata_indeed_dataset_id: str
 
     # OpenAI
     openai_api_key: str

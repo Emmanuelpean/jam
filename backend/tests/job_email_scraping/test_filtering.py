@@ -1,8 +1,7 @@
 """Tests for job email scraping filtering logic."""
 
-import uuid
-
 import pytest
+from sqlalchemy.orm import Session
 
 from app.job_email_scraping.filtering import (
     apply_rule_to_values,
@@ -11,6 +10,7 @@ from app.job_email_scraping.filtering import (
     rule_to_sql_predicate,
 )
 from app.models import ScrapedJob, ScrapingExclusionFilter
+from tests.fixtures.users import FixtureUser
 
 
 class TestApplyRuleToValues:
@@ -46,7 +46,14 @@ class TestApplyRuleToValues:
             ("anything", "anything", "unknown_op", False, False),
         ],
     )
-    def test_apply_rule_to_values(self, value, rule_val, op, case_sensitive, expected) -> None:
+    def test_apply_rule_to_values(
+        self,
+        value: str | float | int,
+        rule_val: str,
+        op: str,
+        case_sensitive: bool,
+        expected: bool,
+    ) -> None:
         """Test various combinations of values, rule values, operators, and case sensitivity."""
 
         result = apply_rule_to_values(job_value=value, rule_value=rule_val, op=op, case_sensitive=case_sensitive)
@@ -55,31 +62,19 @@ class TestApplyRuleToValues:
 
 class TestRuleToSqlPredicate:
 
-    @staticmethod
-    def create_filter(session, **kwargs) -> ScrapingExclusionFilter:
-        """Helper to create and persist a ScrapingFilter."""
+    def test_contains_case_insensitive(self) -> None:
+        """Case-insensitive contains compiles to a lowered LIKE predicate."""
 
-        rule = ScrapingExclusionFilter(owner_id=1, **kwargs)
-        session.add(rule)
-        session.commit()
-        return rule
-
-    def test_contains_case_insensitive(self, test_users, session) -> None:
-        # Simulate ScrapedJob.title column with a SQLAlchemy column()
-
-        rule = self.create_filter(session, type="title", operator="contains", value="python", case_sensitive=False)
+        rule = ScrapingExclusionFilter(type="title", operator="contains", value="python", case_sensitive=False)
         predicate = rule_to_sql_predicate(rule)
 
-        # Ensure predicate is a SQL expression and uses ILIKE/LOWER semantics via contains
         expected = "lower(scraped_job.title) IS NOT NULL AND (lower(scraped_job.title) LIKE '%' || :lower_1 || '%')"
         assert str(predicate) == expected
 
-    def test_equals_numeric_salary(self, test_users, session) -> None:
+    def test_equals_numeric_salary(self) -> None:
         """Test numeric equality operator compiles correctly."""
 
-        rule = self.create_filter(
-            session, type="salary_min", operator="less_than", value="100000", case_sensitive=False
-        )
+        rule = ScrapingExclusionFilter(type="salary_min", operator="less_than", value="100000", case_sensitive=False)
         predicate = rule_to_sql_predicate(rule)
         assert str(predicate) == "scraped_job.salary_min IS NOT NULL AND scraped_job.salary_min < :salary_min_1"
 
@@ -138,12 +133,17 @@ class TestRuleToSqlPredicate:
             ),
         ],
     )
-    def test_operator_predicates(self, type_, operator, value, case_sensitive, expected) -> None:
+    def test_operator_predicates(
+        self,
+        type_: str,
+        operator: str,
+        value: str,
+        case_sensitive: bool,
+        expected: str,
+    ) -> None:
         """Each supported operator compiles to the expected SQL predicate."""
 
-        rule = ScrapingExclusionFilter(
-            type=type_, operator=operator, value=value, case_sensitive=case_sensitive
-        )
+        rule = ScrapingExclusionFilter(type=type_, operator=operator, value=value, case_sensitive=case_sensitive)
         assert str(rule_to_sql_predicate(rule)) == expected
 
     def test_unsupported_operator_raises(self) -> None:
@@ -170,7 +170,7 @@ class TestJobMatchesRulePython:
             ("Python Developer", "Developer", "ends_with", False, True),
         ],
     )
-    def test_string_operators(self, title, value, op, case_sensitive, expected) -> None:
+    def test_string_operators(self, title: str, value: str, op: str, case_sensitive: bool, expected: bool) -> None:
         job = ScrapedJob(title=title)
         rule = ScrapingExclusionFilter(type="title", operator=op, value=value, case_sensitive=case_sensitive)
         assert job_matches_rule_python(job, rule) is expected
@@ -184,7 +184,7 @@ class TestJobMatchesRulePython:
             (50000, "60000", "greater_than", False),
         ],
     )
-    def test_numeric_operators(self, salary, value, op, expected) -> None:
+    def test_numeric_operators(self, salary: int, value: str, op: str, expected: bool) -> None:
         job = ScrapedJob(salary_min=salary)
         rule = ScrapingExclusionFilter(type="salary_min", operator=op, value=value, case_sensitive=False)
         assert job_matches_rule_python(job, rule) is expected
@@ -202,81 +202,45 @@ class TestJobMatchesRulePython:
 
 class TestIsJobFilteredOut:
 
-    @staticmethod
-    def _make_scraped_job(session, owner_id, service_log_id, **kwargs) -> ScrapedJob:
-        defaults = dict(
-            external_job_id=str(uuid.uuid4()), platform="linkedin", title="Python Developer", company="Acme"
-        )
-        defaults.update(kwargs)
-        job = ScrapedJob(owner_id=owner_id, service_log_id=service_log_id, **defaults)
-        session.add(job)
-        session.commit()
-        session.refresh(job)
-        return job
-
-    @staticmethod
-    def _make_scraping_filter(session, owner_id, **kwargs) -> ScrapingExclusionFilter:
-        defaults = dict(is_active=True)
-        defaults.update(kwargs)
-        f = ScrapingExclusionFilter(owner_id=owner_id, **defaults)
-        session.add(f)
-        session.commit()
-        session.refresh(f)
-        return f
-
-    def test_matching_rule_returns_filter(self, session, test_users, test_job_scraping_service_log) -> None:
-        job = self._make_scraped_job(
-            session, test_users[0].id, test_job_scraping_service_log.id, title="Python Developer"
-        )
-        rule = self._make_scraping_filter(
-            session, test_users[0].id, type="title", operator="contains", value="python", case_sensitive=False
+    def test_matching_rule_returns_filter(self, session: Session, test_regular_user: FixtureUser) -> None:
+        job = test_regular_user.create_scraped_job(title="Python Developer")
+        rule = test_regular_user.create_scraping_exclusion_filter(
+            type="title", operator="contains", value="python", case_sensitive=False
         )
         result = is_job_filtered_out(session, job)
         assert result is not None
         assert result.id == rule.id
 
-    def test_no_matching_rule_returns_none(self, session, test_users, test_job_scraping_service_log) -> None:
-        job = self._make_scraped_job(
-            session, test_users[0].id, test_job_scraping_service_log.id, title="Java Developer"
-        )
-        self._make_scraping_filter(
-            session, test_users[0].id, type="title", operator="contains", value="python", case_sensitive=False
+    def test_no_matching_rule_returns_none(self, session: Session, test_regular_user: FixtureUser) -> None:
+        job = test_regular_user.create_scraped_job(title="Java Developer")
+        test_regular_user.create_scraping_exclusion_filter(
+            type="title", operator="contains", value="python", case_sensitive=False
         )
         assert is_job_filtered_out(session, job) is None
 
-    def test_inactive_rule_is_ignored(self, session, test_users, test_job_scraping_service_log) -> None:
-        job = self._make_scraped_job(
-            session, test_users[0].id, test_job_scraping_service_log.id, title="Python Developer"
-        )
-        self._make_scraping_filter(
-            session,
-            test_users[0].id,
-            type="title",
-            operator="contains",
-            value="python",
-            case_sensitive=False,
-            is_active=False,
+    def test_inactive_rule_is_ignored(self, session: Session, test_regular_user: FixtureUser) -> None:
+        job = test_regular_user.create_scraped_job(title="Python Developer")
+        test_regular_user.create_scraping_exclusion_filter(
+            type="title", operator="contains", value="python", case_sensitive=False, is_active=False
         )
         assert is_job_filtered_out(session, job) is None
 
-    def test_rule_from_other_owner_is_ignored(self, session, test_users, test_job_scraping_service_log) -> None:
-        job = self._make_scraped_job(
-            session, test_users[0].id, test_job_scraping_service_log.id, title="Python Developer"
-        )
-        self._make_scraping_filter(
-            session, test_users[1].id, type="title", operator="contains", value="python", case_sensitive=False
+    def test_rule_from_other_owner_is_ignored(
+        self, session: Session, test_regular_user: FixtureUser, test_admin_user: FixtureUser
+    ) -> None:
+        job = test_regular_user.create_scraped_job(title="Python Developer")
+        test_admin_user.create_scraping_exclusion_filter(
+            type="title", operator="contains", value="python", case_sensitive=False
         )
         assert is_job_filtered_out(session, job) is None
 
-    def test_first_matching_rule_wins(self, session, test_users, test_job_scraping_service_log) -> None:
-        job = self._make_scraped_job(
-            session, test_users[0].id, test_job_scraping_service_log.id, title="Python Developer", company="Acme"
+    def test_first_matching_rule_wins(self, session: Session, test_regular_user: FixtureUser) -> None:
+        job = test_regular_user.create_scraped_job(title="Python Developer", company="Acme")
+        rule1 = test_regular_user.create_scraping_exclusion_filter(
+            type="title", operator="contains", value="python", case_sensitive=False
         )
-        rule1 = self._make_scraping_filter(
-            session, test_users[0].id, type="title", operator="contains", value="python", case_sensitive=False
-        )
-        self._make_scraping_filter(
-            session, test_users[0].id, type="company", operator="equals", value="acme", case_sensitive=False
+        test_regular_user.create_scraping_exclusion_filter(
+            type="company", operator="equals", value="acme", case_sensitive=False
         )
         result = is_job_filtered_out(session, job)
         assert result is not None

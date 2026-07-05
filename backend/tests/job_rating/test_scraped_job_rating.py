@@ -2,17 +2,21 @@
 
 import datetime as dt
 
+import pytest
+from sqlalchemy.orm import Session
+
 from app import models
 from app.config import settings
-from app.job_email_scraping.email_parsers import Platform
 from app.job_rating import scraped_job_rating
-from app.job_rating.prompts import create_system_prompt_with_profile
+from app.job_rating.prompts import Prompts, create_system_prompt_with_profile
 from app.job_rating.scraped_job_rating import (
     ScrapedJobRatingService,
     ensure_length_limit,
     get_rating_active_users,
     get_user_unrated_scraped_jobs,
 )
+from tests.base_test import BaseTest
+from tests.fixtures.users import FixtureUser
 
 
 class TestEnsureLengthLimit:
@@ -49,14 +53,14 @@ class TestEnsureLengthLimit:
     def test_text_describer_is_capitalised_in_note(self) -> None:
         """Test that the text describer is capitalised in the truncation note."""
 
-        _, note = ensure_length_limit("title", "x" * 50, 20)
+        note = ensure_length_limit("title", "x" * 50, 20)[1]
         assert note is not None
         assert note.startswith("Title")
 
 
 class TestGetRatingActiveUsers:
 
-    def test_returned_users_meet_all_criteria(self, session, test_users) -> None:
+    def test_returned_users_meet_all_criteria(self, session: Session, test_regular_user: FixtureUser) -> None:
         """Test that all returned users are active, verified, and have active job-rating premium."""
 
         users = get_rating_active_users(session)
@@ -68,30 +72,31 @@ class TestGetRatingActiveUsers:
             assert user.premium.is_active
             assert user.premium.job_rating_active
 
-    def test_excludes_inactive_users(self, session, test_users) -> None:
+    def test_excludes_inactive_users(
+        self, session: Session, test_regular_user: FixtureUser, test_inactive_user: FixtureUser
+    ) -> None:
         """Test that inactive users are not returned."""
 
-        [inactive_user] = [u for u in test_users if not u.is_active]
         users = get_rating_active_users(session)
-        assert inactive_user.id not in [u.id for u in users]
+        assert test_inactive_user.id not in [u.id for u in users]
 
-    def test_excludes_unverified_users(self, session, test_users) -> None:
+    def test_excludes_unverified_users(
+        self, session: Session, test_regular_user: FixtureUser, test_unverified_user: FixtureUser
+    ) -> None:
         """Test that unverified users are not returned."""
 
-        [unverified_user] = [u for u in test_users if not u.is_verified]
         users = get_rating_active_users(session)
-        assert unverified_user.id not in [u.id for u in users]
+        assert test_unverified_user.id not in [u.id for u in users]
 
-    def test_excludes_users_without_active_premium(self, session, test_users) -> None:
+    def test_excludes_users_without_active_premium(
+        self, session: Session, test_regular_user: FixtureUser, test_non_premium_user: FixtureUser
+    ) -> None:
         """Test that users without an active premium subscription are not returned."""
 
-        users_without_premium = [u for u in test_users if u.premium is None or not u.premium.is_active]
-        assert len(users_without_premium) > 0
         result_ids = [u.id for u in get_rating_active_users(session)]
-        for user in users_without_premium:
-            assert user.id not in result_ids
+        assert test_non_premium_user.id not in result_ids
 
-    def test_excludes_user_with_job_rating_inactive(self, session, test_users) -> None:
+    def test_excludes_user_with_job_rating_inactive(self, session: Session, test_regular_user: FixtureUser) -> None:
         """Test that users with job_rating_active=False are not returned."""
 
         eligible_users = get_rating_active_users(session)
@@ -108,337 +113,256 @@ class TestGetRatingActiveUsers:
 
 class TestGetUserUnratedScrapedJobs:
 
-    def test_returned_jobs_meet_all_criteria(self, session, test_regular_user, test_scraped_jobs) -> None:
-        """Test that all returned jobs are eligible for rating."""
+    @staticmethod
+    @pytest.fixture
+    def scraped_jobs(test_regular_user: FixtureUser, test_admin_user: FixtureUser) -> dict[str, models.ScrapedJob]:
+        """One scraped job of every category `get_user_unrated_scraped_jobs` discriminates on.
+
+        Two are rating-eligible (`eligible`, `pending_rating`); the rest are each excluded for a
+        single reason, so a test can assert exactly which jobs the query returns."""
+
+        exclusion_filter = test_regular_user.create_scraping_exclusion_filter()
+
+        jobs = {
+            # Eligible: processed, scraped and either unrated or with a still-pending rating.
+            "eligible": test_regular_user.create_scraped_job(is_processed=True, is_scraped=True),
+            "pending_rating": test_regular_user.create_scraped_job(is_processed=True, is_scraped=True),
+            # Excluded, one reason each.
+            "finalised_rating": test_regular_user.create_scraped_job(is_processed=True, is_scraped=True),
+            "not_processed": test_regular_user.create_scraped_job(is_processed=False, is_scraped=True),
+            "not_scraped": test_regular_user.create_scraped_job(is_processed=True, is_scraped=False),
+            "failed": test_regular_user.create_scraped_job(is_processed=True, is_scraped=True, is_failed=True),
+            "inactive": test_regular_user.create_scraped_job(is_processed=True, is_scraped=True, is_active=False),
+            "imported": test_regular_user.create_scraped_job(is_processed=True, is_scraped=True, is_imported=True),
+            "filtered": test_regular_user.create_scraped_job(
+                is_processed=True, is_scraped=True, exclusion_filter_id=exclusion_filter.id
+            ),
+            "other_user": test_admin_user.create_scraped_job(is_processed=True, is_scraped=True),
+        }
+
+        # A pending rating keeps the job eligible; a finalised (succeeded) one does not.
+        test_regular_user.create_job_rating(scraped_job=jobs["pending_rating"])
+        test_regular_user.create_job_rating(scraped_job=jobs["finalised_rating"], is_success=True)
+
+        return jobs
+
+    def test_returns_only_eligible_jobs(
+        self, session: Session, test_regular_user: FixtureUser, scraped_jobs: dict[str, models.ScrapedJob]
+    ) -> None:
+        """Test that exactly the eligible (unrated or pending-rating) jobs are returned."""
+
+        returned_ids = {job.id for job in get_user_unrated_scraped_jobs(session, test_regular_user.id)}
+        assert returned_ids == {scraped_jobs["eligible"].id, scraped_jobs["pending_rating"].id}
+
+    def test_returned_jobs_meet_all_criteria(
+        self, session: Session, test_regular_user: FixtureUser, scraped_jobs: dict[str, models.ScrapedJob]
+    ) -> None:
+        """Test that all returned jobs satisfy every eligibility criterion."""
 
         jobs = get_user_unrated_scraped_jobs(session, test_regular_user.id)
         assert len(jobs) > 0
         for job in jobs:
             assert job.owner_id == test_regular_user.id
-            assert job.job_rating is None
             assert job.is_processed is True
             assert job.is_scraped is True
             assert job.is_failed is False
             assert job.is_active is True
             assert job.is_imported is False
             assert job.exclusion_filter is None
+            assert job.job_rating is None or job.job_rating.is_pending
 
-    def test_excludes_jobs_of_other_users(self, session, test_regular_user, test_scraped_jobs) -> None:
-        """Test that only jobs belonging to the given user are returned."""
-
-        jobs = get_user_unrated_scraped_jobs(session, test_regular_user.id)
-        for job in jobs:
-            assert job.owner_id == test_regular_user.id
-
-    def test_excludes_already_rated_job(
-        self, session, test_regular_user, test_scraped_jobs, test_user_qualifications, test_ai_prompts
+    @pytest.mark.parametrize(
+        "category",
+        [
+            "finalised_rating",
+            "not_processed",
+            "not_scraped",
+            "failed",
+            "inactive",
+            "imported",
+            "filtered",
+            "other_user",
+        ],
+    )
+    def test_excludes_ineligible_jobs(
+        self,
+        session: Session,
+        test_regular_user: FixtureUser,
+        scraped_jobs: dict[str, models.ScrapedJob],
+        category: str,
     ) -> None:
-        """Test that already rated jobs are excluded."""
+        """Test that each kind of ineligible job is excluded from the results."""
 
-        jobs_before = get_user_unrated_scraped_jobs(session, test_regular_user.id)
-        assert len(jobs_before) > 0
-        job = jobs_before[0]
-
-        qualification = [q for q in test_user_qualifications if q.owner_id == test_regular_user.id][0]
-        system_prompt, job_prompt_template = test_ai_prompts
-        session.add(
-            models.JobRating(
-                scraped_job_id=job.id,
-                owner_id=test_regular_user.id,
-                user_qualification_id=qualification.id,
-                system_prompt_id=system_prompt.id,
-                job_prompt_template_id=job_prompt_template.id,
-                is_success=True,
-                llm_model="chatgpt",
-            )
-        )
-        session.commit()
-
-        jobs_after = get_user_unrated_scraped_jobs(session, test_regular_user.id)
-        assert job.id not in [j.id for j in jobs_after]
-        assert len(jobs_after) == len(jobs_before) - 1
-
-    def test_excludes_inactive_job(self, session, test_regular_user, test_scraped_jobs) -> None:
-        """Test that inactive jobs are excluded."""
-
-        jobs_before = get_user_unrated_scraped_jobs(session, test_regular_user.id)
-        job = jobs_before[0]
-        job.is_active = False
-        session.commit()
-
-        jobs_after = get_user_unrated_scraped_jobs(session, test_regular_user.id)
-        assert job.id not in [j.id for j in jobs_after]
-        assert len(jobs_after) == len(jobs_before) - 1
-
-    def test_excludes_failed_job(self, session, test_regular_user, test_scraped_jobs) -> None:
-        """Test that failed jobs are excluded."""
-
-        jobs_before = get_user_unrated_scraped_jobs(session, test_regular_user.id)
-        job = jobs_before[0]
-        job.is_failed = True
-        session.commit()
-
-        jobs_after = get_user_unrated_scraped_jobs(session, test_regular_user.id)
-        assert job.id not in [j.id for j in jobs_after]
-        assert len(jobs_after) == len(jobs_before) - 1
-
-    def test_excludes_imported_job(self, session, test_regular_user, test_scraped_jobs) -> None:
-        """Test that imported jobs are excluded."""
-
-        jobs_before = get_user_unrated_scraped_jobs(session, test_regular_user.id)
-        job = jobs_before[0]
-        job.is_imported = True
-        session.commit()
-
-        jobs_after = get_user_unrated_scraped_jobs(session, test_regular_user.id)
-        assert job.id not in [j.id for j in jobs_after]
-        assert len(jobs_after) == len(jobs_before) - 1
+        returned_ids = [job.id for job in get_user_unrated_scraped_jobs(session, test_regular_user.id)]
+        assert scraped_jobs[category].id not in returned_ids
 
 
-class TestScrapedJobRaterRateJob:
+class TestScrapedJobRaterRateJob(BaseTest):
 
     @staticmethod
-    def make_service_log(session) -> models.JobRatingServiceLog:
-        """Create a service log for testing"""
-        service_log = models.JobRatingServiceLog(run_datetime=dt.datetime.now())
-        session.add(service_log)
-        session.commit()
-        session.refresh(service_log)
-        return service_log
-
-    @staticmethod
-    def make_scraped_job(session, user_id, description, service_log_id) -> models.ScrapedJob:
-        """Create a scraped job with the given description.
-        :param session: database session
-        :param user_id: user ID of the scraped job owner
-        :param description: job description
-        :param service_log_id: service log ID to associate with the scraped job
-        :return: the created scraped job"""
-
-        scraped_job = models.ScrapedJob(
-            external_job_id=f"test_{dt.datetime.now().timestamp()}",
-            platform=Platform.LINKEDIN,
+    def make_scraped_job(user: FixtureUser, description: str) -> models.ScrapedJob:
+        """Create a scraped, processed job with the given description, ready to be rated."""
+        return user.create_scraped_job(
             is_scraped=True,
             is_processed=True,
             is_failed=False,
             title="Test Job Title",
             company="Test Company",
             description=description,
-            owner_id=user_id,
-            service_log_id=service_log_id,
         )
-        session.add(scraped_job)
-        session.commit()
-        session.refresh(scraped_job)
-        return scraped_job
+
+    @staticmethod
+    def rate_job(
+        session: Session,
+        scraped_job: models.ScrapedJob,
+        user: FixtureUser,
+        qualification: models.UserQualification,
+        service_log: models.JobRatingServiceLog,
+        prompts: Prompts,
+    ) -> None:
+        """Rate a scraped job, building the combined system prompt from the user's qualification."""
+
+        system_prompt, job_prompt_template = prompts
+        combined_system_prompt = create_system_prompt_with_profile(
+            system_prompt.prompt,
+            qualification.experience,
+            qualification.education,
+            qualification.skills,
+            qualification.qualities,
+            qualification.interests,
+        )
+        ScrapedJobRatingService()._rate_job(
+            session,
+            scraped_job,
+            user.id,
+            qualification,
+            service_log,
+            system_prompt,
+            job_prompt_template,
+            combined_system_prompt,
+        )
+
+    @staticmethod
+    def get_rating(session: Session, scraped_job: models.ScrapedJob) -> models.JobRating | None:
+        """Return the job rating for the given scraped job, if any."""
+        return session.query(models.JobRating).filter_by(scraped_job_id=scraped_job.id).first()
 
     def test_skips_job_with_short_description(
         self,
-        session,
-        test_users,
-        test_user_qualifications,
-        test_ai_prompts,
-        test_job_scraping_service_logs,
+        session: Session,
+        test_regular_user: FixtureUser,
+        test_ai_prompts: Prompts,
+        test_rating_service_log: models.JobRatingServiceLog,
     ) -> None:
         """Test that a job whose description is too short is marked as skipped."""
 
-        user = test_users[0]
-        qualification = [q for q in test_user_qualifications if q.owner_id == user.id][0]
-        system_prompt, job_prompt_template = test_ai_prompts
-        service_log = self.make_service_log(session)
-        scraped_job = self.make_scraped_job(session, user.id, "Short", test_job_scraping_service_logs[0].id)
+        qualification = test_regular_user.create_user_qualification(education="BSc Computer Science")
+        scraped_job = self.make_scraped_job(test_regular_user, "Short")
 
-        combined_system_prompt = create_system_prompt_with_profile(
-            system_prompt.prompt,
-            qualification.experience,
-            qualification.education,
-            qualification.skills,
-            qualification.qualities,
-            qualification.interests,
-        )
+        self.rate_job(session, scraped_job, test_regular_user, qualification, test_rating_service_log, test_ai_prompts)
 
-        ScrapedJobRatingService()._rate_job(
-            session,
-            scraped_job,
-            user.id,
-            qualification,
-            service_log,
-            system_prompt,
-            job_prompt_template,
-            combined_system_prompt,
-        )
-
-        session.refresh(service_log)
-        rating = session.query(models.JobRating).filter(models.JobRating.scraped_job_id == scraped_job.id).first()
+        session.refresh(test_rating_service_log)
+        rating = self.get_rating(session, scraped_job)
         assert rating is not None
         assert rating.is_skipped is True
         assert "Job description too short" in rating.skip_reason
-        assert scraped_job.id in service_log.job_skipped_ids
+        assert scraped_job.id in test_rating_service_log.job_skipped_ids
 
     def test_successful_rating(
         self,
-        session,
-        test_users,
-        test_user_qualifications,
-        test_ai_prompts,
-        test_job_scraping_service_logs,
+        session: Session,
+        test_regular_user: FixtureUser,
+        test_ai_prompts: Prompts,
+        test_rating_service_log: models.JobRatingServiceLog,
     ) -> None:
         """Test that a job with a valid description is rated and saved successfully."""
 
-        user = test_users[0]
-        qualification = [q for q in test_user_qualifications if q.owner_id == user.id][0]
-        system_prompt, job_prompt_template = test_ai_prompts
-        service_log = self.make_service_log(session)
+        qualification = test_regular_user.create_user_qualification(education="BSc Computer Science")
         description = "A" * (settings.min_scraping_description_length + 1)
-        scraped_job = self.make_scraped_job(session, user.id, description, test_job_scraping_service_logs[0].id)
+        scraped_job = self.make_scraped_job(test_regular_user, description)
 
-        combined_system_prompt = create_system_prompt_with_profile(
-            system_prompt.prompt,
-            qualification.experience,
-            qualification.education,
-            qualification.skills,
-            qualification.qualities,
-            qualification.interests,
-        )
+        self.rate_job(session, scraped_job, test_regular_user, qualification, test_rating_service_log, test_ai_prompts)
 
-        ScrapedJobRatingService()._rate_job(
-            session,
-            scraped_job,
-            user.id,
-            qualification,
-            service_log,
-            system_prompt,
-            job_prompt_template,
-            combined_system_prompt,
-        )
-
-        session.refresh(service_log)
-        rating = session.query(models.JobRating).filter(models.JobRating.scraped_job_id == scraped_job.id).first()
+        session.refresh(test_rating_service_log)
+        rating = self.get_rating(session, scraped_job)
         assert rating is not None
         assert rating.is_success is True
         assert rating.overall_score is not None
         assert rating.job_prompt is not None
-        assert scraped_job.id in service_log.job_succeeded_ids
+        assert scraped_job.id in test_rating_service_log.job_succeeded_ids
 
     def test_failed_rating(
         self,
-        session,
-        test_users,
-        test_user_qualifications,
-        test_ai_prompts,
-        test_job_scraping_service_logs,
-        monkeypatch,
+        session: Session,
+        test_regular_user: FixtureUser,
+        test_ai_prompts: Prompts,
+        monkeypatch: pytest.MonkeyPatch,
+        test_rating_service_log: models.JobRatingServiceLog,
     ) -> None:
         """Test that an AI scoring error creates a failed job rating entry."""
 
-        user = test_users[0]
-        qualification = [q for q in test_user_qualifications if q.owner_id == user.id][0]
-        system_prompt, job_prompt_template = test_ai_prompts
-        service_log = self.make_service_log(session)
+        qualification = test_regular_user.create_user_qualification(education="BSc Computer Science")
         description = "A" * (settings.min_scraping_description_length + 1)
-        scraped_job = self.make_scraped_job(session, user.id, description, test_job_scraping_service_logs[0].id)
-
-        import app.job_rating.scraped_job_rating as rating_module
+        scraped_job = self.make_scraped_job(test_regular_user, description)
 
         def raise_error(*_args, **_kwargs):
             """Raise an error"""
             raise RuntimeError("AI service unavailable")
 
-        monkeypatch.setattr(rating_module, "claude_query", raise_error)
+        monkeypatch.setattr(scraped_job_rating, "claude_query", raise_error)
 
-        combined_system_prompt = create_system_prompt_with_profile(
-            system_prompt.prompt,
-            qualification.experience,
-            qualification.education,
-            qualification.skills,
-            qualification.qualities,
-            qualification.interests,
-        )
+        self.rate_job(session, scraped_job, test_regular_user, qualification, test_rating_service_log, test_ai_prompts)
 
-        ScrapedJobRatingService()._rate_job(
-            session,
-            scraped_job,
-            user.id,
-            qualification,
-            service_log,
-            system_prompt,
-            job_prompt_template,
-            combined_system_prompt,
-        )
-
-        session.refresh(service_log)
+        session.refresh(test_rating_service_log)
 
         # First failure leaves a pending JobRating (is_success None) with a retry scheduled
-        rating = session.query(models.JobRating).filter(models.JobRating.scraped_job_id == scraped_job.id).first()
+        rating = self.get_rating(session, scraped_job)
         assert rating is not None
         assert rating.is_success is None
         assert rating.rating_retry_count == 1
         assert rating.rating_next_retry_at is not None
-        assert scraped_job.id in service_log.job_failed_ids
+        assert scraped_job.id in test_rating_service_log.job_failed_ids
         assert len(rating.rating_errors) == 1
         service_error = rating.rating_errors[0]
         assert "AI service unavailable" in service_error.message
         assert service_error.scraped_job_id is None
         assert service_error.job_rating_id == rating.id
-        assert service_error.job_rating_service_log_id == service_log.id
+        assert service_error.job_rating_service_log_id == test_rating_service_log.id
         assert service_error.level == "error"
 
     def test_rating_permanently_fails_after_max_retries(
         self,
-        session,
-        test_users,
-        test_user_qualifications,
-        test_ai_prompts,
-        test_job_scraping_service_logs,
-        monkeypatch,
+        session: Session,
+        test_regular_user: FixtureUser,
+        test_ai_prompts: Prompts,
+        monkeypatch: pytest.MonkeyPatch,
+        test_rating_service_log: models.JobRatingServiceLog,
     ) -> None:
         """After settings.rating_max_retry failures a terminal failed JobRating is created."""
 
-        user = test_users[0]
-        qualification = [q for q in test_user_qualifications if q.owner_id == user.id][0]
-        system_prompt, job_prompt_template = test_ai_prompts
-        service_log = self.make_service_log(session)
+        qualification = test_regular_user.create_user_qualification(education="BSc Computer Science")
         description = "A" * (settings.min_scraping_description_length + 1)
-        scraped_job = self.make_scraped_job(session, user.id, description, test_job_scraping_service_logs[0].id)
-
-        import app.job_rating.scraped_job_rating as rating_module
+        scraped_job = self.make_scraped_job(test_regular_user, description)
 
         def raise_error(*_args, **_kwargs):
             """Raise an error"""
             raise RuntimeError("AI service unavailable")
 
-        monkeypatch.setattr(rating_module, "claude_query", raise_error)
+        monkeypatch.setattr(scraped_job_rating, "claude_query", raise_error)
 
-        combined_system_prompt = create_system_prompt_with_profile(
-            system_prompt.prompt,
-            qualification.experience,
-            qualification.education,
-            qualification.skills,
-            qualification.qualities,
-            qualification.interests,
-        )
-
-        rater = ScrapedJobRatingService()
         for _ in range(settings.rating_max_retry):
-            rater._rate_job(
-                session,
-                scraped_job,
-                user.id,
-                qualification,
-                service_log,
-                system_prompt,
-                job_prompt_template,
-                combined_system_prompt,
+            self.rate_job(
+                session, scraped_job, test_regular_user, qualification, test_rating_service_log, test_ai_prompts
             )
             # Clear the scheduled retry so the next iteration re-attempts immediately
-            rating = session.query(models.JobRating).filter_by(scraped_job_id=scraped_job.id).first()
+            rating = self.get_rating(session, scraped_job)
             rating.rating_next_retry_at = None
             session.commit()
 
         session.refresh(scraped_job)
 
         # The rating fails permanently (is_success False) so the job is no longer re-queried
-        rating = session.query(models.JobRating).filter(models.JobRating.scraped_job_id == scraped_job.id).first()
+        rating = self.get_rating(session, scraped_job)
         assert rating is not None
         assert rating.is_success is False
         assert rating.rating_retry_count == settings.rating_max_retry
@@ -449,170 +373,168 @@ class TestScrapedJobRaterRateJob:
 
     def test_truncates_long_description(
         self,
-        session,
-        test_users,
-        test_user_qualifications,
-        test_ai_prompts,
-        test_job_scraping_service_logs,
+        session: Session,
+        test_regular_user: FixtureUser,
+        test_ai_prompts: Prompts,
+        test_rating_service_log: models.JobRatingServiceLog,
     ) -> None:
         """Test that a description exceeding the max length is truncated and a note is recorded."""
 
-        user = test_users[0]
-        qualification = [q for q in test_user_qualifications if q.owner_id == user.id][0]
-        system_prompt, job_prompt_template = test_ai_prompts
-        service_log = self.make_service_log(session)
+        qualification = test_regular_user.create_user_qualification(education="BSc Computer Science")
         description = "A" * (settings.max_scraping_description_length + 100)
-        scraped_job = self.make_scraped_job(session, user.id, description, test_job_scraping_service_logs[0].id)
+        scraped_job = self.make_scraped_job(test_regular_user, description)
 
-        combined_system_prompt = create_system_prompt_with_profile(
-            system_prompt.prompt,
-            qualification.experience,
-            qualification.education,
-            qualification.skills,
-            qualification.qualities,
-            qualification.interests,
-        )
+        self.rate_job(session, scraped_job, test_regular_user, qualification, test_rating_service_log, test_ai_prompts)
 
-        ScrapedJobRatingService()._rate_job(
-            session,
-            scraped_job,
-            user.id,
-            qualification,
-            service_log,
-            system_prompt,
-            job_prompt_template,
-            combined_system_prompt,
-        )
-
-        rating = session.query(models.JobRating).filter(models.JobRating.scraped_job_id == scraped_job.id).first()
+        rating = self.get_rating(session, scraped_job)
         assert rating is not None
         assert rating.is_success is True
         assert rating.notes is not None and len(rating.notes) > 0
         assert any("description" in note.lower() for note in rating.notes)
 
 
-class TestScrapedJobRaterProcessUser:
+class TestScrapedJobRaterProcessUser(BaseTest):
 
     @staticmethod
-    def create_service_log(session) -> models.JobRatingServiceLog:
-        """Create a service log for testing"""
-
-        service_log = models.JobRatingServiceLog(run_datetime=dt.datetime.now())
-        session.add(service_log)
-        session.commit()
-        session.refresh(service_log)
-        return service_log
+    def process_user(
+        session: Session,
+        user: FixtureUser,
+        service_log: models.JobRatingServiceLog,
+        prompts: Prompts,
+    ) -> None:
+        """Process a single user's unrated scraped jobs."""
+        system_prompt, job_prompt_template = prompts
+        ScrapedJobRatingService()._process_user(session, user.id, service_log, system_prompt, job_prompt_template)
 
     def test_skips_user_without_qualification(
-        self, session, test_users, test_scraped_jobs, test_user_qualifications, test_ai_prompts
+        self,
+        session: Session,
+        test_regular_user: FixtureUser,
+        test_ai_prompts: Prompts,
+        test_rating_service_log: models.JobRatingServiceLog,
     ) -> None:
         """Test that a user with no qualification is skipped and not added to user_processed_ids."""
 
-        user = [u for u in test_users if not any(q.owner_id == u.id for q in test_user_qualifications)][0]
-        system_prompt, job_prompt_template = test_ai_prompts
-        service_log = self.create_service_log(session)
+        self.process_user(session, test_regular_user, test_rating_service_log, test_ai_prompts)
 
-        ScrapedJobRatingService()._process_user(session, user.id, service_log, system_prompt, job_prompt_template)
-
-        session.refresh(service_log)
-        assert user.id not in service_log.user_processed_ids
+        session.refresh(test_rating_service_log)
+        assert test_regular_user.id not in test_rating_service_log.user_processed_ids
 
     def test_adds_user_to_processed_ids(
-        self, session, test_users, test_scraped_jobs, test_user_qualifications, test_ai_prompts
+        self,
+        session: Session,
+        test_regular_user: FixtureUser,
+        test_ai_prompts: Prompts,
+        test_rating_service_log: models.JobRatingServiceLog,
     ) -> None:
         """Test that a successfully processed user is added to user_processed_ids."""
 
-        user = [u for u in test_users if any(q.owner_id == u.id for q in test_user_qualifications)][0]
-        system_prompt, job_prompt_template = test_ai_prompts
-        service_log = self.create_service_log(session)
+        test_regular_user.create_user_qualification(experience="QA")
 
-        ScrapedJobRatingService()._process_user(session, user.id, service_log, system_prompt, job_prompt_template)
+        self.process_user(session, test_regular_user, test_rating_service_log, test_ai_prompts)
 
-        session.refresh(service_log)
-        assert user.id in service_log.user_processed_ids
+        session.refresh(test_rating_service_log)
+        assert test_regular_user.id in test_rating_service_log.user_processed_ids
 
     def test_adds_jobs_to_found_ids(
-        self, session, test_users, test_scraped_jobs, test_user_qualifications, test_ai_prompts
+        self,
+        session: Session,
+        test_regular_user: FixtureUser,
+        test_ai_prompts: Prompts,
+        test_rating_service_log: models.JobRatingServiceLog,
     ) -> None:
         """Test that found jobs for the user are recorded in job_found_ids."""
 
-        user = test_users[0]
-        expected_jobs = get_user_unrated_scraped_jobs(session, user.id)
+        test_regular_user.create_user_qualification(experience="QA")
+        test_regular_user.create_scraped_job(is_processed=True, is_scraped=True)
+        test_regular_user.create_scraped_job(is_processed=True, is_scraped=True)
+        expected_jobs = get_user_unrated_scraped_jobs(session, test_regular_user.id)
         assert len(expected_jobs) > 0
 
-        system_prompt, job_prompt_template = test_ai_prompts
-        service_log = self.create_service_log(session)
+        self.process_user(session, test_regular_user, test_rating_service_log, test_ai_prompts)
 
-        ScrapedJobRatingService()._process_user(session, user.id, service_log, system_prompt, job_prompt_template)
-
-        session.refresh(service_log)
+        session.refresh(test_rating_service_log)
         for job in expected_jobs:
-            assert job.id in service_log.job_found_ids
+            assert job.id in test_rating_service_log.job_found_ids
 
 
-class TestScoreScrapedJobs(object):
+class TestScoreScrapedJobs(BaseTest):
 
     @staticmethod
-    def get_premium_users(db) -> list[models.User]:
-        """Return premium users list"""
-        return db.query(models.User).filter(models.User.premium.has(is_active=True)).all()
+    def create_rateable_job(user: FixtureUser, **kwargs) -> models.ScrapedJob:
+        """Create a scraped, processed job eligible for rating, overriding fields via kwargs."""
+        data = {
+            "is_processed": True,
+            "is_scraped": True,
+            "title": "Test Job Title",
+            "company": "Test Company",
+            "description": "A" * 100,
+            **kwargs,
+        }
+        return user.create_scraped_job(**data)
 
-    def test_success(self, session, test_scraped_jobs, test_user_qualifications, test_ai_prompts, monkeypatch) -> None:
-        """Test scoring scraped jobs successfully"""
+    def test_success(
+        self,
+        session: Session,
+        test_regular_user: FixtureUser,
+        test_ai_prompts: Prompts,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test scoring scraped jobs successfully, with one job per rating outcome."""
 
         monkeypatch.setattr(settings, "min_scraping_description_length", 70)
+        test_regular_user.create_user_qualification(experience="10 years Python", education="BSc Computer Science")
+
+        now = dt.datetime.now(dt.timezone.utc)
+        succeeded_job = self.create_rateable_job(test_regular_user)
+        upcoming_job = self.create_rateable_job(test_regular_user, deadline=now + dt.timedelta(days=30))
+        closed_job = self.create_rateable_job(test_regular_user, is_closed=True)
+        past_deadline_job = self.create_rateable_job(test_regular_user, deadline=now - dt.timedelta(days=1))
+        short_job = self.create_rateable_job(test_regular_user, description="Too short")
+        no_description_job = self.create_rateable_job(test_regular_user, description=None)
+
         ScrapedJobRatingService().run(session)
+
         job_ratings = session.query(models.JobRating).all()
-        assert len(job_ratings) == 34
+        assert len(job_ratings) == 6
         for job_rating in job_ratings:
             assert job_rating.is_success is True or job_rating.is_skipped is True
+        ratings_by_job = {job_rating.scraped_job_id: job_rating for job_rating in job_ratings}
+
         service_log = session.query(models.JobRatingServiceLog).first()
         assert service_log is not None
         assert service_log.run_datetime is not None
-        assert len(service_log.job_found_ids) == 34
-        assert len(service_log.job_succeeded_ids) == 13
-        assert len(service_log.job_skipped_ids) == 21
-        assert len(service_log.job_failed_ids) == 0
-        assert len(service_log.user_found_ids) == 3
-        assert len(service_log.user_processed_ids) == 3
+        all_jobs = (succeeded_job, upcoming_job, closed_job, past_deadline_job, short_job, no_description_job)
+        assert set(service_log.job_found_ids) == {job.id for job in all_jobs}
+        assert set(service_log.job_succeeded_ids) == {succeeded_job.id, upcoming_job.id}
+        assert set(service_log.job_skipped_ids) == {
+            closed_job.id,
+            past_deadline_job.id,
+            short_job.id,
+            no_description_job.id,
+        }
+        assert service_log.job_failed_ids == []
+        assert service_log.user_found_ids == [test_regular_user.id]
+        assert service_log.user_processed_ids == [test_regular_user.id]
 
         # Check that the job prompt contains only job details (candidate profile is in system prompt)
-        job_rating = [job_rating for job_rating in job_ratings if job_rating.is_success][0]
+        succeeded_rating = ratings_by_job[succeeded_job.id]
         job_prompt = f"""### Job Details
-- **Title**: {job_rating.scraped_job.title}
-- **Company**: {job_rating.scraped_job.company}
-- **Description**: {job_rating.scraped_job.description}
+- **Title**: {succeeded_job.title}
+- **Company**: {succeeded_job.company}
+- **Description**: {succeeded_job.description}
 """
-        assert job_prompt in job_rating.job_prompt
+        assert job_prompt in succeeded_rating.job_prompt
 
-        # Check that the is_closed jobs are skipped
-        scraped_job = [scraped_job for scraped_job in test_scraped_jobs if scraped_job.is_closed][0]
-        job_rating = [job_rating for job_rating in job_ratings if job_rating.scraped_job.id == scraped_job.id][0]
-        assert job_rating.is_skipped is True
-        assert "is closed" in job_rating.skip_reason.lower()
+        # A closed job and a job past its deadline are both skipped as closed
+        for job in (closed_job, past_deadline_job):
+            assert ratings_by_job[job.id].is_skipped is True
+            assert "is closed" in ratings_by_job[job.id].skip_reason.lower()
 
-        # Check that past deadline jobs are skipped
-        scraped_job = [
-            scraped_job
-            for scraped_job in test_scraped_jobs
-            if scraped_job.deadline and scraped_job.deadline < dt.datetime.now(dt.timezone.utc)
-        ][0]
-        job_rating = [job_rating for job_rating in job_ratings if job_rating.scraped_job.id == scraped_job.id][0]
-        assert job_rating.is_skipped is True
-        assert "is closed" in job_rating.skip_reason.lower()
+        # A job with an upcoming deadline is not skipped
+        assert ratings_by_job[upcoming_job.id].is_skipped is False
 
-        # Check that upcoming deadline jobs are not skipped
-        scraped_job = [
-            scraped_job
-            for scraped_job in test_scraped_jobs
-            if scraped_job.deadline and scraped_job.deadline > dt.datetime.now(dt.timezone.utc)
-        ][0]
-        job_rating = [job_rating for job_rating in job_ratings if job_rating.scraped_job.id == scraped_job.id][0]
-        assert job_rating.is_skipped is False
-
-    def test_critical_error_is_recorded_as_error(
-        self, session, test_scraped_jobs, test_user_qualifications, test_ai_prompts, monkeypatch
-    ) -> None:
+    def test_critical_error_is_recorded_as_error(self, session: Session, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that an unexpected error in the rating workflow is recorded as a unified Error."""
 
         def raise_error(_):

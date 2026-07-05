@@ -1,6 +1,6 @@
 """Tests for email testing endpoints."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from fastapi import status
 from starlette.testclient import TestClient
@@ -14,7 +14,7 @@ class TestGetTestEmails:
     """Tests for GET /test/emails/emails/{email_address} endpoint."""
 
     @patch("app.emails.routers.tests.email_service")
-    def test_returns_emails_when_test_mode_enabled(self, mock_email_service) -> None:
+    def test_returns_emails_when_test_mode_enabled(self, mock_email_service: Mock) -> None:
         """Returns list of emails when test mode is enabled."""
 
         mock_emails = [
@@ -39,7 +39,7 @@ class TestGetTestEmails:
         assert "Test mode not enabled" in response.json()["detail"]
 
     @patch("app.emails.routers.tests.email_service")
-    def test_returns_empty_list_when_no_emails(self, mock_email_service) -> None:
+    def test_returns_empty_list_when_no_emails(self, mock_email_service: Mock) -> None:
         """Returns empty list when no test emails exist."""
 
         mock_email_service.get_test_emails.return_value = []
@@ -55,7 +55,7 @@ class TestGetVerificationLink:
 
     @patch("app.emails.routers.tests.settings")
     @patch("app.emails.routers.tests.email_service")
-    def test_returns_verification_link_when_found(self, mock_email_service, mock_settings) -> None:
+    def test_returns_verification_link_when_found(self, mock_email_service: Mock, mock_settings: Mock) -> None:
         """Extracts and returns verification link from email body."""
 
         mock_settings.frontend_url = "https://example.com"
@@ -82,7 +82,7 @@ class TestGetVerificationLink:
         assert "Test mode not enabled" in response.json()["detail"]
 
     @patch("app.emails.routers.tests.email_service")
-    def test_returns_404_when_no_emails(self, mock_email_service) -> None:
+    def test_returns_404_when_no_emails(self, mock_email_service: Mock) -> None:
         """Returns 404 when no emails found for the address."""
 
         mock_email_service.get_test_emails.return_value = []
@@ -94,7 +94,7 @@ class TestGetVerificationLink:
 
     @patch("app.emails.routers.tests.settings")
     @patch("app.emails.routers.tests.email_service")
-    def test_returns_404_when_no_link_in_email(self, mock_email_service, mock_settings) -> None:
+    def test_returns_404_when_no_link_in_email(self, mock_email_service: Mock, mock_settings: Mock) -> None:
         """Returns 404 when email exists but contains no verification link."""
 
         mock_settings.frontend_url = "https://example.com"
@@ -107,7 +107,7 @@ class TestGetVerificationLink:
 
     @patch("app.emails.routers.tests.settings")
     @patch("app.emails.routers.tests.email_service")
-    def test_uses_most_recent_email(self, mock_email_service, mock_settings) -> None:
+    def test_uses_most_recent_email(self, mock_email_service: Mock, mock_settings: Mock) -> None:
         """Extracts verification link from the most recent (last) email."""
 
         mock_settings.frontend_url = "https://example.com"
@@ -133,7 +133,7 @@ class TestGetResetLink:
 
     @patch("app.emails.routers.tests.settings")
     @patch("app.emails.routers.tests.email_service")
-    def test_returns_reset_link_when_found(self, mock_email_service, mock_settings) -> None:
+    def test_returns_reset_link_when_found(self, mock_email_service: Mock, mock_settings: Mock) -> None:
         """Extracts and returns password reset link from email body."""
 
         mock_settings.frontend_url = "https://example.com"
@@ -160,7 +160,7 @@ class TestGetResetLink:
         assert "Test mode not enabled" in response.json()["detail"]
 
     @patch("app.emails.routers.tests.email_service")
-    def test_returns_404_when_no_emails(self, mock_email_service) -> None:
+    def test_returns_404_when_no_emails(self, mock_email_service: Mock) -> None:
         """Returns 404 when no emails found for the address."""
 
         mock_email_service.get_test_emails.return_value = []
@@ -172,7 +172,7 @@ class TestGetResetLink:
 
     @patch("app.emails.routers.tests.settings")
     @patch("app.emails.routers.tests.email_service")
-    def test_returns_404_when_no_link_in_email(self, mock_email_service, mock_settings) -> None:
+    def test_returns_404_when_no_link_in_email(self, mock_email_service: Mock, mock_settings: Mock) -> None:
         """Returns 404 when email exists but contains no reset link."""
 
         mock_settings.frontend_url = "https://example.com"
@@ -185,7 +185,7 @@ class TestGetResetLink:
 
     @patch("app.emails.routers.tests.settings")
     @patch("app.emails.routers.tests.email_service")
-    def test_uses_most_recent_email(self, mock_email_service, mock_settings) -> None:
+    def test_uses_most_recent_email(self, mock_email_service: Mock, mock_settings: Mock) -> None:
         """Extracts reset link from the most recent (last) email."""
 
         mock_settings.frontend_url = "https://example.com"
@@ -210,7 +210,7 @@ class TestClearTestEmails:
     """Tests for DELETE /test/emails/emails endpoint."""
 
     @patch("app.emails.routers.tests.email_service")
-    def test_clears_emails_when_test_mode_enabled(self, mock_email_service) -> None:
+    def test_clears_emails_when_test_mode_enabled(self, mock_email_service: Mock) -> None:
         """Clears test emails and returns success status."""
 
         response = client.delete("/test/emails/emails")

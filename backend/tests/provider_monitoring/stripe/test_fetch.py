@@ -1,9 +1,11 @@
 """Tests for the Stripe daily-income fetcher."""
 
 import datetime as dt
+from collections.abc import Iterator
 from unittest.mock import patch, MagicMock
 
 import pytest
+from sqlalchemy.orm import Session
 
 from app import models
 from app.provider_monitoring.stripe.fetch import (
@@ -27,7 +29,7 @@ def _ts(d: dt.datetime) -> int:
 
 
 @pytest.fixture
-def mock_window():
+def mock_window() -> Iterator[MagicMock]:
     """Pin the period to June 2026 so we can assert request params."""
     with patch("app.provider_monitoring.stripe.fetch.current_month_window") as mock_w:
         mock_w.return_value = (
@@ -35,6 +37,13 @@ def mock_window():
             dt.datetime(2026, 7, 1, tzinfo=dt.timezone.utc),
         )
         yield mock_w
+
+
+@pytest.fixture
+def mock_stripe() -> Iterator[MagicMock]:
+    """Patch the Stripe SDK used by the daily-income fetcher."""
+    with patch("app.provider_monitoring.stripe.fetch.stripe") as mock:
+        yield mock
 
 
 def _patch_balance_txn_lists(by_type: dict[str, list]) -> MagicMock:
@@ -49,8 +58,7 @@ def _patch_balance_txn_lists(by_type: dict[str, list]) -> MagicMock:
 
 
 class TestFetchStripe:
-    @patch("app.provider_monitoring.stripe.fetch.stripe")
-    def test_groups_by_utc_date(self, mock_stripe, mock_window) -> None:
+    def test_groups_by_utc_date(self, mock_stripe: MagicMock, mock_window: MagicMock) -> None:
         """Two charges on the same UTC day collapse into one StripeDailyIncome row."""
 
         charges = [
@@ -70,8 +78,7 @@ class TestFetchStripe:
         assert result[1].gross_gbp == pytest.approx(20.0)
         assert result[1].net_gbp == pytest.approx(19.40)
 
-    @patch("app.provider_monitoring.stripe.fetch.stripe")
-    def test_refunds_affect_net_only(self, mock_stripe, mock_window) -> None:
+    def test_refunds_affect_net_only(self, mock_stripe: MagicMock, mock_window: MagicMock) -> None:
         """Refunds reduce `net_gbp` but don't show up in `gross_gbp`."""
 
         charges = [_txn(created=_ts(dt.datetime(2026, 6, 5, 12, 0)), amount=5000, net=4850)]
@@ -84,8 +91,7 @@ class TestFetchStripe:
         assert row.gross_gbp == pytest.approx(50.0)
         assert row.net_gbp == pytest.approx(38.50)
 
-    @patch("app.provider_monitoring.stripe.fetch.stripe")
-    def test_refund_only_day_emits_row_with_zero_gross(self, mock_stripe, mock_window) -> None:
+    def test_refund_only_day_emits_row_with_zero_gross(self, mock_stripe: MagicMock, mock_window: MagicMock) -> None:
         """A refund on a day with no charges still emits a row (gross=0, net<0)."""
 
         refunds = [_txn(created=_ts(dt.datetime(2026, 6, 9, 12, 0)), amount=-1000, net=-1000)]
@@ -97,8 +103,7 @@ class TestFetchStripe:
         assert row.gross_gbp == pytest.approx(0.0)
         assert row.net_gbp == pytest.approx(-10.0)
 
-    @patch("app.provider_monitoring.stripe.fetch.stripe")
-    def test_skips_non_gbp_transactions(self, mock_stripe, mock_window) -> None:
+    def test_skips_non_gbp_transactions(self, mock_stripe: MagicMock, mock_window: MagicMock) -> None:
         """Transactions in other currencies are ignored to keep the chart single-currency."""
 
         charges = [
@@ -122,8 +127,7 @@ class TestFetchStripe:
         assert row.gross_gbp == pytest.approx(5.0)
         assert row.net_gbp == pytest.approx(4.85)
 
-    @patch("app.provider_monitoring.stripe.fetch.stripe")
-    def test_currency_match_is_case_insensitive(self, mock_stripe, mock_window) -> None:
+    def test_currency_match_is_case_insensitive(self, mock_stripe: MagicMock, mock_window: MagicMock) -> None:
         """Stripe returns lowercase currency codes, but be defensive: `GBP` should still count."""
 
         charges = [
@@ -135,8 +139,7 @@ class TestFetchStripe:
 
         assert row.gross_gbp == pytest.approx(5.0)
 
-    @patch("app.provider_monitoring.stripe.fetch.stripe")
-    def test_null_currency_is_skipped(self, mock_stripe, mock_window) -> None:
+    def test_null_currency_is_skipped(self, mock_stripe: MagicMock, mock_window: MagicMock) -> None:
         """A txn with `currency=None` is skipped without crashing on `.lower()`."""
 
         charges = [
@@ -149,16 +152,14 @@ class TestFetchStripe:
 
         assert row.gross_gbp == pytest.approx(5.0)
 
-    @patch("app.provider_monitoring.stripe.fetch.stripe")
-    def test_handles_empty_month(self, mock_stripe, mock_window) -> None:
+    def test_handles_empty_month(self, mock_stripe: MagicMock, mock_window: MagicMock) -> None:
         """No transactions yields an empty list."""
 
         mock_stripe.BalanceTransaction.list = _patch_balance_txn_lists({"charge": [], "refund": []})
 
         assert fetch_stripe_daily_income(None) == []
 
-    @patch("app.provider_monitoring.stripe.fetch.stripe")
-    def test_uses_window_timestamps_in_request(self, mock_stripe, mock_window) -> None:
+    def test_uses_window_timestamps_in_request(self, mock_stripe: MagicMock, mock_window: MagicMock) -> None:
         """The `created` filter must use the (period_start, period_end) timestamps."""
 
         mock_stripe.BalanceTransaction.list = _patch_balance_txn_lists({"charge": [], "refund": []})
@@ -176,8 +177,7 @@ class TestFetchStripe:
             "refund",
         ]
 
-    @patch("app.provider_monitoring.stripe.fetch.stripe")
-    def test_days_returned_in_sorted_order(self, mock_stripe, mock_window) -> None:
+    def test_days_returned_in_sorted_order(self, mock_stripe: MagicMock, mock_window: MagicMock) -> None:
         """Even if Stripe returns transactions out of order, output dates are ascending."""
 
         charges = [
@@ -191,8 +191,9 @@ class TestFetchStripe:
 
         assert dates == [dt.date(2026, 6, 2), dt.date(2026, 6, 5), dt.date(2026, 6, 10)]
 
-    @patch("app.provider_monitoring.stripe.fetch.stripe")
-    def test_persists_rows_when_db_passed(self, mock_stripe, mock_window, session) -> None:
+    def test_persists_rows_when_db_passed(
+        self, mock_stripe: MagicMock, mock_window: MagicMock, session: Session
+    ) -> None:
         """Passing a db session upserts into the StripeDailyIncome ORM table (not the schema)."""
 
         charges = [_txn(created=_ts(dt.datetime(2026, 6, 2, 10, 0)), amount=1000, net=970)]
@@ -203,8 +204,9 @@ class TestFetchStripe:
         rows = session.query(models.StripeDailyIncome).all()
         assert [(r.date, r.gross_gbp, r.net_gbp) for r in rows] == [(dt.date(2026, 6, 2), 10.0, 9.7)]
 
-    @patch("app.provider_monitoring.stripe.fetch.stripe")
-    def test_upsert_overwrites_existing_day(self, mock_stripe, mock_window, session) -> None:
+    def test_upsert_overwrites_existing_day(
+        self, mock_stripe: MagicMock, mock_window: MagicMock, session: Session
+    ) -> None:
         """Re-running for the same day overwrites the prior row rather than duplicating it."""
 
         first = [_txn(created=_ts(dt.datetime(2026, 6, 2, 10, 0)), amount=1000, net=970)]

@@ -7,13 +7,15 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.job_email_scraping.job_scrapers.indeed import IndeedBrightdataJobScraper
+from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
 from app.provider_monitoring.brightdata import models
 from app.utilities.database import upsert
 from app.utilities.http import request_with_retry
 
 DATASET_LABELS: dict[str, str] = {
-    settings.brightdata_linkedin_dataset_id: "LinkedIn",
-    settings.brightdata_indeed_dataset_id: "Indeed",
+    LinkedinBrightdataJobScraper.dataset_id: "LinkedIn",
+    IndeedBrightdataJobScraper.dataset_id: "Indeed",
 }
 
 

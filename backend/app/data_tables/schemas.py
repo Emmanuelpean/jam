@@ -122,8 +122,8 @@ class FileWithContentOut(FileOut):
     content: str
 
 
-class FileUpdate(FileCreate):
-    """File update schema"""
+class FileUpdate(OwnedCreate):
+    """File update schema — only the filename may be changed."""
 
     filename: str | None = Field(default=None, max_length=COLUMN_LIMITS.file_name)
 

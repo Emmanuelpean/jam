@@ -3,7 +3,7 @@
 import uuid
 
 import pytest
-from sqlalchemy import create_engine, text, orm
+from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 
 from app import database, models
@@ -18,8 +18,8 @@ def demo_engine(engine):
     """Engine targeting a 'demo' schema inside the test database."""
 
     with engine.connect() as conn:
-        conn.execute(text("DROP SCHEMA IF EXISTS demo CASCADE"))
-        conn.execute(text("CREATE SCHEMA demo"))
+        conn.exec_driver_sql("DROP SCHEMA IF EXISTS demo CASCADE")
+        conn.exec_driver_sql("CREATE SCHEMA demo")
         conn.commit()
 
     demo_eng = create_engine(engine.url, connect_args={"options": "-c search_path=demo"})
@@ -32,8 +32,8 @@ def demo_session_raw(engine, demo_engine):
     """Clean demo schema session — drops and recreates the demo schema each test."""
 
     with engine.connect() as conn:
-        conn.execute(text("DROP SCHEMA IF EXISTS demo CASCADE"))
-        conn.execute(text("CREATE SCHEMA demo"))
+        conn.exec_driver_sql("DROP SCHEMA IF EXISTS demo CASCADE")
+        conn.exec_driver_sql("CREATE SCHEMA demo")
         conn.commit()
     Base.metadata.create_all(bind=demo_engine)
 

@@ -1,13 +1,18 @@
 """Unit tests for the service registry."""
 
+from collections.abc import Callable, Iterator
+
 import pytest
+from sqlalchemy.orm import Session
 
 from app.models import Service
 from app.service import registry
+from app.service.models import ServiceLog
+from app.service.schemas import ServiceLogOut
 
 
 @pytest.fixture(autouse=True)
-def restore_registry():
+def restore_registry() -> Iterator[None]:
     """Snapshot and restore SERVICE_REGISTRY so tests don't leak registrations."""
 
     original = dict(registry.SERVICE_REGISTRY)
@@ -16,15 +21,15 @@ def restore_registry():
     registry.SERVICE_REGISTRY.update(original)
 
 
-def _register(name, run, **kwargs) -> None:
+def _register(name: str, run: Callable, **kwargs) -> None:
     """Register a service, supplying dummy log model/schema (required but unused by most tests)."""
 
-    kwargs.setdefault("log_model", int)
-    kwargs.setdefault("log_schema", str)
+    kwargs.setdefault("log_model", ServiceLog)
+    kwargs.setdefault("log_schema", ServiceLogOut)
     registry.register_service(name, run, **kwargs)
 
 
-def test_register_and_get():
+def test_register_and_get() -> None:
     """A registered callable can be retrieved by name."""
 
     fn = lambda: "ran"  # noqa: E731
@@ -32,7 +37,7 @@ def test_register_and_get():
     assert registry.get_service_callable("unit_test_service") is fn
 
 
-def test_register_overwrites():
+def test_register_overwrites() -> None:
     """Registering the same name twice keeps the latest callable."""
 
     _register("dup_service", lambda: 1)
@@ -40,14 +45,14 @@ def test_register_overwrites():
     assert registry.get_service_callable("dup_service")() == 2
 
 
-def test_get_unknown_raises_key_error():
+def test_get_unknown_raises_key_error() -> None:
     """Looking up an unregistered name raises KeyError."""
 
     with pytest.raises(KeyError):
         registry.get_service_callable("does_not_exist")
 
 
-def test_register_derives_display_name():
+def test_register_derives_display_name() -> None:
     """display_name defaults to a title-cased name when not provided."""
 
     _register("my_cool_service", lambda: None)
@@ -57,18 +62,18 @@ def test_register_derives_display_name():
 # --------------------------------------------------- LOG VIEW ---------------------------------------------------
 
 
-def test_get_service_log_view_returns_pair():
+def test_get_service_log_view_returns_pair() -> None:
     """The registered (model, schema) pair is returned."""
 
-    registry.register_service("view_service", lambda: None, log_model=int, log_schema=str)
-    assert registry.get_service_log_view("view_service") == (int, str)
+    registry.register_service("view_service", lambda: None, log_model=ServiceLog, log_schema=ServiceLogOut)
+    assert registry.get_service_log_view("view_service") == (ServiceLog, ServiceLogOut)
 
 
 # -------------------------------------------------- SYNC TO DB --------------------------------------------------
 
 
 class TestSyncServicesToDb:
-    def test_inserts_missing_services_with_defaults(self, session):
+    def test_inserts_missing_services_with_defaults(self, session: Session) -> None:
         """Each registered service without a row is inserted using its registration defaults."""
 
         registry.SERVICE_REGISTRY.clear()
@@ -85,7 +90,7 @@ class TestSyncServicesToDb:
         assert not rows["svc_a"].is_enabled
         assert rows["svc_b"].display_name == "Svc B"  # derived
 
-    def test_idempotent_and_preserves_admin_edits(self, session):
+    def test_idempotent_and_preserves_admin_edits(self, session: Session) -> None:
         """Re-syncing creates nothing and never overwrites an existing row."""
 
         registry.SERVICE_REGISTRY.clear()

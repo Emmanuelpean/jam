@@ -1,14 +1,11 @@
 """Tests for app/job_rating/chatgpt.py — openai_query."""
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, AsyncMock
 
 import pytest
 
 from app.job_rating.chatgpt import OpenAiError, openai_query
-
-
-# -------------------------------------------------- HELPERS ---------------------------------------------------
 
 
 def _make_response(content: str | None) -> MagicMock:
@@ -20,9 +17,6 @@ def _make_response(content: str | None) -> MagicMock:
     return response
 
 
-# -------------------------------------------------- FIXTURE ---------------------------------------------------
-
-
 @pytest.fixture(autouse=True)
 def mock_openai_client():
     """Patch the module-level OpenAI client so no real HTTP calls are made."""
@@ -30,12 +24,9 @@ def mock_openai_client():
         yield mock_client
 
 
-# --------------------------------------------------- TESTS ----------------------------------------------------
-
-
 class TestOpenaiQuery:
 
-    def test_returns_parsed_json_on_success(self, mock_openai_client) -> None:
+    def test_returns_parsed_json_on_success(self, mock_openai_client: MagicMock | AsyncMock) -> None:
         payload = {"score": 8, "reason": "Good fit"}
         mock_openai_client.chat.completions.create.return_value = _make_response(json.dumps(payload))
 
@@ -43,7 +34,7 @@ class TestOpenaiQuery:
 
         assert result == payload
 
-    def test_calls_correct_model(self, mock_openai_client) -> None:
+    def test_calls_correct_model(self, mock_openai_client: MagicMock | AsyncMock) -> None:
         mock_openai_client.chat.completions.create.return_value = _make_response("{}")
 
         openai_query("sys", "user")
@@ -51,7 +42,7 @@ class TestOpenaiQuery:
         call_kwargs = mock_openai_client.chat.completions.create.call_args.kwargs
         assert call_kwargs["model"] == "gpt-4.1-mini"
 
-    def test_sends_system_and_user_messages(self, mock_openai_client) -> None:
+    def test_sends_system_and_user_messages(self, mock_openai_client: MagicMock | AsyncMock) -> None:
         mock_openai_client.chat.completions.create.return_value = _make_response("{}")
 
         openai_query("My system prompt", "My user prompt")
@@ -61,7 +52,7 @@ class TestOpenaiQuery:
         assert messages[0] == {"role": "system", "content": "My system prompt"}
         assert messages[1] == {"role": "user", "content": "My user prompt"}
 
-    def test_requests_json_object_response_format(self, mock_openai_client) -> None:
+    def test_requests_json_object_response_format(self, mock_openai_client: MagicMock | AsyncMock) -> None:
         mock_openai_client.chat.completions.create.return_value = _make_response("{}")
 
         openai_query("sys", "user")
@@ -69,7 +60,7 @@ class TestOpenaiQuery:
         call_kwargs = mock_openai_client.chat.completions.create.call_args.kwargs
         assert call_kwargs["response_format"] == {"type": "json_object"}
 
-    def test_temperature_is_0_2(self, mock_openai_client) -> None:
+    def test_temperature_is_0_2(self, mock_openai_client: MagicMock | AsyncMock) -> None:
         mock_openai_client.chat.completions.create.return_value = _make_response("{}")
 
         openai_query("sys", "user")
@@ -77,25 +68,25 @@ class TestOpenaiQuery:
         call_kwargs = mock_openai_client.chat.completions.create.call_args.kwargs
         assert call_kwargs["temperature"] == 0.2
 
-    def test_raises_openai_error_on_empty_content(self, mock_openai_client) -> None:
+    def test_raises_openai_error_on_empty_content(self, mock_openai_client: MagicMock | AsyncMock) -> None:
         mock_openai_client.chat.completions.create.return_value = _make_response(None)
 
         with pytest.raises(OpenAiError):
             openai_query("sys", "user")
 
-    def test_raises_openai_error_on_invalid_json(self, mock_openai_client) -> None:
+    def test_raises_openai_error_on_invalid_json(self, mock_openai_client: MagicMock | AsyncMock) -> None:
         mock_openai_client.chat.completions.create.return_value = _make_response("not valid json {{")
 
         with pytest.raises(OpenAiError):
             openai_query("sys", "user")
 
-    def test_raises_openai_error_when_api_raises(self, mock_openai_client) -> None:
+    def test_raises_openai_error_when_api_raises(self, mock_openai_client: MagicMock | AsyncMock) -> None:
         mock_openai_client.chat.completions.create.side_effect = RuntimeError("network error")
 
         with pytest.raises(OpenAiError):
             openai_query("sys", "user")
 
-    def test_nested_json_parsed_correctly(self, mock_openai_client) -> None:
+    def test_nested_json_parsed_correctly(self, mock_openai_client: MagicMock | AsyncMock) -> None:
         payload = {"scores": {"technical": 7, "culture": 9}, "tags": ["python", "remote"]}
         mock_openai_client.chat.completions.create.return_value = _make_response(json.dumps(payload))
 

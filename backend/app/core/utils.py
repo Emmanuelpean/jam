@@ -1,5 +1,6 @@
 """Utility functions for token management and email verification."""
 
+import datetime as dt
 import secrets
 from typing import Callable
 
@@ -61,21 +62,17 @@ def generate_token(
     token_type: TokenType,
     db: Session,
     pending_email: str | None = None,
+    created_at: dt.datetime | None = None,
 ) -> tuple[str, models.UserToken]:
-    """Generate a secure random token and delete old tokens of the same type.
+    """Generate a secure random token for the user.
+    Existing tokens of the same type are removed by the UserToken before_insert listener.
     :param user_id: ID of the user for whom the token is generated
     :param token_type: Type of the token (e.g., 'verification', 'password_reset', 'email_change')
     :param db: Database session
     :param pending_email: Optional pending email for email_change tokens
+    :param created_at: Optional creation timestamp (defaults to now); used to backdate tokens in tests
     :return: Tuple of (plain_token, UserToken object)"""
 
-    # Delete all existing tokens of this type for this user
-    db.query(models.UserToken).filter(
-        models.UserToken.owner_id == user_id,
-        models.UserToken.token_type == token_type,
-    ).delete()
-
-    # Generate new token
     plain_token = secrets.token_urlsafe(32)
     hashed_token = security.hash_token(plain_token)
 
@@ -85,6 +82,8 @@ def generate_token(
         token_type=token_type,
         pending_email=pending_email,
     )
+    if created_at is not None:
+        new_token.created_at = created_at
     db.add(new_token)
     db.commit()
     db.refresh(new_token)

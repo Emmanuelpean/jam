@@ -2,6 +2,8 @@
 
 import copy
 
+from sqlalchemy.orm import Session
+
 
 def override_properties(data: list[dict], *args) -> list[dict]:
     """Override the owner_id in a list of dictionaries
@@ -23,13 +25,21 @@ def override_properties(data: list[dict], *args) -> list[dict]:
     return data
 
 
-def create_db_entries(db, model, data: list | dict) -> list:
+def owner_aligned(users_by_owner_id: dict) -> list:
+    """Build a positional user list (index = owner_id - 1) for override_properties, padding gaps with None."""
+
+    return [users_by_owner_id.get(i + 1) for i in range(max(users_by_owner_id))]
+
+
+def create_db_entries(db: Session, model, data: list | dict | None = None) -> list:
     """Add a list of items to the database and commit
     :param db: database session
     :param model: model class to create entries from
     :param data: list of dictionaries or single dictionary to create entries from
     :return: list of created entries"""
 
+    if not data:
+        data = [{}]
     if isinstance(data, dict):
         data = [data]
     entries = [model(**kwargs) for kwargs in data]

@@ -17,10 +17,10 @@ from tests.utils.create_data.job_scraping import (
 
 @pytest.fixture
 def test_scraped_jobs(
-    session, test_users, test_job_alert_emails, test_scraping_filters, test_geolocations
+    session, owner_users, test_job_alert_emails, test_scraping_filters, test_geolocations
 ) -> list[models.ScrapedJob]:
     """Create test job alert email jobs"""
-    return create_scraped_jobs(session, test_job_alert_emails, test_users, test_scraping_filters, test_geolocations)
+    return create_scraped_jobs(session, test_job_alert_emails, owner_users, test_scraping_filters, test_geolocations)
 
 
 @pytest.fixture
@@ -30,38 +30,12 @@ def test_job_scraping_service_logs(session) -> list[models.JobEmailScrapingServi
 
 
 @pytest.fixture
-def test_platform_stats(session, test_job_scraping_service_logs) -> list[models.JobEmailScrapingPlatformStat]:
-    """Create test platform stats"""
-    return create_job_scraping_platform_stats(session, test_job_scraping_service_logs)
-
-
-@pytest.fixture
-def test_job_scraping_service_errors(
-    session, test_job_scraping_service_logs
-) -> list[models.ServiceError]:
-    """Create test job_email_scraping service errors"""
-    return create_job_scraping_service_errors(session, test_job_scraping_service_logs)
-
-
-@pytest.fixture
-def test_scraped_job_errors(session, test_scraped_jobs) -> list[models.ServiceError]:
-    """Create test per-job scraping errors"""
-    return create_scraped_job_errors(session, test_scraped_jobs)
-
-
-@pytest.fixture
-def test_job_alert_emails(session, test_users, test_job_scraping_service_logs) -> list[models.JobEmail]:
+def test_job_alert_emails(session, owner_users, test_job_scraping_service_logs) -> list[models.JobEmail]:
     """Create test job alert emails"""
-    return create_job_alert_emails(session, test_users, test_job_scraping_service_logs)
+    return create_job_alert_emails(session, owner_users, test_job_scraping_service_logs)
 
 
 @pytest.fixture
-def test_scraping_filters(session, test_users) -> list[models.ScrapingExclusionFilter]:
+def test_scraping_filters(session, owner_users) -> list[models.ScrapingExclusionFilter]:
     """Create test scraped job filter data"""
-    return create_scraping_filters(session, test_users)
-
-
-@pytest.fixture
-def test_scraping_favourite_filters(session, test_users) -> list[models.ScrapingFavouriteFilter]:
-    """Create test scraped job favourite filter data"""
-    return create_scraping_favourite_filters(session, test_users)
+    return create_scraping_filters(session, owner_users)

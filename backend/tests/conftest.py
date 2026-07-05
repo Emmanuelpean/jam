@@ -22,7 +22,7 @@ from starlette import status
 from starlette.testclient import TestClient
 
 from app import models
-from tests.utils import test_data as td
+from tests.base_test import BaseTest
 from tests.utils.test_data.geolocation import MOCK_GEOCODING_RESPONSES
 
 # Load fixtures from separate modules
@@ -57,6 +57,130 @@ def mock_captcha_verification():
 
 
 @pytest.fixture(autouse=True)
+def block_real_apify_client():
+    """Safety net: no test may construct a real ApifyClient, which would hit the live Apify API.
+    Tests that exercise Apify scrapers patch ApifyClient themselves; this makes an un-mocked
+    construction fail loudly instead of reaching the network."""
+
+    def fail(*_args, **_kwargs):
+        raise RuntimeError(
+            "Real ApifyClient constructed in a test - patch "
+            "'app.job_email_scraping.job_scrapers.apify.ApifyClient' in your test or fixture."
+        )
+
+    with patch("app.job_email_scraping.job_scrapers.apify.ApifyClient", side_effect=fail):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def block_real_brightdata_requests():
+    """Safety net: no test may make a real BrightData HTTP request, which would hit the live API.
+    Tests that exercise BrightData scrapers patch the scraper's `requests` themselves; this makes an
+    un-mocked request fail loudly instead of reaching the network."""
+
+    def fail(*_args, **_kwargs):
+        raise RuntimeError(
+            "Real BrightData HTTP request in a test - patch "
+            "'app.job_email_scraping.job_scrapers.brightdata.requests' in your test or fixture."
+        )
+
+    mock_requests = MagicMock()
+    mock_requests.get.side_effect = fail
+    mock_requests.post.side_effect = fail
+    with patch("app.job_email_scraping.job_scrapers.brightdata.requests", mock_requests):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def block_real_openai_client():
+    """Safety net: no test may reach the live OpenAI API. Tests that exercise job rating patch the
+    client themselves; this makes an un-mocked chat completion fail loudly instead of hitting the network.
+
+    Guards both the already-constructed module-level client and the ``OpenAI`` class itself, so any
+    client built during a test (now or in future code paths) is also a loud mock."""
+
+    def fail(*_args, **_kwargs):
+        raise RuntimeError(
+            "Real OpenAI request in a test - patch 'app.job_rating.chatgpt.client' in your test or fixture."
+        )
+
+    def make_loud_client(*_args, **_kwargs):
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = fail
+        return mock_client
+
+    with (
+        patch("app.job_rating.chatgpt.client", make_loud_client()),
+        patch("openai.OpenAI", side_effect=make_loud_client),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def block_real_anthropic_client():
+    """Safety net: no test may reach the live Anthropic API. Tests that exercise job rating patch the
+    client themselves; this makes an un-mocked message create fail loudly instead of hitting the network.
+
+    Guards both the already-constructed module-level client and the ``Anthropic`` class itself, so any
+    client built during a test (now or in future code paths) is also a loud mock."""
+
+    def fail(*_args, **_kwargs):
+        raise RuntimeError(
+            "Real Anthropic request in a test - patch 'app.job_rating.claude.client' in your test or fixture."
+        )
+
+    def make_loud_client(*_args, **_kwargs):
+        mock_client = MagicMock()
+        mock_client.messages.create.side_effect = fail
+        return mock_client
+
+    with (
+        patch("app.job_rating.claude.client", make_loud_client()),
+        patch("anthropic.Anthropic", side_effect=make_loud_client),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def block_real_provider_http():
+    """Safety net for provider-monitoring fetchers (Anthropic cost_report, Apify, BrightData, Stripe),
+    which all reach the network through `request_with_retry` -> `requests.request` in app.utilities.http.
+    Tests patch `request_with_retry` in each fetch module; this blocks the transport underneath so any
+    un-mocked fetch fails loudly instead of hitting the live provider API."""
+
+    def fail(*_args, **_kwargs):
+        raise RuntimeError(
+            "Real provider HTTP request in a test - patch 'request_with_retry' in the relevant "
+            "app.provider_monitoring.*.fetch module in your test or fixture."
+        )
+
+    mock_requests = MagicMock()
+    mock_requests.request.side_effect = fail
+    with patch("app.utilities.http.requests", mock_requests):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def block_real_stripe_requests():
+    """Safety net: no test may reach the live Stripe API through the SDK. The payments code calls the
+    Stripe SDK directly (e.g. `stripe.Customer.create_async`), and every typed call funnels through
+    `_APIRequestor.request`/`request_async`. Tests patch the specific SDK method they exercise; this
+    blocks the transport underneath so any un-mocked call fails loudly instead of hitting the network."""
+
+    def fail(*_args, **_kwargs):
+        raise RuntimeError(
+            "Real Stripe request in a test - patch the specific 'stripe.*' SDK call "
+            "(e.g. 'app.payments.customer.stripe.Customer.retrieve_async') in your test or fixture."
+        )
+
+    with (
+        patch("stripe._api_requestor._APIRequestor.request", side_effect=fail),
+        patch("stripe._api_requestor._APIRequestor.request_async", side_effect=fail),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_nominatim_get():
     """Auto-mock Nominatim HTTP calls using MOCK_GEOCODING_RESPONSES.
     Known queries return a real-shaped Nominatim response; unknown queries return []
@@ -79,6 +203,69 @@ def mock_nominatim_get():
         yield mock
 
 
+@pytest.fixture
+def mock_email_verif():
+    """Patch the email-change verification email so tests can spy on it (not autouse - opt in by name).
+    Real emails are never sent in tests anyway (send_email no-ops under test_mode); this is for assertions."""
+
+    with patch("app.core.routers.auth.email_service.send_email_change_verification") as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_password_notify():
+    """Patch the password-changed notification email so tests can spy on it (not autouse - opt in by name).
+    Real emails are never sent in tests anyway (send_email no-ops under test_mode); this is for assertions."""
+
+    with patch("app.core.routers.user.email_service.send_password_changed_notification") as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_email_notify():
+    """Patch the email-changed notification email so tests can spy on it (not autouse - opt in by name).
+    Real emails are never sent in tests anyway (send_email no-ops under test_mode); this is for assertions."""
+
+    with patch("app.core.routers.auth.email_service.send_email_change_notification") as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_release_email():
+    """Patch the new-version release email so tests can spy on it (not autouse - opt in by name).
+    Real emails are never sent in tests anyway (send_email no-ops under test_mode); this is for assertions."""
+
+    with patch("app.core.routers.user.email_service.send_new_version_email") as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_verification_email():
+    """Patch the email-verification email so tests can spy on it (not autouse - opt in by name).
+    Real emails are never sent in tests anyway (send_email no-ops under test_mode); this is for assertions."""
+
+    with patch("app.core.routers.auth.email_service.send_email_verification_email") as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_password_reset_email():
+    """Patch the password-reset-request email so tests can spy on it (not autouse - opt in by name).
+    Real emails are never sent in tests anyway (send_email no-ops under test_mode); this is for assertions."""
+
+    with patch("app.core.routers.auth.email_service.send_password_reset_email") as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_password_changed_email():
+    """Patch the password-changed notification email so tests can spy on it (not autouse - opt in by name).
+    Real emails are never sent in tests anyway (send_email no-ops under test_mode); this is for assertions."""
+
+    with patch("app.core.routers.auth.email_service.send_password_changed_notification") as mock:
+        yield mock
+
+
 # -------------------------------------------------------- UTILS -------------------------------------------------------
 
 
@@ -95,10 +282,7 @@ def open_file(filepath: str) -> str:
 def pytest_configure(config) -> None:
     """Configure pytest to add custom markers."""
 
-    config.addinivalue_line(
-        "markers",
-        "requires_actions(*actions): mark test as requiring certain CRUD actions",
-    )
+    config.addinivalue_line("markers", "requires_actions(*actions): mark test as requiring certain CRUD actions")
 
 
 def pytest_collection_modifyitems(config, items) -> None:
@@ -128,7 +312,7 @@ def assert_ownership(item: list | dict, owner_id: int) -> None:
             assert_ownership(subitem, owner_id)
 
 
-class CRUDTestBase:
+class CRUDTestBase(BaseTest):
     """Base class for CRUD tests on FastAPI routes.
 
     Subclasses must override:
@@ -230,30 +414,18 @@ class CRUDTestBase:
 
     # ----------------------------------------------------- CLIENTS ----------------------------------------------------
 
-    def _get_authorised_client(self, authorised_clients) -> TestClient:
-        """Get the appropriate authorised client based on admin_only setting."""
-        if self.admin_only:
-            return authorised_clients[td.ADMIN_USER_INDEX]
-        else:
-            return authorised_clients[td.REGULAR_USER_INDEX]
+    @pytest.fixture
+    def authorised_user(self, test_regular_user, test_admin_user) -> models.User:
+        """The user whose client is used for authorised requests (admin for admin_only endpoints)."""
+        return test_admin_user if self.admin_only else test_regular_user
 
-    def _get_admin_unauthorised_client(self, authorised_clients) -> TestClient:
-        """Get a client that should be denied access."""
-        if self.admin_only:
-            return authorised_clients[td.REGULAR_USER_INDEX]
-        else:
-            return authorised_clients[td.ADMIN_USER_INDEX]
+    @pytest.fixture
+    def unauthorised_user(self, test_regular_user, test_admin_user) -> models.User:
+        """The user whose client should be denied access (the opposite of authorised_user)."""
+        return test_regular_user if self.admin_only else test_admin_user
 
-    def _get_admin_authorised_user(self, test_users) -> models.User:
-        """Get the appropriate authorised user based on admin_only setting."""
-        if self.admin_only:
-            return test_users[td.ADMIN_USER_INDEX]
-        else:
-            return test_users[td.REGULAR_USER_INDEX]
-
-    def get_user_data(self, test_users, data: list) -> list:
+    def get_user_data(self, user, data: list) -> list:
         """Get create_data filtered by owner_id based on admin_only setting."""
-        user = self._get_admin_authorised_user(test_users)
         filtered_data = []
         for d in data:
             if isinstance(d, dict):
@@ -277,20 +449,16 @@ class CRUDTestBase:
                 request.getfixturevalue(fixture)
 
     @pytest.fixture
-    def test_data(self, request, test_users) -> list:
+    def test_data(self, request, authorised_user) -> list:
         """Fixture to get the test data from the specified fixture name."""
-        return self.get_user_data(test_users, request.getfixturevalue(self.test_data_ref))
+        return self.get_user_data(authorised_user, request.getfixturevalue(self.test_data_ref))
 
     # ----------------------------------------------------- GET ALL ----------------------------------------------------
 
     @pytest.mark.requires_actions("get", "get_all")
-    def test_get_all_authorised(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
+    def test_get_all_authorised(self, test_data, authorised_user) -> None:
         """Test that authorised users can successfully retrieve all items from the endpoint."""
-        client = self._get_authorised_client(authorised_clients)
+        client = authorised_user.client
         response = self.get_all(client)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data, response.json())
@@ -306,27 +474,19 @@ class CRUDTestBase:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.requires_actions("get", "get_all")
-    def test_get_all_non_admin(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
+    def test_get_all_non_admin(self, test_data, unauthorised_user) -> None:
         """Test that non-admin users requests to get all items are rejected for admin_only endpoints."""
         if self.admin_only:
-            client = self._get_admin_unauthorised_client(authorised_clients)
+            client = unauthorised_user.client
             response = self.get_all(client)
             assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.requires_actions("get", "get_all")
-    def test_get_all_data_only_authorised(
-        self,
-        authorised_clients,
-        request,
-    ) -> None:
+    def test_get_all_data_only_authorised(self, request, test_regular_user) -> None:
         """Test that users only see data they own when retrieving all items (non-admin endpoints only)."""
         if not self.admin_only and self.get_unauthorised_fixture:
             owner_id = request.getfixturevalue(self.get_unauthorised_fixture)[1]
-            response = self.get_all(authorised_clients[owner_id - 1])
+            response = self.get_all(test_regular_user.client)
             assert response.status_code == status.HTTP_200_OK
             data = response.json()
             print(data)
@@ -336,13 +496,9 @@ class CRUDTestBase:
     # ----------------------------------------------------- GET ONE ----------------------------------------------------
 
     @pytest.mark.requires_actions("get", "get_one")
-    def test_get_one_success(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
+    def test_get_one_success(self, test_data, authorised_user) -> None:
         """Test that authorised users can successfully retrieve a specific item by ID."""
-        client = self._get_authorised_client(authorised_clients)
+        client = authorised_user.client
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data[0], response.json())
@@ -358,37 +514,26 @@ class CRUDTestBase:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.requires_actions("get", "get_one")
-    def test_get_one_incorrect_user(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
+    def test_get_one_incorrect_user(self, test_data, unauthorised_user) -> None:
         """Test that users are denied access to items they don't have permission to view."""
-        client = self._get_admin_unauthorised_client(authorised_clients)
+        client = unauthorised_user.client
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.requires_actions("get", "get_one")
-    def test_get_one_non_exist(
-        self,
-        authorised_clients,
-    ) -> None:
+    def test_get_one_non_exist(self, authorised_user) -> None:
         """Test that requests for non-existent items return a 404 error."""
-        client = self._get_authorised_client(authorised_clients)
+        client = authorised_user.client
         response = self.get_one(client, 0)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
     @pytest.mark.requires_actions("post")
-    def test_post_success(
-        self,
-        authorised_clients,
-        test_users,
-    ) -> None:
+    def test_post_success(self, authorised_user) -> None:
         """Test that authorised users can successfully create new items."""
-        client = self._get_authorised_client(authorised_clients)
-        for create_data in self.get_user_data(test_users, self.create_data):
+        client = authorised_user.client
+        for create_data in self.get_user_data(authorised_user, self.create_data):
             create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
             response = self.post(client, create_data)
             assert response.status_code == status.HTTP_201_CREATED
@@ -404,52 +549,40 @@ class CRUDTestBase:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.requires_actions("post")
-    def test_post_non_admin(
-        self,
-        authorised_clients,
-        test_users,
-    ) -> None:
+    def test_post_non_admin(self, authorised_user, unauthorised_user) -> None:
         """Test that non-admin users are denied access to create items on admin-only endpoints."""
         if self.admin_only:
-            client = self._get_admin_unauthorised_client(authorised_clients)
-            for create_data in self.get_user_data(test_users, self.create_data):
+            client = unauthorised_user.client
+            for create_data in self.get_user_data(authorised_user, self.create_data):
                 create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
                 response = self.post(client, create_data)
                 assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.requires_actions("post")
-    def test_post_field_too_long(self, authorised_clients) -> None:
+    def test_post_field_too_long(self, authorised_user) -> None:
         """Test that creating an item with a field exceeding its max length returns 422."""
         if self.too_long_create_data is None:
             return
-        client = self._get_authorised_client(authorised_clients)
+        client = authorised_user.client
         response = self.post(client, self.too_long_create_data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.requires_actions("post")
-    def test_post_unowned_link_rejected(
-        self,
-        authorised_clients,
-        request,
-    ) -> None:
+    def test_post_unowned_link_rejected(self, request, test_regular_user) -> None:
         """Test that creating an entry linking to a related entry the user does not own is rejected (non-admin endpoints)."""
         if not self.admin_only and self.unauthorised_data_fixture:
             data, owner_id = request.getfixturevalue(self.unauthorised_data_fixture)[:2]
             for datum in data:
                 datum = {key: value for key, value in datum.items() if key not in ("id", "owner_id")}
-                response = self.post(authorised_clients[owner_id - 1], datum)
+                response = self.post(test_regular_user.client, datum)
                 assert response.status_code == status.HTTP_403_FORBIDDEN
 
     # ------------------------------------------------------- PUT ------------------------------------------------------
 
     @pytest.mark.requires_actions("put")
-    def test_put_success(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
+    def test_put_success(self, test_data, authorised_user) -> None:
         """Test that authorised users can successfully update existing items."""
-        client = self._get_authorised_client(authorised_clients)
+        client = authorised_user.client
         data_id = self.update_data.get("id")
         assert isinstance(data_id, int)
         response = self.put(client, data_id, self.update_data)
@@ -457,20 +590,16 @@ class CRUDTestBase:
         self.check_output(self.update_data, response.json())
 
     @pytest.mark.requires_actions("put")
-    def test_put_empty_body(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
+    def test_put_empty_body(self, test_data, authorised_user) -> None:
         """Test that PUT requests with empty request bodies are rejected."""
-        client = self._get_authorised_client(authorised_clients)
+        client = authorised_user.client
         response = self.put(client, test_data[0].id, {})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     @pytest.mark.requires_actions("put")
-    def test_put_non_exist(self, authorised_clients) -> None:
+    def test_put_non_exist(self, authorised_user) -> None:
         """Test that PUT requests for non-existent items return a 404 error."""
-        client = self._get_authorised_client(authorised_clients)
+        client = authorised_user.client
         response = self.put(client, 0, {})
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -485,32 +614,25 @@ class CRUDTestBase:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.requires_actions("put")
-    def test_put_forbidden(self, authorised_clients, test_data) -> None:
+    def test_put_forbidden(self, test_data, unauthorised_user) -> None:
         """Test that users are denied access to update items they don't have permission to modify."""
-        client = self._get_admin_unauthorised_client(authorised_clients)
+        client = unauthorised_user.client
         response = self.put(client, test_data[0].id, {"name": "Test"})
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 
     @pytest.mark.requires_actions("delete")
-    def test_delete_success(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
+    def test_delete_success(self, test_data, authorised_user) -> None:
         """Test that authorised users can successfully delete existing items."""
-        client = self._get_authorised_client(authorised_clients)
+        client = authorised_user.client
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
     @pytest.mark.requires_actions("delete")
-    def test_delete_non_exist(
-        self,
-        authorised_clients,
-    ) -> None:
+    def test_delete_non_exist(self, authorised_user) -> None:
         """Test that DELETE requests for non-existent items return a 404 error."""
-        client = self._get_authorised_client(authorised_clients)
+        client = authorised_user.client
         response = self.delete(client, 0)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -525,13 +647,9 @@ class CRUDTestBase:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.requires_actions("delete")
-    def test_delete_forbidden(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
+    def test_delete_forbidden(self, test_data, unauthorised_user) -> None:
         """Test that users are denied access to delete items they don't have permission to remove."""
-        client = self._get_admin_unauthorised_client(authorised_clients)
+        client = unauthorised_user.client
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 

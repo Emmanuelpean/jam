@@ -5,17 +5,19 @@ operations behave as expected under various scenarios, including successful requ
 """
 
 from datetime import datetime, timezone, timedelta
-from unittest.mock import patch
+from unittest.mock import Mock
 
 import pytest
+from sqlalchemy.orm import Session
+from starlette.testclient import TestClient
 
-import app.job_rating.models as job_rating_models
 from app import models
 from app.base_schemas import COLUMN_LIMITS
-from app.core import schemas, oauth2
+from app.core import schemas
 from app.core.models import TokenType
-from app.core.utils import generate_token
+from app.core.schemas import UserQualificationOut, UserOut
 from app.utilities import security
+from tests.base_test import BaseTest
 from tests.conftest import CRUDTestBase
 
 
@@ -28,248 +30,284 @@ class TestUsersCRUD(CRUDTestBase):
     create_data = [{"email": "test1@test.com", "password": "testpassword1", "premium": {"job_scraping_active": False}}]
     update_data = {"id": 1, "email": "newemail@test.com", "premium": {"job_scraping_active": False}}
 
-    def test_update_admin_incorrect_email_format(self, admin_client, test_regular_user) -> None:
+    def test_update_admin_incorrect_email_format(
+        self, test_regular_user: models.User, test_admin_user: models.User
+    ) -> None:
         """Test updating with invalid email."""
 
-        update_data = {"email": "ff"}
-        response = admin_client.put(f"/users/{test_regular_user.id}", json=update_data)
+        update_data = {"email": "incorrect_email"}
+        response = test_admin_user.client.put(f"/users/{test_regular_user.id}", json=update_data)
         assert response.status_code == 422
 
-    def test_update_admin_existing_email(self, admin_client, test_admin_user, test_regular_user) -> None:
+    def test_update_admin_existing_email(self, test_admin_user: models.User, test_regular_user: models.User) -> None:
         """Test updating with an email that already exists."""
 
         update_data = {"email": test_admin_user.email}
-        response = admin_client.put(f"/users/{test_regular_user.id}", json=update_data)
+        response = test_admin_user.client.put(f"/users/{test_regular_user.id}", json=update_data)
         assert response.status_code == 400
 
-    def test_update_account(self, session, admin_client, test_regular_user) -> None:
+    def test_update_account(self, test_regular_user: models.User, test_admin_user: models.User) -> None:
         """Test updating account does not affect the password."""
 
         password = test_regular_user.password
         update_data = {"first_name": "New first name"}
-        response = admin_client.put(f"/users/{test_regular_user.id}", json=update_data)
+        response = test_admin_user.client.put(f"/users/{test_regular_user.id}", json=update_data)
         assert response.status_code == 200
-        session.refresh(test_regular_user)
+        test_regular_user.refresh()
         assert test_regular_user.password == password
 
 
-class TestGetCurrentUser:
+class TestGetCurrentUser(BaseTest):
 
-    def test_get_current_user_profile_success(
-        self, admin_client, test_admin_user, regular_user_client, test_regular_user
-    ) -> None:
+    endpoint = "/current-user"
+
+    def test_get_current_user_admin_profile_success(self, test_admin_user: models.User) -> None:
+        """Test successfully getting current admin user profile."""
+
+        response = test_admin_user.client.get(self.endpoint)
+        self.check_output(test_admin_user, response.json(), UserOut)
+
+    def test_get_current_user_profile_success(self, test_regular_user: models.User) -> None:
         """Test successfully getting current user profile."""
 
-        # Admin
-        response = admin_client.get("/current-user")
-        assert test_admin_user.email == response.json()["email"]
-
-        # Non-admin
-        response = regular_user_client.get("/current-user")
-        assert test_regular_user.email == response.json()["email"]
+        response = test_regular_user.client.get(self.endpoint)
+        self.check_output(test_regular_user, response.json(), UserOut)
 
 
-class TestUpdateCurrentUserEmail:
+class TestUpdateCurrentUserEmail(BaseTest):
 
-    @staticmethod
-    def get_user(user_id, session) -> models.User:
-        """Helper method to get a user by ID."""
-        return session.query(models.User).filter(models.User.id == user_id).first()
+    endpoint = "/current-user/email"
 
-    @patch("app.core.routers.auth.email_service.send_email_change_verification")
-    def test_update_email(self, mock_email_verif, regular_user_client, test_regular_user, session) -> None:
+    def test_update_email(self, mock_email_verif: Mock, test_regular_user: models.User) -> None:
         """Test updating own profile as non-admin (with email change)."""
 
         # Get initial token version
         initial_token_version = test_regular_user.token_version
 
         update_data = {"email": "newemail@example.com", "current_password": test_regular_user.plain_password}
-        response = regular_user_client.put("/current-user/email", json=update_data)
+        response = test_regular_user.client.put(self.endpoint, json=update_data)
         assert mock_email_verif.call_count == 1
         assert mock_email_verif.call_args[0][0] == "newemail@example.com"
         assert response.status_code == 200
 
         # Verify email hasn't changed yet (pending verification)
-        updated_user = self.get_user(test_regular_user.id, session)
-        assert updated_user.email != update_data["email"]
+        test_regular_user.refresh()
+        assert test_regular_user.email != update_data["email"]
 
         # Check pending_email is in UserToken table
-        token_entry = (
-            session.query(models.UserToken)
-            .filter(models.UserToken.owner_id == test_regular_user.id, models.UserToken.token_type == "email_change")
-            .first()
-        )
+        token_entry = test_regular_user.get_token(TokenType.EMAIL_CHANGE)
         assert token_entry is not None
         assert token_entry.pending_email == update_data["email"]
 
         # Verify token version has not changed
-        assert updated_user.token_version == initial_token_version
+        assert test_regular_user.token_version == initial_token_version
 
-    @patch("app.core.routers.auth.email_service.send_email_change_verification")
-    def test_update_email_rate_limited(self, mock_email_verif, regular_user_client, test_regular_user, session) -> None:
+    def test_update_email_rate_limited(self, mock_email_verif: Mock, test_regular_user: models.User) -> None:
         """Test that a rate-limited email change returns 429."""
 
-        password = test_regular_user.plain_password
-        regular_user_client.put(
-            "/current-user/email", json={"email": "newemail@example.com", "current_password": password}
+        test_regular_user.client.put(
+            self.endpoint, json={"email": "newemail@example.com", "current_password": test_regular_user.plain_password}
         )
         # Second request — should be rate limited
-        response = regular_user_client.put(
-            "/current-user/email", json={"email": "another@example.com", "current_password": password}
+        response = test_regular_user.client.put(
+            self.endpoint, json={"email": "another@example.com", "current_password": test_regular_user.plain_password}
         )
         assert response.status_code == 429
         assert mock_email_verif.call_count == 1
         assert "wait" in response.json()["detail"].lower()
 
-    def test_update_email_same_as_current(self, regular_user_client, test_regular_user) -> None:
+    def test_update_email_same_as_current(self, mock_email_verif: Mock, test_regular_user: models.User) -> None:
         """Test that requesting an email change to the current email returns 400."""
 
-        response = regular_user_client.put(
-            "/current-user/email",
+        response = test_regular_user.client.put(
+            self.endpoint,
             json={"email": test_regular_user.email, "current_password": test_regular_user.plain_password},
         )
         assert response.status_code == 400
+        assert mock_email_verif.call_count == 0
 
-    @patch("app.core.routers.auth.email_service.send_email_change_verification")
-    def test_update_email_incorrect_password(self, mock_email_verif, regular_user_client, test_regular_user) -> None:
+    def test_update_email_incorrect_password(self, mock_email_verif: Mock, test_regular_user: models.User) -> None:
         """Test that an email change with an incorrect current password returns 401."""
 
         update_data = {"email": "newemail@example.com", "current_password": "wrongpassword"}
-        response = regular_user_client.put("/current-user/email", json=update_data)
+        response = test_regular_user.client.put(self.endpoint, json=update_data)
         assert response.status_code == 401
         assert mock_email_verif.call_count == 0
 
-    @patch("app.core.routers.auth.email_service.send_email_change_verification")
-    def test_update_email_demo_fail(self, mock_email_verif, demo_user_client, test_demo_user) -> None:
+    def test_update_email_demo_fail(self, mock_email_verif: Mock, test_demo_user: models.User) -> None:
         """Test updating own email as demo user (should fail)."""
 
         update_data = {"email": "newemail@example.com", "current_password": test_demo_user.plain_password}
-        response = demo_user_client.put("/current-user/email", json=update_data)
-        assert mock_email_verif.call_count == 0
+        response = test_demo_user.client.put(self.endpoint, json=update_data)
         assert response.status_code == 403
+        assert mock_email_verif.call_count == 0
 
-    def test_update_incorrect_email_format(self, session, regular_user_client, test_regular_user) -> None:
+    def test_update_incorrect_email_format(self, mock_email_verif: Mock, test_regular_user: models.User) -> None:
         """Test updating with invalid email."""
 
         update_data = {"email": "ff", "current_password": test_regular_user.plain_password}
-        response = regular_user_client.put("/current-user/email", json=update_data)
+        response = test_regular_user.client.put(self.endpoint, json=update_data)
         assert response.status_code == 422
+        assert mock_email_verif.call_count == 0
 
-    def test_update_existing_email(self, session, regular_user_client, test_regular_user, test_admin_user) -> None:
+    def test_update_existing_email(
+        self, mock_email_verif: Mock, test_regular_user: models.User, test_admin_user: models.User
+    ) -> None:
         """Test updating with an email that already exists."""
 
         update_data = {"email": test_admin_user.email, "current_password": test_regular_user.plain_password}
-        response = regular_user_client.put("/current-user/email", json=update_data)
+        response = test_regular_user.client.put(self.endpoint, json=update_data)
         assert response.status_code == 400
+        assert mock_email_verif.call_count == 0
 
 
-class TestUpdateCurrentUserPassword:
+class TestUpdateCurrentUserPassword(BaseTest):
 
-    @staticmethod
-    def get_user(user_id, session) -> models.User:
-        """Helper method to get a user by ID."""
-        return session.query(models.User).filter(models.User.id == user_id).first()
+    endpoint = "/current-user/password"
 
-    @patch("app.core.routers.user.email_service.send_password_changed_notification")
-    def test_update_password(self, mock_notify, regular_user_client, test_regular_user, session) -> None:
+    def test_update_password(self, mock_password_notify: Mock, test_regular_user: models.User) -> None:
         """Test updating own password as non-admin."""
 
         # Get initial token version
         initial_token_version = test_regular_user.token_version
 
         update_data = {"current_password": test_regular_user.plain_password, "new_password": "newpassword1"}
-        response = regular_user_client.put("/current-user/password", json=update_data)
-
+        response = test_regular_user.client.put(self.endpoint, json=update_data)
         assert response.status_code == 200
-
-        # Verify password changed
-        updated_user = self.get_user(test_regular_user.id, session)
-        assert security.verify_password(update_data["new_password"], updated_user.password)
-
-        # Verify token version incremented
-        assert updated_user.token_version == initial_token_version + 1
-
         assert "password changed email sent successfully" in response.json()["message"].lower()
 
-        # Verify email sent
-        assert mock_notify.call_count == 1
-        assert mock_notify.call_args[0][0] == test_regular_user.email
+        # Verify password changed and token version incremented
+        test_regular_user.refresh()
+        assert security.verify_password(update_data["new_password"], test_regular_user.password)
+        assert test_regular_user.token_version == initial_token_version + 1
 
-    def test_update_password_rate_limited(self, regular_user_client, test_regular_user, session) -> None:
+        # Verify email sent
+        assert mock_password_notify.call_count == 1
+        assert mock_password_notify.call_args[0][0] == test_regular_user.email
+
+    def test_update_password_rate_limited(self, mock_password_notify: Mock, test_regular_user: models.User) -> None:
         """Test that a rate-limited password change returns 429."""
 
-        # Seed a recent PASSWORD_CHANGE token to simulate a just-completed password change
-        generate_token(test_regular_user.id, TokenType.PASSWORD_CHANGE, session)
-
-        response = regular_user_client.put(
-            "/current-user/password",
+        # A first password change succeeds and seeds a recent PASSWORD_CHANGE token
+        response = test_regular_user.client.put(
+            self.endpoint,
             json={"current_password": test_regular_user.plain_password, "new_password": "newpassword1"},
+        )
+        assert response.status_code == 200
+
+        # The change revoked the current token, so re-authenticate before the next request
+        test_regular_user.reauthenticate()
+
+        response = test_regular_user.client.put(
+            self.endpoint,
+            json={"current_password": "newpassword1", "new_password": "newpassword2"},
         )
         assert response.status_code == 429
         assert "wait" in response.json()["detail"].lower()
+        assert mock_password_notify.call_count == 1
 
-    def test_update_password_demo_fail(self, demo_user_client, test_demo_user, session) -> None:
+    def test_update_password_demo_fail(self, mock_password_notify: Mock, test_demo_user: models.User) -> None:
         """Test updating own password as demo user (should fail)."""
 
         update_data = {"current_password": test_demo_user.plain_password, "new_password": "newpassword1"}
-        response = demo_user_client.put("/current-user/password", json=update_data)
+        response = test_demo_user.client.put(self.endpoint, json=update_data)
         assert response.status_code == 403
+        assert mock_password_notify.call_count == 0
 
-    def test_update_password_revokes_token(self, regular_user_client, test_regular_user, session) -> None:
+    def test_update_password_revokes_token(self, mock_password_notify: Mock, test_regular_user: models.User) -> None:
         """Test that updating password invalidates current token."""
 
         # Change password
         update_data = {"current_password": test_regular_user.plain_password, "new_password": "newpassword1"}
-        response = regular_user_client.put("/current-user/password", json=update_data)
+        response = test_regular_user.client.put(self.endpoint, json=update_data)
         assert response.status_code == 200
+        assert mock_password_notify.call_count == 1
 
         # Try to use the old token (test_client still has it)
-        response = regular_user_client.get("/current-user")
+        response = test_regular_user.client.get("/current-user")
         assert response.status_code == 401
         assert "revoked" in response.json()["detail"].lower()
 
-    def test_update_password_incorrect_password(self, regular_user_client, test_regular_user, session) -> None:
+    def test_update_password_incorrect_password(
+        self, mock_password_notify: Mock, test_regular_user: models.User
+    ) -> None:
         """Test updating password with incorrect current password."""
 
         update_data = {"current_password": "", "new_password": "newpassword1"}
-        response = regular_user_client.put("/current-user/password", json=update_data)
+        response = test_regular_user.client.put(self.endpoint, json=update_data)
         assert response.status_code == 401
+        assert mock_password_notify.call_count == 0
+
+    @pytest.mark.parametrize(
+        "field, value",
+        [
+            ("current_password", "x" * (COLUMN_LIMITS.password + 1)),
+            ("new_password", "x" * (COLUMN_LIMITS.password + 1)),
+        ],
+    )
+    def test_update_password_field_too_long(self, field: str, value: str, test_regular_user: models.User) -> None:
+        """Test that updating password with a field exceeding its max length returns 422."""
+        response = test_regular_user.client.put(self.endpoint, json={field: value})
+        assert response.status_code == 422
+
+    def test_token_version_starts_at_zero(self, test_regular_user: models.User) -> None:
+        """Test that new users start with token_version 0."""
+
+        assert test_regular_user.token_version == 0
+
+    def test_old_token_rejected_after_password_change(
+        self, mock_password_notify: Mock, test_regular_user: models.User
+    ) -> None:
+        """Test that tokens with an old version are rejected after a password change, and a fresh one works."""
+
+        # Current token works
+        assert test_regular_user.client.get("/current-user").status_code == 200
+
+        # Change password (this increments token_version, revoking existing tokens)
+        update_data = {"current_password": test_regular_user.plain_password, "new_password": "newpassword1"}
+        assert test_regular_user.client.put(self.endpoint, json=update_data).status_code == 200
+
+        # The old token is now rejected
+        response = test_regular_user.client.get("/current-user")
+        assert response.status_code == 401
+        assert "revoked" in response.json()["detail"].lower()
+
+        # A token minted for the new version is accepted
+        test_regular_user.reauthenticate()
+        assert test_regular_user.client.get("/current-user").status_code == 200
 
 
-class TestUpdateCurrentUser:
+class TestUpdateCurrentUser(BaseTest):
 
-    @staticmethod
-    def get_user(user_id, session) -> models.User:
-        """Helper method to get a user by ID."""
-        return session.query(models.User).filter(models.User.id == user_id).first()
+    endpoint = "/current-user"
 
-    def test_update_account(self, session, regular_user_client, test_regular_user) -> None:
+    def test_update_account(self, test_regular_user: models.User) -> None:
         """Test updating account does not affect the password."""
 
         password = test_regular_user.password
         update_data = {"first_name": "New first name"}
-        response = regular_user_client.put("/current-user", json=update_data)
+        response = test_regular_user.client.put(self.endpoint, json=update_data)
         assert response.status_code == 200
-        session.refresh(test_regular_user)
+        test_regular_user.refresh()
         assert test_regular_user.password == password
 
-    def test_update_preferences(self, session, regular_user_client, test_regular_user) -> None:
+    def test_update_preferences(self, test_regular_user: models.User) -> None:
         """Test updating user preferences that don't require password."""
 
         # Get initial token version
         initial_token_version = test_regular_user.token_version
 
         update_data = {"preferences": {"default_currency": "USD"}}
-        response = regular_user_client.put("/current-user", json=update_data)
+        response = test_regular_user.client.put(self.endpoint, json=update_data)
         assert response.status_code == 200
 
-        updated_user = self.get_user(test_regular_user.id, session)
-        assert updated_user.preferences.default_currency == "USD"
+        test_regular_user.refresh()
+        assert test_regular_user.preferences.default_currency == "USD"
 
         # Verify token version NOT incremented (no password/email change)
-        assert updated_user.token_version == initial_token_version
+        assert test_regular_user.token_version == initial_token_version
 
-    def test_update_premium(self, session, regular_user_client, test_regular_user) -> None:
+    def test_update_premium(self, test_regular_user: models.User) -> None:
         """Test updating user premium details that don't require password."""
 
         # Get initial token version
@@ -277,16 +315,16 @@ class TestUpdateCurrentUser:
 
         assert test_regular_user.premium.job_scraping_active is True
         update_data = {"premium": {"job_scraping_active": False}}
-        response = regular_user_client.put("/current-user", json=update_data)
+        response = test_regular_user.client.put(self.endpoint, json=update_data)
         assert response.status_code == 200
 
-        updated_user = self.get_user(test_regular_user.id, session)
-        assert not updated_user.premium.job_scraping_active
+        test_regular_user.refresh()
+        assert not test_regular_user.premium.job_scraping_active
 
         # Verify token version NOT incremented (no password/email change)
-        assert updated_user.token_version == initial_token_version
+        assert test_regular_user.token_version == initial_token_version
 
-    def test_update_premium_is_active(self, session, regular_user_client, test_regular_user) -> None:
+    def test_update_premium_is_active(self, test_regular_user: models.User) -> None:
         """Test updating user premium is_active does not work"""
 
         # Get initial token version
@@ -294,23 +332,23 @@ class TestUpdateCurrentUser:
 
         assert test_regular_user.premium.is_active is True
         update_data = {"premium": {"is_active": False}}
-        response = regular_user_client.put("/current-user", json=update_data)
+        response = test_regular_user.client.put(self.endpoint, json=update_data)
         assert response.status_code == 200
 
-        updated_user = self.get_user(test_regular_user.id, session)
-        assert updated_user.premium.is_active
+        test_regular_user.refresh()
+        assert test_regular_user.premium.is_active
 
         # Verify token version NOT incremented (no password/email change)
-        assert updated_user.token_version == initial_token_version
+        assert test_regular_user.token_version == initial_token_version
 
-    def test_unauthorised_update(self, session, client, test_regular_user) -> None:
+    def test_unauthorised_update(self, client: TestClient) -> None:
         """Test updating without authentication."""
 
         update_data = {"preferences": {"default_currency": "USD"}}
-        response = client.put("/current-user", json=update_data)
+        response = client.put(self.endpoint, json=update_data)
         assert response.status_code == 401
 
-    def test_heartbeat_updates_last_login(self, regular_user_client, test_regular_user, session) -> None:
+    def test_heartbeat_updates_last_login(self, test_regular_user: models.User, session: Session) -> None:
         """Test that heartbeat updates last_login and previous_login."""
 
         # Set an initial last_login
@@ -318,18 +356,18 @@ class TestUpdateCurrentUser:
         test_regular_user.last_login = initial_last_login
         session.commit()
 
-        response = regular_user_client.post("/current-user/heartbeat")
+        response = test_regular_user.client.post(f"{self.endpoint}/heartbeat")
         assert response.status_code == 200
         assert response.json()["success"] is True
 
-        updated_user = self.get_user(test_regular_user.id, session)
-        assert updated_user.previous_login == initial_last_login
-        assert updated_user.last_login > initial_last_login
+        test_regular_user.refresh()
+        assert test_regular_user.previous_login == initial_last_login
+        assert test_regular_user.last_login > initial_last_login
 
-    def test_heartbeat_unauthenticated(self, client) -> None:
+    def test_heartbeat_unauthenticated(self, client: TestClient) -> None:
         """Test that heartbeat requires authentication."""
 
-        response = client.post("/current-user/heartbeat")
+        response = client.post(f"{self.endpoint}/heartbeat")
         assert response.status_code == 401
 
     @pytest.mark.parametrize(
@@ -340,376 +378,190 @@ class TestUpdateCurrentUser:
             ("app_version", "x" * (COLUMN_LIMITS.app_version + 1)),
         ],
     )
-    def test_update_field_too_long(self, field, value, regular_user_client) -> None:
+    def test_update_field_too_long(self, field: str, value: str, test_regular_user: models.User) -> None:
         """Test that updating current user with a field exceeding its max length returns 422."""
-        response = regular_user_client.put("/current-user", json={field: value})
-        assert response.status_code == 422
 
-    @pytest.mark.parametrize(
-        "field, value",
-        [
-            ("current_password", "x" * (COLUMN_LIMITS.password + 1)),
-            ("new_password", "x" * (COLUMN_LIMITS.password + 1)),
-        ],
-    )
-    def test_update_password_field_too_long(self, field, value, regular_user_client) -> None:
-        """Test that updating password with a field exceeding its max length returns 422."""
-        response = regular_user_client.put("/current-user/password", json={field: value})
+        response = test_regular_user.client.put(self.endpoint, json={field: value})
         assert response.status_code == 422
 
 
-class TestEmailVerification:
+class TestEmailVerification(BaseTest):
+    """Test the email verification flow"""
 
-    @patch("app.core.routers.auth.email_service.send_email_change_notification")
-    def test_verify_email_success(self, mock_email, client, test_user_change_email_token_user, session) -> None:
+    endpoint = "/current-user/verify-email"
+
+    def test_verify_email_success(
+        self, mock_email_notify: Mock, client: TestClient, test_regular_user: models.User
+    ) -> None:
         """Test successful email change with valid token."""
 
-        # Get initial token version
-        initial_token_version = test_user_change_email_token_user.token_version
+        # Create a pending email change token
+        pending_email = "newemail@test.com"
+        plain_token, _ = test_regular_user.create_token(TokenType.EMAIL_CHANGE, pending_email=pending_email)
+        initial_token_version = test_regular_user.token_version
 
-        # Get pending email from token
-        token_entry = (
-            session.query(models.UserToken)
-            .filter(
-                models.UserToken.owner_id == test_user_change_email_token_user.id,
-                models.UserToken.token_type == "email_change",
-            )
-            .first()
-        )
-        assert token_entry
-        pending_email = token_entry.pending_email
-
-        response = client.get(
-            f"/current-user/verify-email/{test_user_change_email_token_user.plain_verification_token}"
-        )
-
+        response = client.get(f"{self.endpoint}/{plain_token}")
         assert response.status_code == 200
         assert "email address has been successfully updated" in response.json()["message"].lower()
 
-        user = session.query(models.User).filter(models.User.id == test_user_change_email_token_user.id).first()
-
         # Verify email updated
-        assert user
-        assert user.email == pending_email
+        test_regular_user.refresh()
+        assert test_regular_user.email == pending_email
 
         # Verify token was deleted
-        token_entry = (
-            session.query(models.UserToken)
-            .filter(
-                models.UserToken.owner_id == test_user_change_email_token_user.id,
-                models.UserToken.token_type == "email_change",
-            )
-            .first()
-        )
-        assert token_entry is None
+        assert test_regular_user.get_token(TokenType.EMAIL_CHANGE) is None
 
         # Verify token version incremented
-        assert user.token_version == initial_token_version + 1
+        assert test_regular_user.token_version == initial_token_version + 1
 
         # Verify notification sent
-        assert mock_email.call_count == 1
-        assert mock_email.call_args[0][0] == pending_email
+        assert mock_email_notify.call_count == 1
+        assert mock_email_notify.call_args[0][0] == pending_email
 
-    @patch("app.core.routers.auth.email_service.send_email_change_notification")
-    def test_verify_email_demo_fail(self, mock_email, client, test_demo_user, session) -> None:
+    def test_verify_email_demo_fail(
+        self, mock_email_notify: Mock, client: TestClient, test_demo_user: models.User
+    ) -> None:
         """Test email change fails for demo user."""
 
-        # Create email change token for demo user
-        plain_token, token_obj = generate_token(
-            test_demo_user.id, TokenType.EMAIL_CHANGE, session, pending_email="newemail@test.com"
-        )
-
-        response = client.get(f"/current-user/verify-email/{plain_token}")
-
+        plain_token = test_demo_user.create_token(TokenType.EMAIL_CHANGE, pending_email="newemail@test.com")[0]
+        response = client.get(f"{self.endpoint}/{plain_token}")
         assert response.status_code == 403
-        assert mock_email.call_count == 0
+        assert mock_email_notify.call_count == 0
 
-    def test_verify_email_invalid_token(self, client) -> None:
+    def test_verify_email_invalid_token(self, mock_email_notify: Mock, client: TestClient) -> None:
         """Test email verification with invalid token."""
 
-        response = client.get("/current-user/verify-email/invalid_token_xyz")
-
+        response = client.get(f"{self.endpoint}/invalid_token_xyz")
         assert response.status_code == 403
         assert "invalid" in response.json()["detail"].lower()
+        assert mock_email_notify.call_count == 0
 
-    def test_verify_email_expired_token(self, client, session) -> None:
+    def test_verify_email_expired_token(
+        self, mock_email_notify: Mock, client: TestClient, test_regular_user: models.User
+    ) -> None:
         """Test email verification with expired token."""
 
-        # Create user with all required relationships
-        user = models.User(
-            email="unverified@test.com",
-            password="password",
-            is_verified=False,
-            is_active=True,
-            token_version=0,
-        )
-        session.add(user)
-        session.commit()
-
-        # Create expired token
-        token = "expired_token_123"
-        hashed_token = security.hash_token(token)
+        # Create an already-expired email change token
         expired_time = datetime.now(timezone.utc) - timedelta(hours=25)
-
-        token_entry = models.UserToken(
-            owner_id=user.id,
-            token=hashed_token,
-            token_type="email_change",
-            pending_email="newemail@test.com",
+        plain_token, _ = test_regular_user.create_token(
+            TokenType.EMAIL_CHANGE, pending_email="newemail@test.com", created_at=expired_time
         )
-        session.add(token_entry)
-        session.commit()
 
-        # Set expired time
-        token_entry.created_at = expired_time
-        session.commit()
-
-        response = client.get(f"/current-user/verify-email/{token}")
+        response = client.get(f"{self.endpoint}/{plain_token}")
 
         assert response.status_code == 403
         assert "expired" in response.json()["detail"].lower()
+        assert mock_email_notify.call_count == 0
 
-    def test_verify_email_existing(self, client, session, test_users) -> None:
+    def test_verify_email_existing(
+        self,
+        mock_email_notify: Mock,
+        client: TestClient,
+        test_unverified_user: models.User,
+        test_admin_user: models.User,
+    ) -> None:
         """Test email verification when pending email already exists."""
 
-        # Create user
-        user = models.User(
-            email="unverified@test.com",
-            password="password",
-            is_verified=False,
-            is_active=True,
-            token_version=0,
-        )
-        session.add(user)
-        session.commit()
+        # Create token with an existing email as pending
+        plain_token = test_unverified_user.create_token(TokenType.EMAIL_CHANGE, pending_email=test_admin_user.email)[0]
 
-        # Create token with existing email as pending
-        plain_token, token_obj = generate_token(
-            user.id, TokenType.EMAIL_CHANGE, session, pending_email=test_users[1].email
-        )
-
-        response = client.get(f"/current-user/verify-email/{plain_token}")
+        response = client.get(f"{self.endpoint}/{plain_token}")
 
         assert response.status_code == 400
         assert response.json()["detail"].lower() == "email already registered"
+        assert mock_email_notify.call_count == 0
 
 
-class TestTokenVersioning:
-    """Test suite for token versioning and invalidation."""
-
-    def test_token_version_starts_at_zero(self, test_regular_user) -> None:
-        """Test that new users start with token_version 0."""
-        assert test_regular_user.token_version == 0
-
-    def test_old_token_rejected_after_password_change(
-        self, regular_user_client, test_regular_user, session, client
-    ) -> None:
-        """Test that tokens with old version are rejected after password change."""
-
-        # First verify current token works
-        response = regular_user_client.get("/current-user")
-        assert response.status_code == 200
-
-        # Change password (this increments token_version)
-        update_data = {"current_password": test_regular_user.plain_password, "new_password": "newpassword1"}
-        response = regular_user_client.put("/current-user/password", json=update_data)
-        assert response.status_code == 200
-
-        # Try to use old token - should fail
-        response = regular_user_client.get("/current-user")
-        assert response.status_code == 401
-        assert "revoked" in response.json()["detail"].lower()
-
-        # Verify new login works
-        user = session.query(models.User).filter(models.User.id == test_regular_user.id).first()
-        assert user
-        new_token = oauth2.create_access_token(data={"user_id": test_regular_user.id}, token_version=user.token_version)
-        response = client.get("/current-user", headers={"Authorization": f"Bearer {new_token}"})
-        assert response.status_code == 200
-
-    @patch("app.core.routers.auth.email_service.send_email_change_verification")
-    def test_token_version_no_increments_on_email_change_request(
-        self, _mock_email, regular_user_client, test_regular_user, session
-    ) -> None:
-        """Test that token version does NOT increment when email change is requested."""
-
-        initial_version = test_regular_user.token_version
-
-        update_data = {"email": "newemail@example.com", "current_password": test_regular_user.plain_password}
-        response = regular_user_client.put("/current-user/email", json=update_data)
-        assert response.status_code == 200
-
-        user = session.query(models.User).filter(models.User.id == test_regular_user.id).first()
-        assert user
-        assert user.token_version == initial_version
-
-    @patch("app.core.routers.auth.email_service.send_email_change_notification")
-    def test_token_version_increments_on_email_verification(
-        self, mock_email, client, test_user_change_email_token_user, session
-    ) -> None:
-        """Test that token version increments when email change is verified."""
-
-        initial_version = test_user_change_email_token_user.token_version
-
-        response = client.get(
-            f"/current-user/verify-email/{test_user_change_email_token_user.plain_verification_token}"
-        )
-        assert response.status_code == 200
-
-        user = session.query(models.User).filter(models.User.id == test_user_change_email_token_user.id).first()
-        assert user
-        assert user.token_version == initial_version + 1
-        assert mock_email.call_count == 1
-
-    def test_token_version_unchanged_for_non_sensitive_updates(
-        self, regular_user_client, test_regular_user, session
-    ) -> None:
-        """Test that token version does NOT increment for non-password/email updates."""
-
-        initial_version = test_regular_user.token_version
-
-        update_data = {"preferences": {"default_currency": "USD"}}
-        response = regular_user_client.put("/current-user", json=update_data)
-        assert response.status_code == 200
-
-        user = session.query(models.User).filter(models.User.id == test_regular_user.id).first()
-        assert user
-        assert user.token_version == initial_version
-
-        # Verify token still works
-        response = regular_user_client.get("/current-user")
-        assert response.status_code == 200
-
-
-class TestVerifyPassword:
+class TestVerifyPassword(BaseTest):
     """Test suite for the POST /current-user/verify-password endpoint."""
 
-    def test_verify_password_success(self, regular_user_client, test_regular_user) -> None:
+    endpoint = "/current-user/verify-password"
+
+    def test_verify_password_success(self, test_regular_user: models.User) -> None:
         """Test that the correct password returns 200."""
 
-        response = regular_user_client.post(
-            "/current-user/verify-password", json={"password": test_regular_user.plain_password}
-        )
+        response = test_regular_user.client.post(self.endpoint, json={"password": test_regular_user.plain_password})
         assert response.status_code == 200
         assert response.json()["success"] is True
 
-    def test_verify_password_incorrect_password(self, regular_user_client, test_regular_user) -> None:
+    def test_verify_password_incorrect_password(self, test_regular_user: models.User) -> None:
         """Test that a wrong password returns 401."""
 
-        response = regular_user_client.post(
-            "/current-user/verify-password", json={"password": test_regular_user.plain_password + "wrong"}
+        response = test_regular_user.client.post(
+            self.endpoint, json={"password": test_regular_user.plain_password + "wrong"}
         )
         assert response.status_code == 401
         assert "incorrect" in response.json()["detail"].lower()
 
-    def test_verify_password_empty_password(self, regular_user_client) -> None:
+    def test_verify_password_empty_password(self, test_regular_user: models.User) -> None:
         """Test that an empty password returns 401."""
 
-        response = regular_user_client.post("/current-user/verify-password", json={"password": ""})
+        response = test_regular_user.client.post(self.endpoint, json={"password": ""})
         assert response.status_code == 401
         assert "incorrect" in response.json()["detail"].lower()
 
-    def test_verify_password_unauthenticated(self, client) -> None:
+    def test_verify_password_unauthenticated(self, client: TestClient) -> None:
         """Test that unauthenticated requests return 401."""
 
-        response = client.post("/current-user/verify-password", json={"password": "anypassword"})
+        response = client.post(self.endpoint, json={"password": "anypassword"})
         assert response.status_code == 401
 
-    def test_verify_password_does_not_modify_user(self, regular_user_client, test_regular_user, session) -> None:
-        """Test that a successful password verification leaves user state unchanged."""
 
-        initial_token_version = test_regular_user.token_version
-        initial_password_hash = test_regular_user.password
-
-        regular_user_client.post("/current-user/verify-password", json={"password": test_regular_user.plain_password})
-
-        session.refresh(test_regular_user)
-        assert test_regular_user.token_version == initial_token_version
-        assert test_regular_user.password == initial_password_hash
-
-
-class TestDeleteAccount:
+class TestDeleteAccount(BaseTest):
     """Test suite for account deletion endpoint."""
 
-    def test_delete_account_success(self, regular_user_client, test_regular_user, session) -> None:
+    endpoint = "/current-user"
+
+    def test_delete_account_success(self, test_regular_user: models.User, session: Session) -> None:
         """Test successful account deletion with correct password."""
 
-        # Get user ID before deletion
-        user_id = test_regular_user.id
-
-        # Verify user exists
-        user = session.query(models.User).filter(models.User.id == user_id).first()
-        assert user is not None
-
-        # Delete account
         delete_data = {"password": test_regular_user.plain_password}
-        response = regular_user_client.request("DELETE", "/current-user", json=delete_data)
+        response = test_regular_user.client.request("DELETE", self.endpoint, json=delete_data)
 
         assert response.status_code == 200
         assert response.json()["success"] is True
         assert "deleted successfully" in response.json()["message"].lower()
+        assert self.get_user(session, test_regular_user.id) is None
 
-        # Verify user was deleted
-        user = session.query(models.User).filter(models.User.id == user_id).first()
-        assert user is None
-
-    def test_delete_account_incorrect_password(self, regular_user_client, test_regular_user, session) -> None:
+    def test_delete_account_incorrect_password(self, test_regular_user: models.User, session: Session) -> None:
         """Test account deletion fails with incorrect password."""
 
-        user_id = test_regular_user.id
-
-        # Try to delete with wrong password
         delete_data = {"password": "wrongpassword"}
-        response = regular_user_client.request("DELETE", "/current-user", json=delete_data)
+        response = test_regular_user.client.request("DELETE", self.endpoint, json=delete_data)
 
         assert response.status_code == 401
         assert "incorrect" in response.json()["detail"].lower()
+        assert self.get_user(session, test_regular_user.id) == test_regular_user
 
-        # Verify user still exists
-        user = session.query(models.User).filter(models.User.id == user_id).first()
-        assert user is not None
-
-    def test_delete_account_demo_user_fails(self, demo_user_client, test_demo_user, session) -> None:
+    def test_delete_account_demo_user_fails(self, test_demo_user: models.User, session: Session) -> None:
         """Test that demo users cannot delete their account."""
 
-        user_id = test_demo_user.id
-
-        # Try to delete demo account
         delete_data = {"password": test_demo_user.plain_password}
-        response = demo_user_client.request("DELETE", "/current-user", json=delete_data)
+        response = test_demo_user.client.request("DELETE", self.endpoint, json=delete_data)
 
         assert response.status_code == 403
         assert "test users cannot delete" in response.json()["detail"].lower()
+        assert self.get_user(session, test_demo_user.id) is not None
 
-        # Verify demo user still exists
-        user = session.query(models.User).filter(models.User.id == user_id).first()
-        assert user is not None
-
-    def test_delete_account_unauthenticated(self, client) -> None:
+    def test_delete_account_unauthenticated(self, client: TestClient) -> None:
         """Test that unauthenticated users cannot delete accounts."""
 
         delete_data = {"password": "somepassword"}
-        response = client.request("DELETE", "/current-user", json=delete_data)
+        response = client.request("DELETE", self.endpoint, json=delete_data)
 
         assert response.status_code == 401
 
-    def test_delete_account_empty_password(self, regular_user_client, test_regular_user, session) -> None:
+    def test_delete_account_empty_password(self, test_regular_user: models.User, session: Session) -> None:
         """Test account deletion fails with empty password."""
 
-        user_id = test_regular_user.id
-
-        # Try to delete with empty password
         delete_data = {"password": ""}
-        response = regular_user_client.request("DELETE", "/current-user", json=delete_data)
+        response = test_regular_user.client.request("DELETE", self.endpoint, json=delete_data)
 
         assert response.status_code == 401
         assert "incorrect" in response.json()["detail"].lower()
+        assert self.get_user(session, test_regular_user.id) == test_regular_user
 
-        # Verify user still exists
-        user = session.query(models.User).filter(models.User.id == user_id).first()
-        assert user is not None
-
-    def test_delete_account_cascades_to_related_data(self, regular_user_client, test_regular_user, session) -> None:
+    def test_delete_account_cascades_to_related_data(self, test_regular_user: models.User, session: Session) -> None:
         """Test that deleting account cascades to all related data."""
 
         user_id = test_regular_user.id
@@ -720,179 +572,102 @@ class TestDeleteAccount:
         preferences_id = test_regular_user.preferences.id
         premium_id = test_regular_user.premium.id
 
-        # Create a Job for the user
-
-        job = models.Job(title="Test Job", owner_id=user_id)
-        session.add(job)
-        session.commit()
+        # Create a Job and a Person linked to it
+        job = test_regular_user.create_job(title="Test Job")
         job_id = job.id
-
-        # Create a Person and link it to the Job
-
-        person = models.Person(first_name="John", last_name="Doe", owner_id=user_id)
-        session.add(person)
-        session.commit()
+        person = test_regular_user.create_person(first_name="John", last_name="Doe")
         person_id = person.id
         person.jobs.append(job)
         session.commit()
 
-        # Create a service log for JobEmail
-
-        email_service_log = models.JobEmailScrapingServiceLog(run_datetime=datetime.now(timezone.utc))
-        session.add(email_service_log)
-        session.commit()
-
-        # Create a JobEmail
-
-        job_email = models.JobEmail(
-            external_email_id=f"test_email_{user_id}",
-            subject="Test Job Alert",
-            sender="jobs@linkedin.com",
-            date_received=datetime.now(timezone.utc),
-            platform="LinkedIn",
-            body="Test email body",
-            service_log_id=email_service_log.id,
-            owner_id=user_id,
-        )
-        session.add(job_email)
-        session.commit()
+        # Create a JobEmail and a ScrapedJob linked to it
+        job_email = test_regular_user.create_job_email()
         job_email_id = job_email.id
-
-        # Create a ScrapedJob and link it to the JobEmail
-
-        scraped_job = models.ScrapedJob(
-            external_job_id=f"test_scraped_job_{user_id}",
-            platform="LinkedIn",
-            title="Test Scraped Job",
-            service_log_id=email_service_log.id,
-            owner_id=user_id,
-        )
-        session.add(scraped_job)
-        session.commit()
+        scraped_job = test_regular_user.create_scraped_job(title="Test Scraped Job")
         scraped_job_id = scraped_job.id
         scraped_job.emails.append(job_email)
         session.commit()
 
-        # Create a UserQualification for JobRating
-
-        user_qualification = models.UserQualification(experience="Test experience", owner_id=user_id)
-        session.add(user_qualification)
-        session.commit()
+        # Create a UserQualification and a JobRating for the ScrapedJob
+        user_qualification = test_regular_user.create_user_qualification(experience="Test experience")
         user_qualification_id = user_qualification.id
-
-        # Create a JobRating for the ScrapedJob
-
-        job_rating = job_rating_models.JobRating(
-            overall_score=8,
-            scraped_job_id=scraped_job_id,
-            user_qualification_id=user_qualification_id,
-            owner_id=user_id,
-            llm_model="chatgpt",
+        job_rating = test_regular_user.create_job_rating(
+            scraped_job=scraped_job, user_qualification=user_qualification, overall_score=8
         )
-        session.add(job_rating)
-        session.commit()
         job_rating_id = job_rating.id
 
         # Delete account
         delete_data = {"password": test_regular_user.plain_password}
-        response = regular_user_client.request("DELETE", "/current-user", json=delete_data)
+        response = test_regular_user.client.request("DELETE", self.endpoint, json=delete_data)
 
         assert response.status_code == 200
 
-        # Verify user was deleted
-        user = session.query(models.User).filter(models.User.id == user_id).first()
-        assert user is None
+        # Verify the user and all related data were cascade deleted
+        assert self.get_user(session, user_id) is None
+        assert self.get_by_id(session, models.UserPreferences, preferences_id) is None
+        assert self.get_by_id(session, models.PremiumSettings, premium_id) is None
+        assert self.get_by_id(session, models.Job, job_id) is None
+        assert self.get_by_id(session, models.Person, person_id) is None
+        assert self.get_by_id(session, models.JobEmail, job_email_id) is None
+        assert self.get_by_id(session, models.ScrapedJob, scraped_job_id) is None
+        assert self.get_by_id(session, models.JobRating, job_rating_id) is None
+        assert self.get_by_id(session, models.UserQualification, user_qualification_id) is None
 
-        # Verify preferences were cascade deleted
-        preferences = session.query(models.UserPreferences).filter(models.UserPreferences.id == preferences_id).first()
-        assert preferences is None
-
-        # Verify premium settings were cascade deleted
-        premium = session.query(models.PremiumSettings).filter(models.PremiumSettings.id == premium_id).first()
-        assert premium is None
-
-        # Verify Job was cascade deleted
-        job = session.query(models.Job).filter(models.Job.id == job_id).first()
-        assert job is None
-
-        # Verify Person was cascade deleted
-        person = session.query(models.Person).filter(models.Person.id == person_id).first()
-        assert person is None
-
-        # Verify JobEmail was cascade deleted
-        job_email = session.query(models.JobEmail).filter(models.JobEmail.id == job_email_id).first()
-        assert job_email is None
-
-        # Verify ScrapedJob was cascade deleted
-        scraped_job = session.query(models.ScrapedJob).filter(models.ScrapedJob.id == scraped_job_id).first()
-        assert scraped_job is None
-
-        # Verify JobRating was cascade deleted
-        job_rating = (
-            session.query(job_rating_models.JobRating).filter(job_rating_models.JobRating.id == job_rating_id).first()
-        )
-        assert job_rating is None
-
-        # Verify UserQualification was cascade deleted
-        user_qualification = (
-            session.query(models.UserQualification).filter(models.UserQualification.id == user_qualification_id).first()
-        )
-        assert user_qualification is None
-
-    def test_delete_account_invalidates_token(self, regular_user_client, test_regular_user, session) -> None:
+    def test_delete_account_invalidates_token(self, test_regular_user: models.User) -> None:
         """Test that deleting account prevents further API calls with the same token."""
-
-        # Verify token works before deletion
-        response = regular_user_client.get("/current-user")
-        assert response.status_code == 200
 
         # Delete account
         delete_data = {"password": test_regular_user.plain_password}
-        response = regular_user_client.request("DELETE", "/current-user", json=delete_data)
+        response = test_regular_user.client.request("DELETE", self.endpoint, json=delete_data)
         assert response.status_code == 200
 
         # Try to use the same token after deletion - should fail
-        response = regular_user_client.get("/current-user")
+        response = test_regular_user.client.get(self.endpoint)
         assert response.status_code == 401
 
-    def test_delete_account_with_user_tokens(self, regular_user_client, test_regular_user, session) -> None:
+    def test_delete_account_with_user_tokens(self, test_regular_user: models.User) -> None:
         """Test that deleting account also deletes associated user tokens."""
 
-        user_id = test_regular_user.id
-
-        # Create an email change token for the user
-        generate_token(test_regular_user.id, TokenType.EMAIL_CHANGE, session, pending_email="newemail@test.com")
-
-        # Verify token exists
-        user_token = (
-            session.query(models.UserToken)
-            .filter(models.UserToken.owner_id == user_id, models.UserToken.token_type == "email_change")
-            .first()
-        )
-        assert user_token is not None
+        # Create an email change token for the user and verify it exists
+        test_regular_user.create_token(TokenType.EMAIL_CHANGE, pending_email="newemail@test.com")
+        assert test_regular_user.get_token(TokenType.EMAIL_CHANGE) is not None
 
         # Delete account
         delete_data = {"password": test_regular_user.plain_password}
-        response = regular_user_client.request("DELETE", "/current-user", json=delete_data)
+        response = test_regular_user.client.request("DELETE", self.endpoint, json=delete_data)
         assert response.status_code == 200
 
         # Verify user token was cascade deleted
-        user_token = (
-            session.query(models.UserToken)
-            .filter(models.UserToken.owner_id == user_id, models.UserToken.token_type == "email_change")
-            .first()
-        )
-        assert user_token is None
+        assert test_regular_user.get_token(TokenType.EMAIL_CHANGE) is None
 
 
-class TestSendReleaseEmail:
+class TestSendReleaseEmail(BaseTest):
     """Test suite for the /send-release-email/{version} endpoint."""
 
-    @patch("app.core.routers.user.email_service.send_new_version_email")
-    def test_send_release_email_success(self, mock_send, admin_client, test_users) -> None:
+    endpoint = "/users/send-release-email"
+
+    @pytest.fixture
+    def test_users(
+        self,
+        test_regular_user: models.User,
+        test_admin_user: models.User,
+        test_inactive_user: models.User,
+        test_unverified_user: models.User,
+        test_demo_user: models.User,
+    ) -> list[models.User]:
+        """Two eligible recipients (regular, admin) plus one each excluded by inactive/unverified/demo."""
+
+        return [test_regular_user, test_admin_user, test_inactive_user, test_unverified_user, test_demo_user]
+
+    def test_send_release_email_success(
+        self,
+        mock_release_email: Mock,
+        test_users: list[models.User],
+        test_admin_user: models.User,
+    ) -> None:
         """Test successfully sending release emails as admin."""
 
-        response = admin_client.post("/users/send-release-email/1.2.0")
+        response = test_admin_user.client.post(f"{self.endpoint}/1.2.0")
 
         assert response.status_code == 200
         data = response.json()
@@ -901,37 +676,42 @@ class TestSendReleaseEmail:
 
         # Should only send to active, verified, non-demo users
         expected_recipients = [u for u in test_users if u.is_active and u.is_verified and not u.is_demo]
-        assert mock_send.call_count == len(expected_recipients)
+        assert mock_release_email.call_count == len(expected_recipients)
 
-    @patch("app.core.routers.user.email_service.send_new_version_email")
-    def test_send_release_email_invalid_version(self, mock_send, admin_client) -> None:
+    def test_send_release_email_invalid_version(self, mock_release_email: Mock, test_admin_user: models.User) -> None:
         """Test sending release email for a non-existent version returns 404."""
 
-        response = admin_client.post("/users/send-release-email/99.99.99")
+        response = test_admin_user.client.post(f"{self.endpoint}/99.99.99")
 
         assert response.status_code == 404
         assert "no release data" in response.json()["detail"].lower()
-        assert mock_send.call_count == 0
+        assert mock_release_email.call_count == 0
 
-    def test_send_release_email_non_admin(self, regular_user_client) -> None:
+    def test_send_release_email_non_admin(self, mock_release_email: Mock, test_regular_user: models.User) -> None:
         """Test that non-admin users cannot send release emails."""
 
-        response = regular_user_client.post("/users/send-release-email/1.2.0")
+        response = test_regular_user.client.post(f"{self.endpoint}/1.2.0")
         assert response.status_code == 403
+        assert mock_release_email.call_count == 0
 
-    def test_send_release_email_unauthenticated(self, client) -> None:
+    def test_send_release_email_unauthenticated(self, mock_release_email: Mock, client: TestClient) -> None:
         """Test that unauthenticated users cannot send release emails."""
 
-        response = client.post("/users/send-release-email/1.2.0")
+        response = client.post(f"{self.endpoint}/1.2.0")
         assert response.status_code == 401
+        assert mock_release_email.call_count == 0
 
-    @patch("app.core.routers.user.email_service.send_new_version_email")
-    def test_send_release_email_partial_failure(self, mock_send, admin_client, test_users) -> None:
+    def test_send_release_email_partial_failure(
+        self,
+        mock_release_email: Mock,
+        test_users: list[models.User],
+        test_admin_user: models.User,
+    ) -> None:
         """Test that partial email failures are handled gracefully."""
 
         # Fail on the first call, succeed on the rest
-        mock_send.side_effect = [Exception("SMTP error")] + [None] * (len(test_users) - 1)
-        response = admin_client.post("/users/send-release-email/1.2.0")
+        mock_release_email.side_effect = [Exception("SMTP error")] + [None] * (len(test_users) - 1)
+        response = test_admin_user.client.post(f"{self.endpoint}/1.2.0")
 
         assert response.status_code == 200
         data = response.json()
@@ -942,137 +722,80 @@ class TestSendReleaseEmail:
         assert f"{len(expected_recipients) - 1}/{len(expected_recipients)}" in data["message"]
 
 
-class TestUserQualificationsCRUD(CRUDTestBase):
+class TestUserQualificationsCRUD(BaseTest):
 
     endpoint = "user-qualifications"
-    actions_to_test = []
 
-    def test_get_latest_user_qualification(self, authorised_clients, test_users, test_user_qualifications) -> None:
+    def test_get_latest_user_qualification(self, test_regular_user: models.User) -> None:
         """Test retrieving the latest user qualification for a user."""
 
-        response = authorised_clients[0].get(f"{self.endpoint}/latest")
-        qualifications = self.get_user_data(test_users, test_user_qualifications)
-        latest_qualification = max(qualifications, key=lambda uq: uq.created_at)
-        assert response.json()["id"] == latest_qualification.id
+        qualifications = [
+            test_regular_user.create_user_qualification(education="BSc Computer Science"),
+            test_regular_user.create_user_qualification(education="BSc Computer Science + PhD AI"),
+        ]
+        response = test_regular_user.client.get(f"{self.endpoint}/latest")
         assert response.status_code == 200
+        self.check_output(qualifications[1], response.json(), UserQualificationOut)
 
-    def test_upsert_new(self, authorised_clients, test_users, session) -> None:
+    def test_upsert_new(self, session: Session, test_regular_user: models.User) -> None:
         """Try to insert a new user qualification."""
 
         # Without an ID
-        new_qualification_data = {
-            "experience": "Some stuff",
-        }
-        response = authorised_clients[0].post(f"{self.endpoint}", json=new_qualification_data)
+        response = test_regular_user.client.post(f"{self.endpoint}", json={"experience": "Some stuff"})
         assert response.status_code == 200
-        entry = session.query(models.UserQualification).all()
-        assert len(entry) == 1
+        assert session.query(models.UserQualification).count() == 1
 
         # With an ID
-        new_qualification_data = {
-            "experience": "Some stuff",
-            "id": 1,
-        }
-        response = authorised_clients[0].post(f"{self.endpoint}", json=new_qualification_data)
+        response = test_regular_user.client.post(f"{self.endpoint}", json={"experience": "Some stuff", "id": 1})
         assert response.status_code == 200
-        entry = session.query(models.UserQualification).all()
-        assert len(entry) == 1
+        assert session.query(models.UserQualification).count() == 1
 
-    def test_upsert_with_existing_qualification(
-        self, authorised_clients, test_users, test_user_qualifications, test_scraped_jobs, session
-    ) -> None:
-        """Try to upsert a new user qualification when not linked to a job rating"""
+    def test_upsert_with_existing_qualification(self, test_regular_user: models.User) -> None:
+        """Updating a user qualification when not linked to a job rating should update the qualification."""
 
-        qualifications = self.get_user_data(test_users, test_user_qualifications)
+        qualification = test_regular_user.create_user_qualification(education="BSc Computer Science")
         qualification_data = {
-            "experience": "Some stuff",
-            "id": qualifications[0].id,
+            "education": "Some stuff",
+            "id": qualification.id,
         }
-        response = authorised_clients[0].post(f"{self.endpoint}", json=qualification_data)
+        response = test_regular_user.client.post(f"{self.endpoint}", json=qualification_data)
         assert response.status_code == 200
-        assert response.json()["id"] == qualifications[0].id
+        self.check_output(qualification_data, response.json(), UserQualificationOut)
 
-    def test_upsert_with_job_rating(
-        self, authorised_clients, test_users, test_user_qualifications, test_scraped_jobs, session
-    ) -> None:
-        """Try to upsert a new user qualification when linked to a job rating"""
+    def test_upsert_with_job_rating(self, test_regular_user: models.User) -> None:
+        """Upserting a new user qualification when linked to a job rating creates a new qualification entry"""
 
-        job_rating = job_rating_models.JobRating(
-            owner_id=test_users[0].id,
-            scraped_job_id=test_scraped_jobs[0].id,
-            overall_score=10,
-            user_qualification_id=test_user_qualifications[0].id,
-            llm_model="chatgpt",
-        )
-        session.add(job_rating)
-        session.commit()
+        qualification = test_regular_user.create_user_qualification(education="BSc Computer Science")
+        test_regular_user.create_job_rating(user_qualification=qualification, overall_score=10)
+        new_qualification_data = {
+            "education": "Some stuff",
+            "id": qualification.id,
+        }
+        response = test_regular_user.client.post(f"{self.endpoint}", json=new_qualification_data)
+        assert response.status_code == 200
+        assert response.json()["id"] == qualification.id + 1
+        assert response.json()["education"] == new_qualification_data["education"]
 
+    def test_upsert_incorrect_user(self, test_regular_user: models.User, test_admin_user: models.User) -> None:
+        """Upserting a user qualification for a different user should create a new qualification entry"""
+
+        qualification = test_regular_user.create_user_qualification(education="BSc Computer Science")
         new_qualification_data = {
             "experience": "Some stuff",
-            "id": test_user_qualifications[0].id,
+            "id": qualification.id,
         }
-        response = authorised_clients[0].post(f"{self.endpoint}", json=new_qualification_data)
+        response = test_admin_user.client.post(f"{self.endpoint}", json=new_qualification_data)
         assert response.status_code == 200
-        assert response.json()["id"] == len(test_user_qualifications) + 1
+        assert response.json()["id"] == qualification.id + 1
 
-    def test_upsert_incorrect_user(
-        self, authorised_clients, test_users, test_user_qualifications, test_scraped_jobs, session
-    ) -> None:
-        """Try to upsert a user qualification owned by a different user"""
+    @pytest.mark.parametrize("field", ["experience", "education", "skills", "qualities", "interests"])
+    def test_char_limit(self, test_regular_user: models.User, field: str) -> None:
+        """Test that a profile field at its character limit is accepted and one character over is rejected."""
 
-        new_qualification_data = {
-            "experience": "Some stuff",
-            "id": test_user_qualifications[0].id,
-        }
-        response = authorised_clients[1].post(f"{self.endpoint}", json=new_qualification_data)
-        assert response.status_code == 200
-        assert response.json()["id"] == len(test_user_qualifications) + 1
+        limit = getattr(COLUMN_LIMITS, field)
 
-    def test_experience_within_char_limit(self, authorised_clients, session) -> None:
-        """Test that experience within the 10000 character limit is accepted."""
-
-        data = {"experience": "a" * 10000}
-        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
+        response = test_regular_user.client.post(f"{self.endpoint}", json={field: "a" * limit})
         assert response.status_code == 200
 
-    def test_experience_exceeds_char_limit(self, authorised_clients) -> None:
-        """Test that experience exceeding 10000 characters is rejected."""
-
-        data = {"experience": "a" * 10001}
-        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
-        assert response.status_code == 422
-
-    def test_skills_within_char_limit(self, authorised_clients, session) -> None:
-        """Test that skills within the 3500 character limit is accepted."""
-
-        data = {"skills": "a" * 3500}
-        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
-        assert response.status_code == 200
-
-    def test_skills_exceeds_char_limit(self, authorised_clients) -> None:
-        """Test that skills exceeding 3500 characters is rejected."""
-
-        data = {"skills": "a" * 3501}
-        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
-        assert response.status_code == 422
-
-    def test_qualities_exceeds_char_limit(self, authorised_clients) -> None:
-        """Test that qualities exceeding 3500 characters is rejected."""
-
-        data = {"qualities": "a" * 3501}
-        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
-        assert response.status_code == 422
-
-    def test_education_exceeds_char_limit(self, authorised_clients) -> None:
-        """Test that education exceeding 3500 characters is rejected."""
-
-        data = {"education": "a" * 3501}
-        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
-        assert response.status_code == 422
-
-    def test_interests_exceeds_char_limit(self, authorised_clients) -> None:
-        """Test that interests exceeding 3500 characters is rejected."""
-
-        data = {"interests": "a" * 3501}
-        response = authorised_clients[0].post(f"{self.endpoint}", json=data)
+        response = test_regular_user.client.post(f"{self.endpoint}", json={field: "a" * (limit + 1)})
         assert response.status_code == 422

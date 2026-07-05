@@ -15,11 +15,13 @@ class BrightdataJobScraper(object):
     """Job Scraper
     :ivar base_url: Base URL for the job platform
     :ivar name: Name of the job platform
+    :ivar dataset_id: BrightData dataset ID to scrape
     :ivar poll_interval: Time interval (in seconds) between polling attempts
     :ivar max_attempts: Maximum number of polling attempts"""
 
     base_url: str = ""
     name: str = ""
+    dataset_id: str = ""
     poll_interval: int | float = 2
     max_attempts: int = 60
 
@@ -37,7 +39,6 @@ class BrightdataJobScraper(object):
 
         # Load credentials from the secrets file
         self.api_key = settings.brightdata_api_key
-        self.dataset_id = getattr(settings, f"brightdata_{self.name}_dataset_id")
 
     def _get_snapshot(self) -> str:
         """Get the snapshot id"""

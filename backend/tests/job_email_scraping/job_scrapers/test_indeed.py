@@ -6,6 +6,7 @@ import pytest
 
 from app.job_email_scraping.job_scrapers.indeed import IndeedBrightdataJobScraper, IndeedApifyJobScraper
 from app.job_email_scraping.schemas import JobResult
+from tests.job_email_scraping.job_scrapers.conftest import make_apify_mock
 
 # ================================================ BRIGHTDATA ================================================
 
@@ -21,16 +22,10 @@ BRIGHTDATA_FULL_JOB = {
 
 
 @pytest.fixture
-def brightdata_scraper():
-    """A IndeedBrightdataJobScraper with mocked settings."""
+def brightdata_scraper(mock_brightdata):
+    """A IndeedBrightdataJobScraper with BrightData requests/settings patched (via mock_brightdata)."""
 
-    with (
-        patch("app.job_email_scraping.job_scrapers.brightdata.settings") as mock_settings,
-        patch("app.job_email_scraping.job_scrapers.brightdata.requests"),
-    ):
-        mock_settings.brightdata_api_key = "key"
-        mock_settings.brightdata_indeed_dataset_id = "ds_indeed"
-        yield IndeedBrightdataJobScraper(["abc123"])
+    return IndeedBrightdataJobScraper(["abc123"])
 
 
 class TestIndeedBrightdataInit:
@@ -167,15 +162,10 @@ APIFY_FULL_JOB = {
 
 
 @pytest.fixture
-def apify_scraper():
-    """A IndeedApifyJobScraper with mocked settings."""
+def apify_scraper(mock_apify_cls):
+    """A IndeedApifyJobScraper with ApifyClient patched (via the shared mock_apify_cls fixture)."""
 
-    with (
-        patch("app.job_email_scraping.job_scrapers.apify.ApifyClient"),
-        patch("app.job_email_scraping.job_scrapers.apify.settings") as mock_settings,
-    ):
-        mock_settings.apify_api_key = "test_key"
-        yield IndeedApifyJobScraper(["758f2768706ab970"])
+    return IndeedApifyJobScraper(["758f2768706ab970"])
 
 
 class TestIndeedApifyInit:
@@ -236,10 +226,7 @@ class TestIndeedApifyProcessJobData:
 
     def test_scrape_job_end_to_end(self, apify_scraper) -> None:
         """scrape_job chains Apify workflow and returns processed JobResults."""
-        client = apify_scraper.client
-        client.actor.return_value.start.return_value = {"id": "run_1", "defaultDatasetId": "ds_1"}
-        client.run.return_value.get.return_value = {"status": "SUCCEEDED"}
-        client.dataset.return_value.list_items.return_value.items = [APIFY_FULL_JOB]
+        apify_scraper.client = make_apify_mock([APIFY_FULL_JOB])
 
         with patch("app.job_email_scraping.job_scrapers.apify.time.sleep"):
             results = apify_scraper.scrape_job()

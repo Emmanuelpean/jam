@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
+from sqlalchemy.orm import Session
 
 import app.geolocation.geolocation as geolocation_module
 from app.geolocation.geolocation import call_geocoding_api, geocode_location
@@ -39,7 +40,7 @@ class TestCallGeocodingApi:
 
         assert "No results found" in str(exc_info.value)
 
-    def test_raises_runtime_error_on_http_error(self, mock_nominatim_get) -> None:
+    def test_raises_runtime_error_on_http_error(self, mock_nominatim_get: MagicMock) -> None:
         """Raises RuntimeError when HTTP request fails."""
 
         mock_nominatim_get.side_effect = requests.HTTPError("503 Server Error")
@@ -53,7 +54,7 @@ class TestCallGeocodingApi:
 class TestGeocodeLocation:
     """Tests for geocode_location function."""
 
-    def test_returns_cached_geolocation_when_exists(self, session, mock_nominatim_get) -> None:
+    def test_returns_cached_geolocation_when_exists(self, session: Session, mock_nominatim_get: MagicMock) -> None:
         """Returns cached geolocation without calling API if query exists."""
 
         data = dict(query="London", latitude=51.5074456, longitude=-0.1277653)
@@ -64,7 +65,7 @@ class TestGeocodeLocation:
         assert result.id == geo.id
         assert mock_nominatim_get.call_count == 0
 
-    def test_creates_new_geolocation_when_not_cached(self, session) -> None:
+    def test_creates_new_geolocation_when_not_cached(self, session: Session) -> None:
         """Calls API and creates new geolocation when query not in cache."""
 
         result = geocode_location("London", session)
@@ -73,13 +74,13 @@ class TestGeocodeLocation:
         assert result.latitude == 51.5074456
         assert result.longitude == -0.1277653
 
-    def test_decodes_html_entities_in_string_query(self, session, mock_nominatim_get) -> None:
+    def test_decodes_html_entities_in_string_query(self, session: Session, mock_nominatim_get: MagicMock) -> None:
         """Decodes HTML entities in string queries before calling the API."""
 
         geocode_location("London UK &amp;", session)
         assert mock_nominatim_get.call_args[1]["params"]["q"] == "London UK &"
 
-    def test_returns_empty_geolocation_when_no_results(self, session) -> None:
+    def test_returns_empty_geolocation_when_no_results(self, session: Session) -> None:
         """Returns an empty Geolocation record when the API finds no results, to avoid repeat API calls."""
 
         result = geocode_location("NonexistentPlace12345", session)
@@ -88,7 +89,7 @@ class TestGeocodeLocation:
         assert result.latitude is None
         assert result.longitude is None
 
-    def test_returns_none_on_api_failure(self, session, mock_nominatim_get) -> None:
+    def test_returns_none_on_api_failure(self, session: Session, mock_nominatim_get: MagicMock) -> None:
         """Returns None when a network error occurs."""
 
         mock_nominatim_get.side_effect = requests.ConnectionError("Connection refused")

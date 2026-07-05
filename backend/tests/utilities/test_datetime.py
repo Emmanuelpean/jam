@@ -2,6 +2,7 @@
 
 import datetime as dt
 import types
+from contextlib import AbstractContextManager
 from unittest.mock import patch
 
 import pytest
@@ -10,12 +11,16 @@ from dateutil.relativedelta import relativedelta
 from app.utilities.datetime import current_month_window, to_iso_z
 
 
-def _freeze(frozen: dt.datetime):
+def _freeze(frozen: dt.datetime) -> AbstractContextManager:
     """Patch the module's dt so dt.datetime.now(tz) returns frozen (kept tz-aware)."""
 
     class FrozenDateTime(dt.datetime):
+        """A frozen datetime that always returns the same value."""
+
         @classmethod
-        def now(cls, tz=None):
+        def now(cls, tz: dt.tzinfo | None = None) -> dt.datetime:
+            """Return the frozen value."""
+
             return frozen.replace(tzinfo=tz)
 
     return patch(
@@ -65,7 +70,7 @@ class TestCurrentMonthWindow:
             ),
         ],
     )
-    def test_frozen_windows(self, frozen, expected_start, expected_end) -> None:
+    def test_frozen_windows(self, frozen: dt.datetime, expected_start: dt.datetime, expected_end: dt.datetime) -> None:
         with _freeze(frozen):
             start, end = current_month_window()
         assert start == expected_start
@@ -82,7 +87,7 @@ class TestToIsoZ:
             (dt.datetime(2026, 12, 31, 23, 59, 59), "2026-12-31T23:59:59Z"),
         ],
     )
-    def test_formats_with_trailing_z(self, value, expected) -> None:
+    def test_formats_with_trailing_z(self, value: dt.datetime, expected: str) -> None:
         assert to_iso_z(value) == expected
 
     def test_microseconds_are_dropped(self) -> None:

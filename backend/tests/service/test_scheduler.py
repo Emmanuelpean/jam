@@ -1,22 +1,25 @@
 """Unit tests for the database-driven service scheduler."""
 
 import datetime as dt
+from collections.abc import Callable, Iterator
 from contextlib import nullcontext
 from unittest.mock import MagicMock, patch
 
 import pytest
+from sqlalchemy.orm import Session
 
 from app.models import Service
 from app.service import registry
 from app.service.schemas import ServiceOut
 from app.service.scheduler import ServiceScheduler, compute_next_run
+from tests.base_test import BaseTest
 
 
-def _utc(*args) -> dt.datetime:
+def _utc(*args: int) -> dt.datetime:
     return dt.datetime(*args, tzinfo=dt.timezone.utc)
 
 
-def _register(name, run) -> None:
+def _register(name: str, run: Callable) -> None:
     """Register a service for dispatch tests. The log view is required but unused here."""
 
     registry.register_service(name, run, log_model=Service, log_schema=ServiceOut)
@@ -26,21 +29,21 @@ def _register(name, run) -> None:
 
 
 class TestComputeNextRun:
-    def test_advances_one_period_when_just_due(self):
+    def test_advances_one_period_when_just_due(self) -> None:
         """A slot that just fired advances by exactly one period."""
 
         base = _utc(2026, 1, 1, 12, 0, 0)
         now = _utc(2026, 1, 1, 12, 0, 1)
         assert compute_next_run(base, now, 3.0) == _utc(2026, 1, 1, 15, 0, 0)
 
-    def test_keeps_phase_when_run_overruns(self):
+    def test_keeps_phase_when_run_overruns(self) -> None:
         """If the run took a while, the next slot is still phase-aligned to base."""
 
         base = _utc(2026, 1, 1, 12, 0, 0)
         now = _utc(2026, 1, 1, 12, 20, 0)  # 20-minute run, period 3h
         assert compute_next_run(base, now, 3.0) == _utc(2026, 1, 1, 15, 0, 0)
 
-    def test_skips_missed_slots_after_downtime(self):
+    def test_skips_missed_slots_after_downtime(self) -> None:
         """After long downtime, jump to the next future slot rather than replaying each."""
 
         base = _utc(2026, 1, 1, 12, 0, 0)
@@ -48,14 +51,14 @@ class TestComputeNextRun:
         # Next future 3h slot phase-aligned to 12:00 is 00:00 next day.
         assert compute_next_run(base, now, 3.0) == _utc(2026, 1, 2, 0, 0, 0)
 
-    def test_result_is_strictly_future(self):
+    def test_result_is_strictly_future(self) -> None:
         """The returned slot is always strictly greater than now."""
 
         base = _utc(2026, 1, 1, 12, 0, 0)
         now = _utc(2026, 1, 1, 15, 0, 0)  # exactly on a slot boundary
         assert compute_next_run(base, now, 3.0) == _utc(2026, 1, 1, 18, 0, 0)
 
-    def test_none_base_uses_now(self):
+    def test_none_base_uses_now(self) -> None:
         """With no base, the next run is one period from now."""
 
         now = _utc(2026, 1, 1, 12, 0, 0)
@@ -66,7 +69,7 @@ class TestComputeNextRun:
 
 
 @pytest.fixture
-def restore_registry():
+def restore_registry() -> Iterator[None]:
     """Snapshot and restore SERVICE_REGISTRY so tests don't leak registrations."""
 
     original = dict(registry.SERVICE_REGISTRY)
@@ -76,33 +79,36 @@ def restore_registry():
 
 
 def _make_service(
-    session, name="fake_service", enabled=True, next_run_at=None, period=3.0, parameters=None, is_running=False
-):
+    session: Session,
+    name: str = "fake_service",
+    enabled: bool = True,
+    next_run_at: dt.datetime | None = None,
+    period: float = 3.0,
+    parameters: dict | None = None,
+    is_running: bool = False,
+) -> Service:
     """Create and persist a Service row."""
 
-    service = Service(
+    return BaseTest.create_service(
+        session,
         name=name,
-        display_name=name.replace("_", " ").title(),
         run_period_hours=period,
         parameters=parameters or {},
         is_enabled=enabled,
         is_running=is_running,
         next_run_at=next_run_at,
     )
-    session.add(service)
-    session.commit()
-    session.refresh(service)
-    return service
 
 
 class _SyncThread:
     """Stand-in for threading.Thread that runs the target synchronously on start()."""
 
-    def __init__(self, target=None, args=(), **_kwargs):
+    def __init__(self, target: Callable | None = None, args: tuple = (), **_kwargs) -> None:
         self._target = target
         self._args = args
 
-    def start(self):
+    def start(self) -> None:
+        """Run the target synchronously."""
         if self._target:
             self._target(*self._args)
 
@@ -110,8 +116,10 @@ class _SyncThread:
 # -------------------------------------------------- RUN SERVICE --------------------------------------------------
 
 
-class TestRunService:
-    def test_runs_callable_with_parameters_and_advances_schedule(self, session, restore_registry):
+class TestRunService(BaseTest):
+    def test_runs_callable_with_parameters_and_advances_schedule(
+        self, session: Session, restore_registry: None
+    ) -> None:
         """The registered callable runs with the row's parameters; schedule advances and clears running."""
 
         calls = []
@@ -125,14 +133,15 @@ class TestRunService:
             scheduler._run_service(service_id)
 
         assert calls == [{"timedelta_days": 3}]
-        updated = session.get(Service, service_id)
+        updated = self.get_by_id(session, Service, service_id)
         assert updated.is_running is False
         assert updated.next_run_at > dt.datetime.now(dt.timezone.utc)
 
-    def test_advances_schedule_even_when_callable_raises(self, session, restore_registry):
+    def test_advances_schedule_even_when_callable_raises(self, session: Session, restore_registry: None) -> None:
         """A failing run still advances the schedule and clears the running flag (no stuck service)."""
 
         def boom(**_kw):
+            """Raise a runtime error"""
             raise RuntimeError("kaboom")
 
         _register("fake_service", boom)
@@ -144,24 +153,25 @@ class TestRunService:
         with patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)):
             scheduler._run_service(service_id)
 
-        updated = session.get(Service, service_id)
+        updated = self.get_by_id(session, Service, service_id)
         assert updated.is_running is False
         assert updated.next_run_at > dt.datetime.now(dt.timezone.utc)
 
-    def test_missing_service_is_skipped(self, session, restore_registry):
+    def test_missing_service_is_skipped(self, session: Session, restore_registry: None) -> None:
         """A service id that no longer exists is skipped without error."""
 
         scheduler = ServiceScheduler()
         with patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)):
             scheduler._run_service(99999)  # no such row — must not raise
 
-    def test_row_deleted_during_run_is_handled(self, session, restore_registry):
+    def test_row_deleted_during_run_is_handled(self, session: Session, restore_registry: None) -> None:
         """If the row is deleted mid-run, the finally block skips the schedule update without error."""
 
         base = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=1)
         service_id = _make_service(session, next_run_at=base).id
 
         def delete_row(**_kw):
+            """Delete the row during the run."""
             session.query(Service).filter(Service.id == service_id).delete()
             session.commit()
 
@@ -170,14 +180,14 @@ class TestRunService:
         with patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)):
             scheduler._run_service(service_id)  # must not raise
 
-        assert session.get(Service, service_id) is None
+        assert self.get_by_id(session, Service, service_id) is None
 
 
 # ----------------------------------------------------- TICK -----------------------------------------------------
 
 
-class TestTick:
-    def test_dispatches_only_due_enabled_services(self, session, restore_registry):
+class TestTick(BaseTest):
+    def test_dispatches_only_due_enabled_services(self, session: Session, restore_registry: None) -> None:
         """Only enabled services whose next_run_at is due are dispatched."""
 
         past = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=1)
@@ -196,7 +206,7 @@ class TestTick:
 
         scheduler._run_service.assert_called_once_with(due.id)
 
-    def test_null_next_run_at_is_due(self, session, restore_registry):
+    def test_null_next_run_at_is_due(self, session: Session, restore_registry: None) -> None:
         """An enabled service with no scheduled time is treated as due."""
 
         service = _make_service(session, name="never_run", enabled=True, next_run_at=None)
@@ -211,7 +221,7 @@ class TestTick:
 
         scheduler._run_service.assert_called_once_with(service.id)
 
-    def test_skips_service_already_running(self, session, restore_registry):
+    def test_skips_service_already_running(self, session: Session, restore_registry: None) -> None:
         """A service whose is_running flag is set is not dispatched again (overlap guard)."""
 
         past = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=1)
@@ -227,7 +237,7 @@ class TestTick:
 
         scheduler._run_service.assert_not_called()
 
-    def test_marks_service_running_before_dispatch(self, session, restore_registry):
+    def test_marks_service_running_before_dispatch(self, session: Session, restore_registry: None) -> None:
         """A dispatched service has its is_running flag committed before the worker runs."""
 
         past = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=1)
@@ -241,14 +251,14 @@ class TestTick:
         ):
             scheduler._tick()
 
-        assert session.get(Service, service.id).is_running is True
+        assert self.get_by_id(session, Service, service.id).is_running is True
 
 
 # ----------------------------------------------------- START ----------------------------------------------------
 
 
-class TestStart:
-    def test_resets_stale_running_flags(self, session):
+class TestStart(BaseTest):
+    def test_resets_stale_running_flags(self, session: Session) -> None:
         """Startup clears is_running flags stranded by a crash so those services can run again."""
 
         stuck_id = _make_service(session, name="stuck_service", enabled=True, is_running=True).id
@@ -261,4 +271,4 @@ class TestStart:
             scheduler.start()
         scheduler.stop()
 
-        assert session.get(Service, stuck_id).is_running is False
+        assert self.get_by_id(session, Service, stuck_id).is_running is False

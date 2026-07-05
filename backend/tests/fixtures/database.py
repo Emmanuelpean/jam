@@ -10,7 +10,7 @@ from app.database import Base, create_db_url
 from tests.utils.seed_database import reset_database
 
 
-def _truncate_all_tables(engine: Engine) -> None:
+def truncate_all_tables(engine: Engine) -> None:
     """Fast per-test reset: wipe all rows and reset identity sequences in a single statement."""
 
     table_names = ", ".join(f'"{table.name}"' for table in Base.metadata.sorted_tables)
@@ -21,7 +21,7 @@ def _truncate_all_tables(engine: Engine) -> None:
 
 
 @pytest.fixture(scope="session")
-def worker_database_name(worker_id) -> str:
+def worker_database_name(worker_id: str) -> str:
     """Generate unique database name for each worker."""
 
     database_name = "jam_test"
@@ -32,15 +32,16 @@ def worker_database_name(worker_id) -> str:
 
 
 @pytest.fixture(scope="session")
-def database_url(worker_database_name) -> str:
+def database_url(worker_database_name: str) -> str:
     """Generate database URL for the worker."""
 
     return create_db_url(worker_database_name)
 
 
 @pytest.fixture(scope="session")
-def engine(database_url, worker_id) -> Generator[Engine, Any, None]:
+def engine(database_url: str, worker_id: str) -> Generator[Engine, Any, None]:
     """Create engine once per worker session, creating database first."""
+
     is_parallel = worker_id != "master"
 
     if is_parallel:
@@ -63,10 +64,11 @@ def engine(database_url, worker_id) -> Generator[Engine, Any, None]:
         drop_database(database_url)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def session(engine: Engine) -> Generator[orm.Session, Any, None]:
     """Fixture that sets up and tears down a new database session for each test function."""
-    _truncate_all_tables(engine)
+
+    truncate_all_tables(engine)
     testing_session_local = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = testing_session_local()
     try:

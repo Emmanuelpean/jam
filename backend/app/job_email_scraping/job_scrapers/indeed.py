@@ -12,6 +12,7 @@ class IndeedBrightdataJobScraper(BrightdataJobScraper):
 
     base_url = "https://www.indeed.com/viewjob?jk="
     name = "indeed"
+    dataset_id = "gd_l4dx9j9sscpvs7no2"
     poll_interval: int | float = 10
     max_attempts: int = 100
 

@@ -1,28 +1,14 @@
 """Tests for Job Scraping routers."""
 
-import random
-
+from sqlalchemy.orm import Session
 from starlette import status
+from starlette.testclient import TestClient
 
 from app import models
 from app.job_email_scraping import schemas
 from tests.conftest import CRUDTestBase
-from tests.utils.create_data.utils import create_db_entries
+from tests.fixtures.users import FixtureUser
 from tests.utils.test_data.job_scraping import SCRAPING_FILTER_DATA
-
-
-def _make_scraped_job(session, owner_id: int, service_log_id: int, **kwargs) -> models.ScrapedJob:
-    """Create a minimal active scraped job for preview testing."""
-    data = {
-        "external_job_id": f"preview_{random.random()}",
-        "platform": "test",
-        "is_active": True,
-        "is_imported": False,
-        "owner_id": owner_id,
-        "service_log_id": service_log_id,
-        **kwargs,
-    }
-    return create_db_entries(session, models.ScrapedJob, data)[0]
 
 
 class TestScrapingFilters(CRUDTestBase):
@@ -37,135 +23,97 @@ class TestScrapingFilters(CRUDTestBase):
     required_fixture = ["test_scraped_jobs"]
     actions_to_test = ["get_all", "get_one", "post"]
 
-    @staticmethod
-    def _create_filter(session, owner_id: int = 1, **kwargs) -> models.ScrapingExclusionFilter:
-        """Helper to create a scraped job filter"""
-
-        data = {"type": "title", "operator": "contains", "value": "Some", "owner_id": owner_id, **kwargs}
-        return create_db_entries(session, models.ScrapingExclusionFilter, data)[0]
-
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 
-    def test_delete_filter_without_filtered_jobs(self, session, authorised_clients, test_users) -> None:
+    def test_delete_filter_without_filtered_jobs(self, session: Session, test_regular_user: FixtureUser) -> None:
         """Should delete filter completely when it has no filtered jobs"""
 
-        filter_obj = self._create_filter(session)
-        response = self.delete(authorised_clients[0], filter_obj.id)
+        filter_obj = test_regular_user.create_scraping_exclusion_filter()
+        response = self.delete(test_regular_user.client, filter_obj.id)
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         # Verify filter was completely deleted from database
         deleted_filter = session.query(models.ScrapingExclusionFilter).filter_by(id=filter_obj.id).first()
         assert deleted_filter is None
 
-    def test_delete_filter_with_filtered_jobs(
-        self, session, authorised_clients, test_users, test_job_scraping_service_logs
-    ) -> None:
+    def test_delete_filter_with_filtered_jobs(self, test_regular_user: FixtureUser) -> None:
         """Should deactivate filter when it has filtered jobs instead of deleting"""
 
-        filter_obj = self._create_filter(session)
-        filter_id = filter_obj.id
+        filter_obj = test_regular_user.create_scraping_exclusion_filter()
+        test_regular_user.create_scraped_job(title="Engineer", exclusion_filter_id=filter_obj.id)
 
-        # Add a filtered job
-        scraped_job_data = {
-            "external_job_id": "A",
-            "platform": "saf",
-            "title": "Engineer",
-            "exclusion_filter_id": filter_obj.id,
-            "owner_id": filter_obj.owner_id,
-            "service_log_id": test_job_scraping_service_logs[0].id,
-        }
-        create_db_entries(session, models.ScrapedJob, scraped_job_data)
-
-        response = self.delete(authorised_clients[0], filter_id)
+        response = self.delete(test_regular_user.client, filter_obj.id)
         assert response.status_code == status.HTTP_409_CONFLICT
 
-    def test_delete_filter_not_found(self, authorised_clients) -> None:
+    def test_delete_filter_not_found(self, test_regular_user: FixtureUser) -> None:
         """Should return 403 when filter doesn't exist"""
 
-        response = self.delete(authorised_clients[0], 99999)
+        response = self.delete(test_regular_user.client, 99999)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_delete_filter_wrong_owner(self, session, authorised_clients, test_users) -> None:
+    def test_delete_filter_wrong_owner(self, test_regular_user: FixtureUser, test_admin_user: FixtureUser) -> None:
         """Should return 403 when trying to delete another user's filter"""
 
-        filter_id = self._create_filter(session, 2).id
-        response = self.delete(authorised_clients[0], filter_id)
+        filter_id = test_admin_user.create_scraping_exclusion_filter().id
+        response = self.delete(test_regular_user.client, filter_id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_delete_filter_unauthenticated(self, session, client, test_users) -> None:
+    def test_delete_filter_unauthenticated(self, client: TestClient, test_regular_user: FixtureUser) -> None:
         """Should return 401 when not authenticated"""
 
-        filter_obj = self._create_filter(session)
+        filter_obj = test_regular_user.create_scraping_exclusion_filter()
         response = self.delete(client, filter_obj.id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     # ----------------------------------------------------- UPDATE -----------------------------------------------------
 
-    def test_update_filter_with_filtered_jobs(
-        self, session, authorised_clients, test_users, test_job_scraping_service_logs
-    ) -> None:
+    def test_update_filter_with_filtered_jobs(self, test_regular_user: FixtureUser) -> None:
         """Should update existing filter when it has filtered jobs"""
 
-        filter_obj = self._create_filter(session)
-        filter_id = filter_obj.id
+        filter_obj = test_regular_user.create_scraping_exclusion_filter()
+        test_regular_user.create_scraped_job(title="Engineer", exclusion_filter_id=filter_obj.id)
 
-        # Add a filtered job
-        scraped_job_data = {
-            "external_job_id": "A",
-            "platform": "saf",
-            "title": "Engineer",
-            "exclusion_filter_id": filter_id,
-            "owner_id": filter_obj.owner_id,
-            "service_log_id": test_job_scraping_service_logs[0].id,
-        }
-        create_db_entries(session, models.ScrapedJob, scraped_job_data)
-
-        update_data = {"value": "Updated Title"}
-        response = self.put(authorised_clients[0], filter_id, update_data)
+        response = self.put(test_regular_user.client, filter_obj.id, {"value": "Updated Title"})
 
         assert response.status_code == status.HTTP_409_CONFLICT
 
-    def test_update_filter_without_filtered_jobs_creates_new(self, session, authorised_clients, test_users) -> None:
+    def test_update_filter_without_filtered_jobs_creates_new(self, test_regular_user: FixtureUser) -> None:
         """Should create new filter when original has no filtered jobs"""
 
-        filter_obj = self._create_filter(session)
+        filter_obj = test_regular_user.create_scraping_exclusion_filter()
         filter_id = filter_obj.id
         filter_operator = filter_obj.operator
-        user_id = test_users[0].id
 
         update_data = {"value": "Updated Title"}
-        response = self.put(authorised_clients[0], filter_id, update_data)
+        response = self.put(test_regular_user.client, filter_id, update_data)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["id"] == filter_id
         assert data["value"] == update_data["value"]
         assert data["operator"] == filter_operator
-        assert data["owner_id"] == user_id
+        assert data["owner_id"] == test_regular_user.id
 
-    def test_update_filter_not_found(self, authorised_clients) -> None:
+    def test_update_filter_not_found(self, test_regular_user: FixtureUser) -> None:
         """Should return 403 when filter doesn't exist"""
 
         update_data = {"title": "Updated"}
-        response = self.put(authorised_clients[0], 99999, update_data)
+        response = self.put(test_regular_user.client, 99999, update_data)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_update_filter_wrong_owner(self, session, authorised_clients, test_users) -> None:
+    def test_update_filter_wrong_owner(self, test_regular_user: FixtureUser, test_admin_user: FixtureUser) -> None:
         """Should return 403 when trying to update another user's filter"""
 
-        filter_id = self._create_filter(session, 2).id
-        response = self.put(authorised_clients[0], filter_id, {"value": "Updated"})
+        filter_id = test_admin_user.create_scraping_exclusion_filter().id
+        response = self.put(test_regular_user.client, filter_id, {"value": "Updated"})
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_update_filter_unauthenticated(self, session, client, test_users) -> None:
+    def test_update_filter_unauthenticated(self, client: TestClient, test_regular_user: FixtureUser) -> None:
         """Should return 401 when not authenticated"""
 
-        filter_obj = self._create_filter(session)
+        filter_obj = test_regular_user.create_scraping_exclusion_filter()
         response = self.put(client, filter_obj.id, {"value": "Updated"})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-
-# ----------------------------------------------- EXCLUSION FILTER PREVIEW --------------------------------------------
 
 
 class TestScrapingFilterPreview:
@@ -173,10 +121,10 @@ class TestScrapingFilterPreview:
 
     # -------------------------------------------------- BASIC ---------------------------------------------------------
 
-    def test_preview_returns_200(self, regular_user_client, test_job_scraping_service_logs) -> None:
+    def test_preview_returns_200(self, test_regular_user: FixtureUser) -> None:
         """Should return 200 with the expected pagination shape."""
 
-        response = regular_user_client.get(
+        response = test_regular_user.client.get(
             self.endpoint,
             params={
                 "filter_type": "title",
@@ -189,16 +137,12 @@ class TestScrapingFilterPreview:
         for field in ("items", "total", "total_filtered", "page", "page_size", "total_pages"):
             assert field in data
 
-    def test_preview_returns_matching_jobs(
-        self, session, regular_user_client, test_users, test_job_scraping_service_logs
-    ) -> None:
+    def test_preview_returns_matching_jobs(self, test_regular_user: FixtureUser) -> None:
         """Should return only jobs that match the filter rule."""
-        log_id = test_job_scraping_service_logs[0].id
-        owner_id = test_users[0].id
-        _make_scraped_job(session, owner_id, log_id, title="Senior Python Developer")
-        _make_scraped_job(session, owner_id, log_id, title="Junior Developer")
+        test_regular_user.create_scraped_job(title="Senior Python Developer")
+        test_regular_user.create_scraped_job(title="Junior Developer")
 
-        response = regular_user_client.get(
+        response = test_regular_user.client.get(
             self.endpoint,
             params={
                 "filter_type": "title",
@@ -210,9 +154,9 @@ class TestScrapingFilterPreview:
         assert data["total"] == 1
         assert data["items"][0]["title"] == "Senior Python Developer"
 
-    def test_preview_empty_result(self, regular_user_client, test_job_scraping_service_logs) -> None:
+    def test_preview_empty_result(self, test_regular_user: FixtureUser) -> None:
         """Should return zero items when no jobs match."""
-        response = regular_user_client.get(
+        response = test_regular_user.client.get(
             self.endpoint,
             params={
                 "filter_type": "title",
@@ -226,16 +170,12 @@ class TestScrapingFilterPreview:
 
     # ------------------------------------------------- PAGINATION -----------------------------------------------------
 
-    def test_preview_pagination_first_page(
-        self, session, regular_user_client, test_users, test_job_scraping_service_logs
-    ) -> None:
+    def test_preview_pagination_first_page(self, test_regular_user: FixtureUser) -> None:
         """First page should return page_size items and correct totals."""
-        log_id = test_job_scraping_service_logs[0].id
-        owner_id = test_users[0].id
         for i in range(5):
-            _make_scraped_job(session, owner_id, log_id, company="PaginateCorp", title=f"Job {i}")
+            test_regular_user.create_scraped_job(company="PaginateCorp", title=f"Job {i}")
 
-        response = regular_user_client.get(
+        response = test_regular_user.client.get(
             self.endpoint,
             params={
                 "filter_type": "company",
@@ -252,16 +192,12 @@ class TestScrapingFilterPreview:
         assert data["page_size"] == 2
         assert data["total_pages"] == 3
 
-    def test_preview_pagination_second_page(
-        self, session, regular_user_client, test_users, test_job_scraping_service_logs
-    ) -> None:
+    def test_preview_pagination_second_page(self, test_regular_user: FixtureUser) -> None:
         """Second page should return the remainder."""
-        log_id = test_job_scraping_service_logs[0].id
-        owner_id = test_users[0].id
         for i in range(3):
-            _make_scraped_job(session, owner_id, log_id, company="Page2Corp", title=f"Job {i}")
+            test_regular_user.create_scraped_job(company="Page2Corp", title=f"Job {i}")
 
-        response = regular_user_client.get(
+        response = test_regular_user.client.get(
             self.endpoint,
             params={
                 "filter_type": "company",
@@ -277,16 +213,12 @@ class TestScrapingFilterPreview:
 
     # --------------------------------------------------- SEARCH -------------------------------------------------------
 
-    def test_preview_search_narrows_results(
-        self, session, regular_user_client, test_users, test_job_scraping_service_logs
-    ) -> None:
+    def test_preview_search_narrows_results(self, test_regular_user: FixtureUser) -> None:
         """Search term should further filter results by title, company, or location."""
-        log_id = test_job_scraping_service_logs[0].id
-        owner_id = test_users[0].id
-        _make_scraped_job(session, owner_id, log_id, company="SearchCorp", title="Python Developer")
-        _make_scraped_job(session, owner_id, log_id, company="SearchCorp", title="Java Developer")
+        test_regular_user.create_scraped_job(company="SearchCorp", title="Python Developer")
+        test_regular_user.create_scraped_job(company="SearchCorp", title="Java Developer")
 
-        response = regular_user_client.get(
+        response = test_regular_user.client.get(
             self.endpoint,
             params={
                 "filter_type": "company",
@@ -301,15 +233,11 @@ class TestScrapingFilterPreview:
 
     # ----------------------------------------------- CASE SENSITIVITY ------------------------------------------------
 
-    def test_preview_case_sensitive_no_match(
-        self, session, regular_user_client, test_users, test_job_scraping_service_logs
-    ) -> None:
+    def test_preview_case_sensitive_no_match(self, test_regular_user: FixtureUser) -> None:
         """Case-sensitive filter should not match when casing differs."""
-        log_id = test_job_scraping_service_logs[0].id
-        owner_id = test_users[0].id
-        _make_scraped_job(session, owner_id, log_id, title="CaseSensitiveTitle")
+        test_regular_user.create_scraped_job(title="CaseSensitiveTitle")
 
-        response = regular_user_client.get(
+        response = test_regular_user.client.get(
             self.endpoint,
             params={
                 "filter_type": "title",
@@ -320,15 +248,11 @@ class TestScrapingFilterPreview:
         )
         assert response.json()["total"] == 0
 
-    def test_preview_case_insensitive_matches(
-        self, session, regular_user_client, test_users, test_job_scraping_service_logs
-    ) -> None:
+    def test_preview_case_insensitive_matches(self, test_regular_user: FixtureUser) -> None:
         """Case-insensitive filter should match regardless of casing."""
-        log_id = test_job_scraping_service_logs[0].id
-        owner_id = test_users[0].id
-        _make_scraped_job(session, owner_id, log_id, title="CaseSensitiveTitle")
+        test_regular_user.create_scraped_job(title="CaseSensitiveTitle")
 
-        response = regular_user_client.get(
+        response = test_regular_user.client.get(
             self.endpoint,
             params={
                 "filter_type": "title",
@@ -341,29 +265,22 @@ class TestScrapingFilterPreview:
 
     # --------------------------------------------- OWNERSHIP / FILTERING ---------------------------------------------
 
-    def test_preview_respects_ownership(
-        self, session, regular_user_client, test_users, test_job_scraping_service_logs
-    ) -> None:
+    def test_preview_respects_ownership(self, test_regular_user: FixtureUser, test_admin_user: FixtureUser) -> None:
         """Preview should only return the requesting user's jobs."""
-        log_id = test_job_scraping_service_logs[0].id
-        _make_scraped_job(session, test_users[0].id, log_id, company="OwnerCorp", title="Job A")
-        _make_scraped_job(session, test_users[1].id, log_id, company="OwnerCorp", title="Job B")
+        test_regular_user.create_scraped_job(company="OwnerCorp", title="Job A")
+        test_admin_user.create_scraped_job(company="OwnerCorp", title="Job B")
 
-        response = regular_user_client.get(
+        response = test_regular_user.client.get(
             self.endpoint, params={"filter_type": "company", "filter_operator": "equals", "filter_value": "OwnerCorp"}
         )
         assert response.json()["total"] == 1
 
-    def test_preview_excludes_imported_jobs(
-        self, session, regular_user_client, test_users, test_job_scraping_service_logs
-    ) -> None:
+    def test_preview_excludes_imported_jobs(self, test_regular_user: FixtureUser) -> None:
         """Imported jobs should not appear in preview results."""
-        log_id = test_job_scraping_service_logs[0].id
-        owner_id = test_users[0].id
-        _make_scraped_job(session, owner_id, log_id, title="ImportedJob", is_imported=True)
-        _make_scraped_job(session, owner_id, log_id, title="ImportedJob", is_imported=False)
+        test_regular_user.create_scraped_job(title="ImportedJob", is_imported=True)
+        test_regular_user.create_scraped_job(title="ImportedJob", is_imported=False)
 
-        response = regular_user_client.get(
+        response = test_regular_user.client.get(
             self.endpoint,
             params={
                 "filter_type": "title",
@@ -373,16 +290,12 @@ class TestScrapingFilterPreview:
         )
         assert response.json()["total"] == 1
 
-    def test_preview_excludes_inactive_jobs(
-        self, session, regular_user_client, test_users, test_job_scraping_service_logs
-    ) -> None:
+    def test_preview_excludes_inactive_jobs(self, test_regular_user: FixtureUser) -> None:
         """Inactive jobs should not appear in preview results."""
-        log_id = test_job_scraping_service_logs[0].id
-        owner_id = test_users[0].id
-        _make_scraped_job(session, owner_id, log_id, title="InactiveJob", is_active=False)
-        _make_scraped_job(session, owner_id, log_id, title="InactiveJob", is_active=True)
+        test_regular_user.create_scraped_job(title="InactiveJob", is_active=False)
+        test_regular_user.create_scraped_job(title="InactiveJob", is_active=True)
 
-        response = regular_user_client.get(
+        response = test_regular_user.client.get(
             self.endpoint,
             params={
                 "filter_type": "title",
@@ -394,7 +307,7 @@ class TestScrapingFilterPreview:
 
     # ------------------------------------------------ AUTHENTICATION --------------------------------------------------
 
-    def test_preview_unauthenticated(self, client) -> None:
+    def test_preview_unauthenticated(self, client: TestClient) -> None:
         """Should return 401 when not authenticated."""
         response = client.get(
             self.endpoint,

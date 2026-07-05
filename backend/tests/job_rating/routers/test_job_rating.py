@@ -3,6 +3,7 @@
 import pytest
 
 from app.job_rating import schemas
+from tests.fixtures.users import FixtureUser
 from tests.conftest import CRUDTestBase, make_undefined_method_params
 
 
@@ -24,6 +25,12 @@ class TestJobRatingUndefinedMethods:
         "http_method,path_suffix,expected_status",
         make_undefined_method_params(DEFINED_ACTIONS, UNDEFINED_ACTIONS),
     )
-    def test_undefined_methods(self, admin_client, regular_user_client, http_method, path_suffix, expected_status):
-        response = admin_client.request(http_method, f"{self.ENDPOINT}{path_suffix}")
+    def test_undefined_methods(
+        self,
+        http_method,
+        path_suffix,
+        expected_status,
+        test_admin_user: FixtureUser,
+    ):
+        response = test_admin_user.client.request(http_method, f"{self.ENDPOINT}{path_suffix}")
         assert response.status_code == expected_status

@@ -20,7 +20,7 @@ class TestEmailService:
 
     @patch("app.config.settings.test_mode", False)
     @patch("smtplib.SMTP")
-    def test_send_email_success(self, mock_smtp, email_svc) -> None:
+    def test_send_email_success(self, mock_smtp: MagicMock, email_svc: EmailService) -> None:
         """Test successful email sending."""
 
         # Setup mock
@@ -47,7 +47,7 @@ class TestEmailService:
 
     @patch("app.config.settings.test_mode", False)
     @patch("smtplib.SMTP")
-    def test_send_email_custom_sender(self, mock_smtp, email_svc) -> None:
+    def test_send_email_custom_sender(self, mock_smtp: MagicMock, email_svc: EmailService) -> None:
         """Test sending email with custom sender."""
 
         mock_server = MagicMock()
@@ -68,7 +68,7 @@ class TestEmailService:
 
     @patch("app.config.settings.test_mode", False)
     @patch("smtplib.SMTP")
-    def test_send_email_smtp_failure(self, mock_smtp, email_svc) -> None:
+    def test_send_email_smtp_failure(self, mock_smtp: MagicMock, email_svc: EmailService) -> None:
         """Test handling of SMTP connection failure."""
 
         mock_smtp.side_effect = Exception("SMTP connection failed")
@@ -81,7 +81,7 @@ class TestEmailService:
             )
         assert "SMTP connection failed" in str(exc_info.value)
 
-    def test_send_verification_email_template_missing(self, email_svc) -> None:
+    def test_send_verification_email_template_missing(self, email_svc: EmailService) -> None:
         """Test handling of missing email template."""
 
         with patch.object(
@@ -95,7 +95,7 @@ class TestEmailServiceIMAP:
     """Test suite for IMAP functionality."""
 
     @patch("imaplib.IMAP4_SSL")
-    def test_connect_imap_success(self, mock_imap, email_svc) -> None:
+    def test_connect_imap_success(self, mock_imap: MagicMock, email_svc: EmailService) -> None:
         """Test successful IMAP connection."""
 
         mock_mail = MagicMock()
@@ -108,7 +108,7 @@ class TestEmailServiceIMAP:
         assert result == mock_mail
 
     @patch("imaplib.IMAP4_SSL")
-    def test_connect_imap_failure(self, mock_imap, email_svc) -> None:
+    def test_connect_imap_failure(self, mock_imap: MagicMock, email_svc: EmailService) -> None:
         """Test IMAP connection failure."""
 
         mock_imap.side_effect = Exception("Connection failed")
@@ -118,7 +118,7 @@ class TestEmailServiceIMAP:
         assert "Connection failed" in str(exc_info.value)
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_email_ids_success(self, mock_imap, email_svc) -> None:
+    def test_get_email_ids_success(self, mock_imap: MagicMock, email_svc: EmailService) -> None:
         """Test retrieving email IDs."""
 
         mock_mail = MagicMock()
@@ -137,7 +137,7 @@ class TestEmailServiceIMAP:
         mock_mail.logout.assert_called_once()
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_email_ids_with_filters(self, mock_imap, email_svc) -> None:
+    def test_get_email_ids_with_filters(self, mock_imap: MagicMock, email_svc: EmailService) -> None:
         """Test retrieving email IDs with multiple filters."""
 
         mock_mail = MagicMock()
@@ -155,7 +155,7 @@ class TestEmailServiceIMAP:
         assert email_ids == ["10", "11"]
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_email_ids_no_results(self, mock_imap, email_svc) -> None:
+    def test_get_email_ids_no_results(self, mock_imap: MagicMock, email_svc: EmailService) -> None:
         """Test when no emails match criteria."""
 
         mock_mail = MagicMock()
@@ -167,7 +167,7 @@ class TestEmailServiceIMAP:
         assert email_ids == []
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_email_ids_search_failure(self, mock_imap, email_svc) -> None:
+    def test_get_email_ids_search_failure(self, mock_imap: MagicMock, email_svc: EmailService) -> None:
         """Test handling of search failure."""
 
         mock_mail = MagicMock()
@@ -179,7 +179,7 @@ class TestEmailServiceIMAP:
         assert email_ids == []
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_email_data_success(self, mock_imap, email_svc) -> None:
+    def test_get_email_data_success(self, mock_imap: MagicMock, email_svc: EmailService) -> None:
         """Test retrieving email data."""
 
         mock_mail = MagicMock()
@@ -206,7 +206,7 @@ class TestEmailServiceIMAP:
         mock_mail.logout.assert_called_once()
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_email_data_multipart(self, mock_imap, email_svc) -> None:
+    def test_get_email_data_multipart(self, mock_imap: MagicMock, email_svc: EmailService) -> None:
         """Test retrieving multipart email data."""
 
         mock_mail = MagicMock()
@@ -237,7 +237,9 @@ class TestEmailServiceIMAP:
         assert "<html>HTML body</html>" in content.body
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_email_data_multipart_container_part_skipped(self, mock_imap, email_svc) -> None:
+    def test_get_email_data_multipart_container_part_skipped(
+        self, mock_imap: MagicMock, email_svc: EmailService
+    ) -> None:
         """The multipart/alternative container is the first node yielded by msg.walk().
         Its get_payload(decode=True) returns None, which must be skipped so the real
         text/plain child part is still extracted."""
@@ -265,7 +267,9 @@ class TestEmailServiceIMAP:
         assert "Plain text body" in content.body
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_email_data_single_part_non_bytes_payload_raises(self, mock_imap, email_svc) -> None:
+    def test_get_email_data_single_part_non_bytes_payload_raises(
+        self, mock_imap: MagicMock, email_svc: EmailService
+    ) -> None:
         """If get_payload(decode=True) somehow returns a non-bytes value on a single-part
         message, an AssertionError should be raised to surface the unexpected condition."""
 
@@ -287,7 +291,7 @@ class TestEmailServiceIMAP:
                 email_svc.get_email_data("4")
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_email_data_not_found(self, mock_imap, email_svc) -> None:
+    def test_get_email_data_not_found(self, mock_imap: MagicMock, email_svc: EmailService) -> None:
         """Test that fetching a non-existent email raises an exception."""
 
         mock_mail = MagicMock()
@@ -298,7 +302,7 @@ class TestEmailServiceIMAP:
             email_svc.get_email_data("999")
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_emails_success(self, mock_imap, email_svc) -> None:
+    def test_get_emails_success(self, mock_imap: MagicMock, email_svc: EmailService) -> None:
         """Test retrieving multiple emails."""
 
         mock_mail = MagicMock()
@@ -344,7 +348,7 @@ class TestEmailServiceIMAP:
         assert emails[2].subject == "Email 1"
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_emails_empty_results(self, mock_imap, email_svc) -> None:
+    def test_get_emails_empty_results(self, mock_imap: MagicMock, email_svc: EmailService) -> None:
         """Test retrieving emails when none match."""
 
         mock_mail = MagicMock()
@@ -355,13 +359,13 @@ class TestEmailServiceIMAP:
 
         assert emails == []
 
-    def test_decode_header_plain_text(self, email_svc) -> None:
+    def test_decode_header_plain_text(self, email_svc: EmailService) -> None:
         """Test decoding plain text header."""
 
         result = email_svc._decode_header("Plain text subject")
         assert result == "Plain text subject"
 
-    def test_decode_header_encoded(self, email_svc) -> None:
+    def test_decode_header_encoded(self, email_svc: EmailService) -> None:
         """Test decoding encoded header."""
 
         # Encoded UTF-8 string
@@ -369,13 +373,13 @@ class TestEmailServiceIMAP:
         result = email_svc._decode_header(encoded)
         assert "Test Subject" in result or result != ""
 
-    def test_decode_header_empty(self, email_svc) -> None:
+    def test_decode_header_empty(self, email_svc: EmailService) -> None:
         """Test decoding empty header."""
 
         result = email_svc._decode_header("")
         assert result == ""
 
-    def test_decode_header_none(self, email_svc) -> None:
+    def test_decode_header_none(self, email_svc: EmailService) -> None:
         """Test decoding None header."""
 
         result = email_svc._decode_header(None)

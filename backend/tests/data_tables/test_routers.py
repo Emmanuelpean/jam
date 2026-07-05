@@ -71,25 +71,25 @@ class TestCompanyCRUD(CRUDTestBase):
     }
     too_long_create_data = {"name": "x" * (COLUMN_LIMITS.name + 1)}
 
-    def test_get_all_specific_company(self, authorised_clients, test_companies) -> None:
-        response = authorised_clients[0].get(f"{self.endpoint}/?url=https://techcorp.com")
+    def test_get_all_specific_company(self, test_companies, test_regular_user) -> None:
+        response = test_regular_user.client.get(f"{self.endpoint}/?url=https://techcorp.com")
         assert response.status_code == 200
         companies = response.json()
         assert len(companies) > 0
         assert companies[0]["name"] == "Tech Corp"
 
-    def test_get_all_with_list(self, authorised_clients, test_companies, test_users) -> None:
+    def test_get_all_with_list(self, test_companies, authorised_user, test_regular_user) -> None:
 
-        test_data = self.get_user_data(test_users, test_companies)
-        response = authorised_clients[0].get(f"{self.endpoint}/?id={test_data[0].id}&id={test_data[1].id}")
+        test_data = self.get_user_data(authorised_user, test_companies)
+        response = test_regular_user.client.get(f"{self.endpoint}/?id={test_data[0].id}&id={test_data[1].id}")
         assert response.status_code == 200
         companies = response.json()
         assert len(companies) == 2
         assert companies[0]["id"] == test_data[0].id
         assert companies[0]["id"] == test_data[0].id
 
-    def test_get_all_specific_id_not_owned(self, authorised_clients, test_companies) -> None:
-        response = authorised_clients[1].get(f"{self.endpoint}/?id=1")
+    def test_get_all_specific_id_not_owned(self, test_companies, test_admin_user) -> None:
+        response = test_admin_user.client.get(f"{self.endpoint}/?id=1")
         assert response.status_code == 200
         assert len(response.json()) == 0
 
@@ -100,7 +100,7 @@ class TestFileCRUD(CRUDTestBase):
     out_schema = schemas.FileOut
     test_data_ref = "test_files"
     create_data = FILE_DATA
-    actions_to_test = ["GET", "PUT", "DELETE"]
+    actions_to_test = ["get", "put", "delete"]
     update_data = {
         "filename": "updated_john_doe_cv_2024.pdf",
         "id": 1,
@@ -108,9 +108,9 @@ class TestFileCRUD(CRUDTestBase):
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
-    def test_post_field_too_long(self, authorised_clients) -> None:
+    def test_post_field_too_long(self, authorised_user) -> None:
         """Uploading a file with a filename exceeding the max length returns 422."""
-        client = self._get_authorised_client(authorised_clients)
+        client = authorised_user.client
         data = {
             "filename": "x" * (COLUMN_LIMITS.file_name + 1),
             "type": "text/plain",
@@ -120,10 +120,10 @@ class TestFileCRUD(CRUDTestBase):
         response = self.post(client, data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_post_success(self, authorised_clients, test_users) -> None:
+    def test_post_success(self, authorised_user) -> None:
         """Authorised users can upload a new file and receive 201 with the file metadata."""
-        client = self._get_authorised_client(authorised_clients)
-        for create_data in self.get_user_data(test_users, self.create_data):
+        client = authorised_user.client
+        for create_data in self.get_user_data(authorised_user, self.create_data):
             data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
             response = self.post(client, data)
             assert response.status_code == 201
@@ -134,9 +134,9 @@ class TestFileCRUD(CRUDTestBase):
         response = self.post(client, {})
         assert response.status_code == 401
 
-    def test_post_duplicate_content_returns_existing_file(self, authorised_clients) -> None:
+    def test_post_duplicate_content_returns_existing_file(self, authorised_user) -> None:
         """Uploading a file whose content already exists for that user returns the existing record."""
-        client = self._get_authorised_client(authorised_clients)
+        client = authorised_user.client
         content = base64.b64encode(b"unique duplicate test content").decode()
         data = {"filename": "original.pdf", "content": content, "type": "application/pdf", "size": 28}
 
@@ -148,10 +148,10 @@ class TestFileCRUD(CRUDTestBase):
         assert second.status_code in (200, 201)
         assert second.json()["id"] == first_id
 
-    def test_post_incorrect_user_cannot_see_uploaded_file(self, authorised_clients, test_users) -> None:
+    def test_post_incorrect_user_cannot_see_uploaded_file(self, authorised_user, unauthorised_user) -> None:
         """A file uploaded by one user is not visible to another user."""
-        uploader = self._get_authorised_client(authorised_clients)
-        other = self._get_admin_unauthorised_client(authorised_clients)
+        uploader = authorised_user.client
+        other = unauthorised_user.client
 
         data = {
             "filename": "private_cv.pdf",
@@ -168,42 +168,42 @@ class TestFileCRUD(CRUDTestBase):
 
     # ------------------------------------------------------ DOWNLOAD ---------------------------------------------------
 
-    def test_file_download_data_url_format(self, authorised_clients, test_files) -> None:
+    def test_file_download_data_url_format(self, test_files, test_regular_user) -> None:
         """Test file download with Base64 data URL format"""
 
         # Use existing test file instead of creating new one
         test_file = test_files[0]  # Get first test file
 
         # Download the file
-        download_response = authorised_clients[0].get(f"{self.endpoint}/{test_file.id}/download")
+        download_response = test_regular_user.client.get(f"{self.endpoint}/{test_file.id}/download")
         assert download_response.status_code == 200
 
         # Verify content type and filename in headers
         assert download_response.headers["content-type"] in ["application/pdf", "text/plain; charset=utf-8"]
         assert f'filename="{test_file.filename}"' in download_response.headers["content-disposition"]
 
-    def test_file_download_plain_base64_format(self, authorised_clients, test_files) -> None:
+    def test_file_download_plain_base64_format(self, test_files, test_regular_user) -> None:
         """Test file download with plain Base64 format (without data URL prefix)"""
 
         # Use second test file if available, otherwise first
         test_file = test_files[1] if len(test_files) > 1 else test_files[0]
 
         # Download the file
-        download_response = authorised_clients[0].get(f"{self.endpoint}/{test_file.id}/download")
+        download_response = test_regular_user.client.get(f"{self.endpoint}/{test_file.id}/download")
         assert download_response.status_code == 200
 
         # Verify basic response structure
         assert len(download_response.content) > 0
         assert "content-disposition" in download_response.headers
 
-    def test_file_download_binary_content(self, authorised_clients, test_files) -> None:
+    def test_file_download_binary_content(self, test_files, test_regular_user) -> None:
         """Test file download with binary content (simulating image/PDF)"""
 
         # Use third test file if available, otherwise first
         test_file = test_files[2] if len(test_files) > 2 else test_files[0]
 
         # Download the file
-        download_response = authorised_clients[0].get(f"{self.endpoint}/{test_file.id}/download")
+        download_response = test_regular_user.client.get(f"{self.endpoint}/{test_file.id}/download")
         assert download_response.status_code == 200
 
         # Verify content
@@ -214,22 +214,22 @@ class TestFileCRUD(CRUDTestBase):
         assert "content-type" in download_response.headers
         assert f'filename="{test_file.filename}"' in download_response.headers["content-disposition"]
 
-    def test_file_download_not_found(self, authorised_clients) -> None:
+    def test_file_download_not_found(self, test_regular_user) -> None:
         """Test file download with non-existent file ID"""
 
-        download_response = authorised_clients[0].get(f"{self.endpoint}/999/download")
+        download_response = test_regular_user.client.get(f"{self.endpoint}/999/download")
         assert download_response.status_code == 404
         error_data = download_response.json()
         assert "File not found" in error_data["detail"]
 
-    def test_file_download_unauthorized(self, authorised_clients, test_files) -> None:
+    def test_file_download_unauthorized(self, test_files, test_admin_user) -> None:
         """Test file download access control - users can only download their own files"""
 
         # Use existing test file
         test_file = test_files[0]
 
         # Try to download with second user (assuming test files belong to first user)
-        download_response = authorised_clients[1].get(f"{self.endpoint}/{test_file.id}/download")
+        download_response = test_admin_user.client.get(f"{self.endpoint}/{test_file.id}/download")
         assert download_response.status_code == 404
         error_data = download_response.json()
         assert "File not found" in error_data["detail"]
@@ -244,30 +244,30 @@ class TestFileCRUD(CRUDTestBase):
         file_id = create_response.json()["id"]
         return client.get(f"{self.endpoint}/{file_id}/download")
 
-    def test_file_download_filename_crlf_injection_stripped(self, authorised_clients) -> None:
+    def test_file_download_filename_crlf_injection_stripped(self, test_regular_user) -> None:
         """CRLF characters in filenames must not appear in Content-Disposition header."""
 
         malicious = "evil.pdf\r\nX-Injected: header"
-        response = self._create_and_download_file(authorised_clients[0], malicious)
+        response = self._create_and_download_file(test_regular_user.client, malicious)
         assert response.status_code == 200
         content_disposition = response.headers["content-disposition"]
         assert "\r" not in content_disposition
         assert "\n" not in content_disposition
 
-    def test_file_download_filename_path_traversal_stripped(self, authorised_clients) -> None:
+    def test_file_download_filename_path_traversal_stripped(self, test_regular_user) -> None:
         """Path traversal components must be stripped from the Content-Disposition filename."""
 
         malicious = "../../etc/passwd"
-        response = self._create_and_download_file(authorised_clients[0], malicious)
+        response = self._create_and_download_file(test_regular_user.client, malicious)
         assert response.status_code == 200
         content_disposition = response.headers["content-disposition"]
         assert 'filename="passwd"' in content_disposition
 
-    def test_file_download_filename_quote_injection_stripped(self, authorised_clients) -> None:
+    def test_file_download_filename_quote_injection_stripped(self, test_regular_user) -> None:
         """Embedded double-quotes must be removed so they cannot break the header value."""
 
         malicious = 'file"name.pdf'
-        response = self._create_and_download_file(authorised_clients[0], malicious)
+        response = self._create_and_download_file(test_regular_user.client, malicious)
         assert response.status_code == 200
         content_disposition = response.headers["content-disposition"]
         # The header value must remain a single well-formed token — no unescaped quotes inside it
@@ -275,7 +275,7 @@ class TestFileCRUD(CRUDTestBase):
         inner = content_disposition.split('filename="')[1].rstrip('"')
         assert '"' not in inner
 
-    def test_file_download_empty_content(self, authorised_clients) -> None:
+    def test_file_download_empty_content(self, test_regular_user) -> None:
         """Test file download with empty/null content"""
 
         # Create a file with empty content for this specific test case
@@ -283,10 +283,10 @@ class TestFileCRUD(CRUDTestBase):
 
         # This might fail at creation if backend validates non-empty content
         # Adjust based on your actual validation rules
-        create_response = authorised_clients[0].post(f"{self.endpoint}/", json=file_data)
+        create_response = test_regular_user.client.post(f"{self.endpoint}/", json=file_data)
         if create_response.status_code == 201:
             file_id = create_response.json()["id"]
-            download_response = authorised_clients[0].get(f"{self.endpoint}/{file_id}/download")
+            download_response = test_regular_user.client.get(f"{self.endpoint}/{file_id}/download")
             # Should either return empty content or handle gracefully
             assert download_response.status_code in [200, 404, 500]
 

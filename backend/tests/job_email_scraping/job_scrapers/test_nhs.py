@@ -1,26 +1,14 @@
 """Unit tests for app/job_email_scraping/job_scrapers/nhs.py"""
 
 import datetime as dt
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from app.job_email_scraping.job_scrapers.nhs import NhsApifyJobScraper
-
+from tests.job_email_scraping.job_scrapers.conftest import make_apify_mock
 
 # --------------------------------------------------- HELPERS --------------------------------------------------
-
-
-def make_apify_mock(items: list[dict]) -> MagicMock:
-    """Return a patched ApifyClient mock that yields the given items from the dataset."""
-    mock_client = MagicMock()
-    mock_client.actor.return_value.start.return_value = {
-        "id": "run-123",
-        "defaultDatasetId": "dataset-123",
-    }
-    mock_client.run.return_value.get.return_value = {"status": "SUCCEEDED"}
-    mock_client.dataset.return_value.list_items.return_value.items = items
-    return mock_client
 
 
 BASE_JOB: dict = {
@@ -45,33 +33,19 @@ def make_job(**overrides) -> dict:
     return {**BASE_JOB, **overrides}
 
 
-# --------------------------------------------------- FIXTURES -------------------------------------------------
-
-
-@pytest.fixture
-def mock_apify_cls():
-    """Patches ApifyClient and settings for NhsJobScraper (via the base class module)."""
-    with (
-        patch("app.job_email_scraping.job_scrapers.apify.ApifyClient") as mock_cls,
-        patch("app.job_email_scraping.job_scrapers.apify.settings") as mock_settings,
-    ):
-        mock_settings.apify_api_key = "test_key"
-        yield mock_cls
-
-
 # ---------------------------------------------------- INIT ----------------------------------------------------
 
 
 class TestInit:
-    def test_single_string_id_wrapped_in_list(self) -> None:
+    def test_single_string_id_wrapped_in_list(self, mock_apify_cls: MagicMock) -> None:
         scraper = NhsApifyJobScraper("ABC-123")
         assert scraper.job_ids == ["ABC-123"]
 
-    def test_list_of_ids_preserved(self) -> None:
+    def test_list_of_ids_preserved(self, mock_apify_cls: MagicMock) -> None:
         scraper = NhsApifyJobScraper(["ABC-123", "DEF-456"])
         assert scraper.job_ids == ["ABC-123", "DEF-456"]
 
-    def test_job_urls_built_from_base_url(self) -> None:
+    def test_job_urls_built_from_base_url(self, mock_apify_cls: MagicMock) -> None:
         scraper = NhsApifyJobScraper(["ABC-123", "DEF-456"])
         assert scraper.job_urls == [
             "https://beta.jobs.nhs.uk/candidate/jobadvert/ABC-123",

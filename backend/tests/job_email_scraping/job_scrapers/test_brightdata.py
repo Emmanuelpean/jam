@@ -13,6 +13,7 @@ class ConcreteBrightdataJobScraper(BrightdataJobScraper):
 
     base_url = "https://example.com/job/"
     name = "example"
+    dataset_id = "ds_example"
 
     def _process_job_data(self, job_data: dict) -> JobResult:
         return JobResult(
@@ -29,18 +30,6 @@ def _mock_response(status_code: int, json_data=None, text: str = "") -> MagicMoc
     resp.json.return_value = json_data
     resp.text = text
     return resp
-
-
-@pytest.fixture
-def mock_brightdata():
-    """Patches requests and settings, yields the requests module mock."""
-    with (
-        patch("app.job_email_scraping.job_scrapers.brightdata.requests") as mock_requests,
-        patch("app.job_email_scraping.job_scrapers.brightdata.settings") as mock_settings,
-    ):
-        mock_settings.brightdata_api_key = "test_api_key"
-        mock_settings.brightdata_example_dataset_id = "ds_example"
-        yield mock_requests
 
 
 class TestInit:
@@ -66,8 +55,8 @@ class TestInit:
         scraper = ConcreteBrightdataJobScraper(["a", "b", "c"])
         assert scraper.max_attempts == 60 * 3
 
-    def test_api_key_and_dataset_id_loaded_from_settings(self, mock_brightdata) -> None:
-        """api_key and dataset_id are read from settings using the scraper name."""
+    def test_api_key_loaded_from_settings_and_dataset_id_from_class(self, mock_brightdata) -> None:
+        """api_key is read from settings; dataset_id comes from the scraper class attribute."""
         scraper = ConcreteBrightdataJobScraper("job1")
         assert scraper.api_key == "test_api_key"
         assert scraper.dataset_id == "ds_example"

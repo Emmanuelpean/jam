@@ -1,15 +1,18 @@
 """Pytest fixtures for Job Scraping tests"""
 
 import datetime as dt
-from typing import Any, Generator
+from typing import Any, Callable, Generator
 from unittest import mock
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
+from sqlalchemy.orm import Session
 
 from app import models
 from app.emails.schemas import EmailData
 from app.job_email_scraping.email_parsers import Platform
 from app.job_email_scraping.email_parsers import indeed
+from app.job_email_scraping.models import JobEmailScrapingServiceLog
 from tests.job_email_scraping.mock_job_scrapers import (
     MockVeganJobsBrightdataJobScraper,
     MockIndeedBrightdataJobScraper,
@@ -20,7 +23,7 @@ from tests.utils import job_email_resources as resources
 
 
 @pytest.fixture(autouse=True)
-def patch_get_indeed_redirected_url(monkeypatch) -> None:
+def patch_get_indeed_redirected_url(monkeypatch: MonkeyPatch) -> None:
     """Automatically patch get_indeed_redirected_url in all tests to avoid real HTTP requests"""
 
     def mock_get_indeed_redirected_url(url: str) -> str:
@@ -68,7 +71,7 @@ def mock_job_scrapers() -> Generator[dict, Any, None]:
 
 
 @pytest.fixture
-def test_job_scraping_service_log(session) -> models.JobEmailScrapingServiceLog:
+def test_job_scraping_service_log(session: Session) -> models.JobEmailScrapingServiceLog:
     """Create a test JobEmailScrapingServiceLog record"""
 
     service_log = models.JobEmailScrapingServiceLog(run_datetime=dt.datetime.now())
@@ -78,26 +81,24 @@ def test_job_scraping_service_log(session) -> models.JobEmailScrapingServiceLog:
 
 
 @pytest.fixture
-def email_record_factory(session, test_users, test_job_scraping_service_log) -> Any:
-    """Factory fixture for creating email records in the database."""
+def email_record_factory(
+    test_job_scraping_service_log: JobEmailScrapingServiceLog,
+) -> Callable[..., tuple[models.JobEmail, list]]:
+    """Factory fixture for creating email records in the database.
+    All emails share one service log so per-log stats aggregate across owners."""
 
-    def _create(email_id: str, user_index: int = 0) -> tuple[models.JobEmail, list[str]]:
-        email_resource = resources.TEST_EMAILS.get(email_id + "_" + test_users[user_index].email)
+    def _create(email_id: str, user: models.User) -> tuple[models.JobEmail, list]:
+        email_resource = resources.TEST_EMAILS.get(email_id + "_" + user.email)
 
-        email_data = dict(
+        email_record = user.create_job_email(
+            service_log=test_job_scraping_service_log,
             external_email_id=str(email_resource["id"]),
             subject=email_resource["subject"],
             sender=email_resource["from"],
             date_received=email_resource["date"],
             platform=email_resource["platform"],
             body=email_resource["body"],
-            service_log_id=test_job_scraping_service_log.id,
         )
-
-        email_record = models.JobEmail(**email_data, owner_id=test_users[user_index].id)
-        session.add(email_record)
-        session.commit()
-
         return email_record, email_resource["parsed_output"]
 
     return _create

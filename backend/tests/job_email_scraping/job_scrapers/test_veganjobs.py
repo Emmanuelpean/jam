@@ -6,7 +6,6 @@ import pytest
 
 from app.job_email_scraping.job_scrapers.veganjobs import VeganJobsJobScraper
 
-
 # --------------------------------------------------- HELPERS --------------------------------------------------
 
 
