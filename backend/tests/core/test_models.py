@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.core.models import TokenType
-from fixtures.users import FixtureUser
+from tests.fixtures.users import FixtureUser
 
 # -------------------------------------------------- UTILITY FUNCTIONS -------------------------------------------------
 

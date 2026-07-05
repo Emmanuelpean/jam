@@ -256,6 +256,10 @@ class TestUpdateCurrentUserPassword(BaseTest):
             ("current_password", "x" * (COLUMN_LIMITS.password + 1)),
             ("new_password", "x" * (COLUMN_LIMITS.password + 1)),
         ],
+        ids=[
+            "current_password_too_long",
+            "new_password_too_long",
+        ],
     )
     def test_update_password_field_too_long(self, field: str, value: str, test_regular_user: models.User) -> None:
         """Test that updating password with a field exceeding its max length returns 422."""
@@ -388,6 +392,11 @@ class TestUpdateCurrentUser(BaseTest):
             ("first_name", "x" * (COLUMN_LIMITS.first_name + 1)),
             ("last_name", "x" * (COLUMN_LIMITS.last_name + 1)),
             ("app_version", "x" * (COLUMN_LIMITS.app_version + 1)),
+        ],
+        ids=[
+            "first_name_too_long",
+            "last_name_too_long",
+            "app_version_too_long",
         ],
     )
     def test_update_field_too_long(self, field: str, value: str, test_regular_user: models.User) -> None:

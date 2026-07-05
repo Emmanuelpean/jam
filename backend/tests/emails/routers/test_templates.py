@@ -3,7 +3,7 @@
 from starlette import status
 from starlette.testclient import TestClient
 
-from fixtures.users import FixtureUser
+from tests.fixtures.users import FixtureUser
 
 ENDPOINT = "/email-templates/"
 

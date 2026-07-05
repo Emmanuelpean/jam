@@ -312,6 +312,11 @@ class TestRegister(BaseTest):
             ("first_name", "x" * (COLUMN_LIMITS.first_name + 1)),
             ("last_name", "x" * (COLUMN_LIMITS.last_name + 1)),
         ],
+        ids=[
+            "password_too_long",
+            "first_name_too_long",
+            "last_name_too_long",
+        ],
     )
     def test_register_field_too_long(self, field: str, value: str, client: TestClient) -> None:
         """Test that registering with a field exceeding its max length returns 422."""

@@ -1,18 +1,18 @@
 """User fixtures for testing."""
 
+import datetime as dt
 import uuid
 from typing import TYPE_CHECKING, cast
-import datetime as dt
 
 import pytest
 
 from app import models
-from core.utils import generate_token
-from fixtures.database import session
+from app.core.utils import generate_token
 from tests.base_test import BaseTest
+from tests.fixtures.database import session
 from tests.utils import test_data as td
 from tests.utils.create_data.core import create_users
-from utils.create_data.utils import create_db_entries
+from tests.utils.create_data.utils import create_db_entries
 
 if TYPE_CHECKING:
     from starlette.testclient import TestClient

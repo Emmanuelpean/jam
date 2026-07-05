@@ -29,8 +29,7 @@ class TestExtractJobAlertTitle:
     @pytest.mark.parametrize(
         "html_body,expected_result",
         [
-            # Full HTML with both keywords and location
-            (
+            pytest.param(
                 """<html><body>
                     <td>
                         <h3>Your job alert settings</h3>
@@ -42,59 +41,61 @@ class TestExtractJobAlertTitle:
                     </td>
                     </body></html>""",
                 "public health Cardiff (Caerdydd)",
+                id="full_html",
             ),
-            # Simplified HTML
-            (
+            pytest.param(
                 """<td>
                         <h3>Your job alert settings</h3>
                         <li>Your keywords: software engineer</li>
                         <li>Your location: London</li>
                     </td>""",
                 "software engineer London",
+                id="simplified_html",
             ),
-            # With inline styles
-            (
+            pytest.param(
                 """<td style="font-family:Arial; max-width:560px; color:#000">
                         <h3>Your job alert settings</h3>
                         <li>Your keywords: data science</li>
                         <li>Your location: Manchester</li>
                     </td>""",
                 "data science Manchester",
+                id="inline_styles",
             ),
-            # Different keyword types
-            (
+            pytest.param(
                 """<td>
                         <h3>Your job alert settings</h3>
                         <li>Your keywords: python developer</li>
                         <li>Your location: Bristol</li>
                     </td>""",
                 "python developer Bristol",
+                id="python_developer",
             ),
-            (
+            pytest.param(
                 """<td>
                         <h3>Your job alert settings</h3>
                         <li>Your keywords: R&D engineer</li>
                         <li>Your location: Oxford</li>
                     </td>""",
                 "R&D engineer Oxford",
+                id="special_keyword",
             ),
-            # Location with special characters
-            (
+            pytest.param(
                 """<td>
                         <h3>Your job alert settings</h3>
                         <li>Your keywords: analyst</li>
                         <li>Your location: Edinburgh (Dùn Èideann)</li>
                     </td>""",
                 "analyst Edinburgh (Dùn Èideann)",
+                id="unicode_location",
             ),
-            # Heading in different tag
-            (
+            pytest.param(
                 """<td>
                         <div>Your job alert settings</div>
                         <li>Your keywords: engineer</li>
                         <li>Your location: Leeds</li>
                     </td>""",
                 "engineer Leeds",
+                id="heading_in_div",
             ),
         ],
     )

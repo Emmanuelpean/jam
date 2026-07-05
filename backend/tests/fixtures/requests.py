@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from utils.test_data.geolocation import MOCK_GEOCODING_RESPONSES
+from tests.utils.test_data.geolocation import MOCK_GEOCODING_RESPONSES
 
 
 @pytest.fixture(autouse=True)
