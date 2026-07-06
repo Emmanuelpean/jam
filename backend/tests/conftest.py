@@ -39,9 +39,10 @@ pytest_plugins = [
 # ------------------------------------------------------ FIXTURES ------------------------------------------------------
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def enable_test_mode():
-    """Force test_mode=True for all tests so emails are intercepted and test-only routes are active."""
+    """Opt-in: force test_mode=True for tests that exercise a test_mode-gated feature. Depends on
+    disable_test_mode so this patch is applied last and wins over the autouse default."""
 
     with patch("app.config.settings.test_mode", True):
         yield

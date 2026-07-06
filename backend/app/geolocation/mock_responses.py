@@ -1,4 +1,6 @@
-"""Mock fixtures for geocoding API calls"""
+"""Canned Nominatim responses served by ``call_geocoding_api`` when ``settings.test_mode`` is set,
+so tests never reach the live geocoding API. Keyed by query string; the value is the raw Nominatim
+response list (an empty list means no results were found)."""
 
 MOCK_GEOCODING_RESPONSES = {
     "90210, Beverly Hills, United States": [

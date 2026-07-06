@@ -30,7 +30,7 @@ def _create_tour_entities(user: FixtureUser, session: Session) -> dict:
         is_tour=True,
     )
     company = user.create_company(name=f"Tour Company {user.id}", is_tour=True)
-    keyword = user.create_keyword(f"tour-keyword-{user.id}", is_tour=True)
+    keyword = user.create_keyword(name=f"tour-keyword-{user.id}", is_tour=True)
     job = user.create_job(title="Tour Job", company_id=company.id, is_tour=True)
     job_application_update = user.create_job_application_update(job, type="received", is_tour=True)
     speculative_application = user.create_speculative_application(company, is_tour=True)

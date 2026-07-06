@@ -1,3 +1,5 @@
+"""Fixtures for requests-related tests."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -12,6 +14,7 @@ def block_real_apify_client():
     construction fail loudly instead of reaching the network."""
 
     def fail(*_args, **_kwargs):
+        """Raise an exception when ApifyClient is constructed."""
         raise RuntimeError(
             "Real ApifyClient constructed in a test - patch "
             "'app.job_email_scraping.job_scrapers.apify.ApifyClient' in your test or fixture."
@@ -28,6 +31,7 @@ def block_real_brightdata_requests():
     un-mocked request fail loudly instead of reaching the network."""
 
     def fail(*_args, **_kwargs):
+        """Raise an exception when BrightData requests are made."""
         raise RuntimeError(
             "Real BrightData HTTP request in a test - patch "
             "'app.job_email_scraping.job_scrapers.brightdata.requests' in your test or fixture."
@@ -49,11 +53,13 @@ def block_real_openai_client():
     client built during a test (now or in future code paths) is also a loud mock."""
 
     def fail(*_args, **_kwargs):
+        """Raise an exception when OpenAI requests are made."""
         raise RuntimeError(
             "Real OpenAI request in a test - patch 'app.job_rating.chatgpt.client' in your test or fixture."
         )
 
     def make_loud_client(*_args, **_kwargs):
+        """Make a loud mock of the OpenAI client."""
         mock_client = MagicMock()
         mock_client.chat.completions.create.side_effect = fail
         return mock_client
@@ -74,11 +80,13 @@ def block_real_anthropic_client():
     client built during a test (now or in future code paths) is also a loud mock."""
 
     def fail(*_args, **_kwargs):
+        """Raise an exception when Anthropic requests are made."""
         raise RuntimeError(
             "Real Anthropic request in a test - patch 'app.job_rating.claude.client' in your test or fixture."
         )
 
     def make_loud_client(*_args, **_kwargs):
+        """Make a loud mock of the Anthropic client."""
         mock_client = MagicMock()
         mock_client.messages.create.side_effect = fail
         return mock_client
@@ -98,6 +106,7 @@ def block_real_provider_http():
     un-mocked fetch fails loudly instead of hitting the live provider API."""
 
     def fail(*_args, **_kwargs):
+        """Raise an exception when provider HTTP requests are made."""
         raise RuntimeError(
             "Real provider HTTP request in a test - patch 'request_with_retry' in the relevant "
             "app.provider_monitoring.*.fetch module in your test or fixture."
@@ -117,6 +126,7 @@ def block_real_stripe_requests():
     blocks the transport underneath so any un-mocked call fails loudly instead of hitting the network."""
 
     def fail(*_args, **_kwargs):
+        """Raise an exception when Stripe requests are made."""
         raise RuntimeError(
             "Real Stripe request in a test - patch the specific 'stripe.*' SDK call "
             "(e.g. 'app.payments.customer.stripe.Customer.retrieve_async') in your test or fixture."
@@ -126,6 +136,27 @@ def block_real_stripe_requests():
         patch("stripe._api_requestor._APIRequestor.request", side_effect=fail),
         patch("stripe._api_requestor._APIRequestor.request_async", side_effect=fail),
     ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def block_real_smtp():
+    """Safety net: no test may open a real SMTP connection. ``send_email`` runs its real logic
+    (formatting, logging) but the transport ``smtplib.SMTP`` is a no-op MagicMock. Replaces the old
+    test_mode short-circuit that skipped send_email entirely. Patches ``smtplib.SMTP`` (not the whole
+    module) so tests that mock it themselves - e.g. test_email_service - stack cleanly on top."""
+
+    with patch("smtplib.SMTP") as mock_smtp:
+        yield mock_smtp
+
+
+@pytest.fixture(autouse=True)
+def skip_geocoding_rate_limit():
+    """Skip the 1s Nominatim rate-limit back-off so tests that geocode several queries stay fast.
+    Kept separate from mock_nominatim_get so TestRateLimiting can override just this one (to keep the
+    real sleep) while still reusing the shared requests.get mock."""
+
+    with patch("app.geolocation.geolocation.sleep"):
         yield
 
 
@@ -145,8 +176,5 @@ def mock_nominatim_get():
         mock_response.json.return_value = MOCK_GEOCODING_RESPONSES.get(query, [])
         return mock_response
 
-    with (
-        patch("app.geolocation.geolocation.requests.get", side_effect=side_effect) as mock,
-        patch("app.geolocation.geolocation.time.sleep"),
-    ):
+    with patch("app.geolocation.geolocation.requests.get", side_effect=side_effect) as mock:
         yield mock

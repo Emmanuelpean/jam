@@ -3,13 +3,21 @@
 import datetime as dt
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 import stripe
 from sqlalchemy.orm import Session
 from starlette.testclient import TestClient
 
-from app import models
 from tests.base_test import BaseTest
 from tests.fixtures.users import FixtureUser
+
+
+@pytest.fixture(autouse=True)
+def _enable_test_mode(enable_test_mode):
+    """The webhook endpoint parses events via stripe.Event.construct_from only under test_mode;
+    without it the handler expects a real Stripe signature. Enable it for this module."""
+
+    yield
 
 
 def create_webhook_event(

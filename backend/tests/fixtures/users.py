@@ -2,9 +2,10 @@
 
 import datetime as dt
 import uuid
-from typing import TYPE_CHECKING, cast
 
 import pytest
+from sqlalchemy.orm import Session
+from starlette.testclient import TestClient
 
 from app import models
 from app.core.utils import generate_token
@@ -13,9 +14,6 @@ from tests.fixtures.database import session
 from tests.utils import test_data as td
 from tests.utils.create_data.core import create_users
 from tests.utils.create_data.utils import create_db_entries
-
-if TYPE_CHECKING:
-    from starlette.testclient import TestClient
 
 
 class _LazyUserClient:
@@ -52,111 +50,91 @@ class FixtureUser(models.User):
     plain_verification_token: str
     client: "TestClient"
 
-    def create_user_qualification(self, **kwargs) -> models.UserQualification:
-        """Create a user qualification owned by this user. See BaseTest.create_user_qualification."""
+    def create_entry(self, model, data: dict, **kwargs):
+        """Create an entry of the given type owned by this user"""
+
         session = self._request.getfixturevalue("session")
-        return create_db_entries(session, models.UserQualification, {"owner_id": self.id, **kwargs})[0]
+        return create_db_entries(session, model, {"owner_id": self.id, **data, **kwargs})[0]
+
+    def create_user_qualification(self, **kwargs) -> models.UserQualification:
+        """Create a user qualification owned by this user"""
+
+        return self.create_entry(models.UserQualification, {"education": "PhD"}, **kwargs)
 
     def create_job(self, **kwargs) -> models.Job:
-        """Create a job owned by this user. See BaseTest.create_job."""
-        session = self._request.getfixturevalue("session")
-        data = {"owner_id": self.id, "title": "Test Job", **kwargs}
-        return create_db_entries(session, models.Job, data)[0]
+        """Create a job owned by this user"""
+
+        return self.create_entry(models.Job, {"title": "Test Job"}, **kwargs)
 
     def create_person(self, **kwargs) -> models.Person:
-        """Create a person owned by this user. See BaseTest.create_person."""
-        session = self._request.getfixturevalue("session")
-        data = {"owner_id": self.id, "first_name": "John", "last_name": "Doe", **kwargs}
-        return create_db_entries(session, models.Person, data)[0]
+        """Create a person owned by this user"""
+
+        return self.create_entry(models.Person, {"first_name": "John", "last_name": "Doe"}, **kwargs)
 
     def create_company(self, **kwargs) -> models.Company:
-        """Create a company owned by this user. See BaseTest.create_company."""
-        session = self._request.getfixturevalue("session")
-        data = {"owner_id": self.id, "name": "Acme Corp", **kwargs}
-        return create_db_entries(session, models.Company, data)[0]
+        """Create a company owned by this user"""
+
+        return self.create_entry(models.Company, {"name": "Acme Corp"}, **kwargs)
 
     def create_aggregator(self, **kwargs) -> models.Aggregator:
-        """Create an aggregator owned by this user. See BaseTest.create_aggregator."""
-        session = self._request.getfixturevalue("session")
-        data = {"owner_id": self.id, "name": "LinkedIn", "url": "https://linkedin.com", **kwargs}
-        return create_db_entries(session, models.Aggregator, data)[0]
+        """Create an aggregator owned by this user"""
 
-    def create_keyword(self, name: str = "Python", **kwargs) -> models.Keyword:
-        """Create a keyword owned by this user. See BaseTest.create_keyword."""
-        session = self._request.getfixturevalue("session")
-        data = {"owner_id": self.id, "name": name, **kwargs}
-        return create_db_entries(session, models.Keyword, data)[0]
+        return self.create_entry(models.Aggregator, {"name": "LinkedIn", "url": "https://linkedin.com"}, **kwargs)
+
+    def create_keyword(self, **kwargs) -> models.Keyword:
+        """Create a keyword owned by this user"""
+
+        return self.create_entry(models.Keyword, {"name": "Python"}, **kwargs)
 
     def create_interview(self, job: models.Job, **kwargs) -> models.Interview:
-        """Create an interview for the given job owned by this user. See BaseTest.create_interview."""
+        """Create an interview for the given job owned by this user"""
 
-        session = self._request.getfixturevalue("session")
-        data = {"owner_id": self.id, "job_id": job.id, "type": "technical", **kwargs}
-        return create_db_entries(session, models.Interview, data)[0]
+        return self.create_entry(models.Interview, {"job_id": job.id, "type": "technical"}, **kwargs)
 
     def create_job_application_update(self, job: models.Job, **kwargs) -> models.JobApplicationUpdate:
-        """Create a job application update for the given job owned by this user. See BaseTest.create_job_application_update."""
+        """Create a job application update for the given job owned by this user"""
 
-        session = self._request.getfixturevalue("session")
-        data = {"owner_id": self.id, "job_id": job.id, "type": "received", **kwargs}
-        return create_db_entries(session, models.JobApplicationUpdate, data)[0]
+        return self.create_entry(models.JobApplicationUpdate, {"job_id": job.id, "type": "received"}, **kwargs)
 
     def create_speculative_application(self, company: models.Company, **kwargs) -> models.SpeculativeApplication:
-        """Create a speculative application against the given company owned by this user. See BaseTest.create_speculative_application."""
+        """Create a speculative application against the given company owned by this user"""
 
-        session = self._request.getfixturevalue("session")
-        data = {"owner_id": self.id, "company_id": company.id, **kwargs}
-        return create_db_entries(session, models.SpeculativeApplication, data)[0]
+        return self.create_entry(models.SpeculativeApplication, {"company_id": company.id}, **kwargs)
 
     def create_file(self, **kwargs) -> models.File:
         """Create a file owned by this user. See BaseTest.create_file."""
 
-        session = self._request.getfixturevalue("session")
-        data = {
-            "owner_id": self.id,
-            "filename": "cv.pdf",
-            "content": "base64content",
-            "type": "application/pdf",
-            "size": 1024,
-            **kwargs,
-        }
-        return create_db_entries(session, models.File, data)[0]
+        data = {"filename": "cv.pdf", "content": "base64content", "type": "application/pdf", "size": 1024}
+        return self.create_entry(models.File, data, **kwargs)
 
     def create_forwarding_confirmation_link(self, **kwargs) -> models.ForwardingConfirmationLink:
-        """Create a forwarding confirmation link owned by this user. See BaseTest.create_forwarding_confirmation_link."""
+        """Create a forwarding confirmation link owned by this user"""
 
-        session = self._request.getfixturevalue("session")
-        data = {
-            "owner_id": self.id,
-            "email_external_id": "ext_123",
-            "url": "https://example.com/confirm",
-            "platform": "gmail",
-            **kwargs,
-        }
-        return create_db_entries(session, models.ForwardingConfirmationLink, data)[0]
+        data = {"email_external_id": "ext_123", "url": "https://example.com/confirm", "platform": "gmail"}
+        return self.create_entry(models.ForwardingConfirmationLink, data, **kwargs)
 
     def create_scraped_job(
         self,
         service_log: models.JobEmailScrapingServiceLog | None = None,
         **kwargs,
     ) -> models.ScrapedJob:
-        """Create a scraped job owned by this user. See BaseTest.create_scraped_job."""
+        """Create a scraped job owned by this user"""
 
         session = self._request.getfixturevalue("session")
         if service_log is None:
             service_log = BaseTest.create_email_scraping_service_log(session)
         data = {
-            "owner_id": self.id,
             "service_log_id": service_log.id,
             "external_job_id": str(uuid.uuid4()),
             "platform": "linkedin",
-            **kwargs,
+            "url": "test.com",
         }
-        return create_db_entries(session, models.ScrapedJob, data)[0]
+        return self.create_entry(models.ScrapedJob, data, **kwargs)
 
     def create_job_email(
         self,
         service_log: models.JobEmailScrapingServiceLog | None = None,
+        scraped_jobs: list[models.ScrapedJob] | None = None,
         **kwargs,
     ) -> models.JobEmail:
         """Create a job alert email owned by this user. See BaseTest.create_job_email."""
@@ -165,7 +143,6 @@ class FixtureUser(models.User):
         if service_log is None:
             service_log = BaseTest.create_email_scraping_service_log(session)
         data = {
-            "owner_id": self.id,
             "service_log_id": service_log.id,
             "external_email_id": str(uuid.uuid4()),
             "subject": "Test Job Alert",
@@ -173,9 +150,13 @@ class FixtureUser(models.User):
             "date_received": dt.datetime.now(dt.timezone.utc),
             "platform": "linkedin",
             "body": "Test email body",
-            **kwargs,
         }
-        return create_db_entries(session, models.JobEmail, data)[0]
+        email = self.create_entry(models.JobEmail, data, **kwargs)
+        if scraped_jobs:
+            email.jobs = scraped_jobs
+        session.commit()
+        session.refresh(email)
+        return email
 
     def create_job_rating(
         self,
@@ -184,32 +165,25 @@ class FixtureUser(models.User):
         **kwargs,
     ) -> models.JobRating:
         """Create a job rating owned by this user. See BaseTest.create_job_rating."""
-        session = self._request.getfixturevalue("session")
+
         if scraped_job is None:
             scraped_job = self.create_scraped_job()
         if user_qualification is None:
             user_qualification = self.create_user_qualification(experience="Test")
-        data = {
-            "owner_id": self.id,
-            "scraped_job_id": scraped_job.id,
-            "user_qualification_id": user_qualification.id,
-            "llm_model": "claude",
-            **kwargs,
-        }
-        return create_db_entries(session, models.JobRating, data)[0]
+        data = {"scraped_job_id": scraped_job.id, "user_qualification_id": user_qualification.id, "llm_model": "claude"}
+        return self.create_entry(models.JobRating, data, **kwargs)
 
     def create_scraping_exclusion_filter(self, **kwargs) -> models.ScrapingExclusionFilter:
         """Create a scraping exclusion filter owned by this user. See BaseTest.create_scraping_exclusion_filter."""
 
-        session = self._request.getfixturevalue("session")
-        data = {"owner_id": self.id, "type": "title", "operator": "contains", "value": "Some", **kwargs}
-        return create_db_entries(session, models.ScrapingExclusionFilter, data)[0]
+        data = {"type": "title", "operator": "contains", "value": "Some"}
+        return self.create_entry(models.ScrapingExclusionFilter, data, **kwargs)
 
     def create_scraping_favourite_filter(self, **kwargs) -> models.ScrapingFavouriteFilter:
         """Create a scraping favourite filter owned by this user. See BaseTest.create_scraping_favourite_filter."""
-        session = self._request.getfixturevalue("session")
-        data = {"owner_id": self.id, "type": "title", "operator": "contains", "value": "Python", **kwargs}
-        return create_db_entries(session, models.ScrapingFavouriteFilter, data)[0]
+
+        data = {"type": "title", "operator": "contains", "value": "Python"}
+        return self.create_entry(models.ScrapingFavouriteFilter, data, **kwargs)
 
     def get_token(self, token_type) -> models.UserToken | None:
         """Get the most recent token of the given type for this user. See BaseTest.get_token."""
@@ -237,6 +211,7 @@ class FixtureUser(models.User):
     def reauthenticate(self) -> "FixtureUser":
         """Refresh this user and rebuild its authorised client with a token for the current token_version.
         Use after an action that revokes existing tokens (e.g. a password change) to keep making requests."""
+
         self.refresh()
         self.__dict__.pop("_authorised_client", None)
         return self
@@ -247,7 +222,9 @@ def _patch_user() -> None:
     if hasattr(models.User, "create_token"):
         return
     for name, attr in vars(FixtureUser).items():
-        if callable(attr) and not name.startswith("__"):
+        if name.startswith("__"):
+            continue
+        if callable(attr) or isinstance(attr, property):
             setattr(models.User, name, attr)
     models.User.client = _LazyUserClient()
 
@@ -255,69 +232,69 @@ def _patch_user() -> None:
 _patch_user()
 
 
-def _single_user(session, request, user_data: dict) -> "FixtureUser":
+def _single_user(session: Session, request, user_data: dict) -> FixtureUser:
     """Create and return a single user from its USER_DATA entry, wired up for lazy user.client"""
 
     user = create_users(session, [user_data])[0]
     user._request = request
-    return cast("FixtureUser", user)
+    return user
 
 
 @pytest.fixture
-def test_regular_user(session, request) -> "FixtureUser":
+def test_regular_user(session: Session, request) -> FixtureUser:
     """Fixture for a regular (non-admin, premium) user."""
     return _single_user(session, request, td.REGULAR_USER)
 
 
 @pytest.fixture
-def test_admin_user(session, request) -> "FixtureUser":
+def test_admin_user(session: Session, request) -> FixtureUser:
     """Fixture for an admin user."""
     return _single_user(session, request, td.ADMIN_USER)
 
 
 @pytest.fixture
-def test_demo_user(session, request) -> "FixtureUser":
+def test_demo_user(session: Session, request) -> FixtureUser:
     """Fixture for a demo user."""
     return _single_user(session, request, td.DEMO_USER)
 
 
 @pytest.fixture
-def test_inactive_user(session, request) -> "FixtureUser":
+def test_inactive_user(session: Session, request) -> FixtureUser:
     """Fixture for an inactive user."""
     return _single_user(session, request, td.INACTIVE_USER)
 
 
 @pytest.fixture
-def test_unverified_user(session, request) -> "FixtureUser":
+def test_unverified_user(session: Session, request) -> FixtureUser:
     """Fixture for an unverified user (i.e. is_verified=False)."""
     return _single_user(session, request, td.UNVERIFIED_USER)
 
 
 @pytest.fixture
-def test_toast_user_1(session, request) -> "FixtureUser":
+def test_toast_user_1(session: Session, request) -> FixtureUser:
     """Fixture for the first named premium user (used by the job-scraping suite)."""
     return _single_user(session, request, td.PREMIUM_USER_1)
 
 
 @pytest.fixture
-def test_toast_user_2(session, request) -> "FixtureUser":
+def test_toast_user_2(session: Session, request) -> FixtureUser:
     """Fixture for the second named premium user (used by the job-scraping suite)."""
     return _single_user(session, request, td.PREMIUM_USER_2)
 
 
 @pytest.fixture
-def test_gmail_user(session, request) -> "FixtureUser":
+def test_gmail_user(session: Session, request) -> FixtureUser:
     """Fixture for a registered user with a gmail address (e.g. a forwarding-email originator)."""
     return _single_user(session, request, {"email": "test@gmail.com", "password": "test123"})
 
 
 @pytest.fixture
-def test_stripe_user(session, request) -> "FixtureUser":
+def test_stripe_user(session: Session, request) -> FixtureUser:
     """Fixture for a user with Stripe details (used only by the payments suite)."""
     return _single_user(session, request, td.STRIPE_USER)
 
 
 @pytest.fixture
-def test_non_premium_user(session, request) -> "FixtureUser":
+def test_non_premium_user(session: Session, request) -> FixtureUser:
     """Fixture for a non-premium user (used only by the payments suite)."""
     return _single_user(session, request, td.NON_PREMIUM_USER)

@@ -75,6 +75,24 @@ class BaseTest:
         return create_db_entries(session, models.JobRatingServiceLog, {**kwargs})[0]
 
     @staticmethod
+    def create_platform_stat(
+        session,
+        service_log: models.JobEmailScrapingServiceLog | None = None,
+        name: str = "linkedin",
+        **kwargs,
+    ) -> models.JobEmailScrapingPlatformStat:
+        """Create per-platform stats for a job email scraping run (creates a service log if none given).
+        :param session: database session
+        :param service_log: the run these stats belong to; a new one is created if omitted
+        :param name: platform name (e.g. "linkedin", "indeed")
+        :param kwargs: additional JobEmailScrapingPlatformStat fields (e.g. job_scrape_failed_ids)"""
+
+        if service_log is None:
+            service_log = BaseTest.create_email_scraping_service_log(session)
+        data = {"name": name, "service_log_id": service_log.id, **kwargs}
+        return create_db_entries(session, models.JobEmailScrapingPlatformStat, data)[0]
+
+    @staticmethod
     def create_service(session, name: str = "fake_service", **kwargs) -> models.Service:
         """Create a scheduler Service config row (not user-owned).
         :param session: database session
@@ -108,6 +126,60 @@ class BaseTest:
 
         data = {"error_type": error_type, "message": message, **kwargs}
         return create_db_entries(session, models.ServiceError, data)[0]
+
+    @staticmethod
+    def create_anthropic_usage(session, **kwargs) -> models.AnthropicDailyUsage:
+        """Create a day of Anthropic spend (USD, not user-owned).
+        :param session: database session
+        :param kwargs: AnthropicDailyUsage fields (e.g. date, usage_usd)"""
+
+        data = {"date": dt.datetime.now(dt.timezone.utc).date(), "usage_usd": 10.0, **kwargs}
+        return create_db_entries(session, models.AnthropicDailyUsage, data)[0]
+
+    @staticmethod
+    def create_apify_usage(session, **kwargs) -> models.ApifyDailyUsage:
+        """Create a day of Apify usage (USD, not user-owned).
+        :param session: database session
+        :param kwargs: ApifyDailyUsage fields (e.g. date, usage_usd)"""
+
+        data = {"date": dt.datetime.now(dt.timezone.utc).date(), "usage_usd": 5.0, **kwargs}
+        return create_db_entries(session, models.ApifyDailyUsage, data)[0]
+
+    @staticmethod
+    def create_apify_balance(session, **kwargs) -> models.ApifyBalance:
+        """Create an Apify cycle balance snapshot (USD, not user-owned).
+        :param session: database session
+        :param kwargs: ApifyBalance fields (e.g. limit_usd)"""
+
+        data = {"limit_usd": 100.0, **kwargs}
+        return create_db_entries(session, models.ApifyBalance, data)[0]
+
+    @staticmethod
+    def create_brightdata_usage(session, **kwargs) -> models.BrightdataDailyUsage:
+        """Create a day of Bright Data spend (USD) for one dataset (not user-owned).
+        :param session: database session
+        :param kwargs: BrightdataDailyUsage fields (e.g. date, dataset, usage_usd)"""
+
+        data = {"date": dt.datetime.now(dt.timezone.utc).date(), "dataset": "linkedin", "usage_usd": 3.0, **kwargs}
+        return create_db_entries(session, models.BrightdataDailyUsage, data)[0]
+
+    @staticmethod
+    def create_brightdata_balance(session, **kwargs) -> models.BrightdataBalance:
+        """Create a Bright Data balance snapshot (USD, not user-owned).
+        :param session: database session
+        :param kwargs: BrightdataBalance fields (e.g. balance_usd, pending_costs_usd)"""
+
+        data = {"balance_usd": 50.0, "pending_costs_usd": 2.0, **kwargs}
+        return create_db_entries(session, models.BrightdataBalance, data)[0]
+
+    @staticmethod
+    def create_stripe_income(session, **kwargs) -> models.StripeDailyIncome:
+        """Create a day of Stripe income (GBP, not user-owned).
+        :param session: database session
+        :param kwargs: StripeDailyIncome fields (e.g. date, gross_gbp, net_gbp)"""
+
+        data = {"date": dt.datetime.now(dt.timezone.utc).date(), "gross_gbp": 100.0, "net_gbp": 80.0, **kwargs}
+        return create_db_entries(session, models.StripeDailyIncome, data)[0]
 
     @staticmethod
     def _create_maintenance_setting(session: Session, minutes_offset: int) -> models.Setting:

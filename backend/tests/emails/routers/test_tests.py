@@ -2,12 +2,22 @@
 
 from unittest.mock import Mock, patch
 
+import pytest
 from fastapi import status
 from starlette.testclient import TestClient
 
 from app.main import app
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def _enable_test_mode(enable_test_mode):
+    """Every /test/emails endpoint is gated by require_test_mode, so enable it for this module.
+    The explicit "returns 403 when disabled" tests patch test_mode=False themselves; that patch is
+    applied when the test is called (after fixture setup), so it still wins for those cases."""
+
+    yield
 
 
 class TestGetTestEmails:

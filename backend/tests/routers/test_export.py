@@ -47,8 +47,8 @@ class TestExport(BaseTest):
         """One record of each exported entity produces exactly one data row per CSV with the expected values."""
 
         company = test_regular_user.create_company(name="Acme Corp")
-        aggregator = test_regular_user.create_aggregator(name="LinkedIn")
-        keyword = test_regular_user.create_keyword("Python")
+        aggregator = test_regular_user.create_aggregator()
+        keyword = test_regular_user.create_keyword(name="Python")
         person = test_regular_user.create_person(first_name="Jane", last_name="Smith", company_id=company.id)
         job = test_regular_user.create_job(
             title="Backend Engineer", company_id=company.id, location="London", source_aggregator_id=aggregator.id
@@ -113,8 +113,8 @@ class TestExport(BaseTest):
         company = test_regular_user.create_company()
         job = test_regular_user.create_job(title="Fullstack Dev", company_id=company.id)
         keywords = [
-            test_regular_user.create_keyword("Python"),
-            test_regular_user.create_keyword("Django"),
+            test_regular_user.create_keyword(name="Python"),
+            test_regular_user.create_keyword(name="Django"),
         ]
         contacts = [
             test_regular_user.create_person(first_name="Jane", last_name="Smith", company_id=company.id),
