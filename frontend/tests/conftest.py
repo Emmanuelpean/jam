@@ -14,6 +14,10 @@ import pytest
 import requests
 from sqlalchemy import Engine, orm
 
+backend_path = os.path.abspath(os.path.join(str(__file__), "../../../backend"))
+sys.path.insert(0, backend_path)
+frontend_path = os.path.abspath(os.path.join(__file__, "../.."))
+
 from app.config import settings
 from tests.fixtures.database import truncate_all_tables
 
@@ -31,17 +35,7 @@ _selenium_service.Service.service_url = property(
     lambda self: f"http://{_selenium_utils.join_host_port('127.0.0.1', self.port)}"
 )
 
-backend_path = os.path.abspath(os.path.join(str(__file__), "../../../backend"))
-sys.path.insert(0, backend_path)
-frontend_path = os.path.abspath(os.path.join(__file__, "../.."))
 
-
-# Load the pytest fixtures.
-# Note: tests.fixtures.requests is deliberately NOT loaded here. Its autouse fixtures patch the
-# in-process backend modules (provider guards + the Nominatim mock), which is meaningless for the
-# Selenium suite - the real backend runs in a separate uvicorn process. Worse, mock_nominatim_get
-# patches `app.geolocation.geolocation.requests.get`, i.e. `.get` on the shared requests module,
-# which clobbers requests.get process-wide and breaks the helpers that call the backend over HTTP.
 pytest_plugins = [
     "tests.fixtures.database",
     "tests.fixtures.clients",
