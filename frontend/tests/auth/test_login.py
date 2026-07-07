@@ -2,7 +2,7 @@
 
 import time
 
-from fixtures.users import FixtureUser
+from tests.fixtures.users import FixtureUser
 from frontend_base_test import BaseTest
 
 

@@ -4,7 +4,7 @@ import datetime as dt
 
 from sqlalchemy.orm import Session
 
-from fixtures.users import FixtureUser
+from tests.fixtures.users import FixtureUser
 from frontend_base_test import models, BaseTest
 
 

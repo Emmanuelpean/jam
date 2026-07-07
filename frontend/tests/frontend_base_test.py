@@ -19,7 +19,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from app import models
 from app.config import settings
 from app.core.oauth2 import create_access_token
-from fixtures.users import FixtureUser
+from tests.fixtures.users import FixtureUser
 from tests.base_test import BaseTest as BackendBaseTest
 from helpers.alert_modal_utils import ConfirmModalUtils, DeleteModalUtils, LogoutModalUtils
 from helpers.auth_utils import AuthentificationUtils

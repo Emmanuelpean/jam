@@ -1,7 +1,7 @@
 """Test authentification pages during maintenance mode."""
 
 from app.core.models import TokenType
-from fixtures.users import FixtureUser
+from tests.fixtures.users import FixtureUser
 from frontend_base_test import MaintenanceTestBase
 
 

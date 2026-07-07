@@ -12,7 +12,7 @@ In test mode the frontend polls every 2s instead of 30s.
 
 import time
 
-from fixtures.users import FixtureUser
+from tests.fixtures.users import FixtureUser
 from frontend_base_test import MaintenanceTestBase
 
 # Timeout that comfortably exceeds the 2s test-mode poll interval
