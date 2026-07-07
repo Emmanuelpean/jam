@@ -50,10 +50,7 @@ class TestAggregatorsPage(BaseTablePage):
         """Create aggregator entries owned by the logged-in user"""
 
         return [
-            self.user.create_aggregator(
-                name=f"Aggregator {i}", url=f"https://aggregator{i}.com"
-            )
-            for i in range(count)
+            self.user.create_aggregator(name=f"Aggregator {i}", url=f"https://aggregator{i}.com") for i in range(count)
         ]
 
 
@@ -103,10 +100,7 @@ class TestCompaniesPage(BaseTablePage):
 
         self.company_table_utils.table_context_menu(company.id, "delete")
         modal = self.delete_modal.wait_for_modal()
-        assert (
-            "This will also permanently delete 2 speculative applications linked to this company."
-            in modal.text
-        )
+        assert "This will also permanently delete 2 speculative applications linked to this company." in modal.text
 
     def test_delete_company_without_speculative_applications_no_warning(self) -> None:
         """No warning appears when the company has no linked speculative applications."""
@@ -152,9 +146,7 @@ class TestPersonsPage(BaseTablePage):
         The company is named "Tech Corp" so it can be selected from the modal via ``test_data``.
         """
 
-        company = self.user.create_company(
-            name="Tech Corp", url="https://techcorp.com", description="Tech company"
-        )
+        company = self.user.create_company(name="Tech Corp", url="https://techcorp.com", description="Tech company")
         return [
             self.user.create_person(
                 first_name=f"First{i}",
@@ -199,10 +191,7 @@ class TestPersonsPage(BaseTablePage):
         self.company_modal_utils.confirm_button("edit").click()
         assert "New Company Name" in self.company_modal_utils.wait_for_view_modal().text
         self.company_modal_utils.cancel_button("view").click()
-        assert (
-            self.get_element("modal-view-person-CompanyBadge").text
-            == "New Company Name".upper()
-        )
+        assert self.get_element("modal-view-person-CompanyBadge").text == "New Company Name".upper()
 
 
 class TestJobApplicationUpdatesPage(BaseTablePage):
@@ -214,9 +203,7 @@ class TestJobApplicationUpdatesPage(BaseTablePage):
     required_fields = ["job_id", "type", "date"]
     columns = ["jobBadge", "date", "note", "created_at"]
     test_data = {
-        "date": dt.datetime(
-            year=2025, month=3, day=5, hour=3, minute=30, tzinfo=dt.timezone.utc
-        ),
+        "date": dt.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=dt.timezone.utc),
         "job_id": "Senior Python Developer (Tech Corp)",
         "note": "Received automated confirmation email",
         "type": "Received",
@@ -229,19 +216,13 @@ class TestJobApplicationUpdatesPage(BaseTablePage):
         The job is titled "Senior Python Developer" at "Tech Corp" so it can be selected via ``test_data``.
         """
 
-        company = self.user.create_company(
-            name="Tech Corp", url="https://techcorp.com", description="Tech company"
-        )
-        job = self.user.create_job(
-            title="Senior Python Developer", company_id=company.id
-        )
+        company = self.user.create_company(name="Tech Corp", url="https://techcorp.com", description="Tech company")
+        job = self.user.create_job(title="Senior Python Developer", company_id=company.id)
         return [
             self.user.create_job_application_update(
                 job,
                 type="received",
-                date=dt.datetime(
-                    year=2025, month=3, day=5, hour=3, minute=30, tzinfo=dt.timezone.utc
-                ),
+                date=dt.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=dt.timezone.utc),
                 note="Received automated confirmation email",
             )
             for _ in range(count)
@@ -257,9 +238,7 @@ class TestInterviewPage(BaseTablePage):
     required_fields = ["job_id", "type", "date"]
     columns = ["jobBadge", "type", "date", "created_at"]
     test_data = {
-        "date": dt.datetime(
-            year=2025, month=3, day=5, hour=3, minute=30, tzinfo=dt.timezone.utc
-        ),
+        "date": dt.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=dt.timezone.utc),
         "job_id": "Senior Python Developer (Tech Corp)",
         "note": "Received automated confirmation email",
         "attendance_type": "On-site",
@@ -270,12 +249,8 @@ class TestInterviewPage(BaseTablePage):
     def _create_job(self) -> models.Job:
         """Create the job (with company) that interviews are linked to"""
 
-        company = self.user.create_company(
-            name="Tech Corp", url="https://techcorp.com", description="Tech company"
-        )
-        return self.user.create_job(
-            title="Senior Python Developer", company_id=company.id
-        )
+        company = self.user.create_company(name="Tech Corp", url="https://techcorp.com", description="Tech company")
+        return self.user.create_job(title="Senior Python Developer", company_id=company.id)
 
     def create_entries(self, count: int = 1) -> list[models.Interview]:
         """Create interview entries (linked to a shared job) owned by the logged-in user"""
@@ -286,9 +261,7 @@ class TestInterviewPage(BaseTablePage):
                 job,
                 type="HR",
                 attendance_type="on-site",
-                date=dt.datetime(
-                    year=2025, month=3, day=5, hour=3, minute=30, tzinfo=dt.timezone.utc
-                ),
+                date=dt.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=dt.timezone.utc),
                 note="Initial screening",
             )
             for _ in range(count)
@@ -307,9 +280,7 @@ class TestInterviewPage(BaseTablePage):
             linkedin_url="https://linkedin.com/in/jane",
             company_id=job.company_id,
         )
-        interview = self.user.create_interview(
-            job, type="HR", attendance_type="on-site", note="Screening"
-        )
+        interview = self.user.create_interview(job, type="HR", attendance_type="on-site", note="Screening")
         interview.interviewers = [person]
         self.db.commit()
         return interview
@@ -371,9 +342,7 @@ class TestJobPage(BaseTablePage):
         The company is named "Oxford PV" so it can be selected from the modal via ``test_data``.
         """
 
-        company = self.user.create_company(
-            name="Oxford PV", url="https://oxfordpv.com", description="Solar technology"
-        )
+        company = self.user.create_company(name="Oxford PV", url="https://oxfordpv.com", description="Solar technology")
         return [
             self.user.create_job(
                 title=f"Job {i}",
@@ -393,9 +362,7 @@ class TestJobPage(BaseTablePage):
 
         job = self.load_entries()[0]
         interview_data = dict(
-            date=dt.datetime(
-                year=2025, month=4, day=10, hour=10, minute=0, tzinfo=dt.timezone.utc
-            ),
+            date=dt.datetime(year=2025, month=4, day=10, hour=10, minute=0, tzinfo=dt.timezone.utc),
             type="HR",
             attendance_type="On-site",
             note="Initial HR screening interview",
@@ -412,20 +379,14 @@ class TestJobPage(BaseTablePage):
         assert len(self.interview_table_utils.table_rows) == interview_count + 1
         self.interview_table_utils.table_rows[0].click()
         interview_id = self.interview_table_utils.get_row_id(0)
-        interview = (
-            self.db.query(models.Interview)
-            .filter(models.Interview.id == interview_id)
-            .first()
-        )
+        interview = self.db.query(models.Interview).filter(models.Interview.id == interview_id).first()
         self.interview_modal_utils.check_interview_view_modal(interview, False)
 
     def test_modify_interview(self) -> None:
         """Test modifying an interview through the job view modal"""
 
         job = self.create_entries()[0]
-        self.user.create_interview(
-            job, type="HR", attendance_type="on-site", note="Initial screening"
-        )
+        self.user.create_interview(job, type="HR", attendance_type="on-site", note="Initial screening")
         self.refresh()
 
         interview_data = dict(
@@ -451,11 +412,7 @@ class TestJobPage(BaseTablePage):
 
         # Check the db entry to ensure the modifications were saved
         self.db.expire_all()
-        interview = (
-            self.db.query(models.Interview)
-            .filter(models.Interview.id == interview_id)
-            .first()
-        )
+        interview = self.db.query(models.Interview).filter(models.Interview.id == interview_id).first()
         assert interview.type == "Technical"
         assert interview.attendance_type == "remote"
         assert interview.note == interview_data["note"]
@@ -468,9 +425,7 @@ class TestJobPage(BaseTablePage):
 
         job = self.load_entries()[0]
         update_data = dict(
-            date=dt.datetime(
-                year=2025, month=4, day=15, hour=14, minute=0, tzinfo=dt.timezone.utc
-            ),
+            date=dt.datetime(year=2025, month=4, day=15, hour=14, minute=0, tzinfo=dt.timezone.utc),
             type="Received",
             note="Scheduled first round interview",
         )
@@ -486,11 +441,7 @@ class TestJobPage(BaseTablePage):
         assert len(self.jobApplicationUpdate_table_utils.table_rows) == update_count + 1
         self.jobApplicationUpdate_table_utils.table_rows[0].click()
         update_id = self.jobApplicationUpdate_table_utils.get_row_id(0)
-        update = (
-            self.db.query(models.JobApplicationUpdate)
-            .filter(models.JobApplicationUpdate.id == update_id)
-            .first()
-        )
+        update = self.db.query(models.JobApplicationUpdate).filter(models.JobApplicationUpdate.id == update_id).first()
         self.jobApplicationUpdate_modal_utils.check_update_view_modal(update, False)
 
     def test_modify_job_application_update(self) -> None:
@@ -501,9 +452,7 @@ class TestJobPage(BaseTablePage):
             job,
             type="received",
             note="Initial update",
-            date=dt.datetime(
-                year=2025, month=3, day=5, hour=3, minute=30, tzinfo=dt.timezone.utc
-            ),
+            date=dt.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=dt.timezone.utc),
         )
         self.refresh()
 
@@ -529,11 +478,7 @@ class TestJobPage(BaseTablePage):
 
         # Check the db entry to ensure the modifications were saved
         self.db.expire_all()
-        update = (
-            self.db.query(models.JobApplicationUpdate)
-            .filter(models.JobApplicationUpdate.id == update_id)
-            .first()
-        )
+        update = self.db.query(models.JobApplicationUpdate).filter(models.JobApplicationUpdate.id == update_id).first()
         assert update.type == "sent"
         assert update.note == update_data["note"]
 

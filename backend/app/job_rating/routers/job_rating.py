@@ -4,7 +4,6 @@ from app import models
 from app.job_rating import schemas
 from app.routers.utility import generate_data_table_crud_router
 
-
 job_rating_router = generate_data_table_crud_router(
     table_model=models.JobRating,
     out_schema=schemas.JobRatingOut,

@@ -3,7 +3,6 @@
 from app.job_email_scraping.email_parsers import indeed, linkedin, nhs, veganjobs
 from app.job_email_scraping.email_parsers.utils import Platform
 
-
 JOB_PARSERS = {
     Platform.LINKEDIN: linkedin.parse_linkedin_job_email,
     Platform.INDEED: indeed.parse_indeed_job_email,

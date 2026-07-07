@@ -45,12 +45,7 @@ class TestUsersPage(BaseTablePage):
     def create_entries(self, count: int = 1) -> list[models.User]:
         """Create user entries (distinct from the logged-in admin) for the CRUD tests."""
 
-        return [
-            self.create_user(
-                self.db, email=f"user{i}@example.com", password="Password123!"
-            )
-            for i in range(count)
-        ]
+        return [self.create_user(self.db, email=f"user{i}@example.com", password="Password123!") for i in range(count)]
 
     # ----------------------------------------------------- ADD TEST ---------------------------------------------------
 
@@ -70,16 +65,10 @@ class TestUsersPage(BaseTablePage):
         self.modal_utils.wait_for_edit_modal_close()
 
         # The new user is in the database and the table
-        assert (
-            self.get_entries_count() == n_entries + 1
-        ), "Expected user to be added to database"
-        assert (
-            len(self.table_utils.table_rows) == initial_table_count + 1
-        ), "Expected user to be added to table"
+        assert self.get_entries_count() == n_entries + 1, "Expected user to be added to database"
+        assert len(self.table_utils.table_rows) == initial_table_count + 1, "Expected user to be added to table"
 
-        new_user = (
-            self.db.query(self.model).filter_by(email=self.test_data["email"]).first()
-        )
+        new_user = self.db.query(self.model).filter_by(email=self.test_data["email"]).first()
         assert new_user is not None, "Expected the new user in the database"
 
         # Reopen in view mode and confirm it shows the new user
@@ -103,9 +92,7 @@ class TestUsersPage(BaseTablePage):
         self.modal_utils.confirm_button("edit").click()
         self.modal_utils.wait_for_edit_modal_close()
         self.modal_utils.cancel_button("view").click()
-        assert (
-            len(self.table_utils.table_rows) == initial_count
-        ), "Expected table to remain unchanged"
+        assert len(self.table_utils.table_rows) == initial_count, "Expected table to remain unchanged"
 
     def test_edit_entry_through_right_click_context_menu(self) -> None:
         """Editing a user's email via the right-click context menu.
@@ -119,6 +106,4 @@ class TestUsersPage(BaseTablePage):
         self.modal_utils._fill_modal(email=self.EDIT_EMAIL)
         self.modal_utils.confirm_button("edit").click()
         self.modal_utils.wait_for_edit_modal_close()
-        assert (
-            len(self.table_utils.table_rows) == initial_count
-        ), "Expected table to remain unchanged"
+        assert len(self.table_utils.table_rows) == initial_count, "Expected table to remain unchanged"

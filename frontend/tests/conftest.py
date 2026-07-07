@@ -24,8 +24,8 @@ from selenium.webdriver.common import service as _selenium_service
 from selenium.webdriver.common import utils as _selenium_utils
 
 _orig_is_url_connectable = _selenium_utils.is_url_connectable
-_selenium_utils.is_url_connectable = (
-    lambda port, host="127.0.0.1", scheme="http": _orig_is_url_connectable(port, host, scheme)
+_selenium_utils.is_url_connectable = lambda port, host="127.0.0.1", scheme="http": _orig_is_url_connectable(
+    port, host, scheme
 )
 _selenium_service.Service.service_url = property(
     lambda self: f"http://{_selenium_utils.join_host_port('127.0.0.1', self.port)}"

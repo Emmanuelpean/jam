@@ -35,8 +35,8 @@ def sum_bucket_amount(bucket: dict) -> float:
 
 
 def fetch_anthropic_daily_usage(
-        db: Session | None = None,
-        logger: logging.Logger | None = None,
+    db: Session | None = None,
+    logger: logging.Logger | None = None,
 ) -> list[AnthropicDailyUsage]:
     """Fetch per-day Anthropic organisation cost for the current calendar month.
 

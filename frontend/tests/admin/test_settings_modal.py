@@ -38,7 +38,4 @@ class TestSettingsPage(BaseTablePage):
     def create_entries(self, count: int = 1) -> list[models.Setting]:
         """Create setting entries"""
 
-        return [
-            self.create_setting(self.db, name=f"setting_{i}", value=f"value_{i}")
-            for i in range(count)
-        ]
+        return [self.create_setting(self.db, name=f"setting_{i}", value=f"value_{i}") for i in range(count)]

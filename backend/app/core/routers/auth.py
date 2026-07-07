@@ -22,7 +22,6 @@ from app.emails.email_service import email_service
 from app.utilities import security
 from app.utilities.strings import clean_email
 
-
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
 
 

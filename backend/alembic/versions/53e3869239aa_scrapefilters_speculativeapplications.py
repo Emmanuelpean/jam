@@ -211,13 +211,11 @@ def upgrade() -> None:
         sa.Column("job_scrape_filtered_ids", postgresql.ARRAY(sa.Integer()), server_default="{}", nullable=False),
     )
     # Transfer job_to_scrape_ids data to job_to_process_ids before dropping
-    op.execute(
-        """
+    op.execute("""
         UPDATE job_email_scraping_platform_stat
         SET job_to_process_ids = job_to_scrape_ids
         WHERE job_to_scrape_ids != '{}'
-    """
-    )
+    """)
     op.drop_column("job_email_scraping_platform_stat", "job_to_scrape_ids")
     op.add_column("job_rating", sa.Column("job_prompt", sa.String(), nullable=True))
     op.add_column("job_rating", sa.Column("system_prompt_id", sa.Integer(), nullable=True))
@@ -247,52 +245,40 @@ def upgrade() -> None:
         None, "scraped_job", "scraping_favourite_filter", ["favourite_filter_id"], ["id"], ondelete="SET NULL"
     )
     # Migrate user data to subtables before dropping columns
-    op.execute(
-        """
+    op.execute("""
         INSERT INTO user_preferences (owner_id, theme, chase_threshold, deadline_threshold, update_limit, default_currency)
         SELECT id, theme, chase_threshold, deadline_threshold, update_limit, default_currency
         FROM "user"
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         INSERT INTO stripe_details (owner_id)
         SELECT id FROM "user"
-    """
-    )
-    op.execute(
-        """
+    """)
+    op.execute("""
         INSERT INTO premium_settings (owner_id, is_active)
         SELECT id, toast_active FROM "user"
-    """
-    )
+    """)
     # Migrate verification tokens
-    op.execute(
-        """
+    op.execute("""
         INSERT INTO user_token (owner_id, token, token_type)
         SELECT id, verification_token, 'verification'
         FROM "user"
         WHERE verification_token IS NOT NULL
-    """
-    )
+    """)
     # Migrate password reset tokens
-    op.execute(
-        """
+    op.execute("""
         INSERT INTO user_token (owner_id, token, token_type)
         SELECT id, password_reset_token, 'password_reset'
         FROM "user"
         WHERE password_reset_token IS NOT NULL
-    """
-    )
+    """)
     # Migrate email change tokens
-    op.execute(
-        """
+    op.execute("""
         INSERT INTO user_token (owner_id, token, token_type, pending_email)
         SELECT id, email_change_token, 'email_change', pending_email
         FROM "user"
         WHERE email_change_token IS NOT NULL
-    """
-    )
+    """)
 
     op.add_column("user", sa.Column("previous_login", sa.TIMESTAMP(timezone=True), nullable=True))
     op.add_column("user", sa.Column("app_version", sa.String(), nullable=True))
@@ -395,8 +381,7 @@ def downgrade() -> None:
     )
 
     # Restore user data from subtables before dropping them
-    op.execute(
-        """
+    op.execute("""
         UPDATE "user" u
         SET theme = up.theme,
             chase_threshold = up.chase_threshold,
@@ -405,44 +390,35 @@ def downgrade() -> None:
             default_currency = up.default_currency
         FROM user_preferences up
         WHERE u.id = up.owner_id
-    """
-    )
+    """)
     # Restore toast_active from premium_settings.is_active
-    op.execute(
-        """
+    op.execute("""
         UPDATE "user" u
         SET toast_active = ps.is_active
         FROM premium_settings ps
         WHERE u.id = ps.owner_id
-    """
-    )
+    """)
     # Restore verification tokens
-    op.execute(
-        """
+    op.execute("""
         UPDATE "user" u
         SET verification_token = ut.token
         FROM user_token ut
         WHERE u.id = ut.owner_id AND ut.token_type = 'verification'
-    """
-    )
+    """)
     # Restore password reset tokens
-    op.execute(
-        """
+    op.execute("""
         UPDATE "user" u
         SET password_reset_token = ut.token
         FROM user_token ut
         WHERE u.id = ut.owner_id AND ut.token_type = 'password_reset'
-    """
-    )
+    """)
     # Restore email change tokens
-    op.execute(
-        """
+    op.execute("""
         UPDATE "user" u
         SET email_change_token = ut.token, pending_email = ut.pending_email
         FROM user_token ut
         WHERE u.id = ut.owner_id AND ut.token_type = 'email_change'
-    """
-    )
+    """)
 
     op.create_unique_constraint(
         op.f("user_password_reset_token_key"), "user", ["password_reset_token"], postgresql_nulls_not_distinct=False
@@ -480,13 +456,11 @@ def downgrade() -> None:
         ),
     )
     # Transfer job_to_process_ids data back to job_to_scrape_ids before dropping
-    op.execute(
-        """
+    op.execute("""
         UPDATE job_email_scraping_platform_stat
         SET job_to_scrape_ids = job_to_process_ids
         WHERE job_to_process_ids != '{}'
-    """
-    )
+    """)
     op.drop_column("job_email_scraping_platform_stat", "job_scrape_filtered_ids")
     op.drop_column("job_email_scraping_platform_stat", "job_to_process_ids")
     op.add_column("job", sa.Column("source_id", sa.INTEGER(), autoincrement=False, nullable=True))

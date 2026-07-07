@@ -29,9 +29,7 @@ class ScrapedJobsBuilder(DemoBuilder):
 
         # Wait for real data rows (not skeleton rows) then click the first one
         print("  - Opening first job alert...")
-        rows = self.wait.until(
-            ec.presence_of_all_elements_located((By.CSS_SELECTOR, "[id^='table-row-scrapedJob-']"))
-        )
+        rows = self.wait.until(ec.presence_of_all_elements_located((By.CSS_SELECTOR, "[id^='table-row-scrapedJob-']")))
         first_row = rows[2]
         self._move_to_element_obj(first_row, 500)
         self._click_element_obj(first_row)
@@ -69,8 +67,7 @@ class ScrapedJobsBuilder(DemoBuilder):
         """Animate the demo cursor to a WebElement"""
 
         rect = self.driver.execute_script(
-            "const r = arguments[0].getBoundingClientRect();"
-            "return {x: r.left + r.width/2, y: r.top + r.height/2};",
+            "const r = arguments[0].getBoundingClientRect();" "return {x: r.left + r.width/2, y: r.top + r.height/2};",
             element,
         )
         self.driver.execute_script(f"window.moveCursorTo({rect['x']}, {rect['y']}, {duration_ms});")
@@ -80,8 +77,7 @@ class ScrapedJobsBuilder(DemoBuilder):
         """Click a WebElement with visual cursor effect"""
 
         rect = self.driver.execute_script(
-            "const r = arguments[0].getBoundingClientRect();"
-            "return {x: r.left + r.width/2, y: r.top + r.height/2};",
+            "const r = arguments[0].getBoundingClientRect();" "return {x: r.left + r.width/2, y: r.top + r.height/2};",
             element,
         )
         self.driver.execute_script(f"window.simulateClick({rect['x']}, {rect['y']});")

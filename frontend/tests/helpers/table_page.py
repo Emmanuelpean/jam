@@ -23,17 +23,11 @@ class BaseTablePage(BaseTest):
     # Parameters needed
     entry_type = ""  # entry type, used to resolve the correct *_table_utils / *_modal_utils helpers
     endpoint = ""  # endpoint of the table, used to query the data
-    test_data = (
-        {}
-    )  # test data used to fill the modal (adding entries, adding incorrect entries, editing entries)
-    required_fields = (
-        []
-    )  # required fields for adding entries. if empty, assume that any field is required
+    test_data = {}  # test data used to fill the modal (adding entries, adding incorrect entries, editing entries)
+    required_fields = []  # required fields for adding entries. if empty, assume that any field is required
     duplicate_fields = []  # fields which are required to be unique
     columns = []  # table column keys user for search and sorting
-    sorting_columns = (
-        []
-    )  # columns which can be sorted, if empty assume all columns can be sorted
+    sorting_columns = []  # columns which can be sorted, if empty assume all columns can be sorted
     model = None  # database model class for the entry type
 
     def setup_function(self, request) -> None:
@@ -183,9 +177,7 @@ class BaseTablePage(BaseTest):
         n_entries_new = self.get_entries_count()
         assert n_entries_new == n_entries + 1, "Expected entry to be added to database"
         new_table_count = len(self.table_utils.table_rows)
-        assert (
-            new_table_count == initial_table_count + 1
-        ), "Expected entry to be added to table"
+        assert new_table_count == initial_table_count + 1, "Expected entry to be added to table"
 
         entries = self.db.query(self.model).all()
         entry_id = max([entry.id for entry in entries])
@@ -218,9 +210,7 @@ class BaseTablePage(BaseTest):
         # Try to add the same entry again
         self.table_utils.add_entity_button.click()
         self.modal_utils.wait_for_edit_modal()
-        self.modal_utils._fill_modal(
-            duplicate_fields=self.duplicate_fields, **self.test_data
-        )
+        self.modal_utils._fill_modal(duplicate_fields=self.duplicate_fields, **self.test_data)
         self.modal_utils.assert_confirm_button_disabled("edit")
         self.modal_utils.cancel_button("edit").click()
         self.modal_utils.wait_for_edit_modal_close()
@@ -231,9 +221,7 @@ class BaseTablePage(BaseTest):
         self.load_entries()
 
         if len(self.required_fields) > 1:
-            dictionaries = contiguous_subdicts(
-                {key: self.test_data[key] for key in self.required_fields}
-            )
+            dictionaries = contiguous_subdicts({key: self.test_data[key] for key in self.required_fields})
         else:
             dictionaries = [dict()]
 
@@ -268,9 +256,7 @@ class BaseTablePage(BaseTest):
         self.modal_utils.confirm_button("edit").click()
         self.modal_utils.wait_for_edit_modal_close()
         self.modal_utils.cancel_button("view").click()
-        assert (
-            len(self.table_utils.table_rows) == initial_count
-        ), "Expected table to remain unchanged"
+        assert len(self.table_utils.table_rows) == initial_count, "Expected table to remain unchanged"
 
     def test_edit_entry_through_right_click_context_menu(self) -> None:
         """Test editing an entry through right-click context menu"""
@@ -282,9 +268,7 @@ class BaseTablePage(BaseTest):
         self.modal_utils._fill_modal(**self.test_data)
         self.modal_utils.confirm_button("edit").click()
         self.modal_utils.wait_for_edit_modal_close()
-        assert (
-            len(self.table_utils.table_rows) == initial_count
-        ), "Expected table to remain unchanged"
+        assert len(self.table_utils.table_rows) == initial_count, "Expected table to remain unchanged"
 
     def test_cancel_edit_view(self) -> None:
         """Test cancelling an entry edit opened via the view modal"""

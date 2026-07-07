@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field, field_validator
 from app.base_schemas import OwnedOut, EmailField, serialise_relationships, OwnedCreate, COLUMN_LIMITS
 from app.config import settings
 
-
 # ------------------------------------------------------- KEYWORD ------------------------------------------------------
 
 

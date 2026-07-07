@@ -39,11 +39,23 @@ pytest_plugins = [
 # ------------------------------------------------------ FIXTURES ------------------------------------------------------
 
 
+@pytest.fixture(autouse=True)
+def disable_test_mode():
+    """Autouse default: backend tests run with test_mode=False so external boundaries go through the
+    real code path and are exercised via the mock fixtures. Without this, CI (which sets TEST_MODE=true)
+    would short-circuit test_mode-gated code (e.g. geolocation serving canned data instead of hitting
+    the mocked requests.get). Individual tests opt back in via enable_test_mode."""
+
+    with patch("app.config.settings.test_mode", False):
+        yield
+
+
 @pytest.fixture
-def enable_test_mode():
+def enable_test_mode(disable_test_mode):
     """Opt-in: force test_mode=True for tests that exercise a test_mode-gated feature. Depends on
     disable_test_mode so this patch is applied last and wins over the autouse default."""
 
+    _ = disable_test_mode
     with patch("app.config.settings.test_mode", True):
         yield
 

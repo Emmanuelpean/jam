@@ -5,7 +5,7 @@ from starlette import status
 from starlette.testclient import TestClient
 
 from app import models
-from base_models import ProcessingStatus
+from app.base_models import ProcessingStatus
 from tests.base_test import BaseTest
 from tests.fixtures.users import FixtureUser
 

@@ -22,7 +22,6 @@ from app.routers.utility import generate_data_table_crud_router, assert_admin
 from app.utilities import security
 from app.utilities.logger import AppLogger
 
-
 # -------------------------------------------------------- USERS -------------------------------------------------------
 
 

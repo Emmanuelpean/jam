@@ -452,13 +452,11 @@ class DemoBuilder:
     def inject_highlighting(self) -> None:
         """Inject CSS and JS for cursor highlighting"""
 
-        self.driver.execute_script(
-            f"""
+        self.driver.execute_script(f"""
             const style = document.createElement('style');
             style.textContent = `{HIGHLIGHT_CSS}`;
             document.head.appendChild(style);
-        """
-        )
+        """)
 
         self.driver.execute_script(HIGHLIGHT_JS)
         time.sleep(0.5)
