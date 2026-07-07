@@ -41,7 +41,6 @@ class BaseTablePage(BaseTest):
 
     def create_entries(self, count: int = 1) -> list:
         """Create ``count`` entries (and any FK dependencies) owned by ``self.user`` and return them.
-
         Must be implemented by subclasses."""
 
         raise NotImplementedError

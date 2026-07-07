@@ -2,7 +2,7 @@
 
 import datetime as dt
 
-from base_test import models
+from app import models
 from helpers.table_page import BaseTablePage
 
 

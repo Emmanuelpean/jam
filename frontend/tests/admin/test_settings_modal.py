@@ -2,7 +2,7 @@
 
 from selenium.webdriver.common.by import By
 
-from base_test import models
+from app import models
 from helpers.table_page import BaseTablePage
 
 

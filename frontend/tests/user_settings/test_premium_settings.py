@@ -18,6 +18,7 @@ class TestPremiumSettingsPage(BaseTest):
     """Test class for the Premium Settings Page"""
 
     page_url = "settings/premium"
+    user_fixture = "test_non_premium_user"
 
     @pytest.fixture(scope="class", autouse=True)
     @classmethod
