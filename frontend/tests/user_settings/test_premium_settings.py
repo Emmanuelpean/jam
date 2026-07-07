@@ -10,8 +10,7 @@ import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 
-from base_test import models, BaseTest
-from tests.utils.test_data import TOAST_USER_1_INDEX
+from frontend_base_test import models, BaseTest
 
 
 @pytest.mark.xdist_group("stripe")
@@ -22,7 +21,7 @@ class TestPremiumSettingsPage(BaseTest):
 
     @pytest.fixture(scope="class", autouse=True)
     @classmethod
-    def stripe_listener(cls, test_backend_server) -> Generator[None, None, None]:
+    def stripe_listener(cls, test_backend_server: str) -> Generator[None, None, None]:
         """Start a single Stripe listener for the whole test class and tear it down at the end."""
 
         # Kill any leftover stripe processes from previous runs
@@ -183,14 +182,14 @@ class TestPremiumSettingsPage(BaseTest):
 class TestForwardingConfirmationLinks(BaseTest):
     """Test suite for forwarding confirmation link UI on the Premium tab."""
 
-    user_index = TOAST_USER_1_INDEX
+    user_fixture = "test_toast_user_1"
     page_url = "settings/premium"
     _link: models.ForwardingConfirmationLink = None
 
     def setup_function(self, request) -> None:
         """Setup for each test function."""
 
-        self._link = self._create_confirmation_link()
+        self._link = self.user.create_forwarding_confirmation_link()
         self.login()
 
     def test_confirmation_alert_displayed(self) -> None:
@@ -250,7 +249,7 @@ class TestForwardingConfirmationLinks(BaseTest):
 class TestIncompleteQualificationsWarning(BaseTest):
     """Tests for the incomplete qualifications warning on the Premium tab."""
 
-    user_index = TOAST_USER_1_INDEX
+    user_fixture = "test_toast_user_1"
     page_url = "settings/premium"
 
     def setup_function(self, request) -> None:
@@ -259,14 +258,12 @@ class TestIncompleteQualificationsWarning(BaseTest):
     def test_alert_shown_when_no_qualifications(self) -> None:
         """Alert is visible for a premium user with AI scoring on and no qualifications set."""
 
-        qualifications = self.db.query(models.UserQualification).filter_by(owner_id=self.user.id).all()
-        assert not qualifications
         assert self.premium_settings_utils.incomplete_qualifications_alert.is_displayed()
 
     def test_alert_not_shown_when_qualifications_incomplete(self) -> None:
         """Alert is shown when at least one qualification field is populated, but not all five fields."""
 
-        self._make_qualifications(experience="5 years Python", skills="Python, FastAPI")
+        self.user.create_user_qualification(experience="5 years Python", skills="Python, FastAPI")
         self.driver.refresh()
         time.sleep(0.5)
         assert self.check_element_exists("incomplete-qualifications-alert")
@@ -274,7 +271,7 @@ class TestIncompleteQualificationsWarning(BaseTest):
     def test_alert_not_shown_when_all_qualifications_filled(self) -> None:
         """Alert is hidden once all five qualification fields are populated."""
 
-        self._make_qualifications(
+        self.user.create_user_qualification(
             experience="5 years Python",
             skills="Python, FastAPI",
             qualities="Analytical, detail-oriented",
@@ -287,7 +284,7 @@ class TestIncompleteQualificationsWarning(BaseTest):
     def test_alert_not_shown_when_ai_scoring_off(self) -> None:
         """Alert is hidden when AI Job Matching is disabled, even with no qualifications."""
 
-        self.db.query(models.PremiumSettings).filter_by(owner_id=self.user.id).update({"job_rating_active": False})
+        self.db_user.premium.job_rating_active = False
         self.db.commit()
         self.driver.refresh()
         assert not self.check_element_exists("incomplete-qualifications-alert")

@@ -8,12 +8,12 @@ with the supplied fields pre-filled, then clean the params from the URL.
 import time
 import urllib.parse
 
-from base_test import BaseTest
+from frontend_base_test import BaseTest
 
 
 class TestExtensionAutoOpen(BaseTest):
 
-    user_index = 0
+    user_fixture = "test_regular_user"
     page_url = "jobs"
 
     def setup_function(self, request) -> None:
@@ -63,4 +63,4 @@ class TestExtensionAutoOpen(BaseTest):
             ext_salary_min="50000",
         )
         time.sleep(1)
-        assert not self.job_modal_utils.wait_for_edit_modal_close()
+        self.job_modal_utils.wait_for_edit_modal_close()

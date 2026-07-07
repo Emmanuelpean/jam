@@ -12,23 +12,60 @@ from typing import Generator, Any
 import psutil
 import pytest
 import requests
+from sqlalchemy import Engine, orm
 
 from app.config import settings
+from tests.fixtures.database import truncate_all_tables
+
+# On Windows, resolving "localhost" tries IPv6 (::1) first and stalls ~2s per connection before
+# falling back to IPv4. Selenium spawns a fresh chromedriver per test and talks to it over
+# "localhost", so that stall is paid on every driver startup and shutdown. Force IPv4 instead.
+from selenium.webdriver.common import service as _selenium_service
+from selenium.webdriver.common import utils as _selenium_utils
+
+_orig_is_url_connectable = _selenium_utils.is_url_connectable
+_selenium_utils.is_url_connectable = (
+    lambda port, host="127.0.0.1", scheme="http": _orig_is_url_connectable(port, host, scheme)
+)
+_selenium_service.Service.service_url = property(
+    lambda self: f"http://{_selenium_utils.join_host_port('127.0.0.1', self.port)}"
+)
 
 backend_path = os.path.abspath(os.path.join(str(__file__), "../../../backend"))
 sys.path.insert(0, backend_path)
 frontend_path = os.path.abspath(os.path.join(__file__, "../.."))
 
 
-# Load the pytest fixtures
+# Load the pytest fixtures.
+# Note: tests.fixtures.requests is deliberately NOT loaded here. Its autouse fixtures patch the
+# in-process backend modules (provider guards + the Nominatim mock), which is meaningless for the
+# Selenium suite - the real backend runs in a separate uvicorn process. Worse, mock_nominatim_get
+# patches `app.geolocation.geolocation.requests.get`, i.e. `.get` on the shared requests module,
+# which clobbers requests.get process-wide and breaks the helpers that call the backend over HTTP.
 pytest_plugins = [
     "tests.fixtures.database",
     "tests.fixtures.clients",
     "tests.fixtures.users",
-    "tests.fixtures.test_data",
-    "tests.fixtures.job_scraping",
-    "tests.fixtures.job_rating",
+    "tests.fixtures.others",
 ]
+
+
+@pytest.fixture
+def session(engine: Engine) -> Generator[orm.Session, None, None]:
+    """Committing session for Selenium tests, overriding the backend's transactional-rollback fixture.
+
+    The backend under test runs in a separate uvicorn process with its own DB connection, so fixture
+    data must be committed to be visible over HTTP - an uncommitted transaction on this process's
+    connection would be invisible to it, and any data the server commits would not be rolled back here.
+    Each test therefore starts from a clean database via TRUNCATE rather than transaction rollback."""
+
+    truncate_all_tables(engine)
+    testing_session_local = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db = testing_session_local()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -133,19 +170,25 @@ def print_backend_pid() -> None:
 
 
 @pytest.fixture(scope="session")
-def frontend_url(worker_id) -> str:
+def frontend_url(worker_id: str) -> str:
     """Calculate frontend URL for this worker without starting the server"""
     if worker_id == "master":
         port = 3100
     else:
         worker_num = int(worker_id.replace("gw", ""))
         port = 3100 + worker_num
-    return f"http://localhost:{port}"
+    return f"http://127.0.0.1:{port}"
 
 
 @pytest.fixture(scope="session")
-def test_backend_server(database_url, worker_id, frontend_url, engine) -> Generator[str, None, None]:
+def test_backend_server(
+    database_url: str,
+    worker_id: str,
+    frontend_url: str,
+    engine: Engine,
+) -> Generator[str, None, None]:
     """Start a test backend server for integration tests"""
+
     print("=" * 60)
     print(f"STARTING BACKEND SERVER (Worker: {worker_id})")
     print("=" * 60)
@@ -210,7 +253,7 @@ def test_backend_server(database_url, worker_id, frontend_url, engine) -> Genera
         print(f"Backend process started with PID: {process.pid} on port {port}")
 
         # Wait for server to start
-        api_url = f"http://localhost:{port}"
+        api_url = f"http://127.0.0.1:{port}"
         print(f"Waiting for backend server to be ready at {api_url}...")
 
         for attempt in range(30):
@@ -259,8 +302,13 @@ def test_backend_server(database_url, worker_id, frontend_url, engine) -> Genera
 
 
 @pytest.fixture(scope="session")
-def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Generator[str, None, None]:
+def test_frontend_server(
+    test_backend_server: str,
+    worker_id: str,
+    frontend_url: str,
+) -> Generator[str, None, None]:
     """Start a test frontend server for integration tests"""
+
     print("=" * 60)
     print(f"STARTING FRONTEND SERVER (Worker: {worker_id})")
     print("=" * 60)
@@ -304,7 +352,7 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     # Start the frontend server
     print("Starting frontend server subprocess...")
     process = subprocess.Popen(
-        f'"{npm_cmd}" start -- --port {port}',
+        f'"{npm_cmd}" start -- --port {port} --host 127.0.0.1',
         cwd=frontend_path,
         env=env,
         stdout=subprocess.PIPE,
@@ -317,7 +365,7 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     print(f"Frontend process started with PID: {process.pid}")
 
     # Wait for frontend server to start
-    frontend_url = f"http://localhost:{port}"
+    frontend_url = f"http://127.0.0.1:{port}"
     print(f"Waiting for frontend server at {frontend_url}...")
     print("This will take a few seconds for Vite to start...")
 

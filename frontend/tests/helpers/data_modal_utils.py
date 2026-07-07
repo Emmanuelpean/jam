@@ -7,7 +7,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from app import models
 from helpers.base_utils import BaseUtils
 from helpers.formatting import format_field
-from select_utils import Select
+from helpers.select_utils import Select
 
 
 class DataModalUtils(BaseUtils):
@@ -28,11 +28,6 @@ class DataModalUtils(BaseUtils):
     def add_contact_button(self) -> WebElement:
         """+ button that opens the inline person/contact form inside this modal."""
         return self.get_element("add-button-contact")
-
-    @property
-    def add_keyword_button(self) -> WebElement:
-        """+ button that opens the inline keyword form inside this modal."""
-        return self.get_element("add-button-keyword")
 
     # ------------------------------------------------ HELPER FUNCTIONS ------------------------------------------------
 

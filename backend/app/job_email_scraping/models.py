@@ -26,7 +26,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
-from app.base_models import CommonBase, Owned
+from app.base_models import CommonBase, Owned, ProcessingStatus
 from app.database import Base
 from app.service.models import ServiceLog
 
@@ -93,10 +93,9 @@ class ScrapedJob(Owned, Base):
     -----------
     - `external_job_id` (str): Unique identifier for the job posting.
     - `platform` (str): Platform from which the job was scraped (LinkedIn, Indeed, etc.).
-    - `is_processed` (bool): Indicates whether the job has been processed (scraped, skipped, copied, etc.).
-    - `is_scraped` (bool): Indicates whether the job has been successfully scraped.
-    - `is_failed` (bool): Indicates whether the job scraping failed.
-    - `is_skipped` (bool): Indicates whether the job scraping was skipped (e.g., quota exceeded).
+    - `status` (ProcessingStatus): Scraping outcome — PENDING (not yet finalised, may be retrying),
+      COMPLETED (successfully scraped), FAILED (retries exhausted), SKIPPED (e.g. quota exceeded), or
+      FILTERED (excluded by a rule).
     - `skip_reason` (str, optional): Reason why the job scraping was skipped.
     - `scrape_datetime` (datetime, optional): Date and time when the job was scraped.
     - `is_active` (bool): Indicates whether the job is active
@@ -134,10 +133,7 @@ class ScrapedJob(Owned, Base):
 
     external_job_id = Column(String, nullable=False)
     platform = Column(String, nullable=False)
-    is_processed = Column(Boolean, nullable=False, server_default=expression.false())
-    is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
-    is_failed = Column(Boolean, nullable=False, server_default=expression.false())
-    is_skipped = Column(Boolean, nullable=False, server_default=expression.false())
+    status = Column(String, nullable=False, default=ProcessingStatus.PENDING)
     skip_reason = Column(String, nullable=True)
     scrape_datetime = Column(TIMESTAMP(timezone=True), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
@@ -184,18 +180,20 @@ class ScrapedJob(Owned, Base):
 
     @hybrid_property
     def is_pending(self) -> bool:
-        """Whether the job is still runnable: not yet finalised (is_processed is False — i.e.
-        neither scraped, skipped, nor failed-out) and due for a (re)try now."""
+        """Whether the job is still runnable: not yet finalised (status is PENDING) and due for a
+        (re)try now."""
 
         now = dt.datetime.now(dt.timezone.utc)
-        return not self.is_processed and (self.scraping_next_retry_at is None or self.scraping_next_retry_at <= now)
+        return self.status == ProcessingStatus.PENDING and (
+            self.scraping_next_retry_at is None or self.scraping_next_retry_at <= now
+        )
 
     @is_pending.expression
     def is_pending(cls):
         """SQL form of :attr:`is_pending` for use in queries."""
 
         return and_(
-            cls.is_processed.is_(False),
+            cls.status == ProcessingStatus.PENDING,
             or_(
                 cls.scraping_next_retry_at.is_(None),
                 cls.scraping_next_retry_at <= func.now(),

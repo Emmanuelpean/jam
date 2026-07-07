@@ -1,5 +1,5 @@
-import { ApiResponse, ApiResponsePromise, baseApi, serviceApi } from "./Base";
-import { BaseServiceApi, LogResponse, ServiceRunnerResponse, ServiceStatus } from "./Services";
+import { ApiResponse, baseApi } from "./Base";
+import { createServiceApi } from "./Services";
 import {
 	AnthropicDailyUsageData,
 	ApifyBalanceData,
@@ -21,63 +21,49 @@ const dateRangeQs = ({ start_date, end_date }: DateRangeQuery): string => {
 	return params.length > 0 ? `?${params.join("&")}` : "";
 };
 
-export const externalServiceMonitoringApi = {
+export const providerMonitoringApi = {
 	getAnthropicHistory: async (range: DateRangeQuery, token: string): Promise<AnthropicDailyUsageData[]> => {
 		const res: ApiResponse<AnthropicDailyUsageData[]> = await baseApi.get(
-			`external-service-monitoring-history/anthropic${dateRangeQs(range)}`,
+			`provider-monitoring-history/anthropic${dateRangeQs(range)}`,
 			token
 		);
 		return res.data;
 	},
 	getApifyHistory: async (range: DateRangeQuery, token: string): Promise<ApifyDailyUsageData[]> => {
 		const res: ApiResponse<ApifyDailyUsageData[]> = await baseApi.get(
-			`external-service-monitoring-history/apify${dateRangeQs(range)}`,
+			`provider-monitoring-history/apify${dateRangeQs(range)}`,
 			token
 		);
 		return res.data;
 	},
 	getBrightdataHistory: async (range: DateRangeQuery, token: string): Promise<BrightdataDailyUsageData[]> => {
 		const res: ApiResponse<BrightdataDailyUsageData[]> = await baseApi.get(
-			`external-service-monitoring-history/brightdata${dateRangeQs(range)}`,
+			`provider-monitoring-history/brightdata${dateRangeQs(range)}`,
 			token
 		);
 		return res.data;
 	},
 	getStripeHistory: async (range: DateRangeQuery, token: string): Promise<StripeDailyIncomeData[]> => {
 		const res: ApiResponse<StripeDailyIncomeData[]> = await baseApi.get(
-			`external-service-monitoring-history/stripe${dateRangeQs(range)}`,
+			`provider-monitoring-history/stripe${dateRangeQs(range)}`,
 			token
 		);
 		return res.data;
 	},
 	getBrightdataBalance: async (token: string): Promise<BrightdataBalanceData | null> => {
 		const res: ApiResponse<BrightdataBalanceData | null> = await baseApi.get(
-			"external-service-monitoring-history/brightdata/balance",
+			"provider-monitoring-history/brightdata/balance",
 			token
 		);
 		return res.data;
 	},
 	getApifyBalance: async (token: string): Promise<ApifyBalanceData | null> => {
 		const res: ApiResponse<ApifyBalanceData | null> = await baseApi.get(
-			"external-service-monitoring-history/apify/balance",
+			"provider-monitoring-history/apify/balance",
 			token
 		);
 		return res.data;
 	},
 };
 
-// Service runner API — start takes no arguments (period fixed at 24h on the backend).
-interface ExternalServiceMonitoringRunnerApi extends BaseServiceApi {
-	start: (token: string) => ApiResponsePromise<ServiceRunnerResponse>;
-}
-
-export const externalServiceMonitoringRunnerApi: ExternalServiceMonitoringRunnerApi = {
-	getStatus: (token: string): ApiResponsePromise<ServiceStatus> =>
-		serviceApi.get("external-service-monitoring-service/status", token),
-	stop: (token: string): ApiResponsePromise<ServiceRunnerResponse> =>
-		serviceApi.post("external-service-monitoring-service/stop", {}, token),
-	getLogs: (lines: number, token: string): ApiResponsePromise<LogResponse> =>
-		serviceApi.get(`external-service-monitoring-service/logs?lines=${lines}`, token),
-	start: (token: string): ApiResponsePromise<ServiceRunnerResponse> =>
-		serviceApi.post("external-service-monitoring-service/start", {}, token),
-};
+export const providerMonitoringRunnerApi = createServiceApi("provider_monitoring_service");

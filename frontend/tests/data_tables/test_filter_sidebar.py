@@ -4,7 +4,7 @@ import time
 
 from selenium.webdriver.common.by import By
 
-from base_test import BaseTest
+from frontend_base_test import BaseTest
 
 # All job columns that have a filterConfig defined in TableColumns.tsx
 FILTERABLE_JOB_COLUMNS = [
@@ -33,13 +33,24 @@ class TestFilterSidebar(BaseTest):
     """Tests for the Filter Sidebar on the Jobs table."""
 
     page_url = "jobs"
-    user_index = 0
 
     def setup_function(self, request) -> None:
-        self._make_job(title="Python Developer", application_status="applied", salary_min=90000.0, personal_rating=4)
-        self._make_job(title="Django Developer", application_status="interview", salary_min=75000.0)
-        self._make_job(
-            title="Vue Frontend Engineer", application_status="applied", salary_min=50000.0, personal_rating=3
+        self.user.create_job(
+            title="Python Developer",
+            application_status="applied",
+            salary_min=90000.0,
+            personal_rating=4,
+        )
+        self.user.create_job(
+            title="Django Developer",
+            application_status="interview",
+            salary_min=75000.0,
+        )
+        self.user.create_job(
+            title="Vue Frontend Engineer",
+            application_status="applied",
+            salary_min=50000.0,
+            personal_rating=3,
         )
         self.login()
 
@@ -68,8 +79,7 @@ class TestFilterSidebar(BaseTest):
     def test_clear_button_enabled_after_filter_applied(self) -> None:
         """'Clear all filters' button becomes enabled once any filter is active"""
         self.job_table_utils.open_filter_sidebar()
-        self.get_element("filter-input-title").send_keys("Python")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_text_filter("title", "Python")
         assert self.get_element("filter-clear-btn", enabled=False).is_enabled()
 
     # -------------------------------------------------- Text filter --------------------------------------------------
@@ -78,8 +88,7 @@ class TestFilterSidebar(BaseTest):
         """Typing in a text filter reduces visible rows to only those matching the text"""
         initial_count = self.job_table_utils.get_row_count()
         self.job_table_utils.open_filter_sidebar()
-        self.get_element("filter-input-title").send_keys("Python")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_text_filter("title", "Python")
 
         filtered_count = self.job_table_utils.get_row_count()
         assert filtered_count < initial_count
@@ -91,15 +100,13 @@ class TestFilterSidebar(BaseTest):
         """The filter section is highlighted when its filter is active"""
         self.job_table_utils.open_filter_sidebar()
         assert not self.job_table_utils.is_section_active("title")
-        self.get_element("filter-input-title").send_keys("Python")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_text_filter("title", "Python")
         assert self.job_table_utils.is_section_active("title")
 
     def test_text_filter_pill_appears(self) -> None:
         """A filter pill appears with the search string when a text filter is active"""
         self.job_table_utils.open_filter_sidebar()
-        self.get_element("filter-input-title").send_keys("Python")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_text_filter("title", "Python")
 
         pills = self.job_table_utils.get_filter_pills()
         assert len(pills) == 1
@@ -109,8 +116,7 @@ class TestFilterSidebar(BaseTest):
         """The X button inside the text input clears the filter and restores all rows"""
         initial_count = self.job_table_utils.get_row_count()
         self.job_table_utils.open_filter_sidebar()
-        self.get_element("filter-input-title").send_keys("Python")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_text_filter("title", "Python")
         assert self.job_table_utils.get_row_count() < initial_count
 
         # The X clear button appears only when the input has text
@@ -154,9 +160,7 @@ class TestFilterSidebar(BaseTest):
         """Setting a salary minimum reduces the table to jobs above that threshold"""
         initial_count = self.job_table_utils.get_row_count()
         self.job_table_utils.open_filter_sidebar()
-        min_input = self.get_element("filter-num-min-salary_min")
-        self.set_text(min_input, "85000")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_number_min("salary_min", "85000")
 
         filtered_count = self.job_table_utils.get_row_count()
         assert 0 < filtered_count < initial_count, "Salary min filter should reduce visible rows"
@@ -165,17 +169,13 @@ class TestFilterSidebar(BaseTest):
         """The salary_min section is highlighted after setting a min value"""
         self.job_table_utils.open_filter_sidebar()
         assert not self.job_table_utils.is_section_active("salary_min")
-        min_input = self.get_element("filter-num-min-salary_min")
-        self.set_text(min_input, "85000")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_number_min("salary_min", "85000")
         assert self.job_table_utils.is_section_active("salary_min")
 
     def test_number_filter_pill_appears(self) -> None:
         """A filter pill appears when a number range filter is set"""
         self.job_table_utils.open_filter_sidebar()
-        min_input = self.get_element("filter-num-min-salary_min")
-        self.set_text(min_input, "85000")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_number_min("salary_min", "85000")
 
         pills = self.job_table_utils.get_filter_pills()
         assert len(pills) == 1
@@ -224,9 +224,7 @@ class TestFilterSidebar(BaseTest):
     def test_date_filter_preset_activates_section(self) -> None:
         """Clicking a date preset highlights the section and creates a filter pill"""
         self.job_table_utils.open_filter_sidebar()
-        section = self.get_element("filter-section-created_at")
-        preset_btns = section.find_elements(By.CLASS_NAME, "filter-date-preset-btn")
-        last_30_btn = next(b for b in preset_btns if "30" in b.text)
+        last_30_btn = self.filter_sidebar_utils.date_preset_button("created_at", "30")
         last_30_btn.click()
         time.sleep(0.5)
 
@@ -238,9 +236,7 @@ class TestFilterSidebar(BaseTest):
     def test_date_filter_preset_deactivates_on_second_click(self) -> None:
         """Clicking an already-active preset button toggles it off"""
         self.job_table_utils.open_filter_sidebar()
-        section = self.get_element("filter-section-created_at")
-        preset_btns = section.find_elements(By.CLASS_NAME, "filter-date-preset-btn")
-        last_30_btn = next(b for b in preset_btns if "30" in b.text)
+        last_30_btn = self.filter_sidebar_utils.date_preset_button("created_at", "30")
 
         last_30_btn.click()
         time.sleep(0.3)
@@ -258,20 +254,16 @@ class TestFilterSidebar(BaseTest):
         self.job_table_utils.open_filter_sidebar()
         assert self.job_table_utils.get_active_count_from_sidebar() == 0
 
-        self.get_element("filter-input-title").send_keys("Python")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_text_filter("title", "Python")
         assert self.job_table_utils.get_active_count_from_sidebar() == 1
 
-        min_input = self.get_element("filter-num-min-salary_min")
-        self.set_text(min_input, "80000")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_number_min("salary_min", "80000")
         assert self.job_table_utils.get_active_count_from_sidebar() == 2
 
     def test_multiple_filters_combine_to_narrow_results(self) -> None:
         """Applying two filters shows only rows that satisfy both conditions"""
         self.job_table_utils.open_filter_sidebar()
-        self.get_element("filter-input-title").send_keys("Developer")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_text_filter("title", "Developer")
         developer_count = self.job_table_utils.get_row_count()
 
         self.job_table_utils.select_from_react_select_filter("application_status", "Applied")
@@ -284,8 +276,7 @@ class TestFilterSidebar(BaseTest):
         """Clicking 'Clear all filters' removes all filters and restores the original row count"""
         initial_count = self.job_table_utils.get_row_count()
         self.job_table_utils.open_filter_sidebar()
-        self.get_element("filter-input-title").send_keys("Python")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_text_filter("title", "Python")
         assert self.job_table_utils.get_row_count() < initial_count
 
         self.get_element("filter-clear-btn").click()
@@ -297,13 +288,10 @@ class TestFilterSidebar(BaseTest):
     def test_pill_remove_button_clears_single_filter(self) -> None:
         """Clicking a pill's × removes only that one filter, leaving others intact"""
         self.job_table_utils.open_filter_sidebar()
-        self.get_element("filter-input-title").send_keys("Python")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_text_filter("title", "Python")
         title_only_count = self.job_table_utils.get_row_count()
 
-        min_input = self.get_element("filter-num-min-salary_min")
-        self.set_text(min_input, "60000")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_number_min("salary_min", "60000")
         assert len(self.job_table_utils.get_filter_pills()) == 2
 
         # Remove the salary pill (its text contains "60000"; the title pill contains "Python")
@@ -319,8 +307,7 @@ class TestFilterSidebar(BaseTest):
         """The 'Clear' button in the filter pills row removes all active filters at once"""
         initial_count = self.job_table_utils.get_row_count()
         self.job_table_utils.open_filter_sidebar()
-        self.get_element("filter-input-title").send_keys("Python")
-        time.sleep(0.5)
+        self.filter_sidebar_utils.apply_text_filter("title", "Python")
         assert self.job_table_utils.get_row_count() < initial_count
 
         self.driver.find_element(By.CLASS_NAME, "filter-pills-clear-btn").click()
@@ -334,9 +321,9 @@ class TestFilterSidebar(BaseTest):
     def test_hide_rejected_toggle(self) -> None:
         """Toggle is on by default hiding rejected/withdrawn; turning it off reveals them; turning it on hides them again."""
 
-        self._make_job(title="Active Job", application_status="applied")
-        self._make_job(title="Rejected Job", application_status="rejected")
-        self._make_job(title="Withdrawn Job", application_status="withdrawn")
+        self.user.create_job(title="Active Job", application_status="applied")
+        self.user.create_job(title="Rejected Job", application_status="rejected")
+        self.user.create_job(title="Withdrawn Job", application_status="withdrawn")
         self.refresh()
 
         # On by default -- rejected and withdrawn are hidden

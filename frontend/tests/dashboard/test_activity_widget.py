@@ -24,7 +24,7 @@ class TestActivityWidget(DashboardTestBase):
       - Upcoming Interviews (future-dated interviews)
     """
 
-    user_index = 0
+    user_fixture = "test_regular_user"
 
     def setup_function(self, request) -> None:
         self.login()
@@ -55,20 +55,20 @@ class TestActivityWidget(DashboardTestBase):
 
     def test_recent_activity_shows_one_application(self) -> None:
         """A single job application appears as exactly one item in Recent Activity."""
-        self._create_job(application_date=PAST, application_status="applied")
+        self.user.create_job(application_date=PAST, application_status="applied")
         self._reload()
         assert len(self._activity_items(RECENT_ACTIVITY)) == 1
 
     def test_recent_activity_badge_reflects_application_count(self) -> None:
         """Badge count equals the number of job applications."""
-        self._create_job(title="Job A", application_date=PAST, application_status="applied")
-        self._create_job(title="Job B", application_date=PAST - dt.timedelta(days=1), application_status="applied")
+        self.user.create_job(title="Job A", application_date=PAST, application_status="applied")
+        self.user.create_job(title="Job B", application_date=PAST - dt.timedelta(days=1), application_status="applied")
         self._reload()
         assert self._badge_count(RECENT_ACTIVITY) == 2
 
     def test_recent_activity_item_shows_title_and_date(self) -> None:
         """Each activity item must render a non-empty title and a formatted date."""
-        self._create_job(application_date=PAST, application_status="applied")
+        self.user.create_job(application_date=PAST, application_status="applied")
         self._reload()
         item = self._activity_items(RECENT_ACTIVITY)[0]
         assert item.find_element(By.CSS_SELECTOR, ".activity-title").text.strip() != ""
@@ -76,7 +76,7 @@ class TestActivityWidget(DashboardTestBase):
 
     def test_recent_activity_shows_application_type_label(self) -> None:
         """Application items should display 'Application' as their type label."""
-        self._create_job(application_date=PAST, application_status="applied")
+        self.user.create_job(application_date=PAST, application_status="applied")
         self._reload()
         titles = [
             i.find_element(By.CSS_SELECTOR, ".activity-title").text for i in self._activity_items(RECENT_ACTIVITY)
@@ -85,32 +85,32 @@ class TestActivityWidget(DashboardTestBase):
 
     def test_recent_activity_includes_past_interview(self) -> None:
         """A past interview is included in Recent Activity alongside the application."""
-        job = self._create_job(application_date=PAST, application_status="applied")
-        self._create_interview(job_id=job.id, date=PAST - dt.timedelta(days=1))
+        job = self.user.create_job(application_date=PAST, application_status="applied")
+        self.user.create_interview(job, date=PAST - dt.timedelta(days=1))
         self._reload()
         # 1 application + 1 past interview = 2 items
         assert self._badge_count(RECENT_ACTIVITY) == 2
 
     def test_recent_activity_includes_past_update(self) -> None:
         """A past status update is included in Recent Activity alongside the application."""
-        job = self._create_job(application_date=PAST, application_status="applied")
-        self._create_update(job_id=job.id, date=PAST - dt.timedelta(days=1))
+        job = self.user.create_job(application_date=PAST, application_status="applied")
+        self.user.create_job_application_update(job, date=PAST - dt.timedelta(days=1))
         self._reload()
         # 1 application + 1 past update = 2 items
         assert self._badge_count(RECENT_ACTIVITY) == 2
 
     def test_recent_activity_future_interview_not_shown(self) -> None:
         """A future interview must NOT appear in Recent Activity."""
-        job = self._create_job(application_date=PAST, application_status="applied")
-        self._create_interview(job_id=job.id, date=FUTURE)
+        job = self.user.create_job(application_date=PAST, application_status="applied")
+        self.user.create_interview(job, date=FUTURE)
         self._reload()
         # Only the application; the future interview is excluded
         assert self._badge_count(RECENT_ACTIVITY) == 1
 
     def test_recent_activity_connector_line_between_items(self) -> None:
         """Non-last items have a connector line; the last item does not."""
-        self._create_job(title="Job A", application_date=PAST, application_status="applied")
-        self._create_job(title="Job B", application_date=PAST - dt.timedelta(days=1), application_status="applied")
+        self.user.create_job(title="Job A", application_date=PAST, application_status="applied")
+        self.user.create_job(title="Job B", application_date=PAST - dt.timedelta(days=1), application_status="applied")
         self._reload()
         items = self._activity_items(RECENT_ACTIVITY)
         assert len(items) == 2
@@ -133,30 +133,30 @@ class TestActivityWidget(DashboardTestBase):
 
     def test_upcoming_interviews_shows_one_item(self) -> None:
         """A single future interview appears as exactly one item in Upcoming Interviews."""
-        job = self._create_job(application_date=PAST, application_status="applied")
-        self._create_interview(job_id=job.id, date=FUTURE)
+        job = self.user.create_job(application_date=PAST, application_status="applied")
+        self.user.create_interview(job, date=FUTURE)
         self._reload()
         assert len(self._activity_items(UPCOMING_INTERVIEWS)) == 1
 
     def test_upcoming_interviews_badge_reflects_count(self) -> None:
         """Badge count equals the number of future interviews."""
-        job = self._create_job(application_date=PAST, application_status="applied")
-        self._create_interview(job_id=job.id, date=FUTURE)
-        self._create_interview(job_id=job.id, date=FUTURE + dt.timedelta(days=3))
+        job = self.user.create_job(application_date=PAST, application_status="applied")
+        self.user.create_interview(job, date=FUTURE)
+        self.user.create_interview(job, date=FUTURE + dt.timedelta(days=3))
         self._reload()
         assert self._badge_count(UPCOMING_INTERVIEWS) == 2
 
     def test_upcoming_interviews_past_interview_not_shown(self) -> None:
         """A past interview must NOT appear in Upcoming Interviews."""
-        job = self._create_job(application_date=PAST, application_status="applied")
-        self._create_interview(job_id=job.id, date=PAST - dt.timedelta(days=1))
+        job = self.user.create_job(application_date=PAST, application_status="applied")
+        self.user.create_interview(job, date=PAST - dt.timedelta(days=1))
         self._reload()
         assert self._badge_count(UPCOMING_INTERVIEWS) == 0
 
     def test_upcoming_interviews_item_shows_date(self) -> None:
         """Each upcoming interview item must display a non-empty formatted date."""
-        job = self._create_job(application_date=PAST, application_status="applied")
-        self._create_interview(job_id=job.id, date=FUTURE)
+        job = self.user.create_job(application_date=PAST, application_status="applied")
+        self.user.create_interview(job, date=FUTURE)
         self._reload()
         item = self._activity_items(UPCOMING_INTERVIEWS)[0]
         assert item.find_element(By.CSS_SELECTOR, ".activity-date").text.strip() != ""
@@ -165,17 +165,17 @@ class TestActivityWidget(DashboardTestBase):
         """Item title should be '{type} (interview #1)' for a single interview on a job.
         The number is the interview's sequential position (sorted by date) within its job."""
 
-        job = self._create_job(application_date=PAST, application_status="applied")
-        self._create_interview(job_id=job.id, date=FUTURE, type="Technical")
+        job = self.user.create_job(application_date=PAST, application_status="applied")
+        self.user.create_interview(job, date=FUTURE, type="Technical")
         self._reload()
         title = self._activity_items(UPCOMING_INTERVIEWS)[0].find_element(By.CSS_SELECTOR, ".activity-title").text
         assert "interview #1" in title.lower(), f"Unexpected title: '{title}'"
 
     def test_upcoming_interviews_connector_line_between_items(self) -> None:
         """Non-last items have a connector line; the last item does not."""
-        job = self._create_job(application_date=PAST, application_status="applied")
-        self._create_interview(job_id=job.id, date=FUTURE)
-        self._create_interview(job_id=job.id, date=FUTURE + dt.timedelta(days=3))
+        job = self.user.create_job(application_date=PAST, application_status="applied")
+        self.user.create_interview(job, date=FUTURE)
+        self.user.create_interview(job, date=FUTURE + dt.timedelta(days=3))
         self._reload()
         items = self._activity_items(UPCOMING_INTERVIEWS)
         assert len(items) == 2

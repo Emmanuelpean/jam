@@ -29,22 +29,22 @@ export const useServiceRunnerStatus = (api: BaseServiceApi) => {
 		return (): void => clearInterval(interval);
 	}, [token]);
 
-	// Calculate and update remaining time every second
+	// Calculate and update the time remaining until the next scheduled run every second
 	useEffect(() => {
-		if (!status?.sleep_until) {
+		if (!status?.next_run_at) {
 			setRemainingTime(null);
 			return;
 		}
 		const updateTimer = (): void => {
-			if (!status.sleep_until) return;
-			const remaining: number = new Date(status.sleep_until).getTime() - Date.now() / 1000;
+			if (!status.next_run_at) return;
+			const remaining: number = (new Date(status.next_run_at).getTime() - Date.now()) / 1000;
 			setRemainingTime(remaining > 0 ? Math.round(remaining) : 0);
 		};
 
 		updateTimer();
 		const interval = setInterval(updateTimer, 1000);
 		return (): void => clearInterval(interval);
-	}, [status?.sleep_until]);
+	}, [status?.next_run_at]);
 
 	return { serviceStatus: status, remainingTime, fetchStatus, statusError, loading };
 };

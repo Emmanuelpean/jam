@@ -20,7 +20,7 @@ class TestMapWidget(DashboardTestBase):
     at its own location, not covered by the map.
     """
 
-    user_index = 0
+    user_fixture = "test_regular_user"
 
     def setup_function(self, request) -> None:
         self._set_dashboard_widgets({"type": "map", "metric": "job_count"})
@@ -36,7 +36,7 @@ class TestMapWidget(DashboardTestBase):
     def test_clicking_marker_opens_visible_job_panel(self) -> None:
         """Clicking a location marker opens the side panel listing that location's jobs,
         and the panel is visible on top of the map (not hidden behind it)."""
-        self._create_geolocated_job("London Engineer", "London", "United Kingdom", 51.5074, -0.1278)
+        self.user.create_geolocated_job("London Engineer", "London", "United Kingdom", 51.5074, -0.1278)
         self._reload()
 
         # Wait for the marker to be drawn, then click it.

@@ -5,8 +5,10 @@ import {
 	JobRatingServiceLogData,
 	JobScrapingServiceLogData,
 	ScrapedJobData,
+	ServiceError,
+	ServiceLog,
 } from "../schemas/Services";
-import { ApiResponsePromise, baseApi, serviceApi } from "./Base";
+import { ApiResponse, ApiResponsePromise, baseApi, QueryParams, serviceApi } from "./Base";
 import { createCrudApi, CrudApi } from "./Crud";
 
 // Scraped Job API
@@ -39,40 +41,54 @@ export const scrapedJobApi: ScrapedJobCrudApi = {
 		baseApi.post("scraped-jobs/tour-demo", {}, token),
 };
 
-// Job Rating APIs
-export const jobRatingApi: CrudApi<JobRatingData> = createCrudApi("job-ratings");
+// Service Error API
+export interface ServiceErrorApi {
+	getAll: (token: string, queryParams?: QueryParams | null) => ApiResponsePromise<ServiceError[]>;
+	acknowledge: (ids: number[], isAcknowledged: boolean, token: string) => ApiResponsePromise<ServiceError[]>;
+}
+
+export const serviceErrorApi: ServiceErrorApi = {
+	getAll: createCrudApi<ServiceError>("service-errors").getAll,
+	acknowledge: (ids: number[], isAcknowledged: boolean, token: string): ApiResponsePromise<ServiceError[]> =>
+		baseApi.put("service-errors/acknowledge", { ids, is_acknowledged: isAcknowledged }, token),
+};
 
 // Service Log APIs
 export interface ServiceLogCrudApi<T = any> extends CrudApi {
 	getLatest: (token: string) => ApiResponsePromise<T>;
 }
 
-export const jobScraperServiceLogApi: ServiceLogCrudApi<JobScrapingServiceLogData> = {
-	...createCrudApi("job-scraping-service-logs"),
-	getLatest: (token: string): ApiResponsePromise<JobScrapingServiceLogData> =>
-		baseApi.get("job-scraping-service-logs/latest", token),
-};
+const createServiceLogApi = <T>(serviceName: string): ServiceLogCrudApi<T> => ({
+	...createCrudApi<T>(`service-logs/${serviceName}`),
+	getLatest: (token: string): ApiResponsePromise<T> => baseApi.get(`service-logs/${serviceName}/latest`, token),
+});
 
-export const jobRatingServiceLogApi: ServiceLogCrudApi<JobRatingServiceLogData> = {
-	...createCrudApi("job-rating-service-logs"),
-	getLatest: (token: string): ApiResponsePromise<JobRatingServiceLogData> =>
-		baseApi.get("job-rating-service-logs/latest", token),
-};
+export const jobScraperServiceLogApi: ServiceLogCrudApi<JobScrapingServiceLogData> =
+	createServiceLogApi<JobScrapingServiceLogData>("email_scraper_service");
 
-// Service Runner APIs
-export type ThreadStatus = "started" | "stopped" | "starting" | "stopping";
+export const jobRatingServiceLogApi: ServiceLogCrudApi<JobRatingServiceLogData> =
+	createServiceLogApi<JobRatingServiceLogData>("job_rating_service");
 
+export const providerMonitoringServiceLogApi: ServiceLogCrudApi<ServiceLog> =
+	createServiceLogApi<ServiceLog>("provider_monitoring_service");
+
+// Scheduled service APIs
 export interface ServiceStatus {
-	service_runner_status: ThreadStatus;
-	service_running: boolean;
-	service_kwargs: any;
-	period_hours: number | null;
-	sleep_until: Date | null;
+	name: string;
+	display_name: string;
+	run_period_hours: number;
+	parameters: Record<string, any>;
+	is_enabled: boolean;
+	is_running: boolean;
+	last_run_at: string | null;
+	next_run_at: string | null;
 	last_log: string | null;
 }
 
-export interface ServiceRunnerResponse {
-	detail: string;
+export interface ServiceUpdatePayload {
+	is_enabled?: boolean;
+	run_period_hours?: number;
+	parameters?: Record<string, any>;
 }
 
 export interface LogResponse {
@@ -80,69 +96,48 @@ export interface LogResponse {
 	total_lines: number;
 }
 
-export interface StartServiceRunnerRequest {
-	period_hours: number;
-}
-
-export interface StartJobScraperServiceRunnerRequest extends StartServiceRunnerRequest {
-	timedelta_days: number;
-}
-
-// Base interface with multiple call signatures for start method
-export interface BaseServiceApi {
-	getStatus: (token: string) => ApiResponsePromise<ServiceStatus>;
-	stop: (token: string) => ApiResponsePromise<ServiceRunnerResponse>;
+export interface LogProvider {
 	getLogs: (lines: number, token: string) => ApiResponsePromise<LogResponse>;
 }
 
-// Specific interfaces extending the base
-interface JobScraperServiceRunnerApi extends BaseServiceApi {
-	start(periodHours: number, timedeltaDays: number, token: string): ApiResponsePromise<ServiceRunnerResponse>;
+export interface BaseServiceApi extends LogProvider {
+	getStatus: (token: string) => ApiResponsePromise<ServiceStatus | null>;
+	update: (data: ServiceUpdatePayload, token: string) => ApiResponsePromise<ServiceStatus>;
+	setEnabled: (enabled: boolean, token: string) => ApiResponsePromise<ServiceStatus>;
+	runNow: (token: string) => ApiResponsePromise<ServiceStatus>;
 }
 
-interface JobRatingServiceRunnerApi extends BaseServiceApi {
-	start(periodHours: number, token: string): ApiResponsePromise<ServiceRunnerResponse>;
-}
-
-// Factory function to create service API objects
-function createServiceApi(servicePath: string): BaseServiceApi {
-	return {
-		getStatus: async (token: string): ApiResponsePromise<ServiceStatus> => {
-			return serviceApi.get(`${servicePath}/status`, token);
-		},
-
-		stop: async (token: string): ApiResponsePromise<ServiceRunnerResponse> => {
-			return serviceApi.post(`${servicePath}/stop`, {}, token);
-		},
-
-		getLogs: async (lines: number, token: string): ApiResponsePromise<LogResponse> => {
-			return serviceApi.get(`${servicePath}/logs?lines=${lines}`, token);
-		},
-	};
-}
-
-// Create the specific API instances
-export const jobScraperServiceApi: JobScraperServiceRunnerApi = {
-	...createServiceApi("job-scraper-service"),
-	start: async (
-		periodHours: number,
-		timedeltaDays: number,
-		token: string
-	): ApiResponsePromise<ServiceRunnerResponse> => {
-		const data: StartJobScraperServiceRunnerRequest = {
-			period_hours: periodHours,
-			timedelta_days: timedeltaDays,
-		};
-		return serviceApi.post("job-scraper-service/start", data, token);
+export const createServiceApi = (serviceName: string): BaseServiceApi => ({
+	getStatus: async (token: string): ApiResponsePromise<ServiceStatus | null> => {
+		const res: ApiResponse<ServiceStatus[]> = await baseApi.get("services/", token);
+		const match: ServiceStatus | null =
+			res.data?.find((s: ServiceStatus): boolean => s.name === serviceName) ?? null;
+		return { ...res, data: match };
 	},
-};
+	update: (data: ServiceUpdatePayload, token: string): ApiResponsePromise<ServiceStatus> =>
+		baseApi.patch(`services/${serviceName}`, data, token),
+	setEnabled: (enabled: boolean, token: string): ApiResponsePromise<ServiceStatus> =>
+		baseApi.patch(`services/${serviceName}`, { is_enabled: enabled }, token),
+	runNow: (token: string): ApiResponsePromise<ServiceStatus> =>
+		baseApi.post(`services/${serviceName}/run-now`, {}, token),
+	getLogs: (lines: number, token: string): ApiResponsePromise<LogResponse> =>
+		serviceApi.get(`services/${serviceName}/logs?lines=${lines}`, token),
+});
 
-export const jobRatingServiceRunnerApi: JobRatingServiceRunnerApi = {
-	...createServiceApi("job-rating-service-runner"),
-	start: async (periodHours: number, token: string): ApiResponsePromise<ServiceRunnerResponse> => {
-		const data: StartServiceRunnerRequest = { period_hours: periodHours };
-		return serviceApi.post("job-rating-service-runner/start", data, token);
-	},
+export const jobScraperServiceApi: BaseServiceApi = createServiceApi("email_scraper_service");
+export const jobRatingServiceRunnerApi: BaseServiceApi = createServiceApi("job_rating_service");
+
+export interface SchedulerStatus {
+	running: boolean;
+	poll_interval_seconds: number;
+	last_log: string | null;
+}
+
+export const schedulerApi: LogProvider & { getStatus: (token: string) => ApiResponsePromise<SchedulerStatus> } = {
+	getStatus: (token: string): ApiResponsePromise<SchedulerStatus> =>
+		serviceApi.get("service-scheduler/status", token),
+	getLogs: (lines: number, token: string): ApiResponsePromise<LogResponse> =>
+		serviceApi.get(`service-scheduler/logs?lines=${lines}`, token),
 };
 
 // Job Email API

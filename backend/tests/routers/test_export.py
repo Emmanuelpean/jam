@@ -8,6 +8,7 @@ import zipfile
 from sqlalchemy.orm import Session
 from starlette.testclient import TestClient
 
+from app.base_models import ProcessingStatus
 from tests.base_test import BaseTest
 from tests.fixtures.users import FixtureUser
 
@@ -62,7 +63,7 @@ class TestExport(BaseTest):
         )
         test_regular_user.create_speculative_application(company, contact_email="jane@acme.com", note="Cold outreach")
         scraped_job = test_regular_user.create_scraped_job(title="Scraped Role", company="Scraped Co")
-        test_regular_user.create_job_rating(scraped_job=scraped_job, overall_score=8, is_success=True)
+        test_regular_user.create_job_rating(scraped_job=scraped_job, overall_score=8, status=ProcessingStatus.COMPLETED)
 
         zf = self.get_export_zip(test_regular_user)
         assert set(zf.namelist()) == EXPORT_FILES

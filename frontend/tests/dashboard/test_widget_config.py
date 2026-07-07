@@ -27,7 +27,7 @@ TEN_DAYS_AGO = NOW - dt.timedelta(days=10)
 class TestFollowUpWidgetConfig(DashboardTestBase):
     """The Follow-up table honours its own per-widget chase threshold."""
 
-    user_index = 0
+    user_fixture = "test_regular_user"
 
     def _rows(self):
         card = self.get_element(FOLLOW_UP_TABLE)
@@ -43,7 +43,7 @@ class TestFollowUpWidgetConfig(DashboardTestBase):
         """A 10-day-old application appears when the widget's chase threshold is below 10."""
         self._set_dashboard_widgets({"type": "table", "source": "follow_up", "chaseThreshold": 5})
         self.login()
-        self._create_job(title="Chase Me", application_date=TEN_DAYS_AGO, application_status="applied")
+        self.user.create_job(title="Chase Me", application_date=TEN_DAYS_AGO, application_status="applied")
         self._reload()
         assert len(self._rows()) == 1
 
@@ -51,7 +51,7 @@ class TestFollowUpWidgetConfig(DashboardTestBase):
         """The same application is hidden when the widget's chase threshold is above 10."""
         self._set_dashboard_widgets({"type": "table", "source": "follow_up", "chaseThreshold": 30})
         self.login()
-        self._create_job(title="Not Yet", application_date=TEN_DAYS_AGO, application_status="applied")
+        self.user.create_job(title="Not Yet", application_date=TEN_DAYS_AGO, application_status="applied")
         self._reload()
         assert len(self._rows()) == 0
 
@@ -73,7 +73,7 @@ class TestFollowUpWidgetConfig(DashboardTestBase):
         self._set_dashboard_widgets({"type": "table", "source": "follow_up"})
         self.login()
         # 10 days old: hidden by the default 14-day threshold.
-        self._create_job(title="Chase Me", application_date=TEN_DAYS_AGO, application_status="applied")
+        self.user.create_job(title="Chase Me", application_date=TEN_DAYS_AGO, application_status="applied")
         self._reload()
         assert len(self._rows()) == 0
 

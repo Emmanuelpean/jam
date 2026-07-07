@@ -23,7 +23,7 @@ RESET_CONFIRM_BTN = "confirm-alert-modal-confirm-button"
 class TestDashboardCustomisation(DashboardTestBase):
     """Tests for the customisable dashboard."""
 
-    user_index = 0
+    user_fixture = "test_regular_user"
 
     def setup_function(self, request) -> None:
         # Start with a simple, known layout: one metric widget

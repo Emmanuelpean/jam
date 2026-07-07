@@ -2,12 +2,15 @@
 
 import datetime as dt
 
-from base_test import models, BaseTest
+from sqlalchemy.orm import Session
+
+from fixtures.users import FixtureUser
+from frontend_base_test import models, BaseTest
 
 
 class TestPasswordReset(BaseTest):
 
-    def test_password_reset_within_rate_limit_shows_wait(self, test_regular_user) -> None:
+    def test_password_reset_within_rate_limit_shows_wait(self, test_regular_user: FixtureUser) -> None:
         """Test that requesting a second password reset within the rate limit window shows a 'Please wait' message."""
 
         self.auth_utils.clear_test_emails()
@@ -21,7 +24,9 @@ class TestPasswordReset(BaseTest):
         self.auth_utils.confirm()
         self.auth_utils.assert_toast_message("Please wait")
 
-    def test_password_reset_after_rate_limit_sends_new_email(self, test_regular_user, session) -> None:
+    def test_password_reset_after_rate_limit_sends_new_email(
+        self, test_regular_user: FixtureUser, session: Session
+    ) -> None:
         """Test that requesting a password reset after the rate limit window sends a new email and shows a success message."""
 
         self.auth_utils.clear_test_emails()
@@ -30,16 +35,8 @@ class TestPasswordReset(BaseTest):
         self.auth_utils.confirm()
         self.auth_utils.assert_toast_message("Password reset email sent successfully")
 
-        user = session.query(models.User).filter(models.User.email == test_regular_user.email).first()
-        assert user
-        token = (
-            session.query(models.UserToken)
-            .filter(
-                models.UserToken.owner_id == user.id,
-                models.UserToken.token_type == models.TokenType.PASSWORD_RESET,
-            )
-            .first()
-        )
+        token = test_regular_user.get_token(models.TokenType.PASSWORD_RESET)
+        assert token
         token.created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=3)
         session.commit()
 
@@ -48,7 +45,7 @@ class TestPasswordReset(BaseTest):
         self.auth_utils.confirm()
         self.auth_utils.assert_toast_message("Password reset email sent successfully")
 
-    def test_password_reset_flow(self, test_regular_user) -> None:
+    def test_password_reset_flow(self, test_regular_user: FixtureUser) -> None:
         """Test complete password reset flow using test email endpoints"""
 
         test_email = test_regular_user.email

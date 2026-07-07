@@ -3,7 +3,7 @@ import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { RenderParams } from "../rendering/view/ViewRenders";
 import { ScrapedJobModal } from "../DataModal/ScrapedJobModal";
-import { ScrapedJobData } from "../../services/schemas/Services";
+import { ProcessingStatus, ScrapedJobData } from "../../services/schemas/Services";
 import { Badge } from "react-bootstrap";
 import { useViewport } from "../../contexts/ViewportContext";
 
@@ -21,15 +21,15 @@ const FailedScrapedJobsTable: React.FC<FailedScrapedJobsTableProps> = ({
 
 	const errorTypeColumn: TableColumn<ScrapedJobData> = useMemo(
 		() => ({
-			key: "is_failed",
+			key: "status",
 			label: "Error Type",
 			sortable: false,
 			render: ({ item }: RenderParams): JSX.Element => {
 				const job = item as ScrapedJobData;
-				if (job.is_failed) {
+				if (job.status === ProcessingStatus.FAILED) {
 					return <Badge bg="danger">Scrape Error</Badge>;
 				}
-				if (job.job_rating && job.job_rating.is_success === false) {
+				if (job.job_rating && job.job_rating.status === ProcessingStatus.FAILED) {
 					return (
 						<Badge bg="warning" text="dark">
 							Rating Error

@@ -25,19 +25,8 @@ export const formatErrorMessage = (err: unknown): string => {
 	}
 };
 
-export const serviceRunnerStatusLabels: Record<string, string> = {
-	started: "Active",
-	starting: "Starting",
-	stopping: "Stopping",
-	stopped: "Inactive",
-};
-
-export const serviceRunnerButtonLabels: Record<string, string> = {
-	started: "Stop Service Runner",
-	stopping: "Service Runner Stopping",
-	starting: "Service Runner Starting",
-	stopped: "Start Service Runner",
-};
+export const serviceEnabledLabel = (status: ServiceStatus | null): string =>
+	!status ? "…" : status.is_enabled ? "Enabled" : "Disabled";
 
 export const RenderLabeledInput = (
 	id: string,
@@ -47,7 +36,8 @@ export const RenderLabeledInput = (
 	unitText: string = "",
 	isRequired: boolean = false,
 	onChange?: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,
-	disabled: boolean = false
+	disabled: boolean = false,
+	onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
 ): JSX.Element => {
 	return (
 		<Form.Group id={id}>
@@ -58,7 +48,14 @@ export const RenderLabeledInput = (
 					{help && <HelpBubble helpText={help} />}
 				</InputGroup.Text>
 
-				<Form.Control name={id} type="text" value={value} onChange={onChange} disabled={disabled} />
+				<Form.Control
+					name={id}
+					type="text"
+					value={value}
+					onChange={onChange}
+					onBlur={onBlur}
+					disabled={disabled}
+				/>
 
 				{unitText && <InputGroup.Text>{unitText}</InputGroup.Text>}
 			</InputGroup>
@@ -78,12 +75,7 @@ export const createSeries = (logs: any[], id: string, getValue: (log: any) => nu
 		})),
 });
 
-export const useServiceControl = (
-	token: string | null,
-	fetchStatus: () => Promise<void>,
-	doStart: (token: string) => Promise<unknown>,
-	doStop: (token: string) => Promise<unknown>
-) => {
+export const useServiceControl = (token: string | null, fetchStatus: () => Promise<void>) => {
 	const [loading, setLoading] = useState<boolean>(false);
 
 	const run = async (action: (token: string) => Promise<unknown>): Promise<void> => {
@@ -99,30 +91,17 @@ export const useServiceControl = (
 		}
 	};
 
-	return {
-		loading,
-		handleStart: (): Promise<void> => run(doStart),
-		handleStop: (): Promise<void> => run(doStop),
-	};
+	return { loading, run };
 };
 
 export const renderStatusIcons = (status: ServiceStatus | null, remainingTime: number | null): JSX.Element => {
-	const runnerActive: boolean = !!status && ["started", "starting"].includes(status.service_runner_status);
-	const isStopping: boolean = status?.service_runner_status === "stopping";
-	const serviceRunning: boolean = !!status?.service_running;
-	const showCountdown: boolean = status?.service_runner_status === "started" && !serviceRunning;
+	const enabled: boolean = !!status?.is_enabled;
+	const running: boolean = !!status?.is_running;
+	const showCountdown: boolean = enabled && !running && remainingTime !== null;
 	return (
 		<div className="service-status-icons">
-			<Tooltip
-				delay={500}
-				content={`Service runner: ${status ? serviceRunnerStatusLabels[status.service_runner_status] : "…"}`}
-			>
-				<i
-					className={`bi bi-cpu-fill service-status-icon service-status-icon--runner ${runnerActive ? "is-on" : "is-off"} ${isStopping ? "is-stopping" : ""}`}
-				/>
-			</Tooltip>
-			<Tooltip delay={500} content={`Service: ${serviceRunning ? "Running" : "Idle"}`}>
-				<i className={`bi bi-activity service-status-icon ${serviceRunning ? "is-on is-running" : "is-off"}`} />
+			<Tooltip delay={500} content={`Run: ${running ? "In progress" : "Idle"}`}>
+				<i className={`bi bi-activity service-status-icon ${running ? "is-on is-running" : "is-off"}`} />
 			</Tooltip>
 			{showCountdown && (
 				<Tooltip delay={500} content="Time until next run">
@@ -133,12 +112,15 @@ export const renderStatusIcons = (status: ServiceStatus | null, remainingTime: n
 	);
 };
 
+export interface ServiceControlHandlers {
+	onRunNow: () => void;
+}
+
 export const renderControl = (
 	status: ServiceStatus | null,
 	fields: React.ReactNode,
 	loading: boolean,
-	onStart: () => void,
-	onStop: () => void
+	handlers: ServiceControlHandlers
 ): JSX.Element => {
 	if (!status) return <Spinner text={"Loading status..."} />;
 	return (
@@ -146,15 +128,12 @@ export const renderControl = (
 			{fields && <div className="config-fields">{fields}</div>}
 			<div className="actions-section">
 				<ActionButton
-					id="confirm-start-button"
-					disabled={loading || ["stopping", "starting"].includes(status.service_runner_status)}
-					loading={loading}
-					loadingText={
-						status.service_runner_status === "stopping" ? "Stopping Service..." : "Starting Service..."
-					}
-					defaultText={serviceRunnerButtonLabels[status.service_runner_status]}
+					id="run-now-button"
+					disabled={loading || status.is_running}
+					loading={false}
+					defaultText={status.is_running ? "Run In Progress" : "Run Now"}
 					fullWidth={true}
-					onClick={status.service_runner_status === "started" ? onStop : onStart}
+					onClick={handlers.onRunNow}
 				/>
 			</div>
 		</div>

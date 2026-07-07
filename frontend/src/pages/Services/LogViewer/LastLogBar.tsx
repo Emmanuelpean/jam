@@ -9,11 +9,11 @@ interface LastLogBarProps {
 }
 
 /**
- * Compact bar showing the most recent log line while a service is running. Clicking it
+ * Compact bar showing the most recent log line while a service run is in progress. Clicking it
  * is wired by the parent to open and scroll to the full log viewer.
  */
 export const LastLogBar = ({ serviceStatus, onClick, className }: LastLogBarProps): JSX.Element | null => {
-	if (!serviceStatus?.service_running || !serviceStatus.last_log) return null;
+	if (!serviceStatus?.is_running || !serviceStatus.last_log) return null;
 
 	return (
 		<div

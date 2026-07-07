@@ -1,7 +1,10 @@
-from base_test import BaseTest
+from fixtures.users import FixtureUser
+from frontend.tests.frontend_base_test import BaseTest
 
 
 class TestDemoLogin(BaseTest):
+
+    user_fixture = "test_demo_user"
 
     def setup_function(self, request) -> None:
         """Setup for each test method."""
@@ -38,7 +41,7 @@ class TestDemoLogin(BaseTest):
 
         self.auth_utils.wait_for_login()
 
-    def test_regular_user_has_no_demo_banner(self, test_regular_user) -> None:
+    def test_regular_user_has_no_demo_banner(self, test_regular_user: FixtureUser) -> None:
         """A regular user must not see the demo banner after login."""
 
         self.auth_utils.set_email(test_regular_user.email)

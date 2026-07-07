@@ -2,8 +2,11 @@
 
 import datetime as dt
 
+from sqlalchemy.orm import Session
+
 from app.utilities.security import verify_password
-from base_test import models, BaseTest
+from fixtures.users import FixtureUser
+from frontend_base_test import models, BaseTest
 
 
 class TestAccountSettingsPage(BaseTest):
@@ -47,7 +50,7 @@ class TestAccountSettingsPage(BaseTest):
         assert self.db_user is not None
         assert self.db_user.email == self.user.email
 
-    def test_delete_account_success(self, session) -> None:
+    def test_delete_account_success(self, session: Session) -> None:
         """Test successful account deletion"""
 
         user_id = self.user.id
@@ -70,7 +73,7 @@ class TestAccountSettingsPage(BaseTest):
         assert self.db_user is not None
         assert self.db_user.email == self.user.email
 
-    def test_delete_account_wrong_then_correct_password(self, session) -> None:
+    def test_delete_account_wrong_then_correct_password(self, session: Session) -> None:
         """Test that correcting the password after a wrong-password error allows deletion"""
 
         user_id = self.user.id
@@ -88,7 +91,7 @@ class TestAccountSettingsPage(BaseTest):
         deleted_user = session.query(models.User).filter(models.User.id == user_id).first()
         assert deleted_user is None
 
-    def test_download_data_before_deletion(self, session) -> None:
+    def test_download_data_before_deletion(self) -> None:
         """Test downloading data from the confirmation modal before deletion"""
 
         self.user_settings_utils.delete_account_button.click()
@@ -140,7 +143,7 @@ class TestAccountSettingsPageEmailChange(BaseTest):
         )
         self.db_user.email = new_email
 
-    def test_verification_with_invalid_token_shows_error(self, session) -> None:
+    def test_verification_with_invalid_token_shows_error(self) -> None:
         """Test visiting email verification URL with an invalid or expired token shows an error message."""
 
         new_email = "newuser@test.com"
@@ -153,7 +156,7 @@ class TestAccountSettingsPageEmailChange(BaseTest):
             "Invalid or expired token. Please request a new one by logging in and changing your email address."
         )
 
-    def test_expired_verification_token(self, session) -> None:
+    def test_expired_verification_token(self) -> None:
         """Test email verification with an expired token."""
 
         new_email = "newuser@test.com"
@@ -179,7 +182,7 @@ class TestAccountSettingsPageEmailChange(BaseTest):
         self.request_email_change(new_email)
         self.user_settings_utils.assert_email_error_message("Please wait")
 
-    def test_email_change_after_rate_limit_sends_new_email(self, session) -> None:
+    def test_email_change_after_rate_limit_sends_new_email(self, session: Session) -> None:
         """Test that requesting an email change after the rate limit window sends a new email and shows a success message."""
 
         new_email = "newemail@email.com"
@@ -187,14 +190,8 @@ class TestAccountSettingsPageEmailChange(BaseTest):
         self.request_email_change(new_email)
         self.assert_toast_message(self.get_success_message(new_email))
 
-        token = (
-            session.query(models.UserToken)
-            .filter(
-                models.UserToken.owner_id == self.user.id,
-                models.UserToken.token_type == models.TokenType.EMAIL_CHANGE,
-            )
-            .first()
-        )
+        token = self.user.get_token(models.TokenType.EMAIL_CHANGE)
+        assert token
         token.created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=3)
         session.commit()
 
@@ -202,10 +199,10 @@ class TestAccountSettingsPageEmailChange(BaseTest):
         self.request_email_change(new_email)
         self.assert_toast_message(self.get_success_message(new_email))
 
-    def test_change_email_already_exist(self, test_users) -> None:
+    def test_change_email_already_exist(self, test_admin_user: FixtureUser) -> None:
         """Test changing the email to one already registered shows an inline error"""
 
-        self.request_email_change(test_users[2].email)
+        self.request_email_change(test_admin_user.email)
         self.user_settings_utils.assert_email_error_message("Email already registered")
         assert self.db_user.email == self.user.email
 
@@ -216,7 +213,7 @@ class TestAccountSettingsPageEmailChange(BaseTest):
         self.user_settings_utils.assert_password_error_message("The current password is incorrect.")
         assert self.db_user.email == self.user.email
 
-    def test_change_email_incorrect_format(self, test_users) -> None:
+    def test_change_email_incorrect_format(self) -> None:
         """Test changing the email to an invalid format shows an inline error"""
 
         self.user_settings_utils.change_email_button.click()

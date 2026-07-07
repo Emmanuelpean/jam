@@ -112,7 +112,7 @@ class BaseUtils(SeleniumUtils):
         """Assert that the given error message is displayed on the page"""
 
         element = self.toast
-        assert error_message in element.text, f"Message not found: {error_message}"
+        assert error_message in element.text, f"Message not found: {error_message} in {element.text}"
         element.click()  # Dismiss toast
 
     def wait_for_windows(self, n: int) -> None:
@@ -129,3 +129,10 @@ class BaseUtils(SeleniumUtils):
         """Close the modal"""
 
         self.get_element("modal-close-btn").click()
+
+    def assert_error_message(self, key: str, message: str) -> None:
+        """Assert that the given message is displayed on the page
+        :param key: Key to use for finding the error message element
+        :param message: Message to check for"""
+
+        assert message in self.get_element(key + "-error-message").text, f"Message not found: {message}"

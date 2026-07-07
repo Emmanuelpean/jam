@@ -2,7 +2,7 @@
 
 import time
 
-from base_test import BaseTest
+from frontend_base_test import BaseTest
 
 # Columns visible by default (passed as `columns` prop in JobsPage.tsx)
 DEFAULT_VISIBLE_JOB_COLUMNS = [
@@ -39,22 +39,16 @@ ALL_JOB_COLUMNS = [
 ]
 
 
-class TestColumnConfig(BaseTest):
+class ColumnConfigTest(BaseTest):
     """Tests for the Column Configuration sidebar on the Jobs table"""
-
-    page_url = "jobs"
-
-    def setup_function(self, request) -> None:
-        request.getfixturevalue("test_jobs")
-        self.login()
-
-    # -------------------------------------------------- Helpers --------------------------------------------------
 
     def is_column_config_sidebar_open(self) -> bool:
         """Return True if the column config sidebar has the 'open' class"""
 
         sidebar = self.get_element("column-config-sidebar", enabled=False)
-        return "open" in sidebar.get_attribute("class")
+        class_attr = sidebar.get_attribute("class")
+        assert class_attr is not None, "Sidebar element should have a class attribute"
+        return "open" in class_attr
 
     def open_column_config_sidebar(self) -> None:
         """Open the column config sidebar via the gear button"""
@@ -66,14 +60,29 @@ class TestColumnConfig(BaseTest):
         from selenium.webdriver.common.by import By
 
         headers = self.driver.find_elements(By.XPATH, "//*[@id[starts-with(., 'table-header-')]]")
-        return [h.get_attribute("id").removeprefix("table-header-") for h in headers]
+        vis_columns = []
+        for h in headers:
+            id_attr = h.get_attribute("id")
+            if id_attr:
+                vis_columns.append(id_attr.removeprefix("table-header-"))
+        return vis_columns
 
     def toggle_column(self, key: str) -> None:
         """Toggle a column's visibility checkbox and wait for the async save"""
         self.get_element(f"col-toggle-{key}").click()
         time.sleep(0.5)
 
-    # -------------------------------------------------- Tests --------------------------------------------------
+
+class TestColumnConfig(ColumnConfigTest):
+    """Tests for the Column Configuration sidebar on the Jobs table"""
+
+    page_url = "jobs"
+
+    def setup_function(self, request) -> None:
+        company = self.user.create_company()
+        for _ in range(3):
+            self.user.create_job(company_id=company.id)
+        self.login()
 
     def test_open_and_close_sidebar(self) -> None:
         """Gear button opens the sidebar; the close button dismisses it"""

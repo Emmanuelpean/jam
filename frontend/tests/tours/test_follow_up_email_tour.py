@@ -24,14 +24,13 @@ All seeded data is cleaned up on Done or Skip regardless of how the tour ended.
 """
 
 from app import models
-from base_test import BaseTest
-
+from frontend_base_test import BaseTest
 
 TOUR_ID = "follow-up-email"
 
 
 class TestFollowUpEmailTour(BaseTest):
-    user_index = 0
+    user_fixture = "test_regular_user"
     page_url = "jobs"
 
     def setup_function(self, request) -> None:
@@ -248,7 +247,7 @@ class TestFollowUpEmailTour(BaseTest):
         The tour snapshot hides pre-existing entities from visibleData, so only the
         JAM-seeded demo job (1 row) should be visible while the tour is active.
         """
-        pre_existing = self._make_job(title="Pre-Existing Job")
+        pre_existing = self.user.create_job(title="Pre-Existing Job")
         initial_jobs = self.db.query(models.Job).filter_by(owner_id=self.user.id).count()
 
         self._start_tour()

@@ -117,7 +117,7 @@ class SeleniumUtils(object):
             else:
                 if enabled:
                     element = wait.until(ec.element_to_be_clickable((selector, element_id)))
-                    ActionChains(self.driver).move_to_element(element).perform()
+                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'})", element)
                 else:
                     element = wait.until(ec.presence_of_element_located((selector, element_id)))
 
@@ -142,7 +142,6 @@ class SeleniumUtils(object):
         :param timeout: How long to wait before raising an error
         :param parent: Parent element to search within"""
 
-        time.sleep(0.1)
         try:
             wait = self.get_webdriver_wait(timeout, parent)
             if parent:
@@ -329,6 +328,11 @@ class SeleniumUtils(object):
             wait.until(ec.invisibility_of_element_located((selector, element_id)))
         except TimeoutException:
             raise AssertionError(f"Element {element_id} did not disappear")
+
+    def assert_not_visible(self, element_id: str) -> None:
+        """Assert that an element is not visible"""
+
+        assert not self.driver.find_elements(By.ID, element_id)
 
     def context_menu(self, element: WebElement, choice: str) -> None:
         """Row context menu"""

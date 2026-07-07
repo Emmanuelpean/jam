@@ -11,6 +11,7 @@ from enum import Enum
 from sqlalchemy.orm import Session
 
 from app import models
+from app.base_models import ProcessingStatus
 from app.config import settings
 from app.database import db_session
 from app.emails.email_service import EmailService
@@ -124,8 +125,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
         count = (
             db.query(ScrapedJob)
             .filter(ScrapedJob.owner_id == owner_id)
-            .filter(ScrapedJob.is_scraped)
-            .filter(ScrapedJob.is_failed.is_(False))
+            .filter(ScrapedJob.status == ProcessingStatus.COMPLETED)
             .filter(ScrapedJob.scrape_datetime >= start_of_month)
             .count()
         )
@@ -375,9 +375,9 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                 if data[key] is not None:
                     setattr(job_record, key, data[key])
 
-        # Scraping information
+        # Scraping succeeded: record the timestamp and mark the job COMPLETED.
         job_record.scrape_datetime = dt.datetime.now()
-        job_record.is_scraped = True
+        job_record.status = ProcessingStatus.COMPLETED
 
         db.commit()
 
@@ -394,11 +394,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
         :return: Updated job_record2 instance"""
 
         columns = [
-            # Only scraping info are necessary
-            "is_processed",
-            "is_scraped",
             "scrape_datetime",
-            # Job details
             "title",
             "description",
             "salary_min",
@@ -618,7 +614,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                         f"Job ID {job_record.external_job_id} filtered out for user ID {job_record.owner_id} "
                         f"due to rule {job_filter_rule.name}"
                     )
-                    job_record.is_processed = True
+                    job_record.status = ProcessingStatus.FILTERED
                     job_record.exclusion_filter_id = job_filter_rule.id
                     db.commit()
                     self.upsert_platform_stat(
@@ -638,8 +634,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                 db.query(ScrapedJob)
                 .filter(ScrapedJob.external_job_id == job_record.external_job_id)
                 .filter(ScrapedJob.platform == job_record.platform)
-                .filter(ScrapedJob.is_processed)
-                .filter(ScrapedJob.is_scraped)
+                .filter(ScrapedJob.status == ProcessingStatus.COMPLETED)
                 .first()
             )
 
@@ -650,7 +645,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                     f"Copying data to unscraped record."
                 )
                 self.copy_existing_entry(db, existing_data, job_record)
-                job_record.is_processed = True
+                job_record.status = ProcessingStatus.COPIED
                 db.commit()
                 self.upsert_platform_stat(db, service_log, job_record.platform, job_scrape_copied_ids=job_record.id)
                 continue  # next job record
@@ -661,9 +656,8 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                     f"User ID {job_record.owner_id} has exceeded their monthly scrape quota of "
                     f"{settings.monthly_scrape_quota}. Skipping job ID {job_record.external_job_id}."
                 )
-                job_record.is_skipped = True
+                job_record.status = ProcessingStatus.SKIPPED
                 job_record.skip_reason = f"Monthly scrape quota of {settings.monthly_scrape_quota} exceeded"
-                job_record.is_processed = True
                 db.commit()
                 self.upsert_platform_stat(db, service_log, job_record.platform, job_scrape_skipped_ids=job_record.id)
                 continue  # next job record
@@ -675,7 +669,6 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                 try:
                     job_data = scraper.scrape_job()[0]
                     self.update_scraped_job_data(db, job_record, job_data)
-                    job_record.is_processed = True
                     job_record.scraping_next_retry_at = None
                     db.commit()
                     self.upsert_platform_stat(
@@ -701,8 +694,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                             f"{job_record.external_job_id} in {settings.scrape_retry_delay_hours}h"
                         )
                     else:
-                        job_record.is_processed = True
-                        job_record.is_failed = True
+                        job_record.status = ProcessingStatus.FAILED
                         self.logger.info(
                             f"Job ID {job_record.external_job_id} permanently failed after "
                             f"{settings.scrape_max_retry} attempts"
@@ -711,9 +703,8 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                     self.upsert_platform_stat(db, service_log, job_record.platform, job_scrape_failed_ids=job_record.id)
             else:
                 self.logger.info(f"Unknown platform for job {job_record.external_job_id}. Skipping job.")
-                job_record.is_skipped = True
-                job_record.skip_reason = f"Unknown platform {job_record.platform}"
-                job_record.is_processed = True
+                job_record.status = ProcessingStatus.FAILED
+                self.log_service_error(db, service_log, f"Unknown platform {job_record.platform}")
                 db.commit()
                 continue  # next job record
 

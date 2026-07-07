@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
 from helpers.base_utils import BaseUtils
-from select_utils import Select
+from helpers.select_utils import Select
 
 
 class DataTableUtils(BaseUtils):

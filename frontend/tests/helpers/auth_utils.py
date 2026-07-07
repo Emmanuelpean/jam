@@ -141,52 +141,45 @@ class AuthentificationUtils(BaseUtils):
 
     # ----------------------------------------------------- ERRORS -----------------------------------------------------
 
-    def _assert_message(self, key: str, message: str) -> None:
-        """Assert that the given message is displayed on the page
-        :param key: Key to use for finding the error message element
-        :param message: Message to check for"""
-
-        assert message in self.get_element(key + "error-message").text, f"Message not found: {message}"
-
     def assert_email_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("email-", error_message)
+        self.assert_error_message("email", error_message)
 
     def assert_password_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("password-", error_message)
+        self.assert_error_message("password", error_message)
 
     def assert_confirm_password_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("confirmPassword-", error_message)
+        self.assert_error_message("confirmPassword", error_message)
 
     def assert_accept_terms_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("terms-", error_message)
+        self.assert_error_message("terms", error_message)
 
     def assert_accept_privacy_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("privacy-", error_message)
+        self.assert_error_message("privacy", error_message)
 
     def assert_no_email_error_message(self) -> None:
         """Assert that the email error message is not displayed on the page"""
 
-        self.wait_for_disappear("email-error-message")
+        self.assert_not_visible("email-error-message")
 
     def assert_no_password_error_message(self) -> None:
         """Assert that the password error message is not displayed on the page"""
 
-        self.wait_for_disappear("password-error-message")
+        self.assert_not_visible("password-error-message")
 
     def assert_no_confirm_password_error_message(self) -> None:
         """Assert that the confirm password error message is not displayed on the page"""
 
-        self.wait_for_disappear("confirmPassword-error-message")
+        self.assert_not_visible("confirmPassword-error-message")
 
     # ------------------------------------------------------ PAGES -----------------------------------------------------
 

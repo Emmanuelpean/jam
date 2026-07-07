@@ -7,6 +7,7 @@ from datetime import datetime
 
 from pydantic import field_validator, Field
 
+from app.base_models import ProcessingStatus
 from app.base_schemas import BaseModel, OwnedOut, Out, serialise_relationships, OwnedCreate
 from app.data_tables.schemas import GeolocationOut
 from app.job_rating.schemas import JobRatingOut
@@ -92,13 +93,10 @@ class ScrapedJobOut(OwnedOut):
     external_job_id: str
     platform: str
     service_log_id: int
-    is_processed: bool = False
-    is_scraped: bool = False
-    is_failed: bool = False
+    status: ProcessingStatus
     scrape_datetime: datetime | None = None
     is_active: bool = True
     is_imported: bool = False
-    is_skipped: bool = False
     skip_reason: str | None = None
     scraping_retry_count: int = 0
     scraping_next_retry_at: datetime | None = None

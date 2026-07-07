@@ -3,13 +3,17 @@ import { Col, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "react-bootstrap";
 import {
-	externalServiceMonitoringApi,
-	externalServiceMonitoringRunnerApi,
-} from "../../services/api/ExternalServiceMonitoring";
+	providerMonitoringApi,
+	providerMonitoringRunnerApi,
+} from "../../services/api/ProviderMonitoring";
 import { LineChart, SeriesData } from "../../components/Chart/LineChart";
 import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
+import { useServiceLogs } from "../../hooks/useServiceLogs";
+import { useServiceErrors } from "../../hooks/useServiceErrors";
+import { providerMonitoringServiceLogApi } from "../../services/api/Services";
 import LogViewer, { useLogViewerToggle } from "../Services/LogViewer/LogViewer";
 import { LastLogBar } from "../Services/LogViewer/LastLogBar";
+import { ErrorSummaryCard } from "../Services/ErrorSummaryCard";
 import { TimeFilterPopover } from "../../components/TimeSelection/TimeFilterPopover";
 import { DateRange } from "../../utils/TimeUtils";
 import { failureColor, formatErrorMessage, successColor } from "../Services/ServiceUtils";
@@ -20,6 +24,7 @@ import {
 	ApifyDailyUsageData,
 	BrightdataBalanceData,
 	BrightdataDailyUsageData,
+	ServiceLog,
 	StripeDailyIncomeData,
 } from "../../services/schemas/Services";
 
@@ -161,13 +166,31 @@ const SummaryCard = ({ icon, label, value, caption, valueColor }: SummaryCardPro
 
 const UsagePage = (): JSX.Element => {
 	const { token } = useAuth();
-	const { serviceStatus, statusError } = useServiceRunnerStatus(externalServiceMonitoringRunnerApi);
+	const { serviceStatus, statusError } = useServiceRunnerStatus(providerMonitoringRunnerApi);
 	const {
 		expanded: logsExpanded,
 		setExpanded: setLogsExpanded,
 		open: openLogViewer,
 	} = useLogViewerToggle("usage-log-viewer");
 	const [dateRange, setDateRange] = useState<DateRange | null>(null);
+	const [showAcknowledged, setShowAcknowledged] = useState<boolean>(false);
+
+	const isRunning: boolean = serviceStatus?.is_running || false;
+	const {
+		previousServiceLogs,
+		latestServiceLog,
+		loading: logsLoading,
+	} = useServiceLogs<ServiceLog>(providerMonitoringServiceLogApi, isRunning, dateRange);
+	const {
+		errors: currentErrors,
+		acknowledge: acknowledgeCurrent,
+		loading: currentErrorsLoading,
+	} = useServiceErrors(latestServiceLog, "provider_monitoring_service_log_id", showAcknowledged);
+	const {
+		errors: previousErrors,
+		acknowledge: acknowledgePrevious,
+		loading: previousErrorsLoading,
+	} = useServiceErrors(previousServiceLogs, "provider_monitoring_service_log_id", showAcknowledged, true);
 
 	const [anthropic, setAnthropic] = useState<AnthropicDailyUsageData[]>([]);
 	const [apify, setApify] = useState<ApifyDailyUsageData[]>([]);
@@ -186,12 +209,12 @@ const UsagePage = (): JSX.Element => {
 		try {
 			const range = { start_date: toIsoDate(dateRange.start), end_date: toIsoDate(dateRange.end) };
 			const [a, ap, apBal, bd, bdBal, st] = await Promise.all([
-				externalServiceMonitoringApi.getAnthropicHistory(range, token),
-				externalServiceMonitoringApi.getApifyHistory(range, token),
-				externalServiceMonitoringApi.getApifyBalance(token),
-				externalServiceMonitoringApi.getBrightdataHistory(range, token),
-				externalServiceMonitoringApi.getBrightdataBalance(token),
-				externalServiceMonitoringApi.getStripeHistory(range, token),
+				providerMonitoringApi.getAnthropicHistory(range, token),
+				providerMonitoringApi.getApifyHistory(range, token),
+				providerMonitoringApi.getApifyBalance(token),
+				providerMonitoringApi.getBrightdataHistory(range, token),
+				providerMonitoringApi.getBrightdataBalance(token),
+				providerMonitoringApi.getStripeHistory(range, token),
 			]);
 			setAnthropic(a);
 			setApify(ap);
@@ -421,11 +444,19 @@ const UsagePage = (): JSX.Element => {
 
 			<LogViewer
 				id="usage-log-viewer"
-				api={externalServiceMonitoringRunnerApi}
-				isServiceRunning={serviceStatus?.service_running || false}
-				serviceStatus={serviceStatus}
+				api={providerMonitoringRunnerApi}
+				isServiceRunning={isRunning}
 				expanded={logsExpanded}
 				onExpandedChange={setLogsExpanded}
+			/>
+
+			<ErrorSummaryCard
+				current={{ errors: currentErrors, acknowledge: acknowledgeCurrent }}
+				previous={{ errors: previousErrors, acknowledge: acknowledgePrevious }}
+				showAcknowledged={showAcknowledged}
+				onToggleAcknowledged={setShowAcknowledged}
+				isRunning={isRunning}
+				loading={logsLoading || currentErrorsLoading || previousErrorsLoading}
 			/>
 		</div>
 	);

@@ -1,28 +1,41 @@
 """Tests for follow up email generation."""
 
-from base_test import BaseTest, models
+from frontend_base_test import BaseTest, models
 
 
 class TestFollowUpEmail(BaseTest):
 
-    user_index = 0
+    user_fixture = "test_regular_user"
     page_url = "jobs"
 
     def setup_function(self, request) -> None:
         """Setup for each test function."""
 
-        tech_corp = self._make_company(name="Tech Corp")
-        cloudfirst = self._make_company(name="CloudFirst Inc")
-        john = self._make_person(first_name="John", last_name="Doe", company_id=tech_corp.id, email="j.d@mail.com")
-        mike = self._make_person(first_name="Mike", last_name="Taylor", company_id=tech_corp.id, email="m.t@mail.com")
-        alex = self._make_person(first_name="Alex", last_name="Johnson", company_id=cloudfirst.id, email="a.j@mail.com")
-        self.test_job = self._make_job(
+        tech_corp = self.user.create_company(name="Tech Corp")
+        cloudfirst = self.user.create_company(name="CloudFirst Inc")
+        john = self.user.create_person(
+            first_name="John",
+            last_name="Doe",
+            company_id=tech_corp.id,
+            email="j.d@mail.com",
+        )
+        mike = self.user.create_person(
+            first_name="Mike",
+            last_name="Taylor",
+            company_id=tech_corp.id,
+            email="m.t@mail.com",
+        )
+        alex = self.user.create_person(
+            first_name="Alex",
+            last_name="Johnson",
+            company_id=cloudfirst.id,
+            email="a.j@mail.com",
+        )
+        self.test_job = self.user.create_job(
             title="Senior Python Developer",
             application_status="applied",
+            contacts=[john, mike, alex],
         )
-        self.test_job.contacts = [john, mike, alex]
-        self.db.commit()
-        self.db.refresh(self.test_job)
         self.login()
 
     def test_generate_followup_email(self) -> None:

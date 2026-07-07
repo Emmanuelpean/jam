@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import { ScrapedJobData } from "../../../services/schemas/Services";
+import { ProcessingStatus, ScrapedJobData } from "../../../services/schemas/Services";
 import { useConfig } from "../../../contexts/ConfigContext";
 import JobRatingCard from "./JobRatingCard";
 
@@ -28,7 +28,7 @@ const JobRatingSection = ({ scrapedJob }: JobRatingSectionProps): JSX.Element | 
 	};
 
 	// Successful rating
-	if (rating?.is_success) {
+	if (rating?.status === ProcessingStatus.COMPLETED) {
 		return (
 			<>
 				<JobRatingCard jobRating={rating} />
@@ -48,8 +48,12 @@ const JobRatingSection = ({ scrapedJob }: JobRatingSectionProps): JSX.Element | 
 	}
 
 	// Rating failed with error
-	if (rating && !rating.is_success && rating.error) {
-		const reportLink = createReportLink("Job Rating Error Report", rating.error);
+	if (rating?.status === ProcessingStatus.FAILED) {
+		const ratingErrorText: string | null =
+			rating.rating_errors
+				?.map((e) => e.message)
+				.join("\n\n---\n\n") || null;
+		const reportLink = createReportLink("Job Rating Error Report", ratingErrorText);
 		return (
 			<div className="text-muted small">
 				<i className="bi bi-exclamation-triangle me-1" />
@@ -60,7 +64,7 @@ const JobRatingSection = ({ scrapedJob }: JobRatingSectionProps): JSX.Element | 
 	}
 
 	// Rating skipped
-	if (rating?.is_skipped) {
+	if (rating?.status === ProcessingStatus.SKIPPED) {
 		return (
 			<div className="text-muted small">
 				<i className="bi bi-skip-forward me-1" />
@@ -69,8 +73,8 @@ const JobRatingSection = ({ scrapedJob }: JobRatingSectionProps): JSX.Element | 
 		);
 	}
 
-	// Scraping failed or skipped — rating not applicable
-	if (scrapedJob?.is_failed || scrapedJob?.is_skipped || !scrapedJob?.is_processed) {
+	// Scraping not successfully completed — rating not applicable
+	if (scrapedJob?.status !== ProcessingStatus.COMPLETED) {
 		return (
 			<div className="text-muted small">
 				<i className="bi bi-dash-circle me-1" />

@@ -18,7 +18,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
-from app.base_models import Owned, CommonBase
+from app.base_models import Owned, CommonBase, ProcessingStatus
 from app.database import Base
 from app.service.models import ServiceLog
 
@@ -68,10 +68,9 @@ class JobRating(Owned, Base):
     - `educational_score` (int, optional): Educational score for the job.
     - `interest_score` (int, optional): Interest score for the job.
     - `feedback` (str, optional): Additional feedback or comments about the job rating.
-    - `is_skipped` (bool, optional): Indicates whether the rating process was skipped.
+    - `status` (ProcessingStatus): Rating outcome — PENDING (not yet finalised, may be retrying),
+      COMPLETED (rated successfully), FAILED (retries exhausted), or SKIPPED.
     - `skip_reason` (str, optional): Reason for skipping the rating process.
-    - `is_success` (bool, optional): Whether the rating succeeded. Null while the rating is still
-      pending / being retried; True on success; False once retries are exhausted.
     - `job_prompt` (str, optional): Job prompt used for the rating.
     - `llm_model` (str): LLM model used for the rating.
     - `notes` (List[str], optional): Additional notes or comments about the rating.
@@ -99,9 +98,8 @@ class JobRating(Owned, Base):
     educational_score = Column(Integer, nullable=True)
     interest_score = Column(Integer, nullable=True)
     feedback = Column(String, nullable=True)
-    is_skipped = Column(Boolean, nullable=False, server_default=expression.false())
+    status = Column(String, nullable=False, default=ProcessingStatus.PENDING)
     skip_reason = Column(String, nullable=True)
-    is_success = Column(Boolean, nullable=True)
     job_prompt = Column(String, nullable=True)
     llm_model = Column(String, nullable=False)
     notes = Column(PG_ARRAY(String), server_default="{}", nullable=False)
@@ -131,14 +129,12 @@ class JobRating(Owned, Base):
 
     @hybrid_property
     def is_pending(self) -> bool:
-        """Whether the rating is still runnable: not yet finalised (is_success is None — i.e.
-        neither succeeded nor failed-out), not skipped, and due for a (re)try now."""
+        """Whether the rating is still runnable: not yet finalised (status is PENDING) and due for a
+        (re)try now."""
 
         now = dt.datetime.now(dt.timezone.utc)
-        return (
-            self.is_success is None
-            and not self.is_skipped
-            and (self.rating_next_retry_at is None or self.rating_next_retry_at <= now)
+        return self.status == ProcessingStatus.PENDING and (
+            self.rating_next_retry_at is None or self.rating_next_retry_at <= now
         )
 
     @is_pending.expression
@@ -146,8 +142,7 @@ class JobRating(Owned, Base):
         """SQL form of :attr:`is_pending` for use in queries."""
 
         return and_(
-            cls.is_success.is_(None),
-            cls.is_skipped.is_(False),
+            cls.status == ProcessingStatus.PENDING,
             or_(
                 cls.rating_next_retry_at.is_(None),
                 cls.rating_next_retry_at <= func.now(),

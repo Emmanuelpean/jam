@@ -52,11 +52,6 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 				</div>
 			</div>
 
-			{latestLog.error_message && (
-				<div className="error-message">
-					<strong>Error:</strong> {latestLog.error_message}
-				</div>
-			)}
 			<div style={{ display: "flex", width: "100%", gap: "18px" }}>
 				<ProgressBar
 					title="Users Processed"

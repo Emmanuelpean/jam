@@ -1,29 +1,59 @@
 import React, { JSX, useState } from "react";
-import { ServiceLog } from "../../services/schemas/Services";
+import { ServiceError } from "../../services/schemas/Services";
+import { groupErrorsByMessage } from "../../hooks/useServiceErrors";
 import { useDelayedLoading } from "../../hooks/useDelayedLoading";
+import { GroupedErrorList } from "./GroupedErrorList";
 
-export type ErrorView = "current" | "last";
+type ErrorView = "current" | "last";
 
-interface SharedErrorSummaryCardProps {
-	latestServiceLogs: ServiceLog[] | null;
+export interface ErrorGroupData {
+	errors: ServiceError[];
+	acknowledge: (ids: number[]) => Promise<void>;
+	platformByJobId?: Record<number, string | null>;
+}
+
+export interface PerJobErrorConfig {
+	title: string;
+	discriminatorKey: "scraped_job_id" | "job_rating_id";
+	emptyText: string;
+	showJobs?: boolean;
+}
+
+interface ErrorSummaryCardProps {
+	current: ErrorGroupData;
+	previous: ErrorGroupData;
+	showAcknowledged: boolean;
+	onToggleAcknowledged: (value: boolean) => void;
 	isRunning: boolean;
 	loading?: boolean;
-	children: (errorView: ErrorView) => React.ReactNode;
+	perJob?: PerJobErrorConfig;
 }
 
 export const ErrorSummaryCard = ({
-	latestServiceLogs,
+	current,
+	previous,
+	showAcknowledged,
+	onToggleAcknowledged,
 	isRunning,
 	loading = false,
-	children,
-}: SharedErrorSummaryCardProps): JSX.Element => {
+	perJob,
+}: ErrorSummaryCardProps): JSX.Element => {
 	const visibleLoading = useDelayedLoading(loading);
 	const [errorView, setErrorView] = useState<ErrorView>("current");
+	const data: ErrorGroupData = errorView === "current" ? current : previous;
 
-	const criticalErrorLogs: ServiceLog[] = latestServiceLogs || [];
-	const criticalErrorCount: number = criticalErrorLogs.filter(
-		(l: ServiceLog): boolean => !!(l.error_message && l.error_message.trim())
-	).length;
+	const jobKey = perJob?.discriminatorKey;
+	const runLevel: ServiceError[] = jobKey
+		? data.errors.filter((e: ServiceError): boolean => e[jobKey] == null)
+		: data.errors;
+	const criticalGroups = groupErrorsByMessage(runLevel.filter((e: ServiceError): boolean => e.level === "critical"));
+	const serviceGroups = groupErrorsByMessage(runLevel.filter((e: ServiceError): boolean => e.level !== "critical"));
+	const perJobGroups = jobKey
+		? groupErrorsByMessage(
+				data.errors.filter((e: ServiceError): boolean => e[jobKey] != null),
+				data.platformByJobId
+			)
+		: [];
 
 	return (
 		<div id="error-summary-card" className="status-card mt-4">
@@ -33,17 +63,31 @@ export const ErrorSummaryCard = ({
 				{isRunning && <span className="live-indicator ms-2"></span>}
 			</h2>
 
-			<div className="form-check form-switch mb-3">
-				<input
-					type="checkbox"
-					className="form-check-input"
-					id="errorViewToggle"
-					checked={errorView === "last"}
-					onChange={(e) => setErrorView(e.target.checked ? "last" : "current")}
-				/>
-				<label className="form-check-label" htmlFor="errorViewToggle">
-					Show previous run errors
-				</label>
+			<div className="d-flex flex-wrap gap-4 mb-3">
+				<div className="form-check form-switch">
+					<input
+						type="checkbox"
+						className="form-check-input"
+						id="errorViewToggle"
+						checked={errorView === "last"}
+						onChange={(e) => setErrorView(e.target.checked ? "last" : "current")}
+					/>
+					<label className="form-check-label" htmlFor="errorViewToggle">
+						Show previous run errors
+					</label>
+				</div>
+				<div className="form-check form-switch">
+					<input
+						type="checkbox"
+						className="form-check-input"
+						id="showAcknowledgedToggle"
+						checked={showAcknowledged}
+						onChange={(e) => onToggleAcknowledged(e.target.checked)}
+					/>
+					<label className="form-check-label" htmlFor="showAcknowledgedToggle">
+						Show acknowledged errors
+					</label>
+				</div>
 			</div>
 
 			{visibleLoading ? (
@@ -54,38 +98,30 @@ export const ErrorSummaryCard = ({
 				</div>
 			) : (
 				<div style={{ display: "flex", gap: "18px", height: "540px", overflow: "auto" }}>
-					<div style={{ flex: 1 }}>
-						<h5 className="mb-3">Critical Errors ({criticalErrorCount})</h5>
-						{criticalErrorCount === 0 ? (
-							<div className="text-muted">No critical errors</div>
-						) : (
-							<div className="error-list d-flex flex-column" style={{ gap: "10.8px" }}>
-								{criticalErrorLogs
-									.slice()
-									.sort(
-										(a: ServiceLog, b: ServiceLog): number =>
-											new Date(b.run_datetime).getTime() - new Date(a.run_datetime).getTime()
-									)
-									.filter(
-										(log: ServiceLog): boolean => !!(log.error_message && log.error_message.trim())
-									)
-									.map(
-										(log: ServiceLog, idx: number): JSX.Element => (
-											<div key={idx} className="alert alert-danger">
-												<div className="small mb-1">
-													{new Date(log.run_datetime).toLocaleString()}
-												</div>
-												<div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-													{log.error_message}
-												</div>
-											</div>
-										)
-									)}
-							</div>
-						)}
-					</div>
-
-					{children(errorView)}
+					<GroupedErrorList
+						title="Critical Service Errors"
+						groups={criticalGroups}
+						variant="danger"
+						emptyText="No critical errors"
+						onAcknowledge={data.acknowledge}
+					/>
+					<GroupedErrorList
+						title="Service Errors"
+						groups={serviceGroups}
+						variant="info"
+						emptyText="No service errors"
+						onAcknowledge={data.acknowledge}
+					/>
+					{perJob && (
+						<GroupedErrorList
+							title={perJob.title}
+							groups={perJobGroups}
+							variant="warning"
+							emptyText={perJob.emptyText}
+							showJobs={perJob.showJobs}
+							onAcknowledge={data.acknowledge}
+						/>
+					)}
 				</div>
 			)}
 		</div>

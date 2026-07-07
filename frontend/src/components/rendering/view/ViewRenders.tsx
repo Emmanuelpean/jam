@@ -58,7 +58,7 @@ import {
 	LocationBadge,
 	PersonBadge,
 } from "./DataBadge";
-import { JobEmailData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
+import { JobEmailData, ProcessingStatus, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
 import JobRatingSection from "./JobRatingSection";
 import EmailBody from "./EmailBody";
 import { Currency } from "../../../services/schemas/Others";
@@ -522,20 +522,20 @@ export const renderFunctions = {
 
 	scrapingStatus: (param: RenderParams): ReactNode => {
 		if (!param.item) return null;
-		if (param.item.is_failed)
+		if (param.item.status === ProcessingStatus.FAILED)
 			return (
 				<span id="scraping-status-badge" className="badge bg-danger">
 					Failed
 				</span>
 			);
-		if (!param.item.is_processed && param.item.scrape_error?.length) {
+		if (param.item.status === ProcessingStatus.PENDING && param.item.scraping_retry_count) {
 			return (
 				<span id="scraping-status-badge" className="badge bg-warning text-dark">
-					Retrying ({param.item.retry_count}/3)
+					Retrying ({param.item.scraping_retry_count}/3)
 				</span>
 			);
 		}
-		if (!param.item.is_processed)
+		if (param.item.status === ProcessingStatus.PENDING)
 			return (
 				<span id="scraping-status-badge" className="badge bg-secondary">
 					Pending

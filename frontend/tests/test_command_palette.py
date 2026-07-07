@@ -6,14 +6,13 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
 
-from base_test import BaseTest
+from frontend_base_test import BaseTest
 
 CP_ITEM_ACTIVE = "[id^='cp-item-'].active"
 CP_ITEM_LABEL = ".cp-item-label"
 
 
 class TestCommandPalette(BaseTest):
-    user_index = 0
     page_url = "dashboard"
 
     def setup_function(self, request) -> None:
@@ -185,10 +184,10 @@ class TestCommandPalette(BaseTest):
         assert "/companies" in self.driver.current_url
         self.job_modal_utils.wait_for_edit_modal_close()
 
-    def test_confirm_modal_closes_on_navigation(self, test_jobs) -> None:
+    def test_confirm_modal_closes_on_navigation(self) -> None:
         """Navigating via the command palette closes an open confirm modal."""
 
-        job = self._make_job(title="Test Job")
+        job = self.user.create_job(title="Test Job")
         self.refresh()
         self.go_to_page("jobs")
         self.job_table_utils.table_row_click(job.id)
@@ -208,7 +207,7 @@ class TestCommandPalette(BaseTest):
 class TestCommandPaletteRecordSearch(BaseTest):
     """The palette search also matches the user's records (jobs, companies, contacts, tags, aggregators)."""
 
-    user_index = 0
+    user_fixture = "test_regular_user"
     page_url = "dashboard"
 
     def setup_function(self, request) -> None:
@@ -243,7 +242,7 @@ class TestCommandPaletteRecordSearch(BaseTest):
     def test_search_matches_job_title(self) -> None:
         """Typing a job title surfaces that job as a result."""
 
-        self._make_job(title="Zynapse Backend Engineer")
+        self.user.create_job(title="Zynapse Backend Engineer")
         self.refresh()
         self.open_palette()
         self.palette_input.send_keys("Zynapse")
@@ -253,7 +252,7 @@ class TestCommandPaletteRecordSearch(BaseTest):
     def test_enter_opens_job_view_modal(self) -> None:
         """Selecting a job result navigates to /jobs and opens its view modal."""
 
-        job = self._make_job(title="Zynapse Platform Lead")
+        job = self.user.create_job(title="Zynapse Platform Lead")
         self.refresh()
         self.open_palette()
         self.palette_input.send_keys("Zynapse Platform Lead")
@@ -266,7 +265,7 @@ class TestCommandPaletteRecordSearch(BaseTest):
     def test_click_company_result_opens_view_modal(self) -> None:
         """Clicking a company result navigates to /companies and opens its view modal."""
 
-        company = self._make_company(name="Zentech Solutions")
+        company = self.user.create_company(name="Zentech Solutions")
         self.refresh()
         self.open_palette()
         self.palette_input.send_keys("Zentech")
@@ -279,7 +278,7 @@ class TestCommandPaletteRecordSearch(BaseTest):
     def test_search_matches_contact_name(self) -> None:
         """Selecting a contact result navigates to /contacts and opens its view modal."""
 
-        person = self._make_person(first_name="Zaphod", last_name="Beeblebrox")
+        person = self.user.create_person(first_name="Zaphod", last_name="Beeblebrox")
         self.refresh()
         self.open_palette()
         self.palette_input.send_keys("Zaphod")
@@ -291,7 +290,7 @@ class TestCommandPaletteRecordSearch(BaseTest):
     def test_search_matches_tag_name(self) -> None:
         """Selecting a tag result navigates to /keywords and opens its view modal."""
 
-        keyword = self._make_keyword(name="Zigzag")
+        keyword = self.user.create_keyword(name="Zigzag")
         self.refresh()
         self.open_palette()
         self.palette_input.send_keys("Zigzag")
@@ -303,7 +302,7 @@ class TestCommandPaletteRecordSearch(BaseTest):
     def test_search_matches_aggregator_name(self) -> None:
         """Selecting an aggregator result navigates to /aggregators and opens its view modal."""
 
-        aggregator = self._make_aggregator(name="Zephyr Jobs")
+        aggregator = self.user.create_aggregator(name="Zephyr Jobs")
         self.refresh()
         self.open_palette()
         self.palette_input.send_keys("Zephyr")
@@ -316,7 +315,7 @@ class TestCommandPaletteRecordSearch(BaseTest):
         """No more than five matching records are shown per entity group."""
 
         for i in range(7):
-            self._make_job(title=f"Zcapped Role {i}")
+            self.user.create_job(title=f"Zcapped Role {i}")
         self.refresh()
         self.open_palette()
         self.palette_input.send_keys("Zcapped")
@@ -326,7 +325,7 @@ class TestCommandPaletteRecordSearch(BaseTest):
     def test_record_results_grouped_by_entity(self) -> None:
         """Matching records appear under their entity group header."""
 
-        self._make_company(name="Zgroup Industries")
+        self.user.create_company(name="Zgroup Industries")
         self.refresh()
         self.open_palette()
         self.palette_input.send_keys("Zgroup")

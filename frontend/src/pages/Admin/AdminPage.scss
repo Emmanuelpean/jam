@@ -100,6 +100,29 @@
 	margin-right: 10.8px;
 }
 
+.service-status-control {
+	display: flex;
+	align-items: center;
+	gap: 10.8px;
+}
+
+.service-status-control .service-toggle-icon {
+	display: inline-flex;
+	align-items: center;
+	background: white;
+	border: none;
+	padding: 5.4px 12px;
+	border-radius: 7.2px;
+	font-size: 2rem;
+	line-height: 1;
+	cursor: pointer;
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.6;
+	}
+}
+
 // Box the service status icons in the header.
 .admin-page-modal-status .service-status-icons {
 	margin: 0;

@@ -10,6 +10,7 @@ from starlette.testclient import TestClient
 
 from app import models
 from app.job_email_scraping import schemas
+from app.base_models import ProcessingStatus
 from tests.base_test import BaseTest
 from tests.conftest import CRUDTestBase, make_undefined_method_params
 from tests.fixtures.users import FixtureUser
@@ -963,9 +964,9 @@ class TestErrorsOnly:
         assert data["items"] == []
 
     def test_errors_only_returns_failed_scrape_job(self, test_regular_user: FixtureUser) -> None:
-        """A job with is_failed=True must appear when errors_only=True."""
+        """A job with a FAILED scrape status must appear when errors_only=True."""
 
-        test_regular_user.create_scraped_job(title="Failed Scrape", is_failed=True)
+        test_regular_user.create_scraped_job(title="Failed Scrape", status=ProcessingStatus.FAILED)
         test_regular_user.create_scraped_job(title="Normal Job")
 
         response = test_regular_user.client.get(self.endpoint, params={"errors_only": "true"})
@@ -976,10 +977,10 @@ class TestErrorsOnly:
         assert data["items"][0]["title"] == "Failed Scrape"
 
     def test_errors_only_returns_failed_rating_job(self, test_regular_user: FixtureUser) -> None:
-        """A job whose JobRating has is_success=False must appear when errors_only=True."""
+        """A job whose JobRating has a FAILED status must appear when errors_only=True."""
 
         job = test_regular_user.create_scraped_job(title="Failed Rating")
-        test_regular_user.create_job_rating(scraped_job=job, is_success=False)
+        test_regular_user.create_job_rating(scraped_job=job, status=ProcessingStatus.FAILED)
         test_regular_user.create_scraped_job(title="Normal Job")
 
         response = test_regular_user.client.get(self.endpoint, params={"errors_only": "true"})
@@ -990,11 +991,11 @@ class TestErrorsOnly:
         assert data["items"][0]["title"] == "Failed Rating"
 
     def test_errors_only_returns_both_failure_types(self, test_regular_user: FixtureUser) -> None:
-        """Both is_failed scrape jobs and failed-rating jobs appear together."""
+        """Both FAILED scrape jobs and failed-rating jobs appear together."""
 
-        test_regular_user.create_scraped_job(title="Failed Scrape", is_failed=True)
+        test_regular_user.create_scraped_job(title="Failed Scrape", status=ProcessingStatus.FAILED)
         rating_job = test_regular_user.create_scraped_job(title="Failed Rating")
-        test_regular_user.create_job_rating(scraped_job=rating_job, is_success=False)
+        test_regular_user.create_job_rating(scraped_job=rating_job, status=ProcessingStatus.FAILED)
         test_regular_user.create_scraped_job(title="Normal Job")
 
         response = test_regular_user.client.get(self.endpoint, params={"errors_only": "true"})
@@ -1006,10 +1007,10 @@ class TestErrorsOnly:
         assert titles == {"Failed Scrape", "Failed Rating"}
 
     def test_errors_only_excludes_successful_rating(self, test_regular_user: FixtureUser) -> None:
-        """A job with a successful rating (is_success=True) is not returned."""
+        """A job with a successful rating (COMPLETED status) is not returned."""
 
         job = test_regular_user.create_scraped_job(title="Rated OK")
-        test_regular_user.create_job_rating(scraped_job=job, is_success=True)
+        test_regular_user.create_job_rating(scraped_job=job, status=ProcessingStatus.COMPLETED)
 
         response = test_regular_user.client.get(self.endpoint, params={"errors_only": "true"})
 
@@ -1018,9 +1019,9 @@ class TestErrorsOnly:
         assert data["total_filtered"] == 0
 
     def test_errors_only_excludes_imported_jobs(self, test_regular_user: FixtureUser) -> None:
-        """Imported jobs with is_failed=True must still be excluded by the base filter."""
+        """Imported jobs with a FAILED status must still be excluded by the base filter."""
 
-        test_regular_user.create_scraped_job(title="Imported Failed", is_failed=True, is_imported=True)
+        test_regular_user.create_scraped_job(title="Imported Failed", status=ProcessingStatus.FAILED, is_imported=True)
 
         response = test_regular_user.client.get(self.endpoint, params={"errors_only": "true"})
 
@@ -1029,9 +1030,9 @@ class TestErrorsOnly:
         assert data["total_filtered"] == 0
 
     def test_errors_only_excludes_inactive_jobs(self, test_regular_user: FixtureUser) -> None:
-        """Inactive jobs with is_failed=True must still be excluded by the base filter."""
+        """Inactive jobs with a FAILED status must still be excluded by the base filter."""
 
-        test_regular_user.create_scraped_job(title="Inactive Failed", is_failed=True, is_active=False)
+        test_regular_user.create_scraped_job(title="Inactive Failed", status=ProcessingStatus.FAILED, is_active=False)
 
         response = test_regular_user.client.get(self.endpoint, params={"errors_only": "true"})
 
@@ -1043,7 +1044,9 @@ class TestErrorsOnly:
         """errors_only=True should show failed jobs even if their deadline is in the past."""
 
         past_deadline = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=5)
-        test_regular_user.create_scraped_job(title="Past Deadline Failed", is_failed=True, deadline=past_deadline)
+        test_regular_user.create_scraped_job(
+            title="Past Deadline Failed", status=ProcessingStatus.FAILED, deadline=past_deadline
+        )
 
         response = test_regular_user.client.get(self.endpoint, params={"errors_only": "true"})
 
@@ -1056,7 +1059,7 @@ class TestErrorsOnly:
     ) -> None:
         """Failed jobs belonging to another user are never returned."""
 
-        test_admin_user.create_scraped_job(title="Admin Failed", is_failed=True)
+        test_admin_user.create_scraped_job(title="Admin Failed", status=ProcessingStatus.FAILED)
 
         response = test_regular_user.client.get(self.endpoint, params={"errors_only": "true"})
 

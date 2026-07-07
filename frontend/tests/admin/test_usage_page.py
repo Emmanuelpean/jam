@@ -1,7 +1,7 @@
-"""Tests for the External Service Monitoring (Usage) page.
+"""Tests for the Provider Monitoring (Usage) page.
 
 The Usage page is opened as a modal from the admin dashboard (/admin):
-- Clicking the "External Service Monitoring" card opens the modal.
+- Clicking the "Provider Monitoring" card opens the modal.
 - The body shows per-service spend summary cards, daily charts, a time filter and
   a log viewer; the modal header holds the monitoring service control.
 
@@ -12,13 +12,13 @@ import datetime as dt
 
 from selenium.webdriver.common.by import By
 
-from base_test import BaseTest
+from frontend_base_test import BaseTest
 
 
 class TestUsagePage(BaseTest):
     """Tests for the admin Usage / ESM dashboard modal."""
 
-    user_index = 1  # admin user required for the admin dashboard
+    user_fixture = "test_admin_user"  # admin user required for the admin dashboard
     page_url = "admin"
 
     # Seeded daily values, all within the default 1-month window.
@@ -32,14 +32,14 @@ class TestUsagePage(BaseTest):
         # A couple of days back keeps the rows safely inside the window regardless
         # of any browser/server timezone boundary on "today".
         day = dt.date.today() - dt.timedelta(days=2)
-        self._make_anthropic_usage(date=day, usage_usd=self.ANTHROPIC_USD)
-        self._make_apify_usage(date=day, usage_usd=self.APIFY_USD)
-        self._make_brightdata_usage(date=day, usage_usd=self.BRIGHTDATA_USD)
-        self._make_stripe_income(date=day, gross_gbp=100.0, net_gbp=self.STRIPE_NET_GBP)
+        self.create_anthropic_usage(self.db, date=day, usage_usd=self.ANTHROPIC_USD)
+        self.create_apify_usage(self.db, date=day, usage_usd=self.APIFY_USD)
+        self.create_brightdata_usage(self.db, date=day, usage_usd=self.BRIGHTDATA_USD)
+        self.create_stripe_income(self.db, date=day, gross_gbp=100.0, net_gbp=self.STRIPE_NET_GBP)
         self.login()
 
     def _open_usage(self) -> None:
-        """Open the External Service Monitoring modal from the admin dashboard."""
+        """Open the Provider Monitoring modal from the admin dashboard."""
 
         # Click the title (top of the card) to avoid the sparkline hover overlay.
         card = self.get_element("admin-card-usage", enabled=False)
@@ -103,8 +103,8 @@ class TestUsagePage(BaseTest):
         """The Apify and Bright Data summary cards show their balance captions."""
 
         # Latest balance snapshot per service, fetched when the modal opens.
-        self._make_apify_balance(limit_usd=100.0)
-        self._make_brightdata_balance(balance_usd=50.0, pending_costs_usd=2.0)
+        self.create_apify_balance(self.db, limit_usd=100.0)
+        self.create_brightdata_balance(self.db, balance_usd=50.0, pending_costs_usd=2.0)
 
         self._open_usage()
 

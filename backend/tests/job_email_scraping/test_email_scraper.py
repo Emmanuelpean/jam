@@ -15,6 +15,7 @@ from app.emails.schemas import EmailData
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
 from app.job_email_scraping.email_scraper import JobEmailScrapingService
 from app.job_email_scraping.schemas import JobResult
+from app.base_models import ProcessingStatus
 from tests.base_test import BaseTest
 from tests.fixtures.users import FixtureUser
 from tests.job_email_scraping.mock_job_scrapers import MockIndeedBrightdataJobScraper
@@ -177,7 +178,7 @@ class TestUpdateScrapedJobData:
         )
 
         # Verify initial state
-        assert sample_scraped_job.is_scraped is False
+        assert sample_scraped_job.status == ProcessingStatus.PENDING
         assert sample_scraped_job.title is None
         assert sample_scraped_job.company == "Initial Company Name"
 
@@ -202,7 +203,7 @@ class TestUpdateScrapedJobData:
         session.refresh(sample_scraped_job)
 
         # Verify the data was saved correctly
-        assert sample_scraped_job.is_scraped is True
+        assert sample_scraped_job.status == ProcessingStatus.COMPLETED
         job_data = sample_job_data["job"]
         assert isinstance(job_data, dict)
         assert sample_scraped_job.company == "Initial Company Name"  # not overwritten
@@ -665,7 +666,7 @@ class TestScrapeJobs:
         # Verify all jobs are now scraped
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
         for job in scraped_jobs:
-            assert job.is_scraped
+            assert job.status == ProcessingStatus.COMPLETED
 
         # Verify the platform stats
         platform_stat = (
@@ -693,7 +694,7 @@ class TestScrapeJobs:
         # Verify all jobs are now scraped
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
         for job in scraped_jobs:
-            assert job.is_scraped
+            assert job.status == ProcessingStatus.COMPLETED
 
         # Verify the platform stats
         platform_stat = (
@@ -721,7 +722,7 @@ class TestScrapeJobs:
         # Verify all jobs are now scraped
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
         for job in scraped_jobs:
-            assert job.is_scraped
+            assert job.status == ProcessingStatus.COMPLETED
 
         # Verify the platform stats
         platform_stat = (
@@ -749,7 +750,7 @@ class TestScrapeJobs:
         # Verify all jobs are now scraped
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
         for job in scraped_jobs:
-            assert job.is_scraped
+            assert job.status == ProcessingStatus.COMPLETED
 
         # Verify the platform stats
         platform_stat = (
@@ -783,9 +784,12 @@ class TestScrapeJobs:
             # Verify all jobs are now scraped
             scraped_jobs = session.query(models.ScrapedJob).filter().all()
             assert len(scraped_jobs) == len(indeed_scraped_jobs) + len(indeed_scraped_jobs_user2)
-            for job in scraped_jobs:
-                assert job.is_scraped
-                assert not job.is_failed
+            assert session.query(models.ScrapedJob).filter(
+                models.ScrapedJob.status == ProcessingStatus.COMPLETED
+            ).count() == len(indeed_scraped_jobs)
+            assert session.query(models.ScrapedJob).filter(
+                models.ScrapedJob.status == ProcessingStatus.COPIED
+            ).count() == len(indeed_scraped_jobs)
 
             # Verify the platform stats
             platform_stat = (
@@ -818,10 +822,10 @@ class TestScrapeJobs:
         scraped_jobs = session.query(models.ScrapedJob).filter().all()
         for job in scraped_jobs:
             if job.external_job_id == nhs_scraped_jobs[0].external_job_id:
-                assert not job.is_scraped
+                assert job.status == ProcessingStatus.FILTERED
                 assert job.exclusion_filter_id == filter_entry.id
             else:
-                assert job.is_scraped
+                assert job.status == ProcessingStatus.COMPLETED
                 assert job.scraping_errors == []
 
         # Verify the platform stats
@@ -852,9 +856,7 @@ class TestScrapeJobs:
             scraped_job = models.ScrapedJob(
                 owner_id=linkedin_scraped_jobs[0].owner_id,
                 external_job_id=str(i),
-                is_scraped=True,
-                is_processed=True,
-                is_failed=False,
+                status=ProcessingStatus.COMPLETED,
                 platform="NotLinkedIn",
                 service_log_id=test_job_scraping_service_log.id,
                 scrape_datetime=dt.datetime.now(dt.timezone.utc),
@@ -867,8 +869,7 @@ class TestScrapeJobs:
         # Verify all jobs are skipped (not scraped)
         for job in linkedin_scraped_jobs:
             session.refresh(job)
-            assert job.is_scraped is False
-            assert job.is_skipped is True
+            assert job.status == ProcessingStatus.SKIPPED
             assert job.skip_reason == f"Monthly scrape quota of {settings.monthly_scrape_quota} exceeded"
 
         # Verify the platform stats show jobs as skipped
@@ -918,7 +919,7 @@ class TestScrapeJobsRetry:
         test_job_scraping_service_log: models.JobEmailScrapingServiceLog,
         session: Session,
     ) -> None:
-        """On first failure: retry_count=1, next_retry_at set, is_processed=False, is_failed=False"""
+        """On first failure: retry_count=1, next_retry_at set, status still PENDING"""
         service = JobEmailScrapingService()
 
         with mock.patch("app.job_email_scraping.email_scraper.SCRAPERS", self._failing_scrapers()):
@@ -928,8 +929,7 @@ class TestScrapeJobsRetry:
         assert indeed_scraped_job.scraping_retry_count == 1
         assert indeed_scraped_job.scraping_next_retry_at is not None
         assert indeed_scraped_job.scraping_next_retry_at > dt.datetime.now(dt.timezone.utc)
-        assert indeed_scraped_job.is_processed is False
-        assert indeed_scraped_job.is_failed is False
+        assert indeed_scraped_job.status == ProcessingStatus.PENDING
         assert len(indeed_scraped_job.scraping_errors) == 1
         assert indeed_scraped_job.scraping_errors[0].scraped_job_id == indeed_scraped_job.id
         assert (
@@ -953,8 +953,7 @@ class TestScrapeJobsRetry:
 
         session.refresh(indeed_scraped_job)
         assert indeed_scraped_job.scraping_retry_count == 2
-        assert indeed_scraped_job.is_processed is False
-        assert indeed_scraped_job.is_failed is False
+        assert indeed_scraped_job.status == ProcessingStatus.PENDING
         assert len(indeed_scraped_job.scraping_errors) == 2
 
     def test_third_failure_marks_permanently_failed(
@@ -963,7 +962,7 @@ class TestScrapeJobsRetry:
         test_job_scraping_service_log: models.JobEmailScrapingServiceLog,
         session: Session,
     ) -> None:
-        """After 3 failures: is_failed=True, is_processed=True, retry_count=3"""
+        """After 3 failures: status FAILED, retry_count=3"""
         service = JobEmailScrapingService()
 
         for _ in range(3):
@@ -974,8 +973,7 @@ class TestScrapeJobsRetry:
 
         session.refresh(indeed_scraped_job)
         assert indeed_scraped_job.scraping_retry_count == 3
-        assert indeed_scraped_job.is_processed is True
-        assert indeed_scraped_job.is_failed is True
+        assert indeed_scraped_job.status == ProcessingStatus.FAILED
         assert len(indeed_scraped_job.scraping_errors) == 3
 
     def test_future_retry_at_skips_job(
@@ -995,7 +993,7 @@ class TestScrapeJobsRetry:
 
         session.refresh(indeed_scraped_job)
         assert indeed_scraped_job.scraping_retry_count == 1  # unchanged — was not attempted
-        assert indeed_scraped_job.is_processed is False
+        assert indeed_scraped_job.status == ProcessingStatus.PENDING
 
     def test_past_retry_at_triggers_retry(
         self,
@@ -1013,9 +1011,7 @@ class TestScrapeJobsRetry:
         service.scrape_jobs(session, test_job_scraping_service_log)
 
         session.refresh(indeed_scraped_job)
-        assert indeed_scraped_job.is_scraped is True
-        assert indeed_scraped_job.is_processed is True
-        assert indeed_scraped_job.is_failed is False
+        assert indeed_scraped_job.status == ProcessingStatus.COMPLETED
 
     def test_successful_retry_after_two_failures(
         self,
@@ -1034,9 +1030,7 @@ class TestScrapeJobsRetry:
         service.scrape_jobs(session, test_job_scraping_service_log)
 
         session.refresh(indeed_scraped_job)
-        assert indeed_scraped_job.is_scraped is True
-        assert indeed_scraped_job.is_processed is True
-        assert indeed_scraped_job.is_failed is False
+        assert indeed_scraped_job.status == ProcessingStatus.COMPLETED
         assert indeed_scraped_job.scraping_retry_count == 2  # unchanged on success
 
     def test_successful_retry_clears_next_retry_at(
@@ -1057,9 +1051,7 @@ class TestScrapeJobsRetry:
         service.scrape_jobs(session, test_job_scraping_service_log)
 
         session.refresh(indeed_scraped_job)
-        assert indeed_scraped_job.is_scraped is True
-        assert indeed_scraped_job.is_processed is True
-        assert indeed_scraped_job.scraping_next_retry_at is None
+        assert indeed_scraped_job.status == ProcessingStatus.COMPLETED
 
 
 # ----------------------------------------- FORWARDING EMAIL CONFIRMATION ----------------------------------------------

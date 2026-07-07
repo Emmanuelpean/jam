@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app import models
+from app.base_models import ProcessingStatus
 from app.config import settings
 from app.job_rating import scraped_job_rating
 from app.job_rating.prompts import Prompts, create_system_prompt_with_profile
@@ -124,25 +125,25 @@ class TestGetUserUnratedScrapedJobs:
         exclusion_filter = test_regular_user.create_scraping_exclusion_filter()
 
         jobs = {
-            # Eligible: processed, scraped and either unrated or with a still-pending rating.
-            "eligible": test_regular_user.create_scraped_job(is_processed=True, is_scraped=True),
-            "pending_rating": test_regular_user.create_scraped_job(is_processed=True, is_scraped=True),
+            # Eligible: completed and either unrated or with a still-pending rating.
+            "eligible": test_regular_user.create_scraped_job(status=ProcessingStatus.COMPLETED),
+            "pending_rating": test_regular_user.create_scraped_job(status=ProcessingStatus.COMPLETED),
             # Excluded, one reason each.
-            "finalised_rating": test_regular_user.create_scraped_job(is_processed=True, is_scraped=True),
-            "not_processed": test_regular_user.create_scraped_job(is_processed=False, is_scraped=True),
-            "not_scraped": test_regular_user.create_scraped_job(is_processed=True, is_scraped=False),
-            "failed": test_regular_user.create_scraped_job(is_processed=True, is_scraped=True, is_failed=True),
-            "inactive": test_regular_user.create_scraped_job(is_processed=True, is_scraped=True, is_active=False),
-            "imported": test_regular_user.create_scraped_job(is_processed=True, is_scraped=True, is_imported=True),
+            "finalised_rating": test_regular_user.create_scraped_job(status=ProcessingStatus.COMPLETED),
+            "not_processed": test_regular_user.create_scraped_job(status=ProcessingStatus.PENDING),
+            "not_scraped": test_regular_user.create_scraped_job(status=ProcessingStatus.FILTERED),
+            "failed": test_regular_user.create_scraped_job(status=ProcessingStatus.FAILED),
+            "inactive": test_regular_user.create_scraped_job(status=ProcessingStatus.COMPLETED, is_active=False),
+            "imported": test_regular_user.create_scraped_job(status=ProcessingStatus.COMPLETED, is_imported=True),
             "filtered": test_regular_user.create_scraped_job(
-                is_processed=True, is_scraped=True, exclusion_filter_id=exclusion_filter.id
+                status=ProcessingStatus.COMPLETED, exclusion_filter_id=exclusion_filter.id
             ),
-            "other_user": test_admin_user.create_scraped_job(is_processed=True, is_scraped=True),
+            "other_user": test_admin_user.create_scraped_job(status=ProcessingStatus.COMPLETED),
         }
 
         # A pending rating keeps the job eligible; a finalised (succeeded) one does not.
         test_regular_user.create_job_rating(scraped_job=jobs["pending_rating"])
-        test_regular_user.create_job_rating(scraped_job=jobs["finalised_rating"], is_success=True)
+        test_regular_user.create_job_rating(scraped_job=jobs["finalised_rating"], status=ProcessingStatus.COMPLETED)
 
         return jobs
 
@@ -163,9 +164,7 @@ class TestGetUserUnratedScrapedJobs:
         assert len(jobs) > 0
         for job in jobs:
             assert job.owner_id == test_regular_user.id
-            assert job.is_processed is True
-            assert job.is_scraped is True
-            assert job.is_failed is False
+            assert job.status == ProcessingStatus.COMPLETED
             assert job.is_active is True
             assert job.is_imported is False
             assert job.exclusion_filter is None
@@ -203,9 +202,7 @@ class TestScrapedJobRaterRateJob(BaseTest):
     def make_scraped_job(user: FixtureUser, description: str) -> models.ScrapedJob:
         """Create a scraped, processed job with the given description, ready to be rated."""
         return user.create_scraped_job(
-            is_scraped=True,
-            is_processed=True,
-            is_failed=False,
+            status=ProcessingStatus.COMPLETED,
             title="Test Job Title",
             company="Test Company",
             description=description,
@@ -264,7 +261,7 @@ class TestScrapedJobRaterRateJob(BaseTest):
         session.refresh(test_rating_service_log)
         rating = self.get_rating(session, scraped_job)
         assert rating is not None
-        assert rating.is_skipped is True
+        assert rating.status == ProcessingStatus.SKIPPED
         assert "Job description too short" in rating.skip_reason
         assert scraped_job.id in test_rating_service_log.job_skipped_ids
 
@@ -286,7 +283,7 @@ class TestScrapedJobRaterRateJob(BaseTest):
         session.refresh(test_rating_service_log)
         rating = self.get_rating(session, scraped_job)
         assert rating is not None
-        assert rating.is_success is True
+        assert rating.status == ProcessingStatus.COMPLETED
         assert rating.overall_score is not None
         assert rating.job_prompt is not None
         assert scraped_job.id in test_rating_service_log.job_succeeded_ids
@@ -315,10 +312,10 @@ class TestScrapedJobRaterRateJob(BaseTest):
 
         session.refresh(test_rating_service_log)
 
-        # First failure leaves a pending JobRating (is_success None) with a retry scheduled
+        # First failure leaves a PENDING JobRating with a retry scheduled
         rating = self.get_rating(session, scraped_job)
         assert rating is not None
-        assert rating.is_success is None
+        assert rating.status == ProcessingStatus.PENDING
         assert rating.rating_retry_count == 1
         assert rating.rating_next_retry_at is not None
         assert scraped_job.id in test_rating_service_log.job_failed_ids
@@ -361,10 +358,10 @@ class TestScrapedJobRaterRateJob(BaseTest):
 
         session.refresh(scraped_job)
 
-        # The rating fails permanently (is_success False) so the job is no longer re-queried
+        # The rating fails permanently (status FAILED) so the job is no longer re-queried
         rating = self.get_rating(session, scraped_job)
         assert rating is not None
-        assert rating.is_success is False
+        assert rating.status == ProcessingStatus.FAILED
         assert rating.rating_retry_count == settings.rating_max_retry
         assert len(rating.rating_errors) == settings.rating_max_retry
         assert all(e.job_rating_id == rating.id for e in rating.rating_errors)
@@ -388,7 +385,7 @@ class TestScrapedJobRaterRateJob(BaseTest):
 
         rating = self.get_rating(session, scraped_job)
         assert rating is not None
-        assert rating.is_success is True
+        assert rating.status == ProcessingStatus.COMPLETED
         assert rating.notes is not None and len(rating.notes) > 0
         assert any("description" in note.lower() for note in rating.notes)
 
@@ -446,8 +443,8 @@ class TestScrapedJobRaterProcessUser(BaseTest):
         """Test that found jobs for the user are recorded in job_found_ids."""
 
         test_regular_user.create_user_qualification(experience="QA")
-        test_regular_user.create_scraped_job(is_processed=True, is_scraped=True)
-        test_regular_user.create_scraped_job(is_processed=True, is_scraped=True)
+        test_regular_user.create_scraped_job(status=ProcessingStatus.COMPLETED)
+        test_regular_user.create_scraped_job(status=ProcessingStatus.COMPLETED)
         expected_jobs = get_user_unrated_scraped_jobs(session, test_regular_user.id)
         assert len(expected_jobs) > 0
 
@@ -464,8 +461,7 @@ class TestScoreScrapedJobs(BaseTest):
     def create_rateable_job(user: FixtureUser, **kwargs) -> models.ScrapedJob:
         """Create a scraped, processed job eligible for rating, overriding fields via kwargs."""
         data = {
-            "is_processed": True,
-            "is_scraped": True,
+            "status": ProcessingStatus.COMPLETED,
             "title": "Test Job Title",
             "company": "Test Company",
             "description": "A" * 100,
@@ -498,7 +494,7 @@ class TestScoreScrapedJobs(BaseTest):
         job_ratings = session.query(models.JobRating).all()
         assert len(job_ratings) == 6
         for job_rating in job_ratings:
-            assert job_rating.is_success is True or job_rating.is_skipped is True
+            assert job_rating.status == ProcessingStatus.COMPLETED or job_rating.status == ProcessingStatus.SKIPPED
         ratings_by_job = {job_rating.scraped_job_id: job_rating for job_rating in job_ratings}
 
         service_log = session.query(models.JobRatingServiceLog).first()
@@ -528,11 +524,11 @@ class TestScoreScrapedJobs(BaseTest):
 
         # A closed job and a job past its deadline are both skipped as closed
         for job in (closed_job, past_deadline_job):
-            assert ratings_by_job[job.id].is_skipped is True
+            assert ratings_by_job[job.id].status == ProcessingStatus.SKIPPED
             assert "is closed" in ratings_by_job[job.id].skip_reason.lower()
 
         # A job with an upcoming deadline is not skipped
-        assert ratings_by_job[upcoming_job.id].is_skipped is False
+        assert ratings_by_job[upcoming_job.id].status == ProcessingStatus.COMPLETED
 
     def test_critical_error_is_recorded_as_error(self, session: Session, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that an unexpected error in the rating workflow is recorded as a unified Error."""

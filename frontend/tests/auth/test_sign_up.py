@@ -1,6 +1,7 @@
 """Tests for the sign-up page."""
 
-from base_test import BaseTest
+from fixtures.users import FixtureUser
+from frontend.tests.frontend_base_test import BaseTest
 
 
 class TestSignUp(BaseTest):
@@ -43,14 +44,14 @@ class TestSignUp(BaseTest):
             "Account created! Please check your email inbox to verify your account before logging in."
         )
 
-    def test_signup_existing_email(self, test_users) -> None:
+    def test_signup_existing_email(self, test_regular_user: FixtureUser) -> None:
         """Test signup with an already registered email"""
 
         self.auth_utils.go_to_register()
-        test_email, test_password = test_users[0].email, "Test123!"
+        test_email, test_password = test_regular_user.email, "Test123!"
 
         # Step 1 — credentials
-        self.auth_utils.set_email(test_users[0].email)
+        self.auth_utils.set_email(test_regular_user.email)
         self.auth_utils.set_password(test_password)
         self.auth_utils.set_confirm_password(test_password)
         self.auth_utils.confirm()
@@ -220,7 +221,7 @@ class TestSignUp(BaseTest):
     def test_signup_limited(self) -> None:
         """Test signup when registrations are limited"""
 
-        self._create_setting(name="allowlist", value="")
+        self.create_setting(self.db, name="allowlist", value="")
         self.auth_utils.go_to_register()
         test_email, test_password = "test@test.com", "Test123!"
 

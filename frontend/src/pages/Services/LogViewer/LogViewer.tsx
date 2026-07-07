@@ -1,5 +1,5 @@
 import React, { JSX, useCallback, useEffect, useRef, useState } from "react";
-import { BaseServiceApi, LogResponse, ServiceStatus } from "../../../services/api/Services";
+import { LogProvider, LogResponse } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../components/Spinner/Spinner";
 import "./LogViewer.scss";
@@ -10,9 +10,10 @@ import { ApiResponse } from "../../../services/api/Base";
  * expands the viewer and scrolls it into view once the expand animation has finished.
  */
 export const useLogViewerToggle = (
-	logViewerId: string
+	logViewerId: string,
+	initialExpanded: boolean = false
 ): { expanded: boolean; setExpanded: (value: boolean) => void; open: () => void } => {
-	const [expanded, setExpanded] = useState<boolean>(false);
+	const [expanded, setExpanded] = useState<boolean>(initialExpanded);
 	const open = useCallback((): void => {
 		setExpanded(true);
 		// Wait for the expand animation (0.25s) so the page has grown enough to scroll
@@ -58,23 +59,15 @@ const classifyLogLines = (lines: string[]): ClassifiedLine[] => {
 };
 
 interface LogViewerProps {
-	api: BaseServiceApi;
+	api: LogProvider;
 	isServiceRunning: boolean;
-	serviceStatus: ServiceStatus | null;
 	id?: string;
 	/** Controlled expansion. When provided, internal state is bypassed. */
 	expanded?: boolean;
 	onExpandedChange?: (expanded: boolean) => void;
 }
 
-const LogViewer = ({
-	api,
-	isServiceRunning,
-	serviceStatus,
-	id,
-	expanded,
-	onExpandedChange,
-}: LogViewerProps): JSX.Element => {
+const LogViewer = ({ api, isServiceRunning, id, expanded, onExpandedChange }: LogViewerProps): JSX.Element => {
 	const { token } = useAuth();
 	const [logs, setLogs] = useState<LogResponse | null>(null);
 	const [internalExpanded, setInternalExpanded] = useState<boolean>(false);
@@ -139,8 +132,8 @@ const LogViewer = ({
 					<i className="bi bi-chevron-right" />
 				</span>
 				View Log File
-				{logs && serviceStatus?.last_log && (
-					<span className="log-preview"> - {serviceStatus?.last_log}</span>
+				{logs && logs.lines.length > 0 && (
+					<span className="log-preview"> - {logs.lines[logs.lines.length - 1]}</span>
 				)}
 			</button>
 

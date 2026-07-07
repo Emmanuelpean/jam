@@ -5,14 +5,26 @@ import LogViewer, { useLogViewerToggle } from "./LogViewer/LogViewer";
 import { LastLogBar } from "./LogViewer/LastLogBar";
 import { LatestRunProgress } from "./JobScrapingDashboard/LatestRunProgress";
 import { RunHistoryChart } from "./JobScrapingDashboard/RunHistoryChart";
-import { ErrorSummaryCard } from "./JobScrapingDashboard/ErrorSummaryCard";
+import { ErrorSummaryCard } from "./ErrorSummaryCard";
 import { useJobScraperServiceLogs } from "../../hooks/useJobScraperServiceLogs";
-import { useJobScraperErrors } from "../../hooks/useJobScraperErrors";
 import { useServiceErrors } from "../../hooks/useServiceErrors";
 import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
 import { DateRange } from "../../utils/TimeUtils";
 import { TimeFilterPopover } from "../../components/TimeSelection/TimeFilterPopover";
+import { JobScrapingServiceLogData, PlatformStat } from "../../services/schemas/Services";
 import "./Service.scss";
+
+const buildPlatformByJobId = (logs: JobScrapingServiceLogData[] | null): Record<number, string | null> => {
+	const map: Record<number, string | null> = {};
+	(logs || []).forEach((log: JobScrapingServiceLogData): void => {
+		log.platform_stats.forEach((stat: PlatformStat): void => {
+			stat.job_scrape_failed_ids.forEach((jobId: number): void => {
+				map[jobId] = stat.name;
+			});
+		});
+	});
+	return map;
+};
 
 const JobScrapingPage = (): JSX.Element => {
 	const { serviceStatus, statusError } = useServiceRunnerStatus(jobScraperServiceApi);
@@ -21,6 +33,7 @@ const JobScrapingPage = (): JSX.Element => {
 	// don't fire a throwaway fetch for a placeholder (today-only) window first.
 	const [dateRange, setDateRange] = useState<DateRange | null>(null);
 	const [selectedPlatform, setSelectedPlatform] = useState("all");
+	const [showAcknowledged, setShowAcknowledged] = useState(false);
 	const {
 		expanded: logsExpanded,
 		setExpanded: setLogsExpanded,
@@ -33,29 +46,26 @@ const JobScrapingPage = (): JSX.Element => {
 		platformOptions,
 		serviceLogError,
 		loading: logsLoading,
-	} = useJobScraperServiceLogs(serviceStatus?.service_running || false, dateRange);
+	} = useJobScraperServiceLogs(serviceStatus?.is_running || false, dateRange);
 
 	const {
-		scraperErrors: latestScraperErrors,
-		error: lastestScraperRequestError,
-		loading: latestScraperErrorsLoading,
-	} = useJobScraperErrors(latestServiceLog, selectedPlatform);
+		errors: currentErrors,
+		requestError: currentErrorsRequestError,
+		loading: currentErrorsLoading,
+		acknowledge: acknowledgeCurrent,
+	} = useServiceErrors(latestServiceLog, "job_email_scraping_service_log_id", showAcknowledged);
 	const {
-		scraperErrors: previousScraperErrors,
-		error: previousScraperRequestError,
-		loading: previousScraperErrorsLoading,
-	} = useJobScraperErrors(previousServiceLogs, selectedPlatform, true);
-	const { serviceErrors: lastServiceErrors, loading: lastServiceErrorsLoading } = useServiceErrors(latestServiceLog);
-	const { serviceErrors: previousServiceErrors, loading: previousServiceErrorsLoading } = useServiceErrors(
-		previousServiceLogs,
-		true
-	);
+		errors: previousErrors,
+		requestError: previousErrorsRequestError,
+		loading: previousErrorsLoading,
+		acknowledge: acknowledgePrevious,
+	} = useServiceErrors(previousServiceLogs, "job_email_scraping_service_log_id", showAcknowledged, true);
 
 	const collectedErrors = [
 		{ key: "status", label: "Service status", value: statusError },
 		{ key: "serviceLogs", label: "Service logs", value: serviceLogError },
-		{ key: "lastestScraperRequestError", label: "Last rating error", value: lastestScraperRequestError },
-		{ key: "previousScraperRequestError", label: "Latest rating error", value: previousScraperRequestError },
+		{ key: "currentErrorsRequestError", label: "Latest run errors", value: currentErrorsRequestError },
+		{ key: "previousErrorsRequestError", label: "Previous run errors", value: previousErrorsRequestError },
 	].filter((e) => e.value);
 
 	return (
@@ -85,13 +95,12 @@ const JobScrapingPage = (): JSX.Element => {
 				</div>
 			</div>
 
-			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.service_running || false} />
+			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.is_running || false} />
 
 			<LogViewer
 				id="scraper-log-viewer"
 				api={jobScraperServiceApi}
-				isServiceRunning={serviceStatus?.service_running || false}
-				serviceStatus={serviceStatus}
+				isServiceRunning={serviceStatus?.is_running || false}
 				expanded={logsExpanded}
 				onExpandedChange={setLogsExpanded}
 			/>
@@ -101,24 +110,31 @@ const JobScrapingPage = (): JSX.Element => {
 				selectedPlatform={selectedPlatform}
 				platformOptions={platformOptions}
 				onPlatformChange={setSelectedPlatform}
-				isRunning={serviceStatus?.service_running || false}
+				isRunning={serviceStatus?.is_running || false}
 				loading={logsLoading}
 			/>
 
 			<ErrorSummaryCard
-				latestServiceLogs={previousServiceLogs}
-				lastScraperErrors={latestScraperErrors}
-				latestScraperErrors={previousScraperErrors}
-				lastServiceErrors={lastServiceErrors}
-				latestServiceErrors={previousServiceErrors}
-				isRunning={serviceStatus?.service_running || false}
-				loading={
-					logsLoading ||
-					latestScraperErrorsLoading ||
-					previousScraperErrorsLoading ||
-					lastServiceErrorsLoading ||
-					previousServiceErrorsLoading
-				}
+				current={{
+					errors: currentErrors,
+					acknowledge: acknowledgeCurrent,
+					platformByJobId: buildPlatformByJobId(latestServiceLog ? [latestServiceLog] : null),
+				}}
+				previous={{
+					errors: previousErrors,
+					acknowledge: acknowledgePrevious,
+					platformByJobId: buildPlatformByJobId(previousServiceLogs),
+				}}
+				perJob={{
+					title: "Scraping Errors",
+					discriminatorKey: "scraped_job_id",
+					emptyText: "No scrape errors",
+					showJobs: true,
+				}}
+				showAcknowledged={showAcknowledged}
+				onToggleAcknowledged={setShowAcknowledged}
+				isRunning={serviceStatus?.is_running || false}
+				loading={logsLoading || currentErrorsLoading || previousErrorsLoading}
 			/>
 		</div>
 	);

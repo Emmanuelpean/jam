@@ -8,7 +8,7 @@ import datetime as dt
 
 import pytest
 
-from base_test import BaseTest, models
+from frontend_base_test import BaseTest, models
 
 # Each entry: (cdp_timezone_id, utc_offset_hours, utc_offset_minutes)
 # Dates chosen to avoid DST transitions (2025-03-05):
@@ -36,9 +36,8 @@ class TestJobApplicationUpdateTimezone(BaseTest):
     def setup_function(self, request) -> None:
         """Setup for each test function."""
 
-        test_jobs = request.getfixturevalue("test_jobs")
-        # Pick the first job owned by this user
-        self.test_job = next(j for j in test_jobs if j.owner_id == self.user.id)
+        company = self.user.create_company()
+        self.test_job = self.user.create_job(company_id=company.id)
         self.login()
         self.go_to_page(self.page_url)
 

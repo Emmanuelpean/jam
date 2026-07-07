@@ -5,6 +5,7 @@ from starlette import status
 from starlette.testclient import TestClient
 
 from app import models
+from base_models import ProcessingStatus
 from tests.base_test import BaseTest
 from tests.fixtures.users import FixtureUser
 
@@ -18,14 +19,14 @@ def _create_tour_entities(user: FixtureUser, session: Session) -> dict:
     service_log = BaseTest.create_email_scraping_service_log(session, is_tour=True)
     email = user.create_job_email(service_log=service_log, is_tour=True)
     scraped_job = user.create_scraped_job(
-        service_log=service_log, is_processed=True, is_scraped=True, title="Tour Job", is_tour=True
+        service_log=service_log, status=ProcessingStatus.COMPLETED, title="Tour Job", is_tour=True
     )
     user_qualification = user.create_user_qualification(experience="tour experience", is_tour=True)
     job_rating = user.create_job_rating(
         scraped_job=scraped_job,
         user_qualification=user_qualification,
         llm_model="tour-demo",
-        is_success=True,
+        status=ProcessingStatus.COMPLETED,
         overall_score=8,
         is_tour=True,
     )
@@ -54,7 +55,7 @@ def _create_tour_entities(user: FixtureUser, session: Session) -> dict:
 def _create_non_tour_entities(user: FixtureUser) -> dict:
     """Create is_tour=False entities to verify they survive clear-all."""
 
-    scraped_job = user.create_scraped_job(is_processed=True, is_scraped=True, title="Real Job", is_tour=False)
+    scraped_job = user.create_scraped_job(status=ProcessingStatus.COMPLETED, title="Real Job", is_tour=False)
     company = user.create_company(name=f"Real Company {user.id}", is_tour=False)
     return {"scraped_job": scraped_job, "company": company}
 

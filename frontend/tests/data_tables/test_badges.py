@@ -1,19 +1,22 @@
 """Tests for the scraped jobs."""
 
-from base_test import BaseTest
+import time
+
+from frontend_base_test import BaseTest
 
 
 class TestBadge(BaseTest):
 
-    user_index = 0
     page_url = "jobs"
 
     def setup_function(self, request) -> None:
         """Setup for each test function."""
 
-        request.getfixturevalue("test_jobs")
+        company = self.user.create_company()
+        self.user.create_job(company_id=company.id)
         self.login()
         self.job_table_utils.table_row_click(1)
+        time.sleep(0.5)
 
     def test_view_badge_details(self) -> None:
         """Test viewing badge details from the job table."""

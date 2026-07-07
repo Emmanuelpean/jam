@@ -20,7 +20,7 @@ _LAYOUT_DEFAULTS: dict[str, dict] = {
 
 class DashboardTestBase(BaseTest):
     """Extends BaseTest with helpers for dashboard page reload and layout setup.
-    Data-creation helpers live on BaseTest. Subclasses must still set `user_index`
+    Data-creation helpers live on BaseTest. Subclasses must still set `user_fixture`
     and call `self.login()` in `setup_function`."""
 
     page_url = "dashboard"

@@ -24,15 +24,14 @@ JAM entities seeded at tour start (all is_tour=True):
 """
 
 from app import models
-from base_test import BaseTest
-from select_utils import Select
-
+from frontend_base_test import BaseTest
+from helpers.select_utils import Select
 
 TOUR_ID = "log-application"
 
 
 class TestLogApplicationTour(BaseTest):
-    user_index = 0
+    user_fixture = "test_regular_user"
     page_url = "jobs"
 
     def setup_function(self, request) -> None:
@@ -150,7 +149,7 @@ class TestLogApplicationTour(BaseTest):
         A pre-existing aggregator must not appear in the application_aggregator_id
         dropdown during the tour. After skipping, the aggregator is unaffected.
         """
-        pre_existing = self._make_aggregator(name="Pre-Existing Board", url="https://www.pre-existing.io")
+        pre_existing = self.user.create_aggregator(name="Pre-Existing Board", url="https://www.pre-existing.io")
         initial_aggregators = self.db.query(models.Aggregator).filter_by(owner_id=self.user.id).count()
 
         self._start_and_open_edit_form()

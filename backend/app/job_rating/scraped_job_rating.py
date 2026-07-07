@@ -7,6 +7,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
+from app.base_models import ProcessingStatus
 from app.config import settings
 from app.database import db_session
 from app.job_rating.claude import MODEL as CLAUDE_MODEL, claude_query
@@ -71,9 +72,7 @@ def get_user_unrated_scraped_jobs(db: Session, user_id: int) -> list[models.Scra
         db.query(models.ScrapedJob)
         .outerjoin(models.JobRating, models.JobRating.scraped_job_id == models.ScrapedJob.id)
         .filter(models.ScrapedJob.owner_id == user_id)
-        .filter(models.ScrapedJob.is_processed.is_(True))
-        .filter(models.ScrapedJob.is_scraped.is_(True))
-        .filter(models.ScrapedJob.is_failed.is_(False))
+        .filter(models.ScrapedJob.status == ProcessingStatus.COMPLETED)
         .filter(models.ScrapedJob.is_active.is_(True))
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.exclusion_filter == None)
@@ -239,7 +238,7 @@ class ScrapedJobRatingService(BaseService[models.JobRatingServiceLog]):
             )
 
         if skip_reason:
-            job_rating.is_skipped = True
+            job_rating.status = ProcessingStatus.SKIPPED
             job_rating.skip_reason = skip_reason
             service_log.job_skipped_ids = service_log.job_skipped_ids + [scraped_job.id]
             db.commit()
@@ -290,7 +289,7 @@ class ScrapedJobRatingService(BaseService[models.JobRatingServiceLog]):
             job_rating.interest_score = score["interest_match"]
             job_rating.feedback = score["explanation"]
             job_rating.job_prompt = combined_system_prompt + "\n\n" + job_prompt
-            job_rating.is_success = True
+            job_rating.status = ProcessingStatus.COMPLETED
             job_rating.rating_next_retry_at = None
             service_log.job_succeeded_ids = service_log.job_succeeded_ids + [scraped_job.id]
             db.commit()
@@ -318,7 +317,7 @@ class ScrapedJobRatingService(BaseService[models.JobRatingServiceLog]):
                 self.logger.info(
                     f"Job ID {scraped_job.id} rating permanently failed after {settings.rating_max_retry} attempts"
                 )
-                job_rating.is_success = False
+                job_rating.status = ProcessingStatus.FAILED
             db.commit()
 
 
