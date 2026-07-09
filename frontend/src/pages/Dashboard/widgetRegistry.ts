@@ -167,8 +167,7 @@ export interface WidgetInstance {
 	config: WidgetConfig;
 }
 
-export interface DashboardLayoutDataV3 {
-	version: 3;
+export interface DashboardLayoutData {
 	widgets: WidgetInstance[];
 	layout: LayoutItem[];
 }
@@ -640,7 +639,7 @@ export function isWidgetPremium(config: WidgetConfig): boolean {
 	return variant?.premiumOnly ?? false;
 }
 
-function filterPremium(data: DashboardLayoutDataV3, isPremium: boolean): DashboardLayoutDataV3 {
+function filterPremium(data: DashboardLayoutData, isPremium: boolean): DashboardLayoutData {
 	if (isPremium) return data;
 	const filteredWidgets = data.widgets.filter((w) => !isWidgetPremium(w.config));
 	const widgetIds = new Set(filteredWidgets.map((w) => w.id));
@@ -653,7 +652,7 @@ function filterPremium(data: DashboardLayoutDataV3, isPremium: boolean): Dashboa
 
 // --- Default layout ---
 
-export function getDefaultLayout(isPremium: boolean): DashboardLayoutDataV3 {
+export function getDefaultLayout(isPremium: boolean): DashboardLayoutData {
 	const defaultWidgets: { config: WidgetConfig; oldId: string }[] = [
 		{ config: { type: "metric", metric: "total_jobs" }, oldId: "stat-total-jobs" },
 		{ config: { type: "metric", metric: "applications" }, oldId: "stat-applications" },
@@ -679,17 +678,17 @@ export function getDefaultLayout(isPremium: boolean): DashboardLayoutDataV3 {
 		}
 	}
 
-	return { version: 3, widgets, layout };
+	return { widgets, layout };
 }
 
 // --- Parse layout data ---
 
-export function parseLayoutData(data: string | null, isPremium: boolean): DashboardLayoutDataV3 {
+export function parseLayoutData(data: string | null, isPremium: boolean): DashboardLayoutData {
 	if (!data) return getDefaultLayout(isPremium);
 	try {
 		const parsed = JSON.parse(data) as Record<string, unknown>;
-		if (parsed.version === 3 && parsed.widgets && parsed.layout) {
-			return filterPremium(parsed as unknown as DashboardLayoutDataV3, isPremium);
+		if (parsed.widgets && parsed.layout) {
+			return filterPremium(parsed as unknown as DashboardLayoutData, isPremium);
 		}
 		return getDefaultLayout(isPremium);
 	} catch {

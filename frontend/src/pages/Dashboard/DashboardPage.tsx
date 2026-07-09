@@ -26,7 +26,7 @@ import { getEntityIcon, getTableIcon } from "../../components/rendering/view/Ico
 import PageHeader from "../PageHeader/PageHeader";
 import {
 	buildWidgetSettings,
-	DashboardLayoutDataV3,
+	DashboardLayoutData,
 	generateWidgetId,
 	getDefaultLayout,
 	getDefaultLayoutForConfig,
@@ -151,10 +151,10 @@ const Dashboard: React.FC = () => {
 
 	const isPremium = currentUser?.premium.is_active ?? false;
 
-	const [layoutData, setLayoutData] = useState<DashboardLayoutDataV3>(() =>
+	const [layoutData, setLayoutData] = useState<DashboardLayoutData>(() =>
 		parseLayoutData(currentUser?.preferences.dashboard_layout ?? null, isPremium)
 	);
-	const savedLayoutRef = useRef<DashboardLayoutDataV3>(layoutData);
+	const savedLayoutRef = useRef<DashboardLayoutData>(layoutData);
 	const layoutInitializedRef = useRef(false);
 
 	useEffect(() => {
@@ -187,7 +187,7 @@ const Dashboard: React.FC = () => {
 	const handleLayoutChange = (newLayout: Layout, allLayouts: ResponsiveLayouts): void => {
 		if (!isEditMode) return;
 		setLayoutData(
-			(prev: DashboardLayoutDataV3): DashboardLayoutDataV3 => ({
+			(prev: DashboardLayoutData): DashboardLayoutData => ({
 				...prev,
 				layout: (allLayouts.lg ?? newLayout) as LayoutItem[],
 			})
@@ -224,7 +224,7 @@ const Dashboard: React.FC = () => {
 	const handleAddWidget = (config: WidgetConfig): void => {
 		const id: string = generateWidgetId();
 		const def = getDefaultLayoutForConfig(config);
-		setLayoutData((prev: DashboardLayoutDataV3): DashboardLayoutDataV3 => {
+		setLayoutData((prev: DashboardLayoutData): DashboardLayoutData => {
 			const { x, y } = findFirstFit(prev.layout, def.w, def.h, 12);
 			return {
 				...prev,
@@ -240,7 +240,7 @@ const Dashboard: React.FC = () => {
 			message: "Are you sure you want to remove this widget?",
 			onSuccess: async (): Promise<void> =>
 				setLayoutData(
-					(prev: DashboardLayoutDataV3): DashboardLayoutDataV3 => ({
+					(prev: DashboardLayoutData): DashboardLayoutData => ({
 						...prev,
 						widgets: prev.widgets.filter((w: WidgetInstance): boolean => w.id !== widgetId),
 						layout: prev.layout.filter((l: LayoutItem): boolean => l.i !== widgetId),
@@ -251,7 +251,7 @@ const Dashboard: React.FC = () => {
 
 	const handleUpdateWidgetConfig = (widgetId: string, newConfig: WidgetConfig): void => {
 		setLayoutData(
-			(prev: DashboardLayoutDataV3): DashboardLayoutDataV3 => ({
+			(prev: DashboardLayoutData): DashboardLayoutData => ({
 				...prev,
 				widgets: prev.widgets.map(
 					(w: WidgetInstance): WidgetInstance => (w.id === widgetId ? { ...w, config: newConfig } : w)
