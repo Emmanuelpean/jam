@@ -1,5 +1,5 @@
 from tests.fixtures.users import FixtureUser
-from frontend.tests.frontend_base_test import BaseTest
+from frontend_base_test import BaseTest
 
 
 class TestDemoLogin(BaseTest):

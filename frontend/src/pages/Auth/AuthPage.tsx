@@ -1013,7 +1013,7 @@ function AuthForm(): JSX.Element {
 							className="try-app-btn"
 							onClick={handleDemoLogin}
 							loading={demoLoading}
-							disabled={buttonDisabled || hasFieldErrors}
+							disabled={buttonDisabled || hasFieldErrors || !config}
 							defaultText="Try JAM with Demo Account"
 							loadingText="Loading demo..."
 							defaultIcon="bi bi-play-circle"

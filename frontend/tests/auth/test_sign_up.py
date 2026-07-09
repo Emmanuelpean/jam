@@ -1,7 +1,7 @@
 """Tests for the sign-up page."""
 
 from tests.fixtures.users import FixtureUser
-from frontend.tests.frontend_base_test import BaseTest
+from frontend_base_test import BaseTest
 
 
 class TestSignUp(BaseTest):

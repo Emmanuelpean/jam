@@ -4,7 +4,7 @@ import datetime as dt
 import json
 import time
 
-from base_models import ProcessingStatus
+from app.base_models import ProcessingStatus
 from helpers.dashboard_utils import DashboardUtils
 
 NOW = dt.datetime.now(dt.timezone.utc)
