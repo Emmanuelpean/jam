@@ -30,14 +30,14 @@ class TestDemoLogin(BaseTest):
         # Click logout
         self.close_modal()
         self.get_element("logout-btn").click()
-        self.logout_modal.cancel_button.click()
+        self.logout_modal_utils.cancel_button.click()
 
         # Still on dashboard, banner still visible
         assert self.check_element_exists("demo-banner")
 
         # Fully log out
         self.get_element("logout-btn").click()
-        self.logout_modal.confirm_button.click()
+        self.logout_modal_utils.confirm_button.click()
 
         self.auth_utils.wait_for_login()
 

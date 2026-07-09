@@ -375,3 +375,13 @@ class SeleniumUtils(object):
         if not attribute_value:
             raise AssertionError(f"Attribute '{attribute}' not found on element: {element}")
         return attribute_value
+
+    def wait_for_windows(self, n: int) -> None:
+        """Wait for the given number of browser windows to be present"""
+
+        self.wait.until(ec.number_of_windows_to_be(n))
+
+    def switch_to_window(self, index: int) -> None:
+        """Switch to the browser window with the given index"""
+
+        self.driver.switch_to.window(self.driver.window_handles[index])

@@ -2,11 +2,11 @@
 
 from selenium.webdriver.remote.webelement import WebElement
 
-from helpers.base_utils import BaseUtils
+from helpers.jam_test_utils import JamTestUtils
 from helpers.select_utils import Select
 
 
-class FollowUpEmailModalUtils(BaseUtils):
+class FollowUpEmailModalUtils(JamTestUtils):
     """Utilities for the Follow-Up Email Modal."""
 
     def __init__(self, **kwargs):

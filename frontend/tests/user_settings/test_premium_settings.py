@@ -177,7 +177,7 @@ class TestPremiumSettingsPage(BaseTest):
         self.user_settings_utils.continue_delete_button.click()
         self.user_settings_utils.final_delete_button.click()
         self.wait_for_page("login")
-        self.assert_toast_message("Your account has been permanently deleted.")
+        self.toast_utils.assert_toast_message("Your account has been permanently deleted.")
 
 
 class TestForwardingConfirmationLinks(BaseTest):
@@ -212,7 +212,7 @@ class TestForwardingConfirmationLinks(BaseTest):
         self.premium_settings_utils.dismiss_confirmation_link_alert()
         self.premium_settings_utils.confirmation_link_confirm_button.click()
 
-        self.assert_toast_message("Confirmation link marked as used")
+        self.toast_utils.assert_toast_message("Confirmation link marked as used")
 
         # Verify in database
         self.db.expire_all()

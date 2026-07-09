@@ -1,9 +1,7 @@
 """Test the main pages of JAM"""
 
-from selenium.webdriver.common.by import By
-
 from app import models
-from helpers.table_page import BaseTablePage
+from helpers.table_page_utils import BaseTablePage
 
 
 class TestSettingsPage(BaseTablePage):
@@ -20,20 +18,13 @@ class TestSettingsPage(BaseTablePage):
 
     def setup_function(self, request) -> None:
         super().setup_function(request)
-        self._open_settings_modal()
-
-    def _open_settings_modal(self) -> None:
-        """Open the settings table modal from the admin dashboard."""
-
-        card = self.get_element("admin-card-settings", enabled=False)
-        card.find_element(By.CLASS_NAME, "card-title").click()
-        self.get_element("admin-page-modal", enabled=False)
+        self.admin_page_utils.open_card("admin-card-settings")
 
     def reload_page(self) -> None:
         """Reload the admin page and reopen the settings modal so new entries appear."""
 
         self.refresh()
-        self._open_settings_modal()
+        self.admin_page_utils.open_card("admin-card-settings")
 
     def create_entries(self, count: int = 1) -> list[models.Setting]:
         """Create setting entries"""

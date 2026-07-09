@@ -21,21 +21,6 @@ frontend_path = os.path.abspath(os.path.join(__file__, "../.."))
 from app.config import settings
 from tests.fixtures.database import truncate_all_tables
 
-# On Windows, resolving "localhost" tries IPv6 (::1) first and stalls ~2s per connection before
-# falling back to IPv4. Selenium spawns a fresh chromedriver per test and talks to it over
-# "localhost", so that stall is paid on every driver startup and shutdown. Force IPv4 instead.
-from selenium.webdriver.common import service as _selenium_service
-from selenium.webdriver.common import utils as _selenium_utils
-
-_orig_is_url_connectable = _selenium_utils.is_url_connectable
-_selenium_utils.is_url_connectable = lambda port, host="127.0.0.1", scheme="http": _orig_is_url_connectable(
-    port, host, scheme
-)
-_selenium_service.Service.service_url = property(
-    lambda self: f"http://{_selenium_utils.join_host_port('127.0.0.1', self.port)}"
-)
-
-
 pytest_plugins = [
     "tests.fixtures.database",
     "tests.fixtures.clients",
@@ -171,7 +156,7 @@ def frontend_url(worker_id: str) -> str:
     else:
         worker_num = int(worker_id.replace("gw", ""))
         port = 3100 + worker_num
-    return f"http://127.0.0.1:{port}"
+    return f"http://localhost:{port}"
 
 
 @pytest.fixture(scope="session")
@@ -242,12 +227,13 @@ def test_backend_server(
             stdout=log_out,
             stderr=log_err,
             text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
         )
 
         print(f"Backend process started with PID: {process.pid} on port {port}")
 
         # Wait for server to start
-        api_url = f"http://127.0.0.1:{port}"
+        api_url = f"http://localhost:{port}"
         print(f"Waiting for backend server to be ready at {api_url}...")
 
         for attempt in range(30):
@@ -346,20 +332,20 @@ def test_frontend_server(
     # Start the frontend server
     print("Starting frontend server subprocess...")
     process = subprocess.Popen(
-        f'"{npm_cmd}" start -- --port {port} --host 127.0.0.1',
+        f'"{npm_cmd}" start -- --port {port} --host localhost',
         cwd=frontend_path,
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         shell=True,
         text=True,
-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
+        creationflags=(subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0),
     )
 
     print(f"Frontend process started with PID: {process.pid}")
 
     # Wait for frontend server to start
-    frontend_url = f"http://127.0.0.1:{port}"
+    frontend_url = f"http://localhost:{port}"
     print(f"Waiting for frontend server at {frontend_url}...")
     print("This will take a few seconds for Vite to start...")
 

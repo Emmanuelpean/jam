@@ -5,10 +5,8 @@ wrinkle is that `password` is an add-only field, so the three tests that fill th
 shared `test_data` into an *edit* form are overridden to avoid it.
 """
 
-from selenium.webdriver.common.by import By
-
 from app import models
-from helpers.table_page import BaseTablePage
+from helpers.table_page_utils import BaseTablePage
 
 
 class TestUsersPage(BaseTablePage):
@@ -27,20 +25,13 @@ class TestUsersPage(BaseTablePage):
 
     def setup_function(self, request) -> None:
         super().setup_function(request)
-        self._open_users_modal()
-
-    def _open_users_modal(self) -> None:
-        """Open the users table modal from the admin dashboard."""
-
-        card = self.get_element("admin-card-users", enabled=False)
-        card.find_element(By.CLASS_NAME, "card-title").click()
-        self.get_element("admin-page-modal", enabled=False)
+        self.admin_page_utils.open_card("admin-card-users")
 
     def reload_page(self) -> None:
         """Reload the admin page and reopen the users modal so new entries appear."""
 
         self.refresh()
-        self._open_users_modal()
+        self.admin_page_utils.open_card("admin-card-users")
 
     def create_entries(self, count: int = 1) -> list[models.User]:
         """Create user entries (distinct from the logged-in admin) for the CRUD tests."""

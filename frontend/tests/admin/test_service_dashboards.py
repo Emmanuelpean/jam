@@ -14,132 +14,89 @@ These tests cover:
 5. Proper display of critical, service, scraping and rating errors
 """
 
-from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
 
-from base_test import BaseTest
+from frontend_base_test import BaseTest
 
 
 class ServiceDashboardBase(BaseTest):
     """Shared helpers for service dashboard tests."""
 
-    user_index = 1  # admin user required for the admin dashboard
+    user_fixture = "test_admin_user"
     page_url = "admin"
-
-    def _open_modal(self, card_id: str) -> None:
-        """Open a service dashboard modal by clicking its admin card."""
-
-        # Click the title (top of the card) to avoid the sparkline hover overlay.
-        card = self.get_element(card_id, enabled=False)
-        card.find_element(By.CLASS_NAME, "card-title").click()
-        self.get_element("admin-page-modal", enabled=False)
-
-    def _open_scraping(self) -> None:
-        self._open_modal("admin-card-job-scraping")
-
-    def _open_rating(self) -> None:
-        self._open_modal("admin-card-job-rating")
-
-    def _open_status_control(self) -> None:
-        """Open the status-control popover from the modal header."""
-
-        self.get_element("service-status-icons", selector=By.CLASS_NAME).click()
-
-    def _expand_log_viewer(self) -> None:
-        self.get_element("log-toggle", selector=By.CLASS_NAME).click()
-
-    def _toggle_error_view(self) -> None:
-        self.get_element("errorViewToggle").click()
-
-    def _assert_log_viewer_toggles(self) -> None:
-        """The log viewer is collapsed by default and expands on click.
-
-        The viewer is always in the DOM; the wrapper's `open` class reflects whether
-        it is expanded (it collapses via a CSS grid row, not by unmounting)."""
-
-        wrapper = self.get_element("log-viewer-wrapper", selector=By.CLASS_NAME, enabled=False)
-        assert "open" not in wrapper.get_attribute("class")
-        self._expand_log_viewer()
-        self.wait.until(lambda d: "open" in d.find_element(By.CLASS_NAME, "log-viewer-wrapper").get_attribute("class"))
-
-    def _assert_error_view_toggles(self) -> None:
-        """The error view toggle defaults unchecked and flips on click."""
-
-        checkbox = self.get_element("errorViewToggle")
-        assert not checkbox.is_selected()
-        self._toggle_error_view()
-        assert checkbox.is_selected()
-        self._toggle_error_view()
-        assert not checkbox.is_selected()
 
 
 class TestJobScrapingDashboard(ServiceDashboardBase):
     """Tests for the Job Scraping dashboard modal."""
 
     def setup_function(self, request) -> None:
-        request.getfixturevalue("test_job_scraping_service_logs")
+        # The Service config row is normally seeded at backend startup, but the per-test DB
+        # truncation wipes it, so the status control needs it created explicitly.
+        self.create_service(self.db, name="email_scraper_service", display_name="Job Email Scraping")
+        self.create_email_scraping_service_log(self.db, run_duration=45.2)
         self.login()
 
     def test_page_renders(self) -> None:
         """All static elements render correctly on the Job Scraping dashboard."""
 
-        self._open_scraping()
+        self.service_dashboard_utils.open_scraping()
 
         # Data cards in the modal body
-        assert self.get_element("latest-run-progress", enabled=False).is_displayed()
-        assert self.get_element("error-summary-card", enabled=False).is_displayed()
-        assert self.get_element("history-filters", enabled=False).is_displayed()
+        assert self.service_dashboard_utils.latest_run_progress.is_displayed()
+        assert self.service_dashboard_utils.error_summary_card.is_displayed()
+        assert self.service_dashboard_utils.history_filters.is_displayed()
 
-        # Status control in the modal header: runner + service icons
-        icons = self.get_element("service-status-icons", selector=By.CLASS_NAME, enabled=False)
-        assert len(icons.find_elements(By.CLASS_NAME, "service-status-icon")) >= 2
+        # Status control in the modal header: the run-status icon
+        icons = self.service_dashboard_utils.service_status_icons
+        assert len(icons.find_elements(By.CLASS_NAME, "service-status-icon")) >= 1
 
-        # Opening the status control reveals the config fields and the start button
-        self._open_status_control()
-        self.get_element("confirm-start-button")
-        assert self.get_element("period_hours", selector=By.NAME, enabled=False).is_displayed()
-        assert self.get_element("timedelta_days", selector=By.NAME, enabled=False).is_displayed()
+        # Opening the status control reveals the config fields and the run-now button
+        self.service_dashboard_utils.open_status_control()
+        assert self.service_dashboard_utils.run_now_button
+        assert self.service_dashboard_utils.period_hours_field.is_displayed()
+        assert self.service_dashboard_utils.min_timedelta_days_field.is_displayed()
+        assert self.service_dashboard_utils.max_timedelta_days_field.is_displayed()
 
     def test_interactive_elements(self) -> None:
         """Log viewer and error view toggle work correctly."""
 
-        self._open_scraping()
-        self._assert_log_viewer_toggles()
-        self._assert_error_view_toggles()
+        self.service_dashboard_utils.open_scraping()
+        self.service_dashboard_utils.assert_log_viewer_toggles()
+        self.service_dashboard_utils.assert_error_view_toggles()
 
 
 class TestJobRatingDashboard(ServiceDashboardBase):
     """Tests for the Job Rating dashboard modal."""
 
     def setup_function(self, request) -> None:
-        request.getfixturevalue("test_job_rating_service_logs")
+        # The Service config row is normally seeded at backend startup, but the per-test DB
+        # truncation wipes it, so the status control needs it created explicitly.
+        self.create_service(self.db, name="job_rating_service", display_name="Job Rating")
+        self.create_job_rating_service_log(self.db, run_duration=12.5)
         self.login()
 
     def test_page_renders(self) -> None:
         """All static elements render correctly on the Job Rating dashboard."""
 
-        self._open_rating()
+        self.service_dashboard_utils.open_rating()
 
         # Data cards in the modal body
-        assert self.get_element("latest-run-progress", enabled=False).is_displayed()
-        assert self.get_element("error-summary-card", enabled=False).is_displayed()
-        assert self.get_element("history-filters", enabled=False).is_displayed()
+        assert self.service_dashboard_utils.latest_run_progress.is_displayed()
+        assert self.service_dashboard_utils.error_summary_card.is_displayed()
+        assert self.service_dashboard_utils.history_filters.is_displayed()
 
-        # Status control: only period_hours (no timedelta_days for rating)
-        self._open_status_control()
-        self.get_element("confirm-start-button")
-        assert self.get_element("period_hours", selector=By.NAME, enabled=False).is_displayed()
-        assert not self.check_element_exists(
-            "timedelta_days", selector=By.NAME
-        ), "timedelta_days should not appear on the rating dashboard"
+        # Status control: only period_hours (no min/max_timedelta_days for rating)
+        self.service_dashboard_utils.open_status_control()
+        assert self.service_dashboard_utils.run_now_button
+        assert self.service_dashboard_utils.period_hours_field.is_displayed()
+        self.service_dashboard_utils.assert_no_min_timedelta_days_field()
 
     def test_interactive_elements(self) -> None:
         """Log viewer and error view toggle work correctly on the rating modal."""
 
-        self._open_rating()
-        self._assert_log_viewer_toggles()
-        self._assert_error_view_toggles()
+        self.service_dashboard_utils.open_rating()
+        self.service_dashboard_utils.assert_log_viewer_toggles()
+        self.service_dashboard_utils.assert_error_view_toggles()
 
 
 class TestJobScrapingDashboardErrors(ServiceDashboardBase):
@@ -150,58 +107,49 @@ class TestJobScrapingDashboardErrors(ServiceDashboardBase):
     SCRAPING_ERROR = "Page not found - job posting has been removed"
 
     def setup_function(self, request) -> None:
-        # Service log with today's date so it appears in the default "last 1 week" date range
-        service_log = self._make_service_log(
-            run_duration=30.0,
-            is_success=False,
-            error_message=self.CRITICAL_ERROR,
+        # Service log with today's date (the model default) so it appears in the default date range
+        service_log = self.create_email_scraping_service_log(self.db, run_duration=30.0)
+
+        # Run-level critical error: no scraped_job_id, level=critical (drives is_success/Critical Errors column)
+        self.create_service_error(
+            self.db,
+            message=self.CRITICAL_ERROR,
+            level="critical",
+            job_email_scraping_service_log_id=service_log.id,
         )
 
-        # Service error linked to this log (appears in "Service Errors" column)
-        self._make_service_error(service_log=service_log, message=self.SERVICE_ERROR)
-
-        # Scraped job with a known error (appears in "Scraping Errors" column)
-        scraped_job = self._make_scraped_job(
-            service_log=service_log,
-            is_failed=True,
-            scrape_error=[{"datetime": "2026-03-16T10:00:00+00:00", "error": self.SCRAPING_ERROR}],
-            url="https://test.com",
+        # Run-level (non-critical) error, appears in the "Service Errors" column
+        self.create_service_error(
+            self.db,
+            message=self.SERVICE_ERROR,
+            job_email_scraping_service_log_id=service_log.id,
         )
 
-        # Platform stat referencing the failed job so the hook picks it up
-        self._make_platform_stat(service_log=service_log, job_scrape_failed_ids=[scraped_job.id])
+        # Per-job error (scraped_job_id set), appears in the "Scraping Errors" column
+        scraped_job = self.user.create_scraped_job(service_log=service_log)
+        self.create_service_error(
+            self.db,
+            message=self.SCRAPING_ERROR,
+            job_email_scraping_service_log_id=service_log.id,
+            scraped_job_id=scraped_job.id,
+        )
         self.login()
 
     def test_errors_display(self) -> None:
         """Critical, service and scraping errors all appear in the Error Summary card."""
 
-        self._open_scraping()
+        self.service_dashboard_utils.open_scraping()
+        error_text = self.service_dashboard_utils.wait_for_error_summary_containing(
+            self.CRITICAL_ERROR, self.SERVICE_ERROR, self.SCRAPING_ERROR
+        )
 
-        # Wait until all errors are present together, capturing that snapshot.
-        # The card can flip back to a "Loading..." state during refresh polls, so
-        # reading the text in a separate call after the wait is racy.
-        captured = {}
-
-        def _errors_loaded(d: WebElement):
-            try:
-                text = d.find_element(By.ID, "error-summary-card").text
-            except StaleElementReferenceException:
-                return False
-            if self.CRITICAL_ERROR in text and self.SERVICE_ERROR in text and self.SCRAPING_ERROR in text:
-                captured["text"] = text
-                return True
-            return False
-
-        self.wait.until(_errors_loaded)
-        error_text = captured["text"]
-
-        # Critical Errors column: service logs with error_message within the date range
+        # Critical Errors column: run-level errors with level=critical
         assert self.CRITICAL_ERROR in error_text
 
-        # Service Errors column: service_errors linked to the latest log
+        # Service Errors column: run-level errors with level != critical
         assert self.SERVICE_ERROR in error_text
 
-        # Scraping Errors column: scraped job errors fetched via platform_stats
+        # Scraping Errors column: errors linked to a scraped job
         assert self.SCRAPING_ERROR in error_text
 
 
@@ -212,57 +160,38 @@ class TestJobRatingDashboardErrors(ServiceDashboardBase):
     RATING_ERROR = "Failed to rate job: API timeout after 30 seconds"
 
     def setup_function(self, request) -> None:
-        request.getfixturevalue("test_user_qualifications")
+        # Rating service log with today's date (the model default) so it appears in the default date range
+        rating_log = self.create_job_rating_service_log(self.db, run_duration=20.0)
 
-        # Scraping service log needed as FK for the scraped job
-        scraping_log = self._make_service_log(run_duration=10.0)
-
-        # Scraped job needed as FK for the job rating
-        scraped_job = self._make_scraped_job(service_log=scraping_log, url="https://test.com")
-
-        # Job rating that failed (the error appears in "Job Rating Errors" column)
-        rating = self._create_job_rating(
-            scraped_job,
-            is_success=False,
-            error=self.RATING_ERROR,
-            llm_model="claude-sonnet-4-6",
+        # Run-level critical error: no job_rating_id, level=critical (drives is_success/Critical Errors column)
+        self.create_service_error(
+            self.db,
+            message=self.CRITICAL_ERROR,
+            level="critical",
+            job_rating_service_log_id=rating_log.id,
         )
 
-        # Rating service log with today's date: error_message for Critical Errors,
-        # job_failed_ids referencing the failed rating for the Rating Errors column
-        self._make_rating_service_log(
-            run_duration=20.0,
-            is_success=False,
-            error_message=self.CRITICAL_ERROR,
-            job_failed_ids=[rating.id],
+        # Failed job rating linked to the run via job_rating_service_log_id, and to the
+        # per-job error via job_rating_id (appears in the "Job Rating Errors" column)
+        rating = self.user.create_job_rating(status="failed", llm_model="claude-sonnet-4-6")
+        self.create_service_error(
+            self.db,
+            message=self.RATING_ERROR,
+            job_rating_service_log_id=rating_log.id,
+            job_rating_id=rating.id,
         )
         self.login()
 
     def test_errors_display(self) -> None:
         """Critical and rating errors both appear in the Error Summary card."""
 
-        self._open_rating()
+        self.service_dashboard_utils.open_rating()
+        error_text = self.service_dashboard_utils.wait_for_error_summary_containing(
+            self.CRITICAL_ERROR, self.RATING_ERROR
+        )
 
-        # Wait until both errors are present together, capturing that snapshot.
-        # The card can flip back to a "Loading..." state during refresh polls, so
-        # reading the text in a separate call after the wait is racy.
-        captured = {}
-
-        def _errors_loaded(d):
-            try:
-                text = d.find_element(By.ID, "error-summary-card").text
-            except StaleElementReferenceException:
-                return False
-            if self.CRITICAL_ERROR in text and self.RATING_ERROR in text:
-                captured["text"] = text
-                return True
-            return False
-
-        self.wait.until(_errors_loaded)
-        error_text = captured["text"]
-
-        # Critical Errors column: rating service logs with error_message in the date range
+        # Critical Errors column: rating service logs with a critical-level error
         assert self.CRITICAL_ERROR in error_text
 
-        # Job Rating Errors column: failed job ratings fetched via job_failed_ids
+        # Job Rating Errors column: failed job ratings with an error linked via job_rating_id
         assert self.RATING_ERROR in error_text

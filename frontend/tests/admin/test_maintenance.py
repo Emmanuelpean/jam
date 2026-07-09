@@ -13,7 +13,7 @@ In test mode the frontend polls every 2s instead of 30s.
 import time
 
 from tests.fixtures.users import FixtureUser
-from frontend_base_test import MaintenanceTestBase
+from helpers.maitenance_banner_utils import MaintenanceTestBase
 
 # Timeout that comfortably exceeds the 2s test-mode poll interval
 POLL_TIMEOUT = 3
@@ -30,7 +30,7 @@ class TestMaintenanceBanner(MaintenanceTestBase):
         self.login()
         future_time = self._get_future_timestamp(minutes=30)
         self._set_maintenance_scheduled_at(future_time, test_admin_user)
-        banner = self.get_element("maintenance-countdown-banner", timeout=POLL_TIMEOUT)
+        banner = self.get_element(self.banner_id, timeout=POLL_TIMEOUT)
         text = banner.text.lower()
         assert "maintenance" in text, f"Banner text should mention maintenance: {text}"
         assert "m" in text and "s" in text, f"Countdown should show minutes and seconds: {text}"
@@ -42,7 +42,7 @@ class TestMaintenanceBanner(MaintenanceTestBase):
         self.login()
         future_time = self._get_future_timestamp(minutes=120)
         self._set_maintenance_scheduled_at(future_time, test_admin_user)
-        banner = self.get_element("maintenance-countdown-banner", timeout=POLL_TIMEOUT)
+        banner = self.get_element(self.banner_id, timeout=POLL_TIMEOUT)
         text = banner.text.lower()
         assert "scheduled maintenance on" in text, f"Banner should show scheduled date when >1 hour away: {text}"
         self._clear_maintenance_scheduled_at()
@@ -53,7 +53,7 @@ class TestMaintenanceBanner(MaintenanceTestBase):
         self.login()
         future_time = self._get_future_timestamp(minutes=1 / 60)
         self._set_maintenance_scheduled_at(future_time, test_admin_user)
-        time.sleep(3)
+        time.sleep(POLL_TIMEOUT)
         self.check_element_exists("maintenance-error-banner", timeout=POLL_TIMEOUT)
         self._clear_maintenance_scheduled_at()
 
@@ -63,7 +63,7 @@ class TestMaintenanceBanner(MaintenanceTestBase):
         self.auth_utils.go_to_login()
         future_time = self._get_future_timestamp(minutes=30)
         self._set_maintenance_scheduled_at(future_time, test_admin_user)
-        banner_exists = self.check_element_exists("maintenance-countdown-banner", timeout=POLL_TIMEOUT)
+        banner_exists = self.check_element_exists(self.banner_id, timeout=POLL_TIMEOUT)
         assert banner_exists, "Maintenance banner should not appear for unauthenticated users"
         self._clear_maintenance_scheduled_at()
 

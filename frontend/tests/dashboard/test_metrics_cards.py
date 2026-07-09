@@ -2,23 +2,14 @@
 
 import datetime as dt
 
-from dashboard_base import DashboardTestBase
-
-# Default layout metric card IDs (set in StatCard.tsx / DashboardPage.tsx)
-TOTAL_JOBS = "stat-card-total_jobs"
-APPLICATIONS = "stat-card-applications"
-PENDING = "stat-card-pending"
-FOLLOW_UP = "stat-card-follow_up"
-ACTIVE_APPLICATIONS = "stat-card-active_applications"
-INTERVIEW_RATE = "stat-card-interview_rate"
-AVG_RESPONSE_TIME = "stat-card-avg_response_time"
+from helpers.dashboard_utils import DashboardUtils
 
 NOW = dt.datetime.now(dt.timezone.utc)
 PAST = NOW - dt.timedelta(days=3)
 LONG_PAST = NOW - dt.timedelta(days=20)  # > 14-day default chase threshold
 
 
-class TestMetricsCards(DashboardTestBase):
+class TestMetricsCards(DashboardUtils):
     """Tests for metrics cards on the dashboard."""
 
     def setup_total_jobs(self, request=None) -> None:
@@ -70,27 +61,13 @@ class TestMetricsCards(DashboardTestBase):
         self._set_dashboard_widgets({"type": "metric", "metric": "avg_response_time"})
         self.login()
 
-    # --------------------------------------------------- HELPERS ---------------------------------------------------
-
-    def _value(self, card_id: str) -> int:
-        """Return the integer value displayed on the stat card."""
-        return int(self.get_element(f"{card_id}-value").text)
-
-    def _pct_value(self, card_id: str) -> int:
-        """Return the integer percentage value (strips trailing '%')."""
-        return int(self.get_element(f"{card_id}-value").text.rstrip("%"))
-
-    def _days_value(self, card_id: str) -> int:
-        """Return the integer days value (strips trailing 'd')."""
-        return int(self.get_element(f"{card_id}-value").text.rstrip("d"))
-
     # ----------------------------------------------- TOTAL JOBS ---------------------------------------------------
 
     def test_total_jobs_is_zero_with_no_data(self) -> None:
         """Total Jobs is zero when there are no jobs in the database."""
 
         self.setup_total_jobs()
-        assert self._value(TOTAL_JOBS) == 0
+        assert self._value(self.TOTAL_JOBS) == 0
 
     def test_total_jobs_counts_all_jobs(self) -> None:
         """Total Jobs includes every job regardless of application status."""
@@ -100,7 +77,7 @@ class TestMetricsCards(DashboardTestBase):
         self.user.create_job(title="Job B")
         self.user.create_job(title="Job C", application_date=PAST, application_status="applied")
         self._reload()
-        assert self._value(TOTAL_JOBS) == 3
+        assert self._value(self.TOTAL_JOBS) == 3
 
     def test_total_jobs_includes_unapplied_jobs(self) -> None:
         """Jobs without an application_date still count toward Total Jobs."""
@@ -108,7 +85,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_total_jobs()
         self.user.create_job(title="Saved Job")
         self._reload()
-        assert self._value(TOTAL_JOBS) == 1
+        assert self._value(self.TOTAL_JOBS) == 1
 
     # --------------------------------------------- APPLICATIONS --------------------------------------------------
 
@@ -116,7 +93,7 @@ class TestMetricsCards(DashboardTestBase):
         """Total application is zero when there are no jobs with application_date set."""
 
         self.setup_applications()
-        assert self._value(APPLICATIONS) == 0
+        assert self._value(self.APPLICATIONS) == 0
 
     def test_applications_counts_jobs_with_application_date(self) -> None:
         """Only jobs with application_date set are counted as Applications."""
@@ -125,7 +102,7 @@ class TestMetricsCards(DashboardTestBase):
         self.user.create_job(title="Applied Job", application_date=PAST, application_status="applied")
         self.user.create_job(title="Saved Job")  # no application_date — not counted
         self._reload()
-        assert self._value(APPLICATIONS) == 1
+        assert self._value(self.APPLICATIONS) == 1
 
     def test_applications_counts_multiple(self) -> None:
         """Total number of jobs with application_date is counted correctly."""
@@ -134,7 +111,7 @@ class TestMetricsCards(DashboardTestBase):
         self.user.create_job(title="Job A", application_date=PAST, application_status="applied")
         self.user.create_job(title="Job B", application_date=PAST - dt.timedelta(days=1), application_status="applied")
         self._reload()
-        assert self._value(APPLICATIONS) == 2
+        assert self._value(self.APPLICATIONS) == 2
 
     # ----------------------------------------------- PENDING ------------------------------------------------------
 
@@ -142,7 +119,7 @@ class TestMetricsCards(DashboardTestBase):
         """Pending applications is zero when there are no jobs with a non-terminal status."""
 
         self.setup_pending_applications()
-        assert self._value(PENDING) == 0
+        assert self._value(self.PENDING) == 0
 
     def test_pending_counts_non_terminal_applications(self) -> None:
         """Applied jobs with a non-terminal status are counted as Pending."""
@@ -150,7 +127,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_pending_applications()
         self.user.create_job(title="Applied", application_date=PAST, application_status="applied")
         self._reload()
-        assert self._value(PENDING) == 1
+        assert self._value(self.PENDING) == 1
 
     def test_pending_excludes_rejected(self) -> None:
         """Rejected applications do not count toward Pending."""
@@ -158,7 +135,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_pending_applications()
         self.user.create_job(title="Rejected", application_date=PAST, application_status="rejected")
         self._reload()
-        assert self._value(PENDING) == 0
+        assert self._value(self.PENDING) == 0
 
     def test_pending_excludes_withdrawn(self) -> None:
         """Withdrawn applications do not count toward Pending."""
@@ -166,7 +143,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_pending_applications()
         self.user.create_job(title="Withdrawn", application_date=PAST, application_status="withdrawn")
         self._reload()
-        assert self._value(PENDING) == 0
+        assert self._value(self.PENDING) == 0
 
     def test_pending_mixed(self) -> None:
         """Only the non-terminal application is counted when mixed statuses are present."""
@@ -175,7 +152,7 @@ class TestMetricsCards(DashboardTestBase):
         self.user.create_job(title="Active", application_date=PAST, application_status="applied")
         self.user.create_job(title="Rejected", application_date=PAST, application_status="rejected")
         self._reload()
-        assert self._value(PENDING) == 1
+        assert self._value(self.PENDING) == 1
 
     # ---------------------------------------------- NEED FOLLOW-UP -----------------------------------------------
 
@@ -183,7 +160,7 @@ class TestMetricsCards(DashboardTestBase):
         """Pending applications with no update for > 14 days is zero."""
 
         self.setup_follow_up()
-        assert self._value(FOLLOW_UP) == 0
+        assert self._value(self.FOLLOW_UP) == 0
 
     def test_follow_up_counts_overdue_application(self) -> None:
         """A pending application with no update for > 14 days counts as needing follow-up."""
@@ -191,7 +168,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_follow_up()
         self.user.create_job(title="Old App", application_date=LONG_PAST, application_status="applied")
         self._reload()
-        assert self._value(FOLLOW_UP) == 1
+        assert self._value(self.FOLLOW_UP) == 1
 
     def test_follow_up_excludes_recent_application(self) -> None:
         """A pending application updated recently (within threshold) is not flagged."""
@@ -199,7 +176,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_follow_up()
         self.user.create_job(title="Recent App", application_date=PAST, application_status="applied")
         self._reload()
-        assert self._value(FOLLOW_UP) == 0
+        assert self._value(self.FOLLOW_UP) == 0
 
     def test_follow_up_excludes_rejected(self) -> None:
         """Rejected applications are never flagged for follow-up."""
@@ -207,7 +184,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_follow_up()
         self.user.create_job(title="Rejected", application_date=LONG_PAST, application_status="rejected")
         self._reload()
-        assert self._value(FOLLOW_UP) == 0
+        assert self._value(self.FOLLOW_UP) == 0
 
     def test_follow_up_excludes_offer(self) -> None:
         """Jobs where an offer has been made are not flagged for follow-up."""
@@ -215,7 +192,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_follow_up()
         self.user.create_job(title="Offer", application_date=LONG_PAST, application_status="offer")
         self._reload()
-        assert self._value(FOLLOW_UP) == 0
+        assert self._value(self.FOLLOW_UP) == 0
 
     # ------------------------------------------- ACTIVE APPLICATIONS ----------------------------------------------
 
@@ -223,7 +200,7 @@ class TestMetricsCards(DashboardTestBase):
         """Active application is zero when there are no jobs with a non-terminal status."""
 
         self.setup_active_applications()
-        assert self._value(ACTIVE_APPLICATIONS) == 0
+        assert self._value(self.ACTIVE_APPLICATIONS) == 0
 
     def test_active_applications_counts_applied_status(self) -> None:
         """Active applications are those with a non-terminal status."""
@@ -231,7 +208,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_active_applications()
         self.user.create_job(title="Applied", application_date=PAST, application_status="applied")
         self._reload()
-        assert self._value(ACTIVE_APPLICATIONS) == 1
+        assert self._value(self.ACTIVE_APPLICATIONS) == 1
 
     def test_active_applications_counts_offer_status(self) -> None:
         """'offer' is an active status — not rejected or withdrawn."""
@@ -239,7 +216,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_active_applications()
         self.user.create_job(title="Offer", application_date=PAST, application_status="offer")
         self._reload()
-        assert self._value(ACTIVE_APPLICATIONS) == 1
+        assert self._value(self.ACTIVE_APPLICATIONS) == 1
 
     def test_active_applications_excludes_rejected(self) -> None:
         """Rejected applications are not counted as active applications."""
@@ -247,7 +224,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_active_applications()
         self.user.create_job(title="Rejected", application_date=PAST, application_status="rejected")
         self._reload()
-        assert self._value(ACTIVE_APPLICATIONS) == 0
+        assert self._value(self.ACTIVE_APPLICATIONS) == 0
 
     def test_active_applications_excludes_withdrawn(self) -> None:
         """Withdrawn applications are not counted as active applications."""
@@ -255,7 +232,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_active_applications()
         self.user.create_job(title="Withdrawn", application_date=PAST, application_status="withdrawn")
         self._reload()
-        assert self._value(ACTIVE_APPLICATIONS) == 0
+        assert self._value(self.ACTIVE_APPLICATIONS) == 0
 
     def test_active_applications_mixed(self) -> None:
         """Only non-terminal statuses are counted."""
@@ -265,7 +242,7 @@ class TestMetricsCards(DashboardTestBase):
         self.user.create_job(title="Offer", application_date=PAST, application_status="offer")
         self.user.create_job(title="Rejected", application_date=PAST, application_status="rejected")
         self._reload()
-        assert self._value(ACTIVE_APPLICATIONS) == 2
+        assert self._value(self.ACTIVE_APPLICATIONS) == 2
 
     # ---------------------------------------------- INTERVIEW RATE -----------------------------------------------
 
@@ -273,7 +250,7 @@ class TestMetricsCards(DashboardTestBase):
         """Interview rate is zero when there are no jobs with interviews."""
 
         self.setup_interview_rate()
-        assert self._pct_value(INTERVIEW_RATE) == 0
+        assert self._pct_value(self.INTERVIEW_RATE) == 0
 
     def test_interview_rate_is_zero_when_no_interviews(self) -> None:
         """Applications with no interviews yield a 0% interview rate."""
@@ -281,7 +258,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_interview_rate()
         self.user.create_job(title="No Interview", application_date=PAST, application_status="applied")
         self._reload()
-        assert self._pct_value(INTERVIEW_RATE) == 0
+        assert self._pct_value(self.INTERVIEW_RATE) == 0
 
     def test_interview_rate_is_100_when_all_applications_have_interviews(self) -> None:
         """One application with one interview → 100%."""
@@ -290,7 +267,7 @@ class TestMetricsCards(DashboardTestBase):
         job = self.user.create_job(title="Interviewed", application_date=PAST, application_status="applied")
         self.user.create_interview(job, date=PAST)
         self._reload()
-        assert self._pct_value(INTERVIEW_RATE) == 100
+        assert self._pct_value(self.INTERVIEW_RATE) == 100
 
     def test_interview_rate_is_50_for_one_of_two_applications(self) -> None:
         """One of two applications has an interview → 50%."""
@@ -300,7 +277,7 @@ class TestMetricsCards(DashboardTestBase):
         self.user.create_job(title="Not Interviewed", application_date=PAST, application_status="applied")
         self.user.create_interview(job1, date=PAST)
         self._reload()
-        assert self._pct_value(INTERVIEW_RATE) == 50
+        assert self._pct_value(self.INTERVIEW_RATE) == 50
 
     def test_interview_rate_counts_job_once_with_multiple_interviews(self) -> None:
         """A job with two interviews still counts as one unique application in the numerator."""
@@ -311,7 +288,7 @@ class TestMetricsCards(DashboardTestBase):
         self.user.create_interview(job, date=PAST - dt.timedelta(days=1))
         self._reload()
         # 1 unique job with interviews / 1 total application = 100%
-        assert self._pct_value(INTERVIEW_RATE) == 100
+        assert self._pct_value(self.INTERVIEW_RATE) == 100
 
     # ------------------------------------------- AVG RESPONSE TIME -----------------------------------------------
 
@@ -319,7 +296,7 @@ class TestMetricsCards(DashboardTestBase):
         """Avg response time is zero when there are no jobs with interviews or updates."""
 
         self.setup_avg_response_time()
-        assert self._days_value(AVG_RESPONSE_TIME) == 0
+        assert self._days_value(self.AVG_RESPONSE_TIME) == 0
 
     def test_avg_response_time_is_zero_with_no_updates(self) -> None:
         """An application with no interviews or updates has last_update_date = application_date → 0 days."""
@@ -327,7 +304,7 @@ class TestMetricsCards(DashboardTestBase):
         self.setup_avg_response_time()
         self.user.create_job(title="No Updates", application_date=PAST, application_status="applied")
         self._reload()
-        assert self._days_value(AVG_RESPONSE_TIME) == 0
+        assert self._days_value(self.AVG_RESPONSE_TIME) == 0
 
     def test_avg_response_time_with_update(self) -> None:
         """A job application update 2 days after the application → avg response time = 2 days."""
@@ -336,7 +313,7 @@ class TestMetricsCards(DashboardTestBase):
         job = self.user.create_job(title="With Update", application_date=LONG_PAST, application_status="applied")
         self.user.create_job_application_update(job, date=LONG_PAST + dt.timedelta(days=2))
         self._reload()
-        assert self._days_value(AVG_RESPONSE_TIME) == 2
+        assert self._days_value(self.AVG_RESPONSE_TIME) == 2
 
     def test_avg_response_time_with_interview(self) -> None:
         """An interview 3 days after the application → avg response time = 3 days."""
@@ -345,7 +322,7 @@ class TestMetricsCards(DashboardTestBase):
         job = self.user.create_job(title="With Interview", application_date=LONG_PAST, application_status="applied")
         self.user.create_interview(job, date=LONG_PAST + dt.timedelta(days=3))
         self._reload()
-        assert self._days_value(AVG_RESPONSE_TIME) == 3
+        assert self._days_value(self.AVG_RESPONSE_TIME) == 3
 
     def test_avg_response_time_averaged_across_multiple_applications(self) -> None:
         """Average of a 2-day and a 4-day response = 3 days."""
@@ -356,4 +333,4 @@ class TestMetricsCards(DashboardTestBase):
         self.user.create_job_application_update(job1, date=LONG_PAST + dt.timedelta(days=2))
         self.user.create_job_application_update(job2, date=LONG_PAST + dt.timedelta(days=4))
         self._reload()
-        assert self._days_value(AVG_RESPONSE_TIME) == 3
+        assert self._days_value(self.AVG_RESPONSE_TIME) == 3

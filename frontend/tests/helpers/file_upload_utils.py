@@ -9,12 +9,12 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app import models
-from helpers.base_utils import BaseUtils
+from helpers.jam_test_utils import JamTestUtils
 from helpers.data_modal_utils import DataModalUtils
 from helpers.data_table_utils import DataTableUtils
 
 
-class FileUploadUtils(BaseUtils):
+class FileUploadUtils(JamTestUtils):
     """Helpers for uploading, editing and reading CV / cover letter files on the application tab."""
 
     def __init__(self, **kwargs):

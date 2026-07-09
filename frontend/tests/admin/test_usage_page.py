@@ -10,15 +10,13 @@ Daily usage/income rows are seeded into the DB so the summary totals are determi
 
 import datetime as dt
 
-from selenium.webdriver.common.by import By
-
 from frontend_base_test import BaseTest
 
 
 class TestUsagePage(BaseTest):
     """Tests for the admin Usage / ESM dashboard modal."""
 
-    user_fixture = "test_admin_user"  # admin user required for the admin dashboard
+    user_fixture = "test_admin_user"
     page_url = "admin"
 
     # Seeded daily values, all within the default 1-month window.
@@ -26,11 +24,13 @@ class TestUsagePage(BaseTest):
     APIFY_USD = 5.0
     BRIGHTDATA_USD = 3.0
     STRIPE_NET_GBP = 80.0
-    USD_TO_GBP = 0.79  # must match UsagePage
+    USD_TO_GBP = 0.79
 
     def setup_function(self, request) -> None:
-        # A couple of days back keeps the rows safely inside the window regardless
-        # of any browser/server timezone boundary on "today".
+        # The Service config row is normally seeded at backend startup, but the per-test DB
+        # truncation wipes it, so the status control needs it created explicitly.
+        self.create_service(self.db, name="provider_monitoring_service", display_name="Provider Monitoring")
+
         day = dt.date.today() - dt.timedelta(days=2)
         self.create_anthropic_usage(self.db, date=day, usage_usd=self.ANTHROPIC_USD)
         self.create_apify_usage(self.db, date=day, usage_usd=self.APIFY_USD)
@@ -38,36 +38,28 @@ class TestUsagePage(BaseTest):
         self.create_stripe_income(self.db, date=day, gross_gbp=100.0, net_gbp=self.STRIPE_NET_GBP)
         self.login()
 
-    def _open_usage(self) -> None:
-        """Open the Provider Monitoring modal from the admin dashboard."""
-
-        # Click the title (top of the card) to avoid the sparkline hover overlay.
-        card = self.get_element("admin-card-usage", enabled=False)
-        card.find_element(By.CLASS_NAME, "card-title").click()
-        self.get_element("admin-page-modal", enabled=False)
-
     def test_page_renders(self) -> None:
         """The Usage modal renders its summary cards, charts, filter and log viewer."""
 
-        self._open_usage()
+        self.usage_page_utils.open()
 
         # Time filter + log viewer
-        assert self.get_element("history-filters", enabled=False).is_displayed()
-        assert self.get_element("usage-log-viewer", enabled=False).is_displayed()
-        assert self.check_element_exists("log-toggle", selector=By.CLASS_NAME)
+        assert self.usage_page_utils.history_filters.is_displayed()
+        assert self.usage_page_utils.usage_log_viewer.is_displayed()
+        assert self.usage_page_utils.log_toggle
 
         # Five summary cards: Anthropic / Apify / Bright Data / Stripe / Net balance
-        assert len(self.get_elements("usage-summary-card", selector=By.CLASS_NAME)) == 5
+        assert len(self.usage_page_utils.summary_cards) == 5
 
         # The four per-service charts
-        modal_text = self.get_element("admin-page-modal", enabled=False).text
+        modal_text = self.usage_page_utils.admin_page_modal.text
         for label in ("Anthropic (Claude)", "Apify", "Bright Data", "Stripe Income"):
             assert label in modal_text, f"Missing service chart: {label}"
 
     def test_summary_values(self) -> None:
         """Summary totals reflect the seeded daily usage/income."""
 
-        self._open_usage()
+        self.usage_page_utils.open()
 
         net = self.STRIPE_NET_GBP - (self.ANTHROPIC_USD + self.APIFY_USD + self.BRIGHTDATA_USD) * self.USD_TO_GBP
         values = {
@@ -79,10 +71,8 @@ class TestUsagePage(BaseTest):
         }
 
         # The history is fetched asynchronously once the filter emits its default range.
-        modal = self.get_element("admin-page-modal", enabled=False)
-        self.wait.until(lambda d: values["Anthropic spend"] in modal.text)
+        text = self.usage_page_utils.wait_for_modal_text_containing(values["Anthropic spend"])
 
-        text = modal.text
         # Summary card labels are upper-cased via CSS, so compare case-insensitively.
         text_upper = text.upper()
         for label, value in values.items():
@@ -92,12 +82,12 @@ class TestUsagePage(BaseTest):
     def test_status_control(self) -> None:
         """The monitoring service control opens from the modal header (no config fields)."""
 
-        self._open_usage()
+        self.usage_page_utils.open()
 
-        self.get_element("service-status-icons", selector=By.CLASS_NAME).click()
-        self.get_element("confirm-start-button")
+        self.usage_page_utils.open_status_control()
+        assert self.usage_page_utils.run_now_button
         # Unlike the scraping/rating runners, ESM has no configurable period.
-        assert not self.check_element_exists("period_hours", selector=By.NAME)
+        assert not self.check_element_exists("period_hours")
 
     def test_balance_captions(self) -> None:
         """The Apify and Bright Data summary cards show their balance captions."""
@@ -106,12 +96,9 @@ class TestUsagePage(BaseTest):
         self.create_apify_balance(self.db, limit_usd=100.0)
         self.create_brightdata_balance(self.db, balance_usd=50.0, pending_costs_usd=2.0)
 
-        self._open_usage()
+        self.usage_page_utils.open()
 
-        modal = self.get_element("admin-page-modal", enabled=False)
-        self.wait.until(lambda d: "Cycle limit: $100.00" in modal.text)
-
-        text = modal.text
+        text = self.usage_page_utils.wait_for_modal_text_containing("Cycle limit: $100.00")
         assert "Cycle limit: $100.00" in text  # Apify cycle limit
         assert "Balance: $50.00" in text  # Bright Data balance
         assert "Pending: $2.00" in text  # Bright Data pending costs

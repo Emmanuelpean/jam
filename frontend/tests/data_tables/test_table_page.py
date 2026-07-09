@@ -3,7 +3,7 @@
 import datetime as dt
 
 from app import models
-from helpers.table_page import BaseTablePage
+from helpers.table_page_utils import BaseTablePage
 
 
 class TestKeywordsPage(BaseTablePage):
@@ -99,7 +99,7 @@ class TestCompaniesPage(BaseTablePage):
         self.company_table_utils.wait_for_table_load()
 
         self.company_table_utils.table_context_menu(company.id, "delete")
-        modal = self.delete_modal.wait_for_modal()
+        modal = self.delete_modal_utils.wait_for_modal()
         assert "This will also permanently delete 2 speculative applications linked to this company." in modal.text
 
     def test_delete_company_without_speculative_applications_no_warning(self) -> None:
@@ -110,7 +110,7 @@ class TestCompaniesPage(BaseTablePage):
         self.company_table_utils.wait_for_table_load()
 
         self.company_table_utils.table_context_menu(company.id, "delete")
-        modal = self.delete_modal.wait_for_modal()
+        modal = self.delete_modal_utils.wait_for_modal()
         assert "speculative application" not in modal.text.lower()
 
 
@@ -353,6 +353,11 @@ class TestJobPage(BaseTablePage):
                 salary_min=50000,
                 salary_max=80000,
                 salary_currency="GBP",
+                application_date=dt.datetime.now(),
+                application_url="https://oxfordpv.com/apply/job",
+                application_status="applied",
+                applied_via="aggregator",
+                application_note="Submitted application",
             )
             for i in range(count)
         ]

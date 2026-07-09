@@ -8,7 +8,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
-from selenium_utils import SeleniumUtils
+from helpers.selenium_utils import SeleniumUtils
 
 
 class Select(SeleniumUtils):

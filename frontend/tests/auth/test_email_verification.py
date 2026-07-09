@@ -16,14 +16,14 @@ class TestEmailVerification(BaseTest):
         self.auth_utils.register_user(email, password)
         self.auth_utils.wait_for_login()
         toast_message = "Account created! Please check your email inbox to verify your account before logging in."
-        self.assert_toast_message(toast_message)
+        self.toast_utils.assert_toast_message(toast_message)
 
     def _verify_account_via_email_link(self, email: str) -> None:
         """Helper to retrieve the verification link from email and visit it, asserting success."""
 
         verification_url = self.auth_utils.get_verification_link_from_email(email)
         self.driver.get(verification_url)
-        self.auth_utils.assert_toast_message("Account verified successfully")
+        self.toast_utils.assert_toast_message("Account verified successfully")
         self.auth_utils.wait_for_login()
 
     def test_full_email_verification_flow(self) -> None:
@@ -42,7 +42,7 @@ class TestEmailVerification(BaseTest):
 
         plain_token = test_unverified_user.create_token(TokenType.EMAIL_VERIFICATION)[0]
         self.auth_utils.go_to_verification_url(plain_token)
-        self.auth_utils.assert_toast_message("Account verified successfully")
+        self.toast_utils.assert_toast_message("Account verified successfully")
 
     def test_login_before_verification_shows_wait_then_allows_login(self) -> None:
         """Test that attempting to log in before verifying shows the 'not verified / please wait' message,
@@ -54,7 +54,7 @@ class TestEmailVerification(BaseTest):
         self._register_and_verify_redirect(test_email, test_password)
         self.auth_utils.login_user(test_email, test_password)
         message = "Your account is not verified. Please check your emails for the verification link or please wait"
-        self.auth_utils.assert_toast_message(message)
+        self.toast_utils.assert_toast_message(message)
         self._verify_account_via_email_link(test_email)
         self.auth_utils.wait_for_login()
         self.auth_utils.login_user(test_email, test_password)
@@ -68,7 +68,7 @@ class TestEmailVerification(BaseTest):
         test_unverified_user.create_token(TokenType.EMAIL_VERIFICATION, created_at=last_sent)
 
         self.auth_utils.login_user(test_unverified_user.email, test_unverified_user.plain_password)
-        self.auth_utils.assert_toast_message(f"A new verification email has been sent to {test_unverified_user.email}.")
+        self.toast_utils.assert_toast_message(f"A new verification email has been sent to {test_unverified_user.email}.")
 
     def test_registering_same_email_before_verification_shows_wait_then_allows_login(self) -> None:
         """Test that re-registering the same email before verification shows the 'Please wait' message,
@@ -79,7 +79,7 @@ class TestEmailVerification(BaseTest):
 
         self._register_and_verify_redirect(test_email, test_password)
         self.auth_utils.register_user(test_email, test_password)
-        self.auth_utils.assert_toast_message("Please wait")
+        self.toast_utils.assert_toast_message("Please wait")
         self._verify_account_via_email_link(test_email)
         self.auth_utils.login_user(test_email, test_password)
         self.auth_utils.wait_for_dashboard()
@@ -89,7 +89,7 @@ class TestEmailVerification(BaseTest):
 
         plain_token = test_unverified_user.create_token(TokenType.EMAIL_VERIFICATION)[0]
         self.auth_utils.go_to_verification_url(plain_token[:-4])
-        self.auth_utils.assert_toast_message("Invalid or expired token. Please request a new one by logging in.")
+        self.toast_utils.assert_toast_message("Invalid or expired token. Please request a new one by logging in.")
 
     def test_expired_verification_token_shows_error(self, test_unverified_user: FixtureUser) -> None:
         """Test that visiting the email verification URL with an expired token shows an error message."""
@@ -97,4 +97,4 @@ class TestEmailVerification(BaseTest):
         expired = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=67)
         plain_token = test_unverified_user.create_token(TokenType.EMAIL_VERIFICATION, created_at=expired)[0]
         self.auth_utils.go_to_verification_url(plain_token)
-        self.auth_utils.assert_toast_message("Verification token has expired. Please request a new one by logging in.")
+        self.toast_utils.assert_toast_message("Verification token has expired. Please request a new one by logging in.")

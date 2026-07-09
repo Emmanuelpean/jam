@@ -42,7 +42,7 @@ class TestFollowUpEmail(BaseTest):
         """Test generating a follow-up email and displaying a toast notification."""
 
         self.job_table_utils.table_context_menu(self.test_job.id, "followup")
-        modal = self.followup_modal.wait_for_modal()
+        modal = self.followup_modal_utils.wait_for_modal()
         expected = (
             "Follow Up Email Generator\n"
             "Contact\n"
@@ -64,63 +64,63 @@ class TestFollowUpEmail(BaseTest):
             "Send Email"
         )
         assert modal.text == expected
-        self.followup_modal.contact.select_by_visible_text("Alex Johnson (CloudFirst Inc)")
-        assert "Alex" in self.followup_modal.body.text
+        self.followup_modal_utils.contact.select_by_visible_text("Alex Johnson (CloudFirst Inc)")
+        assert "Alex" in self.followup_modal_utils.body.text
 
     def test_cancel(self) -> None:
         """Test cancelling the follow-up email modal."""
 
         self.job_table_utils.table_context_menu(self.test_job.id, "followup")
-        self.followup_modal.wait_for_modal()
-        self.followup_modal.cancel_button.click()
-        self.followup_modal.wait_for_modal_close()
+        self.followup_modal_utils.wait_for_modal()
+        self.followup_modal_utils.cancel_button.click()
+        self.followup_modal_utils.wait_for_modal_close()
 
     def test_send_email(self) -> None:
         """Test sending the follow-up email and displaying a toast notification."""
 
         self.job_table_utils.table_context_menu(self.test_job.id, "followup")
-        self.followup_modal.wait_for_modal()
-        self.followup_modal.send_button.click()
-        self.confirm_modal.wait_for_modal()
-        self.confirm_modal.confirm_button.click()
-        self.assert_toast_message("Follow up email update created successfully.")
+        self.followup_modal_utils.wait_for_modal()
+        self.followup_modal_utils.send_button.click()
+        self.confirm_modal_utils.wait_for_modal()
+        self.confirm_modal_utils.confirm_button.click()
+        self.toast_utils.assert_toast_message("Follow up email update created successfully.")
         entry = self.db.query(models.JobApplicationUpdate).first()
         assert entry.note.startswith("Follow up email sent to Alex Johnson")
-        self.followup_modal.wait_for_modal_close()
+        self.followup_modal_utils.wait_for_modal_close()
 
     def test_send_email_no_update(self) -> None:
         """Test sending the follow-up email and displaying a toast notification."""
 
         self.job_table_utils.table_context_menu(self.test_job.id, "followup")
-        self.followup_modal.wait_for_modal()
-        self.followup_modal.send_button.click()
-        self.confirm_modal.wait_for_modal()
-        self.confirm_modal.cancel_button.click()
-        self.followup_modal.wait_for_modal_close()
+        self.followup_modal_utils.wait_for_modal()
+        self.followup_modal_utils.send_button.click()
+        self.confirm_modal_utils.wait_for_modal()
+        self.confirm_modal_utils.cancel_button.click()
+        self.followup_modal_utils.wait_for_modal_close()
 
     def test_send_email_gmail(self) -> None:
         """Test sending the follow-up email via Gmail and displaying a toast notification."""
 
         self.job_table_utils.table_context_menu(self.test_job.id, "followup")
-        self.followup_modal.wait_for_modal()
-        self.followup_modal.send_menu_button.click()
-        self.followup_modal.gmail_option.click()
+        self.followup_modal_utils.wait_for_modal()
+        self.followup_modal_utils.send_menu_button.click()
+        self.followup_modal_utils.gmail_option.click()
         self.wait_for_windows(2)
         self.switch_to_window(-1)
         assert "mail.google.com" in self.driver.current_url
-        self.followup_modal.wait_for_modal_close()
+        self.followup_modal_utils.wait_for_modal_close()
 
     def test_send_email_outlook(self) -> None:
         """Test sending the follow-up email via Outlook and displaying a toast notification."""
 
         self.job_table_utils.table_context_menu(self.test_job.id, "followup")
-        self.followup_modal.wait_for_modal()
-        self.followup_modal.send_menu_button.click()
-        self.followup_modal.outlook_option.click()
+        self.followup_modal_utils.wait_for_modal()
+        self.followup_modal_utils.send_menu_button.click()
+        self.followup_modal_utils.outlook_option.click()
         self.wait_for_windows(2)
         self.switch_to_window(-1)
         assert "outlook.office.com" in self.driver.current_url
-        self.followup_modal.wait_for_modal_close()
+        self.followup_modal_utils.wait_for_modal_close()
 
     def test_contact_send_email(self) -> None:
         """Test sending the follow-up email from the job view modal."""
@@ -129,13 +129,13 @@ class TestFollowUpEmail(BaseTest):
         self.job_modal_utils.wait_for_view_modal()
         person_badge = self.get_element("modal-view-job-person-0")
         self.context_menu(person_badge, "followup")
-        self.followup_modal.wait_for_modal()
-        assert self.followup_modal.contact_text == "John Doe (Tech Corp)"
-        assert "John" in self.followup_modal.body.text
-        self.followup_modal.cancel_button.click()
-        self.followup_modal.wait_for_modal_close()
+        self.followup_modal_utils.wait_for_modal()
+        assert self.followup_modal_utils.contact_text == "John Doe (Tech Corp)"
+        assert "John" in self.followup_modal_utils.body.text
+        self.followup_modal_utils.cancel_button.click()
+        self.followup_modal_utils.wait_for_modal_close()
         person_badge = self.get_element("modal-view-job-person-1")
         self.context_menu(person_badge, "followup")
-        self.followup_modal.wait_for_modal()
-        assert self.followup_modal.contact_text == "Mike Taylor (Tech Corp)"
-        assert "Mike" in self.followup_modal.body.text
+        self.followup_modal_utils.wait_for_modal()
+        assert self.followup_modal_utils.contact_text == "Mike Taylor (Tech Corp)"
+        assert "Mike" in self.followup_modal_utils.body.text

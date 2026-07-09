@@ -4,15 +4,13 @@ import time
 
 import requests
 from selenium.webdriver.chrome.webdriver import WebDriver
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
 from app import models
-from selenium_utils import SeleniumUtils
+from helpers.selenium_utils import SeleniumUtils
 
 
-class BaseUtils(SeleniumUtils):
+class JamTestUtils(SeleniumUtils):
     """Base class for selenium utilities"""
 
     driver: WebDriver = None
@@ -23,6 +21,13 @@ class BaseUtils(SeleniumUtils):
     client = None
 
     def _init(self, driver: WebDriver, frontend_base_url: str, backend_base_url: str, db, client) -> None:
+        """Wire up the shared driver/session/client state used by every utils subclass.
+        :param driver: Selenium WebDriver instance.
+        :param frontend_base_url: Base URL of the frontend under test.
+        :param backend_base_url: Base URL of the backend under test.
+        :param db: Database session.
+        :param client: Authorised API client for the current user."""
+
         self.driver = driver
         self.wait = WebDriverWait(self.driver, 10)
         self.frontend_base_url = frontend_base_url
@@ -31,21 +36,20 @@ class BaseUtils(SeleniumUtils):
         self.client = client
 
     def go_to_page(self, page: str) -> None:
-        """Helper method to go to a specific page"""
+        """Helper method to go to a specific page
+        :param page: Path relative to the frontend base URL (e.g. "dashboard")."""
 
         self.go_to_url(f"{self.frontend_base_url}/{page}")
 
     def wait_for_page(self, page: str, timeout=None) -> None:
-        """Wait for the dashboard to load"""
+        """Wait for the dashboard to load
+        :param page: Path relative to the frontend base URL (e.g. "dashboard").
+        :param timeout: How long to wait before raising an error."""
 
         self.wait_for_url(f"{self.frontend_base_url}/{page}", timeout=timeout)
 
     def poll_db_value(self, getter, expected, timeout: float = 10.0) -> None:
         """Poll the DB until getter() returns expected, or raise.
-
-        Useful when the value is committed by the backend API process (a separate
-        process from the test) and therefore lands after a delay.
-
         :param getter: A callable returning the current value (re-queried each poll).
         :param expected: The value to wait for.
         :param timeout: Maximum time to wait in seconds."""
@@ -76,14 +80,16 @@ class BaseUtils(SeleniumUtils):
         return token
 
     def get_verification_link_from_email(self, email: str) -> str:
-        """Helper method to get verification link from test email endpoint"""
+        """Helper method to get verification link from test email endpoint
+        :param email: Email address the verification email was sent to."""
 
         response = requests.get(f"{self.backend_base_url}/test/emails/verification-link/{email}")
         assert response.status_code == 200, f"Failed to get verification link: {response.text}"
         return response.json()["verification_url"]
 
     def get_reset_link_from_email(self, email: str) -> str:
-        """Helper method to get password reset link from test email endpoint"""
+        """Helper method to get password reset link from test email endpoint
+        :param email: Email address the password reset email was sent to."""
 
         response = requests.get(f"{self.backend_base_url}/test/emails/reset-link/{email}")
         assert response.status_code == 200, f"Failed to get reset link: {response.text}"
@@ -96,34 +102,6 @@ class BaseUtils(SeleniumUtils):
         assert response.status_code == 200, "Failed to clear test emails"
 
     # ---------------------------------------------------- ELEMENTS ----------------------------------------------------
-
-    def wait_for_delete_modal(self) -> WebElement:
-        """Wait for the delete modal to appear"""
-
-        return self.get_element("delete-alert-modal")
-
-    @property
-    def toast(self) -> WebElement:
-        """Get the toast modal on the modal"""
-
-        return self.get_element("toast")
-
-    def assert_toast_message(self, error_message: str) -> None:
-        """Assert that the given error message is displayed on the page"""
-
-        element = self.toast
-        assert error_message in element.text, f"Message not found: {error_message} in {element.text}"
-        element.click()  # Dismiss toast
-
-    def wait_for_windows(self, n: int) -> None:
-        """Wait for the given number of browser windows to be present"""
-
-        self.wait.until(ec.number_of_windows_to_be(n))
-
-    def switch_to_window(self, index: int) -> None:
-        """Switch to the browser window with the given index"""
-
-        self.driver.switch_to.window(self.driver.window_handles[index])
 
     def close_modal(self):
         """Close the modal"""

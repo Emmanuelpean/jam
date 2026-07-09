@@ -6,10 +6,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.wait import WebDriverWait
 
-from helpers.base_utils import BaseUtils
+from helpers.jam_test_utils import JamTestUtils
 
 
-class AuthentificationUtils(BaseUtils):
+class AuthentificationUtils(JamTestUtils):
     """Test class for Authentication functionality including:
     - Login with valid credentials
     - Login with invalid credentials

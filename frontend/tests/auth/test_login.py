@@ -37,7 +37,7 @@ class TestLogIn(BaseTest):
         self.auth_utils.confirm()
 
         # Verify error message
-        self.auth_utils.assert_toast_message("Invalid credentials")
+        self.toast_utils.assert_toast_message("Invalid credentials")
 
     def test_inactive_login(self, test_inactive_user: FixtureUser) -> None:
         """Test login with an inactive user's credentials"""
@@ -51,7 +51,7 @@ class TestLogIn(BaseTest):
         self.auth_utils.confirm()
 
         # Verify error message
-        self.auth_utils.assert_toast_message("User account is not active.")
+        self.toast_utils.assert_toast_message("User account is not active.")
 
     def test_login_malformed_email(self) -> None:
         """Test login with invalid email"""
@@ -110,7 +110,7 @@ class TestLogIn(BaseTest):
         self.auth_utils.set_email("crash@crash.com")  # causes the backend to crash in test mode
         self.auth_utils.set_password("Test123!")
         self.auth_utils.confirm()
-        self.auth_utils.assert_toast_message("An unknown error occurred during login.\nRight-click to send email")
+        self.toast_utils.assert_toast_message("An unknown error occurred during login.\nRight-click to send email")
 
     def test_heartbeat_updates_last_login(self):
         """Test that heartbeat updates last login timestamp for authenticated users"""
@@ -152,7 +152,7 @@ class TestLogIn(BaseTest):
 
         self.login()
         self.get_element("logout-btn").click()
-        self.logout_modal.confirm_button.click()
+        self.logout_modal_utils.confirm_button.click()
         self.auth_utils.wait_for_login()
 
     def test_remember_me_unchecked_stores_in_session_storage(self, test_regular_user: FixtureUser) -> None:

@@ -107,7 +107,6 @@ class BaseTablePage(BaseTest):
         """Test viewing an entry details by clicking on a table row"""
 
         entry = self.load_entries()[0]
-        self.table_utils.set_page_item_select("100")
         self.table_utils.table_row_click(entry.id)
         self.modal_utils.test_view_modal(entry)
 
@@ -125,9 +124,9 @@ class BaseTablePage(BaseTest):
 
         entry = self.load_entries()[0]
         self.table_utils.table_context_menu(entry.id, "delete")
-        self.modal_utils.wait_for_delete_modal()
-        self.delete_modal.confirm_button.click()
-        self.delete_modal.wait_for_modal_close()
+        self.delete_modal_utils.wait_for_modal()
+        self.delete_modal_utils.confirm_button.click()
+        self.delete_modal_utils.wait_for_modal_close()
         time.sleep(0.1)
         self.table_utils.wait_for_disappear(f"table-row-{entry.id}")
 
@@ -144,9 +143,9 @@ class BaseTablePage(BaseTest):
         self.modal_utils.edit_button("view").click()
         self.modal_utils.wait_for_edit_modal()
         self.modal_utils.delete_button("edit").click()
-        self.modal_utils.wait_for_delete_modal()
-        self.delete_modal.confirm_button.click()
-        self.delete_modal.wait_for_modal_close()
+        self.delete_modal_utils.wait_for_modal()
+        self.delete_modal_utils.confirm_button.click()
+        self.delete_modal_utils.wait_for_modal_close()
         time.sleep(0.1)
         self.table_utils.wait_for_disappear(f"table-row-{entry.id}")
 

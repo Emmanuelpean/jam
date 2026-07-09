@@ -28,13 +28,13 @@ class TestQualificationSettingsPage(BaseTest):
         self.set_text(self.user_settings_utils.qualities_input, "New Quality")
         self.set_text(self.user_settings_utils.experience_input, "New Experience")
         self.user_settings_utils.confirm()
-        self.assert_toast_message("Qualifications saved successfully.")
+        self.toast_utils.assert_toast_message("Qualifications saved successfully.")
         assert len(self.qualifications) == 1
 
         # Modify qualifications
         self.set_text(self.user_settings_utils.experience_input, "Different Experience")
         self.user_settings_utils.confirm()
-        self.assert_toast_message("Qualifications saved successfully.")
+        self.toast_utils.assert_toast_message("Qualifications saved successfully.")
         assert len(self.qualifications) == 1
         assert self.qualifications[0].qualities == "New Quality"
         assert self.qualifications[0].experience == "Different Experience"
@@ -43,7 +43,7 @@ class TestQualificationSettingsPage(BaseTest):
         self.driver.refresh()
         self.set_text(self.user_settings_utils.experience_input, "Different Experience1")
         self.user_settings_utils.confirm()
-        self.assert_toast_message("Qualifications saved successfully.")
+        self.toast_utils.assert_toast_message("Qualifications saved successfully.")
         assert len(self.qualifications) == 1
         assert self.qualifications[0].qualities == "New Quality"
         assert self.qualifications[0].experience == "Different Experience1"

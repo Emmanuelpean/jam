@@ -43,7 +43,7 @@ class TestJobScrapingTable(BaseTest):
         assert "job rating" not in modal.text.lower()
         self.scrapedJob_modal_utils.import_button().click()
         self.scrapedJob_modal_utils.wait_for_import_modal_close()
-        self.scrapedJob_table_utils.assert_toast_message("Job imported successfully.")
+        self.toast_utils.assert_toast_message("Job imported successfully.")
 
         # Verify that the job count has increased by 1
         assert self.db.query(models.Job).count() == job_count + 1
@@ -69,7 +69,7 @@ class TestJobScrapingTable(BaseTest):
         self.scrapedJob_table_utils.table_context_menu(scraped_job.id, "import")
         self.scrapedJob_modal_utils.import_button().click()
         self.scrapedJob_modal_utils.wait_for_import_modal_close()
-        self.scrapedJob_table_utils.assert_toast_message("Job imported successfully.")
+        self.toast_utils.assert_toast_message("Job imported successfully.")
 
         # Verify that the job count has increased by 1
         assert self.db.query(models.Job).count() == job_count + 1
@@ -91,9 +91,9 @@ class TestJobScrapingTable(BaseTest):
 
         self.scrapedJob_table_utils.table_row(scraped_job.id).click()
         self.scrapedJob_modal_utils.delete_button("import").click()
-        self.delete_modal.confirm_button.click()
+        self.delete_modal_utils.confirm_button.click()
         self.scrapedJob_modal_utils.wait_for_import_modal_close()
-        self.assert_toast_message("Job Alert deleted successfully.")
+        self.toast_utils.assert_toast_message("Job Alert deleted successfully.")
         self.db.expire_all()
         scraped_job = self.db.query(models.ScrapedJob).filter_by(id=scraped_job.id).first()
         assert not scraped_job.is_active
@@ -108,9 +108,9 @@ class TestJobScrapingTable(BaseTest):
         self.show_job(scraped_job)
 
         self.scrapedJob_table_utils.table_context_menu(scraped_job.id, "delete")
-        self.delete_modal.confirm_button.click()
+        self.delete_modal_utils.confirm_button.click()
         self.scrapedJob_modal_utils.wait_for_import_modal_close()
-        self.assert_toast_message("Job Alert deleted successfully.")
+        self.toast_utils.assert_toast_message("Job Alert deleted successfully.")
         self.db.expire_all()
         scraped_job = self.db.query(models.ScrapedJob).filter_by(id=scraped_job.id).first()
         assert not scraped_job.is_active
@@ -463,7 +463,7 @@ class TestScrapingFilters(BaseTest):
         self.scrapingExclusionFilter_table_utils.table_row(self.filter_without_jobs.id).click()
         self.scrapingExclusionFilter_modal_utils.deactivate_button().click()
         self.scrapingExclusionFilter_modal_utils.wait_for_view_modal_close()
-        self.assert_toast_message("Alert Filter deactivated successfully.")
+        self.toast_utils.assert_toast_message("Alert Filter deactivated successfully.")
         self.db.expire_all()
         scraping_filter = (
             self.db.query(models.ScrapingExclusionFilter).filter_by(id=self.filter_without_jobs.id).first()
@@ -486,7 +486,7 @@ class TestScrapingFilters(BaseTest):
         self.scrapingExclusionFilter_modal_utils.edit_button("view", enabled=False).click()
         self.scrapingExclusionFilter_modal_utils._fill_modal(value="Virtual")
         self.scrapingExclusionFilter_modal_utils.confirm_button("edit").click()
-        self.scrapingExclusionFilter_modal_utils.wait_for_view_modal_close()
+        self.scrapingExclusionFilter_modal_utils.wait_for_view_modal()
 
     def test_edit_scraping_filter_failure(self) -> None:
         """Test deactivating a scraping filter when it has filtered jobs."""
@@ -528,7 +528,7 @@ class TestDismissExpiredBulkAction(BaseTest):
         self.scrapedJob_table_utils.wait_for_table_load()
 
         self._click_delete_expired()
-        self.scrapedJob_table_utils.assert_toast_message("No expired job alerts found.")
+        self.toast_utils.assert_toast_message("No expired job alerts found.")
 
     def test_delete_expired_opens_modal_with_expired_jobs(self) -> None:
         """When there are expired jobs, clicking Delete Expired opens the confirmation modal with the jobs listed."""
@@ -561,7 +561,7 @@ class TestDismissExpiredBulkAction(BaseTest):
         self.get_element("dismiss-expired-modal")
         self.get_element("dismiss-expired-confirm-btn").click()
 
-        self.scrapedJob_table_utils.assert_toast_message("1 expired job alert dismissed.")
+        self.toast_utils.assert_toast_message("1 expired job alert dismissed.")
 
         self.db.expire_all()
         updated = self.db.query(models.ScrapedJob).filter_by(id=expired_job.id).first()
@@ -616,9 +616,9 @@ class TestBulkDeleteSelectedAction(BaseTest):
         self._select_row(job1)
         self._select_row(job2)
         self._click_delete_selected()
-        self.delete_modal.confirm_button.click()
+        self.delete_modal_utils.confirm_button.click()
 
-        self.scrapedJob_table_utils.assert_toast_message("2 job alerts dismissed.")
+        self.toast_utils.assert_toast_message("2 job alerts dismissed.")
 
         self.db.expire_all()
         assert not self.db.query(models.ScrapedJob).filter_by(id=job1.id).first().is_active
@@ -634,7 +634,7 @@ class TestBulkDeleteSelectedAction(BaseTest):
 
         self._select_row(job)
         self._click_delete_selected()
-        self.delete_modal.cancel_button.click()
+        self.delete_modal_utils.cancel_button.click()
 
         self.db.expire_all()
         assert self.db.query(models.ScrapedJob).filter_by(id=job.id).first().is_active
@@ -648,9 +648,9 @@ class TestBulkDeleteSelectedAction(BaseTest):
         self.scrapedJob_table_utils.wait_for_table_load()
 
         self._click_delete_selected()
-        self.delete_modal.confirm_button.click()
+        self.delete_modal_utils.confirm_button.click()
 
-        self.scrapedJob_table_utils.assert_toast_message("2 job alerts dismissed.")
+        self.toast_utils.assert_toast_message("2 job alerts dismissed.")
 
         self.db.expire_all()
         assert not self.db.query(models.ScrapedJob).filter_by(id=job1.id).first().is_active
@@ -719,7 +719,7 @@ class TestJobEmailInteraction(BaseTest):
         self._click_job_row_in_modal(scraped_job)
         self.scrapedJob_modal_utils.wait_for_import_modal()
         self.scrapedJob_modal_utils.delete_button("import").click()
-        self.delete_modal.confirm_button.click()
+        self.delete_modal_utils.confirm_button.click()
         self.scrapedJob_modal_utils.wait_for_import_modal_close()
 
         self.db.expire_all()

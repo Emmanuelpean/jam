@@ -28,7 +28,7 @@ class TestAccountSettingsPage(BaseTest):
         self.user_settings_utils.download_data_button.click()
 
         # Wait for the download to complete (toast notification)
-        self.assert_toast_message("Data downloaded")
+        self.toast_utils.assert_toast_message("Data downloaded")
 
     # ------------------------------------------------ ACCOUNT DELETION ------------------------------------------------
 
@@ -59,7 +59,7 @@ class TestAccountSettingsPage(BaseTest):
         self.user_settings_utils.continue_delete_button.click()
         self.user_settings_utils.final_delete_button.click()
         self.wait_for_page("login")
-        self.assert_toast_message("Your account has been permanently deleted.")
+        self.toast_utils.assert_toast_message("Your account has been permanently deleted.")
         deleted_user = session.query(models.User).filter(models.User.id == user_id).first()
         assert deleted_user is None
 
@@ -87,7 +87,7 @@ class TestAccountSettingsPage(BaseTest):
         self.user_settings_utils.continue_delete_button.click()
         self.user_settings_utils.final_delete_button.click()
         self.wait_for_page("login")
-        self.assert_toast_message("Your account has been permanently deleted.")
+        self.toast_utils.assert_toast_message("Your account has been permanently deleted.")
         deleted_user = session.query(models.User).filter(models.User.id == user_id).first()
         assert deleted_user is None
 
@@ -98,7 +98,7 @@ class TestAccountSettingsPage(BaseTest):
         self.set_text(self.user_settings_utils.delete_password, self.user.plain_password)
         self.user_settings_utils.continue_delete_button.click()
         self.user_settings_utils.download_data_modal_button.click()
-        self.assert_toast_message("Data downloaded")
+        self.toast_utils.assert_toast_message("Data downloaded")
 
 
 class TestAccountSettingsPageEmailChange(BaseTest):
@@ -134,11 +134,11 @@ class TestAccountSettingsPageEmailChange(BaseTest):
         new_email = "newemail@email.com"
         self.clear_test_emails()
         self.request_email_change(new_email)
-        self.assert_toast_message(self.get_success_message(new_email))
+        self.toast_utils.assert_toast_message(self.get_success_message(new_email))
         assert new_email in self.get_element("pending-email-info").text
         verification_url = self.get_verification_link_from_email(new_email)
         self.driver.get(verification_url)
-        self.assert_toast_message(
+        self.toast_utils.assert_toast_message(
             "Email address has been successfully updated. You can now log in with your new email."
         )
         self.db_user.email = new_email
@@ -149,10 +149,10 @@ class TestAccountSettingsPageEmailChange(BaseTest):
         new_email = "newuser@test.com"
         self.clear_test_emails()
         self.request_email_change(new_email)
-        self.assert_toast_message(self.get_success_message(new_email))
+        self.toast_utils.assert_toast_message(self.get_success_message(new_email))
         invalid_verification_url = self.get_verification_link_from_email(new_email)[:-4]
         self.driver.get(invalid_verification_url)
-        self.assert_toast_message(
+        self.toast_utils.assert_toast_message(
             "Invalid or expired token. Please request a new one by logging in and changing your email address."
         )
 
@@ -162,11 +162,11 @@ class TestAccountSettingsPageEmailChange(BaseTest):
         new_email = "newuser@test.com"
         self.clear_test_emails()
         self.request_email_change(new_email)
-        self.assert_toast_message(self.get_success_message(new_email))
+        self.toast_utils.assert_toast_message(self.get_success_message(new_email))
         self.db_user.verification_token_created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=20)
         invalid_verification_url = self.get_verification_link_from_email(new_email)[:-4]
         self.driver.get(invalid_verification_url)
-        self.assert_toast_message(
+        self.toast_utils.assert_toast_message(
             "Invalid or expired token. Please request a new one by logging in and changing your email address."
         )
 
@@ -176,7 +176,7 @@ class TestAccountSettingsPageEmailChange(BaseTest):
         new_email = "newemail@email.com"
         self.clear_test_emails()
         self.request_email_change(new_email)
-        self.assert_toast_message(self.get_success_message(new_email))
+        self.toast_utils.assert_toast_message(self.get_success_message(new_email))
 
         self.driver.refresh()
         self.request_email_change(new_email)
@@ -188,7 +188,7 @@ class TestAccountSettingsPageEmailChange(BaseTest):
         new_email = "newemail@email.com"
         self.clear_test_emails()
         self.request_email_change(new_email)
-        self.assert_toast_message(self.get_success_message(new_email))
+        self.toast_utils.assert_toast_message(self.get_success_message(new_email))
 
         token = self.user.get_token(models.TokenType.EMAIL_CHANGE)
         assert token
@@ -197,7 +197,7 @@ class TestAccountSettingsPageEmailChange(BaseTest):
 
         self.driver.refresh()
         self.request_email_change(new_email)
-        self.assert_toast_message(self.get_success_message(new_email))
+        self.toast_utils.assert_toast_message(self.get_success_message(new_email))
 
     def test_change_email_already_exist(self, test_admin_user: FixtureUser) -> None:
         """Test changing the email to one already registered shows an inline error"""
@@ -242,14 +242,14 @@ class TestAccountSettingsPageEmailChange(BaseTest):
         new_email = "newemail@email.com"
         self.clear_test_emails()
         self.request_email_change(new_email)
-        self.assert_toast_message(self.get_success_message(new_email))
+        self.toast_utils.assert_toast_message(self.get_success_message(new_email))
 
         # Visit the verification link. In a real-world scenario this would happen in a separate
         # browser/tab; here it runs in the same driver, which logs us out and bumps token_version
         # server-side. The original tab is unaffected — that's what we simulate next.
         verification_url = self.get_verification_link_from_email(new_email)
         self.driver.get(verification_url)
-        self.assert_toast_message(
+        self.toast_utils.assert_toast_message(
             "Email address has been successfully updated. You can now log in with your new email."
         )
         self.db_user.email = new_email
@@ -290,7 +290,7 @@ class TestAccountSettingsPagePasswordChange(BaseTest):
         self.set_text(self.user_settings_utils.confirm_password, new_password)
         self.user_settings_utils.confirm_password_change_button.click()
         self.wait_for_page("login")
-        self.assert_toast_message("Password has been successfully updated. Please log in again.")
+        self.toast_utils.assert_toast_message("Password has been successfully updated. Please log in again.")
         assert verify_password(new_password, self.db_user.password)
         self.driver.refresh()
         self.wait_for_page("login")

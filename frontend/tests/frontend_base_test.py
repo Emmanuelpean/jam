@@ -8,7 +8,6 @@ the helper functions from this module.
 import json
 import os
 import time
-from datetime import datetime, timezone, timedelta
 from typing import Generator
 
 import pytest
@@ -19,22 +18,29 @@ from selenium.webdriver.support.wait import WebDriverWait
 from app import models
 from app.config import settings
 from app.core.oauth2 import create_access_token
-from tests.fixtures.users import FixtureUser
-from tests.base_test import BaseTest as BackendBaseTest
+from helpers.admin_page_utils import AdminPageUtils
 from helpers.alert_modal_utils import ConfirmModalUtils, DeleteModalUtils, LogoutModalUtils
 from helpers.auth_utils import AuthentificationUtils
-from helpers.base_utils import BaseUtils
+from helpers.column_config_sidebar_utils import ColumnConfigSidebarUtils
+from helpers.command_palette_utils import CommandPaletteUtils
+from helpers.dashboard_edit_utils import DashboardEditUtils
 from helpers.data_modal_utils import DataModalUtils
 from helpers.data_table_utils import DataTableUtils
 from helpers.file_upload_utils import FileUploadUtils
 from helpers.filter_sidebar_utils import FilterSidebarUtils
 from helpers.followup_email_modal_utils import FollowUpEmailModalUtils
+from helpers.jam_test_utils import JamTestUtils
 from helpers.premium_settings_utils import PremiumSettingsUtils
+from helpers.service_dashboard_utils import ServiceDashboardUtils
+from helpers.toast_utils import ToastUtils
 from helpers.tour_utils import TourUtils
+from helpers.usage_page_utils import UsagePageUtils
 from helpers.user_settings_utils import UserSettingsUtils
+from tests.base_test import BaseTest as BackendBaseTest
+from tests.fixtures.users import FixtureUser
 
 
-class BaseTest(BaseUtils, BackendBaseTest):
+class BaseTest(JamTestUtils, BackendBaseTest):
     """Base class for selenium tests"""
 
     _shared_backend_url = None
@@ -105,14 +111,21 @@ class BaseTest(BaseUtils, BackendBaseTest):
     # Others
     auth_utils: AuthentificationUtils
     user_settings_utils: UserSettingsUtils
-    followup_modal: FollowUpEmailModalUtils
-    confirm_modal: ConfirmModalUtils
-    delete_modal: DeleteModalUtils
-    logout_modal: LogoutModalUtils
+    followup_modal_utils: FollowUpEmailModalUtils
+    confirm_modal_utils: ConfirmModalUtils
+    delete_modal_utils: DeleteModalUtils
+    logout_modal_utils: LogoutModalUtils
     premium_settings_utils: PremiumSettingsUtils
     tour_utils: TourUtils
     filter_sidebar_utils: FilterSidebarUtils
     file_upload_utils: FileUploadUtils
+    service_dashboard_utils: ServiceDashboardUtils
+    usage_page_utils: UsagePageUtils
+    admin_page_utils: AdminPageUtils
+    column_config_utils: ColumnConfigSidebarUtils
+    command_palette_utils: CommandPaletteUtils
+    dashboard_edit_utils: DashboardEditUtils
+    toast_utils: ToastUtils
 
     @pytest.fixture(autouse=True)
     def setup_method(
@@ -204,14 +217,21 @@ class BaseTest(BaseUtils, BackendBaseTest):
 
             self.auth_utils = AuthentificationUtils(**shared_kwargs)
             self.user_settings_utils = UserSettingsUtils(**shared_kwargs)
-            self.followup_modal = FollowUpEmailModalUtils(**shared_kwargs)
-            self.confirm_modal = ConfirmModalUtils(**shared_kwargs)
-            self.delete_modal = DeleteModalUtils(**shared_kwargs)
-            self.logout_modal = LogoutModalUtils(**shared_kwargs)
+            self.followup_modal_utils = FollowUpEmailModalUtils(**shared_kwargs)
+            self.confirm_modal_utils = ConfirmModalUtils(**shared_kwargs)
+            self.delete_modal_utils = DeleteModalUtils(**shared_kwargs)
+            self.logout_modal_utils = LogoutModalUtils(**shared_kwargs)
             self.premium_settings_utils = PremiumSettingsUtils(**shared_kwargs)
             self.tour_utils = TourUtils(**shared_kwargs)
             self.filter_sidebar_utils = FilterSidebarUtils(**shared_kwargs)
             self.file_upload_utils = FileUploadUtils(**shared_kwargs)
+            self.service_dashboard_utils = ServiceDashboardUtils(**shared_kwargs)
+            self.usage_page_utils = UsagePageUtils(**shared_kwargs)
+            self.admin_page_utils = AdminPageUtils(**shared_kwargs)
+            self.column_config_utils = ColumnConfigSidebarUtils(**shared_kwargs)
+            self.command_palette_utils = CommandPaletteUtils(**shared_kwargs)
+            self.dashboard_edit_utils = DashboardEditUtils(**shared_kwargs)
+            self.toast_utils = ToastUtils(**shared_kwargs)
 
             self.driver.get(self.frontend_base_url)
             self.setup_function(request)
@@ -353,43 +373,3 @@ class BaseTest(BaseUtils, BackendBaseTest):
         """Helper method to verify user exists in database"""
 
         return self.db.query(models.User).filter(models.User.email == email).all()
-
-
-class MaintenanceTestBase(BaseTest):
-    """Shared helpers for maintenance tests."""
-
-    _setting_id = None
-
-    def _set_maintenance_scheduled_at(self, iso_timestamp: str, test_admin_user: FixtureUser) -> None:
-        """Create or update the maintenance_scheduled_at setting via the API."""
-
-        if self._setting_id is None:
-            response = test_admin_user.client.post(
-                "/settings/", json={"name": "maintenance_scheduled_at", "value": iso_timestamp}
-            )
-            assert response.status_code == 201
-            self._setting_id = response.json()["id"]
-        else:
-            response = test_admin_user.client.put(f"/settings/{self._setting_id}", json={"value": iso_timestamp})
-            assert response.status_code == 200
-
-    def _clear_maintenance_scheduled_at(self) -> None:
-        """Delete the maintenance_scheduled_at setting if it exists."""
-
-        if self._setting_id is not None:
-            self.client.delete(f"/settings/{self._setting_id}")
-            self._setting_id = None
-
-    @staticmethod
-    def _get_future_timestamp(minutes: int | float = 30) -> str:
-        """Get an ISO 8601 timestamp for a time in the future."""
-
-        future_time = datetime.now(timezone.utc) + timedelta(minutes=minutes)
-        return future_time.isoformat()
-
-    @staticmethod
-    def _get_past_timestamp(minutes: int | float = 5) -> str:
-        """Get an ISO 8601 timestamp for a time in the past."""
-
-        past_time = datetime.now(timezone.utc) - timedelta(minutes=minutes)
-        return past_time.isoformat()
