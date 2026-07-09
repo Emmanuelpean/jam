@@ -1102,9 +1102,8 @@ for service_log, date in zip(JOB_RATING_SERVICE_LOG_DATA, SERVICE_LOG_DATETIME):
 
 # ---------------------------------------------- JOB RATING SERVICE ERRORS ----------------------------------------------
 
-# Errors raised during rating, restored as unified ServiceError rows. job_rating_id is the 1-based position of the
-# rating in JOB_RATING_DATA (which equals its scraped_job_id). The single run-level failure is recorded as a
-# CRITICAL error linked to the service log run so that JobRatingServiceLog.is_success derives to False.
+# Run-level failures, restored as unified ServiceError rows linked to a JobRatingServiceLog. The single CRITICAL
+# error is linked to the service-log run so that JobRatingServiceLog.is_success derives to False.
 JOB_RATING_SERVICE_ERROR_DATA = [
     # Run-level critical failure on the second service-log run ("Timeout contacting rating service").
     {
@@ -1113,7 +1112,25 @@ JOB_RATING_SERVICE_ERROR_DATA = [
         "level": "critical",
         "job_rating_service_log_id": 2,
     },
-    # Per-rating failures (linked to the JobRating only).
+    # Additional run-level, non-critical errors spread across the runs (level defaults to "error").
+    {"error_type": "Exception", "message": "Rate limit hit; retried after backoff", "job_rating_service_log_id": 1},
+    {"error_type": "Exception", "message": "Skipped 2 jobs with empty descriptions", "job_rating_service_log_id": 1},
+    {"error_type": "Exception", "message": "Malformed LLM response; used fallback parser", "job_rating_service_log_id": 2},
+    {"error_type": "Exception", "message": "Transient connection reset to rating provider", "job_rating_service_log_id": 3},
+    # Additional run-level critical failure on the third run ("Rating provider quota exhausted").
+    {
+        "error_type": "Exception",
+        "message": "Rating provider quota exhausted",
+        "level": "critical",
+        "job_rating_service_log_id": 3,
+    },
+]
+
+# ------------------------------------------------- JOB RATING ERRORS --------------------------------------------------
+
+# Per-rating failures, restored as unified ServiceError rows linked to their JobRating. job_rating_id is the 1-based
+# position of the rating in JOB_RATING_DATA (which equals its scraped_job_id).
+JOB_RATING_ERROR_DATA = [
     {"error_type": "Exception", "message": "Failed to scrape job details: Page not found", "job_rating_id": 6},
     {"error_type": "Exception", "message": "Failed to scrape job details: Rate limit exceeded", "job_rating_id": 7},
     {"error_type": "Exception", "message": "Failed to rate job: missing job description", "job_rating_id": 11},
@@ -1126,4 +1143,15 @@ JOB_RATING_SERVICE_ERROR_DATA = [
     {"error_type": "Exception", "message": "Failed to rate job: Invalid response format", "job_rating_id": 63},
     {"error_type": "Exception", "message": "Failed to rate job: Service unavailable", "job_rating_id": 64},
     {"error_type": "Exception", "message": "Failed to rate job: Internal server error", "job_rating_id": 65},
+    # Additional per-rating failures (retry attempts on ratings that ultimately failed).
+    {"error_type": "Exception", "message": "Retry failed: Page not found", "job_rating_id": 6},
+    {"error_type": "Exception", "message": "Retry failed: Rate limit exceeded", "job_rating_id": 7},
+    {"error_type": "Exception", "message": "Retry failed: missing job description", "job_rating_id": 11},
+    {"error_type": "Exception", "message": "Retry failed: API timeout", "job_rating_id": 13},
+    {"error_type": "Exception", "message": "Retry failed: Connection timeout", "job_rating_id": 58},
+    {"error_type": "Exception", "message": "Retry failed: Access denied", "job_rating_id": 59},
+    {"error_type": "Exception", "message": "Retry failed: Rate limit exceeded", "job_rating_id": 60},
+    {"error_type": "Exception", "message": "Retry failed: Invalid response format", "job_rating_id": 61},
+    {"error_type": "Exception", "message": "Retry failed: Service unavailable", "job_rating_id": 62},
+    {"error_type": "Exception", "message": "Retry failed: Internal server error", "job_rating_id": 63},
 ]
