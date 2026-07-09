@@ -2,7 +2,11 @@
 
 import time
 
-from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    StaleElementReferenceException,
+    TimeoutException,
+)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
@@ -104,10 +108,22 @@ class Select(SeleniumUtils):
         """Select all options that display text matching the argument"""
 
         self.open_menu()
-        WebDriverWait(self.driver, 5).until(lambda d: len(self.options) > 0)
-        wanted_elements_indexes = [self._get_option_index(i) for i in self.options if i.text.strip() == text.strip()]
 
-        if len(wanted_elements_indexes) == 0:
+        def _matching_indexes(_driver) -> list[str]:
+            """Return option indexes whose text matches, tolerating options that are
+            present but not yet populated/rendered (react-select renders the option
+            elements before their text is available)."""
+
+            try:
+                return [
+                    self._get_option_index(opt) for opt in self.options if opt.text.strip() == text.strip()
+                ]
+            except StaleElementReferenceException:
+                return []
+
+        try:
+            wanted_elements_indexes = WebDriverWait(self.driver, 5).until(lambda d: _matching_indexes(d) or False)
+        except TimeoutException:
             raise NoSuchElementException("Could not locate element with text {0}".format(text))
 
         for element_index in wanted_elements_indexes:
