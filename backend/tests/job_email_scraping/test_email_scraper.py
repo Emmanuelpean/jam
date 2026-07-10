@@ -1164,7 +1164,7 @@ class TestExtractForwardingEmailConfirmation(BaseTest):
         # Verify a service error was logged
         errors = session.query(models.ServiceError).all()
         assert len(errors) == 1
-        assert "Failed to get email with platform gmail" in errors[0].message
+        assert "Failed to get forwarding emails with platform gmail" in errors[0].message
 
         # Verify no confirmation links were created
         count = session.query(models.ForwardingConfirmationLink).count()

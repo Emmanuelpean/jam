@@ -94,7 +94,8 @@ class ServiceError(CommonBase, Base):
     Attributes:
     -----------
     - `error_type` (str): Type/class name of the error (e.g. "TimeoutError").
-    - `message` (str): Error message.
+    - `message` (str, optional): Custom message describing the failure; None when the exception's own
+      type and traceback are enough.
     - `traceback` (str, optional): Full traceback of the error, if available.
     - `is_acknowledged` (bool): Whether an admin has acknowledged the error.
     - `level` (str): Severity (see :class:`ErrorLevel`); defaults to ERROR.
@@ -116,7 +117,7 @@ class ServiceError(CommonBase, Base):
 
     error_type = Column(String, nullable=False)
     message = Column(String, nullable=False)
-    traceback = Column(String, nullable=True)
+    traceback = Column(String, nullable=False)
     is_acknowledged = Column(Boolean, nullable=False, server_default=expression.false())
     level = Column(String, nullable=True, default=ServiceErrorLevel.ERROR)
 
@@ -162,7 +163,7 @@ class ServiceError(CommonBase, Base):
 
 def record_error(
     db: Session,
-    exc: Exception | str,
+    exc: Exception,
     message: str | None = None,
     level: ServiceErrorLevel = ServiceErrorLevel.ERROR,
     scraped_job_id: int | None = None,
@@ -171,12 +172,12 @@ def record_error(
     job_rating_service_log_id: int | None = None,
     provider_monitoring_service_log_id: int | None = None,
 ) -> ServiceError:
-    """Create and persist a ServiceError for a caught exception (or a plain error string).
-    Captures the current traceback via `traceback.format_exc()`, so call this from within the
-    `except` block that handled the error. Pass the service-log id for the originating service.
+    """Create and persist a ServiceError for a caught exception.
+    The stored traceback is formatted from the exception's own `__traceback__`. Pass the service-log id
+    for the originating service.
     :param db: Database session.
-    :param exc: The caught exception or an error message string.
-    :param message: Optional explicit message; defaults to str(exc).
+    :param exc: The caught exception, whose type and traceback are recorded.
+    :param message: Optional custom message describing the failure; None if the exception alone suffices.
     :param level: Error severity.
     :param scraped_job_id: ScrapedJob the error relates to, for per-job failures.
     :param job_rating_id: JobRating the rating error belongs to, if applicable.
@@ -186,9 +187,9 @@ def record_error(
     :return: The persisted ServiceError instance."""
 
     error = ServiceError(
-        error_type=type(exc).__name__ if isinstance(exc, BaseException) else "Error",
-        message=message if message is not None else str(exc),
-        traceback=_traceback.format_exc(),
+        error_type=type(exc).__name__,
+        message=message,
+        traceback="".join(_traceback.format_exception(type(exc), exc, exc.__traceback__)),
         level=level,
         scraped_job_id=scraped_job_id,
         job_rating_id=job_rating_id,

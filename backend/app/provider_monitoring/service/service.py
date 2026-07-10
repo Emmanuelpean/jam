@@ -62,10 +62,12 @@ class ProviderMonitoringService(BaseService[ProviderMonitoringServiceLog]):
                                 provider_monitoring_service_log_id=service_log.id,
                             )
             except Exception as exc:
-                self.logger.exception(f"Critical error in {self.service_name} run: {exc}")
+                message = "Critical error in provider monitoring workflow"
+                self.logger.exception(message)
                 record_error(
                     db=db,
                     exc=exc,
+                    message=message,
                     level=ServiceErrorLevel.CRITICAL,
                     provider_monitoring_service_log_id=service_log.id,
                 )

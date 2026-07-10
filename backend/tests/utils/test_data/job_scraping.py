@@ -192,23 +192,23 @@ JOB_EMAIL_DATA = [
         "alert_name": "Mobile App Developer",
         "job_found_n": 1,
         "subject": "Mobile App Developer jobs near you",
-        "sender": "alerts@totaljobs.com",
+        "sender": "alerts@jobs.nhs.uk",
         "date_received": "2024-02-03T12:15:00",
-        "platform": "totaljobs",
+        "platform": "nhs",
         "service_log_id": 6,
         "body": """
         Mobile development opportunities:
-        
+
         Flutter Developer - Healthcare sector
-        https://totaljobs.com/job/flutter-healthcare-567890
-        
+        https://jobs.nhs.uk/job/flutter-healthcare-567890
+
         iOS Developer - Fintech startup
-        https://totaljobs.com/job/ios-fintech-234567
-        
+        https://jobs.nhs.uk/job/ios-fintech-234567
+
         React Native Developer - Remote
-        https://totaljobs.com/job/react-native-remote-890123
-        
-        TotalJobs Team
+        https://jobs.nhs.uk/job/react-native-remote-890123
+
+        NHS Jobs Team
         """,
     },
     {
@@ -217,24 +217,24 @@ JOB_EMAIL_DATA = [
         "alert_name": "AI & Machine Learning",
         "job_found_n": 0,
         "subject": "AI & Machine Learning weekly digest",
-        "sender": "noreply@reed.co.uk",
+        "sender": "noreply@veganjobs.com",
         "date_received": "2024-02-05T16:40:00",
-        "platform": "reed",
+        "platform": "veganjobs",
         "service_log_id": 7,
         "body": """
         This week's AI & ML roles:
-        
+
         Machine Learning Engineer - Edinburgh
-        https://reed.co.uk/jobs/ml-engineer-edinburgh/345678
-        
+        https://veganjobs.com/jobs/ml-engineer-edinburgh/345678
+
         AI Software Developer - London
-        https://reed.co.uk/jobs/ai-developer-london/456789
-        
+        https://veganjobs.com/jobs/ai-developer-london/456789
+
         Data Scientist - Manchester
-        https://reed.co.uk/jobs/data-scientist-manchester/567890
-        
+        https://veganjobs.com/jobs/data-scientist-manchester/567890
+
         Happy job hunting!
-        Reed
+        VeganJobs
         """,
     },
     {
@@ -243,23 +243,23 @@ JOB_EMAIL_DATA = [
         "alert_name": "Sustainability & Green Tech",
         "job_found_n": 0,
         "subject": "Sustainability & Green Tech jobs",
-        "sender": "jobs@cv-library.co.uk",
+        "sender": "careers@jobs.nhs.uk",
         "date_received": "2024-02-07T09:20:00",
-        "platform": "cv-library",
+        "platform": "nhs",
         "service_log_id": 8,
         "body": """
         Green technology opportunities:
-        
+
         Sustainability Software Engineer - Bristol
-        https://cv-library.co.uk/job/sustainability-bristol-678901
-        
+        https://jobs.nhs.uk/job/sustainability-bristol-678901
+
         Renewable Energy Developer - Edinburgh
-        https://cv-library.co.uk/job/renewable-edinburgh-789012
-        
+        https://jobs.nhs.uk/job/renewable-edinburgh-789012
+
         Environmental Data Analyst - London
-        https://cv-library.co.uk/job/environmental-london-890123
-        
-        CV-Library Team
+        https://jobs.nhs.uk/job/environmental-london-890123
+
+        NHS Jobs Team
         """,
     },
     {
@@ -268,23 +268,23 @@ JOB_EMAIL_DATA = [
         "alert_name": "Full Stack Developer",
         "job_found_n": 0,
         "subject": "Full Stack Developer positions",
-        "sender": "alerts@jobsite.co.uk",
+        "sender": "alerts@veganjobs.com",
         "date_received": "2024-02-09T14:30:00",
-        "platform": "jobsite",
+        "platform": "veganjobs",
         "service_log_id": 9,
         "body": """
         Full stack development roles:
-        
+
         Full Stack JavaScript Developer - Manchester
-        https://jobsite.co.uk/job/fullstack-js-manchester-901234
-        
+        https://veganjobs.com/job/fullstack-js-manchester-901234
+
         Python Full Stack Engineer - London
-        https://jobsite.co.uk/job/python-fullstack-london-012345
-        
+        https://veganjobs.com/job/python-fullstack-london-012345
+
         MEAN Stack Developer - Birmingham
-        https://jobsite.co.uk/job/mean-stack-birmingham-123456
-        
-        Jobsite Team
+        https://veganjobs.com/job/mean-stack-birmingham-123456
+
+        VeganJobs Team
         """,
     },
     {
@@ -463,7 +463,7 @@ JOB_SCRAPING_PLATFORM_STAT_DATA = [
         "service_log_id": 5,
     },
     {
-        "name": "totaljobs",
+        "name": "nhs",
         "job_found_ids": [125, 126, 127],
         "job_scrape_succeeded_ids": [125, 126, 127],
         "job_scrape_failed_ids": [],
@@ -483,7 +483,7 @@ JOB_SCRAPING_PLATFORM_STAT_DATA = [
         "service_log_id": 7,
     },
     {
-        "name": "cv-library",
+        "name": "nhs",
         "job_found_ids": [49],
         "job_scrape_succeeded_ids": [],
         "job_scrape_failed_ids": [49],
@@ -493,7 +493,7 @@ JOB_SCRAPING_PLATFORM_STAT_DATA = [
         "service_log_id": 8,
     },
     {
-        "name": "jobsite",
+        "name": "veganjobs",
         "job_found_ids": list(range(141, 148)),
         "job_scrape_succeeded_ids": list(range(141, 148)),
         "job_scrape_failed_ids": [],
@@ -935,7 +935,7 @@ SCRAPED_JOB_DATA = [
     },
     {
         "external_job_id": "totaljobs_567890",
-        "platform": "totaljobs",
+        "platform": "nhs",
         "owner_id": 2,
         "status": "completed",
         "title": "Flutter Developer",
@@ -946,7 +946,7 @@ SCRAPED_JOB_DATA = [
         "salary_min": 50000.0,
         "salary_max": 70000.0,
         "salary_currency": "GBP",
-        "url": "https://totaljobs.com/job/flutter-healthcare-567890",
+        "url": "https://jobs.nhs.uk/job/flutter-healthcare-567890",
         "scrape_datetime": "2025-09-03T14:22:45.789012+00:00",
         "service_log_id": 1,
         "geolocation_id": 19,
@@ -954,7 +954,7 @@ SCRAPED_JOB_DATA = [
     },
     {
         "external_job_id": "reed_345678",
-        "platform": "reed",
+        "platform": "veganjobs",
         "owner_id": 2,
         "status": "completed",
         "title": "Machine Learning Engineer",
@@ -964,7 +964,7 @@ SCRAPED_JOB_DATA = [
         "salary_min": 65000.0,
         "salary_max": 90000.0,
         "salary_currency": "GBP",
-        "url": "https://reed.co.uk/jobs/ml-engineer-edinburgh/345678",
+        "url": "https://veganjobs.com/jobs/ml-engineer-edinburgh/345678",
         "scrape_datetime": "2025-09-05T09:33:12.345678+00:00",
         "service_log_id": 1,
         "geolocation_id": 20,
@@ -972,7 +972,7 @@ SCRAPED_JOB_DATA = [
     },
     {
         "external_job_id": "jobsite_901234",
-        "platform": "jobsite",
+        "platform": "veganjobs",
         "owner_id": 2,
         "status": "completed",
         "title": "Full Stack JavaScript Developer",
@@ -982,7 +982,7 @@ SCRAPED_JOB_DATA = [
         "salary_min": 55000.0,
         "salary_max": 80000.0,
         "salary_currency": "GBP",
-        "url": "https://jobsite.co.uk/job/fullstack-js-manchester-901234",
+        "url": "https://veganjobs.com/job/fullstack-js-manchester-901234",
         "scrape_datetime": "2025-09-09T13:20:15.567890+00:00",
         "service_log_id": 1,
         "geolocation_id": 21,
@@ -1686,7 +1686,7 @@ SCRAPED_JOB_DATA = [
     },
     {
         "external_job_id": "cvlib_678901",
-        "platform": "cv-library",
+        "platform": "nhs",
         "owner_id": 2,
         "status": "failed",
         "title": "Sustainability Software Engineer",
@@ -1708,7 +1708,7 @@ SCRAPED_JOB_DATA = [
         "external_job_id": "job_1120",
         "platform": "linkedin",
         "owner_id": 1,
-        "status": "failed",
+        "status": "completed",
         "title": "Angular Developer",
         "url": "test",
         "scrape_datetime": "2025-01-05T11:15:00.000+00:00",
@@ -1718,7 +1718,7 @@ SCRAPED_JOB_DATA = [
         "external_job_id": "job_1121",
         "platform": "linkedin",
         "owner_id": 1,
-        "status": "failed",
+        "status": "completed",
         "title": "Data Scientist",
         "url": "test",
         "scrape_datetime": "2025-01-04T14:30:00.000+00:00",
@@ -1728,7 +1728,7 @@ SCRAPED_JOB_DATA = [
         "external_job_id": "job_1122",
         "platform": "linkedin",
         "owner_id": 1,
-        "status": "failed",
+        "status": "completed",
         "title": "AI Software Developer",
         "url": "test",
         "scrape_datetime": "2025-01-03T16:45:00.000+00:00",
@@ -1738,7 +1738,7 @@ SCRAPED_JOB_DATA = [
         "external_job_id": "job_1123",
         "platform": "linkedin",
         "owner_id": 1,
-        "status": "failed",
+        "status": "completed",
         "title": "iOS Developer",
         "url": "test",
         "scrape_datetime": "2025-01-02T08:00:00.000+00:00",
@@ -1748,7 +1748,7 @@ SCRAPED_JOB_DATA = [
         "external_job_id": "job_1124",
         "platform": "linkedin",
         "owner_id": 1,
-        "status": "failed",
+        "status": "completed",
         "title": "Android Developer",
         "url": "test",
         "scrape_datetime": "2025-01-01T13:20:00.000+00:00",
@@ -1758,7 +1758,7 @@ SCRAPED_JOB_DATA = [
         "external_job_id": "job_1150",
         "platform": "linkedin",
         "owner_id": 1,
-        "status": "failed",
+        "status": "completed",
         "title": "Vue.js Developer",
         "url": "test",
         "scrape_datetime": "2024-12-06T14:15:00.000+00:00",
@@ -1768,7 +1768,7 @@ SCRAPED_JOB_DATA = [
         "external_job_id": "job_1151",
         "platform": "linkedin",
         "owner_id": 1,
-        "status": "failed",
+        "status": "completed",
         "title": "Angular Developer",
         "url": "test",
         "scrape_datetime": "2024-12-05T16:30:00.000+00:00",
@@ -1778,7 +1778,7 @@ SCRAPED_JOB_DATA = [
         "external_job_id": "job_1152",
         "platform": "linkedin",
         "owner_id": 1,
-        "status": "failed",
+        "status": "completed",
         "title": "Data Scientist",
         "url": "test",
         "scrape_datetime": "2024-12-04T08:45:00.000+00:00",
@@ -1981,6 +1981,73 @@ SCRAPED_JOB_SKIPPED_INDEX = find_index(status="skipped")
 
 # ---------------------------------------------- SCRAPED JOB SCRAPING ERRORS --------------------------------------------
 
+# Representative tracebacks keyed by failure reason. A job's retries hit the same code path in production, so every
+# error sharing a base reason gets the same traceback here (letting the report link collapse duplicate retry rows).
+_SCRAPING_TRACEBACKS = {
+    "page not found": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
+        "    job_data = scraper.fetch(job_record.url)\n"
+        '  File "app/job_email_scraping/scrapers/base.py", line 88, in fetch\n'
+        "    response.raise_for_status()\n"
+        '  File "requests/models.py", line 1024, in raise_for_status\n'
+        "    raise HTTPError(http_error_msg, response=self)\n"
+        "requests.exceptions.HTTPError: 404 Client Error: Not Found for url"
+    ),
+    "access denied": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
+        "    job_data = scraper.fetch(job_record.url)\n"
+        '  File "app/job_email_scraping/scrapers/base.py", line 88, in fetch\n'
+        "    response.raise_for_status()\n"
+        '  File "requests/models.py", line 1024, in raise_for_status\n'
+        "    raise HTTPError(http_error_msg, response=self)\n"
+        "requests.exceptions.HTTPError: 403 Client Error: Forbidden for url"
+    ),
+    "rate limit": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
+        "    job_data = scraper.fetch(job_record.url)\n"
+        '  File "app/job_email_scraping/scrapers/base.py", line 95, in fetch\n'
+        "    raise RateLimitError(f\"Rate limit exceeded after {attempts} requests\")\n"
+        "app.exceptions.RateLimitError: Rate limit exceeded after 30 requests"
+    ),
+    "connection timeout": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
+        "    job_data = scraper.fetch(job_record.url)\n"
+        '  File "urllib3/connectionpool.py", line 791, in urlopen\n'
+        "    raise ReadTimeoutError(self, url, \"Read timed out.\")\n"
+        "requests.exceptions.ConnectTimeout: HTTPSConnectionPool(host='www.linkedin.com', port=443): Read timed out."
+    ),
+    "invalid": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
+        "    job_data = scraper.parse(response.text)\n"
+        '  File "app/job_email_scraping/scrapers/base.py", line 142, in parse\n'
+        "    raise ParserError(\"Missing required field 'job_title'\")\n"
+        "app.exceptions.ParserError: Invalid job posting format"
+    ),
+}
+
+# Default traceback for reasons not matched above.
+_SCRAPING_TRACEBACK_DEFAULT = (
+    "Traceback (most recent call last):\n"
+    '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
+    "    job_data = scraper.fetch(job_record.url)\n"
+    "Exception: Failed to scrape job"
+)
+
+
+def _scraping_traceback(message: str) -> str:
+    """Return a representative traceback for a per-job scraping failure message (retry prefixes ignored)."""
+    lowered = message.lower()
+    for keyword, traceback in _SCRAPING_TRACEBACKS.items():
+        if keyword in lowered:
+            return traceback
+    return _SCRAPING_TRACEBACK_DEFAULT
+
+
 # Per-job scraping failures, restored as unified ServiceError rows linked to the ScrapedJob. Keyed by external_job_id
 # so the link survives reordering of SCRAPED_JOB_DATA; resolved to the 1-based position used by override_properties.
 _SCRAPED_JOB_ERROR_SPECS = [
@@ -1997,12 +2064,21 @@ _SCRAPED_JOB_ERROR_SPECS = [
     ("job_1152", "Connection timeout - server not responding"),
     ("9988776655", "Scraping blocked - rate limit exceeded"),
     ("job_11sefwfw59rg", "Page not found - job posting may have been removed"),
+    # Retry-attempt failures for the jobs that exhausted their retries and stayed FAILED, so each
+    # FAILED scraped job carries at least three errors.
+    ("2468135790", "Retry 1 failed: Page not found - job posting may have been removed"),
+    ("2468135790", "Retry 2 failed: Page not found - job posting may have been removed"),
+    ("cvlib_678901", "Retry 1 failed: Access denied - company blocked scraping"),
+    ("cvlib_678901", "Retry 2 failed: Access denied - company blocked scraping"),
+    ("soft123456789", "Retry 1 failed: Rate limit exceeded - retry after 24 hours"),
+    ("soft123456789", "Retry 2 failed: Rate limit exceeded - retry after 24 hours"),
 ]
 
 SCRAPED_JOB_ERROR_DATA = [
     {
         "error_type": "Exception",
         "message": message,
+        "traceback": _scraping_traceback(message),
         "scraped_job_id": find_index(external_job_id=external_job_id) + 1,
     }
     for external_job_id, message in _SCRAPED_JOB_ERROR_SPECS

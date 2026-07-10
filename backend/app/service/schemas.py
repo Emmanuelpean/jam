@@ -11,7 +11,7 @@ class ServiceErrorOut(Out):
     """Service Error output schema"""
 
     error_type: str
-    message: str
+    message: str | None = None
     traceback: str | None = None
     is_acknowledged: bool
     level: str | None = None

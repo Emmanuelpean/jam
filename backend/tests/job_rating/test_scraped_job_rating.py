@@ -541,6 +541,7 @@ class TestScoreScrapedJobs(BaseTest):
 
         service_log = ScrapedJobRatingService().run(session)
         error = service_log.service_errors[0]
-        assert "DB connection lost" in error.message
+        assert error.error_type == "RuntimeError"
+        assert "DB connection lost" in error.traceback
         assert error.scraped_job_id is None
         assert error.level == "critical"

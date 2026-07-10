@@ -24,10 +24,17 @@ def create_job_rating_service_errors(db, service_logs) -> list[models.ServiceErr
     return create_db_entries(db, models.ServiceError, data)
 
 
-def create_job_rating_errors(db, job_ratings) -> list[models.ServiceError]:
-    """Create sample per-rating job rating errors as unified ServiceError rows linked to their JobRating"""
+def create_job_rating_errors(db, job_ratings, service_logs) -> list[models.ServiceError]:
+    """Create sample per-rating job rating errors as unified ServiceError rows linked to their JobRating and to the
+    rating run that processed it, mirroring how the rater records per-job failures in production. The owning run is
+    the service log whose job_failed_ids contains the rating's scraped job."""
 
     data = override_properties(job_rating.JOB_RATING_ERROR_DATA, ("job_rating_id", job_ratings))
+    rating_by_id = {rating.id: rating for rating in job_ratings}
+    for entry in data:
+        scraped_job_id = rating_by_id[entry["job_rating_id"]].scraped_job_id
+        log = next((sl for sl in service_logs if scraped_job_id in sl.job_failed_ids), None)
+        entry["job_rating_service_log_id"] = log.id if log else None
     print(f"Creating {len(data)} Job Rating Errors...")
     return create_db_entries(db, models.ServiceError, data)
 

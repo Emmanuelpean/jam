@@ -116,8 +116,15 @@ class ScrapedJobRatingService(BaseService[models.JobRatingServiceLog]):
                     self._process_user(db, user.id, service_log, system_prompt, job_prompt)
 
             except Exception as exception:
-                self.logger.exception(f"Critical error in rating workflow: {exception}")
-                record_error(db, exception, level=ServiceErrorLevel.CRITICAL, job_rating_service_log_id=service_log.id)
+                message = "Critical error in rating workflow"
+                self.logger.exception(message)
+                record_error(
+                    db,
+                    exception,
+                    message,
+                    level=ServiceErrorLevel.CRITICAL,
+                    job_rating_service_log_id=service_log.id,
+                )
             finally:
                 self.logger.info("Finished workflow")
 
@@ -295,7 +302,7 @@ class ScrapedJobRatingService(BaseService[models.JobRatingServiceLog]):
             db.commit()
         except Exception as exception:
             message = f"Error scoring job ID {scraped_job.id}: {exception}\nRaw response is {score}"
-            self.logger.exception(f"Error in rating workflow: {exception}")
+            self.logger.exception(message)
             record_error(
                 db,
                 exception,

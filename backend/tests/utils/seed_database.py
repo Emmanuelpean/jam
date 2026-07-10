@@ -83,7 +83,7 @@ def create_database_data(db: Session) -> None:
     :param db: database session"""
 
     # Core dependencies (always needed)
-    print("Creating core data...")
+    print("\nCreating core data...")
     users = create_users(db, None, 12)
     create_settings(db)
     ai_prompts = create_ai_prompts(db)
@@ -117,7 +117,7 @@ def create_database_data(db: Session) -> None:
     job_rating_service_logs = create_job_rating_service_logs(db)
     job_ratings = create_job_ratings(db, users, user_qualifications, scraped_jobs, job_rating_service_logs, ai_prompts)
     create_job_rating_service_errors(db, job_rating_service_logs)
-    create_job_rating_errors(db, job_ratings)
+    create_job_rating_errors(db, job_ratings, job_rating_service_logs)
 
     # Provider monitoring data
     print("\nCreating provider monitoring services data...")

@@ -911,7 +911,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 59,
-        "status": "failed",
+        "status": "completed",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -921,7 +921,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 60,
-        "status": "failed",
+        "status": "completed",
         "user_qualification_id": 1,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -931,7 +931,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 61,
-        "status": "failed",
+        "status": "completed",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -941,7 +941,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 62,
-        "status": "failed",
+        "status": "completed",
         "user_qualification_id": 1,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -951,7 +951,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 63,
-        "status": "failed",
+        "status": "completed",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -961,7 +961,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 64,
-        "status": "failed",
+        "status": "completed",
         "user_qualification_id": 1,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -971,7 +971,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 65,
-        "status": "failed",
+        "status": "completed",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -1154,4 +1154,107 @@ JOB_RATING_ERROR_DATA = [
     {"error_type": "Exception", "message": "Retry failed: Invalid response format", "job_rating_id": 61},
     {"error_type": "Exception", "message": "Retry failed: Service unavailable", "job_rating_id": 62},
     {"error_type": "Exception", "message": "Retry failed: Internal server error", "job_rating_id": 63},
+    # Final retry-attempt failures for the ratings that exhausted their retries and stayed FAILED, so each
+    # FAILED rating carries at least three errors.
+    {"error_type": "Exception", "message": "Retry failed again: Page not found", "job_rating_id": 6},
+    {"error_type": "Exception", "message": "Retry failed again: Rate limit exceeded", "job_rating_id": 7},
+    {"error_type": "Exception", "message": "Retry failed again: missing job description", "job_rating_id": 11},
+    {"error_type": "Exception", "message": "Retry failed again: API timeout", "job_rating_id": 13},
+    {"error_type": "Exception", "message": "Retry failed again: Connection timeout", "job_rating_id": 58},
 ]
+
+# Representative tracebacks keyed by failure reason. A rating's retries hit the same code path in production, so every
+# error sharing a base reason gets the same traceback here (letting the report link collapse duplicate retry rows).
+_RATING_TRACEBACKS = {
+    "page not found": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
+        "    description = fetch_job_description(scraped_job.url)\n"
+        '  File "app/job_rating/scraped_job_rating.py", line 210, in fetch_job_description\n'
+        "    response.raise_for_status()\n"
+        "requests.exceptions.HTTPError: 404 Client Error: Not Found for url"
+    ),
+    "access denied": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
+        "    score = claude_query(system_prompt, job_prompt)\n"
+        '  File "app/job_rating/claude.py", line 96, in claude_query\n'
+        "    raise PermissionError(response.error)\n"
+        "PermissionError: Access denied"
+    ),
+    "rate limit": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
+        "    score = claude_query(system_prompt, job_prompt)\n"
+        '  File "app/job_rating/claude.py", line 88, in claude_query\n'
+        "    raise RateLimitError(response.error)\n"
+        "anthropic.RateLimitError: Rate limit exceeded"
+    ),
+    "api timeout": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
+        "    score = claude_query(system_prompt, job_prompt)\n"
+        '  File "app/job_rating/claude.py", line 72, in claude_query\n'
+        "    response = client.messages.create(**kwargs)\n"
+        "anthropic.APITimeoutError: Request timed out."
+    ),
+    "connection timeout": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
+        "    score = claude_query(system_prompt, job_prompt)\n"
+        '  File "app/job_rating/claude.py", line 72, in claude_query\n'
+        "    response = client.messages.create(**kwargs)\n"
+        "anthropic.APIConnectionError: Connection error."
+    ),
+    "missing job description": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_rating/scraped_job_rating.py", line 278, in _rate_job\n'
+        "    job_prompt = create_job_only_prompt(job_description=description)\n"
+        '  File "app/job_rating/prompts.py", line 54, in create_job_only_prompt\n'
+        "    raise ValueError(\"missing job description\")\n"
+        "ValueError: missing job description"
+    ),
+    "invalid response format": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_rating/scraped_job_rating.py", line 285, in _rate_job\n'
+        "    job_rating.overall_score = score[\"overall_score\"]\n"
+        "TypeError: 'NoneType' object is not subscriptable"
+    ),
+    "service unavailable": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
+        "    score = claude_query(system_prompt, job_prompt)\n"
+        '  File "app/job_rating/claude.py", line 88, in claude_query\n'
+        "    raise APIStatusError(response.error)\n"
+        "anthropic.APIStatusError: 503 Service Unavailable"
+    ),
+    "internal server error": (
+        "Traceback (most recent call last):\n"
+        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
+        "    score = claude_query(system_prompt, job_prompt)\n"
+        '  File "app/job_rating/claude.py", line 88, in claude_query\n'
+        "    raise APIStatusError(response.error)\n"
+        "anthropic.APIStatusError: 500 Internal Server Error"
+    ),
+}
+
+# Default traceback for reasons not matched above.
+_RATING_TRACEBACK_DEFAULT = (
+    "Traceback (most recent call last):\n"
+    '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
+    "    score = claude_query(system_prompt, job_prompt)\n"
+    "Exception: Failed to rate job"
+)
+
+
+def _rating_traceback(message: str) -> str:
+    """Return a representative traceback for a per-rating failure message (retry prefixes ignored)."""
+    lowered = message.lower()
+    for keyword, traceback in _RATING_TRACEBACKS.items():
+        if keyword in lowered:
+            return traceback
+    return _RATING_TRACEBACK_DEFAULT
+
+
+for _error in JOB_RATING_ERROR_DATA:
+    _error["traceback"] = _rating_traceback(_error["message"])
