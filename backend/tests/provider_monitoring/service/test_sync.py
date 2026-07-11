@@ -42,7 +42,9 @@ class TestServiceMonitorRun:
 
         errors = session.query(models.ServiceError).all()
         assert len(errors) == 1
-        assert "boom" in errors[0].message
+        # Static message; the provider label and exception text are carried in context.
+        assert errors[0].message == "Provider fetch failed."
+        assert errors[0].context == {"provider": "test._boom", "error": "boom"}
         assert errors[0].provider_monitoring_service_log_id == service_log.id
         # A single fetcher failing (run continues) is an "error"-level service error
         assert errors[0].level == "error"

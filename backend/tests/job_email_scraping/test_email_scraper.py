@@ -1161,10 +1161,11 @@ class TestExtractForwardingEmailConfirmation(BaseTest):
         with patch.object(service, "get_email_ids", side_effect=Exception("IMAP error")):
             service.extract_forwarding_email_confirmation(session, service_log)
 
-        # Verify a service error was logged
+        # Verify a service error was logged (static message, platform carried in context)
         errors = session.query(models.ServiceError).all()
         assert len(errors) == 1
-        assert "Failed to get forwarding emails with platform gmail" in errors[0].message
+        assert errors[0].message == "Failed to get forwarding emails."
+        assert errors[0].context == {"platform": "gmail"}
 
         # Verify no confirmation links were created
         count = session.query(models.ForwardingConfirmationLink).count()

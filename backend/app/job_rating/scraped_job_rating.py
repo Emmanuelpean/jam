@@ -301,12 +301,14 @@ class ScrapedJobRatingService(BaseService[models.JobRatingServiceLog]):
             service_log.job_succeeded_ids = service_log.job_succeeded_ids + [scraped_job.id]
             db.commit()
         except Exception as exception:
-            message = f"Error scoring job ID {scraped_job.id}: {exception}\nRaw response is {score}"
-            self.logger.exception(message)
+            message = "Error scoring job."
+            context = {"job_id": scraped_job.id, "error": str(exception), "raw_response": repr(score)}
+            self.logger.exception(f"{message} {context}")
             record_error(
                 db,
                 exception,
                 message=message,
+                context=context,
                 job_rating_id=job_rating.id,
                 job_rating_service_log_id=service_log.id,
             )

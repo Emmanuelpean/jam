@@ -34,56 +34,70 @@ for service_log, date in zip(PROVIDER_MONITORING_SERVICE_LOG_DATA, SERVICE_LOG_D
 
 # ----------------------------------------- PROVIDER MONITORING SERVICE ERRORS ------------------------------------------
 
+# Errors mirror those recorded by ProviderMonitoringService in app/provider_monitoring/service/service.py:
+# each failed fetch records the static "Provider fetch failed." (error_type = the caught exception) with the
+# provider label and error text in `context`; an exception escaping the fetch loop records the CRITICAL
+# "Critical error in provider monitoring workflow".
 PROVIDER_MONITORING_SERVICE_ERROR_DATA = [
     {
         "error_type": "HTTPStatusError",
-        "message": "apify.fetch_apify_balance failed: 401 Client Error: Unauthorized",
+        "message": "Provider fetch failed.",
+        "context": {
+            "provider": "apify.fetch_apify_balance",
+            "error": "Client error '401 Unauthorized' for url 'https://api.apify.com/v2/users/me'",
+        },
         "traceback": (
             "Traceback (most recent call last):\n"
-            '  File "app/provider_monitoring/service/service.py", line 60, in run\n'
-            "    result = fetcher()\n"
-            '  File "app/provider_monitoring/apify.py", line 44, in fetch_apify_balance\n'
+            '  File "app/provider_monitoring/service/service.py", line 54, in run\n'
+            "    fetch_fn(db, self.logger)\n"
+            '  File "app/provider_monitoring/apify/fetch.py", line 44, in fetch_apify_balance\n'
             "    response.raise_for_status()\n"
-            "httpx.HTTPStatusError: 401 Client Error: Unauthorized"
+            "httpx.HTTPStatusError: Client error '401 Unauthorized' for url 'https://api.apify.com/v2/users/me'"
         ),
         "provider_monitoring_service_log_id": 2,
     },
     {
-        "error_type": "OperationalError",
-        "message": "provider_monitoring_service run failed: could not connect to database",
-        "traceback": (
-            "Traceback (most recent call last):\n"
-            '  File "app/provider_monitoring/service/service.py", line 52, in run\n'
-            "    service_log = self.start_run(db)\n"
-            "sqlalchemy.exc.OperationalError: could not connect to server: Connection refused"
-        ),
-        "level": "critical",
-        "provider_monitoring_service_log_id": 3,
-    },
-    {
         "error_type": "ReadTimeout",
-        "message": "anthropic.fetch_anthropic_daily_usage failed: HTTPSConnectionPool: Read timed out",
+        "message": "Provider fetch failed.",
+        "context": {"provider": "anthropic.fetch_anthropic_daily_usage", "error": "The read operation timed out"},
         "traceback": (
             "Traceback (most recent call last):\n"
-            '  File "app/provider_monitoring/service/service.py", line 60, in run\n'
-            "    result = fetcher()\n"
-            '  File "app/provider_monitoring/anthropic.py", line 38, in fetch_anthropic_daily_usage\n'
+            '  File "app/provider_monitoring/service/service.py", line 54, in run\n'
+            "    fetch_fn(db, self.logger)\n"
+            '  File "app/provider_monitoring/anthropic/fetch.py", line 52, in fetch_anthropic_daily_usage\n'
             "    response = client.get(url, timeout=10)\n"
-            "httpx.ReadTimeout: HTTPSConnectionPool: Read timed out"
+            "httpx.ReadTimeout: The read operation timed out"
         ),
         "provider_monitoring_service_log_id": 4,
     },
     {
         "error_type": "KeyError",
-        "message": "brightdata.fetch_brightdata_balance failed: 'balance'",
+        "message": "Provider fetch failed.",
+        "context": {"provider": "brightdata.fetch_brightdata_balance", "error": "'balance'"},
         "traceback": (
             "Traceback (most recent call last):\n"
-            '  File "app/provider_monitoring/service/service.py", line 60, in run\n'
-            "    result = fetcher()\n"
-            '  File "app/provider_monitoring/brightdata.py", line 51, in fetch_brightdata_balance\n'
+            '  File "app/provider_monitoring/service/service.py", line 54, in run\n'
+            "    fetch_fn(db, self.logger)\n"
+            '  File "app/provider_monitoring/brightdata/fetch.py", line 78, in fetch_brightdata_balance\n'
             "    return data['balance']\n"
             "KeyError: 'balance'"
         ),
         "provider_monitoring_service_log_id": 4,
+    },
+    # Critical: a DB failure while persisting a fetch error escapes the inner handler and aborts the run.
+    {
+        "error_type": "OperationalError",
+        "message": "Critical error in provider monitoring workflow",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/provider_monitoring/service/service.py", line 58, in run\n'
+            "    record_error(\n"
+            '  File "app/service/models.py", line 200, in record_error\n'
+            "    db.commit()\n"
+            "sqlalchemy.exc.OperationalError: (psycopg2.errors.AdminShutdown) terminating connection due to "
+            "administrator command"
+        ),
+        "level": "critical",
+        "provider_monitoring_service_log_id": 3,
     },
 ]

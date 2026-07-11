@@ -35,6 +35,9 @@ def create_job_rating_errors(db, job_ratings, service_logs) -> list[models.Servi
         scraped_job_id = rating_by_id[entry["job_rating_id"]].scraped_job_id
         log = next((sl for sl in service_logs if scraped_job_id in sl.job_failed_ids), None)
         entry["job_rating_service_log_id"] = log.id if log else None
+        # Build the recorded message/error_type/traceback from the failure reason now that the scraped job id
+        # (which the production message embeds) is known.
+        entry.update(job_rating.build_rating_error(scraped_job_id, entry.pop("reason")))
     print(f"Creating {len(data)} Job Rating Errors...")
     return create_db_entries(db, models.ServiceError, data)
 

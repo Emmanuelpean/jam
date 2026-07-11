@@ -131,9 +131,16 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                 email = FORWARDING_EMAILS[email_platform]
                 email_ids = self.get_email_ids(from_email=email, timedelta_days=timedelta_days)
             except Exception as exc:
-                message = f"Failed to get forwarding emails with platform {email_platform.value}."
-                record_error(db, exc, message=message, job_email_scraping_service_log_id=service_log.id)
-                self.logger.exception(message)
+                message = "Failed to get forwarding emails."
+                context = {"platform": email_platform.value}
+                record_error(
+                    db,
+                    exc,
+                    message=message,
+                    context=context,
+                    job_email_scraping_service_log_id=service_log.id,
+                )
+                self.logger.exception(f"{message} {context}")
                 continue
 
             for email_id in email_ids:
@@ -150,9 +157,16 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                     else:
                         email = self.get_email_data(email_id)
                 except Exception as exc:
-                    message = f"Failed to read forwarding email {email_id} with platform {email_platform}."
-                    record_error(db, exc, message=message, job_email_scraping_service_log_id=service_log.id)
-                    self.logger.exception(message)
+                    message = "Failed to read forwarding email."
+                    context = {"email_id": email_id, "platform": email_platform.value}
+                    record_error(
+                        db,
+                        exc,
+                        message=message,
+                        context=context,
+                        job_email_scraping_service_log_id=service_log.id,
+                    )
+                    self.logger.exception(f"{message} {context}")
                     continue
 
                 try:
@@ -181,9 +195,16 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                     db.add(confirmation)
                     db.commit()
                 except Exception as exc:
-                    message = f"Failed to extract forwarding confirmation link from email {email.id}"
-                    record_error(db, exc, message=message, job_email_scraping_service_log_id=service_log.id)
-                    self.logger.exception(message)
+                    message = "Failed to extract forwarding confirmation link from email."
+                    context = {"email_id": email.id}
+                    record_error(
+                        db,
+                        exc,
+                        message=message,
+                        context=context,
+                        job_email_scraping_service_log_id=service_log.id,
+                    )
+                    self.logger.exception(f"{message} {context}")
 
     # ------------------------------------------------ EMAIL PROCESSING ------------------------------------------------
 
@@ -513,9 +534,10 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                 service_log.email_found_n += len(email_ids)
                 self.logger.info(f"Found {len(email_ids)} emails")
             except Exception as exception:
-                message = f"Failed to search emails for user ID {user.id}"
-                record_error(db, exception, message, job_email_scraping_service_log_id=service_log.id)
-                self.logger.exception(f"{message}. Skipping user.")
+                message = "Failed to search emails for user."
+                context = {"user_id": user.id}
+                record_error(db, exception, message, context=context, job_email_scraping_service_log_id=service_log.id)
+                self.logger.exception(f"{message} {context}. Skipping user.")
                 email_ids = []
 
             # For each email...
@@ -537,9 +559,16 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                         self.logger.info("Email already exists in database. Skipping email.")
 
                 except Exception as exception:
-                    message = f"Failed to get and save email with ID {email_id}"
-                    record_error(db, exception, message, job_email_scraping_service_log_id=service_log.id)
-                    self.logger.exception(f"{message}. Skipping email.")
+                    message = "Failed to get and save email."
+                    context = {"email_id": email_id}
+                    record_error(
+                        db,
+                        exception,
+                        message,
+                        context=context,
+                        job_email_scraping_service_log_id=service_log.id,
+                    )
+                    self.logger.exception(f"{message} {context}. Skipping email.")
                     continue  # next email
 
             # noinspection PyAugmentAssignment
@@ -561,9 +590,10 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
         try:
             jobs = JOB_PARSERS[email_record.platform](email_record.body)
         except Exception as exception:
-            message = f"Failed to parse email ID {email_record.external_email_id}"
-            record_error(db, exception, message, job_email_scraping_service_log_id=service_log.id)
-            self.logger.exception(f"{message}. Skipping email.")
+            message = "Failed to parse email."
+            context = {"external_email_id": email_record.external_email_id}
+            record_error(db, exception, message, context=context, job_email_scraping_service_log_id=service_log.id)
+            self.logger.exception(f"{message} {context}. Skipping email.")
             return None  # skip the email parsing
 
         # Update the email record with the number of jobs found
@@ -577,9 +607,16 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
             self.upsert_platform_stat(db, service_log, email_record.platform, job_found_ids=job_found_ids)
             self.logger.info(f"Extracted and saved {len(jobs)} job IDs from {email_record.platform}")
         except Exception as exception:
-            message = f"Failed to save job IDs for email ID {email_record.external_email_id}"
-            record_error(db, exception, message=message, job_email_scraping_service_log_id=service_log.id)
-            self.logger.exception(f"{message}. Skipping email.")
+            message = "Failed to save job IDs for email."
+            context = {"external_email_id": email_record.external_email_id}
+            record_error(
+                db,
+                exception,
+                message=message,
+                context=context,
+                job_email_scraping_service_log_id=service_log.id,
+            )
+            self.logger.exception(f"{message} {context}. Skipping email.")
 
     def scrape_jobs(self, db: Session, service_log: JobEmailScrapingServiceLog) -> None:
         """Process all unscraped jobs, including those scheduled for retry.
@@ -611,11 +648,16 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                     )
                     continue  # next job record
             except Exception as exception:
-                message = (
-                    f"Failed to check filtering for job ID {job_record.external_job_id}. Proceeding with scraping."
+                message = "Failed to check filtering for job. Proceeding with scraping."
+                context = {"external_job_id": job_record.external_job_id}
+                record_error(
+                    db,
+                    exception,
+                    message=message,
+                    context=context,
+                    job_email_scraping_service_log_id=service_log.id,
                 )
-                record_error(db, exception, message=message, job_email_scraping_service_log_id=service_log.id)
-                self.logger.exception(message)
+                self.logger.exception(f"{message} {context}")
 
             # Find any existing successfully scraped job data in the database
             existing_data = (
@@ -663,15 +705,17 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                         db, service_log, job_record.platform, job_scrape_succeeded_ids=job_record.id
                     )
                 except Exception as exception:
-                    message = f"Failed to scrape job data for job ID {job_record.external_job_id}"
+                    message = "Failed to scrape job data."
+                    context = {"external_job_id": job_record.external_job_id}
                     record_error(
                         db,
                         exception,
                         message=message,
+                        context=context,
                         scraped_job_id=job_record.id,
                         job_email_scraping_service_log_id=service_log.id,
                     )
-                    self.logger.exception(f"{message}. Skipping job.")
+                    self.logger.exception(f"{message} {context}. Skipping job.")
                     job_record.scraping_retry_count += 1
                     if job_record.scraping_retry_count < settings.scrape_max_retry:
                         job_record.scraping_next_retry_at = dt.datetime.now(dt.timezone.utc) + dt.timedelta(
@@ -690,13 +734,15 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                     db.commit()
                     self.upsert_platform_stat(db, service_log, job_record.platform, job_scrape_failed_ids=job_record.id)
             else:
-                message = f"Unknown platform {job_record.platform} for job ID {job_record.external_job_id}"
-                self.logger.info(f"{message}. Skipping job.")
+                message = "Unknown platform for job."
+                context = {"platform": job_record.platform, "external_job_id": job_record.external_job_id}
+                self.logger.info(f"{message} {context}. Skipping job.")
                 job_record.status = ProcessingStatus.FAILED
                 record_error(
                     db,
                     ValueError(f"Unknown platform {job_record.platform}"),
                     message,
+                    context=context,
                     job_email_scraping_service_log_id=service_log.id,
                 )
                 db.commit()

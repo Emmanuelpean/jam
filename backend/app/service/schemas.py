@@ -12,6 +12,7 @@ class ServiceErrorOut(Out):
 
     error_type: str
     message: str
+    context: dict | None = None
     traceback: str | None = None
     is_acknowledged: bool
     level: str | None = None

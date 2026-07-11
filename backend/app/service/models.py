@@ -94,7 +94,8 @@ class ServiceError(CommonBase, Base):
     Attributes:
     -----------
     - `error_type` (str): Type/class name of the error (e.g. "TimeoutError").
-    - `message` (str): Custom message describing the failure.
+    - `message` (str): Static message describing the failure. Kept free of runtime values
+    - `context` (dict, optional): The runtime values relevant to this occurrence (e.g. {"job_id": "job_42"}).
     - `traceback` (str): Full traceback of the error.
     - `is_acknowledged` (bool): Whether an admin has acknowledged the error.
     - `level` (str): Severity (see :class:`ErrorLevel`); defaults to ERROR.
@@ -116,6 +117,7 @@ class ServiceError(CommonBase, Base):
 
     error_type = Column(String, nullable=False)
     message = Column(String, nullable=False)
+    context = Column(JSON, nullable=True)
     traceback = Column(String, nullable=False)
     is_acknowledged = Column(Boolean, nullable=False, server_default=expression.false())
     level = Column(String, nullable=True, default=ServiceErrorLevel.ERROR)
@@ -164,6 +166,7 @@ def record_error(
     db: Session,
     exc: Exception,
     message: str,
+    context: dict | None = None,
     level: ServiceErrorLevel = ServiceErrorLevel.ERROR,
     scraped_job_id: int | None = None,
     job_rating_id: int | None = None,
@@ -176,7 +179,8 @@ def record_error(
     for the originating service.
     :param db: Database session.
     :param exc: The caught exception, whose type and traceback are recorded.
-    :param message: Custom message describing the failure.
+    :param message: Static message describing the failure. Kept free of runtime values.
+    :param context: The runtime values relevant to this occurrence (e.g. {"job_id": "job_42"}).
     :param level: Error severity.
     :param scraped_job_id: ScrapedJob the error relates to, for per-job failures.
     :param job_rating_id: JobRating the rating error belongs to, if applicable.
@@ -188,6 +192,7 @@ def record_error(
     error = ServiceError(
         error_type=type(exc).__name__,
         message=message,
+        context=context,
         traceback="".join(_traceback.format_exception(type(exc), exc, exc.__traceback__)),
         level=level,
         scraped_job_id=scraped_job_id,

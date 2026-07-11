@@ -321,7 +321,10 @@ class TestScrapedJobRaterRateJob(BaseTest):
         assert scraped_job.id in test_rating_service_log.job_failed_ids
         assert len(rating.rating_errors) == 1
         service_error = rating.rating_errors[0]
-        assert "AI service unavailable" in service_error.message
+        # Static message; the exception text and job id are carried in context.
+        assert service_error.message == "Error scoring job."
+        assert service_error.context["job_id"] == scraped_job.id
+        assert "AI service unavailable" in service_error.context["error"]
         assert service_error.scraped_job_id is None
         assert service_error.job_rating_id == rating.id
         assert service_error.job_rating_service_log_id == test_rating_service_log.id

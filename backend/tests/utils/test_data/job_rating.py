@@ -1100,142 +1100,136 @@ for service_log, date in zip(JOB_RATING_SERVICE_LOG_DATA, SERVICE_LOG_DATETIME):
     service_log["run_datetime"] = date.strftime(DATETIME_FORMAT)
 
 
-# Representative tracebacks keyed by failure reason. A rating's retries hit the same code path in production, so every
-# error sharing a base reason gets the same traceback here (letting the report link collapse duplicate retry rows).
-_RATING_TRACEBACKS = {
-    "page not found": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
-        "    description = fetch_job_description(scraped_job.url)\n"
-        '  File "app/job_rating/scraped_job_rating.py", line 210, in fetch_job_description\n'
-        "    response.raise_for_status()\n"
-        "requests.exceptions.HTTPError: 404 Client Error: Not Found for url"
-    ),
-    "access denied": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
-        "    score = claude_query(system_prompt, job_prompt)\n"
-        '  File "app/job_rating/claude.py", line 96, in claude_query\n'
-        "    raise PermissionError(response.error)\n"
-        "PermissionError: Access denied"
-    ),
-    "rate limit": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
-        "    score = claude_query(system_prompt, job_prompt)\n"
-        '  File "app/job_rating/claude.py", line 88, in claude_query\n'
-        "    raise RateLimitError(response.error)\n"
-        "anthropic.RateLimitError: Rate limit exceeded"
-    ),
-    "api timeout": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
-        "    score = claude_query(system_prompt, job_prompt)\n"
-        '  File "app/job_rating/claude.py", line 72, in claude_query\n'
-        "    response = client.messages.create(**kwargs)\n"
-        "anthropic.APITimeoutError: Request timed out."
-    ),
-    "connection timeout": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
-        "    score = claude_query(system_prompt, job_prompt)\n"
-        '  File "app/job_rating/claude.py", line 72, in claude_query\n'
-        "    response = client.messages.create(**kwargs)\n"
-        "anthropic.APIConnectionError: Connection error."
-    ),
-    "missing job description": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_rating/scraped_job_rating.py", line 278, in _rate_job\n'
-        "    job_prompt = create_job_only_prompt(job_description=description)\n"
-        '  File "app/job_rating/prompts.py", line 54, in create_job_only_prompt\n'
-        '    raise ValueError("missing job description")\n'
-        "ValueError: missing job description"
-    ),
-    "invalid response format": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_rating/scraped_job_rating.py", line 285, in _rate_job\n'
-        '    job_rating.overall_score = score["overall_score"]\n'
-        "TypeError: 'NoneType' object is not subscriptable"
-    ),
-    "service unavailable": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
-        "    score = claude_query(system_prompt, job_prompt)\n"
-        '  File "app/job_rating/claude.py", line 88, in claude_query\n'
-        "    raise APIStatusError(response.error)\n"
-        "anthropic.APIStatusError: 503 Service Unavailable"
-    ),
-    "internal server error": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
-        "    score = claude_query(system_prompt, job_prompt)\n"
-        '  File "app/job_rating/claude.py", line 88, in claude_query\n'
-        "    raise APIStatusError(response.error)\n"
-        "anthropic.APIStatusError: 500 Internal Server Error"
-    ),
+# Per-job rating failures share the static message from app/job_rating/scraped_job_rating.py (`_rate_job`):
+# "Error scoring job.", with the job id / exception text / raw response carried in `context`. Each failure
+# reason maps to the caught exception (driving error_type), the values stored in context, and a representative
+# traceback ending on that exception. `create_job_rating_errors` fills in the actual scraped job id, since
+# only it knows the rating -> scraped-job link.
+_RATING_FAILURES = {
+    "missing_key": {
+        "error_type": "KeyError",
+        "exception": "'overall_score'",
+        "raw_response": "{'technical_fit': 7, 'explanation': 'Strong match'}",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 292, in _rate_job\n'
+            '    job_rating.overall_score = score["overall_score"]\n'
+            "KeyError: 'overall_score'"
+        ),
+    },
+    "api_timeout": {
+        "error_type": "APITimeoutError",
+        "exception": "Request timed out.",
+        "raw_response": "None",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 291, in _rate_job\n'
+            "    score = claude_query(combined_system_prompt, job_prompt)\n"
+            '  File "app/job_rating/claude.py", line 72, in claude_query\n'
+            "    response = client.messages.create(**kwargs)\n"
+            "anthropic.APITimeoutError: Request timed out."
+        ),
+    },
+    "rate_limit": {
+        "error_type": "RateLimitError",
+        "exception": "Error code: 429 - {'type': 'rate_limit_error'}",
+        "raw_response": "None",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 291, in _rate_job\n'
+            "    score = claude_query(combined_system_prompt, job_prompt)\n"
+            '  File "app/job_rating/claude.py", line 72, in claude_query\n'
+            "    response = client.messages.create(**kwargs)\n"
+            "anthropic.RateLimitError: Error code: 429 - {'type': 'rate_limit_error'}"
+        ),
+    },
+    "invalid_format": {
+        "error_type": "JSONDecodeError",
+        "exception": "Expecting value: line 1 column 1 (char 0)",
+        "raw_response": "'Here is my assessment of the candidate for this role'",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 291, in _rate_job\n'
+            "    score = claude_query(combined_system_prompt, job_prompt)\n"
+            '  File "app/job_rating/claude.py", line 110, in claude_query\n'
+            "    return json.loads(response_text)\n"
+            "json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+        ),
+    },
+    "connection": {
+        "error_type": "APIConnectionError",
+        "exception": "Connection error.",
+        "raw_response": "None",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 291, in _rate_job\n'
+            "    score = claude_query(combined_system_prompt, job_prompt)\n"
+            '  File "app/job_rating/claude.py", line 72, in claude_query\n'
+            "    response = client.messages.create(**kwargs)\n"
+            "anthropic.APIConnectionError: Connection error."
+        ),
+    },
+    "overloaded": {
+        "error_type": "InternalServerError",
+        "exception": "Error code: 529 - {'type': 'overloaded_error'}",
+        "raw_response": "None",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 291, in _rate_job\n'
+            "    score = claude_query(combined_system_prompt, job_prompt)\n"
+            '  File "app/job_rating/claude.py", line 88, in claude_query\n'
+            "    raise self._make_status_error_from_response(response)\n"
+            "anthropic.InternalServerError: Error code: 529 - {'type': 'overloaded_error'}"
+        ),
+    },
 }
 
-# Default traceback for reasons not matched above.
-_RATING_TRACEBACK_DEFAULT = (
-    "Traceback (most recent call last):\n"
-    '  File "app/job_rating/scraped_job_rating.py", line 284, in _rate_job\n'
-    "    score = claude_query(system_prompt, job_prompt)\n"
-    "Exception: Failed to rate job"
-)
 
-
-def _rating_traceback(message: str) -> str:
-    """Return a representative traceback for a rating failure message (retry prefixes ignored)."""
-    lowered = message.lower()
-    for keyword, traceback in _RATING_TRACEBACKS.items():
-        if keyword in lowered:
-            return traceback
-    return _RATING_TRACEBACK_DEFAULT
+def build_rating_error(scraped_job_id: int, reason: str) -> dict:
+    """Build the error_type/message/context/traceback for a per-job rating failure, as `_rate_job` records."""
+    failure = _RATING_FAILURES[reason]
+    return {
+        "error_type": failure["error_type"],
+        "message": "Error scoring job.",
+        "context": {
+            "job_id": scraped_job_id,
+            "error": failure["exception"],
+            "raw_response": failure["raw_response"],
+        },
+        "traceback": failure["traceback"],
+    }
 
 
 # ---------------------------------------------- JOB RATING SERVICE ERRORS ----------------------------------------------
 
-# Run-level failures, restored as unified ServiceError rows linked to a JobRatingServiceLog. The single CRITICAL
-# error is linked to the service-log run so that JobRatingServiceLog.is_success derives to False.
+# Run-level failures the rater records, mirroring the sole run-level `record_error` in `run()`: a CRITICAL
+# "Critical error in rating workflow" that aborts the run (so JobRatingServiceLog.is_success derives to False).
+# The two runs differ only in the underlying exception that triggered the outer handler.
 JOB_RATING_SERVICE_ERROR_DATA = [
-    # Run-level critical failure on the second service-log run ("Timeout contacting rating service").
     {
         "error_type": "Exception",
-        "message": "Timeout contacting rating service",
-        "traceback": _rating_traceback("api timeout"),
+        "message": "Critical error in rating workflow",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 112, in run\n'
+            '    raise Exception("No system or job prompt templates found")\n'
+            "Exception: No system or job prompt templates found"
+        ),
         "level": "critical",
         "job_rating_service_log_id": 2,
     },
-    # Additional run-level, non-critical errors spread across the runs (level defaults to "error").
     {
-        "error_type": "Exception",
-        "message": "Rate limit hit; retried after backoff",
-        "traceback": _rating_traceback("rate limit"),
-        "job_rating_service_log_id": 1,
-    },
-    {
-        "error_type": "Exception",
-        "message": "Skipped 2 jobs with empty descriptions",
-        "traceback": _rating_traceback("missing job description"),
-        "job_rating_service_log_id": 1,
-    },
-    {
-        "error_type": "Exception",
-        "message": "Malformed LLM response; used fallback parser",
-        "traceback": _rating_traceback("invalid response format"),
-        "job_rating_service_log_id": 2,
-    },
-    {
-        "error_type": "Exception",
-        "message": "Transient connection reset to rating provider",
-        "traceback": _rating_traceback("connection timeout"),
-        "job_rating_service_log_id": 3,
-    },
-    # Additional run-level critical failure on the third run ("Rating provider quota exhausted").
-    {
-        "error_type": "Exception",
-        "message": "Rating provider quota exhausted",
-        "traceback": _rating_traceback("service unavailable"),
+        "error_type": "OperationalError",
+        "message": "Critical error in rating workflow",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 116, in run\n'
+            "    self._process_user(db, user.id, service_log, system_prompt, job_prompt)\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 165, in _process_user\n'
+            "    db.commit()\n"
+            "sqlalchemy.exc.OperationalError: (psycopg2.errors.AdminShutdown) terminating connection due to "
+            "administrator command"
+        ),
         "level": "critical",
         "job_rating_service_log_id": 3,
     },
@@ -1243,35 +1237,36 @@ JOB_RATING_SERVICE_ERROR_DATA = [
 
 # ------------------------------------------------- JOB RATING ERRORS --------------------------------------------------
 
+# (job_rating_id, failure reason). The message/error_type/traceback are derived per row in
+# create_job_rating_errors, where the rating's scraped job id is known. A rating's retries re-run the same
+# code path, so retry rows repeat the same (rating, reason) pair and collapse in the grouped error view.
 JOB_RATING_ERROR_DATA = [
-    {"error_type": "Exception", "message": "Failed to scrape job details: Page not found", "job_rating_id": 6},
-    {"error_type": "Exception", "message": "Failed to scrape job details: Rate limit exceeded", "job_rating_id": 7},
-    {"error_type": "Exception", "message": "Failed to rate job: missing job description", "job_rating_id": 11},
-    {"error_type": "Exception", "message": "Failed to rate job: API timeout", "job_rating_id": 13},
-    {"error_type": "Exception", "message": "Failed to rate job: Page not found", "job_rating_id": 58},
-    {"error_type": "Exception", "message": "Failed to rate job: Page not found", "job_rating_id": 59},
-    {"error_type": "Exception", "message": "Failed to rate job: Connection timeout", "job_rating_id": 60},
-    {"error_type": "Exception", "message": "Failed to rate job: Access denied", "job_rating_id": 61},
-    {"error_type": "Exception", "message": "Failed to rate job: Rate limit exceeded", "job_rating_id": 62},
-    {"error_type": "Exception", "message": "Failed to rate job: Invalid response format", "job_rating_id": 63},
-    {"error_type": "Exception", "message": "Failed to rate job: Service unavailable", "job_rating_id": 64},
-    {"error_type": "Exception", "message": "Failed to rate job: Internal server error", "job_rating_id": 65},
-    {"error_type": "Exception", "message": "Retry failed: Page not found", "job_rating_id": 6},
-    {"error_type": "Exception", "message": "Retry failed: Rate limit exceeded", "job_rating_id": 7},
-    {"error_type": "Exception", "message": "Retry failed: missing job description", "job_rating_id": 11},
-    {"error_type": "Exception", "message": "Retry failed: API timeout", "job_rating_id": 13},
-    {"error_type": "Exception", "message": "Retry failed: Connection timeout", "job_rating_id": 58},
-    {"error_type": "Exception", "message": "Retry failed: Access denied", "job_rating_id": 59},
-    {"error_type": "Exception", "message": "Retry failed: Rate limit exceeded", "job_rating_id": 60},
-    {"error_type": "Exception", "message": "Retry failed: Invalid response format", "job_rating_id": 61},
-    {"error_type": "Exception", "message": "Retry failed: Service unavailable", "job_rating_id": 62},
-    {"error_type": "Exception", "message": "Retry failed: Internal server error", "job_rating_id": 63},
-    {"error_type": "Exception", "message": "Retry failed again: Page not found", "job_rating_id": 6},
-    {"error_type": "Exception", "message": "Retry failed again: Rate limit exceeded", "job_rating_id": 7},
-    {"error_type": "Exception", "message": "Retry failed again: missing job description", "job_rating_id": 11},
-    {"error_type": "Exception", "message": "Retry failed again: API timeout", "job_rating_id": 13},
-    {"error_type": "Exception", "message": "Retry failed again: Connection timeout", "job_rating_id": 58},
+    {"job_rating_id": 6, "reason": "missing_key"},
+    {"job_rating_id": 7, "reason": "rate_limit"},
+    {"job_rating_id": 11, "reason": "invalid_format"},
+    {"job_rating_id": 13, "reason": "api_timeout"},
+    {"job_rating_id": 58, "reason": "connection"},
+    {"job_rating_id": 59, "reason": "overloaded"},
+    {"job_rating_id": 60, "reason": "connection"},
+    {"job_rating_id": 61, "reason": "rate_limit"},
+    {"job_rating_id": 62, "reason": "rate_limit"},
+    {"job_rating_id": 63, "reason": "invalid_format"},
+    {"job_rating_id": 64, "reason": "overloaded"},
+    {"job_rating_id": 65, "reason": "missing_key"},
+    # Retry rows: the same rating hits the same failure again, so message and error_type repeat verbatim.
+    {"job_rating_id": 6, "reason": "missing_key"},
+    {"job_rating_id": 7, "reason": "rate_limit"},
+    {"job_rating_id": 11, "reason": "invalid_format"},
+    {"job_rating_id": 13, "reason": "api_timeout"},
+    {"job_rating_id": 58, "reason": "connection"},
+    {"job_rating_id": 59, "reason": "overloaded"},
+    {"job_rating_id": 60, "reason": "connection"},
+    {"job_rating_id": 61, "reason": "rate_limit"},
+    {"job_rating_id": 62, "reason": "rate_limit"},
+    {"job_rating_id": 63, "reason": "invalid_format"},
+    {"job_rating_id": 6, "reason": "missing_key"},
+    {"job_rating_id": 7, "reason": "rate_limit"},
+    {"job_rating_id": 11, "reason": "invalid_format"},
+    {"job_rating_id": 13, "reason": "api_timeout"},
+    {"job_rating_id": 58, "reason": "connection"},
 ]
-
-for _error in JOB_RATING_ERROR_DATA:
-    _error["traceback"] = _rating_traceback(_error["message"])

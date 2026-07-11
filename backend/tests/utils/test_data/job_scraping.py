@@ -506,179 +506,177 @@ JOB_SCRAPING_PLATFORM_STAT_DATA = [
 
 # --------------------------------------------- JOB SCRAPING SERVICE ERRORS --------------------------------------------
 
+# Run-level errors mirror those recorded by JobEmailScrapingService in
+# app/job_email_scraping/email_scraper.py: the stored message is the custom message passed to
+# record_error, error_type is the caught exception's class name, and the traceback ends on that exception.
 JOB_SCRAPING_SERVICE_ERROR_DATA = [
     {
+        "error_type": "TimeoutError",
+        "message": "Failed to get forwarding emails.",
+        "context": {"platform": "LinkedIn"},
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 132, in extract_forwarding_email_confirmation\n'
+            "    email_ids = self.get_email_ids(from_email=email, timedelta_days=timedelta_days)\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 312, in get_email_ids\n'
+            "    status, data = self.imap.search(None, criteria)\n"
+            "TimeoutError: IMAP search command timed out"
+        ),
+        "service_log_id": 1,
+    },
+    {
+        "error_type": "AttributeError",
+        "message": "Failed to read forwarding email.",
+        "context": {"email_id": "198772", "platform": "Indeed"},
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 151, in extract_forwarding_email_confirmation\n'
+            "    email = self.get_email_data(email_id)\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 271, in get_email_data\n'
+            "    body = message.get_payload()[0].get_payload(decode=True)\n"
+            "AttributeError: 'NoneType' object has no attribute 'get_payload'"
+        ),
+        "service_log_id": 1,
+    },
+    {
+        "error_type": "IntegrityError",
+        "message": "Failed to extract forwarding confirmation link from email.",
+        "context": {"email_id": "198773"},
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 182, in extract_forwarding_email_confirmation\n'
+            "    db.commit()\n"
+            "sqlalchemy.exc.IntegrityError: (psycopg2.errors.UniqueViolation) duplicate key value violates "
+            'unique constraint "forwarding_confirmation_link_email_external_id_key"'
+        ),
+        "service_log_id": 1,
+    },
+    {
         "error_type": "ConnectionError",
-        "message": "Failed to connect to LinkedIn API: Connection timeout after 30 seconds",
-        "traceback": """Traceback (most recent call last):
-  File "/app/scrapers/linkedin_scraper.py", line 145, in scrape_job
-    response = requests.get(url, timeout=30)
-  File "/usr/local/lib/python3.11/site-packages/requests/api.py", line 73, in get
-    return request("get", url, **kwargs)
-  File "/usr/local/lib/python3.11/site-packages/requests/sessions.py", line 589, in request
-    resp = self.send(prep, **send_kwargs)
-requests.exceptions.ConnectionError: HTTPSConnectionPool(host='www.linkedin.com', port=443): Max retries exceeded with url: /jobs/view/12345678""",
-        "service_log_id": 1,
-    },
-    {
-        "error_type": "SMTPAuthenticationError",
-        "message": "SMTP authentication failed: Invalid credentials",
-        "traceback": """Traceback (most recent call last):
-  File "/app/email/gmail_client.py", line 89, in connect
-    server.login(self.username, self.password)
-  File "/usr/local/lib/python3.11/smtplib.py", line 750, in login
-    raise SMTPAuthenticationError(code, resp)
-smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted')""",
-        "service_log_id": 1,
-    },
-    {
-        "error_type": "PDFParseError",
-        "message": "Failed to parse PDF: File appears to be corrupted",
-        "traceback": """Traceback (most recent call last):
-  File "/app/parsers/pdf_parser.py", line 56, in extract_text
-    doc = fitz.open(pdf_path)
-  File "/usr/local/lib/python3.11/site-packages/fitz/fitz.py", line 2156, in __init__
-    _fitz.Document_swiginit(self, _fitz.new_Document(filename, stream, filetype, rect, width, height, fontsize))
-RuntimeError: cannot open document: cannot recognize version""",
-        "service_log_id": 1,
-    },
-    {
-        "error_type": "RateLimitError",
-        "message": "Rate limit exceeded: 429 Too Many Requests",
-        "traceback": """Traceback (most recent call last):
-  File "/app/scrapers/base_scraper.py", line 203, in fetch_page
-    response = self.session.get(url)
-  File "/usr/local/lib/python3.11/site-packages/requests/sessions.py", line 600, in get
-    return self.request("GET", url, **kwargs)
-  File "/app/scrapers/base_scraper.py", line 178, in request
-    raise RateLimitError(f"Rate limit exceeded after {attempt_count} requests")
-app.exceptions.RateLimitError: Rate limit exceeded after 30 requests""",
-        "service_log_id": 1,
-    },
-    {
-        "error_type": "DatabaseError",
-        "message": "Failed to commit transaction: Deadlock detected",
-        "traceback": """Traceback (most recent call last):
-  File "/app/db/session.py", line 67, in save_jobs
-    session.commit()
-  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 1451, in commit
-    self._transaction.commit(_to_root=self.future)
-  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 844, in commit
-    self._prepare_impl()
-sqlalchemy.exc.OperationalError: (psycopg2.errors.DeadlockDetected) deadlock detected
-DETAIL:  Process 12345 waits for ShareLock on transaction 67890""",
+        "message": "Failed to search emails for user.",
+        "context": {"user_id": 2},
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 499, in process_emails\n'
+            "    email_ids = self.get_email_ids(\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 305, in get_email_ids\n'
+            "    self.connect()\n"
+            "ConnectionError: Failed to establish a connection to the IMAP server"
+        ),
         "service_log_id": 2,
     },
     {
-        "error_type": "ParserError",
-        "message": "Failed to parse job details: Missing required field 'job_title'",
-        "traceback": """Traceback (most recent call last):
-  File "/app/parsers/job_parser.py", line 112, in parse_job_data
-    title = soup.find("h1", class_="job-title").text.strip()
-AttributeError: 'NoneType' object has no attribute 'text'
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/app/scrapers/indeed_scraper.py", line 234, in scrape_job
-    job_data = self.parser.parse_job_data(html)
-  File "/app/parsers/job_parser.py", line 115, in parse_job_data
-    raise ParserError("Missing required field 'job_title'")
-app.exceptions.ParserError: Missing required field 'job_title'""",
+        "error_type": "IntegrityError",
+        "message": "Failed to get and save email.",
+        "context": {"email_id": "44120"},
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 525, in process_emails\n'
+            "    email_record, is_new = self.get_and_save_email_to_db(db, email_id, user, service_log.id, forwarded)\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 388, in get_and_save_email_to_db\n'
+            "    db.commit()\n"
+            "sqlalchemy.exc.IntegrityError: (psycopg2.errors.NotNullViolation) null value in column "
+            '"external_email_id" violates not-null constraint'
+        ),
         "service_log_id": 3,
     },
     {
-        "error_type": "ValidationError",
-        "message": "Job data validation failed: Invalid salary format",
-        "traceback": """Traceback (most recent call last):
-  File "/app/models/job.py", line 89, in validate_salary
-    return self._parse_salary_string(salary_str)
-  File "/app/models/job.py", line 103, in _parse_salary_string
-    raise ValueError(f"Unable to parse salary: {salary_str}")
-ValueError: Unable to parse salary: £competitive + benefits
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/app/services/job_service.py", line 178, in create_job
-    validated_job = Job.validate(job_data)
-  File "/app/models/job.py", line 45, in validate
-    raise ValidationError(f"Job data validation failed: {str(e)}")
-app.exceptions.ValidationError: Job data validation failed: Invalid salary format""",
+        "error_type": "AttributeError",
+        "message": "Failed to parse email.",
+        "context": {"external_email_id": "44121"},
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 562, in extract_email_data\n'
+            "    jobs = JOB_PARSERS[email_record.platform](email_record.body)\n"
+            '  File "app/job_email_scraping/parsers/indeed.py", line 44, in parse\n'
+            "    cards = soup.find('div', id='jobcards').find_all('a')\n"
+            "AttributeError: 'NoneType' object has no attribute 'find_all'"
+        ),
         "service_log_id": 4,
     },
     {
-        "error_type": "TimeoutError",
-        "message": "Selenium webdriver timeout: Page load exceeded 60 seconds",
-        "traceback": """Traceback (most recent call last):
-  File "/app/scrapers/selenium_scraper.py", line 156, in load_page
-    WebDriverWait(self.driver, 60).until(
-        EC.presence_of_element_located((By.CLASS_NAME, "job-details"))
-    )
-  File "/usr/local/lib/python3.11/site-packages/selenium/webdriver/support/wait.py", line 95, in until
-    raise TimeoutException(message, screen, stacktrace)
-selenium.common.exceptions.TimeoutException: Message: Timeout waiting for job-details element""",
+        "error_type": "IntegrityError",
+        "message": "Failed to save job IDs for email.",
+        "context": {"external_email_id": "44122"},
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 575, in extract_email_data\n'
+            "    scraped_jobs = self.save_job_base_info_to_db(db, email_record, jobs)\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 421, in save_job_base_info_to_db\n'
+            "    db.commit()\n"
+            "sqlalchemy.exc.IntegrityError: (psycopg2.errors.ForeignKeyViolation) insert or update on table "
+            '"scraped_job" violates foreign key constraint "scraped_job_owner_id_fkey"'
+        ),
         "service_log_id": 3,
     },
     {
-        "error_type": "JSONDecodeError",
-        "message": "Failed to parse API response: Invalid JSON",
-        "traceback": """Traceback (most recent call last):
-  File "/app/scrapers/api_scraper.py", line 201, in fetch_jobs
-    data = response.json()
-  File "/usr/local/lib/python3.11/site-packages/requests/models.py", line 975, in json
-    return complexjson.loads(self.text, **kwargs)
-  File "/usr/local/lib/python3.11/json/__init__.py", line 346, in loads
-    return _default_decoder.decode(s)
-  File "/usr/local/lib/python3.11/json/decoder.py", line 337, in decode
-    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
-json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)""",
+        "error_type": "OperationalError",
+        "message": "Failed to check filtering for job. Proceeding with scraping.",
+        "context": {"external_job_id": "2468135790"},
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 601, in scrape_jobs\n'
+            "    if job_filter_rule := is_job_filtered_out(db, job_record):\n"
+            '  File "app/job_email_scraping/filtering.py", line 58, in is_job_filtered_out\n'
+            "    return db.query(ScrapingExclusionFilter).filter(...).first()\n"
+            "sqlalchemy.exc.OperationalError: (psycopg2.errors.QueryCanceled) canceling statement due to "
+            "statement timeout"
+        ),
         "service_log_id": 8,
     },
     {
-        "error_type": "MemoryError",
-        "message": "Out of memory while processing large dataset",
-        "traceback": """Traceback (most recent call last):
-  File "/app/services/batch_processor.py", line 145, in process_jobs
-    all_jobs = session.query(Job).all()
-  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2893, in all
-    return self._iter().all()
-MemoryError: Unable to allocate 2.5 GiB for an array with shape (50000, 100) and data type object""",
-        "service_log_id": 7,
-    },
-    # Run-level critical failures: these aborted the whole run, so the run's derived is_success is False.
-    {
-        "error_type": "Exception",
-        "message": "Rate limit exceeded after 30 requests",
+        "error_type": "ValueError",
+        "message": "Unknown platform for job.",
+        "context": {"platform": "monster", "external_job_id": "job_9001"},
         "traceback": (
             "Traceback (most recent call last):\n"
-            '  File "app/job_email_scraping/email_scraper.py", line 472, in scrape\n'
+            '  File "app/job_email_scraping/email_scraper.py", line 696, in scrape_jobs\n'
+            "    record_error(db, ValueError(f'Unknown platform {job_record.platform}'), message, ...)\n"
+            "ValueError: Unknown platform monster"
+        ),
+        "service_log_id": 7,
+    },
+    # Run-level critical failures: the outer handler in scrape() aborts the whole run, so the run's
+    # derived is_success is False. All three share the recorded message but differ in the caught exception.
+    {
+        "error_type": "ConnectionError",
+        "message": "Critical error in scraping workflow.",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 452, in scrape\n'
             "    self.scrape_jobs(db, service_log)\n"
-            "Exception: Rate limit exceeded after 30 requests"
+            '  File "app/job_email_scraping/email_scraper.py", line 658, in scrape_jobs\n'
+            "    job_data = scraper.scrape_job()[0]\n"
+            "ConnectionError: Failed to establish a connection to the scraping provider"
         ),
         "level": "critical",
         "service_log_id": 3,
     },
     {
-        "error_type": "Exception",
-        "message": "SMTP server connection timeout",
+        "error_type": "OperationalError",
+        "message": "Critical error in scraping workflow.",
         "traceback": (
             "Traceback (most recent call last):\n"
-            '  File "app/job_email_scraping/email_scraper.py", line 471, in scrape\n'
+            '  File "app/job_email_scraping/email_scraper.py", line 451, in scrape\n'
             "    self.process_emails(db, timedelta_days, service_log)\n"
-            "Exception: SMTP server connection timeout"
+            '  File "app/job_email_scraping/email_scraper.py", line 546, in process_emails\n'
+            "    service_log.user_processed_ids = service_log.user_processed_ids + [user.id]\n"
+            "sqlalchemy.exc.OperationalError: (psycopg2.errors.AdminShutdown) terminating connection due to "
+            "administrator command"
         ),
         "level": "critical",
         "service_log_id": 6,
     },
     {
-        "error_type": "Exception",
-        "message": "PDF parsing library crashed on corrupted file",
+        "error_type": "TimeoutError",
+        "message": "Critical error in scraping workflow.",
         "traceback": (
             "Traceback (most recent call last):\n"
-            '  File "app/job_email_scraping/email_scraper.py", line 472, in scrape\n'
+            '  File "app/job_email_scraping/email_scraper.py", line 452, in scrape\n'
             "    self.scrape_jobs(db, service_log)\n"
-            "Exception: PDF parsing library crashed on corrupted file"
+            '  File "app/job_email_scraping/email_scraper.py", line 658, in scrape_jobs\n'
+            "    job_data = scraper.scrape_job()[0]\n"
+            "TimeoutError: Scraping provider did not respond within 120 seconds"
         ),
         "level": "critical",
         "service_log_id": 8,
@@ -1999,103 +1997,108 @@ SCRAPED_JOB_SKIPPED_INDEX = find_index(status="skipped")
 
 # ---------------------------------------------- SCRAPED JOB SCRAPING ERRORS --------------------------------------------
 
-# Representative tracebacks keyed by failure reason. A job's retries hit the same code path in production, so every
-# error sharing a base reason gets the same traceback here (letting the report link collapse duplicate retry rows).
-_SCRAPING_TRACEBACKS = {
-    "page not found": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
-        "    job_data = scraper.fetch(job_record.url)\n"
-        '  File "app/job_email_scraping/scrapers/base.py", line 88, in fetch\n'
-        "    response.raise_for_status()\n"
-        '  File "requests/models.py", line 1024, in raise_for_status\n'
-        "    raise HTTPError(http_error_msg, response=self)\n"
-        "requests.exceptions.HTTPError: 404 Client Error: Not Found for url"
-    ),
-    "access denied": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
-        "    job_data = scraper.fetch(job_record.url)\n"
-        '  File "app/job_email_scraping/scrapers/base.py", line 88, in fetch\n'
-        "    response.raise_for_status()\n"
-        '  File "requests/models.py", line 1024, in raise_for_status\n'
-        "    raise HTTPError(http_error_msg, response=self)\n"
-        "requests.exceptions.HTTPError: 403 Client Error: Forbidden for url"
-    ),
-    "rate limit": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
-        "    job_data = scraper.fetch(job_record.url)\n"
-        '  File "app/job_email_scraping/scrapers/base.py", line 95, in fetch\n'
-        '    raise RateLimitError(f"Rate limit exceeded after {attempts} requests")\n'
-        "app.exceptions.RateLimitError: Rate limit exceeded after 30 requests"
-    ),
-    "connection timeout": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
-        "    job_data = scraper.fetch(job_record.url)\n"
-        '  File "urllib3/connectionpool.py", line 791, in urlopen\n'
-        '    raise ReadTimeoutError(self, url, "Read timed out.")\n'
-        "requests.exceptions.ConnectTimeout: HTTPSConnectionPool(host='www.linkedin.com', port=443): Read timed out."
-    ),
-    "invalid": (
-        "Traceback (most recent call last):\n"
-        '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
-        "    job_data = scraper.parse(response.text)\n"
-        '  File "app/job_email_scraping/scrapers/base.py", line 142, in parse\n'
-        "    raise ParserError(\"Missing required field 'job_title'\")\n"
-        "app.exceptions.ParserError: Invalid job posting format"
-    ),
+_SCRAPING_FAILURES = {
+    "page_not_found": {
+        "error_type": "HTTPError",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 658, in scrape_jobs\n'
+            "    job_data = scraper.scrape_job()[0]\n"
+            '  File "app/job_email_scraping/scrapers/base.py", line 88, in scrape_job\n'
+            "    response.raise_for_status()\n"
+            '  File "requests/models.py", line 1024, in raise_for_status\n'
+            "    raise HTTPError(http_error_msg, response=self)\n"
+            "requests.exceptions.HTTPError: 404 Client Error: Not Found for url"
+        ),
+    },
+    "access_denied": {
+        "error_type": "HTTPError",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 658, in scrape_jobs\n'
+            "    job_data = scraper.scrape_job()[0]\n"
+            '  File "app/job_email_scraping/scrapers/base.py", line 88, in scrape_job\n'
+            "    response.raise_for_status()\n"
+            '  File "requests/models.py", line 1024, in raise_for_status\n'
+            "    raise HTTPError(http_error_msg, response=self)\n"
+            "requests.exceptions.HTTPError: 403 Client Error: Forbidden for url"
+        ),
+    },
+    "rate_limit": {
+        "error_type": "RateLimitError",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 658, in scrape_jobs\n'
+            "    job_data = scraper.scrape_job()[0]\n"
+            '  File "app/job_email_scraping/scrapers/base.py", line 95, in scrape_job\n'
+            '    raise RateLimitError(f"Rate limit exceeded after {attempts} requests")\n'
+            "app.job_email_scraping.exceptions.RateLimitError: Rate limit exceeded after 30 requests"
+        ),
+    },
+    "connection_timeout": {
+        "error_type": "ConnectTimeout",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 658, in scrape_jobs\n'
+            "    job_data = scraper.scrape_job()[0]\n"
+            '  File "urllib3/connectionpool.py", line 791, in urlopen\n'
+            '    raise ReadTimeoutError(self, url, "Read timed out.")\n'
+            "requests.exceptions.ConnectTimeout: HTTPSConnectionPool(host='www.linkedin.com', port=443): "
+            "Read timed out."
+        ),
+    },
+    "invalid_format": {
+        "error_type": "ParserError",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 658, in scrape_jobs\n'
+            "    job_data = scraper.scrape_job()[0]\n"
+            '  File "app/job_email_scraping/scrapers/base.py", line 142, in scrape_job\n'
+            "    raise ParserError(\"Missing required field 'job_title'\")\n"
+            "app.job_email_scraping.exceptions.ParserError: Missing required field 'job_title'"
+        ),
+    },
 }
 
-# Default traceback for reasons not matched above.
-_SCRAPING_TRACEBACK_DEFAULT = (
-    "Traceback (most recent call last):\n"
-    '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
-    "    job_data = scraper.fetch(job_record.url)\n"
-    "Exception: Failed to scrape job"
-)
 
+def _scraped_job_error(external_job_id: str, reason: str) -> dict:
+    """Build a per-job scraping error row for the given job and failure reason."""
 
-def _scraping_traceback(message: str) -> str:
-    """Return a representative traceback for a per-job scraping failure message (retry prefixes ignored)."""
-    lowered = message.lower()
-    for keyword, traceback in _SCRAPING_TRACEBACKS.items():
-        if keyword in lowered:
-            return traceback
-    return _SCRAPING_TRACEBACK_DEFAULT
+    failure = _SCRAPING_FAILURES[reason]
+    return {
+        "error_type": failure["error_type"],
+        "message": "Failed to scrape job data.",
+        "context": {"external_job_id": external_job_id},
+        "traceback": failure["traceback"],
+        "scraped_job_id": find_index(external_job_id=external_job_id) + 1,
+    }
 
 
 _SCRAPED_JOB_ERROR_SPECS = [
-    ("2468135790", "Page not found - job posting may have been removed"),
-    ("cvlib_678901", "Access denied - company blocked scraping"),
-    ("soft123456789", "Rate limit exceeded - retry after 24 hours"),
-    ("job_1120", "Page not found - job posting may have been removed"),
-    ("job_1121", "Scraping blocked - rate limit exceeded"),
-    ("job_1122", "Access denied - company blocked scraping"),
-    ("job_1123", "Rate limit exceeded - retry after 24 hours"),
-    ("job_1124", "Connection timeout - server not responding"),
-    ("job_1150", "Invalid job posting format"),
-    ("job_1151", "Page not found - job posting may have been removed"),
-    ("job_1152", "Connection timeout - server not responding"),
-    ("9988776655", "Scraping blocked - rate limit exceeded"),
-    ("job_11sefwfw59rg", "Page not found - job posting may have been removed"),
-    ("2468135790", "Retry 1 failed: Page not found - job posting may have been removed"),
-    ("2468135790", "Retry 2 failed: Page not found - job posting may have been removed"),
-    ("cvlib_678901", "Retry 1 failed: Access denied - company blocked scraping"),
-    ("cvlib_678901", "Retry 2 failed: Access denied - company blocked scraping"),
-    ("soft123456789", "Retry 1 failed: Rate limit exceeded - retry after 24 hours"),
-    ("soft123456789", "Retry 2 failed: Rate limit exceeded - retry after 24 hours"),
+    ("2468135790", "page_not_found"),
+    ("2468135790", "page_not_found"),
+    ("2468135790", "page_not_found"),
+    ("cvlib_678901", "access_denied"),
+    ("cvlib_678901", "access_denied"),
+    ("cvlib_678901", "access_denied"),
+    ("soft123456789", "rate_limit"),
+    ("soft123456789", "rate_limit"),
+    ("soft123456789", "rate_limit"),
+    ("job_1120", "page_not_found"),
+    ("job_1121", "rate_limit"),
+    ("job_1122", "access_denied"),
+    ("job_1123", "rate_limit"),
+    ("job_1124", "connection_timeout"),
+    ("job_1150", "invalid_format"),
+    ("job_1151", "page_not_found"),
+    ("job_1152", "connection_timeout"),
+    ("9988776655", "rate_limit"),
+    ("job_11sefwfw59rg", "page_not_found"),
 ]
 
+
 SCRAPED_JOB_ERROR_DATA = [
-    {
-        "error_type": "Exception",
-        "message": message,
-        "traceback": _scraping_traceback(message),
-        "scraped_job_id": find_index(external_job_id=external_job_id) + 1,
-    }
-    for external_job_id, message in _SCRAPED_JOB_ERROR_SPECS
+    _scraped_job_error(external_job_id, reason) for external_job_id, reason in _SCRAPED_JOB_ERROR_SPECS
 ]
 
 EMAIL_SCRAPEDJOB_MAPPINGS = [

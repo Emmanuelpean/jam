@@ -53,12 +53,14 @@ class ProviderMonitoringService(BaseService[ProviderMonitoringServiceLog]):
                             self.logger.info(f"Fetching {label}")
                             fetch_fn(db, self.logger)
                         except Exception as exc:
-                            message = f"{label} failed: {exc}"
-                            self.logger.exception(message)
+                            message = "Provider fetch failed."
+                            context = {"provider": label, "error": str(exc)}
+                            self.logger.exception(f"{message} {context}")
                             record_error(
                                 db=db,
                                 exc=exc,
                                 message=message,
+                                context=context,
                                 provider_monitoring_service_log_id=service_log.id,
                             )
             except Exception as exc:
