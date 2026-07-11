@@ -784,12 +784,10 @@ class TestScrapeJobs:
             # Verify all jobs are now scraped
             scraped_jobs = session.query(models.ScrapedJob).filter().all()
             assert len(scraped_jobs) == len(indeed_scraped_jobs) + len(indeed_scraped_jobs_user2)
-            assert session.query(models.ScrapedJob).filter(
-                models.ScrapedJob.status == ProcessingStatus.COMPLETED
-            ).count() == len(indeed_scraped_jobs)
-            assert session.query(models.ScrapedJob).filter(
-                models.ScrapedJob.status == ProcessingStatus.COPIED
-            ).count() == len(indeed_scraped_jobs)
+            assert (
+                session.query(models.ScrapedJob).filter(models.ScrapedJob.status == ProcessingStatus.COMPLETED).count()
+                == len(indeed_scraped_jobs) * 2
+            )
 
             # Verify the platform stats
             platform_stat = (

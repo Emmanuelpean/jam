@@ -675,7 +675,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
                     f"Copying data to unscraped record."
                 )
                 self.copy_existing_entry(db, existing_data, job_record)
-                job_record.status = ProcessingStatus.COPIED
+                job_record.status = ProcessingStatus.COMPLETED
                 db.commit()
                 self.upsert_platform_stat(db, service_log, job_record.platform, job_scrape_copied_ids=job_record.id)
                 continue  # next job record

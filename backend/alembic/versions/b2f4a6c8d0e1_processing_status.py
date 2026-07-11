@@ -31,7 +31,6 @@ def upgrade() -> None:
             WHEN is_skipped THEN 'skipped'
             WHEN is_scraped THEN 'completed'
             WHEN is_processed THEN 'filtered'
-            WHEN is_copied THEN 'copied'
             ELSE 'pending'
         END
         """)
