@@ -100,9 +100,8 @@ export const useServiceControl = (token: string | null, fetchStatus: () => Promi
 };
 
 export const renderStatusIcons = (status: ServiceStatus | null, remainingTime: number | null): JSX.Element => {
-	const enabled: boolean = !!status?.is_enabled;
 	const running: boolean = !!status?.is_running;
-	const showCountdown: boolean = enabled && !running && remainingTime !== null;
+	const showCountdown: boolean = !!remainingTime;
 	return (
 		<div className="service-status-icons">
 			<Tooltip delay={500} content={`Run: ${running ? "In progress" : "Idle"}`}>

@@ -175,11 +175,9 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 		const createReportLink = (scrapedJob: ScrapedJobData): JSX.Element => {
 			const errorIds: number[] = scrapedJob.scraping_errors?.map((e: ServiceError): number => e.id) || [];
 			const title: string = "Job Alert Error Report";
-			const message: string = [
-				"",
-				`Job ID: ${scrapedJob?.id || "N/A"}`,
-				`Service Error IDs: ${errorIds.join(", ")}`,
-			].join("\n");
+			const message: string = ["", `Job ID: ${scrapedJob.id}`, `Service Error IDs: ${errorIds.join(", ")}`].join(
+				"\n"
+			);
 			const body: string = encodeURIComponent(message);
 			const mailtoLink = `mailto:${supportEmail}?subject=${encodeURIComponent(title)}&body=${body}`;
 

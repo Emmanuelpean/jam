@@ -111,16 +111,25 @@ export const Popover = ({
 			{mounted &&
 				coords &&
 				createPortal(
-					<div
-						ref={popoverRef}
-						className={`jam-popover ${shown ? "is-open" : ""} ${className}`.trim()}
-						style={{ top: coords.top, left: coords.left }}
-						onClick={(event): void => event.stopPropagation()}
-						onTransitionEnd={handleTransitionEnd}
-						role="dialog"
-					>
-						{typeof children === "function" ? children(closePopover) : children}
-					</div>,
+					<>
+						<div
+							className={`jam-popover-backdrop ${shown ? "is-open" : ""}`.trim()}
+							onClick={(event): void => {
+								event.stopPropagation();
+								closePopover();
+							}}
+						/>
+						<div
+							ref={popoverRef}
+							className={`jam-popover ${shown ? "is-open" : ""} ${className}`.trim()}
+							style={{ top: coords.top, left: coords.left }}
+							onClick={(event): void => event.stopPropagation()}
+							onTransitionEnd={handleTransitionEnd}
+							role="dialog"
+						>
+							{typeof children === "function" ? children(closePopover) : children}
+						</div>
+					</>,
 					document.body
 				)}
 		</span>

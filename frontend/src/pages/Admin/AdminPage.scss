@@ -100,6 +100,27 @@
 	display: none;
 }
 
+.admin-page-modal-filter .time-filter-button {
+	display: inline-flex;
+	align-items: center;
+	margin: 0;
+	padding: 9px 14.4px;
+	color: #878787;
+	background: white;
+	border: none;
+	border-radius: 7.2px;
+	box-shadow: none;
+	font-size: 1rem;
+	line-height: 1.5;
+	text-shadow: none;
+}
+
+.admin-page-modal-filter .time-filter-button:hover,
+.admin-page-modal-filter .time-filter-button:focus {
+	color: #878787;
+	background: #f1f3f5;
+}
+
 .admin-page-modal-status {
 	display: flex;
 	align-items: center;

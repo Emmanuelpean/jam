@@ -519,6 +519,7 @@ const AdminPage = (): JSX.Element => {
 				onExited={() => setOpenPage(null)}
 				centered
 				scrollable
+				enforceFocus={false}
 				dialogClassName="admin-page-modal-dialog"
 				className="admin-page-modal"
 				id="admin-page-modal"

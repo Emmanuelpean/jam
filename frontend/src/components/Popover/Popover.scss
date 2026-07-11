@@ -3,6 +3,19 @@
     cursor: pointer;
 }
 
+.jam-popover-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1079;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.jam-popover-backdrop.is-open {
+    opacity: 1;
+}
+
 .jam-popover {
     position: fixed;
     z-index: 1080;
@@ -29,7 +42,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .jam-popover {
+    .jam-popover,
+    .jam-popover-backdrop {
         transition: none;
     }
 }

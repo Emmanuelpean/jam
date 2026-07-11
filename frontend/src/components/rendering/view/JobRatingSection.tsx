@@ -15,11 +15,9 @@ const JobRatingSection = ({ scrapedJob }: JobRatingSectionProps): JSX.Element | 
 	const createReportLink = (rating: JobRatingData): JSX.Element => {
 		const errorIds: number[] = rating.rating_errors?.map((e: ServiceError): number => e.id) || [];
 		const title: string = "Job Rating Error Report";
-		const message: string = [
-			"",
-			`Job ID: ${scrapedJob?.id || "N/A"}`,
-			`Service Error IDs: ${errorIds.join(", ")}`,
-		].join("\n");
+		const message: string = ["", `Job ID: ${scrapedJob.id}`, `Service Error IDs: ${errorIds.join(", ")}`].join(
+			"\n"
+		);
 		const body: string = encodeURIComponent(message);
 		const mailtoLink = `mailto:${supportEmail}?subject=${encodeURIComponent(title)}&body=${body}`;
 
