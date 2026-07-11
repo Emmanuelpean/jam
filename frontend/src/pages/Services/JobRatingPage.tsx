@@ -9,14 +9,16 @@ import { ErrorSummaryCard } from "./ErrorSummaryCard";
 import { useJobRatingServiceLogs } from "../../hooks/useJobRatingServiceLog";
 import { useServiceErrors } from "../../hooks/useServiceErrors";
 import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
-import { DateRange } from "../../utils/TimeUtils";
+import { DateRange, toDdMmYyyyHhMm } from "../../utils/TimeUtils";
 import { TimeFilterPopover } from "../../components/TimeSelection/TimeFilterPopover";
+import { JobRatingServiceLogData, ServiceError } from "../../services/schemas/Services";
 import "./Service.scss";
 
 const JobRatingPage = (): JSX.Element => {
 	const { serviceStatus, statusError } = useServiceRunnerStatus(jobRatingServiceRunnerApi);
 	const [dateRange, setDateRange] = useState<DateRange | null>(null);
 	const [showAcknowledged, setShowAcknowledged] = useState(false);
+	const [selectedLogId, setSelectedLogId] = useState<number | null>(null);
 	const {
 		expanded: logsExpanded,
 		setExpanded: setLogsExpanded,
@@ -31,24 +33,24 @@ const JobRatingPage = (): JSX.Element => {
 	} = useJobRatingServiceLogs(serviceStatus?.is_running || false, dateRange);
 
 	const {
-		errors: currentErrors,
-		requestError: currentErrorsRequestError,
-		loading: currentErrorsLoading,
-		acknowledge: acknowledgeCurrent,
-	} = useServiceErrors(latestServiceLog, "job_rating_service_log_id", showAcknowledged);
-	const {
-		errors: previousErrors,
-		requestError: previousErrorsRequestError,
-		loading: previousErrorsLoading,
-		acknowledge: acknowledgePrevious,
+		errors,
+		requestError: errorsRequestError,
+		loading: errorsLoading,
+		setAcknowledged,
 	} = useServiceErrors(previousServiceLogs, "job_rating_service_log_id", showAcknowledged, true);
 
 	const collectedErrors = [
 		{ key: "status", label: "Service status", value: statusError },
 		{ key: "serviceLogs", label: "Service logs", value: serviceLogError },
-		{ key: "currentErrorsRequestError", label: "Latest run errors", value: currentErrorsRequestError },
-		{ key: "previousErrorsRequestError", label: "Previous run errors", value: previousErrorsRequestError },
+		{ key: "errorsRequestError", label: "Service errors", value: errorsRequestError },
 	].filter((e) => e.value);
+
+	const selectedLog: JobRatingServiceLogData | null =
+		(previousServiceLogs || []).find((log: JobRatingServiceLogData): boolean => log.id === selectedLogId) ?? null;
+	const displayedErrors: ServiceError[] = selectedLog
+		? errors.filter((e: ServiceError): boolean => e.job_rating_service_log_id === selectedLog.id)
+		: errors;
+	const selectedRunLabel: string | null = selectedLog ? toDdMmYyyyHhMm(new Date(selectedLog.run_datetime)) : null;
 
 	return (
 		<div className="scraped-jobs-page">
@@ -91,16 +93,23 @@ const JobRatingPage = (): JSX.Element => {
 				serviceLogData={previousServiceLogs}
 				isRunning={serviceStatus?.is_running || false}
 				loading={logsLoading}
+				selectedLogId={selectedLog?.id ?? null}
+				onSelectLog={setSelectedLogId}
 			/>
 
 			<ErrorSummaryCard
-				current={{ errors: currentErrors, acknowledge: acknowledgeCurrent }}
-				previous={{ errors: previousErrors, acknowledge: acknowledgePrevious }}
-				perJob={{ title: "Job Rating Errors", discriminatorKey: "job_rating_id", emptyText: "No rating errors" }}
+				current={{ errors: displayedErrors, setAcknowledged }}
+				perJob={{
+					title: "Job Rating Errors",
+					discriminatorKey: "job_rating_id",
+					emptyText: "No rating errors",
+				}}
 				showAcknowledged={showAcknowledged}
 				onToggleAcknowledged={setShowAcknowledged}
 				isRunning={serviceStatus?.is_running || false}
-				loading={logsLoading || currentErrorsLoading || previousErrorsLoading}
+				loading={logsLoading || errorsLoading}
+				selectedRunLabel={selectedRunLabel}
+				onClearSelectedRun={() => setSelectedLogId(null)}
 			/>
 		</div>
 	);

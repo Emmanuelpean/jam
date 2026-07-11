@@ -14,6 +14,8 @@ These tests cover:
 5. Proper display of critical, service, scraping and rating errors
 """
 
+import datetime as dt
+
 from selenium.webdriver.common.by import By
 
 from frontend_base_test import BaseTest
@@ -58,11 +60,10 @@ class TestJobScrapingDashboard(ServiceDashboardBase):
         assert self.service_dashboard_utils.max_timedelta_days_field.is_displayed()
 
     def test_interactive_elements(self) -> None:
-        """Log viewer and error view toggle work correctly."""
+        """Log viewer toggle works correctly."""
 
         self.service_dashboard_utils.open_scraping()
         self.service_dashboard_utils.assert_log_viewer_toggles()
-        self.service_dashboard_utils.assert_error_view_toggles()
 
 
 class TestJobRatingDashboard(ServiceDashboardBase):
@@ -92,19 +93,20 @@ class TestJobRatingDashboard(ServiceDashboardBase):
         self.service_dashboard_utils.assert_no_min_timedelta_days_field()
 
     def test_interactive_elements(self) -> None:
-        """Log viewer and error view toggle work correctly on the rating modal."""
+        """Log viewer toggle works correctly on the rating modal."""
 
         self.service_dashboard_utils.open_rating()
         self.service_dashboard_utils.assert_log_viewer_toggles()
-        self.service_dashboard_utils.assert_error_view_toggles()
 
 
 class TestJobScrapingDashboardErrors(ServiceDashboardBase):
     """Tests that critical, service and scraping errors display correctly."""
 
-    CRITICAL_ERROR = "Critical: database connection pool exhausted"
-    SERVICE_ERROR = "Failed to connect to LinkedIn API: Connection timed out"
-    SCRAPING_ERROR = "Page not found - job posting has been removed"
+    # Messages are the static strings recorded by the scraper in app/job_email_scraping/email_scraper.py
+    # (runtime values like the job id live in the error's `context`, not the message).
+    CRITICAL_ERROR = "Critical error in scraping workflow."
+    SERVICE_ERROR = "Failed to get forwarding emails."
+    SCRAPING_ERROR = "Failed to scrape job data."
 
     def setup_function(self, request) -> None:
         # Service log with today's date (the model default) so it appears in the default date range
@@ -113,6 +115,7 @@ class TestJobScrapingDashboardErrors(ServiceDashboardBase):
         # Run-level critical error: no scraped_job_id, level=critical (drives is_success/Critical Errors column)
         self.create_service_error(
             self.db,
+            error_type="OperationalError",
             message=self.CRITICAL_ERROR,
             level="critical",
             job_email_scraping_service_log_id=service_log.id,
@@ -121,6 +124,7 @@ class TestJobScrapingDashboardErrors(ServiceDashboardBase):
         # Run-level (non-critical) error, appears in the "Service Errors" column
         self.create_service_error(
             self.db,
+            error_type="TimeoutError",
             message=self.SERVICE_ERROR,
             job_email_scraping_service_log_id=service_log.id,
         )
@@ -129,6 +133,7 @@ class TestJobScrapingDashboardErrors(ServiceDashboardBase):
         scraped_job = self.user.create_scraped_job(service_log=service_log)
         self.create_service_error(
             self.db,
+            error_type="HTTPError",
             message=self.SCRAPING_ERROR,
             job_email_scraping_service_log_id=service_log.id,
             scraped_job_id=scraped_job.id,
@@ -153,11 +158,56 @@ class TestJobScrapingDashboardErrors(ServiceDashboardBase):
         assert self.SCRAPING_ERROR in error_text
 
 
+class TestServiceDashboardRunFilter(ServiceDashboardBase):
+    """Clicking a run in the history chart filters the already-loaded errors to that run."""
+
+    # Two distinct static run-level messages the scraper records, so each run's error is uniquely
+    # identifiable in the summary.
+    OLD_RUN_ERROR = "Failed to search emails for user."
+    NEW_RUN_ERROR = "Failed to get forwarding emails."
+
+    def setup_function(self, request) -> None:
+        now = dt.datetime.now(dt.timezone.utc)
+        # Two runs a day apart (both inside the default 1-week window), each with its own error.
+        old_log = self.create_email_scraping_service_log(
+            self.db, run_duration=30.0, run_datetime=now - dt.timedelta(days=1)
+        )
+        new_log = self.create_email_scraping_service_log(self.db, run_duration=20.0, run_datetime=now)
+        self.create_service_error(
+            self.db, error_type="TimeoutError", message=self.OLD_RUN_ERROR, job_email_scraping_service_log_id=old_log.id
+        )
+        self.create_service_error(
+            self.db, error_type="TimeoutError", message=self.NEW_RUN_ERROR, job_email_scraping_service_log_id=new_log.id
+        )
+        self.login()
+
+    def test_click_run_filters_errors_to_that_run(self) -> None:
+        """Clicking the newest run's chart point shows only that run's error; clearing restores both."""
+
+        self.service_dashboard_utils.open_scraping()
+
+        # Both runs' errors are visible before any selection.
+        self.service_dashboard_utils.wait_for_error_summary_containing(self.OLD_RUN_ERROR, self.NEW_RUN_ERROR)
+
+        # Clicking the newest run's point filters the errors to that run and shows the run chip.
+        self.service_dashboard_utils.select_run_from_chart(newest=True)
+        assert self.service_dashboard_utils.selected_run_filter.is_displayed()
+        self.service_dashboard_utils.wait_for_error_summary_filtered(
+            contains=self.NEW_RUN_ERROR, excludes=self.OLD_RUN_ERROR
+        )
+
+        # Clearing the filter restores errors for all runs.
+        self.service_dashboard_utils.clear_run_filter()
+        self.service_dashboard_utils.wait_for_error_summary_containing(self.OLD_RUN_ERROR, self.NEW_RUN_ERROR)
+
+
 class TestJobRatingDashboardErrors(ServiceDashboardBase):
     """Tests that critical and rating errors display correctly on the rating modal."""
 
-    CRITICAL_ERROR = "Critical: rating service crashed unexpectedly"
-    RATING_ERROR = "Failed to rate job: API timeout after 30 seconds"
+    # Messages are the static strings recorded in app/job_rating/scraped_job_rating.py (the job id and
+    # raw response live in the error's `context`).
+    CRITICAL_ERROR = "Critical error in rating workflow"
+    RATING_ERROR = "Error scoring job."
 
     def setup_function(self, request) -> None:
         # Rating service log with today's date (the model default) so it appears in the default date range
@@ -166,6 +216,7 @@ class TestJobRatingDashboardErrors(ServiceDashboardBase):
         # Run-level critical error: no job_rating_id, level=critical (drives is_success/Critical Errors column)
         self.create_service_error(
             self.db,
+            error_type="Exception",
             message=self.CRITICAL_ERROR,
             level="critical",
             job_rating_service_log_id=rating_log.id,
@@ -176,6 +227,7 @@ class TestJobRatingDashboardErrors(ServiceDashboardBase):
         rating = self.user.create_job_rating(status="failed", llm_model="claude-sonnet-4-6")
         self.create_service_error(
             self.db,
+            error_type="KeyError",
             message=self.RATING_ERROR,
             job_rating_service_log_id=rating_log.id,
             job_rating_id=rating.id,

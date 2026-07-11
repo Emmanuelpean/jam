@@ -437,6 +437,22 @@ const AdminPage = (): JSX.Element => {
 					</AdminCard>
 				</Col>
 
+				<Col xs={12}>
+					<AdminCard
+						id="admin-card-scheduler"
+						title="Service Scheduler"
+						icon="clock-history"
+						onClick={(): void => openModal("scheduler")}
+					>
+						<SchedulerStatusBody status={scheduler.schedulerStatus} />
+						{scheduler.schedulerStatus?.last_log && (
+							<div className="admin-card-caption text-truncate">
+								{scheduler.schedulerStatus.last_log}
+							</div>
+						)}
+					</AdminCard>
+				</Col>
+
 				<Col xs={12} md={6} xl={4}>
 					<AdminCard
 						id="admin-card-job-scraping"
@@ -502,22 +518,6 @@ const AdminPage = (): JSX.Element => {
 								allowNegative
 							/>
 						</div>
-					</AdminCard>
-				</Col>
-
-				<Col xs={12} md={6} xl={4}>
-					<AdminCard
-						id="admin-card-scheduler"
-						title="Service Scheduler"
-						icon="clock-history"
-						onClick={(): void => openModal("scheduler")}
-					>
-						<SchedulerStatusBody status={scheduler.schedulerStatus} />
-						{scheduler.schedulerStatus?.last_log && (
-							<div className="admin-card-caption text-truncate">
-								{scheduler.schedulerStatus.last_log}
-							</div>
-						)}
 					</AdminCard>
 				</Col>
 			</Row>

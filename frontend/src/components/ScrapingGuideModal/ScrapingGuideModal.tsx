@@ -26,8 +26,8 @@ export const ScrapingGuideModal = forwardRef<ScrapingGuideModalHandle>((_, ref):
 	}));
 
 	const copyEmail = (): void => {
-		navigator.clipboard.writeText(config.scraper_email).then((): void => {
-			showToastSuccess(`${config.scraper_email} copied to clipboard`);
+		navigator.clipboard.writeText(config?.scraper_email).then((): void => {
+			showToastSuccess(`${config?.scraper_email} copied to clipboard`);
 		});
 	};
 
@@ -108,8 +108,8 @@ export const ScrapingGuideModal = forwardRef<ScrapingGuideModalHandle>((_, ref):
 					onToggle={() => toggleSection("outlook-web")}
 				>
 					<p className="small text-muted mt-2">
-						Hotmail addresses (<code>@hotmail.com</code>, <code>@live.com</code>) use the same
-						interface — sign in at <strong>outlook.live.com</strong>.
+						Hotmail addresses (<code>@hotmail.com</code>, <code>@live.com</code>) use the same interface —
+						sign in at <strong>outlook.live.com</strong>.
 					</p>
 					<ol className="mt-2 mb-2">
 						<li>

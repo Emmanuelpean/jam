@@ -15,8 +15,7 @@ import { KeywordModal } from "./KeywordModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { JamData, useDataContext } from "../../contexts/DataContext";
-import { JobData } from "../../services/schemas/DataTables";
-import { JobCreate } from "../../services/schemas/DataTables";
+import { JobCreate, JobData } from "../../services/schemas/DataTables";
 import { ProcessingStatus, ScrapedJobData, ScrapedJobUpdate, ServiceError } from "../../services/schemas/Services";
 import { useConfig } from "../../contexts/ConfigContext";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
@@ -40,6 +39,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 			getPersonPreviewConfig,
 		} = useFormOptions();
 		const ff = useFormFields();
+		const supportEmail: string | undefined = config?.support_email;
 
 		const transformInputData = (data: ScrapedJobData) => {
 			if (!data) return data;
@@ -172,24 +172,26 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 			modalViewFields.geolocationMap(false),
 		];
 
+		const createReportLink = (scrapedJob: ScrapedJobData): JSX.Element => {
+			const errorIds: number[] = scrapedJob.scraping_errors?.map((e: ServiceError): number => e.id) || [];
+			const title: string = "Job Alert Error Report";
+			const message: string = [
+				"",
+				`Job ID: ${scrapedJob?.id || "N/A"}`,
+				`Service Error IDs: ${errorIds.join(", ")}`,
+			].join("\n");
+			const body: string = encodeURIComponent(message);
+			const mailtoLink = `mailto:${supportEmail}?subject=${encodeURIComponent(title)}&body=${body}`;
+
+			return (
+				<a href={mailtoLink} style={{ color: "inherit", textDecoration: "underline" }}>
+					report it here
+				</a>
+			);
+		};
+
 		const warningMessage = (data: ScrapedJobData): WarningMessageConfig[] | null => {
 			const result: WarningMessageConfig[] = [];
-
-			const createReportLink = (subject: string, errorMessage: string | null): JSX.Element | null => {
-				const supportEmail: string = config?.support_email;
-				if (!supportEmail) return null;
-
-				const body: string = encodeURIComponent(
-					`Error Details:\n${errorMessage || "Unknown error"}\n\nJob ID: ${data?.id || "N/A"}\nJob Title: ${data?.title || "N/A"}\nJob URL: ${data?.url || "N/A"}`
-				);
-				const mailtoLink = `mailto:${supportEmail}?subject=${encodeURIComponent(subject)}&body=${body}`;
-
-				return (
-					<a href={mailtoLink} style={{ color: "inherit", textDecoration: "underline" }}>
-						report it here
-					</a>
-				);
-			};
 
 			// Scraped Job Status
 			if (data?.status === ProcessingStatus.PENDING && !data?.scraping_errors.length) {
@@ -201,15 +203,12 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 			if (data?.status === ProcessingStatus.PENDING && data?.scraping_errors.length) {
 				result.push({
 					key: "scraping_retry_pending",
-					message: `Scraping failed (attempt ${data.scraping_retry_count}/${config.scrape_max_retry}). It will be reattempted soon.`,
+					message: `Scraping failed (attempt ${data.scraping_retry_count}/${config?.scrape_max_retry}). It will be reattempted soon.`,
 					variant: "warning",
 				});
 			}
 			if (data?.status === ProcessingStatus.FAILED) {
-				const reportLink = createReportLink(
-					"Job Alert Error Report",
-					data?.scraping_errors.map((e: ServiceError) => e.traceback).join("\n\n---\n\n") || null
-				);
+				const reportLink: JSX.Element = createReportLink(data);
 				result.push({
 					key: "scraping_failed",
 					message: (
@@ -234,7 +233,13 @@ export const ScrapedJobModal = forwardRef<DataModalHandle<ScrapedJobData>, JamDa
 					variant: "warning",
 				});
 			}
-
+			if (data?.status === ProcessingStatus.FILTERED) {
+				result.push({
+					key: "job_skipped",
+					message: "This job was filtered by your scraping filters.",
+					variant: "info",
+				});
+			}
 			return result.length ? result : null;
 		};
 

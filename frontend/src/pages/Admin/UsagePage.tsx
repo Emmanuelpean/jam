@@ -176,20 +176,15 @@ const UsagePage = (): JSX.Element => {
 	const [showAcknowledged, setShowAcknowledged] = useState<boolean>(false);
 
 	const isRunning: boolean = serviceStatus?.is_running || false;
+	const { previousServiceLogs, loading: logsLoading } = useServiceLogs<ServiceLog>(
+		providerMonitoringServiceLogApi,
+		isRunning,
+		dateRange
+	);
 	const {
-		previousServiceLogs,
-		latestServiceLog,
-		loading: logsLoading,
-	} = useServiceLogs<ServiceLog>(providerMonitoringServiceLogApi, isRunning, dateRange);
-	const {
-		errors: currentErrors,
-		acknowledge: acknowledgeCurrent,
-		loading: currentErrorsLoading,
-	} = useServiceErrors(latestServiceLog, "provider_monitoring_service_log_id", showAcknowledged);
-	const {
-		errors: previousErrors,
-		acknowledge: acknowledgePrevious,
-		loading: previousErrorsLoading,
+		errors,
+		setAcknowledged,
+		loading: errorsLoading,
 	} = useServiceErrors(previousServiceLogs, "provider_monitoring_service_log_id", showAcknowledged, true);
 
 	const [anthropic, setAnthropic] = useState<AnthropicDailyUsageData[]>([]);
@@ -451,12 +446,11 @@ const UsagePage = (): JSX.Element => {
 			/>
 
 			<ErrorSummaryCard
-				current={{ errors: currentErrors, acknowledge: acknowledgeCurrent }}
-				previous={{ errors: previousErrors, acknowledge: acknowledgePrevious }}
+				current={{ errors, setAcknowledged }}
 				showAcknowledged={showAcknowledged}
 				onToggleAcknowledged={setShowAcknowledged}
 				isRunning={isRunning}
-				loading={logsLoading || currentErrorsLoading || previousErrorsLoading}
+				loading={logsLoading || errorsLoading}
 			/>
 		</div>
 	);

@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import { ProcessingStatus, ScrapedJobData } from "../../../services/schemas/Services";
+import { JobRatingData, ProcessingStatus, ScrapedJobData, ServiceError } from "../../../services/schemas/Services";
 import { useConfig } from "../../../contexts/ConfigContext";
 import JobRatingCard from "./JobRatingCard";
 
@@ -9,16 +9,19 @@ interface JobRatingSectionProps {
 
 const JobRatingSection = ({ scrapedJob }: JobRatingSectionProps): JSX.Element | null => {
 	const { config } = useConfig();
-	const rating = scrapedJob?.job_rating;
+	const rating: JobRatingData | null = scrapedJob?.job_rating;
+	const supportEmail: string | undefined = config?.support_email;
 
-	const createReportLink = (subject: string, errorMessage: string | null): JSX.Element | null => {
-		const supportEmail: string = config?.support_email;
-		if (!supportEmail) return null;
-
-		const body: string = encodeURIComponent(
-			`Error Details:\n${errorMessage || "Unknown error"}\n\nJob ID: ${scrapedJob?.id || "N/A"}\nJob Title: ${scrapedJob?.title || "N/A"}\nJob URL: ${scrapedJob?.url || "N/A"}`
-		);
-		const mailtoLink = `mailto:${supportEmail}?subject=${encodeURIComponent(subject)}&body=${body}`;
+	const createReportLink = (rating: JobRatingData): JSX.Element => {
+		const errorIds: number[] = rating.rating_errors?.map((e: ServiceError): number => e.id) || [];
+		const title: string = "Job Rating Error Report";
+		const message: string = [
+			"",
+			`Job ID: ${scrapedJob?.id || "N/A"}`,
+			`Service Error IDs: ${errorIds.join(", ")}`,
+		].join("\n");
+		const body: string = encodeURIComponent(message);
+		const mailtoLink = `mailto:${supportEmail}?subject=${encodeURIComponent(title)}&body=${body}`;
 
 		return (
 			<a href={mailtoLink} style={{ color: "inherit", textDecoration: "underline" }}>
@@ -32,14 +35,17 @@ const JobRatingSection = ({ scrapedJob }: JobRatingSectionProps): JSX.Element | 
 		return (
 			<>
 				<JobRatingCard jobRating={rating} />
+				// Display the notes
 				{rating.notes.length > 0 && (
 					<div className="text-muted small mt-2">
 						<i className="bi bi-info-circle me-1" />
 						<span>Notes:</span>
 						<ul className="mb-0 mt-1">
-							{rating.notes.map((note: string, idx: number) => (
-								<li key={idx}>{note}</li>
-							))}
+							{rating.notes.map(
+								(note: string, idx: number): JSX.Element => (
+									<li key={idx}>{note}</li>
+								)
+							)}
 						</ul>
 					</div>
 				)}
@@ -47,13 +53,9 @@ const JobRatingSection = ({ scrapedJob }: JobRatingSectionProps): JSX.Element | 
 		);
 	}
 
-	// Rating failed with error
+	// Rating failed
 	if (rating?.status === ProcessingStatus.FAILED) {
-		const ratingErrorText: string | null =
-			rating.rating_errors
-				?.map((e) => e.message)
-				.join("\n\n---\n\n") || null;
-		const reportLink = createReportLink("Job Rating Error Report", ratingErrorText);
+		const reportLink: JSX.Element = createReportLink(rating);
 		return (
 			<div className="text-muted small">
 				<i className="bi bi-exclamation-triangle me-1" />
@@ -73,8 +75,8 @@ const JobRatingSection = ({ scrapedJob }: JobRatingSectionProps): JSX.Element | 
 		);
 	}
 
-	// Scraping not successfully completed — rating not applicable
-	if (scrapedJob?.status !== ProcessingStatus.COMPLETED) {
+	// Scraping pending
+	if (scrapedJob?.status === ProcessingStatus.PENDING) {
 		return (
 			<div className="text-muted small">
 				<i className="bi bi-dash-circle me-1" />

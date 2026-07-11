@@ -68,7 +68,9 @@ class TestEmailVerification(BaseTest):
         test_unverified_user.create_token(TokenType.EMAIL_VERIFICATION, created_at=last_sent)
 
         self.auth_utils.login_user(test_unverified_user.email, test_unverified_user.plain_password)
-        self.toast_utils.assert_toast_message(f"A new verification email has been sent to {test_unverified_user.email}.")
+        self.toast_utils.assert_toast_message(
+            f"A new verification email has been sent to {test_unverified_user.email}."
+        )
 
     def test_registering_same_email_before_verification_shows_wait_then_allows_login(self) -> None:
         """Test that re-registering the same email before verification shows the 'Please wait' message,

@@ -1,6 +1,7 @@
 """Utilities for the admin service dashboard modals (Job Scraping and Job Rating)."""
 
 from selenium.common.exceptions import StaleElementReferenceException
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
@@ -31,12 +32,6 @@ class ServiceDashboardUtils(AdminPageUtils):
         return self.get_element("log-viewer-wrapper", selector=By.CLASS_NAME, enabled=False)
 
     @property
-    def error_view_toggle(self) -> WebElement:
-        """The checkbox toggling between current-run and previous-run errors."""
-
-        return self.get_element("errorViewToggle")
-
-    @property
     def latest_run_progress(self) -> WebElement:
         """The Latest Run Progress card in the modal body."""
 
@@ -53,6 +48,18 @@ class ServiceDashboardUtils(AdminPageUtils):
         """The run-history time filter in the modal body."""
 
         return self.get_element("history-filters", enabled=False)
+
+    @property
+    def run_history_card(self) -> WebElement:
+        """The Run History card (holds the run-history line charts)."""
+
+        return self.get_element("run-history-card", enabled=False)
+
+    @property
+    def selected_run_filter(self) -> WebElement:
+        """The chip shown when the errors are filtered to a single run (clicking it clears the filter)."""
+
+        return self.get_element("selected-run-filter")
 
     @property
     def run_now_button(self) -> WebElement:
@@ -100,11 +107,6 @@ class ServiceDashboardUtils(AdminPageUtils):
 
         self.log_toggle.click()
 
-    def toggle_error_view(self) -> None:
-        """Click the error view checkbox."""
-
-        self.error_view_toggle.click()
-
     def assert_log_viewer_toggles(self) -> None:
         """The log viewer is collapsed by default and expands on click.
 
@@ -115,22 +117,41 @@ class ServiceDashboardUtils(AdminPageUtils):
         self.expand_log_viewer()
         self.wait.until(lambda d: "open" in d.find_element(By.CLASS_NAME, "log-viewer-wrapper").get_attribute("class"))
 
-    def assert_error_view_toggles(self) -> None:
-        """The error view toggle defaults unchecked and flips on click."""
-
-        checkbox = self.error_view_toggle
-        assert not checkbox.is_selected()
-        self.toggle_error_view()
-        assert checkbox.is_selected()
-        self.toggle_error_view()
-        assert not checkbox.is_selected()
-
     def assert_no_min_timedelta_days_field(self) -> None:
         """Assert the minimum-age config field is absent (rating dashboard has no per-job age filter)."""
 
         assert not self.check_element_exists(
             "min_timedelta_days"
         ), "min_timedelta_days should not appear on the rating dashboard"
+
+    def select_run_from_chart(self, newest: bool = True) -> None:
+        """Click a data point in the run-history chart to filter errors to that run.
+
+        Clicks the rightmost (newest run) or leftmost (oldest run) data point in the first line chart.
+        Recharts derives the clicked point from the real mouse position, and Selenium's move_to_element
+        is unreliable on SVG nodes, so the offset from the (reliable) wrapper element to the dot's centre
+        is measured via getBoundingClientRect and used for a real ActionChains click.
+        :param newest: click the most recent run's point when True, else the oldest."""
+
+        wrapper = self.run_history_card.find_elements(By.CLASS_NAME, "recharts-wrapper")[0]
+        dots = wrapper.find_elements(By.CSS_SELECTOR, "circle.recharts-dot")
+        assert dots, "expected run-history chart to render data points"
+        target = (max if newest else min)(dots, key=lambda dot: float(dot.get_attribute("cx")))
+        offset_x, offset_y = self.driver.execute_script(
+            """
+            const dot = arguments[0].getBoundingClientRect(), wrap = arguments[1].getBoundingClientRect();
+            return [(dot.left + dot.width / 2) - (wrap.left + wrap.width / 2),
+                    (dot.top + dot.height / 2) - (wrap.top + wrap.height / 2)];
+            """,
+            target,
+            wrapper,
+        )
+        ActionChains(self.driver).move_to_element_with_offset(wrapper, int(offset_x), int(offset_y)).click().perform()
+
+    def clear_run_filter(self) -> None:
+        """Clear the single-run error filter via its chip."""
+
+        self.selected_run_filter.click()
 
     def wait_for_error_summary_containing(self, *messages: str) -> str:
         """Wait until the Error Summary card's text contains every given message, then return that text.
@@ -151,4 +172,24 @@ class ServiceDashboardUtils(AdminPageUtils):
             return False
 
         self.wait.until(_errors_loaded)
+        return captured["text"]
+
+    def wait_for_error_summary_filtered(self, *, contains: str, excludes: str) -> str:
+        """Wait until the Error Summary card contains `contains` but no longer contains `excludes`.
+
+        Used after selecting a run: the kept run's error stays while the other run's error drops out."""
+
+        captured = {}
+
+        def _filtered(d) -> bool:
+            try:
+                text = d.find_element(By.ID, "error-summary-card").text
+            except StaleElementReferenceException:
+                return False
+            if contains in text and excludes not in text:
+                captured["text"] = text
+                return True
+            return False
+
+        self.wait.until(_filtered)
         return captured["text"]

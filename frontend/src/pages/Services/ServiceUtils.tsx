@@ -63,6 +63,11 @@ export const RenderLabeledInput = (
 	);
 };
 
+export const runDatetimeMs = (log: { run_datetime: any }): number => new Date(log.run_datetime).getTime();
+
+export const findLogByX = <T extends { id: number; run_datetime: any }>(logs: T[], xMs: number): T | undefined =>
+	logs.find((log: T): boolean => runDatetimeMs(log) === xMs);
+
 export const createSeries = (logs: any[], id: string, getValue: (log: any) => number, color?: string): SeriesData => ({
 	id,
 	color,

@@ -1,14 +1,12 @@
-import React, { JSX, useState } from "react";
+import React, { JSX } from "react";
 import { ServiceError } from "../../services/schemas/Services";
-import { groupErrorsByMessage } from "../../hooks/useServiceErrors";
+import { ErrorGroup, groupErrorsByMessage } from "../../hooks/useServiceErrors";
 import { useDelayedLoading } from "../../hooks/useDelayedLoading";
 import { GroupedErrorList } from "./GroupedErrorList";
 
-type ErrorView = "current" | "last";
-
 export interface ErrorGroupData {
 	errors: ServiceError[];
-	acknowledge: (ids: number[]) => Promise<void>;
+	setAcknowledged: (ids: number[], isAcknowledged: boolean) => Promise<void>;
 	platformByJobId?: Record<number, string | null>;
 }
 
@@ -21,61 +19,68 @@ export interface PerJobErrorConfig {
 
 interface ErrorSummaryCardProps {
 	current: ErrorGroupData;
-	previous: ErrorGroupData;
 	showAcknowledged: boolean;
 	onToggleAcknowledged: (value: boolean) => void;
 	isRunning: boolean;
 	loading?: boolean;
 	perJob?: PerJobErrorConfig;
+	/** Label of the run the errors are filtered to (from clicking a chart point), or null for all runs. */
+	selectedRunLabel?: string | null;
+	/** Clear the run filter and show errors for all runs again. */
+	onClearSelectedRun?: () => void;
 }
 
 export const ErrorSummaryCard = ({
-	current,
-	previous,
+	current: data,
 	showAcknowledged,
 	onToggleAcknowledged,
 	isRunning,
 	loading = false,
 	perJob,
+	selectedRunLabel = null,
+	onClearSelectedRun,
 }: ErrorSummaryCardProps): JSX.Element => {
 	const visibleLoading = useDelayedLoading(loading);
-	const [errorView, setErrorView] = useState<ErrorView>("current");
-	const data: ErrorGroupData = errorView === "current" ? current : previous;
 
 	const jobKey = perJob?.discriminatorKey;
 	const runLevel: ServiceError[] = jobKey
 		? data.errors.filter((e: ServiceError): boolean => e[jobKey] == null)
 		: data.errors;
-	const criticalGroups = groupErrorsByMessage(runLevel.filter((e: ServiceError): boolean => e.level === "critical"));
-	const serviceGroups = groupErrorsByMessage(runLevel.filter((e: ServiceError): boolean => e.level !== "critical"));
-	const perJobGroups = jobKey
+	const criticalGroups: ErrorGroup[] = groupErrorsByMessage(
+		runLevel.filter((e: ServiceError): boolean => e.level === "critical")
+	);
+	const serviceGroups: ErrorGroup[] = groupErrorsByMessage(
+		runLevel.filter((e: ServiceError): boolean => e.level !== "critical")
+	);
+	const perJobGroups: ErrorGroup[] = jobKey
 		? groupErrorsByMessage(
 				data.errors.filter((e: ServiceError): boolean => e[jobKey] != null),
 				data.platformByJobId
 			)
 		: [];
-
+	console.log(perJobGroups);
 	return (
 		<div id="error-summary-card" className="status-card mt-4">
 			<h2 className="card-title">
 				<i className="bi bi-exclamation-triangle me-2"></i>
 				Error Summary
 				{isRunning && <span className="live-indicator ms-2"></span>}
+				{selectedRunLabel && (
+					<button
+						id="selected-run-filter"
+						type="button"
+						className="btn btn-sm btn-outline-primary ms-3 py-0"
+						onClick={onClearSelectedRun}
+						title="Show errors for all runs"
+					>
+						<i className="bi bi-funnel-fill me-1"></i>
+						Run: {selectedRunLabel}
+						<i className="bi bi-x-lg ms-2"></i>
+					</button>
+				)}
 			</h2>
 
 			<div className="d-flex flex-wrap gap-4 mb-3">
-				<div className="form-check form-switch">
-					<input
-						type="checkbox"
-						className="form-check-input"
-						id="errorViewToggle"
-						checked={errorView === "last"}
-						onChange={(e) => setErrorView(e.target.checked ? "last" : "current")}
-					/>
-					<label className="form-check-label" htmlFor="errorViewToggle">
-						Show previous run errors
-					</label>
-				</div>
 				<div className="form-check form-switch">
 					<input
 						type="checkbox"
@@ -103,14 +108,14 @@ export const ErrorSummaryCard = ({
 						groups={criticalGroups}
 						variant="danger"
 						emptyText="No critical errors"
-						onAcknowledge={data.acknowledge}
+						onSetAcknowledged={data.setAcknowledged}
 					/>
 					<GroupedErrorList
 						title="Service Errors"
 						groups={serviceGroups}
 						variant="info"
 						emptyText="No service errors"
-						onAcknowledge={data.acknowledge}
+						onSetAcknowledged={data.setAcknowledged}
 					/>
 					{perJob && (
 						<GroupedErrorList
@@ -119,7 +124,7 @@ export const ErrorSummaryCard = ({
 							variant="warning"
 							emptyText={perJob.emptyText}
 							showJobs={perJob.showJobs}
-							onAcknowledge={data.acknowledge}
+							onSetAcknowledged={data.setAcknowledged}
 						/>
 					)}
 				</div>

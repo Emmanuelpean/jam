@@ -115,9 +115,7 @@ class Select(SeleniumUtils):
             elements before their text is available)."""
 
             try:
-                return [
-                    self._get_option_index(opt) for opt in self.options if opt.text.strip() == text.strip()
-                ]
+                return [self._get_option_index(opt) for opt in self.options if opt.text.strip() == text.strip()]
             except StaleElementReferenceException:
                 return []
 

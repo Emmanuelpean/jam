@@ -9,9 +9,9 @@ import { ErrorSummaryCard } from "./ErrorSummaryCard";
 import { useJobScraperServiceLogs } from "../../hooks/useJobScraperServiceLogs";
 import { useServiceErrors } from "../../hooks/useServiceErrors";
 import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
-import { DateRange } from "../../utils/TimeUtils";
+import { DateRange, toDdMmYyyyHhMm } from "../../utils/TimeUtils";
 import { TimeFilterPopover } from "../../components/TimeSelection/TimeFilterPopover";
-import { JobScrapingServiceLogData, PlatformStat } from "../../services/schemas/Services";
+import { JobScrapingServiceLogData, PlatformStat, ServiceError } from "../../services/schemas/Services";
 import "./Service.scss";
 
 const buildPlatformByJobId = (logs: JobScrapingServiceLogData[] | null): Record<number, string | null> => {
@@ -34,6 +34,7 @@ const JobScrapingPage = (): JSX.Element => {
 	const [dateRange, setDateRange] = useState<DateRange | null>(null);
 	const [selectedPlatform, setSelectedPlatform] = useState("all");
 	const [showAcknowledged, setShowAcknowledged] = useState(false);
+	const [selectedLogId, setSelectedLogId] = useState<number | null>(null);
 	const {
 		expanded: logsExpanded,
 		setExpanded: setLogsExpanded,
@@ -49,24 +50,24 @@ const JobScrapingPage = (): JSX.Element => {
 	} = useJobScraperServiceLogs(serviceStatus?.is_running || false, dateRange);
 
 	const {
-		errors: currentErrors,
-		requestError: currentErrorsRequestError,
-		loading: currentErrorsLoading,
-		acknowledge: acknowledgeCurrent,
-	} = useServiceErrors(latestServiceLog, "job_email_scraping_service_log_id", showAcknowledged);
-	const {
-		errors: previousErrors,
-		requestError: previousErrorsRequestError,
-		loading: previousErrorsLoading,
-		acknowledge: acknowledgePrevious,
+		errors,
+		requestError: errorsRequestError,
+		loading: errorsLoading,
+		setAcknowledged,
 	} = useServiceErrors(previousServiceLogs, "job_email_scraping_service_log_id", showAcknowledged, true);
 
 	const collectedErrors = [
 		{ key: "status", label: "Service status", value: statusError },
 		{ key: "serviceLogs", label: "Service logs", value: serviceLogError },
-		{ key: "currentErrorsRequestError", label: "Latest run errors", value: currentErrorsRequestError },
-		{ key: "previousErrorsRequestError", label: "Previous run errors", value: previousErrorsRequestError },
+		{ key: "errorsRequestError", label: "Service errors", value: errorsRequestError },
 	].filter((e) => e.value);
+
+	const selectedLog: JobScrapingServiceLogData | null =
+		(previousServiceLogs || []).find((log: JobScrapingServiceLogData): boolean => log.id === selectedLogId) ?? null;
+	const displayedErrors: ServiceError[] = selectedLog
+		? errors.filter((e: ServiceError): boolean => e.job_email_scraping_service_log_id === selectedLog.id)
+		: errors;
+	const selectedRunLabel: string | null = selectedLog ? toDdMmYyyyHhMm(new Date(selectedLog.run_datetime)) : null;
 
 	return (
 		<div className="scraped-jobs-page">
@@ -112,17 +113,14 @@ const JobScrapingPage = (): JSX.Element => {
 				onPlatformChange={setSelectedPlatform}
 				isRunning={serviceStatus?.is_running || false}
 				loading={logsLoading}
+				selectedLogId={selectedLog?.id ?? null}
+				onSelectLog={setSelectedLogId}
 			/>
 
 			<ErrorSummaryCard
 				current={{
-					errors: currentErrors,
-					acknowledge: acknowledgeCurrent,
-					platformByJobId: buildPlatformByJobId(latestServiceLog ? [latestServiceLog] : null),
-				}}
-				previous={{
-					errors: previousErrors,
-					acknowledge: acknowledgePrevious,
+					errors: displayedErrors,
+					setAcknowledged,
 					platformByJobId: buildPlatformByJobId(previousServiceLogs),
 				}}
 				perJob={{
@@ -134,7 +132,9 @@ const JobScrapingPage = (): JSX.Element => {
 				showAcknowledged={showAcknowledged}
 				onToggleAcknowledged={setShowAcknowledged}
 				isRunning={serviceStatus?.is_running || false}
-				loading={logsLoading || currentErrorsLoading || previousErrorsLoading}
+				loading={logsLoading || errorsLoading}
+				selectedRunLabel={selectedRunLabel}
+				onClearSelectedRun={() => setSelectedLogId(null)}
 			/>
 		</div>
 	);

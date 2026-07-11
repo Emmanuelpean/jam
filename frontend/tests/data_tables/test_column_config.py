@@ -68,13 +68,13 @@ class TestColumnConfig(BaseTest):
         """Default visible columns are checked; non-default columns are unchecked"""
         self.column_config_utils.open()
         for key in DEFAULT_VISIBLE_JOB_COLUMNS:
-            assert self.column_config_utils.column_toggle(key).is_selected(), (
-                f"Expected column '{key}' to be checked by default"
-            )
+            assert self.column_config_utils.column_toggle(
+                key
+            ).is_selected(), f"Expected column '{key}' to be checked by default"
         for key in set(ALL_JOB_COLUMNS) - set(DEFAULT_VISIBLE_JOB_COLUMNS):
-            assert not self.column_config_utils.column_toggle(key).is_selected(), (
-                f"Expected column '{key}' to be unchecked by default"
-            )
+            assert not self.column_config_utils.column_toggle(
+                key
+            ).is_selected(), f"Expected column '{key}' to be unchecked by default"
 
     def test_reset_button_enabled_after_hiding_column(self) -> None:
         """Reset button becomes enabled once at least one column is hidden"""

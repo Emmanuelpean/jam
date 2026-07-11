@@ -60,7 +60,8 @@ export interface PlatformStat {
 export interface ServiceError extends BaseOut {
 	error_type: string;
 	message: string;
-	traceback: string | null;
+	context: Record<string, unknown> | null;
+	traceback: string;
 	is_acknowledged: boolean;
 	level: string | null;
 	scraped_job_id: number | null;
