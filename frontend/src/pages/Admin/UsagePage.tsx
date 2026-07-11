@@ -15,6 +15,7 @@ import LogViewer, { useLogViewerToggle } from "../Services/LogViewer/LogViewer";
 import { LastLogBar } from "../Services/LogViewer/LastLogBar";
 import { ErrorSummaryCard } from "../Services/ErrorSummaryCard";
 import { TimeFilterPopover } from "../../components/TimeSelection/TimeFilterPopover";
+import { ServiceFilterSlot } from "../Services/ServiceFilterSlot";
 import { DateRange } from "../../utils/TimeUtils";
 import { failureColor, formatErrorMessage, successColor } from "../Services/ServiceUtils";
 import "../Services/Service.scss";
@@ -309,20 +310,19 @@ const UsagePage = (): JSX.Element => {
 				</div>
 			)}
 
-			<div className="d-flex align-items-center gap-3 service-filter-row">
-				<LastLogBar serviceStatus={serviceStatus} onClick={openLogViewer} />
-				<div className="ms-auto">
-					<TimeFilterPopover
-						id="history-filters"
-						onDateRangeChange={setDateRange}
-						defaultMode="period"
-						defaultAmount={1}
-						defaultUnit="months"
-						defaultIntervalSeconds={3600}
-						availableUnits={["weeks", "months", "years"]}
-					/>
-				</div>
-			</div>
+			<ServiceFilterSlot>
+				<TimeFilterPopover
+					id="history-filters"
+					onDateRangeChange={setDateRange}
+					defaultMode="period"
+					defaultAmount={1}
+					defaultUnit="months"
+					defaultIntervalSeconds={3600}
+					availableUnits={["weeks", "months", "years"]}
+				/>
+			</ServiceFilterSlot>
+
+			<LastLogBar serviceStatus={serviceStatus} onClick={openLogViewer} className="mb-3" />
 
 			<Row className="g-3 mt-1">
 				<Col xs={12} sm={6} lg={4} xl={true}>

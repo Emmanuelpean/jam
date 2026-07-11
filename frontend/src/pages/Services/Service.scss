@@ -417,16 +417,8 @@
 	color: var(--service-off-color);
 }
 
-/* The filter row reserves a fixed height so the last-log bar appearing/disappearing
-   never shifts the layout below. The height is taller than both the Filters button
-   and the bar. */
-.service-filter-row {
-	min-height: 40px;
-}
-
-/* Last service-log line shown while a service is running (Usage page filter row and the
-   scraping / rating dashboards). The flex rules let it share the Usage filter row; when it
-   stands alone it simply fills the available width. */
+/* Last service-log line shown while a service is running (scraping / rating / usage
+   dashboards). It stands alone and fills the available width. */
 .service-last-log {
 	display: flex;
 	flex: 1 1 auto;

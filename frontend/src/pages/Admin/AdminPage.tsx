@@ -16,12 +16,10 @@ import {
 	ServiceStatus,
 	ServiceUpdatePayload,
 } from "../../services/api/Services";
-import {
-	providerMonitoringApi,
-	providerMonitoringRunnerApi,
-} from "../../services/api/ProviderMonitoring";
+import { providerMonitoringApi, providerMonitoringRunnerApi } from "../../services/api/ProviderMonitoring";
 import { failureColor, serviceEnabledLabel, successColor } from "../Services/ServiceUtils";
 import { ServiceConfigField, ServiceStatusControl } from "../Services/ServiceStatusControl";
+import { ServiceFilterSlotContext } from "../Services/ServiceFilterSlot";
 import { formatDuration } from "../../utils/TimeUtils";
 import { UserData } from "../../services/schemas/Core";
 import { Sparkline, SparklinePoint } from "../../components/Chart/Sparkline";
@@ -36,7 +34,6 @@ import UsagePage from "./UsagePage";
 import "../Services/Service.scss";
 import "./AdminPage.scss";
 
-// Each admin card opens its page inside a large modal rather than navigating away.
 type AdminPageKey = "users" | "settings" | "email" | "scraping" | "rating" | "usage" | "scheduler";
 
 const ADMIN_PAGES: Record<AdminPageKey, { title: string; icon: string; render: () => JSX.Element }> = {
@@ -321,9 +318,8 @@ const AdminPage = (): JSX.Element => {
 	const { token } = useAuth();
 	const { users, settings, emailTemplates } = useDataContext();
 	const [openPage, setOpenPage] = useState<AdminPageKey | null>(null);
-	// `showModal` drives the open/close transition; the modal stays mounted while it
-	// animates out, and `openPage` (the content) is only cleared once it has (onExited).
 	const [showModal, setShowModal] = useState<boolean>(false);
+	const [filterSlot, setFilterSlot] = useState<HTMLDivElement | null>(null);
 
 	const openModal = (key: AdminPageKey): void => {
 		setOpenPage(key);
@@ -335,15 +331,12 @@ const AdminPage = (): JSX.Element => {
 	const monitoring = useServiceRunnerStatus(providerMonitoringRunnerApi);
 	const scheduler = useSchedulerStatus();
 
-	// The live status for each service page, used to drive the interactive control in
-	// the modal header. These are the same statuses already polled for the cards.
 	const pageStatus: Partial<Record<AdminPageKey, ReturnType<typeof useServiceRunnerStatus>>> = {
 		scraping,
 		rating,
 		usage: monitoring,
 	};
 
-	// Daily-value series for the past week, embedded as a sparkline in each service card.
 	const [scrapedSeries, setScrapedSeries] = useState<SparklinePoint[]>([]);
 	const [ratedSeries, setRatedSeries] = useState<SparklinePoint[]>([]);
 	const [balanceSeries, setBalanceSeries] = useState<SparklinePoint[]>([]);
@@ -446,9 +439,7 @@ const AdminPage = (): JSX.Element => {
 					>
 						<SchedulerStatusBody status={scheduler.schedulerStatus} />
 						{scheduler.schedulerStatus?.last_log && (
-							<div className="admin-card-caption text-truncate">
-								{scheduler.schedulerStatus.last_log}
-							</div>
+							<div className="admin-card-caption text-truncate">{scheduler.schedulerStatus.last_log}</div>
 						)}
 					</AdminCard>
 				</Col>
@@ -546,6 +537,7 @@ const AdminPage = (): JSX.Element => {
 									<span>{ADMIN_PAGES[openPage].title}</span>
 								</span>
 							</Modal.Title>
+							<div className="admin-page-modal-filter" ref={setFilterSlot} />
 							{pageStatus[openPage] && SERVICE_CONTROLS[openPage] && (
 								<div className="admin-page-modal-status">
 									<ServiceStatusControl
@@ -557,7 +549,11 @@ const AdminPage = (): JSX.Element => {
 								</div>
 							)}
 						</JamModal.Header>
-						<Modal.Body className="admin-page-modal-body">{ADMIN_PAGES[openPage].render()}</Modal.Body>
+						<Modal.Body className="admin-page-modal-body">
+							<ServiceFilterSlotContext.Provider value={filterSlot}>
+								{ADMIN_PAGES[openPage].render()}
+							</ServiceFilterSlotContext.Provider>
+						</Modal.Body>
 					</>
 				)}
 			</JamModal>

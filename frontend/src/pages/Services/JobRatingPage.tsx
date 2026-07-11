@@ -11,6 +11,7 @@ import { useServiceErrors } from "../../hooks/useServiceErrors";
 import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
 import { DateRange, toDdMmYyyyHhMm } from "../../utils/TimeUtils";
 import { TimeFilterPopover } from "../../components/TimeSelection/TimeFilterPopover";
+import { ServiceFilterSlot } from "./ServiceFilterSlot";
 import { JobRatingServiceLogData, ServiceError } from "../../services/schemas/Services";
 import "./Service.scss";
 
@@ -72,12 +73,11 @@ const JobRatingPage = (): JSX.Element => {
 				</div>
 			)}
 
-			<div className="d-flex align-items-center gap-3 mb-4 service-filter-row">
-				<LastLogBar serviceStatus={serviceStatus} onClick={openLogViewer} />
-				<div className="ms-auto">
-					<TimeFilterPopover id="history-filters" onDateRangeChange={setDateRange} defaultMode="period" />
-				</div>
-			</div>
+			<ServiceFilterSlot>
+				<TimeFilterPopover id="history-filters" onDateRangeChange={setDateRange} defaultMode="period" />
+			</ServiceFilterSlot>
+
+			<LastLogBar serviceStatus={serviceStatus} onClick={openLogViewer} className="mb-4" />
 
 			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.is_running || false} />
 

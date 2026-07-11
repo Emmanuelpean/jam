@@ -75,23 +75,29 @@
 	color: var(--bs-secondary-color);
 }
 
-// Large near-fullscreen modal used to host a full admin page.
 .admin-page-modal-dialog {
 	width: 95vw;
 	max-width: 1400px;
 }
 
-// The modal header is built directly: icon + title on the left, the open page's
-// status control and the close button on the right.
 .admin-page-modal .modal-header {
 	align-items: center;
 	padding: 9px 14.4px;
 }
 
-// The title grows so the status control sits on the far right, next to the close button.
 .admin-page-modal .modal-title {
 	flex: 1;
 	min-width: 0;
+}
+
+.admin-page-modal-filter {
+	display: flex;
+	align-items: center;
+	margin-right: 10.8px;
+}
+
+.admin-page-modal-filter:empty {
+	display: none;
 }
 
 .admin-page-modal-status {
@@ -106,8 +112,6 @@
 	gap: 10.8px;
 }
 
-
-// Box the service status icons in the header.
 .admin-page-modal-status .service-status-icons {
 	margin: 0;
 	background: white;
@@ -116,7 +120,6 @@
 	font-size: 2rem;
 }
 
-// The header lives in the modal header, so the body is just page content.
 .admin-page-modal-body {
 	padding: 14.4px 18px 18px;
 }

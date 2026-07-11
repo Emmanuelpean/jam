@@ -26,7 +26,7 @@ export const ScrapingGuideModal = forwardRef<ScrapingGuideModalHandle>((_, ref):
 	}));
 
 	const copyEmail = (): void => {
-		navigator.clipboard.writeText(config?.scraper_email).then((): void => {
+		navigator.clipboard.writeText(config?.scraper_email ?? "").then((): void => {
 			showToastSuccess(`${config?.scraper_email} copied to clipboard`);
 		});
 	};

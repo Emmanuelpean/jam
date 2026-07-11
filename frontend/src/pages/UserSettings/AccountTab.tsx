@@ -290,8 +290,8 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		}
 		if (!passwordFormData.new_password) {
 			newErrors.new_password = "New password is required";
-		} else if (passwordFormData.new_password.length < config.min_password_length) {
-			newErrors.new_password = `New password must be at least ${config.min_password_length} characters long`;
+		} else if (passwordFormData.new_password.length < (config?.min_password_length ?? 0)) {
+			newErrors.new_password = `New password must be at least ${config?.min_password_length} characters long`;
 		}
 		if (passwordFormData.new_password !== passwordFormData.confirm_password) {
 			newErrors.confirm_password = "Passwords do not match";

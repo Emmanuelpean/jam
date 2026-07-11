@@ -241,8 +241,8 @@ function AuthForm(): JSX.Element {
 				}
 				if (!formData.password) {
 					errors.password = "Password is required.";
-				} else if (formData.password.length < config.min_password_length) {
-					errors.password = `Password must be at least ${config.min_password_length} characters long.`;
+				} else if (formData.password.length < (config?.min_password_length ?? 0)) {
+					errors.password = `Password must be at least ${config?.min_password_length} characters long.`;
 				}
 
 				if (!formData.confirmPassword) {
@@ -284,8 +284,8 @@ function AuthForm(): JSX.Element {
 		if (["login", "resetPassword"].includes(mode)) {
 			if (!formData.password) {
 				errors.password = "Password is required.";
-			} else if (mode === "resetPassword" && formData.password.length < config.min_password_length) {
-				errors.password = `Password must be at least ${config.min_password_length} characters long.`;
+			} else if (mode === "resetPassword" && formData.password.length < (config?.min_password_length ?? 0)) {
+				errors.password = `Password must be at least ${config?.min_password_length} characters long.`;
 			}
 		}
 
@@ -429,7 +429,7 @@ function AuthForm(): JSX.Element {
 		const errorTitle: string = "Demo Login Failed";
 
 		try {
-			const result: GenericResponse = await login(config.app_demo_username, "demo");
+			const result: GenericResponse = await login(config?.app_demo_username ?? "", "demo");
 			if (result.success) {
 				navigate("/dashboard");
 			} else {
@@ -809,7 +809,7 @@ function AuthForm(): JSX.Element {
 													Just checking that you are not a robot
 												</span>
 												<TurnstileWidget
-													siteKey={config.turnstile_site_key}
+													siteKey={config?.turnstile_site_key ?? ""}
 													onVerify={(token: string) => {
 														setCaptchaToken(token);
 														setFieldErrors(
