@@ -1100,69 +1100,6 @@ for service_log, date in zip(JOB_RATING_SERVICE_LOG_DATA, SERVICE_LOG_DATETIME):
     service_log["run_datetime"] = date.strftime(DATETIME_FORMAT)
 
 
-# ---------------------------------------------- JOB RATING SERVICE ERRORS ----------------------------------------------
-
-# Run-level failures, restored as unified ServiceError rows linked to a JobRatingServiceLog. The single CRITICAL
-# error is linked to the service-log run so that JobRatingServiceLog.is_success derives to False.
-JOB_RATING_SERVICE_ERROR_DATA = [
-    # Run-level critical failure on the second service-log run ("Timeout contacting rating service").
-    {
-        "error_type": "Exception",
-        "message": "Timeout contacting rating service",
-        "level": "critical",
-        "job_rating_service_log_id": 2,
-    },
-    # Additional run-level, non-critical errors spread across the runs (level defaults to "error").
-    {"error_type": "Exception", "message": "Rate limit hit; retried after backoff", "job_rating_service_log_id": 1},
-    {"error_type": "Exception", "message": "Skipped 2 jobs with empty descriptions", "job_rating_service_log_id": 1},
-    {"error_type": "Exception", "message": "Malformed LLM response; used fallback parser", "job_rating_service_log_id": 2},
-    {"error_type": "Exception", "message": "Transient connection reset to rating provider", "job_rating_service_log_id": 3},
-    # Additional run-level critical failure on the third run ("Rating provider quota exhausted").
-    {
-        "error_type": "Exception",
-        "message": "Rating provider quota exhausted",
-        "level": "critical",
-        "job_rating_service_log_id": 3,
-    },
-]
-
-# ------------------------------------------------- JOB RATING ERRORS --------------------------------------------------
-
-# Per-rating failures, restored as unified ServiceError rows linked to their JobRating. job_rating_id is the 1-based
-# position of the rating in JOB_RATING_DATA (which equals its scraped_job_id).
-JOB_RATING_ERROR_DATA = [
-    {"error_type": "Exception", "message": "Failed to scrape job details: Page not found", "job_rating_id": 6},
-    {"error_type": "Exception", "message": "Failed to scrape job details: Rate limit exceeded", "job_rating_id": 7},
-    {"error_type": "Exception", "message": "Failed to rate job: missing job description", "job_rating_id": 11},
-    {"error_type": "Exception", "message": "Failed to rate job: API timeout", "job_rating_id": 13},
-    {"error_type": "Exception", "message": "Failed to rate job: Page not found", "job_rating_id": 58},
-    {"error_type": "Exception", "message": "Failed to rate job: Page not found", "job_rating_id": 59},
-    {"error_type": "Exception", "message": "Failed to rate job: Connection timeout", "job_rating_id": 60},
-    {"error_type": "Exception", "message": "Failed to rate job: Access denied", "job_rating_id": 61},
-    {"error_type": "Exception", "message": "Failed to rate job: Rate limit exceeded", "job_rating_id": 62},
-    {"error_type": "Exception", "message": "Failed to rate job: Invalid response format", "job_rating_id": 63},
-    {"error_type": "Exception", "message": "Failed to rate job: Service unavailable", "job_rating_id": 64},
-    {"error_type": "Exception", "message": "Failed to rate job: Internal server error", "job_rating_id": 65},
-    # Additional per-rating failures (retry attempts on ratings that ultimately failed).
-    {"error_type": "Exception", "message": "Retry failed: Page not found", "job_rating_id": 6},
-    {"error_type": "Exception", "message": "Retry failed: Rate limit exceeded", "job_rating_id": 7},
-    {"error_type": "Exception", "message": "Retry failed: missing job description", "job_rating_id": 11},
-    {"error_type": "Exception", "message": "Retry failed: API timeout", "job_rating_id": 13},
-    {"error_type": "Exception", "message": "Retry failed: Connection timeout", "job_rating_id": 58},
-    {"error_type": "Exception", "message": "Retry failed: Access denied", "job_rating_id": 59},
-    {"error_type": "Exception", "message": "Retry failed: Rate limit exceeded", "job_rating_id": 60},
-    {"error_type": "Exception", "message": "Retry failed: Invalid response format", "job_rating_id": 61},
-    {"error_type": "Exception", "message": "Retry failed: Service unavailable", "job_rating_id": 62},
-    {"error_type": "Exception", "message": "Retry failed: Internal server error", "job_rating_id": 63},
-    # Final retry-attempt failures for the ratings that exhausted their retries and stayed FAILED, so each
-    # FAILED rating carries at least three errors.
-    {"error_type": "Exception", "message": "Retry failed again: Page not found", "job_rating_id": 6},
-    {"error_type": "Exception", "message": "Retry failed again: Rate limit exceeded", "job_rating_id": 7},
-    {"error_type": "Exception", "message": "Retry failed again: missing job description", "job_rating_id": 11},
-    {"error_type": "Exception", "message": "Retry failed again: API timeout", "job_rating_id": 13},
-    {"error_type": "Exception", "message": "Retry failed again: Connection timeout", "job_rating_id": 58},
-]
-
 # Representative tracebacks keyed by failure reason. A rating's retries hit the same code path in production, so every
 # error sharing a base reason gets the same traceback here (letting the report link collapse duplicate retry rows).
 _RATING_TRACEBACKS = {
@@ -1211,13 +1148,13 @@ _RATING_TRACEBACKS = {
         '  File "app/job_rating/scraped_job_rating.py", line 278, in _rate_job\n'
         "    job_prompt = create_job_only_prompt(job_description=description)\n"
         '  File "app/job_rating/prompts.py", line 54, in create_job_only_prompt\n'
-        "    raise ValueError(\"missing job description\")\n"
+        '    raise ValueError("missing job description")\n'
         "ValueError: missing job description"
     ),
     "invalid response format": (
         "Traceback (most recent call last):\n"
         '  File "app/job_rating/scraped_job_rating.py", line 285, in _rate_job\n'
-        "    job_rating.overall_score = score[\"overall_score\"]\n"
+        '    job_rating.overall_score = score["overall_score"]\n'
         "TypeError: 'NoneType' object is not subscriptable"
     ),
     "service unavailable": (
@@ -1248,13 +1185,93 @@ _RATING_TRACEBACK_DEFAULT = (
 
 
 def _rating_traceback(message: str) -> str:
-    """Return a representative traceback for a per-rating failure message (retry prefixes ignored)."""
+    """Return a representative traceback for a rating failure message (retry prefixes ignored)."""
     lowered = message.lower()
     for keyword, traceback in _RATING_TRACEBACKS.items():
         if keyword in lowered:
             return traceback
     return _RATING_TRACEBACK_DEFAULT
 
+
+# ---------------------------------------------- JOB RATING SERVICE ERRORS ----------------------------------------------
+
+# Run-level failures, restored as unified ServiceError rows linked to a JobRatingServiceLog. The single CRITICAL
+# error is linked to the service-log run so that JobRatingServiceLog.is_success derives to False.
+JOB_RATING_SERVICE_ERROR_DATA = [
+    # Run-level critical failure on the second service-log run ("Timeout contacting rating service").
+    {
+        "error_type": "Exception",
+        "message": "Timeout contacting rating service",
+        "traceback": _rating_traceback("api timeout"),
+        "level": "critical",
+        "job_rating_service_log_id": 2,
+    },
+    # Additional run-level, non-critical errors spread across the runs (level defaults to "error").
+    {
+        "error_type": "Exception",
+        "message": "Rate limit hit; retried after backoff",
+        "traceback": _rating_traceback("rate limit"),
+        "job_rating_service_log_id": 1,
+    },
+    {
+        "error_type": "Exception",
+        "message": "Skipped 2 jobs with empty descriptions",
+        "traceback": _rating_traceback("missing job description"),
+        "job_rating_service_log_id": 1,
+    },
+    {
+        "error_type": "Exception",
+        "message": "Malformed LLM response; used fallback parser",
+        "traceback": _rating_traceback("invalid response format"),
+        "job_rating_service_log_id": 2,
+    },
+    {
+        "error_type": "Exception",
+        "message": "Transient connection reset to rating provider",
+        "traceback": _rating_traceback("connection timeout"),
+        "job_rating_service_log_id": 3,
+    },
+    # Additional run-level critical failure on the third run ("Rating provider quota exhausted").
+    {
+        "error_type": "Exception",
+        "message": "Rating provider quota exhausted",
+        "traceback": _rating_traceback("service unavailable"),
+        "level": "critical",
+        "job_rating_service_log_id": 3,
+    },
+]
+
+# ------------------------------------------------- JOB RATING ERRORS --------------------------------------------------
+
+JOB_RATING_ERROR_DATA = [
+    {"error_type": "Exception", "message": "Failed to scrape job details: Page not found", "job_rating_id": 6},
+    {"error_type": "Exception", "message": "Failed to scrape job details: Rate limit exceeded", "job_rating_id": 7},
+    {"error_type": "Exception", "message": "Failed to rate job: missing job description", "job_rating_id": 11},
+    {"error_type": "Exception", "message": "Failed to rate job: API timeout", "job_rating_id": 13},
+    {"error_type": "Exception", "message": "Failed to rate job: Page not found", "job_rating_id": 58},
+    {"error_type": "Exception", "message": "Failed to rate job: Page not found", "job_rating_id": 59},
+    {"error_type": "Exception", "message": "Failed to rate job: Connection timeout", "job_rating_id": 60},
+    {"error_type": "Exception", "message": "Failed to rate job: Access denied", "job_rating_id": 61},
+    {"error_type": "Exception", "message": "Failed to rate job: Rate limit exceeded", "job_rating_id": 62},
+    {"error_type": "Exception", "message": "Failed to rate job: Invalid response format", "job_rating_id": 63},
+    {"error_type": "Exception", "message": "Failed to rate job: Service unavailable", "job_rating_id": 64},
+    {"error_type": "Exception", "message": "Failed to rate job: Internal server error", "job_rating_id": 65},
+    {"error_type": "Exception", "message": "Retry failed: Page not found", "job_rating_id": 6},
+    {"error_type": "Exception", "message": "Retry failed: Rate limit exceeded", "job_rating_id": 7},
+    {"error_type": "Exception", "message": "Retry failed: missing job description", "job_rating_id": 11},
+    {"error_type": "Exception", "message": "Retry failed: API timeout", "job_rating_id": 13},
+    {"error_type": "Exception", "message": "Retry failed: Connection timeout", "job_rating_id": 58},
+    {"error_type": "Exception", "message": "Retry failed: Access denied", "job_rating_id": 59},
+    {"error_type": "Exception", "message": "Retry failed: Rate limit exceeded", "job_rating_id": 60},
+    {"error_type": "Exception", "message": "Retry failed: Invalid response format", "job_rating_id": 61},
+    {"error_type": "Exception", "message": "Retry failed: Service unavailable", "job_rating_id": 62},
+    {"error_type": "Exception", "message": "Retry failed: Internal server error", "job_rating_id": 63},
+    {"error_type": "Exception", "message": "Retry failed again: Page not found", "job_rating_id": 6},
+    {"error_type": "Exception", "message": "Retry failed again: Rate limit exceeded", "job_rating_id": 7},
+    {"error_type": "Exception", "message": "Retry failed again: missing job description", "job_rating_id": 11},
+    {"error_type": "Exception", "message": "Retry failed again: API timeout", "job_rating_id": 13},
+    {"error_type": "Exception", "message": "Retry failed again: Connection timeout", "job_rating_id": 58},
+]
 
 for _error in JOB_RATING_ERROR_DATA:
     _error["traceback"] = _rating_traceback(_error["message"])

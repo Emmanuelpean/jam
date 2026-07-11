@@ -94,9 +94,8 @@ class ServiceError(CommonBase, Base):
     Attributes:
     -----------
     - `error_type` (str): Type/class name of the error (e.g. "TimeoutError").
-    - `message` (str, optional): Custom message describing the failure; None when the exception's own
-      type and traceback are enough.
-    - `traceback` (str, optional): Full traceback of the error, if available.
+    - `message` (str): Custom message describing the failure.
+    - `traceback` (str): Full traceback of the error.
     - `is_acknowledged` (bool): Whether an admin has acknowledged the error.
     - `level` (str): Severity (see :class:`ErrorLevel`); defaults to ERROR.
 
@@ -164,7 +163,7 @@ class ServiceError(CommonBase, Base):
 def record_error(
     db: Session,
     exc: Exception,
-    message: str | None = None,
+    message: str,
     level: ServiceErrorLevel = ServiceErrorLevel.ERROR,
     scraped_job_id: int | None = None,
     job_rating_id: int | None = None,
@@ -177,7 +176,7 @@ def record_error(
     for the originating service.
     :param db: Database session.
     :param exc: The caught exception, whose type and traceback are recorded.
-    :param message: Optional custom message describing the failure; None if the exception alone suffices.
+    :param message: Custom message describing the failure.
     :param level: Error severity.
     :param scraped_job_id: ScrapedJob the error relates to, for per-job failures.
     :param job_rating_id: JobRating the rating error belongs to, if applicable.

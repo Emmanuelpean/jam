@@ -650,18 +650,36 @@ MemoryError: Unable to allocate 2.5 GiB for an array with shape (50000, 100) and
     {
         "error_type": "Exception",
         "message": "Rate limit exceeded after 30 requests",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 472, in scrape\n'
+            "    self.scrape_jobs(db, service_log)\n"
+            "Exception: Rate limit exceeded after 30 requests"
+        ),
         "level": "critical",
         "service_log_id": 3,
     },
     {
         "error_type": "Exception",
         "message": "SMTP server connection timeout",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 471, in scrape\n'
+            "    self.process_emails(db, timedelta_days, service_log)\n"
+            "Exception: SMTP server connection timeout"
+        ),
         "level": "critical",
         "service_log_id": 6,
     },
     {
         "error_type": "Exception",
         "message": "PDF parsing library crashed on corrupted file",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_email_scraping/email_scraper.py", line 472, in scrape\n'
+            "    self.scrape_jobs(db, service_log)\n"
+            "Exception: PDF parsing library crashed on corrupted file"
+        ),
         "level": "critical",
         "service_log_id": 8,
     },
@@ -1964,13 +1982,13 @@ SCRAPED_JOB_DATA = [
 ]
 
 
-def find_index(**kwargs) -> int | None:
+def find_index(**kwargs) -> int:
     """Find the scraped job index for the given kwargs."""
 
     for index, scraped_job in enumerate(SCRAPED_JOB_DATA):
         if all([scraped_job.get(key) == value for key, value in kwargs.items()]):
             return index
-    return None
+    raise AssertionError(f"No scraped job found with kwargs: {kwargs}")
 
 
 SCRAPED_JOB_SCRAPED = find_index(status="completed")
@@ -2009,7 +2027,7 @@ _SCRAPING_TRACEBACKS = {
         '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
         "    job_data = scraper.fetch(job_record.url)\n"
         '  File "app/job_email_scraping/scrapers/base.py", line 95, in fetch\n'
-        "    raise RateLimitError(f\"Rate limit exceeded after {attempts} requests\")\n"
+        '    raise RateLimitError(f"Rate limit exceeded after {attempts} requests")\n'
         "app.exceptions.RateLimitError: Rate limit exceeded after 30 requests"
     ),
     "connection timeout": (
@@ -2017,7 +2035,7 @@ _SCRAPING_TRACEBACKS = {
         '  File "app/job_email_scraping/email_scraper.py", line 672, in scrape_job\n'
         "    job_data = scraper.fetch(job_record.url)\n"
         '  File "urllib3/connectionpool.py", line 791, in urlopen\n'
-        "    raise ReadTimeoutError(self, url, \"Read timed out.\")\n"
+        '    raise ReadTimeoutError(self, url, "Read timed out.")\n'
         "requests.exceptions.ConnectTimeout: HTTPSConnectionPool(host='www.linkedin.com', port=443): Read timed out."
     ),
     "invalid": (
@@ -2048,8 +2066,6 @@ def _scraping_traceback(message: str) -> str:
     return _SCRAPING_TRACEBACK_DEFAULT
 
 
-# Per-job scraping failures, restored as unified ServiceError rows linked to the ScrapedJob. Keyed by external_job_id
-# so the link survives reordering of SCRAPED_JOB_DATA; resolved to the 1-based position used by override_properties.
 _SCRAPED_JOB_ERROR_SPECS = [
     ("2468135790", "Page not found - job posting may have been removed"),
     ("cvlib_678901", "Access denied - company blocked scraping"),
@@ -2064,8 +2080,6 @@ _SCRAPED_JOB_ERROR_SPECS = [
     ("job_1152", "Connection timeout - server not responding"),
     ("9988776655", "Scraping blocked - rate limit exceeded"),
     ("job_11sefwfw59rg", "Page not found - job posting may have been removed"),
-    # Retry-attempt failures for the jobs that exhausted their retries and stayed FAILED, so each
-    # FAILED scraped job carries at least three errors.
     ("2468135790", "Retry 1 failed: Page not found - job posting may have been removed"),
     ("2468135790", "Retry 2 failed: Page not found - job posting may have been removed"),
     ("cvlib_678901", "Retry 1 failed: Access denied - company blocked scraping"),

@@ -115,16 +115,18 @@ class BaseTest:
         session,
         error_type: str = "RuntimeError",
         message: str = "boom",
+        traceback: str = "Traceback (most recent call last):\n  ...\nRuntimeError: boom",
         **kwargs,
     ) -> models.ServiceError:
         """Create a unified service-error row (not user-owned).
         :param session: database session
         :param error_type: error class name (e.g. "TimeoutError")
         :param message: error message
+        :param traceback: error traceback
         :param kwargs: additional ServiceError fields (e.g. is_acknowledged, level, or a
             *_service_log_id / scraped_job_id / job_rating_id link)"""
 
-        data = {"error_type": error_type, "message": message, **kwargs}
+        data = {"error_type": error_type, "message": message, "traceback": traceback, **kwargs}
         return create_db_entries(session, models.ServiceError, data)[0]
 
     @staticmethod

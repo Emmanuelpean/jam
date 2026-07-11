@@ -34,32 +34,56 @@ for service_log, date in zip(PROVIDER_MONITORING_SERVICE_LOG_DATA, SERVICE_LOG_D
 
 # ----------------------------------------- PROVIDER MONITORING SERVICE ERRORS ------------------------------------------
 
-# Per-fetcher failures are ERROR level (one fetcher failing does not fail the run); a run-level abort is CRITICAL and
-# drives the run's derived is_success to False. provider_monitoring_service_log_id is the 1-based position of the
-# run in PROVIDER_MONITORING_SERVICE_LOG_DATA.
 PROVIDER_MONITORING_SERVICE_ERROR_DATA = [
-    # Run 2: a single fetcher failed, the rest of the run completed (is_success stays True).
     {
         "error_type": "HTTPStatusError",
         "message": "apify.fetch_apify_balance failed: 401 Client Error: Unauthorized",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/provider_monitoring/service/service.py", line 60, in run\n'
+            "    result = fetcher()\n"
+            '  File "app/provider_monitoring/apify.py", line 44, in fetch_apify_balance\n'
+            "    response.raise_for_status()\n"
+            "httpx.HTTPStatusError: 401 Client Error: Unauthorized"
+        ),
         "provider_monitoring_service_log_id": 2,
     },
-    # Run 3: the whole run aborted before/while fetching (is_success False).
     {
         "error_type": "OperationalError",
         "message": "provider_monitoring_service run failed: could not connect to database",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/provider_monitoring/service/service.py", line 52, in run\n'
+            "    service_log = self.start_run(db)\n"
+            "sqlalchemy.exc.OperationalError: could not connect to server: Connection refused"
+        ),
         "level": "critical",
         "provider_monitoring_service_log_id": 3,
     },
-    # Run 4: two independent fetchers failed but the run still finished (is_success stays True).
     {
         "error_type": "ReadTimeout",
         "message": "anthropic.fetch_anthropic_daily_usage failed: HTTPSConnectionPool: Read timed out",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/provider_monitoring/service/service.py", line 60, in run\n'
+            "    result = fetcher()\n"
+            '  File "app/provider_monitoring/anthropic.py", line 38, in fetch_anthropic_daily_usage\n'
+            "    response = client.get(url, timeout=10)\n"
+            "httpx.ReadTimeout: HTTPSConnectionPool: Read timed out"
+        ),
         "provider_monitoring_service_log_id": 4,
     },
     {
         "error_type": "KeyError",
         "message": "brightdata.fetch_brightdata_balance failed: 'balance'",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/provider_monitoring/service/service.py", line 60, in run\n'
+            "    result = fetcher()\n"
+            '  File "app/provider_monitoring/brightdata.py", line 51, in fetch_brightdata_balance\n'
+            "    return data['balance']\n"
+            "KeyError: 'balance'"
+        ),
         "provider_monitoring_service_log_id": 4,
     },
 ]
