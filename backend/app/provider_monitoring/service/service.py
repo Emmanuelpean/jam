@@ -5,10 +5,6 @@ full window anyway, so there is no cross-run retry here. Every failure is record
 admins can spot partial failures (a run's derived is_success only flips to False on a critical
 error)."""
 
-from contextlib import nullcontext
-
-from sqlalchemy.orm import Session
-
 from app.database import db_session
 from app.provider_monitoring.anthropic.fetch import fetch_anthropic_daily_usage
 from app.provider_monitoring.apify.fetch import fetch_apify_daily_usage, fetch_apify_balance
@@ -37,12 +33,11 @@ class ProviderMonitoringService(BaseService[ProviderMonitoringServiceLog]):
             "brightdata": [fetch_brightdata_daily_usage, fetch_brightdata_balance],
         }
 
-    def run(self, db: Session | None = None) -> ProviderMonitoringServiceLog:
+    def run(self) -> ProviderMonitoringServiceLog:
         """Fetch the different external services data
-        :param db: optional session to run within; if omitted, one is created and closed for the run
         :return Service log entry"""
 
-        with db_session() if db is None else nullcontext(db) as db:
+        with db_session() as db:
             service_log = self.start_run(db)
 
             try:

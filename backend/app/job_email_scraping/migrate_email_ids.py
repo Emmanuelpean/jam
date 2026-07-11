@@ -1,6 +1,6 @@
 """Migration script to update external_email_id from IMAP sequence numbers to UIDs.
 
-Fetches all emails from the past 1000 days via IMAP, matches them to database
+Fetches all emails from the past 10000 days via IMAP, matches them to database
 records by subject + date_received, and updates the database.
 Multiple IMAP matches for a single DB record are highlighted as ambiguous.
 """

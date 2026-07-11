@@ -1,6 +1,8 @@
 """Tests for scoring scraped jobs"""
 
 import datetime as dt
+from contextlib import nullcontext
+from unittest.mock import patch
 
 import pytest
 from sqlalchemy.orm import Session
@@ -460,6 +462,13 @@ class TestScrapedJobRaterProcessUser(BaseTest):
 
 class TestScoreScrapedJobs(BaseTest):
 
+    @pytest.fixture(autouse=True)
+    def _run_within_test_session(self, session: Session):
+        """Make ScrapedJobRatingService.run()'s own db_session() reuse the test's transactional session."""
+
+        with patch.object(scraped_job_rating, "db_session", side_effect=lambda: nullcontext(session)):
+            yield
+
     @staticmethod
     def create_rateable_job(user: FixtureUser, **kwargs) -> models.ScrapedJob:
         """Create a scraped, processed job eligible for rating, overriding fields via kwargs."""
@@ -492,7 +501,7 @@ class TestScoreScrapedJobs(BaseTest):
         short_job = self.create_rateable_job(test_regular_user, description="Too short")
         no_description_job = self.create_rateable_job(test_regular_user, description=None)
 
-        ScrapedJobRatingService().run(session)
+        ScrapedJobRatingService().run()
 
         job_ratings = session.query(models.JobRating).all()
         assert len(job_ratings) == 6
@@ -542,7 +551,7 @@ class TestScoreScrapedJobs(BaseTest):
 
         monkeypatch.setattr(scraped_job_rating, "get_rating_active_users", raise_error)
 
-        service_log = ScrapedJobRatingService().run(session)
+        service_log = ScrapedJobRatingService().run()
         error = service_log.service_errors[0]
         assert error.error_type == "RuntimeError"
         assert "DB connection lost" in error.traceback

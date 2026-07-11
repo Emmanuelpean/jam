@@ -1,10 +1,23 @@
 """Tests for the ServiceMonitor run behaviour and Error recording."""
 
+from contextlib import nullcontext
+from unittest.mock import patch
+
+import pytest
 from sqlalchemy.orm import Session
 
 from app import models
+from app.provider_monitoring.service import service as provider_service
 from app.provider_monitoring.service.service import ProviderMonitoringService
 from app.provider_monitoring.service.schemas import ProviderMonitoringServiceLogOut
+
+
+@pytest.fixture(autouse=True)
+def _run_within_test_session(session: Session):
+    """Make the service's own db_session() reuse the test's transactional session."""
+
+    with patch.object(provider_service, "db_session", side_effect=lambda: nullcontext(session)):
+        yield
 
 
 def _is_success(service_log: models.ProviderMonitoringServiceLog) -> bool:
@@ -36,7 +49,7 @@ class TestServiceMonitorRun:
         """A failing fetcher records an Error linked to the run. The failure is error-level (the
         run still completes), so the derived is_success stays True."""
 
-        service_log = _make_service({"test": [_boom]}).run(session)
+        service_log = _make_service({"test": [_boom]}).run()
 
         assert _is_success(service_log) is True
 
@@ -52,7 +65,7 @@ class TestServiceMonitorRun:
     def test_successful_run_records_no_error(self, session: Session) -> None:
         """A run where every fetcher succeeds is marked successful and records no Error."""
 
-        service_log = _make_service({"test": [_ok]}).run(session)
+        service_log = _make_service({"test": [_ok]}).run()
 
         assert _is_success(service_log) is True
         assert session.query(models.ServiceError).count() == 0
@@ -66,7 +79,7 @@ class TestServiceMonitorRun:
             _ = db, logger
             calls.append("ok")
 
-        service_log = _make_service({"a": [_boom], "b": [_record_ok]}).run(session)
+        service_log = _make_service({"a": [_boom], "b": [_record_ok]}).run()
 
         # The second fetcher still ran, and only the failing one produced an Error
         assert calls == ["ok"]

@@ -1,6 +1,7 @@
 """Test module for email_scaper.py functions and JobScraper class"""
 
 import datetime as dt
+from contextlib import nullcontext
 from functools import partial
 from typing import Callable
 from unittest import mock
@@ -1291,3 +1292,81 @@ class TestComputeLookbackDays(BaseTest):
         self.create_email_scraping_service_log(session, run_datetime=now - dt.timedelta(hours=1), is_tour=True)
         current = self.create_email_scraping_service_log(session, run_datetime=now)
         assert service.compute_lookback_days(session, current, 1, 10) == pytest.approx(2, abs=1e-6)
+
+
+class TestRun(BaseTest):
+    """Tests for JobEmailScrapingService.run orchestration."""
+
+    @pytest.fixture(autouse=True)
+    def _run_within_test_session(self, session: Session):
+        with patch(
+            "app.job_email_scraping.email_scraper.db_session",
+            side_effect=lambda: nullcontext(session),
+        ):
+            yield
+
+    def test_orchestrates_stages_and_finalises_log(self, session: Session) -> None:
+        """run() runs each stage once with the first-run lookback window, then persists a finished,
+        successful service log."""
+
+        service = JobEmailScrapingService()
+        with (
+            patch.object(service, "extract_forwarding_email_confirmation") as extract,
+            patch.object(service, "process_emails") as process,
+            patch.object(service, "scrape_jobs") as scrape,
+        ):
+            service_log = service.run(min_timedelta_days=1, max_timedelta_days=10)
+
+        extract.assert_called_once()
+        process.assert_called_once()
+        scrape.assert_called_once()
+        assert extract.call_args == mock.call(mock.ANY, service_log, 10)
+        assert process.call_args == mock.call(mock.ANY, 10, service_log)
+        assert scrape.call_args == mock.call(mock.ANY, service_log)
+
+        assert session.query(models.JobEmailScrapingServiceLog).one().id == service_log.id
+        assert service_log.is_finished is True
+        assert service_log.is_success is True
+        assert session.query(models.ServiceError).count() == 0
+
+    def test_critical_error_is_recorded_and_not_raised(self, session: Session) -> None:
+        """A failure in the scraping workflow is recorded as a CRITICAL service error; the run still
+        finishes and the exception does not propagate."""
+
+        service = JobEmailScrapingService()
+        with (
+            patch.object(service, "extract_forwarding_email_confirmation"),
+            patch.object(service, "process_emails", side_effect=RuntimeError("boom")),
+            patch.object(service, "scrape_jobs") as scrape,
+        ):
+            service_log = service.run()
+
+        scrape.assert_not_called()
+        assert service_log.is_finished is True
+        assert service_log.is_success is False
+
+        errors = session.query(models.ServiceError).all()
+        assert len(errors) == 1
+        assert errors[0].level == "critical"
+        assert errors[0].error_type == "RuntimeError"
+        assert errors[0].job_email_scraping_service_log_id == service_log.id
+
+    def test_forwarding_stage_failure_is_recorded_and_skips_rest(self, session: Session) -> None:
+        """A failure in a stage that runs before email processing is also recorded as CRITICAL, the
+        remaining stages are skipped, and the run still finishes."""
+
+        service = JobEmailScrapingService()
+        with (
+            patch.object(service, "extract_forwarding_email_confirmation", side_effect=RuntimeError("boom")),
+            patch.object(service, "process_emails") as process,
+            patch.object(service, "scrape_jobs") as scrape,
+        ):
+            service_log = service.run()
+
+        process.assert_not_called()
+        scrape.assert_not_called()
+        assert service_log.is_finished is True
+        assert service_log.is_success is False
+        error = session.query(models.ServiceError).one()
+        assert error.level == "critical"
+        assert error.job_email_scraping_service_log_id == service_log.id

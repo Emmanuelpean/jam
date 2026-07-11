@@ -61,7 +61,7 @@ def request_with_retry(
             delay = BACKOFF_BASE_SECONDS * 2 ** (attempt - 1)
         time.sleep(delay)
 
-    if not resp:
+    if resp is None:
         raise RuntimeError(f"Failed to fetch {service} data after {MAX_ATTEMPTS:d} attempts")
 
     return resp

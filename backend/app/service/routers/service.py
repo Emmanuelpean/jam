@@ -12,6 +12,7 @@ from app.database import get_db
 from app.models import Service
 from app.models import User
 from app.routers.utility import assert_admin
+from app.service.registry import SERVICE_REGISTRY
 from app.service.schemas import ServiceOut, ServiceUpdate
 from app.utilities.logger import AppLogger
 
@@ -49,22 +50,18 @@ def update_service(
     db: Session = Depends(get_db),
 ):
     """Update a service's configuration (enable/disable, period, parameters). Admin only.
-    Enabling a service with no scheduled run (or one in the past) seeds next_run_at to now so it
-    runs on the scheduler's next poll."""
+    Enabling a service that has no scheduled run seeds next_run_at to now so it runs on the
+    scheduler's next poll (a past next_run_at is already due, so it is left untouched)."""
 
     assert_admin(current_user)
     service = _get_service_by_name(db, name)
 
-    now = dt.datetime.now(dt.timezone.utc)
-    was_enabled = service.is_enabled
-
     for field, value in service_update.model_dump(exclude_unset=True).items():
         setattr(service, field, value)
 
-    # When (re)enabling, make sure there is a due/near-future slot to run from.
-    if service.is_enabled and (not was_enabled or service.next_run_at is None):
-        if service.next_run_at is None:
-            service.next_run_at = now
+    # An enabled service needs a slot to run from; a past next_run_at is already due.
+    if service.is_enabled and service.next_run_at is None:
+        service.next_run_at = dt.datetime.now(dt.timezone.utc)
 
     db.commit()
     db.refresh(service)
@@ -100,4 +97,6 @@ def get_logs(
     :param current_user: Current authenticated user."""
 
     assert_admin(current_user)
+    if name not in SERVICE_REGISTRY:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Unknown service '{name}'")
     return AppLogger.read_logger(name).read_log_tail(lines)

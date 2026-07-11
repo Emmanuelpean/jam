@@ -464,11 +464,10 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
 
         with db_session() as db:
             service_log = self.start_run(db)
-            timedelta_days = self.compute_lookback_days(db, service_log, min_timedelta_days, max_timedelta_days)
-            self.logger.info(f"Using an email lookback window of {timedelta_days:.2f} day(s)")
-            self.extract_forwarding_email_confirmation(db, service_log, timedelta_days)
-
             try:
+                timedelta_days = self.compute_lookback_days(db, service_log, min_timedelta_days, max_timedelta_days)
+                self.logger.info(f"Using an email lookback window of {timedelta_days:.2f} day(s)")
+                self.extract_forwarding_email_confirmation(db, service_log, timedelta_days)
                 self.process_emails(db, timedelta_days, service_log)
                 self.scrape_jobs(db, service_log)
             except Exception as exception:

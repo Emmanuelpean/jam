@@ -74,5 +74,4 @@ def downgrade() -> None:
     op.execute("UPDATE scraped_job SET is_scraped = (status = 'completed')")
     op.execute("UPDATE scraped_job SET is_failed = (status = 'failed')")
     op.execute("UPDATE scraped_job SET is_skipped = (status = 'skipped')")
-    op.execute("UPDATE scraped_job SET is_copied = (status = 'copied')")
     op.drop_column("scraped_job", "status")

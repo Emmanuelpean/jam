@@ -4,15 +4,19 @@ from collections.abc import Iterator
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 from app.utilities.http import MAX_ATTEMPTS, request_with_retry
 
 
-def _resp(status_code: int) -> MagicMock:
-    resp = MagicMock()
+def _resp(status_code: int, headers: dict | None = None) -> requests.Response:
+    """Build a real requests.Response so bool(resp) reflects the status code, matching production."""
+
+    resp = requests.Response()
     resp.status_code = status_code
-    resp.headers = {}
-    resp.text = "body"
+    resp._content = b"body"
+    if headers:
+        resp.headers.update(headers)
     return resp
 
 
@@ -69,8 +73,7 @@ class TestRequestWithRetry:
         assert mock_sleep.call_count == 0
 
     def test_honours_numeric_retry_after_header(self, mock_request: MagicMock, mock_sleep: MagicMock) -> None:
-        retryable = _resp(429)
-        retryable.headers = {"retry-after": "7"}
+        retryable = _resp(429, {"retry-after": "7"})
         mock_request.side_effect = [retryable, _resp(200)]
 
         request_with_retry("GET", "https://x", service="svc")

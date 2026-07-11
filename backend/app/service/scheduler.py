@@ -133,6 +133,7 @@ class ServiceScheduler(object):
         """Run a single service and advance its schedule.
         :param service_id: Primary key of the Service row to run."""
 
+        # Short-lived session so no DB connection is held for the whole run.
         with db_session() as db:
             service = db.query(Service).filter(Service.id == service_id).first()
             if service is None:
@@ -140,16 +141,17 @@ class ServiceScheduler(object):
                 return
             name = service.name
             parameters = service.parameters or {}
-            try:
-                fn = get_service_callable(name)
-                self.logger.info(f"Running service '{name}' with parameters {parameters}")
-                fn(**parameters)
-                self.logger.info(f"Service '{name}' finished")
-            except Exception as exc:
-                self.logger.exception(f"Service '{name}' failed: {exc}")
-            finally:
-                # Re-fetch in case the row changed; advance the schedule and clear the running flag.
-                # The row may have been deleted mid-run, in which case there is nothing to update.
+
+        try:
+            fn = get_service_callable(name)
+            self.logger.info(f"Running service '{name}' with parameters {parameters}")
+            fn(**parameters)
+            self.logger.info(f"Service '{name}' finished")
+        except Exception as exc:
+            self.logger.exception(f"Service '{name}' failed: {exc}")
+        finally:
+            # Fresh session; the row may have been deleted mid-run.
+            with db_session() as db:
                 service = db.query(Service).filter(Service.id == service_id).first()
                 if service is not None:
                     now = dt.datetime.now(dt.timezone.utc)

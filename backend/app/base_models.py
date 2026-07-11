@@ -20,7 +20,6 @@ class ProcessingStatus(StrEnum):
     COMPLETED = "completed"
     FAILED = "failed"
     SKIPPED = "skipped"
-    COPIED = "copied"
     FILTERED = "filtered"
 
 

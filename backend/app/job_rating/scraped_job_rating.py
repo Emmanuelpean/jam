@@ -1,7 +1,6 @@
 """Use Gemini LLM to rate how well scraped jobs match user qualifications."""
 
 import datetime as dt
-from contextlib import nullcontext
 
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -91,12 +90,11 @@ class ScrapedJobRatingService(BaseService[models.JobRatingServiceLog]):
 
         BaseService.__init__(self, models.JobRatingServiceLog)
 
-    def run(self, db: Session | None = None) -> models.JobRatingServiceLog:
+    def run(self) -> models.JobRatingServiceLog:
         """Score all scraped jobs using AI.
-        :param db: optional session to run within; if omitted, one is created and closed for the run
         :return: Job rating service log entry"""
 
-        with db_session() if db is None else nullcontext(db) as db:
+        with db_session() as db:
             service_log = self.start_run(db)
 
             try:
