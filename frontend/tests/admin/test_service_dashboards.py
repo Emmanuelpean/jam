@@ -32,8 +32,6 @@ class TestJobScrapingDashboard(ServiceDashboardBase):
     """Tests for the Job Scraping dashboard modal."""
 
     def setup_function(self, request) -> None:
-        # The Service config row is normally seeded at backend startup, but the per-test DB
-        # truncation wipes it, so the status control needs it created explicitly.
         self.create_service(self.db, name="email_scraper_service", display_name="Job Email Scraping")
         self.create_email_scraping_service_log(self.db, run_duration=45.2)
         self.login()
@@ -70,8 +68,6 @@ class TestJobRatingDashboard(ServiceDashboardBase):
     """Tests for the Job Rating dashboard modal."""
 
     def setup_function(self, request) -> None:
-        # The Service config row is normally seeded at backend startup, but the per-test DB
-        # truncation wipes it, so the status control needs it created explicitly.
         self.create_service(self.db, name="job_rating_service", display_name="Job Rating")
         self.create_job_rating_service_log(self.db, run_duration=12.5)
         self.login()
@@ -102,8 +98,6 @@ class TestJobRatingDashboard(ServiceDashboardBase):
 class TestJobScrapingDashboardErrors(ServiceDashboardBase):
     """Tests that critical, service and scraping errors display correctly."""
 
-    # Messages are the static strings recorded by the scraper in app/job_email_scraping/email_scraper.py
-    # (runtime values like the job id live in the error's `context`, not the message).
     CRITICAL_ERROR = "Critical error in scraping workflow."
     SERVICE_ERROR = "Failed to get forwarding emails."
     SCRAPING_ERROR = "Failed to scrape job data."
@@ -161,8 +155,6 @@ class TestJobScrapingDashboardErrors(ServiceDashboardBase):
 class TestServiceDashboardRunFilter(ServiceDashboardBase):
     """Clicking a run in the history chart filters the already-loaded errors to that run."""
 
-    # Two distinct static run-level messages the scraper records, so each run's error is uniquely
-    # identifiable in the summary.
     OLD_RUN_ERROR = "Failed to search emails for user."
     NEW_RUN_ERROR = "Failed to get forwarding emails."
 
@@ -201,19 +193,56 @@ class TestServiceDashboardRunFilter(ServiceDashboardBase):
         self.service_dashboard_utils.wait_for_error_summary_containing(self.OLD_RUN_ERROR, self.NEW_RUN_ERROR)
 
 
+class TestServiceDashboardErrorGrouping(ServiceDashboardBase):
+    """Errors sharing a type and message collapse into a single group with an occurrence count."""
+
+    FREQUENT_ERROR = "Failed to get forwarding emails."
+    OCCASIONAL_ERROR = "Failed to search emails for user."
+
+    def setup_function(self, request) -> None:
+        service_log = self.create_email_scraping_service_log(self.db, run_duration=30.0)
+        for _ in range(3):
+            self.create_service_error(
+                self.db,
+                error_type="TimeoutError",
+                message=self.FREQUENT_ERROR,
+                job_email_scraping_service_log_id=service_log.id,
+            )
+        for _ in range(2):
+            self.create_service_error(
+                self.db,
+                error_type="TimeoutError",
+                message=self.OCCASIONAL_ERROR,
+                job_email_scraping_service_log_id=service_log.id,
+            )
+        self.login()
+
+    def test_errors_group_by_message(self) -> None:
+        """Five raw errors show as two groups (3 and 2 occurrences), expanding to their rows."""
+
+        self.service_dashboard_utils.open_scraping()
+        error_text = self.service_dashboard_utils.wait_for_error_summary_containing(
+            self.FREQUENT_ERROR, self.OCCASIONAL_ERROR
+        )
+
+        text = error_text.lower()
+        assert "service errors (2 unique)" in text
+        assert "3 occurrences" in text
+        assert "2 occurrences" in text
+
+        assert self.service_dashboard_utils.expand_error_group(self.FREQUENT_ERROR) == 3
+        assert self.service_dashboard_utils.expand_error_group(self.OCCASIONAL_ERROR) == 2
+
+
 class TestJobRatingDashboardErrors(ServiceDashboardBase):
     """Tests that critical and rating errors display correctly on the rating modal."""
 
-    # Messages are the static strings recorded in app/job_rating/scraped_job_rating.py (the job id and
-    # raw response live in the error's `context`).
     CRITICAL_ERROR = "Critical error in rating workflow"
     RATING_ERROR = "Error scoring job."
 
     def setup_function(self, request) -> None:
-        # Rating service log with today's date (the model default) so it appears in the default date range
         rating_log = self.create_job_rating_service_log(self.db, run_duration=20.0)
 
-        # Run-level critical error: no job_rating_id, level=critical (drives is_success/Critical Errors column)
         self.create_service_error(
             self.db,
             error_type="Exception",
@@ -222,8 +251,6 @@ class TestJobRatingDashboardErrors(ServiceDashboardBase):
             job_rating_service_log_id=rating_log.id,
         )
 
-        # Failed job rating linked to the run via job_rating_service_log_id, and to the
-        # per-job error via job_rating_id (appears in the "Job Rating Errors" column)
         rating = self.user.create_job_rating(status="failed", llm_model="claude-sonnet-4-6")
         self.create_service_error(
             self.db,

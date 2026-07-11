@@ -24,9 +24,7 @@ interface ErrorSummaryCardProps {
 	isRunning: boolean;
 	loading?: boolean;
 	perJob?: PerJobErrorConfig;
-	/** Label of the run the errors are filtered to (from clicking a chart point), or null for all runs. */
 	selectedRunLabel?: string | null;
-	/** Clear the run filter and show errors for all runs again. */
 	onClearSelectedRun?: () => void;
 }
 
@@ -58,7 +56,6 @@ export const ErrorSummaryCard = ({
 				data.platformByJobId
 			)
 		: [];
-	console.log(perJobGroups);
 	return (
 		<div id="error-summary-card" className="status-card mt-4">
 			<h2 className="card-title">

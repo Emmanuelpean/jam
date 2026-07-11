@@ -153,6 +153,23 @@ class ServiceDashboardUtils(AdminPageUtils):
 
         self.selected_run_filter.click()
 
+    def error_group(self, message: str) -> WebElement:
+        """The grouped-error alert whose message text contains `message`."""
+
+        for group in self.error_summary_card.find_elements(By.CSS_SELECTOR, ".error-list .alert"):
+            if message in group.find_element(By.CLASS_NAME, "grouped-error-message").text:
+                return group
+        raise AssertionError(f"No error group containing {message!r}")
+
+    def expand_error_group(self, message: str) -> int:
+        """Expand the group containing `message` and return its number of occurrence rows."""
+
+        self.error_group(message).find_element(By.CLASS_NAME, "grouped-error-message").click()
+        occurrences = self.wait.until(
+            lambda d: self.error_group(message).find_element(By.CLASS_NAME, "grouped-error-occurrences")
+        )
+        return len(occurrences.find_elements(By.CLASS_NAME, "grouped-error-occurrence"))
+
     def wait_for_error_summary_containing(self, *messages: str) -> str:
         """Wait until the Error Summary card's text contains every given message, then return that text.
 

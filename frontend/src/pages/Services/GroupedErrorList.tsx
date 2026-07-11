@@ -27,7 +27,6 @@ export const GroupedErrorList = ({
 	const [busyErrorId, setBusyErrorId] = useState<number | null>(null);
 	const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-	/** Stable identity for a group that survives re-sorting when other groups are acknowledged. */
 	const groupKey = (group: ErrorGroup): string => `${group.errorType}:${group.message}`;
 
 	const handleToggleAcknowledged = async (group: ErrorGroup, index: number): Promise<void> => {
