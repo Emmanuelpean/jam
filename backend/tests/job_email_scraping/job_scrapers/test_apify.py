@@ -6,6 +6,7 @@ import pytest
 
 from app.job_email_scraping.job_scrapers.apify import ApifyJobScraper
 from app.job_email_scraping.schemas import JobInfo, JobResult
+from tests.job_email_scraping.job_scrapers.conftest import make_run, make_run_status
 
 
 class ConcreteApifyJobScraper(ApifyJobScraper):
@@ -57,7 +58,7 @@ class TestStartActorRun:
 
     def test_starts_actor_with_correct_input(self, mock_apify_cls: MagicMock) -> None:
         """Actor is started with startUrls from job_urls and residential proxy config."""
-        mock_run = {"id": "run_123", "defaultDatasetId": "ds_456"}
+        mock_run = make_run("run_123", "ds_456")
         mock_apify_cls.return_value.actor.return_value.start.return_value = mock_run
 
         scraper = ConcreteApifyJobScraper(["job1", "job2"])
@@ -82,7 +83,7 @@ class TestWaitForData:
     @patch("app.job_email_scraping.job_scrapers.apify.time.sleep")
     def test_returns_immediately_on_succeeded(self, mock_sleep: MagicMock, mock_apify_cls: MagicMock) -> None:
         """Returns without sleeping when the first poll returns SUCCEEDED."""
-        mock_apify_cls.return_value.run.return_value.get.return_value = {"status": "SUCCEEDED"}
+        mock_apify_cls.return_value.run.return_value.get.return_value = make_run_status("SUCCEEDED")
 
         scraper = ConcreteApifyJobScraper("job1")
         scraper._wait_for_data("run_123")
@@ -94,9 +95,9 @@ class TestWaitForData:
     def test_polls_until_succeeded(self, mock_sleep: MagicMock, mock_apify_cls: MagicMock) -> None:
         """Sleeps between polls and stops as soon as SUCCEEDED is returned."""
         mock_apify_cls.return_value.run.return_value.get.side_effect = [
-            {"status": "READY"},
-            {"status": "RUNNING"},
-            {"status": "SUCCEEDED"},
+            make_run_status("READY"),
+            make_run_status("RUNNING"),
+            make_run_status("SUCCEEDED"),
         ]
 
         scraper = ConcreteApifyJobScraper("job1")
@@ -110,7 +111,7 @@ class TestWaitForData:
         self, _mock_sleep: MagicMock, mock_apify_cls: MagicMock, failed_status: str
     ) -> None:
         """Raises Exception immediately on FAILED, ABORTED, or TIMED-OUT status."""
-        mock_apify_cls.return_value.run.return_value.get.return_value = {"status": failed_status}
+        mock_apify_cls.return_value.run.return_value.get.return_value = make_run_status(failed_status)
 
         scraper = ConcreteApifyJobScraper("job1")
         with pytest.raises(Exception, match=failed_status.lower()):
@@ -119,7 +120,7 @@ class TestWaitForData:
     @patch("app.job_email_scraping.job_scrapers.apify.time.sleep")
     def test_raises_timeout_when_max_attempts_exceeded(self, mock_sleep: MagicMock, mock_apify_cls: MagicMock) -> None:
         """Raises TimeoutError after exhausting all polling attempts without SUCCEEDED."""
-        mock_apify_cls.return_value.run.return_value.get.return_value = {"status": "RUNNING"}
+        mock_apify_cls.return_value.run.return_value.get.return_value = make_run_status("RUNNING")
 
         scraper = ConcreteApifyJobScraper("job1")
         with pytest.raises(TimeoutError, match="not complete"):
@@ -168,8 +169,8 @@ class TestScrapeJob:
     def test_orchestrates_full_scrape_workflow(self, _mock_sleep: MagicMock, mock_apify_cls: MagicMock) -> None:
         """Chains start → wait → retrieve → process and returns processed JobResults."""
         client = mock_apify_cls.return_value
-        client.actor.return_value.start.return_value = {"id": "run_abc", "defaultDatasetId": "ds_xyz"}
-        client.run.return_value.get.return_value = {"status": "SUCCEEDED"}
+        client.actor.return_value.start.return_value = make_run("run_abc", "ds_xyz")
+        client.run.return_value.get.return_value = make_run_status("SUCCEEDED")
         client.dataset.return_value.list_items.return_value.items = [
             {"company": "Acme", "title": "Engineer"},
             {"company": "Globex", "title": "Designer"},
@@ -183,17 +184,3 @@ class TestScrapeJob:
         assert results[0].job.title == "Engineer"
         assert results[1].company == "Globex"
         assert results[1].job.title == "Designer"
-
-    def test_raises_when_no_run_id(self, mock_apify_cls: MagicMock) -> None:
-        """Raises Exception when actor start returns no run ID."""
-        mock_apify_cls.return_value.actor.return_value.start.return_value = {"defaultDatasetId": "ds_xyz"}
-
-        with pytest.raises(Exception, match="No run_id"):
-            ConcreteApifyJobScraper("job1").scrape_job()
-
-    def test_raises_when_no_dataset_id(self, mock_apify_cls: MagicMock) -> None:
-        """Raises Exception when actor start returns no dataset ID."""
-        mock_apify_cls.return_value.actor.return_value.start.return_value = {"id": "run_abc"}
-
-        with pytest.raises(Exception, match="No defaultDatasetId"):
-            ConcreteApifyJobScraper("job1").scrape_job()

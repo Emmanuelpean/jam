@@ -112,6 +112,8 @@ class BrightdataJobScraper(object):
         json_data = data_resp.json()
 
         # Handle other errors
+        if isinstance(json_data, list) and json_data[0].get("error_code") == "dead_page":
+            return [{"is_closed": True}]
         if data_resp.status_code != 200:
             raise Exception(f"Failed to get snapshot data: {data_resp.status_code} {data_resp.text}")
         if isinstance(json_data, list) and "error_code" in json_data[0]:

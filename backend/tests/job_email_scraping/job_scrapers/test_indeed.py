@@ -1,5 +1,6 @@
 """Tests for IndeedBrightdataJobScraper and IndeedApifyJobScraper._process_job_data."""
 
+import datetime as dt
 from unittest.mock import patch
 
 import pytest
@@ -146,18 +147,17 @@ class TestIndeedBrightdataSalary:
 # ================================================== APIFY ===================================================
 
 APIFY_FULL_JOB = {
-    "jobInfoModel": {
-        "jobInfoHeaderModel": {
-            "jobTitle": "Postdoctoral Research Assistant in Physiology of Calcification in phytoplankton",
-            "companyName": "University of Oxford",
-        },
-        "location": {
-            "fullAddress": "Wellington Square, Oxford",
-        },
-        "description": {
-            "text": "The Department of Earth Sciences are seeking a highly motivated researcher.",
-        },
-    }
+    "positionName": "Postdoctoral Research Assistant in Physiology of Calcification in phytoplankton",
+    "company": "University of Oxford",
+    "fullAddress": "Wellington Square, Oxford, OX1 2JD",
+    "location": "Oxford",
+    "jobDescription": "The Department of Earth Sciences are seeking a highly motivated researcher.",
+    "remote": False,
+    "expired": False,
+    "expirationDate": "2026-03-29",
+    "salaryMin": 38674.0,
+    "salaryMax": 46913.0,
+    "currency": "GBP",
 }
 
 
@@ -197,30 +197,47 @@ class TestIndeedApifyProcessJobData:
         result = apify_scraper._process_job_data(APIFY_FULL_JOB)
         assert result.company == "University of Oxford"
 
-    def test_location_mapped(self, apify_scraper) -> None:
+    def test_location_uses_full_address(self, apify_scraper) -> None:
         result = apify_scraper._process_job_data(APIFY_FULL_JOB)
-        assert result.location == "Wellington Square, Oxford"
+        assert result.location == "Wellington Square, Oxford, OX1 2JD"
+
+    def test_location_falls_back_to_location_when_full_address_empty(self, apify_scraper) -> None:
+        data = {**APIFY_FULL_JOB, "fullAddress": ""}
+        result = apify_scraper._process_job_data(data)
+        assert result.location == "Oxford"
+
+    def test_remote_appends_suffix_to_location(self, apify_scraper) -> None:
+        data = {**APIFY_FULL_JOB, "remote": True}
+        result = apify_scraper._process_job_data(data)
+        assert result.location == "Wellington Square, Oxford, OX1 2JD (Remote)"
 
     def test_description_mapped(self, apify_scraper) -> None:
         result = apify_scraper._process_job_data(APIFY_FULL_JOB)
         assert result.job.description == "The Department of Earth Sciences are seeking a highly motivated researcher."
 
+    def test_deadline_mapped(self, apify_scraper) -> None:
+        result = apify_scraper._process_job_data(APIFY_FULL_JOB)
+        assert result.job.deadline == dt.datetime(2026, 3, 29)
+
+    def test_is_closed_from_expired_flag(self, apify_scraper) -> None:
+        data = {**APIFY_FULL_JOB, "expired": True}
+        result = apify_scraper._process_job_data(data)
+        assert result.job.is_closed is True
+
+    def test_not_closed_when_not_expired(self, apify_scraper) -> None:
+        result = apify_scraper._process_job_data(APIFY_FULL_JOB)
+        assert result.job.is_closed is False
+
     def test_raw_is_str_of_job_data(self, apify_scraper) -> None:
         result = apify_scraper._process_job_data(APIFY_FULL_JOB)
         assert result.raw == str(APIFY_FULL_JOB)
 
-    def test_missing_job_info_model_raises(self, apify_scraper) -> None:
+    def test_missing_key_raises(self, apify_scraper) -> None:
         with pytest.raises(KeyError):
             apify_scraper._process_job_data({})
 
-    def test_missing_job_title_raises(self, apify_scraper) -> None:
-        data = {
-            "jobInfoModel": {
-                "jobInfoHeaderModel": {"companyName": "Acme"},
-                "location": {"fullAddress": "London"},
-                "description": {"text": "Some text"},
-            }
-        }
+    def test_missing_position_name_raises(self, apify_scraper) -> None:
+        data = {k: v for k, v in APIFY_FULL_JOB.items() if k != "positionName"}
         with pytest.raises(KeyError):
             apify_scraper._process_job_data(data)
 
@@ -234,4 +251,20 @@ class TestIndeedApifyProcessJobData:
         assert len(results) == 1
         assert results[0].company == "University of Oxford"
         assert results[0].job.title == "Postdoctoral Research Assistant in Physiology of Calcification in phytoplankton"
-        assert results[0].location == "Wellington Square, Oxford"
+        assert results[0].location == "Wellington Square, Oxford, OX1 2JD"
+
+
+class TestIndeedApifySalary:
+
+    def test_salary_mapped(self, apify_scraper) -> None:
+        result = apify_scraper._process_job_data(APIFY_FULL_JOB)
+        assert result.job.salary.min_amount == 38674.0
+        assert result.job.salary.max_amount == 46913.0
+        assert result.job.salary.currency == "GBP"
+
+    def test_missing_salary_values_give_none(self, apify_scraper) -> None:
+        data = {**APIFY_FULL_JOB, "salaryMin": None, "salaryMax": None, "currency": None}
+        result = apify_scraper._process_job_data(data)
+        assert result.job.salary.min_amount is None
+        assert result.job.salary.max_amount is None
+        assert result.job.salary.currency is None

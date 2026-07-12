@@ -5,6 +5,7 @@ This module provides functionality to scrape job postings using the Apify API.""
 import time
 
 from apify_client import ApifyClient
+from apify_client._models import Run  # noqa
 from tqdm import tqdm
 
 from app.config import settings
@@ -37,9 +38,9 @@ class ApifyJobScraper(object):
         # Load credentials from the secrets file
         self.client = ApifyClient(settings.apify_api_key)
 
-    def _start_actor_run(self) -> dict:
+    def _start_actor_run(self) -> Run:
         """Start the Apify actor run.
-        :return: Actor run information"""
+        :return: Actor run object"""
 
         run_input = {
             "startUrls": [{"url": job_url} for job_url in self.job_urls],
@@ -58,7 +59,7 @@ class ApifyJobScraper(object):
                 run_info = self.client.run(run_id).get()
                 if not run_info:
                     raise Exception(f"No run info returned for run ID: {run_id}")
-                status = run_info.get("status")
+                status = run_info.status
 
                 # Update progress bar description with current status
                 pbar.set_description(f"Status: {status}")
@@ -95,13 +96,8 @@ class ApifyJobScraper(object):
         """Complete workflow to scrape jobs using Apify"""
 
         run = self._start_actor_run()
-        run_id = run.get("id")
-        dataset_id = run.get("defaultDatasetId")
-
-        if not isinstance(run_id, str) and not run_id:
-            raise Exception(f"No run_id returned: {run}")
-        if not isinstance(dataset_id, str) and not dataset_id:
-            raise Exception(f"No defaultDatasetId returned: {run}")
+        run_id = run.id
+        dataset_id = run.default_dataset_id
 
         self._wait_for_data(run_id)
         data = self._retrieve_data(dataset_id)

@@ -43,6 +43,7 @@ class IndeedBrightdataJobScraper(BrightdataJobScraper):
                 title=job_data.get("job_title"),
                 description=job_data.get("description_text", "").strip("Show more Show less") or None,
                 url=job_data.get("url"),
+                is_closed=job_data.get("is_closed", False),
                 salary=Salary(
                     min_amount=min_amount,
                     max_amount=max_amount,
@@ -68,17 +69,30 @@ class IndeedApifyJobScraper(ApifyJobScraper):
         :return: JobResult containing job information"""
 
         # Extract job info from nested structure
-        title = job_data["jobInfoModel"]["jobInfoHeaderModel"]["jobTitle"]
-        location = job_data["jobInfoModel"]["location"]["fullAddress"]
-        company = job_data["jobInfoModel"]["jobInfoHeaderModel"]["companyName"]
-        description = job_data["jobInfoModel"]["description"]["text"]
+        title = job_data["positionName"]
+        location = job_data["fullAddress"] if job_data["fullAddress"] else job_data["location"]
+        company = job_data["company"]
+        description = job_data["jobDescription"]
+        remote = job_data["remote"]
+        is_closed = job_data["expired"]
+        deadline = job_data["expirationDate"]
+        min_salary = job_data["salaryMin"]
+        max_salary = job_data["salaryMax"]
+        currency = job_data["currency"]
 
         return JobResult(
             company=company,
-            location=location,
+            location=location + " (Remote)" if remote else location,
             job=JobInfo(
                 title=title,
                 description=description,
+                deadline=deadline,
+                is_closed=is_closed,
+                salary=Salary(
+                    min_amount=min_salary,
+                    max_amount=max_salary,
+                    currency=currency,
+                ),
             ),
             raw=str(job_data),
         )

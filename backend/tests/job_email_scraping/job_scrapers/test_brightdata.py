@@ -203,6 +203,12 @@ class TestRetrieveData:
         with pytest.raises(Exception, match="Failed to get snapshot data"):
             ConcreteBrightdataJobScraper("job1")._retrieve_data("snap_123")
 
+    def test_dead_page_error_code_returns_is_closed(self, mock_brightdata) -> None:
+        """A 'dead_page' error_code returns a single is_closed marker instead of raising."""
+        mock_brightdata.get.return_value = _mock_response(200, [{"error_code": "dead_page"}])
+
+        assert ConcreteBrightdataJobScraper("job1")._retrieve_data("snap_123") == [{"is_closed": True}]
+
     def test_raises_on_non_200_non_202_status(self, mock_brightdata) -> None:
         """Raises Exception on a status that is neither 200 nor 202."""
         mock_brightdata.get.return_value = _mock_response(404, text="Not Found")
@@ -245,3 +251,18 @@ class TestScrapeJob:
         assert results[0].job.title == "Engineer"
         assert results[1].company == "Globex"
         assert results[1].job.title == "Designer"
+
+    @patch("app.job_email_scraping.job_scrapers.brightdata.time.sleep")
+    def test_dead_page_produces_single_result_without_raising(self, _mock_sleep, mock_brightdata) -> None:
+        """A dead-page snapshot flows through the workflow to one is_closed job instead of erroring."""
+        mock_brightdata.post.return_value = _mock_response(200, {"snapshot_id": "snap_abc"})
+        mock_brightdata.get.side_effect = [
+            _mock_response(200, {"status": "ready"}),  # _wait_for_data
+            _mock_response(200, [{"error_code": "dead_page"}]),  # _retrieve_data
+        ]
+
+        results = ConcreteBrightdataJobScraper(["job1"]).scrape_job()
+
+        assert len(results) == 1
+        assert isinstance(results[0], JobResult)
+        assert results[0].raw == "{'is_closed': True}"
