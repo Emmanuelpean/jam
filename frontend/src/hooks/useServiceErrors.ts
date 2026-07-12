@@ -24,14 +24,10 @@ export interface ErrorGroup {
 	ids: number[];
 	count: number;
 	isAcknowledged: boolean;
-	jobs: { jobId: number; platform: string | null }[];
 	errors: ServiceError[];
 }
 
-export const groupErrorsByMessage = (
-	errors: ServiceError[],
-	platformByJobId?: Record<number, string | null>
-): ErrorGroup[] => {
+export const groupErrorsByMessage = (errors: ServiceError[]): ErrorGroup[] => {
 	const groups = new Map<string, ErrorGroup>();
 	errors.forEach((error: ServiceError): void => {
 		const message: string = error.message.trim();
@@ -44,7 +40,6 @@ export const groupErrorsByMessage = (
 				ids: [],
 				count: 0,
 				isAcknowledged: error.is_acknowledged,
-				jobs: [],
 				errors: [],
 			};
 			groups.set(key, group);
@@ -52,9 +47,6 @@ export const groupErrorsByMessage = (
 		group.ids.push(error.id);
 		group.errors.push(error);
 		group.count++;
-		if (error.scraped_job_id != null) {
-			group.jobs.push({ jobId: error.scraped_job_id, platform: platformByJobId?.[error.scraped_job_id] ?? null });
-		}
 	});
 	return Array.from(groups.values()).sort((a: ErrorGroup, b: ErrorGroup): number => b.count - a.count);
 };
@@ -63,7 +55,8 @@ export const useServiceErrors = (
 	logs: ServiceLog | ServiceLog[] | null,
 	filterKey: ErrorFilterKey,
 	showAcknowledged: boolean,
-	showLoadingOnUpdate: boolean = false
+	showLoadingOnUpdate: boolean = false,
+	isRunning: boolean = false
 ): UseServiceErrorsResult => {
 	const { token } = useAuth();
 	const [errors, setErrors] = useState<ServiceError[]>([]);
@@ -72,7 +65,7 @@ export const useServiceErrors = (
 	const hasLoaded = useRef<boolean>(false);
 
 	const logIds: number[] = logs ? normaliseArray(logs).map((log: ServiceLog): number => log.id) : [];
-	const logIdsKey: string = logIds.join(",");
+	const logIdsKey: string = [...logIds].sort((a: number, b: number): number => a - b).join(",");
 
 	const fetchErrors = useCallback(async (): Promise<void> => {
 		if (!token || logIds.length === 0) {
@@ -95,7 +88,7 @@ export const useServiceErrors = (
 		} finally {
 			setLoading(false);
 		}
-	}, [token, logIdsKey, filterKey, showAcknowledged]);
+	}, [token, logIdsKey, filterKey, showAcknowledged, isRunning]);
 
 	useEffect((): void => {
 		fetchErrors().then();

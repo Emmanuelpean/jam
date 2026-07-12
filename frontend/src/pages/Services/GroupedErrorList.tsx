@@ -8,7 +8,7 @@ interface GroupedErrorListProps {
 	groups: ErrorGroup[];
 	variant: "info" | "warning" | "danger";
 	emptyText: string;
-	showJobs?: boolean;
+	platformByJobId?: Record<number, string | null>;
 	onSetAcknowledged: (ids: number[], isAcknowledged: boolean) => Promise<void>;
 }
 
@@ -20,7 +20,7 @@ export const GroupedErrorList = ({
 	groups,
 	variant,
 	emptyText,
-	showJobs = false,
+	platformByJobId,
 	onSetAcknowledged,
 }: GroupedErrorListProps): JSX.Element => {
 	const [busyIndex, setBusyIndex] = useState<number | null>(null);
@@ -114,15 +114,6 @@ export const GroupedErrorList = ({
 									<i className={`bi ${isExpanded ? "bi-chevron-down" : "bi-chevron-right"} me-1`}></i>
 									<span className="grouped-error-type">{group.errorType}</span> {group.message}
 								</div>
-								{showJobs && group.jobs.length > 0 && (
-									<div className="mt-2" style={{ fontSize: "0.85rem" }}>
-										{group.jobs.map((job, jobIdx: number) => (
-											<div key={jobIdx}>
-												{job.platform ?? "unknown"}: {job.jobId}
-											</div>
-										))}
-									</div>
-								)}
 								{isExpanded && (
 									<div className="grouped-error-occurrences mt-2">
 										{group.errors.map(
@@ -157,18 +148,37 @@ export const GroupedErrorList = ({
 															></i>
 														</button>
 													</div>
-													{error.context && Object.keys(error.context).length > 0 && (
+													{(error.scraped_job_id != null ||
+														(error.context && Object.keys(error.context).length > 0)) && (
 														<div className="grouped-error-context">
-															{Object.entries(error.context).map(
-																([contextKey, value]): JSX.Element => (
-																	<div key={contextKey}>
+															{error.scraped_job_id != null && (
+																<>
+																	<div>
 																		<span className="grouped-error-context-key">
-																			{contextKey}:
+																			platform:
 																		</span>{" "}
-																		{formatContextValue(value)}
+																		{platformByJobId?.[error.scraped_job_id] ??
+																			"unknown"}
 																	</div>
-																)
+																	<div>
+																		<span className="grouped-error-context-key">
+																			job id:
+																		</span>{" "}
+																		{error.scraped_job_id}
+																	</div>
+																</>
 															)}
+															{error.context &&
+																Object.entries(error.context).map(
+																	([contextKey, value]): JSX.Element => (
+																		<div key={contextKey}>
+																			<span className="grouped-error-context-key">
+																				{contextKey}:
+																			</span>{" "}
+																			{formatContextValue(value)}
+																		</div>
+																	)
+																)}
 														</div>
 													)}
 													{error.traceback && (

@@ -152,6 +152,7 @@ Frontend reads from `frontend/.env` (typically just the API base URL).
 - TypeScript: Prettier (see `.prettierrc`), Stylelint for SCSS
 - SCSS variables in `frontend/src/_variables.scss`, themes in `Themes.scss`
 - Never write implementation history in comments or docstrings (e.g. "changed from X to Y", "this used to...", "previously..."). Describe what the code does now, not how it evolved — history belongs in commit messages.
+- Keep comments to a minimum. Do NOT add comments that restate what the code plainly does or annotate self-evident logic (e.g. every element, rule, or step). Only comment when it explains non-obvious *why* that the code itself can't convey. When in doubt, leave the comment out.
 
 ## Editing Files on Windows
 

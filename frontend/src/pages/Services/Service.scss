@@ -424,19 +424,24 @@
 	flex: 1 1 auto;
 	align-self: stretch;
 	align-items: center;
-	gap: 9px;
+	gap: 12.6px;
 	min-width: 0;
-	padding: 5.4px 14.4px;
-	font-size: 12.6px;
+	padding: 10.8px 19.8px;
+	font-size: 15.3px;
 	cursor: pointer;
 	border: 1px solid var(--bs-border-color);
-	border-radius: 10.8px;
+	border-radius: 12.6px;
 	background-color: var(--bs-card-bg);
 	transition: border-color 0.2s ease;
 }
 
 .service-last-log:hover {
 	border-color: var(--primary-mid);
+}
+
+.service-last-log .live-indicator {
+	width: 14.4px;
+	height: 14.4px;
 }
 
 .service-last-log .service-last-log-text {

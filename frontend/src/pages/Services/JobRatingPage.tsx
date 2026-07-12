@@ -33,12 +33,27 @@ const JobRatingPage = (): JSX.Element => {
 		loading: logsLoading,
 	} = useJobRatingServiceLogs(serviceStatus?.is_running || false, dateRange);
 
+	const logsForErrors: JobRatingServiceLogData[] = previousServiceLogs ? [...previousServiceLogs] : [];
+	if (
+		latestServiceLog &&
+		!latestServiceLog.is_finished &&
+		!logsForErrors.some((log: JobRatingServiceLogData): boolean => log.id === latestServiceLog.id)
+	) {
+		logsForErrors.push(latestServiceLog);
+	}
+
 	const {
 		errors,
 		requestError: errorsRequestError,
 		loading: errorsLoading,
 		setAcknowledged,
-	} = useServiceErrors(previousServiceLogs, "job_rating_service_log_id", showAcknowledged, true);
+	} = useServiceErrors(
+		logsForErrors,
+		"job_rating_service_log_id",
+		showAcknowledged,
+		true,
+		serviceStatus?.is_running || false
+	);
 
 	const collectedErrors = [
 		{ key: "status", label: "Service status", value: statusError },

@@ -14,7 +14,6 @@ export interface PerJobErrorConfig {
 	title: string;
 	discriminatorKey: "scraped_job_id" | "job_rating_id";
 	emptyText: string;
-	showJobs?: boolean;
 }
 
 interface ErrorSummaryCardProps {
@@ -51,10 +50,7 @@ export const ErrorSummaryCard = ({
 		runLevel.filter((e: ServiceError): boolean => e.level !== "critical")
 	);
 	const perJobGroups: ErrorGroup[] = jobKey
-		? groupErrorsByMessage(
-				data.errors.filter((e: ServiceError): boolean => e[jobKey] != null),
-				data.platformByJobId
-			)
+		? groupErrorsByMessage(data.errors.filter((e: ServiceError): boolean => e[jobKey] != null))
 		: [];
 	return (
 		<div id="error-summary-card" className="status-card mt-4">
@@ -120,7 +116,7 @@ export const ErrorSummaryCard = ({
 							groups={perJobGroups}
 							variant="warning"
 							emptyText={perJob.emptyText}
-							showJobs={perJob.showJobs}
+							platformByJobId={data.platformByJobId}
 							onSetAcknowledged={data.setAcknowledged}
 						/>
 					)}

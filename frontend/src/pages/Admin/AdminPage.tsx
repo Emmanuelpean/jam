@@ -17,10 +17,9 @@ import {
 	ServiceUpdatePayload,
 } from "../../services/api/Services";
 import { providerMonitoringApi, providerMonitoringRunnerApi } from "../../services/api/ProviderMonitoring";
-import { failureColor, serviceEnabledLabel, successColor } from "../Services/ServiceUtils";
+import { failureColor, formatNextRun, serviceEnabledLabel, successColor } from "../Services/ServiceUtils";
 import { ServiceConfigField, ServiceStatusControl } from "../Services/ServiceStatusControl";
 import { ServiceFilterSlotContext } from "../Services/ServiceFilterSlot";
-import { formatDuration } from "../../utils/TimeUtils";
 import { UserData } from "../../services/schemas/Core";
 import { Sparkline, SparklinePoint } from "../../components/Chart/Sparkline";
 import JamModal from "../../components/JamModal/JamModal";
@@ -275,7 +274,7 @@ const ServiceStatusBody = ({
 							{showCountdown && (
 								<span className="service-next-run">
 									<i className="bi bi-hourglass-split me-1" />
-									{formatDuration(remainingTime)}
+									{formatNextRun(remainingTime)}
 								</span>
 							)}
 						</span>

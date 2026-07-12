@@ -99,17 +99,23 @@ export const useServiceControl = (token: string | null, fetchStatus: () => Promi
 	return { loading, run };
 };
 
+export const formatNextRun = (remainingTime: number | null): string | null => {
+	if (remainingTime === null) return null;
+	return remainingTime <= 0 ? "Due now" : formatDuration(remainingTime);
+};
+
 export const renderStatusIcons = (status: ServiceStatus | null, remainingTime: number | null): JSX.Element => {
 	const running: boolean = !!status?.is_running;
-	const showCountdown: boolean = !!remainingTime;
+	const nextRunLabel: string | null = formatNextRun(remainingTime);
+	const isDue: boolean = remainingTime !== null && remainingTime <= 0 && !running;
 	return (
 		<div className="service-status-icons">
 			<Tooltip delay={500} content={`Run: ${running ? "In progress" : "Idle"}`}>
 				<i className={`bi bi-activity service-status-icon ${running ? "is-on is-running" : "is-off"}`} />
 			</Tooltip>
-			{showCountdown && (
-				<Tooltip delay={500} content="Time until next run">
-					<span className="service-next-run">({formatDuration(remainingTime)})</span>
+			{nextRunLabel && !running && (
+				<Tooltip delay={500} content={isDue ? "Next run is due" : "Time until next run"}>
+					<span className="service-next-run">({nextRunLabel})</span>
 				</Tooltip>
 			)}
 		</div>
