@@ -1,28 +1,19 @@
 """Unit tests for the database-driven service scheduler."""
 
 import datetime as dt
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from contextlib import nullcontext
 from unittest.mock import MagicMock, patch
 
-import pytest
 from sqlalchemy.orm import Session
 
 from app.models import Service
-from app.service import registry
-from app.service.schemas import ServiceOut
 from app.service.scheduler import ServiceScheduler, compute_next_run
 from tests.base_test import BaseTest
 
 
 def _utc(*args: int) -> dt.datetime:
     return dt.datetime(*args, tzinfo=dt.timezone.utc)
-
-
-def _register(name: str, run: Callable) -> None:
-    """Register a service for dispatch tests. The log view is required but unused here."""
-
-    registry.register_service(name, run, log_model=Service, log_schema=ServiceOut)
 
 
 # ------------------------------------------------ COMPUTE NEXT RUN ------------------------------------------------
@@ -68,16 +59,6 @@ class TestComputeNextRun:
 # --------------------------------------------------- FIXTURES ---------------------------------------------------
 
 
-@pytest.fixture
-def restore_registry() -> Iterator[None]:
-    """Snapshot and restore SERVICE_REGISTRY so tests don't leak registrations."""
-
-    original = dict(registry.SERVICE_REGISTRY)
-    yield
-    registry.SERVICE_REGISTRY.clear()
-    registry.SERVICE_REGISTRY.update(original)
-
-
 def _make_service(
     session: Session,
     name: str = "fake_service",
@@ -117,13 +98,11 @@ class _SyncThread:
 
 
 class TestRunService(BaseTest):
-    def test_runs_callable_with_parameters_and_advances_schedule(
-        self, session: Session, restore_registry: None
-    ) -> None:
+    def test_runs_callable_with_parameters_and_advances_schedule(self, session: Session) -> None:
         """The registered callable runs with the row's parameters; schedule advances and clears running."""
 
         calls = []
-        _register("fake_service", lambda **kw: calls.append(kw))
+        self.register_service("fake_service", lambda **kw: calls.append(kw))
         base = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=1)
         service = _make_service(session, next_run_at=base, parameters={"timedelta_days": 3})
 
@@ -137,14 +116,14 @@ class TestRunService(BaseTest):
         assert updated.is_running is False
         assert updated.next_run_at > dt.datetime.now(dt.timezone.utc)
 
-    def test_advances_schedule_even_when_callable_raises(self, session: Session, restore_registry: None) -> None:
+    def test_advances_schedule_even_when_callable_raises(self, session: Session) -> None:
         """A failing run still advances the schedule and clears the running flag (no stuck service)."""
 
         def boom(**_kw):
             """Raise a runtime error"""
             raise RuntimeError("kaboom")
 
-        _register("fake_service", boom)
+        self.register_service("fake_service", boom)
         base = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=1)
         service = _make_service(session, next_run_at=base)
 
@@ -157,14 +136,14 @@ class TestRunService(BaseTest):
         assert updated.is_running is False
         assert updated.next_run_at > dt.datetime.now(dt.timezone.utc)
 
-    def test_missing_service_is_skipped(self, session: Session, restore_registry: None) -> None:
+    def test_missing_service_is_skipped(self, session: Session) -> None:
         """A service id that no longer exists is skipped without error."""
 
         scheduler = ServiceScheduler()
         with patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)):
             scheduler._run_service(99999)  # no such row — must not raise
 
-    def test_row_deleted_during_run_is_handled(self, session: Session, restore_registry: None) -> None:
+    def test_row_deleted_during_run_is_handled(self, session: Session) -> None:
         """If the row is deleted mid-run, the finally block skips the schedule update without error."""
 
         base = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=1)
@@ -175,7 +154,7 @@ class TestRunService(BaseTest):
             session.query(Service).filter(Service.id == service_id).delete()
             session.commit()
 
-        _register("fake_service", delete_row)
+        self.register_service("fake_service", delete_row)
         scheduler = ServiceScheduler()
         with patch("app.service.scheduler.db_session", side_effect=lambda: nullcontext(session)):
             scheduler._run_service(service_id)  # must not raise
@@ -187,7 +166,7 @@ class TestRunService(BaseTest):
 
 
 class TestTick(BaseTest):
-    def test_dispatches_only_due_enabled_services(self, session: Session, restore_registry: None) -> None:
+    def test_dispatches_only_due_enabled_services(self, session: Session) -> None:
         """Only enabled services whose next_run_at is due are dispatched."""
 
         past = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=1)
@@ -206,7 +185,7 @@ class TestTick(BaseTest):
 
         scheduler._run_service.assert_called_once_with(due.id)
 
-    def test_null_next_run_at_is_due(self, session: Session, restore_registry: None) -> None:
+    def test_null_next_run_at_is_due(self, session: Session) -> None:
         """An enabled service with no scheduled time is treated as due."""
 
         service = _make_service(session, name="never_run", enabled=True, next_run_at=None)
@@ -221,7 +200,7 @@ class TestTick(BaseTest):
 
         scheduler._run_service.assert_called_once_with(service.id)
 
-    def test_skips_service_already_running(self, session: Session, restore_registry: None) -> None:
+    def test_skips_service_already_running(self, session: Session) -> None:
         """A service whose is_running flag is set is not dispatched again (overlap guard)."""
 
         past = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=1)
@@ -237,7 +216,7 @@ class TestTick(BaseTest):
 
         scheduler._run_service.assert_not_called()
 
-    def test_marks_service_running_before_dispatch(self, session: Session, restore_registry: None) -> None:
+    def test_marks_service_running_before_dispatch(self, session: Session) -> None:
         """A dispatched service has its is_running flag committed before the worker runs."""
 
         past = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=1)

@@ -55,7 +55,7 @@ def seed_service_logs(session: Session) -> Callable[[str], list]:
 
 
 class TestGetServiceLogs(BaseTest):
-    def test_returns_empty_when_log_file_missing(self, test_admin_user: FixtureUser) -> None:
+    def test_returns_404_when_log_file_missing(self, test_admin_user: FixtureUser) -> None:
         """Returns zero lines when the log file does not exist."""
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -63,12 +63,12 @@ class TestGetServiceLogs(BaseTest):
                 mock_settings.log_directory = tmpdir
                 resp = test_admin_user.client.get("/services/nonexistent/logs")
 
-        assert resp.status_code == status.HTTP_200_OK
-        assert resp.json() == {"lines": [], "total_lines": 0}
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
 
     def test_returns_last_n_lines_of_small_file(self, test_admin_user: FixtureUser) -> None:
         """Returns the correct tail lines from a file under 1 MB."""
 
+        self.register_service("test_service")
         log_lines = [f"line {i}" for i in range(20)]
         with tempfile.TemporaryDirectory() as tmpdir:
             with open(os.path.join(tmpdir, "test_service.log"), "w", encoding="utf-8") as f:
@@ -85,6 +85,7 @@ class TestGetServiceLogs(BaseTest):
     def test_returns_all_lines_when_fewer_than_requested(self, test_admin_user: FixtureUser) -> None:
         """Returns all lines when the file has fewer lines than requested."""
 
+        self.register_service("svc")
         log_lines = ["alpha", "beta", "gamma"]
         with tempfile.TemporaryDirectory() as tmpdir:
             with open(os.path.join(tmpdir, "svc.log"), "w", encoding="utf-8") as f:

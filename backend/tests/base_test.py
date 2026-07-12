@@ -2,17 +2,46 @@
 
 import datetime as dt
 import uuid
+from collections.abc import Callable, Iterator
 from typing import Any
 
+import pytest
 from sqlalchemy.orm import Session
 
 from app import models
+from app.service import registry
+from app.service.models import ServiceLog
+from app.service.schemas import ServiceLogOut
 from tests.utils.create_data.core import create_users
 from tests.utils.create_data.utils import create_db_entries
 
 
 class BaseTest:
     """Base class for all backend tests"""
+
+    @pytest.fixture(autouse=True)
+    def _restore_service_registry(self) -> Iterator[None]:
+        """Snapshot and restore SERVICE_REGISTRY so services registered in a test don't leak to others."""
+
+        original = dict(registry.SERVICE_REGISTRY)
+        yield
+        registry.SERVICE_REGISTRY.clear()
+        registry.SERVICE_REGISTRY.update(original)
+
+    @staticmethod
+    def register_service(name: str, run: Callable = lambda: None, **kwargs) -> None:
+        """Register a throwaway service in the runtime service registry (removed after the test).
+
+        Distinct from create_service, which inserts a Service config row in the database: this makes the
+        registry-driven service endpoints resolve `name`. log_model/log_schema default to the base
+        ServiceLog view for tests that don't assert on serialisation.
+        :param name: Service registry key.
+        :param run: Callable invoked as run(**parameters); defaults to a no-op.
+        :param kwargs: Overrides forwarded to register_service (e.g. log_model, log_schema, display_name)."""
+
+        kwargs.setdefault("log_model", ServiceLog)
+        kwargs.setdefault("log_schema", ServiceLogOut)
+        registry.register_service(name, run, **kwargs)
 
     @staticmethod
     def create_user(session, **kwargs) -> models.User:
