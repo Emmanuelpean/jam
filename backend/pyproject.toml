@@ -59,6 +59,7 @@ data_file = "reports/coverage/.coverage"
 omit = [
     "backend/tests/*",
     "frontend",
+    "*/templates/*",
 ]
 
 [tool.coverage.html]
