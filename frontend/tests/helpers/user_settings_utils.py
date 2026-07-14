@@ -103,6 +103,12 @@ class UserSettingsUtils(JamTestUtils):
         return self.get_element(theme_key + "-theme")
 
     @property
+    def tour_shortcut_toggle(self) -> WebElement:
+        """Get the 'Show the Take a Tour shortcut in the sidebar' toggle"""
+
+        return self.get_element("tour-shortcut-toggle")
+
+    @property
     def dark_mode_btn(self) -> WebElement:
         """Get the dark mode toggle button"""
 

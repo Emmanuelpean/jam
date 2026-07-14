@@ -51,6 +51,7 @@ export const useNavigation = (): UseNavigationResult => {
 		(t) => isPremium || !["import-scraped-job", "scraping-filters"].includes(t.id)
 	);
 	const allToursCompleted = implementedTours.length > 0 && implementedTours.every((t) => completedTourIds.has(t.id));
+	const tourPanelDismissed = currentUser?.preferences.tour_panel_dismissed ?? false;
 
 	const handleLogoutClick = async (): Promise<void> => {
 		if (currentUser?.is_demo) {
@@ -130,7 +131,7 @@ export const useNavigation = (): UseNavigationResult => {
 			condition: (user: UserData): boolean => user.is_admin,
 			position: "bottom",
 		},
-		...(!allToursCompleted && !isMobile
+		...(!allToursCompleted && !tourPanelDismissed && !isMobile
 			? [
 					{
 						icon: "map",

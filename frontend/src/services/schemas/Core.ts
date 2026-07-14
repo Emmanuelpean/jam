@@ -42,6 +42,7 @@ export interface UserPreferences {
 	default_currency: string;
 	extension_banner_dismissed: boolean;
 	completed_tours: string[] | null;
+	tour_panel_dismissed: boolean;
 	dashboard_layout: string | null;
 	table_columns: Record<string, string[]> | null;
 	table_sort: TableSortConfigs | null;
