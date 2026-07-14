@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     monthly_scrape_quota: int
     scrape_retry_delay_hours: float
     scrape_max_retry: int
+    rating_retry_delay_hours: float = 3.0
+    rating_max_retry: int = 3
     min_scraping_description_length: int
     max_scraping_description_length: int
     max_scraping_title_length: int
@@ -43,6 +45,7 @@ class Settings(BaseSettings):
     # Other settings
     log_directory: str
     test_mode: bool
+    scheduler: bool = False  # set via SCHEDULER=true on the dedicated scheduler process
 
     # Email configuration
     main_email_username: str
@@ -68,15 +71,13 @@ class Settings(BaseSettings):
 
     # BrightData
     brightdata_api_key: str
-    brightdata_linkedin_dataset_id: str
-    brightdata_indeed_dataset_id: str
 
     # OpenAI
     openai_api_key: str
 
     # Anthropic
     anthropic_api_key: str
-    anthropic_admin_key: str | None = None
+    anthropic_admin_key: str
 
     # Apify
     apify_api_key: str

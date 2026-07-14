@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session, joinedload
 from starlette import status
 
 from app import models
+from app.base_models import ProcessingStatus
 from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.job_email_scraping import schemas
@@ -96,8 +97,8 @@ def get_all(
     if errors_only:
         query = query.outerjoin(models.JobRating).filter(
             or_(
-                models.ScrapedJob.is_failed.is_(True),
-                models.JobRating.is_success.is_(False),
+                models.ScrapedJob.status == ProcessingStatus.FAILED,
+                models.JobRating.status == ProcessingStatus.FAILED,
             )
         )
 
@@ -373,8 +374,7 @@ def create_tour_demo(
         service_log_id=service_log.id,
         external_job_id=f"tour-demo-{current_user.id}",
         platform="LinkedIn",
-        is_processed=True,
-        is_scraped=True,
+        status=ProcessingStatus.COMPLETED,
         scrape_datetime=now,
         is_active=True,
         is_tour=True,
@@ -402,7 +402,7 @@ def create_tour_demo(
         scraped_job_id=scraped_job.id,
         user_qualification_id=user_qualification.id,
         llm_model="tour-demo",
-        is_success=True,
+        status=ProcessingStatus.COMPLETED,
         overall_score=8,
         technical_score=8,
         experience_score=7,

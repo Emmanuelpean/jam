@@ -1,16 +1,18 @@
 """Pytest fixtures for Job Scraping tests"""
 
 import datetime as dt
-from typing import Any, Generator
+from typing import Any, Callable, Generator
 from unittest import mock
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
+from sqlalchemy.orm import Session
 
 from app import models
 from app.emails.schemas import EmailData
 from app.job_email_scraping.email_parsers import Platform
 from app.job_email_scraping.email_parsers import indeed
-from app.job_email_scraping.email_scraper import JobEmailScraper
+from app.job_email_scraping.models import JobEmailScrapingServiceLog
 from tests.job_email_scraping.mock_job_scrapers import (
     MockVeganJobsBrightdataJobScraper,
     MockIndeedBrightdataJobScraper,
@@ -21,7 +23,7 @@ from tests.utils import job_email_resources as resources
 
 
 @pytest.fixture(autouse=True)
-def patch_get_indeed_redirected_url(monkeypatch) -> None:
+def patch_get_indeed_redirected_url(monkeypatch: MonkeyPatch) -> None:
     """Automatically patch get_indeed_redirected_url in all tests to avoid real HTTP requests"""
 
     def mock_get_indeed_redirected_url(url: str) -> str:
@@ -50,7 +52,7 @@ def patch_get_indeed_redirected_url(monkeypatch) -> None:
             return f"https://uk.indeed.com/rc/clk/dl?jk={jk}"
         return url
 
-    monkeypatch.setattr(indeed, "get_indeed_redirected_url", mock_get_indeed_redirected_url, raising=False)
+    monkeypatch.setattr(indeed, "get_indeed_redirected_url", mock_get_indeed_redirected_url)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -69,7 +71,7 @@ def mock_job_scrapers() -> Generator[dict, Any, None]:
 
 
 @pytest.fixture
-def test_job_scraping_service_log(session) -> models.JobEmailScrapingServiceLog:
+def test_job_scraping_service_log(session: Session) -> models.JobEmailScrapingServiceLog:
     """Create a test JobEmailScrapingServiceLog record"""
 
     service_log = models.JobEmailScrapingServiceLog(run_datetime=dt.datetime.now())
@@ -79,46 +81,24 @@ def test_job_scraping_service_log(session) -> models.JobEmailScrapingServiceLog:
 
 
 @pytest.fixture
-def test_job_scraper(session) -> JobEmailScraper:
-    """Create a JobScraper instance for testing with mocked file dependencies."""
+def email_record_factory(
+    test_job_scraping_service_log: JobEmailScrapingServiceLog,
+) -> Callable[..., tuple[models.JobEmail, list]]:
+    """Factory fixture for creating email records in the database.
+    All emails share one service log so per-log stats aggregate across owners."""
 
-    entry = models.Setting(name="indeed_scraper", value="brightapi")
-    session.add(entry)
-    session.commit()
-    return JobEmailScraper(session)
+    def _create(email_id: str, user: models.User) -> tuple[models.JobEmail, list]:
+        email_resource = resources.TEST_EMAILS.get(email_id + "_" + user.email)
 
-
-@pytest.fixture
-def job_scraper_with_brightapi_skip(session) -> JobEmailScraper:
-    """Create a JobScraper instance with BrightAPI skip enabled for indeed jobs."""
-
-    entry = models.Setting(name="indeed_scraper", value="email")
-    session.add(entry)
-    session.commit()
-    return JobEmailScraper(session)
-
-
-@pytest.fixture
-def email_record_factory(session, test_users, test_job_scraping_service_log) -> Any:
-    """Factory fixture for creating email records in the database."""
-
-    def _create(email_id: str, user_index: int = 0) -> tuple[models.JobEmail, list[str]]:
-        email_resource = resources.TEST_EMAILS.get(email_id + "_" + test_users[user_index].email)
-
-        email_data = dict(
+        email_record = user.create_job_email(
+            service_log=test_job_scraping_service_log,
             external_email_id=str(email_resource["id"]),
             subject=email_resource["subject"],
             sender=email_resource["from"],
             date_received=email_resource["date"],
             platform=email_resource["platform"],
             body=email_resource["body"],
-            service_log_id=test_job_scraping_service_log.id,
         )
-
-        email_record = models.JobEmail(**email_data, owner_id=test_users[user_index].id)
-        session.add(email_record)
-        session.commit()
-
         return email_record, email_resource["parsed_output"]
 
     return _create

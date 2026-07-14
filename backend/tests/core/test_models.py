@@ -3,9 +3,11 @@
 import datetime as dt
 
 import pytest
+from sqlalchemy.orm import Session
 
 from app import models
-
+from app.core.models import TokenType
+from tests.fixtures.users import FixtureUser
 
 # -------------------------------------------------- UTILITY FUNCTIONS -------------------------------------------------
 
@@ -21,7 +23,13 @@ class TestUserTokenRemainingSeconds:
             (0, 120),  # right now = 120 seconds remaining
         ],
     )
-    def test_remaining_seconds(self, session, minutes_ago, expected_remaining, test_regular_user) -> None:
+    def test_remaining_seconds(
+        self,
+        session: Session,
+        minutes_ago: int,
+        expected_remaining: int,
+        test_regular_user: FixtureUser,
+    ) -> None:
         """Test calculation of remaining seconds for rate limiting on UserToken model"""
 
         created_time = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=minutes_ago)
@@ -49,16 +57,21 @@ class TestUserTokenIsValid:
     @pytest.mark.parametrize(
         "token_type, minutes_ago, expected_valid",
         [
-            ("verification", 35, True),  # verification: 10 min ago = valid
-            ("verification", 70, False),  # verification: 25 min ago = expired
-            ("password_reset", 10, True),  # password_reset: 10 min ago = valid
-            ("password_reset", 35, False),  # password_reset: 25 min ago = expired
-            ("email_change", 10, True),  # email_change: 10 min ago = valid
-            ("email_change", 65, False),  # email_change: 25 min ago = expired
+            (TokenType.EMAIL_VERIFICATION, 35, True),  # verification: 10 min ago = valid
+            (TokenType.EMAIL_VERIFICATION, 70, False),  # verification: 25 min ago = expired
+            (TokenType.PASSWORD_RESET, 10, True),  # password_reset: 10 min ago = valid
+            (TokenType.PASSWORD_RESET, 35, False),  # password_reset: 25 min ago = expired
+            (TokenType.EMAIL_CHANGE, 10, True),  # email_change: 10 min ago = valid
+            (TokenType.EMAIL_CHANGE, 65, False),  # email_change: 25 min ago = expired
         ],
     )
     def test_is_valid_different_token_types(
-        self, session, token_type, minutes_ago, expected_valid, test_regular_user
+        self,
+        session: Session,
+        token_type: TokenType,
+        minutes_ago: int,
+        expected_valid: bool,
+        test_regular_user: FixtureUser,
     ) -> None:
         """Test token validity for different token types."""
 
@@ -86,46 +99,64 @@ class TestUserTokenDeletesExistingOfSameType:
     """Test that creating a new token deletes existing tokens of the same type for the same user."""
 
     @staticmethod
-    def _add_token(session, user_id, token_type, token):
+    def _add_token(
+        session: Session,
+        user_id: int,
+        token_type: TokenType,
+        token: str,
+    ) -> None:
         """Helper function to add a token to the database."""
 
         token = models.UserToken(owner_id=user_id, token=token, token_type=token_type)
         session.add(token)
         session.commit()
 
-    def test_new_token_deletes_existing_same_type(self, session, test_regular_user) -> None:
+    def test_new_token_deletes_existing_same_type(
+        self,
+        session: Session,
+        test_regular_user: FixtureUser,
+    ) -> None:
         """Test that creating a new token deletes existing token of the same type."""
 
-        self._add_token(session, test_regular_user.id, "verification", "first_token")
+        self._add_token(session, test_regular_user.id, TokenType.EMAIL_VERIFICATION, "first_token")
         assert session.query(models.UserToken).filter_by(token="first_token").first() is not None
 
-        self._add_token(session, test_regular_user.id, "verification", "second_token")
+        self._add_token(session, test_regular_user.id, TokenType.EMAIL_VERIFICATION, "second_token")
         assert session.query(models.UserToken).filter_by(token="first_token").first() is None
         assert session.query(models.UserToken).filter_by(token="second_token").first() is not None
 
         # Verify only one token exists for this user and type
         count = (
-            session.query(models.UserToken).filter_by(owner_id=test_regular_user.id, token_type="verification").count()
+            session.query(models.UserToken)
+            .filter_by(owner_id=test_regular_user.id, token_type=TokenType.EMAIL_VERIFICATION)
+            .count()
         )
         assert count == 1
 
-    def test_new_token_does_not_delete_different_type(self, session, test_regular_user) -> None:
+    def test_new_token_does_not_delete_different_type(
+        self,
+        session: Session,
+        test_regular_user: FixtureUser,
+    ) -> None:
         """Test that creating a new token does not delete tokens of a different type."""
 
-        self._add_token(session, test_regular_user.id, "verification", "verification_token")
-        self._add_token(session, test_regular_user.id, "password_reset", "password_reset_token")
+        self._add_token(session, test_regular_user.id, TokenType.EMAIL_VERIFICATION, "verification_token")
+        self._add_token(session, test_regular_user.id, TokenType.PASSWORD_RESET, "password_reset_token")
 
         # Verify both tokens still exist
         assert session.query(models.UserToken).filter_by(token="verification_token").first() is not None
         assert session.query(models.UserToken).filter_by(token="password_reset_token").first() is not None
 
-    def test_new_token_does_not_delete_other_users_tokens(self, session, test_regular_user, test_users) -> None:
+    def test_new_token_does_not_delete_other_users_tokens(
+        self,
+        session: Session,
+        test_regular_user: FixtureUser,
+        test_admin_user: FixtureUser,
+    ) -> None:
         """Test that creating a new token does not delete tokens of the same type for other users."""
 
-        other_user = test_users[1]
-
-        self._add_token(session, test_regular_user.id, "verification", "user1_token")
-        self._add_token(session, other_user.id, "verification", "user2_token")
+        self._add_token(session, test_regular_user.id, TokenType.EMAIL_VERIFICATION, "user1_token")
+        self._add_token(session, test_admin_user.id, TokenType.EMAIL_VERIFICATION, "user2_token")
 
         # Verify both tokens still exist
         assert session.query(models.UserToken).filter_by(token="user1_token").first() is not None

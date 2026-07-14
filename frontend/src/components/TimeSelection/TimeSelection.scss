@@ -1,16 +1,12 @@
-/* Inline filter toolbar: sits next to a label with no extra vertical chrome.
-   Control sizing comes from the global .form-control-sm / .btn-group-sm rules. */
 .time-selection-container {
     padding: 0;
 }
 
-/* The unit dropdown grows to fill the remaining width of the popover row.
-   min-width: 0 lets it shrink below the select's intrinsic min-width when needed. */
 .time-selection-container .time-unit-select {
     flex: 1 1 auto;
     min-width: 0;
 }
 
-.time-selection-container .time-unit-select .jam-select.jam-select--sm .jam-select__control {
+.time-selection-container .time-unit-select .jam-select .jam-select__control {
     min-width: 0;
 }

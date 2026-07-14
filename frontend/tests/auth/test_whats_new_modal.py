@@ -1,14 +1,16 @@
 """Tests for the What's New Modal feature."""
 
-from base_test import BaseTest
+from sqlalchemy.orm import Session
+
+from frontend_base_test import BaseTest
 
 
 class TestWhatsNewModal(BaseTest):
 
-    def test_welcome_modal_shows_for_new_user(self, session) -> None:
+    def test_welcome_modal_shows_for_new_user(self, session: Session) -> None:
         """Test that the Welcome modal appears after login when user has no app_version (new user)."""
 
-        self.db_user.app_version = None
+        self.user.app_version = None
         session.commit()
 
         self.login()
@@ -23,7 +25,7 @@ class TestWhatsNewModal(BaseTest):
         # Verify app_version is updated in the database
         assert self.db_user.app_version is not None
 
-    def test_whats_new_modal_shows_for_returning_user(self, session) -> None:
+    def test_whats_new_modal_shows_for_returning_user(self, session: Session) -> None:
         """Test that the What's New carousel appears after login when user has an older app_version."""
 
         self.db_user.app_version = "1.0.0"
@@ -45,7 +47,7 @@ class TestWhatsNewModal(BaseTest):
         assert self.db_user.app_version != "1.1.0"
         assert self.db_user.app_version != "1.0.0"
 
-    def test_no_modal_shown_when_up_to_date(self, session) -> None:
+    def test_no_modal_shown_when_up_to_date(self, session: Session) -> None:
         """Test that no modal appears when user's app_version matches the current version."""
 
         # Set user's app_version to a future version (already seen everything)

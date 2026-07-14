@@ -4,6 +4,8 @@ Defines SQLAlchemy ORM models for email-based job scraping functionality.
 Includes models for job alert emails, extracted job IDs, and scraped job data
 with associated companies and locations from external sources."""
 
+import datetime as dt
+
 from sqlalchemy import (
     Column,
     String,
@@ -15,15 +17,18 @@ from sqlalchemy import (
     Table,
     UniqueConstraint,
     CheckConstraint,
+    and_,
+    or_,
+    func,
 )
-from sqlalchemy.dialects.postgresql import JSONB, ARRAY as PG_ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
-from app.base_models import CommonBase, Owned
+from app.base_models import CommonBase, Owned, ProcessingStatus
 from app.database import Base
-from app.service_runner.models import ServiceLog
+from app.service.models import ServiceLog
 
 jobemail_scrapedjob_mapping = Table(
     "jobemail_scrapedjob_mapping",
@@ -88,17 +93,15 @@ class ScrapedJob(Owned, Base):
     -----------
     - `external_job_id` (str): Unique identifier for the job posting.
     - `platform` (str): Platform from which the job was scraped (LinkedIn, Indeed, etc.).
-    - `is_processed` (bool): Indicates whether the job has been processed (scraped, skipped, copied, etc.).
-    - `is_scraped` (bool): Indicates whether the job has been successfully scraped.
-    - `is_failed` (bool): Indicates whether the job scraping failed.
-    - `is_skipped` (bool): Indicates whether the job scraping was skipped (e.g., quota exceeded).
-    - `scrape_error` (list of dict): List of error entries, each with 'datetime' and 'error' keys, recorded on each failed scrape attempt.
+    - `status` (ProcessingStatus): Scraping outcome — PENDING (not yet finalised, may be retrying),
+      COMPLETED (successfully scraped), FAILED (retries exhausted), SKIPPED (e.g. quota exceeded), or
+      FILTERED (excluded by a rule).
     - `skip_reason` (str, optional): Reason why the job scraping was skipped.
     - `scrape_datetime` (datetime, optional): Date and time when the job was scraped.
     - `is_active` (bool): Indicates whether the job is active
     - `is_imported` (bool): Indicates whether the job was imported into a job.
-    - `retry_count` (int): Number of times the job has been retried.
-    - `next_retry_at` (datetime, optional): Date and time when the next retry is scheduled.
+    - `scraping_retry_count` (int): Number of times the job scrape has been retried.
+    - `scraping_next_retry_at` (datetime, optional): Date and time when the next scrape retry is scheduled.
 
     # Job data
     - `title` (str, optional): Title of the job.
@@ -130,17 +133,13 @@ class ScrapedJob(Owned, Base):
 
     external_job_id = Column(String, nullable=False)
     platform = Column(String, nullable=False)
-    is_processed = Column(Boolean, nullable=False, server_default=expression.false())
-    is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
-    is_failed = Column(Boolean, nullable=False, server_default=expression.false())
-    scrape_error = Column(JSONB, server_default="[]", nullable=False)
-    is_skipped = Column(Boolean, nullable=False, server_default=expression.false())
+    status = Column(String, nullable=False, default=ProcessingStatus.PENDING)
     skip_reason = Column(String, nullable=True)
     scrape_datetime = Column(TIMESTAMP(timezone=True), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
     is_imported = Column(Boolean, nullable=False, server_default=expression.false())
-    retry_count = Column(Integer, nullable=False, server_default="0")
-    next_retry_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    scraping_retry_count = Column(Integer, nullable=False, server_default="0")
+    scraping_next_retry_at = Column(TIMESTAMP(timezone=True), nullable=True)
     read_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     # Job data
@@ -174,12 +173,35 @@ class ScrapedJob(Owned, Base):
     exclusion_filter = relationship("ScrapingExclusionFilter", back_populates="filtered_jobs")
     job = relationship("Job", back_populates="scraped_job")
     geolocation = relationship("Geolocation")
+    scraping_errors = relationship("ServiceError", back_populates="scraped_job", cascade="all, delete-orphan")
 
     # Constraints
     __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)
 
+    @hybrid_property
+    def is_pending(self) -> bool:
+        """Whether the job is still runnable: not yet finalised (status is PENDING) and due for a
+        (re)try now."""
 
-class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
+        now = dt.datetime.now(dt.timezone.utc)
+        return self.status == ProcessingStatus.PENDING and (
+            self.scraping_next_retry_at is None or self.scraping_next_retry_at <= now
+        )
+
+    @is_pending.expression
+    def is_pending(cls):
+        """SQL form of :attr:`is_pending` for use in queries."""
+
+        return and_(
+            cls.status == ProcessingStatus.PENDING,
+            or_(
+                cls.scraping_next_retry_at.is_(None),
+                cls.scraping_next_retry_at <= func.now(),
+            ),
+        )
+
+
+class JobEmailScrapingServiceLog(ServiceLog, Base):
     """Represents logs of service operations and their status.
 
     Attributes:
@@ -194,8 +216,7 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
     - `emails` (list of JobEmail): List of email messages associated with the service log.
     - `scraped_jobs` (list of ScrapedJob): List of scraped jobs associated with the service log.
     - `platform_stats` (list of JobEmailScrapingPlatformStat): List of platform statistics associated with the service log.
-    - `errors` (list of JobEmailScrapingServiceError): List of errors associated with the service log.
-
+    - `service_errors` (list of ServiceError): List of errors that have happened during the service run.
     Properties:
     -----------
     - `job_scrape_succeeded_n` (int): Total successfully scraped jobs across all platforms.
@@ -205,8 +226,6 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
     - `job_found_n` (int): Total jobs found (copied + skipped) across all platforms.
     - `email_saved_n` (int): Total emails saved across all platforms.
     - `email_skipped_n` (int): Total emails skipped across all platforms."""
-
-    is_tour = Column(Boolean, nullable=False, server_default=expression.false())
 
     # Users
     user_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
@@ -219,7 +238,9 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
     emails = relationship("JobEmail", back_populates="service_log")
     scraped_jobs = relationship("ScrapedJob", back_populates="service_log")
     platform_stats = relationship("JobEmailScrapingPlatformStat", back_populates="service_log")
-    service_errors = relationship("JobEmailScrapingServiceError", back_populates="service_log")
+    service_errors = relationship(
+        "ServiceError", back_populates="job_email_scraping_service_log", cascade="all, delete-orphan"
+    )
 
     def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""
@@ -344,36 +365,6 @@ class JobEmailScrapingPlatformStat(CommonBase, Base):
         kwargs.setdefault("job_scrape_skipped_ids", [])
         kwargs.setdefault("job_scrape_filtered_ids", [])
         super().__init__(**kwargs)
-
-
-class JobEmailScrapingServiceError(CommonBase, Base):
-    """Records unexpected/unhandled errors raised during a service run.
-
-    Attributes:
-    -----------
-    - `error_type` (str): Type of the error.
-    - `message` (str, optional): Error message.
-    - `traceback` (str, optional): Traceback of the error.
-
-    Foreign keys:
-    -------------
-    - `service_log_id` (int): Foreign key to the associated JobEmailScrapingServiceLog.
-
-    Relationships:
-    --------------
-    - `service_log` (JobEmailScrapingServiceLog): Relationship to the associated JobEmailScrapingServiceLog"""
-
-    error_type = Column(String, nullable=False)
-    message = Column(String, nullable=False)
-    traceback = Column(String, nullable=False)
-
-    # Foreign keys
-    service_log_id = Column(
-        Integer, ForeignKey("job_email_scraping_service_log.id", ondelete="CASCADE"), nullable=False
-    )
-
-    # Relationships
-    service_log = relationship("JobEmailScrapingServiceLog", back_populates="service_errors")
 
 
 class Filter(object):

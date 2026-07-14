@@ -1,0 +1,270 @@
+"""Tests for IndeedBrightdataJobScraper and IndeedApifyJobScraper._process_job_data."""
+
+import datetime as dt
+from unittest.mock import patch
+
+import pytest
+
+from app.job_email_scraping.job_scrapers.indeed import IndeedBrightdataJobScraper, IndeedApifyJobScraper
+from app.job_email_scraping.schemas import JobResult
+from tests.job_email_scraping.job_scrapers.conftest import make_apify_mock
+
+# ================================================ BRIGHTDATA ================================================
+
+BRIGHTDATA_FULL_JOB = {
+    "company_name": "Acme Corp",
+    "company_url": "https://www.indeed.com/cmp/acme-corp",
+    "location": "London, UK",
+    "job_title": "Software Engineer",
+    "description_text": "Build great things.",
+    "url": "https://www.indeed.com/viewjob?jk=abc123",
+    "salary_formatted": "£45,000 - £65,000 a year",
+}
+
+
+@pytest.fixture
+def brightdata_scraper(mock_brightdata):
+    """A IndeedBrightdataJobScraper with BrightData requests/settings patched (via mock_brightdata)."""
+
+    return IndeedBrightdataJobScraper(["abc123"])
+
+
+class TestIndeedBrightdataInit:
+
+    def test_base_url_is_indeed(self, brightdata_scraper) -> None:
+        assert brightdata_scraper.base_url == "https://www.indeed.com/viewjob?jk="
+
+    def test_name_is_indeed(self, brightdata_scraper) -> None:
+        assert brightdata_scraper.name == "indeed"
+
+    def test_job_url_constructed_correctly(self, brightdata_scraper) -> None:
+        assert brightdata_scraper.job_urls == ["https://www.indeed.com/viewjob?jk=abc123"]
+
+
+class TestIndeedBrightdataProcessJobData:
+
+    def test_returns_job_result(self, brightdata_scraper) -> None:
+        result = brightdata_scraper._process_job_data(BRIGHTDATA_FULL_JOB)
+        assert isinstance(result, JobResult)
+
+    def test_company_name_mapped(self, brightdata_scraper) -> None:
+        result = brightdata_scraper._process_job_data(BRIGHTDATA_FULL_JOB)
+        assert result.company == "Acme Corp"
+
+    def test_company_url_mapped_to_company_id(self, brightdata_scraper) -> None:
+        result = brightdata_scraper._process_job_data(BRIGHTDATA_FULL_JOB)
+        assert result.company_id == "https://www.indeed.com/cmp/acme-corp"
+
+    def test_location_mapped(self, brightdata_scraper) -> None:
+        result = brightdata_scraper._process_job_data(BRIGHTDATA_FULL_JOB)
+        assert result.location == "London, UK"
+
+    def test_job_title_mapped(self, brightdata_scraper) -> None:
+        result = brightdata_scraper._process_job_data(BRIGHTDATA_FULL_JOB)
+        assert result.job.title == "Software Engineer"
+
+    def test_url_mapped(self, brightdata_scraper) -> None:
+        result = brightdata_scraper._process_job_data(BRIGHTDATA_FULL_JOB)
+        assert result.job.url == "https://www.indeed.com/viewjob?jk=abc123"
+
+    def test_description_mapped(self, brightdata_scraper) -> None:
+        result = brightdata_scraper._process_job_data(BRIGHTDATA_FULL_JOB)
+        assert result.job.description == "Build great things."
+
+    def test_raw_is_str_of_job_data(self, brightdata_scraper) -> None:
+        result = brightdata_scraper._process_job_data(BRIGHTDATA_FULL_JOB)
+        assert result.raw == str(BRIGHTDATA_FULL_JOB)
+
+    def test_description_strips_show_more_show_less(self, brightdata_scraper) -> None:
+        # NOTE: str.strip(chars) strips individual characters from both ends, so the test
+        # text must not start with any character in "Show more Show less" (S,h,o,w, ,m,r,e,l,s).
+        data = {**BRIGHTDATA_FULL_JOB, "description_text": "Build great things.Show more Show less"}
+        result = brightdata_scraper._process_job_data(data)
+        assert result.job.description == "Build great things."
+
+    def test_description_only_show_more_show_less_gives_none(self, brightdata_scraper) -> None:
+        data = {**BRIGHTDATA_FULL_JOB, "description_text": "Show more Show less"}
+        result = brightdata_scraper._process_job_data(data)
+        assert result.job.description is None
+
+    def test_missing_description_gives_none(self, brightdata_scraper) -> None:
+        data = {k: v for k, v in BRIGHTDATA_FULL_JOB.items() if k != "description_text"}
+        result = brightdata_scraper._process_job_data(data)
+        assert result.job.description is None
+
+
+class TestIndeedBrightdataSalary:
+
+    def test_yearly_salary_extracted_with_commas(self, brightdata_scraper) -> None:
+        result = brightdata_scraper._process_job_data(BRIGHTDATA_FULL_JOB)
+        assert result.job.salary.min_amount == 45000.0
+        assert result.job.salary.max_amount == 65000.0
+        assert result.job.salary.currency == "GBP"
+
+    def test_salary_with_per_annum_wording(self, brightdata_scraper) -> None:
+        data = {**BRIGHTDATA_FULL_JOB, "salary_formatted": "£30,000 - £50,000 per annum"}
+        result = brightdata_scraper._process_job_data(data)
+        assert result.job.salary.min_amount == 30000.0
+        assert result.job.salary.max_amount == 50000.0
+
+    def test_salary_with_en_dash(self, brightdata_scraper) -> None:
+        data = {**BRIGHTDATA_FULL_JOB, "salary_formatted": "£40,000 – £60,000 a year"}
+        result = brightdata_scraper._process_job_data(data)
+        assert result.job.salary.min_amount == 40000.0
+        assert result.job.salary.max_amount == 60000.0
+
+    def test_salary_without_commas(self, brightdata_scraper) -> None:
+        data = {**BRIGHTDATA_FULL_JOB, "salary_formatted": "£45000 - £65000 a year"}
+        result = brightdata_scraper._process_job_data(data)
+        assert result.job.salary.min_amount == 45000.0
+        assert result.job.salary.max_amount == 65000.0
+
+    def test_missing_salary_formatted_gives_none(self, brightdata_scraper) -> None:
+        data = {k: v for k, v in BRIGHTDATA_FULL_JOB.items() if k != "salary_formatted"}
+        result = brightdata_scraper._process_job_data(data)
+        assert result.job.salary.min_amount is None
+        assert result.job.salary.max_amount is None
+        assert result.job.salary.currency is None
+
+    def test_non_yearly_salary_gives_none(self, brightdata_scraper) -> None:
+        data = {**BRIGHTDATA_FULL_JOB, "salary_formatted": "£3,000 - £5,000 a month"}
+        result = brightdata_scraper._process_job_data(data)
+        assert result.job.salary.min_amount is None
+        assert result.job.salary.currency is None
+
+    def test_unrecognised_salary_format_gives_none(self, brightdata_scraper) -> None:
+        data = {**BRIGHTDATA_FULL_JOB, "salary_formatted": "Competitive salary"}
+        result = brightdata_scraper._process_job_data(data)
+        assert result.job.salary.min_amount is None
+
+    def test_empty_dict_does_not_raise(self, brightdata_scraper) -> None:
+        result = brightdata_scraper._process_job_data({})
+        assert isinstance(result, JobResult)
+        assert result.company is None
+        assert result.job.salary.min_amount is None
+
+
+# ================================================== APIFY ===================================================
+
+APIFY_FULL_JOB = {
+    "positionName": "Postdoctoral Research Assistant in Physiology of Calcification in phytoplankton",
+    "company": "University of Oxford",
+    "fullAddress": "Wellington Square, Oxford, OX1 2JD",
+    "location": "Oxford",
+    "jobDescription": "The Department of Earth Sciences are seeking a highly motivated researcher.",
+    "remote": False,
+    "expired": False,
+    "expirationDate": "2026-03-29",
+    "salaryMin": 38674.0,
+    "salaryMax": 46913.0,
+    "currency": "GBP",
+}
+
+
+@pytest.fixture
+def apify_scraper(mock_apify_cls):
+    """A IndeedApifyJobScraper with ApifyClient patched (via the shared mock_apify_cls fixture)."""
+
+    return IndeedApifyJobScraper(["758f2768706ab970"])
+
+
+class TestIndeedApifyInit:
+
+    def test_base_url_is_indeed(self, apify_scraper) -> None:
+        assert apify_scraper.base_url == "https://www.indeed.com/viewjob?jk="
+
+    def test_name_is_indeed(self, apify_scraper) -> None:
+        assert apify_scraper.name == "indeed"
+
+    def test_actor_id(self, apify_scraper) -> None:
+        assert apify_scraper.actor_id == "memo23/apify-indeed-cheerio-ppr"
+
+    def test_job_url_constructed_correctly(self, apify_scraper) -> None:
+        assert apify_scraper.job_urls == ["https://www.indeed.com/viewjob?jk=758f2768706ab970"]
+
+
+class TestIndeedApifyProcessJobData:
+
+    def test_returns_job_result(self, apify_scraper) -> None:
+        result = apify_scraper._process_job_data(APIFY_FULL_JOB)
+        assert isinstance(result, JobResult)
+
+    def test_job_title_mapped(self, apify_scraper) -> None:
+        result = apify_scraper._process_job_data(APIFY_FULL_JOB)
+        assert result.job.title == "Postdoctoral Research Assistant in Physiology of Calcification in phytoplankton"
+
+    def test_company_name_mapped(self, apify_scraper) -> None:
+        result = apify_scraper._process_job_data(APIFY_FULL_JOB)
+        assert result.company == "University of Oxford"
+
+    def test_location_uses_full_address(self, apify_scraper) -> None:
+        result = apify_scraper._process_job_data(APIFY_FULL_JOB)
+        assert result.location == "Wellington Square, Oxford, OX1 2JD"
+
+    def test_location_falls_back_to_location_when_full_address_empty(self, apify_scraper) -> None:
+        data = {**APIFY_FULL_JOB, "fullAddress": ""}
+        result = apify_scraper._process_job_data(data)
+        assert result.location == "Oxford"
+
+    def test_remote_appends_suffix_to_location(self, apify_scraper) -> None:
+        data = {**APIFY_FULL_JOB, "remote": True}
+        result = apify_scraper._process_job_data(data)
+        assert result.location == "Wellington Square, Oxford, OX1 2JD (Remote)"
+
+    def test_description_mapped(self, apify_scraper) -> None:
+        result = apify_scraper._process_job_data(APIFY_FULL_JOB)
+        assert result.job.description == "The Department of Earth Sciences are seeking a highly motivated researcher."
+
+    def test_deadline_mapped(self, apify_scraper) -> None:
+        result = apify_scraper._process_job_data(APIFY_FULL_JOB)
+        assert result.job.deadline == dt.datetime(2026, 3, 29)
+
+    def test_is_closed_from_expired_flag(self, apify_scraper) -> None:
+        data = {**APIFY_FULL_JOB, "expired": True}
+        result = apify_scraper._process_job_data(data)
+        assert result.job.is_closed is True
+
+    def test_not_closed_when_not_expired(self, apify_scraper) -> None:
+        result = apify_scraper._process_job_data(APIFY_FULL_JOB)
+        assert result.job.is_closed is False
+
+    def test_raw_is_str_of_job_data(self, apify_scraper) -> None:
+        result = apify_scraper._process_job_data(APIFY_FULL_JOB)
+        assert result.raw == str(APIFY_FULL_JOB)
+
+    def test_missing_key_raises(self, apify_scraper) -> None:
+        with pytest.raises(KeyError):
+            apify_scraper._process_job_data({})
+
+    def test_missing_position_name_raises(self, apify_scraper) -> None:
+        data = {k: v for k, v in APIFY_FULL_JOB.items() if k != "positionName"}
+        with pytest.raises(KeyError):
+            apify_scraper._process_job_data(data)
+
+    def test_scrape_job_end_to_end(self, apify_scraper) -> None:
+        """scrape_job chains Apify workflow and returns processed JobResults."""
+        apify_scraper.client = make_apify_mock([APIFY_FULL_JOB])
+
+        with patch("app.job_email_scraping.job_scrapers.apify.time.sleep"):
+            results = apify_scraper.scrape_job()
+
+        assert len(results) == 1
+        assert results[0].company == "University of Oxford"
+        assert results[0].job.title == "Postdoctoral Research Assistant in Physiology of Calcification in phytoplankton"
+        assert results[0].location == "Wellington Square, Oxford, OX1 2JD"
+
+
+class TestIndeedApifySalary:
+
+    def test_salary_mapped(self, apify_scraper) -> None:
+        result = apify_scraper._process_job_data(APIFY_FULL_JOB)
+        assert result.job.salary.min_amount == 38674.0
+        assert result.job.salary.max_amount == 46913.0
+        assert result.job.salary.currency == "GBP"
+
+    def test_missing_salary_values_give_none(self, apify_scraper) -> None:
+        data = {**APIFY_FULL_JOB, "salaryMin": None, "salaryMax": None, "currency": None}
+        result = apify_scraper._process_job_data(data)
+        assert result.job.salary.min_amount is None
+        assert result.job.salary.max_amount is None
+        assert result.job.salary.currency is None

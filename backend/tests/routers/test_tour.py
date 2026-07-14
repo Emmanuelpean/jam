@@ -1,123 +1,41 @@
 """Tests for tour-related routes: POST /scraped-jobs/tour-demo and POST /tour/clear-all."""
 
-import datetime as dt
-
+from sqlalchemy.orm import Session
 from starlette import status
+from starlette.testclient import TestClient
 
 from app import models
-from tests.utils.create_data.utils import create_db_entries
-
+from app.base_models import ProcessingStatus
+from tests.base_test import BaseTest
+from tests.fixtures.users import FixtureUser
 
 # -------------------------------------------------- HELPERS ---------------------------------------------------
 
 
-def _create_tour_entities(session, user: models.User) -> dict:
+def _create_tour_entities(user: FixtureUser, session: Session) -> dict:
     """Create a minimal set of is_tour=True entities for the given user.
     Returns a dict of created objects keyed by type."""
 
-    now = dt.datetime.now(dt.timezone.utc)
-
-    service_log = create_db_entries(
-        session,
-        models.JobEmailScrapingServiceLog,
-        {"run_datetime": now, "is_tour": True},
-    )[0]
-
-    email = create_db_entries(
-        session,
-        models.JobEmail,
-        {
-            "owner_id": user.id,
-            "service_log_id": service_log.id,
-            "external_email_id": "tour-test-email",
-            "subject": "Tour email",
-            "body": "body",
-            "platform": "linkedin",
-            "sender": "test@test.com",
-            "date_received": now,
-            "is_tour": True,
-        },
-    )[0]
-
-    scraped_job = create_db_entries(
-        session,
-        models.ScrapedJob,
-        {
-            "owner_id": user.id,
-            "service_log_id": service_log.id,
-            "external_job_id": f"tour-test-{user.id}",
-            "platform": "LinkedIn",
-            "is_processed": True,
-            "is_scraped": True,
-            "scrape_datetime": now,
-            "is_active": True,
-            "is_tour": True,
-            "title": "Tour Job",
-        },
-    )[0]
-
-    user_qualification = create_db_entries(
-        session,
-        models.UserQualification,
-        {"owner_id": user.id, "is_tour": True, "experience": "tour experience"},
-    )[0]
-
-    job_rating = create_db_entries(
-        session,
-        models.JobRating,
-        {
-            "owner_id": user.id,
-            "scraped_job_id": scraped_job.id,
-            "user_qualification_id": user_qualification.id,
-            "llm_model": "tour-demo",
-            "is_success": True,
-            "overall_score": 8,
-            "is_tour": True,
-        },
-    )[0]
-
-    company = create_db_entries(
-        session,
-        models.Company,
-        {"owner_id": user.id, "name": f"Tour Company {user.id}", "is_tour": True},
-    )[0]
-
-    keyword = create_db_entries(
-        session,
-        models.Keyword,
-        {"owner_id": user.id, "name": f"tour-keyword-{user.id}", "is_tour": True},
-    )[0]
-
-    job = create_db_entries(
-        session,
-        models.Job,
-        {"owner_id": user.id, "title": "Tour Job", "company_id": company.id, "is_tour": True},
-    )[0]
-
-    job_application_update = create_db_entries(
-        session,
-        models.JobApplicationUpdate,
-        {"owner_id": user.id, "job_id": job.id, "type": "received", "is_tour": True},
-    )[0]
-
-    speculative_application = create_db_entries(
-        session,
-        models.SpeculativeApplication,
-        {"owner_id": user.id, "company_id": company.id, "is_tour": True},
-    )[0]
-
-    file = create_db_entries(
-        session,
-        models.File,
-        {
-            "owner_id": user.id,
-            "filename": "tour-cv.pdf",
-            "content": "base64content",
-            "type": "application/pdf",
-            "size": 1024,
-            "is_tour": True,
-        },
-    )[0]
+    service_log = BaseTest.create_email_scraping_service_log(session, is_tour=True)
+    email = user.create_job_email(service_log=service_log, is_tour=True)
+    scraped_job = user.create_scraped_job(
+        service_log=service_log, status=ProcessingStatus.COMPLETED, title="Tour Job", is_tour=True
+    )
+    user_qualification = user.create_user_qualification(experience="tour experience", is_tour=True)
+    job_rating = user.create_job_rating(
+        scraped_job=scraped_job,
+        user_qualification=user_qualification,
+        llm_model="tour-demo",
+        status=ProcessingStatus.COMPLETED,
+        overall_score=8,
+        is_tour=True,
+    )
+    company = user.create_company(name=f"Tour Company {user.id}", is_tour=True)
+    keyword = user.create_keyword(name=f"tour-keyword-{user.id}", is_tour=True)
+    job = user.create_job(title="Tour Job", company_id=company.id, is_tour=True)
+    job_application_update = user.create_job_application_update(job, type="received", is_tour=True)
+    speculative_application = user.create_speculative_application(company, is_tour=True)
+    file = user.create_file(is_tour=True)
 
     return {
         "service_log": service_log,
@@ -134,55 +52,26 @@ def _create_tour_entities(session, user: models.User) -> dict:
     }
 
 
-def _create_non_tour_entities(session, user: models.User) -> dict:
+def _create_non_tour_entities(user: FixtureUser) -> dict:
     """Create is_tour=False entities to verify they survive clear-all."""
 
-    now = dt.datetime.now(dt.timezone.utc)
-
-    service_log = create_db_entries(
-        session,
-        models.JobEmailScrapingServiceLog,
-        {"run_datetime": now, "is_tour": False},
-    )[0]
-
-    scraped_job = create_db_entries(
-        session,
-        models.ScrapedJob,
-        {
-            "owner_id": user.id,
-            "service_log_id": service_log.id,
-            "external_job_id": f"real-job-{user.id}",
-            "platform": "LinkedIn",
-            "is_processed": True,
-            "is_scraped": True,
-            "scrape_datetime": now,
-            "is_active": True,
-            "is_tour": False,
-            "title": "Real Job",
-        },
-    )[0]
-
-    company = create_db_entries(
-        session,
-        models.Company,
-        {"owner_id": user.id, "name": f"Real Company {user.id}", "is_tour": False},
-    )[0]
-
+    scraped_job = user.create_scraped_job(status=ProcessingStatus.COMPLETED, title="Real Job", is_tour=False)
+    company = user.create_company(name=f"Real Company {user.id}", is_tour=False)
     return {"scraped_job": scraped_job, "company": company}
 
 
 # ----------------------------------------------- TOUR DEMO -------------------------------------------------------
 
 
-class TestCreateTourDemo:
+class TestCreateTourDemo(BaseTest):
     """Tests for POST /scraped-jobs/tour-demo"""
 
     endpoint = "/scraped-jobs/tour-demo"
 
-    def test_creates_scraped_job_with_tour_data(self, regular_user_client, test_regular_user, session) -> None:
+    def test_creates_scraped_job_with_tour_data(self, test_regular_user: FixtureUser, session: Session) -> None:
         """Should return a ScrapedJob and create linked JobEmail, UserQualification, and JobRating."""
 
-        response = regular_user_client.post(self.endpoint)
+        response = test_regular_user.client.post(self.endpoint)
 
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
@@ -194,11 +83,11 @@ class TestCreateTourDemo:
         email_id = data["emails"][0]
 
         # Verify DB state
-        scraped_job = session.query(models.ScrapedJob).filter_by(id=scraped_job_id).first()
+        scraped_job = self.get_by_id(session, models.ScrapedJob, scraped_job_id)
         assert scraped_job is not None
         assert scraped_job.is_tour is True
 
-        email = session.query(models.JobEmail).filter_by(id=email_id).first()
+        email = self.get_by_id(session, models.JobEmail, email_id)
         assert email is not None
         assert email.is_tour is True
 
@@ -206,11 +95,11 @@ class TestCreateTourDemo:
         assert rating is not None
         assert rating.is_tour is True
 
-        qual = session.query(models.UserQualification).filter_by(id=rating.user_qualification_id).first()
+        qual = self.get_by_id(session, models.UserQualification, rating.user_qualification_id)
         assert qual is not None
         assert qual.is_tour is True
 
-    def test_unauthenticated(self, client) -> None:
+    def test_unauthenticated(self, client: TestClient) -> None:
         """Should return 401 for unauthenticated requests."""
 
         response = client.post(self.endpoint)
@@ -220,18 +109,18 @@ class TestCreateTourDemo:
 # ------------------------------------------------- CLEAR ALL -------------------------------------------------------
 
 
-class TestClearAllTourData:
+class TestClearAllTourData(BaseTest):
     """Tests for POST /tour/clear-all"""
 
     endpoint = "/tour/clear-all"
 
-    def test_deletes_all_tour_entities_for_user(self, regular_user_client, test_regular_user, session) -> None:
+    def test_deletes_all_tour_entities_for_user(self, test_regular_user: FixtureUser, session: Session) -> None:
         """Should delete all is_tour=True rows owned by the current user."""
 
-        _create_tour_entities(session, test_regular_user)
+        _create_tour_entities(test_regular_user, session)
         uid = test_regular_user.id
 
-        response = regular_user_client.post(self.endpoint)
+        response = test_regular_user.client.post(self.endpoint)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
         session.expire_all()
@@ -246,37 +135,39 @@ class TestClearAllTourData:
         assert session.query(models.SpeculativeApplication).filter_by(owner_id=uid, is_tour=True).count() == 0
         assert session.query(models.File).filter_by(owner_id=uid, is_tour=True).count() == 0
 
-    def test_does_not_delete_non_tour_entities(self, regular_user_client, test_regular_user, session) -> None:
+    def test_does_not_delete_non_tour_entities(self, test_regular_user: FixtureUser, session: Session) -> None:
         """Should leave is_tour=False rows untouched."""
 
-        non_tour = _create_non_tour_entities(session, test_regular_user)
+        non_tour = _create_non_tour_entities(test_regular_user)
         uid = test_regular_user.id
 
-        regular_user_client.post(self.endpoint)
+        test_regular_user.client.post(self.endpoint)
         session.expire_all()
 
         assert session.query(models.ScrapedJob).filter_by(id=non_tour["scraped_job"].id).first() is not None
         assert session.query(models.Company).filter_by(id=non_tour["company"].id).first() is not None
         assert session.query(models.ScrapedJob).filter_by(owner_id=uid, is_tour=False).count() == 1
 
-    def test_does_not_delete_another_users_tour_data(self, regular_user_client, test_admin_user, session) -> None:
+    def test_does_not_delete_another_users_tour_data(
+        self, test_admin_user: FixtureUser, session: Session, test_regular_user: FixtureUser
+    ) -> None:
         """Should only delete tour data belonging to the authenticated user."""
 
-        admin_entities = _create_tour_entities(session, test_admin_user)
+        admin_entities = _create_tour_entities(test_admin_user, session)
 
-        regular_user_client.post(self.endpoint)
+        test_regular_user.client.post(self.endpoint)
         session.expire_all()
 
-        assert session.query(models.ScrapedJob).filter_by(id=admin_entities["scraped_job"].id).first() is not None
-        assert session.query(models.JobEmail).filter_by(id=admin_entities["email"].id).first() is not None
+        assert self.get_by_id(session, models.ScrapedJob, admin_entities["scraped_job"].id) is not None
+        assert self.get_by_id(session, models.JobEmail, admin_entities["email"].id) is not None
 
-    def test_idempotent_when_no_tour_data(self, regular_user_client) -> None:
+    def test_idempotent_when_no_tour_data(self, test_regular_user: FixtureUser) -> None:
         """Should return 204 even when there is nothing to delete."""
 
-        response = regular_user_client.post(self.endpoint)
+        response = test_regular_user.client.post(self.endpoint)
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    def test_unauthenticated(self, client) -> None:
+    def test_unauthenticated(self, client: TestClient) -> None:
         """Should return 401 for unauthenticated requests."""
 
         response = client.post(self.endpoint)

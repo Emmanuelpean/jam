@@ -12,14 +12,14 @@ Tour step order (app-overview):
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 
-from base_test import BaseTest
+from frontend_base_test import BaseTest
 
 TOUR_ID = "app-overview"
 TOTAL_STEPS = 6
 
 
 class TestAppOverviewTour(BaseTest):
-    user_index = 0
+    user_fixture = "test_regular_user"
     page_url = "dashboard"
 
     def setup_function(self, request) -> None:

@@ -1,8 +1,6 @@
 """Tests for the User Settings Page"""
 
-import time
-
-from base_test import BaseTest
+from frontend_base_test import BaseTest
 
 
 class TestPreferenceSettingsPage(BaseTest):
@@ -25,12 +23,10 @@ class TestPreferenceSettingsPage(BaseTest):
         """Test changing the theme settings"""
 
         self.user_settings_utils.get_theme("raspberry").click()
-        time.sleep(0.1)
-        assert self.db_user.preferences.theme == "raspberry"
+        self.poll_db_value(lambda: self.db_user.preferences.theme, "raspberry")
 
     def test_toggle_dark_model(self) -> None:
         """Toggle Dark Model"""
 
         self.user_settings_utils.dark_mode_btn.click()
-        time.sleep(0.1)
-        assert self.db_user.preferences.dark_mode
+        self.poll_db_value(lambda: self.db_user.preferences.dark_mode, "dark")

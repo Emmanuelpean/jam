@@ -234,7 +234,7 @@ export const PremiumTab = (): JSX.Element => {
 	const statusDisplay: SubscriptionStatusDisplay = getSubscriptionStatusDisplay(
 		currentUser?.stripe_details.subscription_status ?? null,
 		currentUser?.stripe_details.trial_end_date ?? null,
-		config?.support_email,
+		config?.support_email ?? "",
 		currentUser?.premium ?? null
 	);
 	const hasActiveSubscription: boolean = ["active", "trialing", "paused"].includes(
@@ -452,7 +452,7 @@ export const PremiumTab = (): JSX.Element => {
 							<h6 className="premium-feature-section-title">Supported job boards:</h6>
 							<div className="job-board-badges">
 								{jobBoards.map((board: JobBoard): JSX.Element => {
-									const email: string = config?.platform_sender_emails?.[board.emailKey];
+									const email: string = config?.platform_sender_emails?.[board.emailKey] ?? "";
 									return (
 										<Tooltip
 											key={board.name}

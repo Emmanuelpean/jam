@@ -4,14 +4,12 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
+from sqlalchemy.orm import Session
 
-from dashboard_base import DashboardTestBase
-
-MAP_PANEL = "map-jobs-panel"  # CSS class of the side panel that lists a location's jobs
-MARKER = "path.leaflet-interactive"  # CircleMarker rendered for each location
+from helpers.dashboard_utils import DashboardUtils
 
 
-class TestMapWidget(DashboardTestBase):
+class TestMapWidget(DashboardUtils):
     """Tests for the Map widget (Jobs by Location).
 
     Regression cover for the side panel: clicking a location marker must open the
@@ -20,23 +18,21 @@ class TestMapWidget(DashboardTestBase):
     at its own location, not covered by the map.
     """
 
-    user_index = 0
+    user_fixture = "test_regular_user"
 
     def setup_function(self, request) -> None:
         self._set_dashboard_widgets({"type": "map", "metric": "job_count"})
         self.login()
 
-    # --------------------------------------------------- HELPERS ---------------------------------------------------
-
-    def _markers(self):
-        return self.driver.find_elements(By.CSS_SELECTOR, MARKER)
-
     # ---------------------------------------------------- TESTS ----------------------------------------------------
 
-    def test_clicking_marker_opens_visible_job_panel(self) -> None:
+    def test_clicking_marker_opens_visible_job_panel(self, session: Session) -> None:
         """Clicking a location marker opens the side panel listing that location's jobs,
         and the panel is visible on top of the map (not hidden behind it)."""
-        self._create_geolocated_job("London Engineer", "London", "United Kingdom", 51.5074, -0.1278)
+        geolocation = self.create_geolocation(
+            session, city="London", country="United Kingdom", latitude=51.5074, longitude=-0.1278
+        )
+        self.user.create_job(title="London Engineer", location="London", geolocation=geolocation)
         self._reload()
 
         # Wait for the marker to be drawn, then click it.
@@ -45,7 +41,7 @@ class TestMapWidget(DashboardTestBase):
         ActionChains(self.driver).move_to_element(marker).click().perform()
 
         # The side panel must appear and list the job.
-        panel = WebDriverWait(self.driver, 10).until(ec.visibility_of_element_located((By.CLASS_NAME, MAP_PANEL)))
+        panel = WebDriverWait(self.driver, 10).until(ec.visibility_of_element_located((By.CLASS_NAME, self.MAP_PANEL)))
         assert "London Engineer" in panel.text
 
         # Regression guard: the panel must be the top-most element at its own centre,

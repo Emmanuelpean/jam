@@ -1,10 +1,18 @@
 import { BaseOut, GeoLocationData, OwnedOut } from "./Base";
 
+export enum ProcessingStatus {
+	PENDING = "pending",
+	COMPLETED = "completed",
+	FAILED = "failed",
+	SKIPPED = "skipped",
+	FILTERED = "filtered",
+}
+
 export interface ServiceLog extends BaseOut {
 	run_datetime: Date;
 	run_duration: number | null;
-	is_success: boolean | null;
-	error_message: string | null;
+	is_finished: boolean;
+	is_success: boolean;
 }
 
 // ---------------------------------------------------- JOB SCRAPING ---------------------------------------------------
@@ -15,7 +23,6 @@ export interface JobScrapingServiceLogData extends ServiceLog {
 	emails: number[];
 	scraped_jobs: ScrapedJobData[];
 	platform_stats: PlatformStat[];
-	errors: ServiceError[];
 	job_to_process_n: number;
 	job_scrape_succeeded_n: number;
 	job_scrape_failed_n: number;
@@ -25,7 +32,6 @@ export interface JobScrapingServiceLogData extends ServiceLog {
 	email_found_n: number;
 	email_saved_n: number;
 	email_skipped_n: number;
-	service_errors: ServiceError[];
 }
 
 export interface JobRatingServiceLogData extends ServiceLog {
@@ -51,27 +57,29 @@ export interface PlatformStat {
 	service_log_id: number;
 }
 
-export interface ServiceError {
-	id: number;
+export interface ServiceError extends BaseOut {
 	error_type: string;
 	message: string;
+	context: Record<string, unknown> | null;
 	traceback: string;
-	service_log_id: number;
+	is_acknowledged: boolean;
+	level: string | null;
+	scraped_job_id: number | null;
+	job_rating_id: number | null;
+	job_email_scraping_service_log_id: number | null;
+	job_rating_service_log_id: number | null;
+	provider_monitoring_service_log_id: number | null;
 }
 
 // ---------------------------------------------------- SCRAPED JOB ----------------------------------------------------
 
 export interface ScrapedJobData extends OwnedOut {
 	external_job_id: string;
-	is_scraped: boolean;
-	is_failed: boolean;
-	is_processed: boolean;
-	is_skipped: boolean;
+	status: ProcessingStatus;
 	skip_reason: string | null;
-	scrape_error: Array<{ datetime: string; error: string }>;
 	scrape_datetime: Date;
-	retry_count: number;
-	next_retry_at: string | null;
+	scraping_retry_count: number;
+	scraping_next_retry_at: string | null;
 	is_active: boolean;
 	is_imported: boolean;
 	title: string | null;
@@ -90,6 +98,7 @@ export interface ScrapedJobData extends OwnedOut {
 	emails: number[];
 	job_rating: JobRatingData | null;
 	geolocation: GeoLocationData | null;
+	scraping_errors: ServiceError[];
 	read_at: Date | null;
 }
 
@@ -105,16 +114,17 @@ export interface JobRatingData extends BaseOut {
 	educational_score: number | null;
 	interest_score: number | null;
 	feedback: string | null;
-	is_success: boolean | null;
-	is_skipped: boolean | null;
+	status: ProcessingStatus;
 	skip_reason: string | null;
-	error: string | null;
 	scraped_job_id: number | null;
 	user_qualification_id: number | null;
 	job_prompt_template_id: number | null;
 	system_prompt_id: number | null;
 	job_prompt: string | null;
 	notes: string[];
+	rating_retry_count: number;
+	rating_next_retry_at: string | null;
+	rating_errors: ServiceError[];
 }
 
 export interface ScrapingFilterTransform {
@@ -166,7 +176,7 @@ export interface ForwardingConfirmationLinkData extends OwnedOut {
 	is_used: boolean;
 }
 
-// -------------------------------------------- EXTERNAL SERVICE MONITORING --------------------------------------------
+// ------------------------------------------------ PROVIDER MONITORING ------------------------------------------------
 
 export interface AnthropicDailyUsageData extends BaseOut {
 	date: string;

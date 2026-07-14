@@ -5,12 +5,12 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.wait import WebDriverWait
 
 from app import models
-from helpers.base_utils import BaseUtils
+from helpers.jam_test_utils import JamTestUtils
 from helpers.formatting import format_field
-from select_utils import Select
+from helpers.select_utils import Select
 
 
-class DataModalUtils(BaseUtils):
+class DataModalUtils(JamTestUtils):
     """Base class for testing data modals"""
 
     def __init__(self, entry_type: str, **kwargs):
@@ -28,11 +28,6 @@ class DataModalUtils(BaseUtils):
     def add_contact_button(self) -> WebElement:
         """+ button that opens the inline person/contact form inside this modal."""
         return self.get_element("add-button-contact")
-
-    @property
-    def add_keyword_button(self) -> WebElement:
-        """+ button that opens the inline keyword form inside this modal."""
-        return self.get_element("add-button-keyword")
 
     # ------------------------------------------------ HELPER FUNCTIONS ------------------------------------------------
 
@@ -385,7 +380,7 @@ class DataModalUtils(BaseUtils):
                 entry.recruitment_company.name.upper() if entry.recruitment_company else None,
             )
         else:
-            expected += format_field("Source", entry.source_type.capitalize() if entry.source_type else None)
+            expected += format_field("Source", entry.source_type.upper() if entry.source_type else None)
 
         url = entry.url.replace("https://", "") if entry.url else None
         expected += format_field("Job URL", url)
@@ -439,7 +434,7 @@ class DataModalUtils(BaseUtils):
                 expected += "Cover Letter\n"
 
         expected += "Notes\n"
-        expected += format_field(None, entry.application_note if entry.note else None)
+        expected += format_field(None, entry.application_note if entry.application_note else None)
         expected += (
             "Add Interview\n"
             "Date\n"

@@ -31,7 +31,7 @@ def get_pending_confirmation_links(
     entry = (
         db.query(models.ForwardingConfirmationLink)
         .filter(models.ForwardingConfirmationLink.owner_id == current_user.id)
-        .order_by(models.ForwardingConfirmationLink.created_at.desc())
+        .order_by(models.ForwardingConfirmationLink.created_at.desc(), models.ForwardingConfirmationLink.id.desc())
         .first()
     )
     if entry and entry.is_used:

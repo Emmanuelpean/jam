@@ -1,8 +1,6 @@
 """Tests for the Column Configuration sidebar feature"""
 
-import time
-
-from base_test import BaseTest
+from frontend_base_test import BaseTest
 
 # Columns visible by default (passed as `columns` prop in JobsPage.tsx)
 DEFAULT_VISIBLE_JOB_COLUMNS = [
@@ -45,81 +43,57 @@ class TestColumnConfig(BaseTest):
     page_url = "jobs"
 
     def setup_function(self, request) -> None:
-        request.getfixturevalue("test_jobs")
+        company = self.user.create_company()
+        for _ in range(3):
+            self.user.create_job(company_id=company.id)
         self.login()
-
-    # -------------------------------------------------- Helpers --------------------------------------------------
-
-    def is_column_config_sidebar_open(self) -> bool:
-        """Return True if the column config sidebar has the 'open' class"""
-
-        sidebar = self.get_element("column-config-sidebar", enabled=False)
-        return "open" in sidebar.get_attribute("class")
-
-    def open_column_config_sidebar(self) -> None:
-        """Open the column config sidebar via the gear button"""
-        self.get_element("column-config-toggle-btn").click()
-        self.get_element("col-toggle-title")  # wait for sidebar content to appear
-
-    def get_visible_table_columns(self) -> list[str]:
-        """Return column keys currently shown in the table header"""
-        from selenium.webdriver.common.by import By
-
-        headers = self.driver.find_elements(By.XPATH, "//*[@id[starts-with(., 'table-header-')]]")
-        return [h.get_attribute("id").removeprefix("table-header-") for h in headers]
-
-    def toggle_column(self, key: str) -> None:
-        """Toggle a column's visibility checkbox and wait for the async save"""
-        self.get_element(f"col-toggle-{key}").click()
-        time.sleep(0.5)
-
-    # -------------------------------------------------- Tests --------------------------------------------------
 
     def test_open_and_close_sidebar(self) -> None:
         """Gear button opens the sidebar; the close button dismisses it"""
-        assert not self.is_column_config_sidebar_open()
+        assert not self.column_config_utils.is_open()
 
-        self.open_column_config_sidebar()
-        assert self.is_column_config_sidebar_open()
+        self.column_config_utils.open()
+        assert self.column_config_utils.is_open()
 
-        self.get_element("column-config-close-btn").click()
-        time.sleep(0.5)
-        assert not self.is_column_config_sidebar_open()
+        self.column_config_utils.close()
+        assert not self.column_config_utils.is_open()
 
     def test_all_columns_listed_in_sidebar(self) -> None:
         """All registered job columns (visible and hidden) appear as toggles in the sidebar"""
-        self.open_column_config_sidebar()
+        self.column_config_utils.open()
         for key in ALL_JOB_COLUMNS:
             assert self.check_element_exists(f"col-toggle-{key}"), f"Toggle not found for column key '{key}'"
 
     def test_default_visible_columns_checked(self) -> None:
         """Default visible columns are checked; non-default columns are unchecked"""
-        self.open_column_config_sidebar()
+        self.column_config_utils.open()
         for key in DEFAULT_VISIBLE_JOB_COLUMNS:
-            checkbox = self.get_element(f"col-toggle-{key}")
-            assert checkbox.is_selected(), f"Expected column '{key}' to be checked by default"
+            assert self.column_config_utils.column_toggle(
+                key
+            ).is_selected(), f"Expected column '{key}' to be checked by default"
         for key in set(ALL_JOB_COLUMNS) - set(DEFAULT_VISIBLE_JOB_COLUMNS):
-            checkbox = self.get_element(f"col-toggle-{key}")
-            assert not checkbox.is_selected(), f"Expected column '{key}' to be unchecked by default"
+            assert not self.column_config_utils.column_toggle(
+                key
+            ).is_selected(), f"Expected column '{key}' to be unchecked by default"
 
     def test_reset_button_enabled_after_hiding_column(self) -> None:
         """Reset button becomes enabled once at least one column is hidden"""
-        self.open_column_config_sidebar()
-        self.toggle_column("url")
+        self.column_config_utils.open()
+        self.column_config_utils.toggle_column("url")
 
-        assert self.get_element("column-config-reset-btn").is_enabled()
+        assert self.column_config_utils.reset_button.is_enabled()
 
     def test_hide_column_removes_table_header(self) -> None:
         """Unchecking a default-visible column removes its header from the table"""
-        self.open_column_config_sidebar()
-        self.toggle_column("application_status")
+        self.column_config_utils.open()
+        self.column_config_utils.toggle_column("application_status")
 
-        assert "application_status" not in self.get_visible_table_columns()
+        assert "application_status" not in self.column_config_utils.visible_table_columns()
 
     def test_hide_column_persists_to_db(self) -> None:
         """Hidden column list is saved to the user's preferences"""
-        self.open_column_config_sidebar()
-        self.toggle_column("application_status")
+        self.column_config_utils.open()
+        self.column_config_utils.toggle_column("application_status")
 
         saved = self.db_user.preferences.table_columns
         assert saved is not None, "table_columns preference was not saved"
@@ -130,36 +104,35 @@ class TestColumnConfig(BaseTest):
 
     def test_show_hidden_column_restores_table_header(self) -> None:
         """Re-checking a hidden column restores its header in the table"""
-        self.open_column_config_sidebar()
-        self.toggle_column("application_status")
-        assert "application_status" not in self.get_visible_table_columns()
+        self.column_config_utils.open()
+        self.column_config_utils.toggle_column("application_status")
+        assert "application_status" not in self.column_config_utils.visible_table_columns()
 
-        self.toggle_column("application_status")
-        assert "application_status" in self.get_visible_table_columns()
+        self.column_config_utils.toggle_column("application_status")
+        assert "application_status" in self.column_config_utils.visible_table_columns()
 
     def test_show_hidden_column_updates_db(self) -> None:
         """Re-enabling a hidden column adds it back to saved preferences"""
-        self.open_column_config_sidebar()
-        self.toggle_column("application_status")
+        self.column_config_utils.open()
+        self.column_config_utils.toggle_column("application_status")
         assert "application_status" not in self.db_user.preferences.table_columns["job"]
 
-        self.toggle_column("application_status")
+        self.column_config_utils.toggle_column("application_status")
         assert "application_status" in self.db_user.preferences.table_columns["job"]
 
     def test_reset_to_defaults_restores_all_columns(self) -> None:
         """Reset to Defaults restores default columns and clears the DB preference"""
-        self.open_column_config_sidebar()
-        self.toggle_column("application_status")
-        self.toggle_column("url")
+        self.column_config_utils.open()
+        self.column_config_utils.toggle_column("application_status")
+        self.column_config_utils.toggle_column("url")
 
-        assert "application_status" not in self.get_visible_table_columns()
-        assert "url" not in self.get_visible_table_columns()
+        assert "application_status" not in self.column_config_utils.visible_table_columns()
+        assert "url" not in self.column_config_utils.visible_table_columns()
 
-        self.get_element("column-config-reset-btn").click()
-        time.sleep(0.5)
+        self.column_config_utils.reset_to_defaults()
 
         # Sidebar closes after reset — verify table directly
-        headers = self.get_visible_table_columns()
+        headers = self.column_config_utils.visible_table_columns()
         for key in DEFAULT_VISIBLE_JOB_COLUMNS:
             assert key in headers, f"Column '{key}' should be visible after reset"
 
@@ -168,23 +141,23 @@ class TestColumnConfig(BaseTest):
 
     def test_hidden_columns_persist_across_reload(self) -> None:
         """Hidden columns are restored from preferences on page reload"""
-        self.open_column_config_sidebar()
-        self.toggle_column("application_status")
-        self.toggle_column("url")
+        self.column_config_utils.open()
+        self.column_config_utils.toggle_column("application_status")
+        self.column_config_utils.toggle_column("url")
 
         self.login()  # reloads the page and re-fetches user preferences
 
-        headers = self.get_visible_table_columns()
+        headers = self.column_config_utils.visible_table_columns()
         assert "application_status" not in headers, "'application_status' should still be hidden after reload"
         assert "url" not in headers, "'url' should still be hidden after reload"
         assert "title" in headers, "'title' should still be visible after reload"
 
     def test_multiple_hidden_columns_all_saved(self) -> None:
         """Hiding multiple columns saves all of them to preferences"""
-        self.open_column_config_sidebar()
-        self.toggle_column("application_status")
-        self.toggle_column("url")
-        self.toggle_column("salary_min")
+        self.column_config_utils.open()
+        self.column_config_utils.toggle_column("application_status")
+        self.column_config_utils.toggle_column("url")
+        self.column_config_utils.toggle_column("salary_min")
 
         saved = self.db_user.preferences.table_columns["job"]
         assert "application_status" not in saved
@@ -194,22 +167,20 @@ class TestColumnConfig(BaseTest):
 
     def test_sort_direction_toggle(self) -> None:
         """Sort direction button toggles between Asc and Desc"""
-        self.open_column_config_sidebar()
-        initial_text = self.get_element("column-config-sort-direction-btn").text
+        self.column_config_utils.open()
+        initial_text = self.column_config_utils.sort_direction_button.text
 
-        self.get_element("column-config-sort-direction-btn").click()
-        time.sleep(0.3)
+        self.column_config_utils.toggle_sort_direction()
 
-        new_text = self.get_element("column-config-sort-direction-btn").text
+        new_text = self.column_config_utils.sort_direction_button.text
         assert initial_text != new_text, "Sort direction label should change after clicking"
 
     def test_sort_direction_persists_to_db(self) -> None:
         """Changing sort direction saves it to the user's table_sort preference"""
-        self.open_column_config_sidebar()
-        initial_text = self.get_element("column-config-sort-direction-btn").text
+        self.column_config_utils.open()
+        initial_text = self.column_config_utils.sort_direction_button.text
 
-        self.get_element("column-config-sort-direction-btn").click()
-        time.sleep(0.5)
+        self.column_config_utils.toggle_sort_direction()
 
         saved_sort = self.db_user.preferences.table_sort
         assert saved_sort is not None, "table_sort preference was not saved"

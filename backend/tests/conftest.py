@@ -5,34 +5,34 @@ Fixtures are organised in the tests/fixtures/ directory:
 - database.py: Database session and engine fixtures
 - clients.py: API test client fixtures
 - users.py: User-related fixtures
-- test_data.py: Test data fixtures for various models
+- others.py: Test data fixtures for various models
 
 The CRUDTestBase class is in tests/utils/crud_test_base.py
 """
 
-import datetime as dt
 import os
-from typing import Any, Type
-from unittest.mock import MagicMock, patch
+from typing import Generic, Type, TypeVar
+from unittest.mock import patch
 
 import pytest
 from pydantic import BaseModel
 from requests import Response
+from sqlalchemy.orm import Session
 from starlette import status
 from starlette.testclient import TestClient
 
 from app import models
-from tests.utils import test_data as td
-from tests.utils.test_data.geolocation import MOCK_GEOCODING_RESPONSES
+from tests.base_test import BaseTest
+from tests.fixtures.users import FixtureUser
 
 # Load fixtures from separate modules
 pytest_plugins = [
     "tests.fixtures.database",
     "tests.fixtures.clients",
     "tests.fixtures.users",
-    "tests.fixtures.test_data",
-    "tests.fixtures.job_scraping",
-    "tests.fixtures.job_rating",
+    "tests.fixtures.others",
+    "tests.fixtures.emails",
+    "tests.fixtures.requests",
 ]
 
 
@@ -40,9 +40,22 @@ pytest_plugins = [
 
 
 @pytest.fixture(autouse=True)
-def enable_test_mode():
-    """Force test_mode=True for all tests so emails are intercepted and test-only routes are active."""
+def disable_test_mode():
+    """Autouse default: backend tests run with test_mode=False so external boundaries go through the
+    real code path and are exercised via the mock fixtures. Without this, CI (which sets TEST_MODE=true)
+    would short-circuit test_mode-gated code (e.g. geolocation serving canned data instead of hitting
+    the mocked requests.get). Individual tests opt back in via enable_test_mode."""
 
+    with patch("app.config.settings.test_mode", False):
+        yield
+
+
+@pytest.fixture
+def enable_test_mode(disable_test_mode):
+    """Opt-in: force test_mode=True for tests that exercise a test_mode-gated feature. Depends on
+    disable_test_mode so this patch is applied last and wins over the autouse default."""
+
+    _ = disable_test_mode
     with patch("app.config.settings.test_mode", True):
         yield
 
@@ -53,29 +66,6 @@ def mock_captcha_verification():
 
     with patch("app.core.routers.auth.verify_captcha_token", return_value=True):
         yield
-
-
-@pytest.fixture(autouse=True)
-def mock_nominatim_get():
-    """Auto-mock Nominatim HTTP calls using MOCK_GEOCODING_RESPONSES.
-    Known queries return a real-shaped Nominatim response; unknown queries return []
-    which causes call_geocoding_api to raise ValueError."""
-
-    def side_effect(url, **kwargs):
-        """Mock the requests.get call to Nominatim."""
-        _ = url
-        params = kwargs.get("params", {})
-        query = params.get("q")
-        mock_response = MagicMock()
-        mock_response.raise_for_status = MagicMock()
-        mock_response.json.return_value = MOCK_GEOCODING_RESPONSES.get(query, [])
-        return mock_response
-
-    with (
-        patch("app.geolocation.geolocation.requests.get", side_effect=side_effect) as mock,
-        patch("app.geolocation.geolocation.time.sleep"),
-    ):
-        yield mock
 
 
 # -------------------------------------------------------- UTILS -------------------------------------------------------
@@ -94,10 +84,7 @@ def open_file(filepath: str) -> str:
 def pytest_configure(config) -> None:
     """Configure pytest to add custom markers."""
 
-    config.addinivalue_line(
-        "markers",
-        "requires_actions(*actions): mark test as requiring certain CRUD actions",
-    )
+    config.addinivalue_line("markers", "requires_actions(*actions): mark test as requiring certain CRUD actions")
 
 
 def pytest_collection_modifyitems(config, items) -> None:
@@ -127,411 +114,299 @@ def assert_ownership(item: list | dict, owner_id: int) -> None:
             assert_ownership(subitem, owner_id)
 
 
-class CRUDTestBase:
+EntryT = TypeVar("EntryT", bound=models.CommonBase)
+
+
+class CRUDTestBase(BaseTest, Generic[EntryT]):
     """Base class for CRUD tests on FastAPI routes.
+
+    Instead of relying on shared test-data fixtures, each subclass creates only the entries it
+    needs per test by overriding the creation hooks below.
 
     Subclasses must override:
     - endpoint: str - base URL path for the resource (e.g. "/aggregators")
-    - create_schema: Pydantic model class for creation validation (e.g. schemas.AggregatorCreate)
     - out_schema: Pydantic model class for output validation (e.g. schemas.AggregatorOut)
-    - test_data_ref: str - name of pytest fixture providing list of test objects
-    - update_data: dict - example data for updating an existing object
-    - create_data: list[dict] - example data for creating new objects
-    - required_fixture: str or list[str] - name(s) of pytest fixture(s) for the post operations
-    - get_unauthorised_fixture: str - name of pytest fixture providing data for access tests with incorrect ownership
-    - unauthorised_data_fixture: str - name of pytest fixture providing data for creation tests with incorrect ownership
+    - update_data: dict - fields to change when updating an existing entry (no "id")
+    - create_entry(session, owner, **overrides): create one persisted entry owned by `owner`
+      (needed for the get/put/delete actions)
+    - create_payload(session, owner): build a valid POST body for creating an entry owned by
+      `owner`, creating any related entries as needed (needed for the "post" action)
+
+    Subclasses may override:
+    - create_schema: Pydantic model class for creation validation
+    - create_unauthorised_payload(session, owner, other): a POST body linking to an entry owned by
+      `other`, to assert unowned links are rejected; return None (default) to skip that test
     - admin_only: bool - if True, only admin users can access the endpoint
-    - actions_to_test: list[str] - which CRUD actions to test (any subset of ["get", "post", "put", "delete"])"""
+    - actions_to_test: list[str] - which CRUD actions to test (any subset of ["get", "post", "put", "delete"])
+    - too_long_create_data: dict - a POST body with an over-length field, to assert 422
+    - n_entries: int - how many entries to seed for the get-all tests"""
 
     endpoint: str = ""
     create_schema: Type[BaseModel] | None = None
     out_schema: Type[BaseModel] | None = None
-    test_data_ref: str = ""
     update_data: dict[str, str | int] = None
-    create_data: list[dict] = None
-    required_fixture: str = None
-    get_unauthorised_fixture: str = None
-    unauthorised_data_fixture = None
     admin_only: bool = False
     actions_to_test: list[str] = ["get", "post", "put", "delete"]
     too_long_create_data: dict | None = None
+    n_entries: int = 2
 
-    def check_output(
-        self,
-        test_data: Any,
-        response_data: list[dict] | dict,
-    ):
-        """Check that the output of a test matches the test data."""
-        if isinstance(test_data, list) and isinstance(response_data, list):
-            assert len(test_data) == len(response_data)
-            for d1, d2 in zip(test_data, response_data):
-                return self.check_output(d1, d2)
+    # ------------------------------------------------- CREATION HOOKS -------------------------------------------------
 
-        if isinstance(response_data, dict) and self.out_schema is not None:
-            response_data = self.out_schema(**response_data)
+    def create_entry(self, session: Session, owner: FixtureUser, **overrides) -> EntryT:
+        """Create and return one persisted entry owned by `owner`. Override in subclasses."""
+        raise NotImplementedError(f"{type(self).__name__} must implement create_entry")
 
-        if isinstance(test_data, dict):
-            items = test_data.items()
-        else:
-            items = vars(test_data).items()
+    def create_payload(self, session: Session, owner: FixtureUser) -> dict:
+        """Return a valid POST body for creating an entry owned by `owner`, creating any related
+        entries it references. Override in subclasses that test the "post" action."""
+        raise NotImplementedError(f"{type(self).__name__} must implement create_payload")
 
-        for key, value in items:
-            if key[0] != "_" and key in response_data:
-                response_value = getattr(response_data, key)
-                if isinstance(value, models.Base) or isinstance(value, list):
-                    self.check_output(value, response_value)
-                elif key == "date" and isinstance(value, str):
-                    if isinstance(response_value, dt.datetime):
-                        parsed_value = dt.datetime.fromisoformat(value)
-                        if response_value.tzinfo is not None and parsed_value.tzinfo is None:
-                            parsed_value = parsed_value.replace(tzinfo=dt.timezone.utc)
-                        elif response_value.tzinfo is None and parsed_value.tzinfo is not None:
-                            parsed_value = parsed_value.replace(tzinfo=None)
-                        assert parsed_value == response_value
-                    else:
-                        assert value == response_value
-                else:
-                    try:
-                        assert value == response_value
-                    except Exception:
-                        print(value)
-                        print(response_value)
-                        raise AssertionError
-
+    def create_unauthorised_payload(self, session: Session, owner: FixtureUser, other: FixtureUser) -> dict | None:
+        """Return a POST body that links to an entry owned by `other`, so the endpoint can be
+        checked to reject unowned links. Return None (default) to skip that test."""
         return None
+
+    def create_entries(self, session: Session, owner: FixtureUser) -> list[EntryT]:
+        """Create `n_entries` entries owned by `owner` for the get-all tests."""
+        return [self.create_entry(session, owner) for _ in range(self.n_entries)]
 
     # -------------------------------------------------- CRUD METHODS --------------------------------------------------
 
-    def get_all(self, client) -> Response:
+    def get_all(self, client: TestClient) -> Response:
         """Helper method to get all items from the endpoint."""
         return client.get(self.endpoint)
 
-    def get_bulk(self, client, item_ids) -> Response:
+    def get_bulk(self, client: TestClient, item_ids: list[int]) -> Response:
         """Helper method to get bulk items from the endpoint."""
         strings = ["ids=" + str(i) for i in item_ids]
         return client.get(f"{self.endpoint}/?{'&'.join(strings)}")
 
-    def get_one(self, client, item_id) -> Response:
+    def get_one(self, client: TestClient, item_id: int) -> Response:
         """Helper method to get one item from the endpoint."""
         return client.get(f"{self.endpoint}/{item_id}")
 
-    def post(self, client, data) -> Response:
+    def post(self, client: TestClient, data: dict) -> Response:
         """Helper method to post a new item to the endpoint."""
         return client.post(self.endpoint, json=data)
 
-    def put(self, client: TestClient, item_id: int, data) -> Response:
+    def put(self, client: TestClient, item_id: int, data: dict) -> Response:
         """Helper method to update an existing item in the endpoint."""
         return client.put(f"{self.endpoint}/{item_id}", json=data)
 
-    def delete(self, client, item_id) -> Response:
+    def delete(self, client: TestClient, item_id: int) -> Response:
         """Helper method to delete an existing item from the endpoint."""
         return client.delete(f"{self.endpoint}/{item_id}")
 
     # ----------------------------------------------------- CLIENTS ----------------------------------------------------
 
-    def _get_authorised_client(self, authorised_clients) -> TestClient:
-        """Get the appropriate authorised client based on admin_only setting."""
-        if self.admin_only:
-            return authorised_clients[td.ADMIN_USER_INDEX]
-        else:
-            return authorised_clients[td.REGULAR_USER_INDEX]
-
-    def _get_admin_unauthorised_client(self, authorised_clients) -> TestClient:
-        """Get a client that should be denied access."""
-        if self.admin_only:
-            return authorised_clients[td.REGULAR_USER_INDEX]
-        else:
-            return authorised_clients[td.ADMIN_USER_INDEX]
-
-    def _get_admin_authorised_user(self, test_users) -> models.User:
-        """Get the appropriate authorised user based on admin_only setting."""
-        if self.admin_only:
-            return test_users[td.ADMIN_USER_INDEX]
-        else:
-            return test_users[td.REGULAR_USER_INDEX]
-
-    def get_user_data(self, test_users, data: list) -> list:
-        """Get create_data filtered by owner_id based on admin_only setting."""
-        user = self._get_admin_authorised_user(test_users)
-        filtered_data = []
-        for d in data:
-            if isinstance(d, dict):
-                owner_condition = "owner_id" in d and d["owner_id"] == user.id
-            else:
-                owner_condition = hasattr(d, "owner_id") and d.owner_id == user.id
-
-            if not self.admin_only:
-                if owner_condition:
-                    filtered_data.append(d)
-            else:
-                filtered_data.append(d)
-
-        return filtered_data
-
-    @pytest.fixture(autouse=True)
-    def setup_method(self, request) -> None:
-        """Fixture that runs before each test method."""
-        if isinstance(self.required_fixture, list):
-            for fixture in self.required_fixture:
-                request.getfixturevalue(fixture)
+    @pytest.fixture
+    def authorised_user(self, test_regular_user: FixtureUser, test_admin_user: FixtureUser) -> FixtureUser:
+        """The user whose client is used for authorised requests (admin for admin_only endpoints)."""
+        return test_admin_user if self.admin_only else test_regular_user
 
     @pytest.fixture
-    def test_data(self, request, test_users) -> list:
-        """Fixture to get the test data from the specified fixture name."""
-        return self.get_user_data(test_users, request.getfixturevalue(self.test_data_ref))
+    def unauthorised_user(self, test_regular_user: FixtureUser, test_admin_user: FixtureUser) -> FixtureUser:
+        """The user whose client should be denied access (the opposite of authorised_user)."""
+        return test_regular_user if self.admin_only else test_admin_user
 
     # ----------------------------------------------------- GET ALL ----------------------------------------------------
 
     @pytest.mark.requires_actions("get", "get_all")
-    def test_get_all_authorised(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
-        """Test that authorised users can successfully retrieve all items from the endpoint."""
-        client = self._get_authorised_client(authorised_clients)
-        response = self.get_all(client)
+    def test_get_all_authorised(self, session: Session, authorised_user: FixtureUser) -> None:
+        """Test that authorised users can successfully retrieve all items they own from the endpoint."""
+
+        entries = self.create_entries(session, authorised_user)
+        response = self.get_all(authorised_user.client)
         assert response.status_code == status.HTTP_200_OK
-        self.check_output(test_data, response.json())
+        data = response.json()
+        assert len(data) >= len(entries)
+        if data and "id" in data[0]:
+            returned_ids = {item["id"] for item in data}
+            assert {entry.id for entry in entries} <= returned_ids
+            self.check_output(entries[0], next(item for item in data if item["id"] == entries[0].id), self.out_schema)
+        else:
+            self.check_output(entries[0], data[0], self.out_schema)
 
     @pytest.mark.requires_actions("get", "get_all")
-    def test_get_all_unauthenticated(
-        self,
-        client: TestClient,
-        test_data,
-    ) -> None:
+    def test_get_all_unauthenticated(self, client: TestClient) -> None:
         """Test that unauthenticated requests to get all items are rejected."""
         response = self.get_all(client)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.requires_actions("get", "get_all")
-    def test_get_all_non_admin(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
+    def test_get_all_non_admin(self, unauthorised_user: FixtureUser) -> None:
         """Test that non-admin users requests to get all items are rejected for admin_only endpoints."""
         if self.admin_only:
-            client = self._get_admin_unauthorised_client(authorised_clients)
-            response = self.get_all(client)
+            response = self.get_all(unauthorised_user.client)
             assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.requires_actions("get", "get_all")
     def test_get_all_data_only_authorised(
-        self,
-        authorised_clients,
-        request,
+        self, session: Session, authorised_user: FixtureUser, unauthorised_user: FixtureUser
     ) -> None:
         """Test that users only see data they own when retrieving all items (non-admin endpoints only)."""
-        if not self.admin_only and self.get_unauthorised_fixture:
-            owner_id = request.getfixturevalue(self.get_unauthorised_fixture)[1]
-            response = self.get_all(authorised_clients[owner_id - 1])
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            print(data)
-            if data:
-                assert_ownership(data, owner_id)
+        if self.admin_only:
+            return
+        self.create_entry(session, authorised_user)
+        self.create_entry(session, unauthorised_user)
+        response = self.get_all(authorised_user.client)
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data
+        assert_ownership(data, authorised_user.id)
 
     # ----------------------------------------------------- GET ONE ----------------------------------------------------
 
     @pytest.mark.requires_actions("get", "get_one")
-    def test_get_one_success(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
+    def test_get_one_success(self, session: Session, authorised_user: FixtureUser) -> None:
         """Test that authorised users can successfully retrieve a specific item by ID."""
-        client = self._get_authorised_client(authorised_clients)
-        response = self.get_one(client, test_data[0].id)
+        entry = self.create_entry(session, authorised_user)
+        response = self.get_one(authorised_user.client, entry.id)
         assert response.status_code == status.HTTP_200_OK
-        self.check_output(test_data[0], response.json())
+        self.check_output(entry, response.json(), self.out_schema)
 
     @pytest.mark.requires_actions("get", "get_one")
-    def test_get_one_unauthenticated(
-        self,
-        client,
-        test_data,
-    ) -> None:
+    def test_get_one_unauthenticated(self, session: Session, client: TestClient, authorised_user: FixtureUser) -> None:
         """Test that unauthenticated requests to get a specific item are rejected."""
-        response = self.get_one(client, test_data[0].id)
+        entry = self.create_entry(session, authorised_user)
+        response = self.get_one(client, entry.id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.requires_actions("get", "get_one")
     def test_get_one_incorrect_user(
-        self,
-        authorised_clients,
-        test_data,
+        self, session: Session, authorised_user: FixtureUser, unauthorised_user: FixtureUser
     ) -> None:
         """Test that users are denied access to items they don't have permission to view."""
-        client = self._get_admin_unauthorised_client(authorised_clients)
-        response = self.get_one(client, test_data[0].id)
+        entry = self.create_entry(session, authorised_user)
+        response = self.get_one(unauthorised_user.client, entry.id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.requires_actions("get", "get_one")
-    def test_get_one_non_exist(
-        self,
-        authorised_clients,
-    ) -> None:
+    def test_get_one_non_exist(self, authorised_user: FixtureUser) -> None:
         """Test that requests for non-existent items return a 404 error."""
-        client = self._get_authorised_client(authorised_clients)
-        response = self.get_one(client, 0)
+        response = self.get_one(authorised_user.client, 0)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
     @pytest.mark.requires_actions("post")
-    def test_post_success(
-        self,
-        authorised_clients,
-        test_users,
-    ) -> None:
+    def test_post_success(self, session: Session, authorised_user: FixtureUser) -> None:
         """Test that authorised users can successfully create new items."""
-        client = self._get_authorised_client(authorised_clients)
-        for create_data in self.get_user_data(test_users, self.create_data):
-            create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
-            response = self.post(client, create_data)
-            assert response.status_code == status.HTTP_201_CREATED
-            self.check_output(create_data, response.json())
+        payload = self.create_payload(session, authorised_user)
+        response = self.post(authorised_user.client, payload)
+        assert response.status_code == status.HTTP_201_CREATED
+        self.check_output(payload, response.json(), self.out_schema)
 
     @pytest.mark.requires_actions("post")
-    def test_post_unauthenticated(
-        self,
-        client,
-    ) -> None:
+    def test_post_unauthenticated(self, client: TestClient) -> None:
         """Test that unauthenticated requests to create items are rejected."""
         response = self.post(client, {})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.requires_actions("post")
     def test_post_non_admin(
-        self,
-        authorised_clients,
-        test_users,
+        self, session: Session, authorised_user: FixtureUser, unauthorised_user: FixtureUser
     ) -> None:
         """Test that non-admin users are denied access to create items on admin-only endpoints."""
         if self.admin_only:
-            client = self._get_admin_unauthorised_client(authorised_clients)
-            for create_data in self.get_user_data(test_users, self.create_data):
-                create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
-                response = self.post(client, create_data)
-                assert response.status_code == status.HTTP_403_FORBIDDEN
+            payload = self.create_payload(session, authorised_user)
+            response = self.post(unauthorised_user.client, payload)
+            assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @pytest.mark.requires_actions("post")
-    def test_post_field_too_long(self, authorised_clients) -> None:
+    def test_post_field_too_long(self, authorised_user: FixtureUser) -> None:
         """Test that creating an item with a field exceeding its max length returns 422."""
         if self.too_long_create_data is None:
             return
-        client = self._get_authorised_client(authorised_clients)
-        response = self.post(client, self.too_long_create_data)
+        response = self.post(authorised_user.client, self.too_long_create_data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.requires_actions("post")
     def test_post_unowned_link_rejected(
-        self,
-        authorised_clients,
-        request,
+        self, session: Session, authorised_user: FixtureUser, unauthorised_user: FixtureUser
     ) -> None:
-        """Test that creating an entry linking to a related entry the user does not own is rejected (non-admin endpoints)."""
-        if not self.admin_only and self.unauthorised_data_fixture:
-            data, owner_id = request.getfixturevalue(self.unauthorised_data_fixture)[:2]
-            for datum in data:
-                datum = {key: value for key, value in datum.items() if key not in ("id", "owner_id")}
-                response = self.post(authorised_clients[owner_id - 1], datum)
-                assert response.status_code == status.HTTP_403_FORBIDDEN
+        """Test that creating an entry linking to a related entry the user does not own is rejected."""
+
+        payload = self.create_unauthorised_payload(session, authorised_user, unauthorised_user)
+        if payload is None:
+            return
+        response = self.post(authorised_user.client, payload)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     # ------------------------------------------------------- PUT ------------------------------------------------------
 
     @pytest.mark.requires_actions("put")
-    def test_put_success(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
+    def test_put_success(self, session: Session, authorised_user: FixtureUser) -> None:
         """Test that authorised users can successfully update existing items."""
-        client = self._get_authorised_client(authorised_clients)
-        data_id = self.update_data.get("id")
-        assert isinstance(data_id, int)
-        response = self.put(client, data_id, self.update_data)
+
+        entry = self.create_entry(session, authorised_user)
+        response = self.put(authorised_user.client, entry.id, self.update_data)
         assert response.status_code == status.HTTP_200_OK
-        self.check_output(self.update_data, response.json())
+        assert response.json()["id"] == entry.id
+        self.check_output(self.update_data, response.json(), self.out_schema)
 
     @pytest.mark.requires_actions("put")
-    def test_put_empty_body(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
+    def test_put_empty_body(self, session: Session, authorised_user: FixtureUser) -> None:
         """Test that PUT requests with empty request bodies are rejected."""
-        client = self._get_authorised_client(authorised_clients)
-        response = self.put(client, test_data[0].id, {})
+
+        entry = self.create_entry(session, authorised_user)
+        response = self.put(authorised_user.client, entry.id, {})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     @pytest.mark.requires_actions("put")
-    def test_put_non_exist(self, authorised_clients) -> None:
+    def test_put_non_exist(self, authorised_user: FixtureUser) -> None:
         """Test that PUT requests for non-existent items return a 404 error."""
-        client = self._get_authorised_client(authorised_clients)
-        response = self.put(client, 0, {})
+
+        response = self.put(authorised_user.client, 0, {})
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.requires_actions("put")
-    def test_put_unauthenticated(
-        self,
-        client,
-        test_data,
-    ) -> None:
+    def test_put_unauthenticated(self, session: Session, client: TestClient, authorised_user: FixtureUser) -> None:
         """Test that unauthenticated requests to update items are rejected."""
-        response = self.put(client, test_data[0].id, {"name": "Test"})
+
+        entry = self.create_entry(session, authorised_user)
+        response = self.put(client, entry.id, {"name": "Test"})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.requires_actions("put")
-    def test_put_forbidden(self, authorised_clients, test_data) -> None:
+    def test_put_forbidden(
+        self, session: Session, authorised_user: FixtureUser, unauthorised_user: FixtureUser
+    ) -> None:
         """Test that users are denied access to update items they don't have permission to modify."""
-        client = self._get_admin_unauthorised_client(authorised_clients)
-        response = self.put(client, test_data[0].id, {"name": "Test"})
+
+        entry = self.create_entry(session, authorised_user)
+        response = self.put(unauthorised_user.client, entry.id, {"name": "Test"})
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 
     @pytest.mark.requires_actions("delete")
-    def test_delete_success(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
+    def test_delete_success(self, session: Session, authorised_user: FixtureUser) -> None:
         """Test that authorised users can successfully delete existing items."""
-        client = self._get_authorised_client(authorised_clients)
-        response = self.delete(client, test_data[0].id)
+        entry = self.create_entry(session, authorised_user)
+        response = self.delete(authorised_user.client, entry.id)
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
     @pytest.mark.requires_actions("delete")
-    def test_delete_non_exist(
-        self,
-        authorised_clients,
-    ) -> None:
+    def test_delete_non_exist(self, authorised_user: FixtureUser) -> None:
         """Test that DELETE requests for non-existent items return a 404 error."""
-        client = self._get_authorised_client(authorised_clients)
-        response = self.delete(client, 0)
+        response = self.delete(authorised_user.client, 0)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.requires_actions("delete")
-    def test_delete_unauthenticated(
-        self,
-        client,
-        test_data,
-    ) -> None:
+    def test_delete_unauthenticated(self, session: Session, client: TestClient, authorised_user: FixtureUser) -> None:
         """Test that unauthenticated requests to delete items are rejected."""
-        response = self.delete(client, test_data[0].id)
+        entry = self.create_entry(session, authorised_user)
+        response = self.delete(client, entry.id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.requires_actions("delete")
     def test_delete_forbidden(
-        self,
-        authorised_clients,
-        test_data,
+        self, session: Session, authorised_user: FixtureUser, unauthorised_user: FixtureUser
     ) -> None:
         """Test that users are denied access to delete items they don't have permission to remove."""
-        client = self._get_admin_unauthorised_client(authorised_clients)
-        response = self.delete(client, test_data[0].id)
+        entry = self.create_entry(session, authorised_user)
+        response = self.delete(unauthorised_user.client, entry.id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
 

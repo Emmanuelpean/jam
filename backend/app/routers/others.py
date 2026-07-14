@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
 from app import models, database
 from app.base_schemas import COLUMN_LIMITS
@@ -24,13 +25,11 @@ def get_currencies() -> list[dict]:
 config_router = APIRouter(prefix="/config", tags=["config"])
 
 
-def get_demo_credentials(db) -> str:
-    """Get the demo user for testing purposes."""
+def get_demo_credentials(db: Session) -> str:
+    """Return the demo user's email, or an empty string when no demo user exists"""
 
     user = db.query(models.User).filter(models.User.is_demo).first()
-    if not user:
-        raise AssertionError("No demo user found in database.")
-    return user.email
+    return user.email if user else ""
 
 
 @config_router.get("/", response_model=ConfigOut)

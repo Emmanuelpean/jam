@@ -2,53 +2,50 @@
 
 import datetime as dt
 
-from base_test import models, BaseTest
+from sqlalchemy.orm import Session
+
+from tests.fixtures.users import FixtureUser
+from frontend_base_test import models, BaseTest
 
 
 class TestPasswordReset(BaseTest):
 
-    def test_password_reset_within_rate_limit_shows_wait(self, test_regular_user) -> None:
+    def test_password_reset_within_rate_limit_shows_wait(self, test_regular_user: FixtureUser) -> None:
         """Test that requesting a second password reset within the rate limit window shows a 'Please wait' message."""
 
         self.auth_utils.clear_test_emails()
         self.auth_utils.go_to_forgot_password()
         self.auth_utils.set_email(test_regular_user.email)
         self.auth_utils.confirm()
-        self.auth_utils.assert_toast_message("Password reset email sent successfully")
+        self.toast_utils.assert_toast_message("Password reset email sent successfully")
 
         self.auth_utils.go_to_forgot_password()
         self.auth_utils.set_email(test_regular_user.email)
         self.auth_utils.confirm()
-        self.auth_utils.assert_toast_message("Please wait")
+        self.toast_utils.assert_toast_message("Please wait")
 
-    def test_password_reset_after_rate_limit_sends_new_email(self, test_regular_user, session) -> None:
+    def test_password_reset_after_rate_limit_sends_new_email(
+        self, test_regular_user: FixtureUser, session: Session
+    ) -> None:
         """Test that requesting a password reset after the rate limit window sends a new email and shows a success message."""
 
         self.auth_utils.clear_test_emails()
         self.auth_utils.go_to_forgot_password()
         self.auth_utils.set_email(test_regular_user.email)
         self.auth_utils.confirm()
-        self.auth_utils.assert_toast_message("Password reset email sent successfully")
+        self.toast_utils.assert_toast_message("Password reset email sent successfully")
 
-        user = session.query(models.User).filter(models.User.email == test_regular_user.email).first()
-        assert user
-        token = (
-            session.query(models.UserToken)
-            .filter(
-                models.UserToken.owner_id == user.id,
-                models.UserToken.token_type == models.TokenType.PASSWORD_RESET,
-            )
-            .first()
-        )
+        token = test_regular_user.get_token(models.TokenType.PASSWORD_RESET)
+        assert token
         token.created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=3)
         session.commit()
 
         self.auth_utils.go_to_forgot_password()
         self.auth_utils.set_email(test_regular_user.email)
         self.auth_utils.confirm()
-        self.auth_utils.assert_toast_message("Password reset email sent successfully")
+        self.toast_utils.assert_toast_message("Password reset email sent successfully")
 
-    def test_password_reset_flow(self, test_regular_user) -> None:
+    def test_password_reset_flow(self, test_regular_user: FixtureUser) -> None:
         """Test complete password reset flow using test email endpoints"""
 
         test_email = test_regular_user.email
@@ -64,7 +61,7 @@ class TestPasswordReset(BaseTest):
         self.auth_utils.confirm()
 
         # Verify success message
-        self.auth_utils.assert_toast_message("Password reset email sent successfully")
+        self.toast_utils.assert_toast_message("Password reset email sent successfully")
 
         # Get reset link from test endpoint
         reset_url = self.auth_utils.get_reset_link_from_email(test_email)
@@ -78,7 +75,7 @@ class TestPasswordReset(BaseTest):
         self.auth_utils.confirm()
 
         # Verify success message
-        self.auth_utils.assert_toast_message("Password has been reset successfully")
+        self.toast_utils.assert_toast_message("Password has been reset successfully")
 
         # Login with new password
         self.auth_utils.wait_for_login()
@@ -95,7 +92,7 @@ class TestPasswordReset(BaseTest):
         self.auth_utils.set_password("password")
         self.auth_utils.set_confirm_password("password")
         self.auth_utils.confirm()
-        self.auth_utils.assert_toast_message("Invalid or expired password reset token")
+        self.toast_utils.assert_toast_message("Invalid or expired password reset token")
 
     def test_forgot_password_field_limits(self) -> None:
         """Entering email over the limit disables Send Reset Link; reducing re-enables it."""

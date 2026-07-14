@@ -158,7 +158,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 
 	if (isPreviewMode) {
 		defaultColumns = defaultColumns.filter(
-			(col: TableColumn<ScrapedJobData>): boolean => !["url", "is_processed"].includes(col.key)
+			(col: TableColumn<ScrapedJobData>): boolean => !["url", "status"].includes(col.key)
 		);
 	}
 	if (dashboardMode && isTablet) {
@@ -168,7 +168,7 @@ const ScrapedJobsTable: React.FC<ScrapedJobTableProps> = ({
 	}
 	if (dashboardMode && isMobile) {
 		defaultColumns = defaultColumns.filter(
-			(col: TableColumn<ScrapedJobData>): boolean => !["company", "is_processed"].includes(col.key)
+			(col: TableColumn<ScrapedJobData>): boolean => !["company", "status"].includes(col.key)
 		);
 	}
 

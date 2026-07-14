@@ -83,12 +83,26 @@ def create_job_scraping_platform_stats(db, service_logs) -> list[models.JobEmail
     return create_db_entries(db, models.JobEmailScrapingPlatformStat, data)
 
 
-def create_job_scraping_service_errors(db, service_logs) -> list[models.JobEmailScrapingServiceError]:
-    """Create sample Job Scraping service errors"""
+def create_job_scraping_service_errors(db, service_logs) -> list[models.ServiceError]:
+    """Create sample Job Scraping service errors as unified Error rows"""
 
     data = override_properties(job_scraping.JOB_SCRAPING_SERVICE_ERROR_DATA, ("service_log_id", service_logs))
+    for entry in data:
+        entry["job_email_scraping_service_log_id"] = entry.pop("service_log_id")
     print(f"Creating {len(data)} Job Scraping Service Errors...")
-    return create_db_entries(db, models.JobEmailScrapingServiceError, data)
+    return create_db_entries(db, models.ServiceError, data)
+
+
+def create_scraped_job_errors(db, scraped_jobs) -> list[models.ServiceError]:
+    """Create sample per-job scraping errors as unified Error rows linked to their ScrapedJob and to the
+    scraping run that produced the job, mirroring how the scraper records per-job failures in production."""
+
+    data = override_properties(job_scraping.SCRAPED_JOB_ERROR_DATA, ("scraped_job_id", scraped_jobs))
+    service_log_id_by_job_id = {job.id: job.service_log_id for job in scraped_jobs}
+    for entry in data:
+        entry["job_email_scraping_service_log_id"] = service_log_id_by_job_id[entry["scraped_job_id"]]
+    print(f"Creating {len(data)} Scraped Job Errors...")
+    return create_db_entries(db, models.ServiceError, data)
 
 
 def create_scraping_filters(db, users: list[models.User]) -> list[models.ScrapingExclusionFilter]:

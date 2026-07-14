@@ -1,6 +1,7 @@
 """Tests for the sign-up page."""
 
-from base_test import BaseTest
+from tests.fixtures.users import FixtureUser
+from frontend_base_test import BaseTest
 
 
 class TestSignUp(BaseTest):
@@ -39,18 +40,18 @@ class TestSignUp(BaseTest):
         # Verify redirect to login page
         self.auth_utils.wait_for_login()
         assert self.verify_user_in_database(test_email)
-        self.auth_utils.assert_toast_message(
+        self.toast_utils.assert_toast_message(
             "Account created! Please check your email inbox to verify your account before logging in."
         )
 
-    def test_signup_existing_email(self, test_users) -> None:
+    def test_signup_existing_email(self, test_regular_user: FixtureUser) -> None:
         """Test signup with an already registered email"""
 
         self.auth_utils.go_to_register()
-        test_email, test_password = test_users[0].email, "Test123!"
+        test_email, test_password = test_regular_user.email, "Test123!"
 
         # Step 1 — credentials
-        self.auth_utils.set_email(test_users[0].email)
+        self.auth_utils.set_email(test_regular_user.email)
         self.auth_utils.set_password(test_password)
         self.auth_utils.set_confirm_password(test_password)
         self.auth_utils.confirm()
@@ -65,7 +66,7 @@ class TestSignUp(BaseTest):
         self.auth_utils.confirm()
 
         # Verify error message and database
-        self.auth_utils.assert_toast_message("Email already registered")
+        self.toast_utils.assert_toast_message("Email already registered")
         assert len(self.verify_user_in_database(test_email)) == 1, "Multiple users with the same email found"
 
     def test_signup_invalid_email(self) -> None:
@@ -220,7 +221,7 @@ class TestSignUp(BaseTest):
     def test_signup_limited(self) -> None:
         """Test signup when registrations are limited"""
 
-        self._create_setting(name="allowlist", value="")
+        self.create_setting(self.db, name="allowlist", value="")
         self.auth_utils.go_to_register()
         test_email, test_password = "test@test.com", "Test123!"
 
@@ -239,7 +240,7 @@ class TestSignUp(BaseTest):
         self.auth_utils.wait_for_captcha()
         self.auth_utils.confirm()
 
-        self.auth_utils.assert_toast_message("You are not allowed to sign up for now.")
+        self.toast_utils.assert_toast_message("You are not allowed to sign up for now.")
         assert not self.verify_user_in_database(test_email)
 
     def test_register_field_limits(self) -> None:

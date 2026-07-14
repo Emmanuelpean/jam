@@ -2,82 +2,94 @@
 
 # -------------------------------------------------------- USER --------------------------------------------------------
 
+REGULAR_USER = {
+    "email": "regular@example.com",
+    "password": "password1",
+    "premium": {"is_active": True},
+    "is_verified": True,
+    "first_name": "Regular",
+    "last_name": "User",
+    "app_version": "10.0.0",
+    "preferences": {"dark_mode": "dark"},
+}
+
+
+ADMIN_USER = {
+    "email": "admin@example.com",
+    "password": "password2",
+    "is_admin": True,
+    "is_verified": True,
+    "first_name": "Admin",
+    "last_name": "User",
+    "app_version": "10.0.0",
+}
+
+INACTIVE_USER = {
+    "email": "inactive@example.com",
+    "password": "password3",
+    "is_active": False,
+    "is_verified": True,
+    "app_version": "10.0.0",
+}
+
+
+UNVERIFIED_USER = {
+    "email": "user5@example.com",
+    "password": "password5",
+    "is_verified": False,
+    "app_version": "10.0.0",
+}
+
+
+DEMO_USER = {
+    "email": "demo@example.com",
+    "password": "demo_password",
+    "is_verified": True,
+    "is_demo": True,
+}
+
+
+PREMIUM_USER_1 = {
+    "email": "emmanuelpean@gmail.com",
+    "password": "test_password",
+    "is_verified": True,
+    "premium": {"is_active": True},
+    "app_version": "10.0.0",
+}
+
+PREMIUM_USER_2 = {
+    "email": "jessicaaggood@live.co.uk",
+    "password": "test_password",
+    "is_verified": True,
+    "premium": {"is_active": True},
+    "app_version": "10.0.0",
+}
+
+STRIPE_USER = {
+    "email": "strip_customer@example.com",
+    "password": "password6",
+    "is_verified": True,
+    "stripe_details": {"customer_id": "cus_test_123", "subscription_id": "sub_id"},
+    "app_version": "10.0.0",
+}
+
+NON_PREMIUM_USER = {
+    "email": "non-premium_user@example.com",
+    "password": "password7",
+    "is_verified": True,
+    "app_version": "10.0.0",
+}
 
 USER_DATA = [
-    # Regular user
-    {
-        "email": "regular@example.com",
-        "password": "password1",
-        "premium": {"is_active": True},
-        "is_verified": True,
-        "first_name": "Regular",
-        "last_name": "User",
-        "app_version": "10.0.0",
-        "preferences": {"dark_mode": "dark"},
-    },
-    # Admin user
-    {
-        "email": "admin@example.com",
-        "password": "password2",
-        "is_admin": True,
-        "is_verified": True,
-        "first_name": "Admin",
-        "last_name": "User",
-        "app_version": "10.0.0",
-    },
-    # Inactive user
-    {
-        "email": "inactive@example.com",
-        "password": "password3",
-        "is_active": False,
-        "is_verified": True,
-        "app_version": "10.0.0",
-    },
-    # Unverified user
-    {
-        "email": "user5@example.com",
-        "password": "password5",
-        "is_verified": False,
-        "app_version": "10.0.0",
-    },
-    # Demo user
-    {
-        "email": "demo@example.com",
-        "password": "demo_password",
-        "is_verified": True,
-        "is_demo": True,
-    },
-    # Named users for specific tests
-    {
-        "email": "emmanuelpean@gmail.com",
-        "password": "test_password",
-        "is_verified": True,
-        "premium": {"is_active": True},
-        "app_version": "10.0.0",
-    },
-    # Named users for specific tests
-    {
-        "email": "jessicaaggood@live.co.uk",
-        "password": "test_password",
-        "is_verified": True,
-        "premium": {"is_active": True},
-        "app_version": "10.0.0",
-    },
-    # User with stripe details
-    {
-        "email": "strip_customer@example.com",
-        "password": "password6",
-        "is_verified": True,
-        "stripe_details": {"customer_id": "cus_test_123", "subscription_id": "sub_id"},
-        "app_version": "10.0.0",
-    },
-    # Non-premium user
-    {
-        "email": "non-premium_user@example.com",
-        "password": "password7",
-        "is_verified": True,
-        "app_version": "10.0.0",
-    },
+    REGULAR_USER,
+    ADMIN_USER,
+    INACTIVE_USER,
+    UNVERIFIED_USER,
+    DEMO_USER,
+    PREMIUM_USER_1,
+    PREMIUM_USER_2,
+    STRIPE_USER,
+    NON_PREMIUM_USER,
 ]
 
 # Regular user
@@ -126,12 +138,6 @@ assert not USER_DATA[NON_PREMIUM_USER_INDEX].get(
 
 
 SETTINGS_DATA = [
-    {
-        "name": "allowlist",
-        "value": ", ".join([data["email"] for data in USER_DATA] + ["newuser@user.com"]),
-        "description": "Emails allowed to sign up",
-        "is_active": False,
-    },
     {
         "name": "default_person_role",
         "value": "Recruiter",

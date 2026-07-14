@@ -26,6 +26,7 @@ import {
 	interviewTypeOptions,
 	updateTypeOptions,
 } from "../form/FormOptions";
+import { ProcessingStatus } from "../../../services/schemas/Services";
 
 export interface TableColumn<T extends JamData = JamData> extends ViewField {
 	label: string;
@@ -955,10 +956,10 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	scrapingStatusColumn: <T extends JamData & { is_processed: boolean }>(
+	scrapingStatusColumn: <T extends JamData & { status: ProcessingStatus }>(
 		overrides: ColumnOverrides<T> = {}
 	): TableColumn<T> => ({
-		key: "is_processed",
+		key: "status",
 		label: "Status",
 		sortable: true,
 		searchable: false,

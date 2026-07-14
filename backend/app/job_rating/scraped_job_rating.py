@@ -1,17 +1,20 @@
 """Use Gemini LLM to rate how well scraped jobs match user qualifications."""
 
 import datetime as dt
-import traceback
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models
+from app.base_models import ProcessingStatus
 from app.config import settings
-from app.database import get_db
+from app.database import db_session
 from app.job_rating.claude import MODEL as CLAUDE_MODEL, claude_query
 from app.job_rating.prompts import create_job_only_prompt, create_system_prompt_with_profile
-from app.service_runner.service_runner import ServiceRunner
-from app.utilities.logger import AppLogger
+from app.service.models import ServiceErrorLevel, record_error
+from app.job_rating.schemas import JobRatingServiceLogOut
+from app.service.registry import register_service
+from app.service.service import BaseService
 
 SERVICE_NAME = "job_rating_service"
 
@@ -56,78 +59,77 @@ def get_rating_active_users(db: Session) -> list[models.User]:
 
 
 def get_user_unrated_scraped_jobs(db: Session, user_id: int) -> list[models.ScrapedJob]:
-    """Get all unrated scraped jobs for a given user.
+    """Get all scraped jobs for a user that still need rating.
+    A job needs rating if it has no JobRating yet, or its JobRating is still pending
+    (not yet succeeded, failed-out, or skipped) and is due for another retry.
     :param db: Database session
     :param user_id: ID of the user to get jobs for
-    :return: List of unrated scraped jobs"""
+    :return: List of scraped jobs to rate"""
 
     # noinspection PyComparisonWithNone
     return (
         db.query(models.ScrapedJob)
+        .outerjoin(models.JobRating, models.JobRating.scraped_job_id == models.ScrapedJob.id)
         .filter(models.ScrapedJob.owner_id == user_id)
-        .filter(models.ScrapedJob.is_processed.is_(True))
-        .filter(models.ScrapedJob.is_scraped.is_(True))
-        .filter(models.ScrapedJob.is_failed.is_(False))
-        .filter(models.ScrapedJob.job_rating == None)
+        .filter(models.ScrapedJob.status == ProcessingStatus.COMPLETED)
         .filter(models.ScrapedJob.is_active.is_(True))
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.exclusion_filter == None)
+        .filter(or_(models.JobRating.id == None, models.JobRating.is_pending))
         .all()
     )
 
 
-class ScrapedJobRater:
+class ScrapedJobRatingService(BaseService[models.JobRatingServiceLog]):
     """Rates scraped jobs against user qualifications using AI."""
+
+    service_name = "job_rating_service"
 
     def __init__(self) -> None:
         """Initialise the job rater."""
 
-        self.logger = AppLogger.create_service_logger(SERVICE_NAME, "INFO")
+        BaseService.__init__(self, models.JobRatingServiceLog)
 
-    def run(self, db: Session | None = None) -> models.JobRatingServiceLog:
+    def run(self) -> models.JobRatingServiceLog:
         """Score all scraped jobs using AI.
-        :param db: Database session
         :return: Job rating service log entry"""
 
-        db = next(get_db()) if db is None else db
+        with db_session() as db:
+            service_log = self.start_run(db)
 
-        # Create service log entry
-        start_time = dt.datetime.now()
-        service_log = models.JobRatingServiceLog(run_datetime=start_time)
-        db.add(service_log)
-        db.commit()
-        db.refresh(service_log)
+            try:
+                # Get all active users with job rating active
+                users = get_rating_active_users(db)
+                self.logger.info(f"Found {len(users)} active users to process")
+                service_log.user_found_ids = [user.id for user in users]
 
-        try:
-            # Get all active users with job rating active
-            users = get_rating_active_users(db)
-            self.logger.info(f"Found {len(users)} active users to process")
-            service_log.user_found_ids = [user.id for user in users]
+                # Get latest system and job prompt templates
+                system_prompt = db.query(models.AiSystemPrompt).order_by(models.AiSystemPrompt.id.desc()).first()
+                job_prompt = db.query(models.AiJobPromptTemplate).order_by(models.AiJobPromptTemplate.id.desc()).first()
+                if not system_prompt or not job_prompt:
+                    raise Exception("No system or job prompt templates found")
 
-            # Get latest system and job prompt templates
-            system_prompt = db.query(models.AiSystemPrompt).order_by(models.AiSystemPrompt.id.desc()).first()
-            job_prompt = db.query(models.AiJobPromptTemplate).order_by(models.AiJobPromptTemplate.id.desc()).first()
-            if not system_prompt or not job_prompt:
-                raise Exception("No system or job prompt templates found")
+                # Process each user
+                for user in users:
+                    self._process_user(db, user.id, service_log, system_prompt, job_prompt)
 
-            # Process each user
-            for user in users:
-                self._process_user(db, user.id, service_log, system_prompt, job_prompt)
+            except Exception as exception:
+                message = "Critical error in rating workflow"
+                self.logger.exception(message)
+                record_error(
+                    db,
+                    exception,
+                    message,
+                    level=ServiceErrorLevel.CRITICAL,
+                    job_rating_service_log_id=service_log.id,
+                )
+            finally:
+                self.logger.info("Finished workflow")
 
-            # Mark service log as successful
-            service_log.is_success = True
-
-        except Exception as exception:
-            self.logger.exception(f"Critical error in rating workflow: {exception}")
-            service_log.is_success = False
-            service_log.error_message = str(exception)
-        finally:
-            self.logger.info("Finished workflow")
-
-        service_log.run_duration = (dt.datetime.now() - start_time).total_seconds()
-        db.commit()
-        db.refresh(service_log)
-        return service_log
+            service_log.set_run_duration()
+            db.commit()
+            db.refresh(service_log)
+            return service_log
 
     def _process_user(
         self,
@@ -148,7 +150,7 @@ class ScrapedJobRater:
         user_qualification = (
             db.query(models.UserQualification)
             .filter(models.UserQualification.owner_id == user_id)
-            .order_by(models.UserQualification.modified_at.desc())
+            .order_by(models.UserQualification.modified_at.desc(), models.UserQualification.id.desc())
             .first()
         )
         if not user_qualification:
@@ -160,8 +162,7 @@ class ScrapedJobRater:
         service_log.job_found_ids = service_log.job_found_ids + [job.id for job in scraped_jobs]
         self.logger.info(f"Found {len(scraped_jobs)} scraped jobs to rate")
 
-        # Build the combined system prompt (instructions + candidate profile) once per user
-        # so Anthropic caches it across all jobs for this user
+        # Build the combined system prompt
         combined_system_prompt = create_system_prompt_with_profile(
             prompt_template=system_prompt.prompt,
             user_experience=user_qualification.experience,
@@ -210,72 +211,71 @@ class ScrapedJobRater:
         self.logger.info(f"Processing job ID {scraped_job.id}")
         notes = []
 
-        job_rating_kwargs = dict(
-            scraped_job_id=scraped_job.id,
-            owner_id=user_id,
-            user_qualification_id=user_qualification.id,
-            system_prompt_id=system_prompt.id,
-            job_prompt_template_id=job_prompt_template.id,
-            llm_model=CLAUDE_MODEL,
-        )
+        job_rating = scraped_job.job_rating
+        if job_rating is None:
+            job_rating = models.JobRating(
+                scraped_job_id=scraped_job.id,
+                owner_id=user_id,
+                llm_model=CLAUDE_MODEL,
+                job_prompt_template_id=job_prompt_template.id,
+                system_prompt_id=system_prompt.id,
+                user_qualification_id=user_qualification.id,
+            )
+            db.add(job_rating)
+            db.flush()
 
+        skip_reason = None
         # Check that the job is not closed
         if scraped_job.is_closed or (scraped_job.deadline and scraped_job.deadline < dt.datetime.now(dt.timezone.utc)):
             self.logger.info(f"Skipping job ID {scraped_job.id} as it is closed")
-            job_rating = models.JobRating(
-                is_skipped=True,
-                skip_reason="Job is closed",
-                **job_rating_kwargs,
-            )
-            db.add(job_rating)
-            service_log.job_skipped_ids = service_log.job_skipped_ids + [scraped_job.id]
-            db.commit()
-            return
-
-        # Check that the job description is not too short
-        if scraped_job.description and len(scraped_job.description) < settings.min_scraping_description_length:
-            self.logger.info(f"Skipping job ID {scraped_job.id} as its description is too short")
-            job_rating = models.JobRating(
-                is_skipped=True,
-                skip_reason=f"Job description too short (minimum length is {settings.min_scraping_description_length} characters)",
-                **job_rating_kwargs,
-            )
-            db.add(job_rating)
-            service_log.job_skipped_ids = service_log.job_skipped_ids + [scraped_job.id]
-            db.commit()
-            return
+            skip_reason = "Job is closed"
 
         # Ensure that the job has a description
-        if not scraped_job.description:
+        elif not scraped_job.description:
             self.logger.info(f"Skipping job ID {scraped_job.id} as it has no description")
-            job_rating = models.JobRating(
-                is_skipped=True,
-                skip_reason="Job has no description",
-                **job_rating_kwargs,
+            skip_reason = "Job has no description"
+
+        # Check that the job description is not too short
+        elif len(scraped_job.description) < settings.min_scraping_description_length:
+            self.logger.info(f"Skipping job ID {scraped_job.id} as its description is too short")
+            skip_reason = (
+                f"Job description too short (minimum length is {settings.min_scraping_description_length} characters)"
             )
-            db.add(job_rating)
+
+        if skip_reason:
+            job_rating.status = ProcessingStatus.SKIPPED
+            job_rating.skip_reason = skip_reason
             service_log.job_skipped_ids = service_log.job_skipped_ids + [scraped_job.id]
             db.commit()
             return
 
         description, description_note = ensure_length_limit(
-            "description", scraped_job.description, settings.max_scraping_description_length, self.logger
+            "description",
+            scraped_job.description,
+            settings.max_scraping_description_length,
+            self.logger,
         )
         if description_note:
             notes.append(description_note)
         title, title_note = ensure_length_limit(
-            "title", scraped_job.title, settings.max_scraping_title_length, self.logger
+            "title",
+            scraped_job.title,
+            settings.max_scraping_title_length,
+            self.logger,
         )
         if title_note:
             notes.append(title_note)
         company, company_note = ensure_length_limit(
-            "company", scraped_job.company, settings.max_scraping_company_length, self.logger
+            "company",
+            scraped_job.company,
+            settings.max_scraping_company_length,
+            self.logger,
         )
         if company_note:
             notes.append(company_note)
 
         if notes:
-            job_rating_kwargs["notes"] = notes
+            job_rating.notes = notes
 
         score = None
         try:
@@ -287,34 +287,52 @@ class ScrapedJobRater:
                 job_description=description,
             )
             score = claude_query(combined_system_prompt, job_prompt)
-            job_rating = models.JobRating(
-                overall_score=score["overall_score"],
-                technical_score=score["technical_fit"],
-                experience_score=score["experience_alignment"],
-                educational_score=score["educational_match"],
-                interest_score=score["interest_match"],
-                feedback=score["explanation"],
-                job_prompt=combined_system_prompt + "\n\n" + job_prompt,
-                is_success=True,
-                **job_rating_kwargs,
-            )
-            db.add(job_rating)
+            job_rating.overall_score = score["overall_score"]
+            job_rating.technical_score = score["technical_fit"]
+            job_rating.experience_score = score["experience_alignment"]
+            job_rating.educational_score = score["educational_match"]
+            job_rating.interest_score = score["interest_match"]
+            job_rating.feedback = score["explanation"]
+            job_rating.job_prompt = combined_system_prompt + "\n\n" + job_prompt
+            job_rating.status = ProcessingStatus.COMPLETED
+            job_rating.rating_next_retry_at = None
             service_log.job_succeeded_ids = service_log.job_succeeded_ids + [scraped_job.id]
             db.commit()
         except Exception as exception:
-            tb = traceback.format_exc()
-            self.logger.exception(f"Error in rating workflow: {exception}")
-            job_rating = models.JobRating(
-                is_success=False,
-                error=f"Error scoring job: {exception}\n{tb}\nRaw response is {score}",
-                **job_rating_kwargs,
+            message = "Error scoring job."
+            context = {"job_id": scraped_job.id, "error": str(exception), "raw_response": repr(score)}
+            self.logger.exception(f"{message} {context}")
+            record_error(
+                db,
+                exception,
+                message=message,
+                context=context,
+                job_rating_id=job_rating.id,
+                job_rating_service_log_id=service_log.id,
             )
-            db.add(job_rating)
+            job_rating.rating_retry_count += 1
             service_log.job_failed_ids = service_log.job_failed_ids + [scraped_job.id]
+            if job_rating.rating_retry_count < settings.rating_max_retry:
+                job_rating.rating_next_retry_at = dt.datetime.now(dt.timezone.utc) + dt.timedelta(
+                    hours=settings.rating_retry_delay_hours
+                )
+                self.logger.info(
+                    f"Scheduled rating retry {job_rating.rating_retry_count}/{settings.rating_max_retry} for "
+                    f"job ID {scraped_job.id} in {settings.rating_retry_delay_hours}h"
+                )
+            else:
+                self.logger.info(
+                    f"Job ID {scraped_job.id} rating permanently failed after {settings.rating_max_retry} attempts"
+                )
+                job_rating.status = ProcessingStatus.FAILED
             db.commit()
 
 
-job_rating_service_runner = ServiceRunner(
-    service_name=SERVICE_NAME,
-    service_function=ScrapedJobRater().run,
+register_service(
+    ScrapedJobRatingService.service_name,
+    ScrapedJobRatingService().run,
+    display_name="Job Rating",
+    run_period_hours=3,
+    log_model=models.JobRatingServiceLog,
+    log_schema=JobRatingServiceLogOut,
 )

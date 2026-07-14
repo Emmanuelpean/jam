@@ -39,15 +39,14 @@ JAM entities seeded at tour start (all is_tour=True):
 """
 
 from app import models
-from base_test import BaseTest
-from select_utils import Select
-
+from frontend_base_test import BaseTest
+from helpers.select_utils import Select
 
 TOUR_ID = "first-job"
 
 
 class TestFirstJobTour(BaseTest):
-    user_index = 0
+    user_fixture = "test_regular_user"
     page_url = "jobs"
 
     def setup_function(self, request) -> None:
@@ -499,7 +498,7 @@ class TestFirstJobTour(BaseTest):
 
         A company created before the tour must not appear in the company dropdown during the tour.
         """
-        pre_existing = self._make_company(name="Pre-Existing Corp")
+        pre_existing = self.user.create_company(name="Pre-Existing Corp")
         initial_companies = self.db.query(models.Company).filter_by(owner_id=self.user.id).count()
 
         self._start_tour_and_open_form()

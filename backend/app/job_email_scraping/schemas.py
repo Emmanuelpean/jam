@@ -7,9 +7,11 @@ from datetime import datetime
 
 from pydantic import field_validator, Field
 
+from app.base_models import ProcessingStatus
 from app.base_schemas import BaseModel, OwnedOut, Out, serialise_relationships, OwnedCreate
 from app.data_tables.schemas import GeolocationOut
 from app.job_rating.schemas import JobRatingOut
+from app.service.schemas import ServiceErrorOut, ServiceLogOut
 
 
 class Salary(BaseModel):
@@ -77,23 +79,27 @@ class JobEmailOut(JobEmail, OwnedOut):
 # ----------------------------------------------------- SCRAPED JOB ----------------------------------------------------
 
 
-class ScrapedJob(BaseModel):
-    """Scraped Job base schema"""
+class ScrapedJobUpdate(BaseModel):
+    """Scraped Job update schema"""
+
+    is_active: bool | None = None
+    is_imported: bool | None = None
+    read_at: datetime | None = None
+
+
+class ScrapedJobOut(OwnedOut):
+    """Scraped Job output schema"""
 
     external_job_id: str
     platform: str
     service_log_id: int
-    is_processed: bool = False
-    is_scraped: bool = False
-    is_failed: bool = False
+    status: ProcessingStatus
     scrape_datetime: datetime | None = None
-    scrape_error: list[dict] = []
     is_active: bool = True
     is_imported: bool = False
-    is_skipped: bool = False
     skip_reason: str | None = None
-    retry_count: int = 0
-    next_retry_at: datetime | None = None
+    scraping_retry_count: int = 0
+    scraping_next_retry_at: datetime | None = None
     read_at: datetime | None = None
 
     # Job data
@@ -110,21 +116,11 @@ class ScrapedJob(BaseModel):
     raw_location: str | None = None
     company: str | None = None
 
-
-class ScrapedJobUpdate(BaseModel):
-    """Scraped Job update schema"""
-
-    is_active: bool | None = None
-    is_imported: bool | None = None
-    read_at: datetime | None = None
-
-
-class ScrapedJobOut(ScrapedJob, OwnedOut):
-    """Scraped Job output schema"""
-
+    # Relationships
     emails: list[int]
     job_rating: JobRatingOut | None
     geolocation: GeolocationOut | None
+    scraping_errors: list[ServiceErrorOut] = []
 
     @field_validator("emails", mode="before")
     @classmethod
@@ -179,13 +175,8 @@ class PlatformAlertStats(BaseModel):
 # ----------------------------------------------------- SERVICE LOG ----------------------------------------------------
 
 
-class JobEmailScrapingServiceLogOut(Out):
+class JobEmailScrapingServiceLogOut(ServiceLogOut):
     """Job Email Scraping Service Log output schema"""
-
-    run_datetime: datetime | None = None
-    run_duration: float | None = None
-    is_success: bool | None = None
-    error_message: str | None = None
 
     # Users
     user_found_ids: list[int] = []
@@ -208,7 +199,6 @@ class JobEmailScrapingServiceLogOut(Out):
     emails: list[int]
     scraped_jobs: list[int]
     platform_stats: list["JobEmailScrapingPlatformStatOut"]
-    service_errors: list["JobEmailScrapingServiceErrorOut"]
 
     @field_validator("emails", "scraped_jobs", mode="before")
     @classmethod
@@ -238,17 +228,6 @@ class JobEmailScrapingPlatformStatOut(Out):
     email_skipped_ids: list[int] = []
 
     service_log_id: int | None = None
-
-
-# --------------------------------------------- JOB SCRAPING SERVICE ERROR ---------------------------------------------
-
-
-class JobEmailScrapingServiceErrorOut(Out):
-    """Job Email Scraping Service Error output schema"""
-
-    error_type: str
-    message: str
-    traceback: str
 
 
 # ------------------------------------------------ EMAIL SCRAPER SERVICE -----------------------------------------------

@@ -18,15 +18,14 @@ JAM entities seeded at tour start (all is_tour=True):
 """
 
 from app import models
-from base_test import BaseTest
-from select_utils import Select
-
+from frontend_base_test import BaseTest
+from helpers.select_utils import Select
 
 TOUR_ID = "log-update"
 
 
 class TestLogUpdateTour(BaseTest):
-    user_index = 0
+    user_fixture = "test_regular_user"
     page_url = "jobs"
 
     def setup_function(self, request) -> None:

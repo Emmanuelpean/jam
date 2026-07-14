@@ -67,9 +67,10 @@ class DashboardBuilder(DemoBuilder):
         time.sleep(0.5)
         self.capture_frames_for_duration(1.0)
 
-        col_width = self.driver.execute_script(
-            "return document.querySelector('.dashboard-main').getBoundingClientRect().width"
-        ) / COLS
+        col_width = (
+            self.driver.execute_script("return document.querySelector('.dashboard-main').getBoundingClientRect().width")
+            / COLS
+        )
 
         # Scroll down so the y=8 widget row is centred in the viewport
         print("  - Scrolling to widget row...")
@@ -84,7 +85,9 @@ class DashboardBuilder(DemoBuilder):
 
         # Widen the new upcoming-interviews widget via its SE handle (right edge grows into freed space)
         print("  - Resizing upcoming interviews wider...")
-        self._drag_handle_topmost("activity-card-upcoming_interviews", "react-resizable-handle-se", dx_cols=+2, col_width=col_width)
+        self._drag_handle_topmost(
+            "activity-card-upcoming_interviews", "react-resizable-handle-se", dx_cols=+2, col_width=col_width
+        )
         self.capture_frames_for_duration(0.8)
 
         # Save

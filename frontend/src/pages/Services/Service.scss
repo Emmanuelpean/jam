@@ -1,43 +1,43 @@
 /* Status Section */
 .status-card {
-    margin-bottom: 14.4px;
-    padding: 12.6px 14.4px;
-    transition: box-shadow 0.2s ease;
-    border: 1px solid var(--bs-border-color);
-    border-radius: 10.8px;
-    background-color: var(--bs-card-bg);
-    box-shadow: 0 1.8px 7.2px rgb(0 0 0 / 8%);
+	margin-bottom: 14.4px;
+	padding: 12.6px 14.4px;
+	transition: box-shadow 0.2s ease;
+	border: 1px solid var(--bs-border-color);
+	border-radius: 10.8px;
+	background-color: var(--bs-card-bg);
+	box-shadow: 0 1.8px 7.2px rgb(0 0 0 / 8%);
 }
 
 .jam-popover.time-filter-popover {
-    width: 610px;
-    max-width: 610px;
+	width: 700px;
+	max-width: 700px;
 }
 
 .status-card .card-title {
-    font-size: 16.2px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    margin-bottom: 9px;
-    padding-bottom: 7.2px;
-    color: var(--bs-body-color);
-    border-bottom: 1.8px solid var(--bs-border-color);
+	font-size: 16.2px;
+	font-weight: 600;
+	display: flex;
+	align-items: center;
+	margin-bottom: 9px;
+	padding-bottom: 7.2px;
+	color: var(--bs-body-color);
+	border-bottom: 1.8px solid var(--bs-border-color);
 }
 
 // When the title shares a row with another control (e.g. the platform
 // selector), the underline should span the full card width, not just the
 // title text. Move the border to the header row and clear it on the title.
 .status-card .history-chart-header {
-    margin-bottom: 9px;
-    padding-bottom: 7.2px;
-    border-bottom: 1.8px solid var(--bs-border-color);
+	margin-bottom: 9px;
+	padding-bottom: 7.2px;
+	border-bottom: 1.8px solid var(--bs-border-color);
 }
 
 .status-card .history-chart-header .card-title {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
+	margin-bottom: 0;
+	padding-bottom: 0;
+	border-bottom: none;
 }
 
 /* Keep the header compact: the controls (platform select / Filters button) are
@@ -45,318 +45,471 @@
    The controls keep their normal size but no longer add height to the header row,
    which then matches the text-only card headers. */
 .status-card .history-chart-header .history-chart-controls {
-    display: flex;
-    align-items: center;
-    gap: 7.2px;
-    margin-top: -5px;
-    margin-bottom: -5px;
+	display: flex;
+	align-items: center;
+	gap: 7.2px;
+	margin-top: -5px;
+	margin-bottom: -5px;
 }
 
 /* Compact Service Status card: status badges share the header row with the
    title, and the config fields sit on a single row next to the action button. */
 .service-status-card .service-status-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10.8px 21.6px;
-    margin-bottom: 10.8px;
-    padding-bottom: 9px;
-    border-bottom: 1.8px solid var(--bs-border-color);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 10.8px 21.6px;
+	margin-bottom: 10.8px;
+	padding-bottom: 9px;
+	border-bottom: 1.8px solid var(--bs-border-color);
 }
 
 .service-status-card .service-status-header .card-title {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    font-size: 16.2px;
-    border-bottom: none;
+	margin-bottom: 0;
+	padding-bottom: 0;
+	font-size: 16.2px;
+	border-bottom: none;
 }
 
 .service-status-card .service-status-body {
-    display: flex;
-    align-items: flex-end;
-    flex-wrap: wrap;
-    gap: 14.4px 21.6px;
+	display: flex;
+	align-items: flex-end;
+	flex-wrap: wrap;
+	gap: 14.4px 21.6px;
 }
 
 .service-status-card .config-fields {
-    flex: 1 1 320px;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 10.8px 14.4px;
+	flex: 1 1 320px;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 10.8px 14.4px;
 }
 
 .service-status-card .config-fields > * {
-    flex: 1 1 200px;
+	flex: 1 1 200px;
 }
 
 .service-status-card .actions-section {
-    flex: 0 0 auto;
-    min-width: 220px;
+	flex: 0 0 auto;
+	min-width: 220px;
 }
 
 .status-card .status-label {
-    font-weight: 600;
+	font-weight: 600;
 }
 
 .live-indicator {
-    display: inline-block;
-    width: 10.8px;
-    height: 10.8px;
-    animation: pulse 2s infinite;
-    border-radius: 50%;
-    background-color: #28a745;
+	display: inline-block;
+	width: 10.8px;
+	height: 10.8px;
+	animation: pulse 2s infinite;
+	border-radius: 50%;
+	background-color: #28a745;
 }
 
 @keyframes pulse {
-    0%,
-    100% {
-        opacity: 1;
-    }
+	0%,
+	100% {
+		opacity: 1;
+	}
 
-    50% {
-        opacity: 0.4;
-    }
+	50% {
+		opacity: 0.4;
+	}
+}
+
+.error-list .spin {
+	display: inline-block;
+	animation: spin 0.7s linear infinite;
+}
+
+.grouped-error-message {
+	border-radius: 5.4px;
+}
+
+.grouped-error-type {
+	font-weight: 700;
+	font-family: var(--bs-font-monospace);
+}
+
+.grouped-error-message:hover {
+	text-decoration: underline;
+}
+
+.grouped-error-occurrences {
+	display: flex;
+	flex-direction: column;
+	gap: 7.2px;
+	border-top: 1.8px solid color-mix(in srgb, currentColor 25%, transparent);
+	padding-top: 7.2px;
+}
+
+.grouped-error-occurrence {
+	font-size: 0.85rem;
+	padding: 5.4px 7.2px;
+	border-radius: 5.4px;
+	background-color: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.grouped-error-occurrence-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 9px;
+	margin-bottom: 3.6px;
+	font-size: 0.78rem;
+}
+
+/* Keep the meta text muted, but not the acknowledge button. */
+.grouped-error-occurrence-meta > span {
+	opacity: 0.75;
+}
+
+.grouped-error-context {
+	display: flex;
+	flex-direction: column;
+	gap: 1.8px;
+	word-break: break-word;
+}
+
+.grouped-error-context-key {
+	font-weight: 600;
+	opacity: 0.75;
+}
+
+.grouped-error-traceback {
+	margin: 3.6px 0 0;
+	padding: 5.4px 7.2px;
+	max-height: 216px;
+	overflow: auto;
+	font-size: 0.72rem;
+	white-space: pre-wrap;
+	word-break: break-word;
+	border-radius: 5.4px;
+	background-color: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+/* Clicking a run-history chart focuses the SVG surface or an inner element (line, dot, layer);
+   suppress the browser focus outline on the wrapper and everything inside it. */
+.recharts-wrapper,
+.recharts-wrapper * {
+	outline: none;
+}
+
+/* Axis/legend labels and tick labels shouldn't be text-selectable when clicking the chart. */
+.recharts-wrapper text,
+.recharts-legend-wrapper {
+	user-select: none;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 .metrics-grid {
-    display: grid;
-    margin-bottom: 10.8px;
-    grid-template-columns: repeat(auto-fit, minmax(198px, 1fr));
-    gap: 14.4px;
+	display: grid;
+	margin-bottom: 10.8px;
+	grid-template-columns: repeat(auto-fit, minmax(198px, 1fr));
+	gap: 14.4px;
 }
 
 /* Three metric columns with a wider last column (platform stats): 1 : 1 : 2 */
 .metrics-grid--wide-last {
-    grid-template-columns: minmax(198px, 1fr) minmax(198px, 1fr) minmax(198px, 2fr);
+	grid-template-columns: minmax(198px, 1fr) minmax(198px, 1fr) minmax(198px, 2fr);
 }
 
 .metric-group {
-    padding: 10.8px;
-    border: 1px solid var(--bs-muted-color);
-    border-radius: 5.4px;
+	padding: 10.8px;
+	border: 1px solid var(--bs-muted-color);
+	border-radius: 5.4px;
 }
 
 .metric-item {
-    font-size: 12.6px;
-    margin: 5.4px 0;
-    color: var(--bs-body-color);
+	font-size: 12.6px;
+	margin: 5.4px 0;
+	color: var(--bs-body-color);
 }
 
 .error-message {
-    margin-top: 10.8px;
-    padding: 10.8px;
-    color: #721c24;
-    border: 1px solid #dc3545;
-    border-radius: 5.4px;
-    background-color: rgb(220 53 69 / 10%);
+	margin-top: 10.8px;
+	padding: 10.8px;
+	color: #721c24;
+	border: 1px solid #dc3545;
+	border-radius: 5.4px;
+	background-color: rgb(220 53 69 / 10%);
 }
 
 .status-indicators {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10.8px 21.6px;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10.8px 21.6px;
 }
 
 .indicator-item {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 7.2px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 7.2px;
 }
 
 .indicator-label {
-    font-size: 10.8px;
-    font-weight: 600;
-    letter-spacing: 0.03rem;
-    text-transform: uppercase;
+	font-size: 10.8px;
+	font-weight: 600;
+	letter-spacing: 0.03rem;
+	text-transform: uppercase;
 }
 
 .status-badge {
-    font-size: 12.6px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    width: fit-content;
-    padding: 7.2px 14.4px;
-    transition: all 0.2s ease;
-    border-radius: 7.2px;
+	font-size: 12.6px;
+	font-weight: 600;
+	display: inline-flex;
+	align-items: center;
+	width: fit-content;
+	padding: 7.2px 14.4px;
+	transition: all 0.2s ease;
+	border-radius: 7.2px;
+}
+
+/* Large enable/disable switch shown in the service dashboard header. */
+.service-enabled-toggle {
+	--toggle-off-color: #878787;
+	--toggle-on-color: #10b981;
+
+	display: inline-flex;
+	align-items: center;
+	gap: 10.8px;
+	padding: 3.6px;
+	border: none;
+	background: none;
+	cursor: pointer;
+}
+
+.service-enabled-toggle:disabled {
+	cursor: default;
+	opacity: 0.65;
+}
+
+.service-enabled-toggle__track {
+	position: relative;
+	display: inline-block;
+	width: 54px;
+	height: 30px;
+	flex: 0 0 auto;
+	border-radius: 999px;
+	background-color: var(--toggle-off-color);
+	transition: background-color 0.2s ease;
+}
+
+.service-enabled-toggle.is-enabled .service-enabled-toggle__track {
+	background-color: var(--toggle-on-color);
+}
+
+.service-enabled-toggle__thumb {
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background-color: #fff;
+	box-shadow: 0 1.8px 3.6px rgb(0 0 0 / 25%);
+	transition: transform 0.2s ease;
+}
+
+.service-enabled-toggle.is-enabled .service-enabled-toggle__thumb {
+	transform: translateX(24px);
+}
+
+.service-enabled-toggle__spinner {
+	width: 13px;
+	height: 13px;
+	border: 2px solid var(--toggle-off-color);
+	border-top-color: transparent;
+	border-radius: 50%;
+	animation: spin 0.7s linear infinite;
 }
 
 /* Service-runner / service status icons shown in the service page tab headers.
    Distinct icons per indicator; colour reflects whether each is on or off. */
 .service-status-icons {
-    --service-off-color: #878787;
+	--service-off-color: #878787;
 
-    display: inline-flex;
-    align-items: center;
-    gap: 12.6px;
-    padding: 12px 19px;
-    margin: -12px -19px;
-    font-size: 19.8px;
-    line-height: 1;
-    user-select: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 12.6px;
+	padding: 12px 19px;
+	margin: -12px -19px;
+	font-size: 19.8px;
+	line-height: 1;
+	user-select: none;
 }
 
 .service-status-icon.is-on {
-    color: #10b981;
+	color: #10b981;
 }
 
 .service-status-icon.is-off {
-    color: var(--service-off-color);
+	color: var(--service-off-color);
 }
 
 /* The service runner being inactive is notable, so flag it in red. */
 .service-status-icon--runner.is-off {
-    color: #ef4444;
+	color: #ef4444;
 }
 
 /* While the runner is waiting for the service to stop, flash red / inactive. */
 @keyframes runner-stopping-flash {
-    0%,
-    100% {
-        color: #ef4444;
-    }
+	0%,
+	100% {
+		color: #ef4444;
+	}
 
-    50% {
-        color: var(--bs-secondary-color, #9ca3af);
-    }
+	50% {
+		color: var(--bs-secondary-color, #9ca3af);
+	}
 }
 
 .service-status-icon--runner.is-stopping {
-    animation: runner-stopping-flash 1s ease-in-out infinite;
+	animation: runner-stopping-flash 1s ease-in-out infinite;
 }
 
 /* While the service is actively running, pulse the green icon. */
 @keyframes service-running-flash {
-    0%,
-    100% {
-        opacity: 1;
-    }
+	0%,
+	100% {
+		opacity: 1;
+	}
 
-    50% {
-        opacity: 0.35;
-    }
+	50% {
+		opacity: 0.35;
+	}
 }
 
 .service-status-icon.is-running {
-    animation: service-running-flash 1.5s ease-in-out infinite;
+	animation: service-running-flash 1.5s ease-in-out infinite;
 }
 
 /* Control popover body: stacked config fields above the start/stop button. */
 .service-control {
-    display: flex;
-    flex-direction: column;
-    gap: 14.4px;
+	display: flex;
+	flex-direction: column;
+	gap: 14.4px;
 }
 
 /* Countdown to the next run, shown beside the status icons in the header. */
 .service-status-icons .service-next-run {
-    display: inline-flex;
-    align-items: center;
-    font-size: 14.4px;
-    font-weight: 600;
-    color: var(--service-off-color);
+	display: inline-flex;
+	align-items: center;
+	font-size: 14.4px;
+	font-weight: 600;
+	color: var(--service-off-color);
 }
 
-/* The filter row reserves a fixed height so the last-log bar appearing/disappearing
-   never shifts the layout below. The height is taller than both the Filters button
-   and the bar. */
-.service-filter-row {
-    min-height: 40px;
-}
-
-/* Last service-log line shown while a service is running (Usage page filter row and the
-   scraping / rating dashboards). The flex rules let it share the Usage filter row; when it
-   stands alone it simply fills the available width. */
+/* Last service-log line shown while a service is running (scraping / rating / usage
+   dashboards). It stands alone and fills the available width. */
 .service-last-log {
-    display: flex;
-    flex: 1 1 auto;
-    align-self: stretch;
-    align-items: center;
-    gap: 9px;
-    min-width: 0;
-    padding: 5.4px 14.4px;
-    font-size: 12.6px;
-    cursor: pointer;
-    border: 1px solid var(--bs-border-color);
-    border-radius: 10.8px;
-    background-color: var(--bs-card-bg);
-    transition: border-color 0.2s ease;
+	display: flex;
+	flex: 1 1 auto;
+	align-self: stretch;
+	align-items: center;
+	gap: 12.6px;
+	min-width: 0;
+	padding: 10.8px 19.8px;
+	font-size: 15.3px;
+	cursor: pointer;
+	border: 1px solid var(--bs-border-color);
+	border-radius: 12.6px;
+	background-color: var(--bs-card-bg);
+	transition: border-color 0.2s ease;
 }
 
 .service-last-log:hover {
-    border-color: var(--primary-mid);
+	border-color: var(--primary-mid);
+}
+
+.service-last-log .live-indicator {
+	width: 14.4px;
+	height: 14.4px;
 }
 
 .service-last-log .service-last-log-text {
-    overflow: hidden;
-    font-family: monospace;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--bs-body-color);
+	overflow: hidden;
+	font-family: monospace;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--bs-body-color);
 }
 
 /* Usage page summary stat cards (per-service totals + net balance). */
 .usage-summary-card {
-    display: flex;
-    flex-direction: column;
-    gap: 5.4px;
+	display: flex;
+	flex-direction: column;
+	gap: 5.4px;
 }
 
 .usage-summary-card .usage-summary-top {
-    display: flex;
-    align-items: center;
-    gap: 7.2px;
+	display: flex;
+	align-items: center;
+	gap: 7.2px;
 }
 
 .usage-summary-card .usage-summary-icon {
-    font-size: 16.2px;
-    color: var(--primary-mid);
+	font-size: 16.2px;
+	color: var(--primary-mid);
 }
 
 .usage-summary-card .usage-summary-label {
-    font-size: 12.6px;
-    font-weight: 600;
-    letter-spacing: 0.03rem;
-    text-transform: uppercase;
-    color: var(--bs-secondary-color);
+	font-size: 12.6px;
+	font-weight: 600;
+	letter-spacing: 0.03rem;
+	text-transform: uppercase;
+	color: var(--bs-secondary-color);
 }
 
 .usage-summary-card .usage-summary-value {
-    font-size: 25.2px;
-    font-weight: 700;
-    color: var(--bs-body-color);
+	font-size: 25.2px;
+	font-weight: 700;
+	color: var(--bs-body-color);
 }
 
 .usage-summary-card .usage-summary-caption {
-    font-size: 11.7px;
-    color: var(--bs-secondary-color);
+	font-size: 11.7px;
+	color: var(--bs-secondary-color);
 }
 
 .badge-success {
-    color: white;
-    background-color: #10b981;
-    box-shadow: 0 1.8px 3.6px rgb(16 185 129 / 20%);
+	color: white;
+	background-color: #10b981;
+	box-shadow: 0 1.8px 3.6px rgb(16 185 129 / 20%);
 }
 
 .badge-danger {
-    color: white;
-    background-color: #ef4444;
-    box-shadow: 0 1.8px 3.6px rgb(239 68 68 / 20%);
+	color: white;
+	background-color: #ef4444;
+	box-shadow: 0 1.8px 3.6px rgb(239 68 68 / 20%);
 }
 
 .config-fields {
-    display: flex;
-    flex-direction: column;
-    gap: 14.4px;
+	display: flex;
+	flex-direction: column;
+	gap: 14.4px;
 }
 
 /* Actions Section */
 .actions-section {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
 }

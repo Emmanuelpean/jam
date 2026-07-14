@@ -1,14 +1,11 @@
 """Tests for app/job_rating/claude.py — claude_query."""
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, AsyncMock
 
 import pytest
 
 from app.job_rating.claude import ClaudeError, claude_query
-
-
-# -------------------------------------------------- HELPERS ---------------------------------------------------
 
 
 def _make_response(text: str) -> MagicMock:
@@ -20,9 +17,6 @@ def _make_response(text: str) -> MagicMock:
     return response
 
 
-# -------------------------------------------------- FIXTURE ---------------------------------------------------
-
-
 @pytest.fixture(autouse=True)
 def mock_anthropic_client():
     """Patch the module-level Anthropic client so no real HTTP calls are made."""
@@ -30,12 +24,9 @@ def mock_anthropic_client():
         yield mock_client
 
 
-# --------------------------------------------------- TESTS ----------------------------------------------------
-
-
 class TestClaudeQuery:
 
-    def test_returns_parsed_json_on_success(self, mock_anthropic_client) -> None:
+    def test_returns_parsed_json_on_success(self, mock_anthropic_client: MagicMock | AsyncMock) -> None:
         # The module prepends "{" to response.content[0].text, so the mock text
         # should be the JSON body WITHOUT the opening brace.
         payload = {"score": 8, "reason": "Good fit"}
@@ -46,7 +37,7 @@ class TestClaudeQuery:
 
         assert result == payload
 
-    def test_calls_correct_model(self, mock_anthropic_client) -> None:
+    def test_calls_correct_model(self, mock_anthropic_client: MagicMock | AsyncMock) -> None:
         mock_anthropic_client.messages.create.return_value = _make_response("}")
 
         claude_query("sys", "user")
@@ -54,7 +45,7 @@ class TestClaudeQuery:
         call_kwargs = mock_anthropic_client.messages.create.call_args.kwargs
         assert call_kwargs["model"] == "claude-haiku-4-5-20251001"
 
-    def test_sends_system_prompt_with_cache_control(self, mock_anthropic_client) -> None:
+    def test_sends_system_prompt_with_cache_control(self, mock_anthropic_client: MagicMock | AsyncMock) -> None:
         mock_anthropic_client.messages.create.return_value = _make_response("}")
 
         claude_query("My system prompt", "user")
@@ -64,7 +55,7 @@ class TestClaudeQuery:
             {"type": "text", "text": "My system prompt", "cache_control": {"type": "ephemeral"}}
         ]
 
-    def test_sends_user_message_and_assistant_prefix(self, mock_anthropic_client) -> None:
+    def test_sends_user_message_and_assistant_prefix(self, mock_anthropic_client: MagicMock | AsyncMock) -> None:
         mock_anthropic_client.messages.create.return_value = _make_response("}")
 
         claude_query("sys", "My user prompt")
@@ -74,7 +65,7 @@ class TestClaudeQuery:
         assert messages[0] == {"role": "user", "content": "My user prompt"}
         assert messages[1] == {"role": "assistant", "content": "{"}
 
-    def test_temperature_is_0_2(self, mock_anthropic_client) -> None:
+    def test_temperature_is_0_2(self, mock_anthropic_client: MagicMock | AsyncMock) -> None:
         mock_anthropic_client.messages.create.return_value = _make_response("}")
 
         claude_query("sys", "user")
@@ -82,7 +73,7 @@ class TestClaudeQuery:
         call_kwargs = mock_anthropic_client.messages.create.call_args.kwargs
         assert call_kwargs["temperature"] == 0.2
 
-    def test_default_max_tokens_is_1024(self, mock_anthropic_client) -> None:
+    def test_default_max_tokens_is_1024(self, mock_anthropic_client: MagicMock | AsyncMock) -> None:
         mock_anthropic_client.messages.create.return_value = _make_response("}")
 
         claude_query("sys", "user")
@@ -90,7 +81,7 @@ class TestClaudeQuery:
         call_kwargs = mock_anthropic_client.messages.create.call_args.kwargs
         assert call_kwargs["max_tokens"] == 1024
 
-    def test_custom_max_tokens_passed_through(self, mock_anthropic_client) -> None:
+    def test_custom_max_tokens_passed_through(self, mock_anthropic_client: MagicMock | AsyncMock) -> None:
         mock_anthropic_client.messages.create.return_value = _make_response("}")
 
         claude_query("sys", "user", max_tokens=2048)
@@ -98,7 +89,7 @@ class TestClaudeQuery:
         call_kwargs = mock_anthropic_client.messages.create.call_args.kwargs
         assert call_kwargs["max_tokens"] == 2048
 
-    def test_json_with_whitespace_parsed_correctly(self, mock_anthropic_client) -> None:
+    def test_json_with_whitespace_parsed_correctly(self, mock_anthropic_client: MagicMock | AsyncMock) -> None:
         # content = "{" + text; test that leading/trailing whitespace in the combined
         # string is stripped before JSON parsing.
         payload = {"score": 5}
@@ -110,7 +101,7 @@ class TestClaudeQuery:
 
         assert result == payload
 
-    def test_empty_json_object_parsed_correctly(self, mock_anthropic_client) -> None:
+    def test_empty_json_object_parsed_correctly(self, mock_anthropic_client: MagicMock | AsyncMock) -> None:
         # content = "{" + "}" = "{}"
         mock_anthropic_client.messages.create.return_value = _make_response("}")
 
@@ -118,19 +109,19 @@ class TestClaudeQuery:
 
         assert result == {}
 
-    def test_raises_claude_error_on_invalid_json(self, mock_anthropic_client) -> None:
+    def test_raises_claude_error_on_invalid_json(self, mock_anthropic_client: MagicMock | AsyncMock) -> None:
         mock_anthropic_client.messages.create.return_value = _make_response("not valid json {{")
 
         with pytest.raises(ClaudeError):
             claude_query("sys", "user")
 
-    def test_raises_claude_error_when_api_raises(self, mock_anthropic_client) -> None:
+    def test_raises_claude_error_when_api_raises(self, mock_anthropic_client: MagicMock | AsyncMock) -> None:
         mock_anthropic_client.messages.create.side_effect = RuntimeError("network error")
 
         with pytest.raises(ClaudeError):
             claude_query("sys", "user")
 
-    def test_nested_json_parsed_correctly(self, mock_anthropic_client) -> None:
+    def test_nested_json_parsed_correctly(self, mock_anthropic_client: MagicMock | AsyncMock) -> None:
         payload = {"scores": {"technical": 7, "culture": 9}, "tags": ["python", "remote"]}
         raw_json = json.dumps(payload)
         mock_anthropic_client.messages.create.return_value = _make_response(raw_json[1:])

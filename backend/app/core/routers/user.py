@@ -22,7 +22,6 @@ from app.routers.utility import generate_data_table_crud_router, assert_admin
 from app.utilities import security
 from app.utilities.logger import AppLogger
 
-
 # -------------------------------------------------------- USERS -------------------------------------------------------
 
 
@@ -131,7 +130,7 @@ def get_latest_user_qualification(
     entry = (
         db.query(models.UserQualification)
         .filter(models.UserQualification.owner_id == user.id)
-        .order_by(models.UserQualification.modified_at.desc())
+        .order_by(models.UserQualification.modified_at.desc(), models.UserQualification.id.desc())
         .first()
     )
     if not entry:

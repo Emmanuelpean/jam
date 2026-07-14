@@ -9,11 +9,11 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
-from helpers.base_utils import BaseUtils
-from select_utils import Select
+from helpers.jam_test_utils import JamTestUtils
+from helpers.select_utils import Select
 
 
-class DataTableUtils(BaseUtils):
+class DataTableUtils(JamTestUtils):
     """Base class for testing data tables"""
 
     def __init__(self, entry_type: str, **kwargs):

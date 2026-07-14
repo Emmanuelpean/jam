@@ -21,16 +21,14 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.add_column("scraped_job", sa.Column("retry_count", sa.Integer(), nullable=False, server_default="0"))
     op.add_column("scraped_job", sa.Column("next_retry_at", sa.TIMESTAMP(timezone=True), nullable=True))
-    op.execute(
-        """
+    op.execute("""
         ALTER TABLE scraped_job
         ALTER COLUMN scrape_error TYPE JSONB
         USING CASE
             WHEN scrape_error IS NULL THEN '[]'::jsonb
             ELSE jsonb_build_array(jsonb_build_object('datetime', scrape_datetime::text, 'error', scrape_error))
         END
-        """
-    )
+        """)
     op.execute("ALTER TABLE scraped_job ALTER COLUMN scrape_error SET NOT NULL")
     op.execute("ALTER TABLE scraped_job ALTER COLUMN scrape_error SET DEFAULT '[]'")
     op.add_column("scraped_job", sa.Column("is_closed", sa.BOOLEAN, nullable=False, server_default="false"))
@@ -39,16 +37,14 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_column("scraped_job", "retry_count")
     op.drop_column("scraped_job", "next_retry_at")
-    op.execute(
-        """
+    op.execute("""
         ALTER TABLE scraped_job
         ALTER COLUMN scrape_error TYPE VARCHAR
         USING CASE
             WHEN jsonb_array_length(scrape_error) = 0 THEN NULL
             ELSE (SELECT string_agg(elem->>'error', E'\\n\\n') FROM jsonb_array_elements(scrape_error) AS elem)
         END
-        """
-    )
+        """)
     op.execute("ALTER TABLE scraped_job ALTER COLUMN scrape_error DROP NOT NULL")
     op.execute("ALTER TABLE scraped_job ALTER COLUMN scrape_error DROP DEFAULT")
     op.drop_column("scraped_job", "is_closed")

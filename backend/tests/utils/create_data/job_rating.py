@@ -13,6 +13,35 @@ def create_job_rating_service_logs(db) -> list[models.JobRatingServiceLog]:
     return create_db_entries(db, models.JobRatingServiceLog, data)
 
 
+def create_job_rating_service_errors(db, service_logs) -> list[models.ServiceError]:
+    """Create sample run-level job rating errors as unified ServiceError rows linked to their service log"""
+
+    data = override_properties(
+        job_rating.JOB_RATING_SERVICE_ERROR_DATA,
+        ("job_rating_service_log_id", service_logs),
+    )
+    print(f"Creating {len(data)} Job Rating Service Errors...")
+    return create_db_entries(db, models.ServiceError, data)
+
+
+def create_job_rating_errors(db, job_ratings, service_logs) -> list[models.ServiceError]:
+    """Create sample per-rating job rating errors as unified ServiceError rows linked to their JobRating and to the
+    rating run that processed it, mirroring how the rater records per-job failures in production. The owning run is
+    the service log whose job_failed_ids contains the rating's scraped job."""
+
+    data = override_properties(job_rating.JOB_RATING_ERROR_DATA, ("job_rating_id", job_ratings))
+    rating_by_id = {rating.id: rating for rating in job_ratings}
+    for entry in data:
+        scraped_job_id = rating_by_id[entry["job_rating_id"]].scraped_job_id
+        log = next((sl for sl in service_logs if scraped_job_id in sl.job_failed_ids), None)
+        entry["job_rating_service_log_id"] = log.id if log else None
+        # Build the recorded message/error_type/traceback from the failure reason now that the scraped job id
+        # (which the production message embeds) is known.
+        entry.update(job_rating.build_rating_error(scraped_job_id, entry.pop("reason")))
+    print(f"Creating {len(data)} Job Rating Errors...")
+    return create_db_entries(db, models.ServiceError, data)
+
+
 def create_job_ratings(db, users, use_qualifications, scraped_jobs, service_logs, ai_prompts) -> list[models.JobRating]:
     """Create sample job ratings"""
 

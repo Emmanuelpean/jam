@@ -2,11 +2,11 @@
 
 from selenium.webdriver.remote.webelement import WebElement
 
-from helpers.base_utils import BaseUtils
-from select_utils import Select
+from helpers.jam_test_utils import JamTestUtils
+from helpers.select_utils import Select
 
 
-class UserSettingsUtils(BaseUtils):
+class UserSettingsUtils(JamTestUtils):
     """Test class for the User Settings Page"""
 
     def __init__(self, **kwargs):
@@ -125,32 +125,25 @@ class UserSettingsUtils(BaseUtils):
 
         self.get_element("confirm-button").click()
 
-    def _assert_message(self, key: str, message: str) -> None:
-        """Assert that the given message is displayed on the page
-        :param key: Key to use for finding the error message element
-        :param message: Message to check for"""
-
-        assert message in self.get_element(key + "error-message").text, f"Message not found: {message}"
-
     def assert_email_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("email-", error_message)
+        self.assert_error_message("email", error_message)
 
     def assert_password_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("current_password-", error_message)
+        self.assert_error_message("current_password", error_message)
 
     def assert_new_password_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("new_password-", error_message)
+        self.assert_error_message("new_password", error_message)
 
     def assert_confirm_password_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("confirm_password-", error_message)
+        self.assert_error_message("confirm_password", error_message)
 
     def assert_no_email_error_message(self) -> None:
         """Assert that the email error message is not displayed on the page"""
@@ -175,7 +168,7 @@ class UserSettingsUtils(BaseUtils):
     def assert_delete_password_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed under the delete password field"""
 
-        self._assert_message("delete_password-", error_message)
+        self.assert_error_message("delete_password", error_message)
 
     @property
     def download_data_button(self) -> WebElement:

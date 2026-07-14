@@ -14,7 +14,7 @@ JOB_RATING_DATA = [
         "experience_score": 3,
         "educational_score": 6,
         "interest_score": 4,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Moderate match. The candidate has some relevant skills but lacks specific experience.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -30,7 +30,7 @@ JOB_RATING_DATA = [
         "experience_score": 7,
         "educational_score": 8,
         "interest_score": 9,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Strong match. Candidate's technical skills and education align well with requirements.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -46,7 +46,7 @@ JOB_RATING_DATA = [
         "experience_score": 5,
         "educational_score": 6,
         "interest_score": 7,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Decent match overall with room for growth in experience.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -62,7 +62,7 @@ JOB_RATING_DATA = [
         "experience_score": 8,
         "educational_score": 9,
         "interest_score": 8,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Excellent match. Candidate profile closely aligns with job requirements.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -78,7 +78,7 @@ JOB_RATING_DATA = [
         "experience_score": 4,
         "educational_score": 3,
         "interest_score": 5,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Weak match. Required skills do not align with candidate profile.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -89,8 +89,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 6,
-        "is_success": False,
-        "error": "Failed to scrape job details: Page not found",
+        "status": "failed",
         "user_qualification_id": 3,
         "owner_id": 2,
         "system_prompt_id": 1,
@@ -100,8 +99,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 7,
-        "is_success": False,
-        "error": "Failed to scrape job details: Rate limit exceeded",
+        "status": "failed",
         "user_qualification_id": 4,
         "owner_id": 2,
         "system_prompt_id": 1,
@@ -116,7 +114,7 @@ JOB_RATING_DATA = [
         "experience_score": 6,
         "educational_score": 7,
         "interest_score": 8,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Good match. Candidate has strong technical background relevant to this role.",
         "user_qualification_id": 3,
         "owner_id": 2,
@@ -132,7 +130,7 @@ JOB_RATING_DATA = [
         "experience_score": 4,
         "educational_score": 5,
         "interest_score": 6,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Average match. Some transferable skills but lacks direct experience.",
         "user_qualification_id": 4,
         "owner_id": 2,
@@ -148,7 +146,7 @@ JOB_RATING_DATA = [
         "experience_score": 8,
         "educational_score": 10,
         "interest_score": 9,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Excellent match. Education and skills are highly relevant.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -159,8 +157,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 11,
-        "is_success": False,
-        "error": "Failed to rate job: missing job description",
+        "status": "failed",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -175,7 +172,7 @@ JOB_RATING_DATA = [
         "experience_score": 3,
         "educational_score": 2,
         "interest_score": 3,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Poor match. Job requirements are outside the candidate's domain.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -186,8 +183,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 13,
-        "is_success": False,
-        "error": "Failed to rate job: API timeout",
+        "status": "failed",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -202,7 +198,7 @@ JOB_RATING_DATA = [
         "experience_score": 6,
         "educational_score": 7,
         "interest_score": 7,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Good technical fit with relevant educational background.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -218,7 +214,7 @@ JOB_RATING_DATA = [
         "experience_score": 6,
         "educational_score": 5,
         "interest_score": 6,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Moderate match. Experience is somewhat relevant.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -234,7 +230,7 @@ JOB_RATING_DATA = [
         "experience_score": 7,
         "educational_score": 8,
         "interest_score": 8,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Strong candidate with well-matched technical skills.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -250,7 +246,7 @@ JOB_RATING_DATA = [
         "experience_score": 5,
         "educational_score": 6,
         "interest_score": 7,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Reasonable match with some gaps in required experience.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -266,7 +262,7 @@ JOB_RATING_DATA = [
         "experience_score": 9,
         "educational_score": 10,
         "interest_score": 10,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Perfect match. Candidate exceeds all requirements.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -282,7 +278,7 @@ JOB_RATING_DATA = [
         "experience_score": 5,
         "educational_score": 4,
         "interest_score": 4,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Below average match. Key technical requirements not met.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -298,7 +294,7 @@ JOB_RATING_DATA = [
         "experience_score": 8,
         "educational_score": 7,
         "interest_score": 6,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Good experience alignment despite moderate technical fit.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -314,7 +310,7 @@ JOB_RATING_DATA = [
         "experience_score": 9,
         "educational_score": 7,
         "interest_score": 8,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Strong match with excellent experience in the domain.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -330,7 +326,7 @@ JOB_RATING_DATA = [
         "experience_score": 3,
         "educational_score": 4,
         "interest_score": 2,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Weak match. Role requires specialized skills not present in profile.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -346,7 +342,7 @@ JOB_RATING_DATA = [
         "experience_score": 5,
         "educational_score": 6,
         "interest_score": 8,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Decent match. High interest alignment compensates for experience gaps.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -362,7 +358,7 @@ JOB_RATING_DATA = [
         "experience_score": 8,
         "educational_score": 9,
         "interest_score": 9,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Excellent technical match with strong academic credentials.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -378,7 +374,7 @@ JOB_RATING_DATA = [
         "experience_score": 6,
         "educational_score": 4,
         "interest_score": 5,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Average match across all dimensions.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -394,7 +390,7 @@ JOB_RATING_DATA = [
         "experience_score": 7,
         "educational_score": 6,
         "interest_score": 7,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Good overall match with solid technical foundation.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -410,7 +406,7 @@ JOB_RATING_DATA = [
         "experience_score": 4,
         "educational_score": 5,
         "interest_score": 3,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Below average. Limited alignment with core job requirements.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -426,7 +422,7 @@ JOB_RATING_DATA = [
         "experience_score": 8,
         "educational_score": 7,
         "interest_score": 9,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Very strong candidate. Technical depth and enthusiasm stand out.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -442,7 +438,7 @@ JOB_RATING_DATA = [
         "experience_score": 7,
         "educational_score": 5,
         "interest_score": 6,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Moderate match. Relevant experience but educational gap.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -458,7 +454,7 @@ JOB_RATING_DATA = [
         "experience_score": 2,
         "educational_score": 3,
         "interest_score": 2,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Poor fit. Candidate lacks fundamental requirements for this position.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -474,7 +470,7 @@ JOB_RATING_DATA = [
         "experience_score": 8,
         "educational_score": 6,
         "interest_score": 7,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Good match with strong relevant experience.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -490,7 +486,7 @@ JOB_RATING_DATA = [
         "experience_score": 10,
         "educational_score": 8,
         "interest_score": 9,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Outstanding experience match. Candidate is highly qualified.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -506,7 +502,7 @@ JOB_RATING_DATA = [
         "experience_score": 5,
         "educational_score": 6,
         "interest_score": 4,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Average match. Some transferable skills identified.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -522,7 +518,7 @@ JOB_RATING_DATA = [
         "experience_score": 7,
         "educational_score": 9,
         "interest_score": 8,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Strong educational alignment and solid technical skills.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -538,7 +534,7 @@ JOB_RATING_DATA = [
         "experience_score": 7,
         "educational_score": 6,
         "interest_score": 5,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Reasonable fit. Experience compensates for technical gaps.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -554,7 +550,7 @@ JOB_RATING_DATA = [
         "experience_score": 4,
         "educational_score": 5,
         "interest_score": 3,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Limited match. Key requirements are not satisfied.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -570,7 +566,7 @@ JOB_RATING_DATA = [
         "experience_score": 6,
         "educational_score": 7,
         "interest_score": 8,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Good match. Technical skills and interests align well.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -586,7 +582,7 @@ JOB_RATING_DATA = [
         "experience_score": 10,
         "educational_score": 9,
         "interest_score": 10,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Near perfect match across all dimensions.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -602,7 +598,7 @@ JOB_RATING_DATA = [
         "experience_score": 4,
         "educational_score": 3,
         "interest_score": 4,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Weak match. Candidate would need significant upskilling.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -618,7 +614,7 @@ JOB_RATING_DATA = [
         "experience_score": 9,
         "educational_score": 8,
         "interest_score": 7,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Strong experience-driven match with good educational background.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -634,7 +630,7 @@ JOB_RATING_DATA = [
         "experience_score": 5,
         "educational_score": 7,
         "interest_score": 6,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Decent fit. Educational background provides a solid foundation.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -650,7 +646,7 @@ JOB_RATING_DATA = [
         "experience_score": 4,
         "educational_score": 6,
         "interest_score": 5,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Average match. Neither strong nor weak alignment.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -666,7 +662,7 @@ JOB_RATING_DATA = [
         "experience_score": 7,
         "educational_score": 6,
         "interest_score": 8,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Good technical and interest alignment.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -682,7 +678,7 @@ JOB_RATING_DATA = [
         "experience_score": 8,
         "educational_score": 10,
         "interest_score": 8,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Excellent match. Highly qualified candidate for this role.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -698,7 +694,7 @@ JOB_RATING_DATA = [
         "experience_score": 3,
         "educational_score": 5,
         "interest_score": 4,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Below average fit. Limited relevant experience.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -714,7 +710,7 @@ JOB_RATING_DATA = [
         "experience_score": 6,
         "educational_score": 5,
         "interest_score": 7,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Moderate match with potential for growth.",
         "notes": [
             "Description was truncated as it was too long (5234 characters. Limit is 5000 characters)",
@@ -734,8 +730,7 @@ JOB_RATING_DATA = [
         "experience_score": None,
         "educational_score": None,
         "interest_score": None,
-        "is_success": False,
-        "is_skipped": True,
+        "status": "skipped",
         "skip_reason": "Job description too short (minimum length is 100 characters)",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -751,7 +746,7 @@ JOB_RATING_DATA = [
         "experience_score": 6,
         "educational_score": 5,
         "interest_score": 5,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Average match. Some relevant experience but technical gaps.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -767,7 +762,7 @@ JOB_RATING_DATA = [
         "experience_score": 8,
         "educational_score": 7,
         "interest_score": 6,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Good match driven by relevant work experience.",
         "user_qualification_id": 3,
         "owner_id": 2,
@@ -783,7 +778,7 @@ JOB_RATING_DATA = [
         "experience_score": 3,
         "educational_score": 4,
         "interest_score": 3,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Weak fit. Core skill requirements not met.",
         "user_qualification_id": 4,
         "owner_id": 2,
@@ -799,7 +794,7 @@ JOB_RATING_DATA = [
         "experience_score": 9,
         "educational_score": 8,
         "interest_score": 10,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Outstanding match. Candidate is an ideal fit for this position.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -815,7 +810,7 @@ JOB_RATING_DATA = [
         "experience_score": 6,
         "educational_score": 7,
         "interest_score": 5,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Moderate match. Educational background is the strongest dimension.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -831,7 +826,7 @@ JOB_RATING_DATA = [
         "experience_score": 7,
         "educational_score": 9,
         "interest_score": 7,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Strong academic and technical alignment.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -847,7 +842,7 @@ JOB_RATING_DATA = [
         "experience_score": 5,
         "educational_score": 4,
         "interest_score": 4,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Limited alignment. Candidate would need training to succeed.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -863,7 +858,7 @@ JOB_RATING_DATA = [
         "experience_score": 6,
         "educational_score": 8,
         "interest_score": 7,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Good match. Solid educational background supports candidacy.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -879,7 +874,7 @@ JOB_RATING_DATA = [
         "experience_score": 4,
         "educational_score": 5,
         "interest_score": 6,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Moderate fit. Interest alignment is promising.",
         "user_qualification_id": 1,
         "owner_id": 1,
@@ -895,7 +890,7 @@ JOB_RATING_DATA = [
         "experience_score": 8,
         "educational_score": 7,
         "interest_score": 8,
-        "is_success": True,
+        "status": "completed",
         "feedback": "Very good match. Technical expertise is a strong selling point.",
         "user_qualification_id": 2,
         "owner_id": 1,
@@ -906,8 +901,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 58,
-        "is_success": False,
-        "error": "Failed to rate job: Page not found",
+        "status": "failed",
         "user_qualification_id": 1,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -917,8 +911,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 59,
-        "is_success": False,
-        "error": "Failed to rate job: Page not found",
+        "status": "completed",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -928,8 +921,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 60,
-        "is_success": False,
-        "error": "Failed to rate job: Connection timeout",
+        "status": "completed",
         "user_qualification_id": 1,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -939,8 +931,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 61,
-        "is_success": False,
-        "error": "Failed to rate job: Access denied",
+        "status": "completed",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -950,8 +941,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 62,
-        "is_success": False,
-        "error": "Failed to rate job: Rate limit exceeded",
+        "status": "completed",
         "user_qualification_id": 1,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -961,8 +951,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 63,
-        "is_success": False,
-        "error": "Failed to rate job: Invalid response format",
+        "status": "completed",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -972,8 +961,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 64,
-        "is_success": False,
-        "error": "Failed to rate job: Service unavailable",
+        "status": "completed",
         "user_qualification_id": 1,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -983,8 +971,7 @@ JOB_RATING_DATA = [
     },
     {
         "scraped_job_id": 65,
-        "is_success": False,
-        "error": "Failed to rate job: Internal server error",
+        "status": "completed",
         "user_qualification_id": 2,
         "owner_id": 1,
         "system_prompt_id": 1,
@@ -1000,8 +987,6 @@ JOB_RATING_SERVICE_LOG_DATA = [
     {
         "run_duration": 0.85,
         "run_datetime": "2025-01-15T12:34:56+00:00",
-        "is_success": True,
-        "error_message": None,
         "job_found_ids": [
             21,
             22,
@@ -1094,8 +1079,6 @@ JOB_RATING_SERVICE_LOG_DATA = [
     {
         "run_duration": 1.23,
         "run_datetime": "2025-02-01T09:00:00+00:00",
-        "is_success": False,
-        "error_message": "Timeout contacting rating service",
         "job_found_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
         "job_succeeded_ids": [1, 2, 3, 4, 5, 8, 9, 10, 12, 14, 15, 16, 17, 18, 19, 20],
         "job_failed_ids": [6, 7, 11, 13],
@@ -1105,8 +1088,6 @@ JOB_RATING_SERVICE_LOG_DATA = [
     {
         "run_duration": 3,
         "run_datetime": "2025-03-10T18:00:00+00:00",
-        "is_success": None,
-        "error_message": None,
         "job_found_ids": [],
         "job_succeeded_ids": [],
         "job_failed_ids": [],
@@ -1117,3 +1098,175 @@ JOB_RATING_SERVICE_LOG_DATA = [
 SERVICE_LOG_DATETIME = [CURRENT_DATE - dt.timedelta(days=i) for i in range(len(JOB_RATING_SERVICE_LOG_DATA))]
 for service_log, date in zip(JOB_RATING_SERVICE_LOG_DATA, SERVICE_LOG_DATETIME):
     service_log["run_datetime"] = date.strftime(DATETIME_FORMAT)
+
+
+# Per-job rating failures share the static message from app/job_rating/scraped_job_rating.py (`_rate_job`):
+# "Error scoring job.", with the job id / exception text / raw response carried in `context`. Each failure
+# reason maps to the caught exception (driving error_type), the values stored in context, and a representative
+# traceback ending on that exception. `create_job_rating_errors` fills in the actual scraped job id, since
+# only it knows the rating -> scraped-job link.
+_RATING_FAILURES = {
+    "missing_key": {
+        "error_type": "KeyError",
+        "exception": "'overall_score'",
+        "raw_response": "{'technical_fit': 7, 'explanation': 'Strong match'}",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 292, in _rate_job\n'
+            '    job_rating.overall_score = score["overall_score"]\n'
+            "KeyError: 'overall_score'"
+        ),
+    },
+    "api_timeout": {
+        "error_type": "APITimeoutError",
+        "exception": "Request timed out.",
+        "raw_response": "None",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 291, in _rate_job\n'
+            "    score = claude_query(combined_system_prompt, job_prompt)\n"
+            '  File "app/job_rating/claude.py", line 72, in claude_query\n'
+            "    response = client.messages.create(**kwargs)\n"
+            "anthropic.APITimeoutError: Request timed out."
+        ),
+    },
+    "rate_limit": {
+        "error_type": "RateLimitError",
+        "exception": "Error code: 429 - {'type': 'rate_limit_error'}",
+        "raw_response": "None",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 291, in _rate_job\n'
+            "    score = claude_query(combined_system_prompt, job_prompt)\n"
+            '  File "app/job_rating/claude.py", line 72, in claude_query\n'
+            "    response = client.messages.create(**kwargs)\n"
+            "anthropic.RateLimitError: Error code: 429 - {'type': 'rate_limit_error'}"
+        ),
+    },
+    "invalid_format": {
+        "error_type": "JSONDecodeError",
+        "exception": "Expecting value: line 1 column 1 (char 0)",
+        "raw_response": "'Here is my assessment of the candidate for this role'",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 291, in _rate_job\n'
+            "    score = claude_query(combined_system_prompt, job_prompt)\n"
+            '  File "app/job_rating/claude.py", line 110, in claude_query\n'
+            "    return json.loads(response_text)\n"
+            "json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+        ),
+    },
+    "connection": {
+        "error_type": "APIConnectionError",
+        "exception": "Connection error.",
+        "raw_response": "None",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 291, in _rate_job\n'
+            "    score = claude_query(combined_system_prompt, job_prompt)\n"
+            '  File "app/job_rating/claude.py", line 72, in claude_query\n'
+            "    response = client.messages.create(**kwargs)\n"
+            "anthropic.APIConnectionError: Connection error."
+        ),
+    },
+    "overloaded": {
+        "error_type": "InternalServerError",
+        "exception": "Error code: 529 - {'type': 'overloaded_error'}",
+        "raw_response": "None",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 291, in _rate_job\n'
+            "    score = claude_query(combined_system_prompt, job_prompt)\n"
+            '  File "app/job_rating/claude.py", line 88, in claude_query\n'
+            "    raise self._make_status_error_from_response(response)\n"
+            "anthropic.InternalServerError: Error code: 529 - {'type': 'overloaded_error'}"
+        ),
+    },
+}
+
+
+def build_rating_error(scraped_job_id: int, reason: str) -> dict:
+    """Build the error_type/message/context/traceback for a per-job rating failure, as `_rate_job` records."""
+    failure = _RATING_FAILURES[reason]
+    return {
+        "error_type": failure["error_type"],
+        "message": "Error scoring job.",
+        "context": {
+            "job_id": scraped_job_id,
+            "error": failure["exception"],
+            "raw_response": failure["raw_response"],
+        },
+        "traceback": failure["traceback"],
+    }
+
+
+# ---------------------------------------------- JOB RATING SERVICE ERRORS ----------------------------------------------
+
+# Run-level failures the rater records, mirroring the sole run-level `record_error` in `run()`: a CRITICAL
+# "Critical error in rating workflow" that aborts the run (so JobRatingServiceLog.is_success derives to False).
+# The two runs differ only in the underlying exception that triggered the outer handler.
+JOB_RATING_SERVICE_ERROR_DATA = [
+    {
+        "error_type": "Exception",
+        "message": "Critical error in rating workflow",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 112, in run\n'
+            '    raise Exception("No system or job prompt templates found")\n'
+            "Exception: No system or job prompt templates found"
+        ),
+        "level": "critical",
+        "job_rating_service_log_id": 2,
+    },
+    {
+        "error_type": "OperationalError",
+        "message": "Critical error in rating workflow",
+        "traceback": (
+            "Traceback (most recent call last):\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 116, in run\n'
+            "    self._process_user(db, user.id, service_log, system_prompt, job_prompt)\n"
+            '  File "app/job_rating/scraped_job_rating.py", line 165, in _process_user\n'
+            "    db.commit()\n"
+            "sqlalchemy.exc.OperationalError: (psycopg2.errors.AdminShutdown) terminating connection due to "
+            "administrator command"
+        ),
+        "level": "critical",
+        "job_rating_service_log_id": 3,
+    },
+]
+
+# ------------------------------------------------- JOB RATING ERRORS --------------------------------------------------
+
+# (job_rating_id, failure reason). The message/error_type/traceback are derived per row in
+# create_job_rating_errors, where the rating's scraped job id is known. A rating's retries re-run the same
+# code path, so retry rows repeat the same (rating, reason) pair and collapse in the grouped error view.
+JOB_RATING_ERROR_DATA = [
+    {"job_rating_id": 6, "reason": "missing_key"},
+    {"job_rating_id": 7, "reason": "rate_limit"},
+    {"job_rating_id": 11, "reason": "invalid_format"},
+    {"job_rating_id": 13, "reason": "api_timeout"},
+    {"job_rating_id": 58, "reason": "connection"},
+    {"job_rating_id": 59, "reason": "overloaded"},
+    {"job_rating_id": 60, "reason": "connection"},
+    {"job_rating_id": 61, "reason": "rate_limit"},
+    {"job_rating_id": 62, "reason": "rate_limit"},
+    {"job_rating_id": 63, "reason": "invalid_format"},
+    {"job_rating_id": 64, "reason": "overloaded"},
+    {"job_rating_id": 65, "reason": "missing_key"},
+    # Retry rows: the same rating hits the same failure again, so message and error_type repeat verbatim.
+    {"job_rating_id": 6, "reason": "missing_key"},
+    {"job_rating_id": 7, "reason": "rate_limit"},
+    {"job_rating_id": 11, "reason": "invalid_format"},
+    {"job_rating_id": 13, "reason": "api_timeout"},
+    {"job_rating_id": 58, "reason": "connection"},
+    {"job_rating_id": 59, "reason": "overloaded"},
+    {"job_rating_id": 60, "reason": "connection"},
+    {"job_rating_id": 61, "reason": "rate_limit"},
+    {"job_rating_id": 62, "reason": "rate_limit"},
+    {"job_rating_id": 63, "reason": "invalid_format"},
+    {"job_rating_id": 6, "reason": "missing_key"},
+    {"job_rating_id": 7, "reason": "rate_limit"},
+    {"job_rating_id": 11, "reason": "invalid_format"},
+    {"job_rating_id": 13, "reason": "api_timeout"},
+    {"job_rating_id": 58, "reason": "connection"},
+]

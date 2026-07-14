@@ -30,13 +30,13 @@ Cleanup on Done/Skip:
 import time
 
 from app import models
-from base_test import BaseTest
+from frontend_base_test import BaseTest
 
 TOUR_ID = "import-scraped-job"
 
 
 class TestImportScrapedJobTour(BaseTest):
-    user_index = 0
+    user_fixture = "test_regular_user"
     page_url = "job-alerts/jobs"
 
     def setup_function(self, request) -> None:

@@ -24,14 +24,13 @@ All seeded data is cleaned up on Done or Skip regardless of how the tour ended.
 """
 
 from app import models
-from base_test import BaseTest
-
+from frontend_base_test import BaseTest
 
 TOUR_ID = "follow-up-email"
 
 
 class TestFollowUpEmailTour(BaseTest):
-    user_index = 0
+    user_fixture = "test_regular_user"
     page_url = "jobs"
 
     def setup_function(self, request) -> None:
@@ -57,7 +56,7 @@ class TestFollowUpEmailTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.context_menu(self._demo_job_row(), "followup")
         # Tour auto-advances when #follow-up-modal appears
-        self.followup_modal.wait_for_modal()
+        self.followup_modal_utils.wait_for_modal()
 
     def _open_via_badge(self) -> None:
         """Choose Method 2: open the job view modal and right-click the first contact badge."""
@@ -73,7 +72,7 @@ class TestFollowUpEmailTour(BaseTest):
         badge = self.get_element("modal-view-job-person-0")
         self.context_menu(badge, "followup")
         # Tour auto-advances when #follow-up-modal appears
-        self.followup_modal.wait_for_modal()
+        self.followup_modal_utils.wait_for_modal()
 
     def _open_via_button(self) -> None:
         """Choose Method 3: open view modal, click Application tab, click the Follow-up button."""
@@ -93,7 +92,7 @@ class TestFollowUpEmailTour(BaseTest):
         self.tour_utils.wait_for_popover()
         self.get_element("job-modal-follow-up-button").click()
         # Tour auto-advances when #follow-up-modal appears
-        self.followup_modal.wait_for_modal()
+        self.followup_modal_utils.wait_for_modal()
 
     def _complete_modal_steps(self) -> None:
         """Advance through follow-up-contact, follow-up-subject, and follow-up-body steps."""
@@ -117,14 +116,14 @@ class TestFollowUpEmailTour(BaseTest):
         """
         # follow-up-send: click Send Email; tour waits for confirm dialog buttons
         self.tour_utils.wait_for_popover()
-        self.followup_modal.send_button.click()
+        self.followup_modal_utils.send_button.click()
 
         # follow-up-log-update: confirm dialog is highlighted — click Yes or No
         self.tour_utils.wait_for_popover()
         if log_update:
-            self.confirm_modal.confirm_button.click()
+            self.confirm_modal_utils.confirm_button.click()
         else:
-            self.confirm_modal.cancel_button.click()
+            self.confirm_modal_utils.cancel_button.click()
 
     def _finish_tour(self) -> None:
         """Click Done on the follow-up-done step and wait for the popover to vanish."""
@@ -248,7 +247,7 @@ class TestFollowUpEmailTour(BaseTest):
         The tour snapshot hides pre-existing entities from visibleData, so only the
         JAM-seeded demo job (1 row) should be visible while the tour is active.
         """
-        pre_existing = self._make_job(title="Pre-Existing Job")
+        pre_existing = self.user.create_job(title="Pre-Existing Job")
         initial_jobs = self.db.query(models.Job).filter_by(owner_id=self.user.id).count()
 
         self._start_tour()

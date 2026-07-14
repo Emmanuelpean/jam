@@ -12,7 +12,6 @@ interface TimeSelectionProps {
 	unit: TimeUnit;
 	startDate: string;
 	endDate: string;
-	/** Restrict the selectable time units; defaults to all units. */
 	availableUnits?: TimeUnit[];
 	onModeChange: (mode: SelectionMode) => void;
 	onAmountChange: (amount: number) => void;
@@ -45,9 +44,9 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
 	onUnitChange,
 	onStartDateChange,
 	onEndDateChange,
-}) => {
+}: TimeSelectionProps): JSX.Element => {
 	const options: SelectOption[] = availableUnits
-		? timeUnitOptions.filter((o) => availableUnits.includes(o.value))
+		? timeUnitOptions.filter((o: SelectOption): boolean => availableUnits.includes(o.value))
 		: timeUnitOptions;
 
 	const timeUnitField: ModalFormField = {
@@ -57,13 +56,12 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
 		options,
 		placeholder: "Select unit",
 		isClearable: false,
-		size: "sm",
 	};
 
 	return (
 		<div className="time-selection-container">
 			<div className="d-flex align-items-center gap-3 flex-wrap">
-				<div className="btn-group btn-group-sm" role="group" aria-label="Selection mode">
+				<div className="btn-group" role="group" aria-label="Selection mode">
 					<button
 						type="button"
 						className={`btn ${mode === "period" ? "btn-primary" : "btn-outline-secondary"}`}
@@ -84,7 +82,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
 					<>
 						<input
 							type="number"
-							className="form-control form-control-sm"
+							className="form-control"
 							style={{ width: "70px" }}
 							min="1"
 							value={amount}
@@ -99,7 +97,6 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
 								value={unit}
 								error={null}
 								handleChange={(event: any) => {
-									// SelectInput emits SyntheticEvent with target.value being the selected option's value
 									if (event?.target?.value) onUnitChange(event.target.value as TimeUnit);
 								}}
 							/>
@@ -111,7 +108,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
 					<>
 						<input
 							type="datetime-local"
-							className="form-control form-control-sm"
+							className="form-control"
 							style={{ width: "165px" }}
 							value={startDate}
 							onChange={(e: React.ChangeEvent<HTMLInputElement>) => onStartDateChange(e.target.value)}
@@ -119,7 +116,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
 						<span className="text-muted fw-bold">to</span>
 						<input
 							type="datetime-local"
-							className="form-control form-control-sm"
+							className="form-control"
 							style={{ width: "165px" }}
 							value={endDate}
 							onChange={(e: React.ChangeEvent<HTMLInputElement>) => onEndDateChange(e.target.value)}

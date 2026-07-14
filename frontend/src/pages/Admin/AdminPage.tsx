@@ -5,20 +5,21 @@ import { getTableIcon } from "../../components/rendering/view/Icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDataContext } from "../../contexts/DataContext";
 import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
+import { useSchedulerStatus } from "../../hooks/useSchedulerStatus";
 import {
+	BaseServiceApi,
 	jobRatingServiceLogApi,
 	jobRatingServiceRunnerApi,
 	jobScraperServiceApi,
 	jobScraperServiceLogApi,
+	SchedulerStatus,
 	ServiceStatus,
+	ServiceUpdatePayload,
 } from "../../services/api/Services";
-import {
-	externalServiceMonitoringApi,
-	externalServiceMonitoringRunnerApi,
-} from "../../services/api/ExternalServiceMonitoring";
-import { failureColor, serviceRunnerStatusLabels, successColor } from "../Services/ServiceUtils";
+import { providerMonitoringApi, providerMonitoringRunnerApi } from "../../services/api/ProviderMonitoring";
+import { failureColor, formatNextRun, serviceEnabledLabel, successColor } from "../Services/ServiceUtils";
 import { ServiceConfigField, ServiceStatusControl } from "../Services/ServiceStatusControl";
-import { formatDuration } from "../../utils/TimeUtils";
+import { ServiceFilterSlotContext } from "../Services/ServiceFilterSlot";
 import { UserData } from "../../services/schemas/Core";
 import { Sparkline, SparklinePoint } from "../../components/Chart/Sparkline";
 import JamModal from "../../components/JamModal/JamModal";
@@ -27,12 +28,12 @@ import { AppSettingsPage } from "./AppSettingsPage";
 import EmailTemplatesPage from "./EmailTemplatesPage";
 import JobScrapingPage from "../Services/JobScrapingPage";
 import JobRatingPage from "../Services/JobRatingPage";
+import SchedulerPage from "../Services/SchedulerPage";
 import UsagePage from "./UsagePage";
 import "../Services/Service.scss";
 import "./AdminPage.scss";
 
-// Each admin card opens its page inside a large modal rather than navigating away.
-type AdminPageKey = "users" | "settings" | "email" | "scraping" | "rating" | "usage";
+type AdminPageKey = "users" | "settings" | "email" | "scraping" | "rating" | "usage" | "scheduler";
 
 const ADMIN_PAGES: Record<AdminPageKey, { title: string; icon: string; render: () => JSX.Element }> = {
 	users: { title: "Users", icon: getTableIcon("Users"), render: () => <UsersPage /> },
@@ -45,62 +46,70 @@ const ADMIN_PAGES: Record<AdminPageKey, { title: string; icon: string; render: (
 	},
 	rating: { title: "Job Rating", icon: getTableIcon("Job Rating Dashboard"), render: () => <JobRatingPage /> },
 	usage: {
-		title: "External Service Monitoring",
+		title: "Provider Monitoring",
 		icon: getTableIcon("ESM"),
 		render: () => <UsagePage />,
 	},
+	scheduler: { title: "Service Scheduler", icon: "clock-history", render: () => <SchedulerPage /> },
 };
 
-// Start/stop config for the service-runner pages, shown as an interactive control in
-// the modal header. The live status is supplied separately (already polled for the cards).
 interface ServiceControlConfig {
 	ariaLabel: string;
 	configFields: ServiceConfigField[];
-	start: (values: Record<string, number>, token: string) => Promise<unknown>;
-	stop: (token: string) => Promise<unknown>;
+	api: BaseServiceApi;
+	buildUpdate?: (values: Record<string, number>) => ServiceUpdatePayload;
 }
 
 const SERVICE_CONTROLS: Partial<Record<AdminPageKey, ServiceControlConfig>> = {
 	scraping: {
 		ariaLabel: "Job scraping service controls",
+		api: jobScraperServiceApi,
 		configFields: [
 			{
 				name: "period_hours",
 				label: "Scraping Period",
 				help: "Time between scraping runs.",
 				unit: "Hour(s)",
-				getValue: (s) => s.period_hours || 0,
+				getValue: (s) => s.run_period_hours || 0,
 			},
 			{
-				name: "timedelta_days",
-				label: "Time Delta",
-				help: "Number of days back to scrape job postings for each run.",
+				name: "min_timedelta_days",
+				label: "Min Time Delta",
+				help: "Minimum number of days back to scrape emails for each run.",
 				unit: "Day(s)",
-				getValue: (s) => s.service_kwargs?.timedelta_days || 0,
+				getValue: (s) => s.parameters?.min_timedelta_days || 0,
+			},
+			{
+				name: "max_timedelta_days",
+				label: "Max Time Delta",
+				help: "Maximum number of days back to scrape emails (used to catch up after downtime).",
+				unit: "Day(s)",
+				getValue: (s) => s.parameters?.max_timedelta_days || 0,
 			},
 		],
-		start: (v, t) => jobScraperServiceApi.start(v.period_hours ?? 0, v.timedelta_days ?? 0, t),
-		stop: (t) => jobScraperServiceApi.stop(t),
+		buildUpdate: (v) => ({
+			run_period_hours: v.period_hours,
+			parameters: { min_timedelta_days: v.min_timedelta_days, max_timedelta_days: v.max_timedelta_days },
+		}),
 	},
 	rating: {
 		ariaLabel: "Job rating service controls",
+		api: jobRatingServiceRunnerApi,
 		configFields: [
 			{
 				name: "period_hours",
-				label: "Scraping Period",
+				label: "Rating Period",
 				help: "Time between rating runs.",
 				unit: "Hour(s)",
-				getValue: (s) => s.period_hours || 0,
+				getValue: (s) => s.run_period_hours || 0,
 			},
 		],
-		start: (v, t) => jobRatingServiceRunnerApi.start(v.period_hours ?? 0, t),
-		stop: (t) => jobRatingServiceRunnerApi.stop(t),
+		buildUpdate: (v) => ({ run_period_hours: v.period_hours }),
 	},
 	usage: {
 		ariaLabel: "Monitoring service controls",
+		api: providerMonitoringRunnerApi,
 		configFields: [],
-		start: (_v, t) => externalServiceMonitoringRunnerApi.start(t),
-		stop: (t) => externalServiceMonitoringRunnerApi.stop(t),
 	},
 };
 
@@ -237,41 +246,62 @@ const ServiceStatusBody = ({
 	status: ServiceStatus | null;
 	remainingTime: number | null;
 }): JSX.Element => {
-	const runnerActive: boolean = !!status && ["started", "starting"].includes(status.service_runner_status);
-	const isStopping: boolean = status?.service_runner_status === "stopping";
-	const serviceRunning: boolean = !!status?.service_running;
-	const showCountdown: boolean = status?.service_runner_status === "started" && !serviceRunning;
+	const enabled: boolean = !!status?.is_enabled;
+	const running: boolean = !!status?.is_running;
+	const showCountdown: boolean = enabled && !running && remainingTime !== null;
 	return (
 		<StatList
 			rows={[
-				{
-					label: "Service runner",
-					value: (
-						<span className="admin-card-status-value">
-							<i
-								className={`bi bi-cpu-fill service-status-icon service-status-icon--runner ${runnerActive ? "is-on" : "is-off"} ${isStopping ? "is-stopping" : ""}`}
-							/>
-							{status ? serviceRunnerStatusLabels[status.service_runner_status] : "…"}
-						</span>
-					),
-				},
 				{
 					label: "Service",
 					value: (
 						<span className="admin-card-status-value">
 							<i
-								className={`bi bi-activity service-status-icon ${serviceRunning ? "is-on is-running" : "is-off"}`}
+								className={`bi bi-cpu-fill service-status-icon service-status-icon--runner ${enabled ? "is-on" : "is-off"}`}
 							/>
-							{serviceRunning ? "Running" : "Idle"}
+							{serviceEnabledLabel(status)}
+						</span>
+					),
+				},
+				{
+					label: "Run",
+					value: (
+						<span className="admin-card-status-value">
+							<i
+								className={`bi bi-activity service-status-icon ${running ? "is-on is-running" : "is-off"}`}
+							/>
+							{running ? "In progress" : "Idle"}
 							{showCountdown && (
 								<span className="service-next-run">
 									<i className="bi bi-hourglass-split me-1" />
-									{formatDuration(remainingTime)}
+									{formatNextRun(remainingTime)}
 								</span>
 							)}
 						</span>
 					),
 				},
+			]}
+		/>
+	);
+};
+
+const SchedulerStatusBody = ({ status }: { status: SchedulerStatus | null }): JSX.Element => {
+	const running: boolean = !!status?.running;
+	return (
+		<StatList
+			rows={[
+				{
+					label: "Scheduler",
+					value: (
+						<span className="admin-card-status-value">
+							<i
+								className={`bi bi-activity service-status-icon ${running ? "is-on is-running" : "is-off"}`}
+							/>
+							{status ? (running ? "Running" : "Stopped") : "…"}
+						</span>
+					),
+				},
+				{ label: "Poll interval", value: status ? `${status.poll_interval_seconds}s` : "…" },
 			]}
 		/>
 	);
@@ -287,9 +317,8 @@ const AdminPage = (): JSX.Element => {
 	const { token } = useAuth();
 	const { users, settings, emailTemplates } = useDataContext();
 	const [openPage, setOpenPage] = useState<AdminPageKey | null>(null);
-	// `showModal` drives the open/close transition; the modal stays mounted while it
-	// animates out, and `openPage` (the content) is only cleared once it has (onExited).
 	const [showModal, setShowModal] = useState<boolean>(false);
+	const [filterSlot, setFilterSlot] = useState<HTMLDivElement | null>(null);
 
 	const openModal = (key: AdminPageKey): void => {
 		setOpenPage(key);
@@ -298,17 +327,15 @@ const AdminPage = (): JSX.Element => {
 
 	const scraping = useServiceRunnerStatus(jobScraperServiceApi);
 	const rating = useServiceRunnerStatus(jobRatingServiceRunnerApi);
-	const monitoring = useServiceRunnerStatus(externalServiceMonitoringRunnerApi);
+	const monitoring = useServiceRunnerStatus(providerMonitoringRunnerApi);
+	const scheduler = useSchedulerStatus();
 
-	// The live status for each service page, used to drive the interactive control in
-	// the modal header. These are the same statuses already polled for the cards.
 	const pageStatus: Partial<Record<AdminPageKey, ReturnType<typeof useServiceRunnerStatus>>> = {
 		scraping,
 		rating,
 		usage: monitoring,
 	};
 
-	// Daily-value series for the past week, embedded as a sparkline in each service card.
 	const [scrapedSeries, setScrapedSeries] = useState<SparklinePoint[]>([]);
 	const [ratedSeries, setRatedSeries] = useState<SparklinePoint[]>([]);
 	const [balanceSeries, setBalanceSeries] = useState<SparklinePoint[]>([]);
@@ -327,10 +354,10 @@ const AdminPage = (): JSX.Element => {
 				const [scrapeLogs, ratingLogs, anthropic, apify, brightdata, stripe] = await Promise.all([
 					jobScraperServiceLogApi.getAll(token, dtRange),
 					jobRatingServiceLogApi.getAll(token, dtRange),
-					externalServiceMonitoringApi.getAnthropicHistory(isoRange, token),
-					externalServiceMonitoringApi.getApifyHistory(isoRange, token),
-					externalServiceMonitoringApi.getBrightdataHistory(isoRange, token),
-					externalServiceMonitoringApi.getStripeHistory(isoRange, token),
+					providerMonitoringApi.getAnthropicHistory(isoRange, token),
+					providerMonitoringApi.getApifyHistory(isoRange, token),
+					providerMonitoringApi.getBrightdataHistory(isoRange, token),
+					providerMonitoringApi.getStripeHistory(isoRange, token),
 				]);
 				if (cancelled) return;
 				setScrapedSeries(dailySeriesFromLogs(scrapeLogs.data, (l) => l.job_scrape_succeeded_n));
@@ -402,6 +429,20 @@ const AdminPage = (): JSX.Element => {
 					</AdminCard>
 				</Col>
 
+				<Col xs={12}>
+					<AdminCard
+						id="admin-card-scheduler"
+						title="Service Scheduler"
+						icon="clock-history"
+						onClick={(): void => openModal("scheduler")}
+					>
+						<SchedulerStatusBody status={scheduler.schedulerStatus} />
+						{scheduler.schedulerStatus?.last_log && (
+							<div className="admin-card-caption text-truncate">{scheduler.schedulerStatus.last_log}</div>
+						)}
+					</AdminCard>
+				</Col>
+
 				<Col xs={12} md={6} xl={4}>
 					<AdminCard
 						id="admin-card-job-scraping"
@@ -441,7 +482,7 @@ const AdminPage = (): JSX.Element => {
 				<Col xs={12} md={6} xl={4}>
 					<AdminCard
 						id="admin-card-usage"
-						title="External Service Monitoring"
+						title="Provider Monitoring"
 						icon={getTableIcon("ESM")}
 						onClick={(): void => openModal("usage")}
 					>
@@ -477,6 +518,7 @@ const AdminPage = (): JSX.Element => {
 				onExited={() => setOpenPage(null)}
 				centered
 				scrollable
+				enforceFocus={false}
 				dialogClassName="admin-page-modal-dialog"
 				className="admin-page-modal"
 				id="admin-page-modal"
@@ -495,6 +537,7 @@ const AdminPage = (): JSX.Element => {
 									<span>{ADMIN_PAGES[openPage].title}</span>
 								</span>
 							</Modal.Title>
+							<div className="admin-page-modal-filter" ref={setFilterSlot} />
 							{pageStatus[openPage] && SERVICE_CONTROLS[openPage] && (
 								<div className="admin-page-modal-status">
 									<ServiceStatusControl
@@ -506,7 +549,11 @@ const AdminPage = (): JSX.Element => {
 								</div>
 							)}
 						</JamModal.Header>
-						<Modal.Body className="admin-page-modal-body">{ADMIN_PAGES[openPage].render()}</Modal.Body>
+						<Modal.Body className="admin-page-modal-body">
+							<ServiceFilterSlotContext.Provider value={filterSlot}>
+								{ADMIN_PAGES[openPage].render()}
+							</ServiceFilterSlotContext.Provider>
+						</Modal.Body>
 					</>
 				)}
 			</JamModal>

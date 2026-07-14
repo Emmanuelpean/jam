@@ -3,8 +3,12 @@
 import re
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
+from sqlalchemy.orm import Session
 
 import app.job_rating.scraped_job_rating as rating
+from app import models
+from tests.utils.create_data.utils import create_db_entries
 
 
 def claude_query_mock(system_prompt: str, llm_prompt: str, max_tokens: int = 1024) -> dict[str, int | str | None]:
@@ -117,7 +121,13 @@ def claude_query_mock(system_prompt: str, llm_prompt: str, max_tokens: int = 102
 
 
 @pytest.fixture(autouse=True)
-def mock_ai_score(monkeypatch) -> None:
+def mock_ai_score(monkeypatch: MonkeyPatch) -> None:
     """Mock claude_query for all tests"""
 
-    monkeypatch.setattr(rating, "claude_query", claude_query_mock, raising=False)
+    monkeypatch.setattr(rating, "claude_query", claude_query_mock)
+
+
+@pytest.fixture
+def test_rating_service_log(session: Session) -> models.JobRatingServiceLog:
+    """Create a job-rating service log."""
+    return create_db_entries(session, models.JobRatingServiceLog)[0]

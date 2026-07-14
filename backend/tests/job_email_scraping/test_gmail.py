@@ -20,7 +20,7 @@ FORWARDING_EMAIL_BODY = (
     "https://mail-settings.google.com/mail/uf-%5BANGjdJ8crp9rBh5i9I-r3iERmjhlyamWW6AjJnoz2nzjEAYpevJY"
     "VJBCnSl8-peOQHxG99zkoz27zS8fQrYlciEmDRqWoHgWTIQEfMmjBg%5D-YPBzzHEVNTIn_UsssjTeatvjBPg "
     "Pour savoir pourquoi vous avez reçu ce message, veuillez consulter la page "
-    "http://support.google.com/mail/bin/answer.py?answer=184973. "
+    "https://support.google.com/mail/bin/answer.py?answer=184973. "
     "Veuillez ne pas répondre à ce message."
 )
 

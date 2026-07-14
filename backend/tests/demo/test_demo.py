@@ -4,26 +4,30 @@ import datetime as dt
 from unittest.mock import patch
 
 import jwt
+from sqlalchemy import Engine
+from sqlalchemy import orm
+from sqlalchemy.orm import Session
+from starlette.testclient import TestClient
 
 from app import models
 from app.config import settings
 from app.core.oauth2 import create_access_token
 from app.demo.setup import cleanup_stale_demo_users, setup_demo_schema
+from app.demo.setup import seed_demo_ai_prompts
 from tests.demo.conftest import create_demo_user
-from tests.utils import test_data as td
+from tests.fixtures.users import FixtureUser
 from tests.utils.create_data.core import create_users
 
 
 class TestDemoLogin:
 
-    def test_login_creates_ephemeral_user_in_demo_schema(self, test_demo_user, demo_login_client, demo_session) -> None:
+    def test_login_creates_ephemeral_user_in_demo_schema(
+        self, test_demo_user: FixtureUser, demo_login_client: TestClient, demo_session: Session
+    ) -> None:
         """Logging in with the demo account must create exactly one ephemeral user
         in the demo schema and return a JWT stamped with is_demo=True."""
 
-        response = demo_login_client.post(
-            "/login",
-            data={"username": test_demo_user.email, "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"]},
-        )
+        response = demo_login_client.post("/login", data={"username": test_demo_user.email, "password": "A"})
 
         assert response.status_code == 200
 
@@ -48,16 +52,12 @@ class TestDemoLogin:
         assert user.premium is not None
         assert user.premium.is_active is True
 
-    def test_login_seeds_data_for_ephemeral_user(self, test_demo_user, demo_login_client, demo_session) -> None:
+    def test_login_seeds_data_for_ephemeral_user(
+        self, test_demo_user: FixtureUser, demo_login_client: TestClient, demo_session: Session
+    ) -> None:
         """After demo login the ephemeral user must have seeded jobs and companies."""
 
-        response = demo_login_client.post(
-            "/login",
-            data={
-                "username": test_demo_user.email,
-                "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
-            },
-        )
+        response = demo_login_client.post("/login", data={"username": test_demo_user.email, "password": "A"})
 
         assert response.status_code == 200
 
@@ -75,7 +75,7 @@ class TestDemoLogin:
         assert companies > 0, "Expected seeded companies for the demo user"
 
     def test_regular_user_login_does_not_touch_demo_schema(
-        self, test_regular_user, demo_login_client, demo_session
+        self, test_regular_user: FixtureUser, demo_login_client: TestClient, demo_session: Session
     ) -> None:
         """A normal (non-demo) login must not create any record in the demo schema."""
 
@@ -83,7 +83,7 @@ class TestDemoLogin:
             "/login",
             data={
                 "username": test_regular_user.email,
-                "password": td.USER_DATA[td.REGULAR_USER_INDEX]["password"],
+                "password": test_regular_user.plain_password,
             },
         )
 
@@ -101,16 +101,14 @@ class TestDemoLogin:
 
 
 class TestDemoSchemaSetup:
-    def test_setup_seeds_ai_prompts_in_fresh_schema(self, demo_session) -> None:
+    def test_setup_seeds_ai_prompts_in_fresh_schema(self, demo_session: Session) -> None:
         """setup_demo_schema must seed AI system prompts when the schema is empty."""
 
         # demo_session fixture already seeded AI prompts — verify they exist
         assert demo_session.query(models.AiSystemPrompt).count() > 0
 
-    def test_seed_demo_ai_prompts_does_not_duplicate(self, demo_session) -> None:
+    def test_seed_demo_ai_prompts_does_not_duplicate(self, demo_session: Session) -> None:
         """seed_demo_ai_prompts must not add duplicate AI prompts when called repeatedly."""
-
-        from app.demo.setup import seed_demo_ai_prompts
 
         # demo_session fixture already seeded prompts
         count_before = demo_session.query(models.AiSystemPrompt).count()
@@ -124,23 +122,13 @@ class TestDemoSchemaSetup:
 
 
 class TestMultipleDemoUsers:
-    def test_two_logins_create_two_independent_users(self, test_demo_user, demo_login_client, demo_session) -> None:
+    def test_two_logins_create_two_independent_users(
+        self, test_demo_user: FixtureUser, demo_login_client: TestClient, demo_session: Session
+    ) -> None:
         """Two concurrent demo logins must create two distinct ephemeral users."""
 
-        res1 = demo_login_client.post(
-            "/login",
-            data={
-                "username": test_demo_user.email,
-                "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
-            },
-        )
-        res2 = demo_login_client.post(
-            "/login",
-            data={
-                "username": test_demo_user.email,
-                "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
-            },
-        )
+        res1 = demo_login_client.post("/login", data={"username": test_demo_user.email, "password": "A"})
+        res2 = demo_login_client.post("/login", data={"username": test_demo_user.email, "password": "A"})
 
         assert res1.status_code == 200
         assert res2.status_code == 200
@@ -156,23 +144,13 @@ class TestMultipleDemoUsers:
         emails = {u.email for u in users}
         assert len(emails) == 2, "Each ephemeral user must have a unique email"
 
-    def test_each_session_data_belongs_only_to_its_user(self, test_demo_user, demo_login_client, demo_session) -> None:
+    def test_each_session_data_belongs_only_to_its_user(
+        self, test_demo_user: FixtureUser, demo_login_client: TestClient, demo_session: Session
+    ) -> None:
         """Data seeded for session A must not appear under session B's user ID."""
 
-        res1 = demo_login_client.post(
-            "/login",
-            data={
-                "username": test_demo_user.email,
-                "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
-            },
-        )
-        res2 = demo_login_client.post(
-            "/login",
-            data={
-                "username": test_demo_user.email,
-                "password": td.USER_DATA[td.DEMO_USER_INDEX]["password"],
-            },
-        )
+        res1 = demo_login_client.post("/login", data={"username": test_demo_user.email, "password": "A"})
+        res2 = demo_login_client.post("/login", data={"username": test_demo_user.email, "password": "A"})
 
         payload1 = jwt.decode(res1.json()["access_token"], settings.secret_key, algorithms=[settings.algorithm])
         payload2 = jwt.decode(res2.json()["access_token"], settings.secret_key, algorithms=[settings.algorithm])
@@ -190,7 +168,7 @@ class TestMultipleDemoUsers:
 
 class TestDemoSchemaIsolation:
 
-    def test_deleting_demo_user_does_not_affect_public_schema(self, session, demo_session) -> None:
+    def test_deleting_demo_user_does_not_affect_public_schema(self, session: Session, demo_session: Session) -> None:
         """Deleting a demo user (and their cascaded data) in the demo schema
         must not affect a regular user or their data in the public schema."""
 
@@ -224,7 +202,7 @@ class TestDemoSchemaIsolation:
             session.query(models.Job).filter(models.Job.id == public_job_id).first() is not None
         ), "Job in the public schema must still exist"
 
-    def test_deleting_demo_entry_does_not_affect_other_demo_users(self, demo_session) -> None:
+    def test_deleting_demo_entry_does_not_affect_other_demo_users(self, demo_session: Session) -> None:
         """Deleting one demo user's data must not affect another demo user's data
         within the same demo schema."""
 
@@ -250,7 +228,7 @@ class TestDemoSchemaIsolation:
 
 
 class TestDemoCleanup:
-    def test_cleanup_endpoint_deletes_demo_user(self, demo_session, demo_client) -> None:
+    def test_cleanup_endpoint_deletes_demo_user(self, demo_session: Session, demo_client: TestClient) -> None:
         """POST /demo/cleanup must remove the calling demo user from the demo schema."""
 
         user = create_demo_user(demo_session)
@@ -269,7 +247,7 @@ class TestDemoCleanup:
         deleted = demo_session.query(models.User).filter(models.User.id == user.id).first()
         assert deleted is None, "Demo user must be deleted after cleanup"
 
-    def test_cleanup_cascades_to_user_preferences(self, demo_session, demo_client) -> None:
+    def test_cleanup_cascades_to_user_preferences(self, demo_session: Session, demo_client: TestClient) -> None:
         """Deleting the demo user must cascade-delete their UserPreferences record."""
 
         user = create_demo_user(demo_session)
@@ -288,14 +266,13 @@ class TestDemoCleanup:
             is None
         ), "UserPreferences must be cascade-deleted with the demo user"
 
-    def test_cleanup_is_forbidden_for_non_demo_users(self, client, tokens) -> None:
+    def test_cleanup_is_forbidden_for_non_demo_users(self, test_regular_user: FixtureUser) -> None:
         """Regular (non-demo) users must receive 403 from /demo/cleanup."""
 
-        regular_token = tokens[td.REGULAR_USER_INDEX]
-        response = client.post("/demo/cleanup", headers={"Authorization": f"Bearer {regular_token}"})
+        response = test_regular_user.client.post("/demo/cleanup")
         assert response.status_code == 403
 
-    def test_cleanup_requires_authentication(self, demo_client) -> None:
+    def test_cleanup_requires_authentication(self, demo_client: TestClient) -> None:
         """Unauthenticated requests to /demo/cleanup must be rejected."""
 
         response = demo_client.post("/demo/cleanup")
@@ -304,7 +281,7 @@ class TestDemoCleanup:
 
 class TestStaleDemoUserCleanup:
 
-    def test_users_older_than_24h_are_deleted(self, demo_session) -> None:
+    def test_users_older_than_24h_are_deleted(self, demo_session: Session) -> None:
         """cleanup_stale_demo_users must remove demo users created more than 24 h ago."""
 
         old_user = create_demo_user(demo_session)
@@ -327,7 +304,7 @@ class TestStaleDemoUserCleanup:
             demo_session.query(models.User).filter(models.User.id == fresh_user.id).first() is not None
         ), "User created within the last 24 h must be kept"
 
-    def test_users_exactly_at_boundary_are_kept(self, demo_session) -> None:
+    def test_users_exactly_at_boundary_are_kept(self, demo_session: Session) -> None:
         """A user created exactly at the 24-hour boundary must not be deleted."""
 
         user = create_demo_user(demo_session)
@@ -342,7 +319,7 @@ class TestStaleDemoUserCleanup:
 
         assert demo_session.query(models.User).filter(models.User.id == user.id).first() is not None
 
-    def test_fresh_users_are_never_deleted(self, demo_session) -> None:
+    def test_fresh_users_are_never_deleted(self, demo_session: Session) -> None:
         """cleanup_stale_demo_users must leave recently-created users untouched."""
 
         user = create_demo_user(demo_session)
@@ -352,18 +329,22 @@ class TestStaleDemoUserCleanup:
         assert demo_session.query(models.User).filter(models.User.id == user.id).first() is not None
 
     def test_stale_cleanup_runs_during_setup_demo_schema(
-        self, engine, demo_engine, demo_session_raw, demo_session_factory_raw
+        self,
+        engine: Engine,
+        demo_engine: Engine,
+        demo_session_untracked: Session,
+        demo_session_factory_raw: orm.sessionmaker,
     ) -> None:
         """setup_demo_schema must remove stale demo users as part of its startup routine."""
 
         # Insert a stale user directly
-        old_user = create_demo_user(demo_session_raw)
+        old_user = create_demo_user(demo_session_untracked)
         old_user_id = old_user.id
         cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=25)
-        demo_session_raw.query(models.User).filter(models.User.id == old_user_id).update(
+        demo_session_untracked.query(models.User).filter(models.User.id == old_user_id).update(
             {"created_at": cutoff}, synchronize_session=False
         )
-        demo_session_raw.commit()
+        demo_session_untracked.commit()
 
         with (
             patch("app.demo.setup.engine", engine),
@@ -372,7 +353,7 @@ class TestStaleDemoUserCleanup:
         ):
             setup_demo_schema()
 
-        demo_session_raw.expire_all()
+        demo_session_untracked.expire_all()
         assert (
-            demo_session_raw.query(models.User).filter(models.User.id == old_user_id).first() is None
+            demo_session_untracked.query(models.User).filter(models.User.id == old_user_id).first() is None
         ), "setup_demo_schema must delete demo users older than 24 h"

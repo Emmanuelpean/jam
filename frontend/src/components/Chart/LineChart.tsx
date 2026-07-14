@@ -6,11 +6,13 @@ import {
 	Legend,
 	Line,
 	LineChart as RechartsLineChart,
+	ReferenceLine,
 	ResponsiveContainer,
 	Tooltip,
 	XAxis,
 	YAxis,
 } from "recharts";
+import type { LegendPayload } from "recharts/types/component/DefaultLegendContent";
 import { toDdMmYyyyHhMm } from "../../utils/TimeUtils";
 import LoadingSpinner from "../Spinner/Spinner";
 
@@ -27,6 +29,24 @@ export interface SeriesData {
 
 const CHART_PALETTE: string[] = ["var(--bs-primary)", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#06b6d4"];
 
+type ChartRow = { x: number } & Record<string, number | null | undefined>;
+
+interface TooltipEntry {
+	dataKey: string | number;
+	value: number | null;
+	color?: string;
+}
+
+interface CustomTooltipProps {
+	active?: boolean;
+	payload?: TooltipEntry[];
+	label?: number | string;
+}
+
+interface ChartClickState {
+	activeLabel?: number | string;
+}
+
 export interface LineChartProps {
 	data: SeriesData[] | null;
 	xAxisLabel?: string;
@@ -36,6 +56,8 @@ export interface LineChartProps {
 	xAxisFormatter?: (value: Date) => string;
 	isLoading?: boolean;
 	height?: number;
+	onPointClick?: (xMs: number) => void;
+	selectedX?: number | null;
 }
 
 export const LineChart = ({
@@ -47,6 +69,8 @@ export const LineChart = ({
 	yAxisFormatter = (value: number | null): number | null => value,
 	isLoading = false,
 	height = 400,
+	onPointClick,
+	selectedX = null,
 }: LineChartProps): JSX.Element => {
 	const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
 
@@ -85,19 +109,19 @@ export const LineChart = ({
 		return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
 	};
 
-	const transformedData =
-		data[0]?.data.map((_, index) => {
-			const point: Record<string, any> = {
+	const transformedData: ChartRow[] =
+		data[0]?.data.map((_: DataPoint, index: number): ChartRow => {
+			const point: ChartRow = {
 				x: toMs(data[0]!.data[index]!.x),
 			};
-			data.forEach((series) => {
+			data.forEach((series: SeriesData): void => {
 				point[series.id] = series.data[index]?.y;
 			});
 			return point;
 		}) || [];
 
-	const handleLegendClick = (e: any): void => {
-		const seriesId = e.dataKey;
+	const handleLegendClick = (e: LegendPayload): void => {
+		const seriesId: string = String(e.dataKey);
 		setHiddenSeries((prev: Set<string>): Set<string> => {
 			const newSet = new Set(prev);
 			if (newSet.has(seriesId)) {
@@ -109,9 +133,9 @@ export const LineChart = ({
 		});
 	};
 
-	const formatTick = (value: any): string => xAxisFormatter(new Date(value));
+	const formatTick = (value: number | string | undefined): string => xAxisFormatter(new Date(value ?? 0));
 
-	const CustomTooltip = ({ active, payload, label }: any) => {
+	const CustomTooltip = ({ active, payload, label }: CustomTooltipProps): JSX.Element | null => {
 		if (!active || !payload || !payload.length) return null;
 		return (
 			<div
@@ -124,9 +148,9 @@ export const LineChart = ({
 				}}
 			>
 				<p style={{ margin: 0, fontWeight: "bold", color: "var(--bs-body-color)" }}>
-					{xAxisLabel}: {formatTick(label)}
+					{xAxisLabel ? `${xAxisLabel}: ${formatTick(label)}` : formatTick(label)}
 				</p>
-				{payload.map((entry: any) => (
+				{payload.map((entry: TooltipEntry) => (
 					<p key={entry.dataKey} style={{ margin: 0, color: entry.color }}>
 						{entry.dataKey}: {Number(entry.value ?? 0).toFixed(2)}
 					</p>
@@ -135,10 +159,24 @@ export const LineChart = ({
 		);
 	};
 
+	const handleChartClick = (state: ChartClickState): void => {
+		if (onPointClick && state && state.activeLabel != null) {
+			onPointClick(Number(state.activeLabel));
+		}
+	};
+
 	return (
 		<ResponsiveContainer width={"100%"} height={height}>
-			<RechartsLineChart data={transformedData} margin={{ top: 5, right: 30, left: 8, bottom: 12 }}>
+			<RechartsLineChart
+				data={transformedData}
+				margin={{ top: 5, right: 30, left: 8, bottom: 12 }}
+				onClick={onPointClick ? handleChartClick : undefined}
+				style={onPointClick ? { cursor: "pointer" } : undefined}
+			>
 				<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
+				{selectedX != null && (
+					<ReferenceLine x={selectedX} stroke="var(--bs-primary)" strokeWidth={2} strokeDasharray="4 3" />
+				)}
 				<XAxis
 					dataKey="x"
 					type="number"
@@ -153,7 +191,7 @@ export const LineChart = ({
 					)}
 				</XAxis>
 				<YAxis
-					tickFormatter={(value) => String(yAxisFormatter(value) ?? "")}
+					tickFormatter={(value: number): string => String(yAxisFormatter(value) ?? "")}
 					tick={{ fontSize: fontsize, fill: "var(--bs-body-color)" }}
 					stroke="var(--bs-border-color)"
 					domain={[0, "auto"]}
@@ -172,7 +210,7 @@ export const LineChart = ({
 						cursor: "pointer",
 						color: "var(--bs-body-color)",
 					}}
-					formatter={(value) => (
+					formatter={(value: string): JSX.Element => (
 						<span
 							style={{
 								color: hiddenSeries.has(value) ? "var(--bs-muted-color)" : "var(--bs-body-color)",

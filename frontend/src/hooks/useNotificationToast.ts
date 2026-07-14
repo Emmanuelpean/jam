@@ -137,7 +137,7 @@ export const useToast = (): UseToastReturn => {
 		if (status && status < 500) {
 			showToastError(message, errorTitle);
 		} else {
-			showToastError(unknownMessage, errorTitle, config.support_email, errorToString(error));
+			showToastError(unknownMessage, errorTitle, config?.support_email, errorToString(error));
 		}
 	};
 

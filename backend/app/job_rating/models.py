@@ -1,19 +1,26 @@
 """Database models for job ratings and their service logs."""
 
+import datetime as dt
+
 from sqlalchemy import (
     Column,
     Integer,
     String,
     ForeignKey,
     Boolean,
+    TIMESTAMP,
+    and_,
+    or_,
+    func,
 )
 from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
-from app.base_models import Owned, CommonBase
+from app.base_models import Owned, CommonBase, ProcessingStatus
 from app.database import Base
-from app.service_runner.models import ServiceLog
+from app.service.models import ServiceLog
 
 
 class AiSystemPrompt(CommonBase, Base):
@@ -61,13 +68,14 @@ class JobRating(Owned, Base):
     - `educational_score` (int, optional): Educational score for the job.
     - `interest_score` (int, optional): Interest score for the job.
     - `feedback` (str, optional): Additional feedback or comments about the job rating.
-    - `is_skipped` (bool, optional): Indicates whether the rating process was skipped.
+    - `status` (ProcessingStatus): Rating outcome — PENDING (not yet finalised, may be retrying),
+      COMPLETED (rated successfully), FAILED (retries exhausted), or SKIPPED.
     - `skip_reason` (str, optional): Reason for skipping the rating process.
-    - `is_success` (bool, optional): Indicates whether the rating process was successful.
-    - `error` (str, optional): Error message if the rating process failed.
     - `job_prompt` (str, optional): Job prompt used for the rating.
     - `llm_model` (str): LLM model used for the rating.
     - `notes` (List[str], optional): Additional notes or comments about the rating.
+    - `rating_retry_count` (int): Number of times the rating has been retried.
+    - `rating_next_retry_at` (datetime, optional): When the next rating retry is scheduled.
 
     Foreign keys:
     -------------
@@ -81,7 +89,8 @@ class JobRating(Owned, Base):
     - `scraped_job` (ScrapedJob): ScrapedJob object related to the rating.
     - `use_qualification` (UserQualification): UserQualification object related to the rating.
     - `system_prompt` (AiSystemPrompt, optional): AiSystemPrompt object related to the rating.
-    - `job_prompt_template` (AiJobPromptTemplate, optional): AiJobPromptTemplate object related to the rating."""
+    - `job_prompt_template` (AiJobPromptTemplate, optional): AiJobPromptTemplate object related to the rating.
+    - `rating_errors` (list of Error): Errors raised while rating this job."""
 
     overall_score = Column(Integer, nullable=True)
     technical_score = Column(Integer, nullable=True)
@@ -89,13 +98,13 @@ class JobRating(Owned, Base):
     educational_score = Column(Integer, nullable=True)
     interest_score = Column(Integer, nullable=True)
     feedback = Column(String, nullable=True)
-    is_skipped = Column(Boolean, nullable=False, server_default=expression.false())
+    status = Column(String, nullable=False, default=ProcessingStatus.PENDING)
     skip_reason = Column(String, nullable=True)
-    is_success = Column(Boolean, nullable=True)
-    error = Column(String, nullable=True)
     job_prompt = Column(String, nullable=True)
     llm_model = Column(String, nullable=False)
     notes = Column(PG_ARRAY(String), server_default="{}", nullable=False)
+    rating_retry_count = Column(Integer, nullable=False, server_default="0")
+    rating_next_retry_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     # Foreign keys
     scraped_job_id = Column(Integer, ForeignKey("scraped_job.id", ondelete="CASCADE"), nullable=False)
@@ -110,6 +119,7 @@ class JobRating(Owned, Base):
     user_qualification = relationship("UserQualification", back_populates="job_ratings")
     system_prompt = relationship("AiSystemPrompt", back_populates="job_ratings")
     job_prompt_template = relationship("AiJobPromptTemplate", back_populates="job_ratings")
+    rating_errors = relationship("ServiceError", foreign_keys="ServiceError.job_rating_id", back_populates="job_rating")
 
     def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""
@@ -117,8 +127,30 @@ class JobRating(Owned, Base):
         kwargs.setdefault("notes", [])
         super().__init__(**kwargs)
 
+    @hybrid_property
+    def is_pending(self) -> bool:
+        """Whether the rating is still runnable: not yet finalised (status is PENDING) and due for a
+        (re)try now."""
 
-class JobRatingServiceLog(ServiceLog, CommonBase, Base):
+        now = dt.datetime.now(dt.timezone.utc)
+        return self.status == ProcessingStatus.PENDING and (
+            self.rating_next_retry_at is None or self.rating_next_retry_at <= now
+        )
+
+    @is_pending.expression
+    def is_pending(cls):
+        """SQL form of :attr:`is_pending` for use in queries."""
+
+        return and_(
+            cls.status == ProcessingStatus.PENDING,
+            or_(
+                cls.rating_next_retry_at.is_(None),
+                cls.rating_next_retry_at <= func.now(),
+            ),
+        )
+
+
+class JobRatingServiceLog(ServiceLog, Base):
     """Represents service logs for job ratings.
 
     Attributes:
@@ -136,6 +168,9 @@ class JobRatingServiceLog(ServiceLog, CommonBase, Base):
     job_succeeded_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_skipped_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_failed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+
+    # Relationships
+    service_errors = relationship("ServiceError", back_populates="job_rating_service_log", cascade="all, delete-orphan")
 
     def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""

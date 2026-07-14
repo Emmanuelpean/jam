@@ -7,7 +7,6 @@ from pydantic import BaseModel, EmailStr, BeforeValidator, Field
 
 from app.utilities.strings import clean_email
 
-
 # --------------------------------------------------- COLUMN LIMITS ----------------------------------------------------
 
 

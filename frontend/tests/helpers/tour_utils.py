@@ -4,10 +4,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.wait import WebDriverWait
 
-from helpers.base_utils import BaseUtils
+from helpers.jam_test_utils import JamTestUtils
 
 
-class TourUtils(BaseUtils):
+class TourUtils(JamTestUtils):
 
     def __init__(self, **kwargs):
         self._init(**kwargs)

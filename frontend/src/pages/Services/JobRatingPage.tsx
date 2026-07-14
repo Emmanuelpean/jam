@@ -5,17 +5,21 @@ import LogViewer, { useLogViewerToggle } from "./LogViewer/LogViewer";
 import { LastLogBar } from "./LogViewer/LastLogBar";
 import { LatestRunProgress } from "./JobRatingDashboard/LatestRunProgress";
 import { RunHistoryChart } from "./JobRatingDashboard/RunHistoryChart";
-import { ErrorSummaryCard } from "./JobRatingDashboard/ErrorSummaryCard";
+import { ErrorSummaryCard } from "./ErrorSummaryCard";
 import { useJobRatingServiceLogs } from "../../hooks/useJobRatingServiceLog";
-import { useJobRatingErrors } from "../../hooks/useJobRatingErrors";
+import { useServiceErrors } from "../../hooks/useServiceErrors";
 import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
-import { DateRange } from "../../utils/TimeUtils";
+import { DateRange, toDdMmYyyyHhMm } from "../../utils/TimeUtils";
 import { TimeFilterPopover } from "../../components/TimeSelection/TimeFilterPopover";
+import { ServiceFilterSlot } from "./ServiceFilterSlot";
+import { JobRatingServiceLogData, ServiceError } from "../../services/schemas/Services";
 import "./Service.scss";
 
 const JobRatingPage = (): JSX.Element => {
 	const { serviceStatus, statusError } = useServiceRunnerStatus(jobRatingServiceRunnerApi);
 	const [dateRange, setDateRange] = useState<DateRange | null>(null);
+	const [showAcknowledged, setShowAcknowledged] = useState(false);
+	const [selectedLogId, setSelectedLogId] = useState<number | null>(null);
 	const {
 		expanded: logsExpanded,
 		setExpanded: setLogsExpanded,
@@ -27,25 +31,42 @@ const JobRatingPage = (): JSX.Element => {
 		latestServiceLog,
 		serviceLogError,
 		loading: logsLoading,
-	} = useJobRatingServiceLogs(serviceStatus?.service_running || false, dateRange);
+	} = useJobRatingServiceLogs(serviceStatus?.is_running || false, dateRange);
+
+	const logsForErrors: JobRatingServiceLogData[] = previousServiceLogs ? [...previousServiceLogs] : [];
+	if (
+		latestServiceLog &&
+		!latestServiceLog.is_finished &&
+		!logsForErrors.some((log: JobRatingServiceLogData): boolean => log.id === latestServiceLog.id)
+	) {
+		logsForErrors.push(latestServiceLog);
+	}
 
 	const {
-		scraperErrors: previousRatingErrors,
-		error: previousRatingRequestError,
-		loading: previousRatingErrorsLoading,
-	} = useJobRatingErrors(previousServiceLogs, true);
-	const {
-		scraperErrors: lastRatingErrors,
-		error: latestRatingRequestError,
-		loading: lastRatingErrorsLoading,
-	} = useJobRatingErrors(latestServiceLog);
+		errors,
+		requestError: errorsRequestError,
+		loading: errorsLoading,
+		setAcknowledged,
+	} = useServiceErrors(
+		logsForErrors,
+		"job_rating_service_log_id",
+		showAcknowledged,
+		true,
+		serviceStatus?.is_running || false
+	);
 
 	const collectedErrors = [
 		{ key: "status", label: "Service status", value: statusError },
 		{ key: "serviceLogs", label: "Service logs", value: serviceLogError },
-		{ key: "lastRatingError", label: "Last rating error", value: latestRatingRequestError },
-		{ key: "latestRatingError", label: "Latest rating error", value: previousRatingRequestError },
+		{ key: "errorsRequestError", label: "Service errors", value: errorsRequestError },
 	].filter((e) => e.value);
+
+	const selectedLog: JobRatingServiceLogData | null =
+		(previousServiceLogs || []).find((log: JobRatingServiceLogData): boolean => log.id === selectedLogId) ?? null;
+	const displayedErrors: ServiceError[] = selectedLog
+		? errors.filter((e: ServiceError): boolean => e.job_rating_service_log_id === selectedLog.id)
+		: errors;
+	const selectedRunLabel: string | null = selectedLog ? toDdMmYyyyHhMm(new Date(selectedLog.run_datetime)) : null;
 
 	return (
 		<div className="scraped-jobs-page">
@@ -67,36 +88,43 @@ const JobRatingPage = (): JSX.Element => {
 				</div>
 			)}
 
-			<div className="d-flex align-items-center gap-3 mb-4 service-filter-row">
-				<LastLogBar serviceStatus={serviceStatus} onClick={openLogViewer} />
-				<div className="ms-auto">
-					<TimeFilterPopover id="history-filters" onDateRangeChange={setDateRange} defaultMode="period" />
-				</div>
-			</div>
+			<ServiceFilterSlot>
+				<TimeFilterPopover id="history-filters" onDateRangeChange={setDateRange} defaultMode="period" />
+			</ServiceFilterSlot>
 
-			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.service_running || false} />
+			<LastLogBar serviceStatus={serviceStatus} onClick={openLogViewer} className="mb-4" />
+
+			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.is_running || false} />
 
 			<LogViewer
 				id="rating-log-viewer"
 				api={jobRatingServiceRunnerApi}
-				isServiceRunning={serviceStatus?.service_running || false}
-				serviceStatus={serviceStatus}
+				isServiceRunning={serviceStatus?.is_running || false}
 				expanded={logsExpanded}
 				onExpandedChange={setLogsExpanded}
 			/>
 
 			<RunHistoryChart
 				serviceLogData={previousServiceLogs}
-				isRunning={serviceStatus?.service_running || false}
+				isRunning={serviceStatus?.is_running || false}
 				loading={logsLoading}
+				selectedLogId={selectedLog?.id ?? null}
+				onSelectLog={setSelectedLogId}
 			/>
 
 			<ErrorSummaryCard
-				latestServiceLogs={previousServiceLogs}
-				lastRatingErrors={lastRatingErrors}
-				latestRatingErrors={previousRatingErrors}
-				isRunning={serviceStatus?.service_running || false}
-				loading={logsLoading || previousRatingErrorsLoading || lastRatingErrorsLoading}
+				current={{ errors: displayedErrors, setAcknowledged }}
+				perJob={{
+					title: "Job Rating Errors",
+					discriminatorKey: "job_rating_id",
+					emptyText: "No rating errors",
+				}}
+				showAcknowledged={showAcknowledged}
+				onToggleAcknowledged={setShowAcknowledged}
+				isRunning={serviceStatus?.is_running || false}
+				loading={logsLoading || errorsLoading}
+				selectedRunLabel={selectedRunLabel}
+				onClearSelectedRun={() => setSelectedLogId(null)}
 			/>
 		</div>
 	);

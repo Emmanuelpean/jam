@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_361c51a8d17ee2a1_schemas_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.14.2">coverage.py v7.14.2</a>,
-            created at 2026-06-21 21:36 +0100
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.15.0">coverage.py v7.15.0</a>,
+            created at 2026-07-12 12:13 +0100
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -216,8 +216,8 @@
     <p class="run"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t">    <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t">        <span class="com"># Content is already a base64 string - just decode it</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t">        <span class="key">if</span> <span class="nam">file_record</span><span class="op">.</span><span class="nam">content</span><span class="op">.</span><span class="nam">startswith</span><span class="op">(</span><span class="str">"data:"</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t">            <span class="nam">encoded_data</span> <span class="op">=</span> <span class="nam">file_record</span><span class="op">.</span><span class="nam">content</span><span class="op">.</span><span class="nam">split</span><span class="op">(</span><span class="str">","</span><span class="op">,</span> <span class="num">1</span><span class="op">)</span><span class="op">[</span><span class="num">1</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t">            <span class="nam">file_content</span> <span class="op">=</span> <span class="nam">base64</span><span class="op">.</span><span class="nam">b64decode</span><span class="op">(</span><span class="nam">encoded_data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t">            <span class="nam">encoded_data</span> <span class="op">=</span> <span class="nam">file_record</span><span class="op">.</span><span class="nam">content</span><span class="op">.</span><span class="nam">split</span><span class="op">(</span><span class="str">","</span><span class="op">,</span> <span class="num">1</span><span class="op">)</span><span class="op">[</span><span class="num">1</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t">            <span class="nam">file_content</span> <span class="op">=</span> <span class="nam">base64</span><span class="op">.</span><span class="nam">b64decode</span><span class="op">(</span><span class="nam">encoded_data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t140" href="#t140">140</a></span><span class="t">            <span class="com"># Pure base64 string</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t141" href="#t141">141</a></span><span class="t">            <span class="nam">file_content</span> <span class="op">=</span> <span class="nam">base64</span><span class="op">.</span><span class="nam">b64decode</span><span class="op">(</span><span class="nam">file_record</span><span class="op">.</span><span class="nam">content</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -253,8 +253,8 @@
     <p class="pln"><span class="n"><a id="t171" href="#t171">171</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t172" href="#t172">172</a></span><span class="t">    <span class="nam">location</span> <span class="op">=</span> <span class="nam">entry</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"location"</span><span class="op">)</span> <span class="key">or</span> <span class="op">(</span><span class="nam">entry_data</span> <span class="key">or</span> <span class="op">{</span><span class="op">}</span><span class="op">)</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"location"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t173" href="#t173">173</a></span><span class="t">    <span class="key">if</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">location</span><span class="op">,</span> <span class="nam">str</span><span class="op">)</span> <span class="key">and</span> <span class="nam">location</span><span class="op">.</span><span class="nam">strip</span><span class="op">(</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t174" href="#t174">174</a></span><span class="t">        <span class="nam">geolocation</span> <span class="op">=</span> <span class="nam">geocode_location</span><span class="op">(</span><span class="nam">location</span><span class="op">.</span><span class="nam">strip</span><span class="op">(</span><span class="op">)</span><span class="op">,</span> <span class="nam">db</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">        <span class="key">return</span> <span class="op">{</span><span class="str">"geolocation_id"</span><span class="op">:</span> <span class="nam">geolocation</span><span class="op">.</span><span class="nam">id</span> <span class="key">if</span> <span class="nam">geolocation</span> <span class="key">else</span> <span class="key">None</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t174" href="#t174">174</a></span><span class="t">        <span class="nam">geolocation</span> <span class="op">=</span> <span class="nam">geocode_location</span><span class="op">(</span><span class="nam">location</span><span class="op">.</span><span class="nam">strip</span><span class="op">(</span><span class="op">)</span><span class="op">,</span> <span class="nam">db</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t175" href="#t175">175</a></span><span class="t">        <span class="key">return</span> <span class="op">{</span><span class="str">"geolocation_id"</span><span class="op">:</span> <span class="nam">geolocation</span><span class="op">.</span><span class="nam">id</span> <span class="key">if</span> <span class="nam">geolocation</span> <span class="key">else</span> <span class="key">None</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t176" href="#t176">176</a></span><span class="t">    <span class="key">return</span> <span class="op">{</span><span class="str">"geolocation_id"</span><span class="op">:</span> <span class="key">None</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t177" href="#t177">177</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -347,8 +347,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_361c51a8d17ee2a1_schemas_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.14.2">coverage.py v7.14.2</a>,
-            created at 2026-06-21 21:36 +0100
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.15.0">coverage.py v7.15.0</a>,
+            created at 2026-07-12 12:13 +0100
         </p>
     </div>
 </footer>

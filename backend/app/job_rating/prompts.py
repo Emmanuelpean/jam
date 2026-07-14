@@ -6,6 +6,9 @@ from app.job_rating.chatgpt import openai_query
 from app.job_rating.claude import claude_query
 from app.job_rating.models import AiSystemPrompt, AiJobPromptTemplate
 
+# A system prompt paired with its job prompt template.
+Prompts = tuple[AiSystemPrompt, AiJobPromptTemplate]
+
 # -------------------------------------------------------- V1 ---------------------------------------------------------
 
 
@@ -177,7 +180,7 @@ def create_job_only_prompt(
     )
 
 
-def seed_ai_prompts(db: Session) -> tuple[AiSystemPrompt, AiJobPromptTemplate]:
+def seed_ai_prompts(db: Session) -> Prompts:
     """Seed the database with initial AI prompts if they don't exist.
     :param db: Database session
     :return: Tuple of (AiSystemPrompt, AiJobPromptTemplate) instances"""
@@ -195,7 +198,7 @@ def seed_ai_prompts(db: Session) -> tuple[AiSystemPrompt, AiJobPromptTemplate]:
     return system_prompt, job_template
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     title = "Software Engineer"
     company = "Tech Corp"
     description = "We are looking for a Software Engineer with experience in Python and web development."

@@ -71,6 +71,7 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       APIFY_API_KEY: ${{ secrets.APIFY_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      ANTHROPIC_ADMIN_KEY: ${{ secrets.ANTHROPIC_ADMIN_KEY }}
 
       # Payment Configuration
       STRIPE_API_KEY: ${{ secrets.STRIPE_SECRET_KEY }}

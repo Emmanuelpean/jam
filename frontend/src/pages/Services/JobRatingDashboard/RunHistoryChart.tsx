@@ -1,18 +1,37 @@
 import React, { JSX, useEffect, useState } from "react";
 import { JobRatingServiceLogData } from "../../../services/schemas/Services";
 import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
-import { createSeries, failureColor, skippedColor, successColor } from "../ServiceUtils";
+import { createSeries, failureColor, findLogByX, runDatetimeMs, skippedColor, successColor } from "../ServiceUtils";
 import { useDelayedLoading } from "../../../hooks/useDelayedLoading";
 
 interface RunHistoryChartProps {
 	serviceLogData: JobRatingServiceLogData[] | null;
 	isRunning: boolean;
 	loading?: boolean;
+	/** Id of the run whose errors are being shown, or null when showing all. */
+	selectedLogId?: number | null;
+	/** Toggle the run selection when a chart point is clicked (null clears it). */
+	onSelectLog?: (logId: number | null) => void;
 }
 
-export const RunHistoryChart = ({ serviceLogData, isRunning, loading = false }: RunHistoryChartProps): JSX.Element => {
+export const RunHistoryChart = ({
+	serviceLogData,
+	isRunning,
+	loading = false,
+	selectedLogId = null,
+	onSelectLog,
+}: RunHistoryChartProps): JSX.Element => {
 	const visibleLoading: boolean = useDelayedLoading(loading);
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
+
+	const selectedLog = (serviceLogData || []).find((log: JobRatingServiceLogData): boolean => log.id === selectedLogId);
+	const selectedX: number | null = selectedLog ? runDatetimeMs(selectedLog) : null;
+
+	const handlePointClick = (xMs: number): void => {
+		if (!onSelectLog || !serviceLogData) return;
+		const log = findLogByX(serviceLogData, xMs);
+		if (log) onSelectLog(log.id === selectedLogId ? null : log.id);
+	};
 
 	useEffect(() => {
 		if (!serviceLogData) return;
@@ -47,7 +66,7 @@ export const RunHistoryChart = ({ serviceLogData, isRunning, loading = false }: 
 	}, [serviceLogData]);
 
 	return (
-		<div className="status-card mt-4">
+		<div id="run-history-card" className="status-card mt-4">
 			<h2 className="card-title">
 				<i className="bi bi-clock-history me-2"></i>
 				Run History
@@ -61,8 +80,22 @@ export const RunHistoryChart = ({ serviceLogData, isRunning, loading = false }: 
 				</div>
 			) : (
 				<div style={{ display: "flex" }}>
-					{logData && logData[0] && <LineChart data={logData[0]} yAxisLabel="Number of jobs rated" />}
-					{logData && logData[1] && <LineChart data={logData[1]} yAxisLabel="Run duration [h]" />}
+					{logData && logData[0] && (
+						<LineChart
+							data={logData[0]}
+							yAxisLabel="Number of jobs rated"
+							onPointClick={onSelectLog ? handlePointClick : undefined}
+							selectedX={selectedX}
+						/>
+					)}
+					{logData && logData[1] && (
+						<LineChart
+							data={logData[1]}
+							yAxisLabel="Run duration [h]"
+							onPointClick={onSelectLog ? handlePointClick : undefined}
+							selectedX={selectedX}
+						/>
+					)}
 				</div>
 			)}
 		</div>

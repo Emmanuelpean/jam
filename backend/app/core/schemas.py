@@ -12,7 +12,6 @@ from pydantic import BaseModel, Field
 
 from app.base_schemas import Out, OwnedOut, EmailField, ColumnLimits, COLUMN_LIMITS
 
-
 # ------------------------------------------------------- SETTINGS ------------------------------------------------------
 
 

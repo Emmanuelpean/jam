@@ -84,8 +84,7 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_interview_geolocation_id"), "interview", ["geolocation_id"], unique=False)
 
-    op.execute(
-        """
+    op.execute("""
         UPDATE job
         SET location = CONCAT_WS(', ',
                 NULLIF(l.city, ''),
@@ -95,10 +94,8 @@ def upgrade() -> None:
             geolocation_id = l.geolocation_id
         FROM location l
         WHERE job.location_id = l.id
-        """
-    )
-    op.execute(
-        """
+        """)
+    op.execute("""
         UPDATE interview
         SET location = CONCAT_WS(', ',
                 NULLIF(l.city, ''),
@@ -108,8 +105,7 @@ def upgrade() -> None:
             geolocation_id = l.geolocation_id
         FROM location l
         WHERE interview.location_id = l.id
-        """
-    )
+        """)
 
     op.drop_index("ix_job_location_id", table_name="job")
     op.drop_constraint("job_location_id_fkey", "job", type_="foreignkey")

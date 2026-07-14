@@ -1,8 +1,10 @@
 """Tests for email utility functions"""
 
 import pytest
+from sqlalchemy.orm import Session
 
 from app.emails.utils import clean_email_address, get_user_id_from_email, build_multi_from_query
+from tests.fixtures.users import FixtureUser
 
 
 class TestCleanEmailAddress:
@@ -22,7 +24,7 @@ class TestCleanEmailAddress:
             ("emmanuel péan, phd <emmanuelpean@gmail.com>", "emmanuelpean@gmail.com"),
         ],
     )
-    def test_clean_email_address(self, sender_field, expected) -> None:
+    def test_clean_email_address(self, sender_field: str, expected: str) -> None:
         """Test email address cleaning with various formats"""
 
         result = clean_email_address(sender_field)
@@ -32,30 +34,28 @@ class TestCleanEmailAddress:
 class TestGetUserIdFromEmail:
     """Test class for get_user_id_from_email function"""
 
-    def test_get_user_id_existing_user(self, session, test_users) -> None:
+    def test_get_user_id_existing_user(self, session: Session, test_regular_user: FixtureUser) -> None:
         """Test getting user ID for existing user"""
 
-        test_user = test_users[0]
-        result = get_user_id_from_email(test_user.email, session)
-        assert result == test_user.id
+        result = get_user_id_from_email(test_regular_user.email, session)
+        assert result == test_regular_user.id
 
-    def test_get_user_id_non_existing_user(self, session) -> None:
+    def test_get_user_id_non_existing_user(self, session: Session) -> None:
         """Test getting user ID for non-existing user returns default ID 1"""
 
         with pytest.raises(AssertionError):
             get_user_id_from_email("nonexistent@example.com", session)
 
-    def test_get_user_id_empty_email(self, session) -> None:
+    def test_get_user_id_empty_email(self, session: Session) -> None:
         """Test getting user ID with empty email"""
 
         with pytest.raises(AssertionError):
             get_user_id_from_email("", session)
 
-    def test_get_user_id_case_sensitivity(self, session, test_users) -> None:
+    def test_get_user_id_case_sensitivity(self, session: Session, test_regular_user: FixtureUser) -> None:
         """Test that email lookup is case-sensitive (as per database collation)"""
 
-        test_user = test_users[0]
-        upper_email = test_user.email.upper()
+        upper_email = test_regular_user.email.upper()
         with pytest.raises(AssertionError):
             get_user_id_from_email(upper_email, session)
 
@@ -91,7 +91,7 @@ class TestBuildMultiFromQuery:
             "four_emails",
         ],
     )
-    def test_valid_email_queries(self, input_emails, expected_output) -> None:
+    def test_valid_email_queries(self, input_emails: str | list[str], expected_output: str) -> None:
         """Test that valid email inputs produce correct IMAP query strings"""
         result = build_multi_from_query(input_emails)
         assert result == expected_output
@@ -114,11 +114,17 @@ class TestBuildMultiFromQuery:
     @pytest.mark.parametrize(
         "input_emails",
         [
-            ["email@domain.com", "another@domain.com", "third@domain.com", "fourth@domain.com", "fifth@domain.com"],
+            [
+                "email@domain.com",
+                "another@domain.com",
+                "third@domain.com",
+                "fourth@domain.com",
+                "fifth@domain.com",
+            ],
         ],
         ids=["five_emails"],
     )
-    def test_large_email_list(self, input_emails) -> None:
+    def test_large_email_list(self, input_emails: list[str]) -> None:
         """Test that larger lists produce correct nested OR structure"""
         result = build_multi_from_query(input_emails)
 

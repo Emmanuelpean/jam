@@ -92,6 +92,15 @@ export class ApiService {
 		return handleResponse(response);
 	}
 
+	async patch(endpoint: string, data: any, token: string | null = null): ApiResponsePromise {
+		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
+			method: "PATCH",
+			headers: getAuthHeaders(token || ""),
+			body: JSON.stringify(data),
+		});
+		return handleResponse(response);
+	}
+
 	async delete(endpoint: string, token: string | null = null, data: any = null): ApiResponsePromise {
 		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "DELETE",

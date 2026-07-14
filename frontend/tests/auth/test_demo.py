@@ -1,7 +1,10 @@
-from base_test import BaseTest
+from tests.fixtures.users import FixtureUser
+from frontend_base_test import BaseTest
 
 
 class TestDemoLogin(BaseTest):
+
+    user_fixture = "test_demo_user"
 
     def setup_function(self, request) -> None:
         """Setup for each test method."""
@@ -27,18 +30,18 @@ class TestDemoLogin(BaseTest):
         # Click logout
         self.close_modal()
         self.get_element("logout-btn").click()
-        self.logout_modal.cancel_button.click()
+        self.logout_modal_utils.cancel_button.click()
 
         # Still on dashboard, banner still visible
         assert self.check_element_exists("demo-banner")
 
         # Fully log out
         self.get_element("logout-btn").click()
-        self.logout_modal.confirm_button.click()
+        self.logout_modal_utils.confirm_button.click()
 
         self.auth_utils.wait_for_login()
 
-    def test_regular_user_has_no_demo_banner(self, test_regular_user) -> None:
+    def test_regular_user_has_no_demo_banner(self, test_regular_user: FixtureUser) -> None:
         """A regular user must not see the demo banner after login."""
 
         self.auth_utils.set_email(test_regular_user.email)

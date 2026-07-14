@@ -12,23 +12,39 @@ from typing import Generator, Any
 import psutil
 import pytest
 import requests
-
-from app.config import settings
+from sqlalchemy import Engine, orm
 
 backend_path = os.path.abspath(os.path.join(str(__file__), "../../../backend"))
 sys.path.insert(0, backend_path)
 frontend_path = os.path.abspath(os.path.join(__file__, "../.."))
 
+from app.config import settings
+from tests.fixtures.database import truncate_all_tables
 
-# Load the pytest fixtures
 pytest_plugins = [
     "tests.fixtures.database",
     "tests.fixtures.clients",
     "tests.fixtures.users",
-    "tests.fixtures.test_data",
-    "tests.fixtures.job_scraping",
-    "tests.fixtures.job_rating",
+    "tests.fixtures.others",
 ]
+
+
+@pytest.fixture
+def session(engine: Engine) -> Generator[orm.Session, None, None]:
+    """Committing session for Selenium tests, overriding the backend's transactional-rollback fixture.
+
+    The backend under test runs in a separate uvicorn process with its own DB connection, so fixture
+    data must be committed to be visible over HTTP - an uncommitted transaction on this process's
+    connection would be invisible to it, and any data the server commits would not be rolled back here.
+    Each test therefore starts from a clean database via TRUNCATE rather than transaction rollback."""
+
+    truncate_all_tables(engine)
+    testing_session_local = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db = testing_session_local()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -133,7 +149,7 @@ def print_backend_pid() -> None:
 
 
 @pytest.fixture(scope="session")
-def frontend_url(worker_id) -> str:
+def frontend_url(worker_id: str) -> str:
     """Calculate frontend URL for this worker without starting the server"""
     if worker_id == "master":
         port = 3100
@@ -144,8 +160,14 @@ def frontend_url(worker_id) -> str:
 
 
 @pytest.fixture(scope="session")
-def test_backend_server(database_url, worker_id, frontend_url, engine) -> Generator[str, None, None]:
+def test_backend_server(
+    database_url: str,
+    worker_id: str,
+    frontend_url: str,
+    engine: Engine,
+) -> Generator[str, None, None]:
     """Start a test backend server for integration tests"""
+
     print("=" * 60)
     print(f"STARTING BACKEND SERVER (Worker: {worker_id})")
     print("=" * 60)
@@ -205,6 +227,7 @@ def test_backend_server(database_url, worker_id, frontend_url, engine) -> Genera
             stdout=log_out,
             stderr=log_err,
             text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
         )
 
         print(f"Backend process started with PID: {process.pid} on port {port}")
@@ -259,8 +282,13 @@ def test_backend_server(database_url, worker_id, frontend_url, engine) -> Genera
 
 
 @pytest.fixture(scope="session")
-def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Generator[str, None, None]:
+def test_frontend_server(
+    test_backend_server: str,
+    worker_id: str,
+    frontend_url: str,
+) -> Generator[str, None, None]:
     """Start a test frontend server for integration tests"""
+
     print("=" * 60)
     print(f"STARTING FRONTEND SERVER (Worker: {worker_id})")
     print("=" * 60)
@@ -304,14 +332,14 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     # Start the frontend server
     print("Starting frontend server subprocess...")
     process = subprocess.Popen(
-        f'"{npm_cmd}" start -- --port {port}',
+        f'"{npm_cmd}" start -- --port {port} --host localhost',
         cwd=frontend_path,
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         shell=True,
         text=True,
-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
+        creationflags=(subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0),
     )
 
     print(f"Frontend process started with PID: {process.pid}")

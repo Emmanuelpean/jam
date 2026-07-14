@@ -15,11 +15,13 @@ class BrightdataJobScraper(object):
     """Job Scraper
     :ivar base_url: Base URL for the job platform
     :ivar name: Name of the job platform
+    :ivar dataset_id: BrightData dataset ID to scrape
     :ivar poll_interval: Time interval (in seconds) between polling attempts
     :ivar max_attempts: Maximum number of polling attempts"""
 
     base_url: str = ""
     name: str = ""
+    dataset_id: str = ""
     poll_interval: int | float = 2
     max_attempts: int = 60
 
@@ -37,7 +39,6 @@ class BrightdataJobScraper(object):
 
         # Load credentials from the secrets file
         self.api_key = settings.brightdata_api_key
-        self.dataset_id = getattr(settings, f"brightdata_{self.name}_dataset_id")
 
     def _get_snapshot(self) -> str:
         """Get the snapshot id"""
@@ -111,6 +112,8 @@ class BrightdataJobScraper(object):
         json_data = data_resp.json()
 
         # Handle other errors
+        if isinstance(json_data, list) and json_data[0].get("error_code") == "dead_page":
+            return [{"is_closed": True}]
         if data_resp.status_code != 200:
             raise Exception(f"Failed to get snapshot data: {data_resp.status_code} {data_resp.text}")
         if isinstance(json_data, list) and "error_code" in json_data[0]:

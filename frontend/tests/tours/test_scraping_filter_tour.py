@@ -23,14 +23,14 @@ Cleanup on Done/Skip:
 from selenium.webdriver import ActionChains
 
 from app import models
-from base_test import BaseTest
-from select_utils import Select
+from frontend_base_test import BaseTest
+from helpers.select_utils import Select
 
 TOUR_ID = "scraping-filters"
 
 
 class TestScrapingFilterTour(BaseTest):
-    user_index = 0
+    user_fixture = "test_regular_user"
     page_url = "job-alerts/jobs"
 
     def setup_function(self, request) -> None:

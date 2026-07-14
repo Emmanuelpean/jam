@@ -5,11 +5,13 @@ import logging
 import threading
 import time
 import traceback
+from time import sleep
 
 import requests
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.geolocation.mock_responses import MOCK_GEOCODING_RESPONSES
 from app.models import Geolocation
 
 _last_call_time = 0.0
@@ -24,22 +26,25 @@ def call_geocoding_api(query: str) -> tuple[float, float, dict]:
 
     global _last_call_time
 
-    print("Calling Nominatim API for query:", query)
-    base_url = "https://nominatim.openstreetmap.org/search"
-    params = {"format": "json", "limit": 1, "addressdetails": 1, "q": query, "accept-language": "en"}
-    headers = {"User-Agent": f"JAM/{settings.app_version} ({settings.main_email_username})"}
+    if settings.test_mode:
+        data = MOCK_GEOCODING_RESPONSES.get(query, [])
+    else:
+        print("Calling Nominatim API for query:", query)
+        base_url = "https://nominatim.openstreetmap.org/search"
+        params = {"format": "json", "limit": 1, "addressdetails": 1, "q": query, "accept-language": "en"}
+        headers = {"User-Agent": f"JAM/{settings.app_version} ({settings.main_email_username})"}
 
-    try:
-        with _api_lock:
-            elapsed = time.monotonic() - _last_call_time
-            if elapsed < 1.0:
-                time.sleep(1.0 - elapsed)
-            response = requests.get(base_url, params=params, headers=headers, timeout=5)
-            _last_call_time = time.monotonic()
-        response.raise_for_status()
-        data = response.json()
-    except Exception as e:
-        raise RuntimeError(f"Nominatim API error: {str(e)}")
+        try:
+            with _api_lock:
+                elapsed = time.monotonic() - _last_call_time
+                if elapsed < 1.0:
+                    sleep(1.0 - elapsed)
+                response = requests.get(base_url, params=params, headers=headers, timeout=5)
+                _last_call_time = time.monotonic()
+            response.raise_for_status()
+            data = response.json()
+        except Exception as e:
+            raise RuntimeError(f"Nominatim API error: {str(e)}")
 
     if data and len(data) > 0:
         result = data[0]

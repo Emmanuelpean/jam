@@ -4,8 +4,8 @@ import datetime as dt
 
 from pydantic import BaseModel
 
-from app.base_schemas import Out
-
+from app.base_models import ProcessingStatus
+from app.service.schemas import ServiceErrorOut, ServiceLogOut
 
 # ----------------------------------------------------- JOB RATING -----------------------------------------------------
 
@@ -19,28 +19,25 @@ class JobRatingOut(BaseModel):
     educational_score: int | None
     interest_score: int | None
     feedback: str | None
-    is_success: bool | None
-    is_skipped: bool | None
+    status: ProcessingStatus
     skip_reason: str | None
-    error: str | None
     scraped_job_id: int | None
     user_qualification_id: int | None
     system_prompt_id: int | None
     job_prompt_template_id: int | None
     job_prompt: str | None
     notes: list[str] = []
+    rating_retry_count: int = 0
+    rating_next_retry_at: dt.datetime | None = None
+    rating_errors: list[ServiceErrorOut] = []
 
 
 # ----------------------------------------------- JOB RATING SERVICE LOG -----------------------------------------------
 
 
-class JobRatingServiceLogOut(Out):
+class JobRatingServiceLogOut(ServiceLogOut):
     """Job Rating Service Log output schema"""
 
-    run_datetime: dt.datetime
-    run_duration: float | None = None
-    is_success: bool | None = None
-    error_message: str | None = None
     job_found_ids: list[int] = []
     job_succeeded_ids: list[int] = []
     job_failed_ids: list[int] = []

@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field, field_validator
 from app.base_schemas import OwnedOut, EmailField, serialise_relationships, OwnedCreate, COLUMN_LIMITS
 from app.config import settings
 
-
 # ------------------------------------------------------- KEYWORD ------------------------------------------------------
 
 
@@ -122,8 +121,8 @@ class FileWithContentOut(FileOut):
     content: str
 
 
-class FileUpdate(FileCreate):
-    """File update schema"""
+class FileUpdate(OwnedCreate):
+    """File update schema — only the filename may be changed."""
 
     filename: str | None = Field(default=None, max_length=COLUMN_LIMITS.file_name)
 

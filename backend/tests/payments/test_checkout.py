@@ -1,6 +1,6 @@
 """Tests for Stripe checkout session building."""
 
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -11,16 +11,10 @@ class TestBuildCheckoutParams:
     """Tests for build_checkout_params function."""
 
     @pytest.mark.asyncio
-    @patch("app.payments.checkout.settings")
-    @patch("app.payments.checkout.stripe.Subscription.list_async", new_callable=AsyncMock)
-    async def test_returns_trial_params_for_new_customer(self, mock_list, mock_settings) -> None:
+    async def test_returns_trial_params_for_new_customer(
+        self, mock_checkout_settings: MagicMock, mock_subscription_list: AsyncMock
+    ) -> None:
         """New customers get 14-day trial with optional payment method."""
-
-        mock_settings.stripe_toast_price_id = "price_test123"
-        mock_settings.frontend_url = "https://example.com"
-
-        # No previous subscriptions
-        mock_list.return_value = MagicMock(data=[])
 
         result = await build_checkout_params("cus_new123")
 
@@ -35,20 +29,16 @@ class TestBuildCheckoutParams:
         assert "success=true" in result["success_url"]
         assert "canceled=true" in result["cancel_url"]
 
-        mock_list.assert_called_once_with(customer="cus_new123", status="all", limit=1)
+        mock_subscription_list.assert_called_once_with(customer="cus_new123", status="all", limit=1)
 
     @pytest.mark.asyncio
-    @patch("app.payments.checkout.settings")
-    @patch("app.payments.checkout.stripe.Subscription.list_async", new_callable=AsyncMock)
-    async def test_returns_no_trial_params_for_returning_customer(self, mock_list, mock_settings) -> None:
+    async def test_returns_no_trial_params_for_returning_customer(
+        self, mock_checkout_settings: MagicMock, mock_subscription_list: AsyncMock
+    ) -> None:
         """Returning customers do not get trial and must provide payment method."""
 
-        mock_settings.stripe_toast_price_id = "price_test123"
-        mock_settings.frontend_url = "https://example.com"
-
         # Has previous subscription
-        mock_subscription = MagicMock()
-        mock_list.return_value = MagicMock(data=[mock_subscription])
+        mock_subscription_list.return_value = MagicMock(data=[MagicMock()])
 
         result = await build_checkout_params("cus_returning123")
 
@@ -61,14 +51,12 @@ class TestBuildCheckoutParams:
         assert result["line_items"][0]["price"] == "price_test123"
 
     @pytest.mark.asyncio
-    @patch("app.payments.checkout.settings")
-    @patch("app.payments.checkout.stripe.Subscription.list_async", new_callable=AsyncMock)
-    async def test_includes_correct_urls(self, mock_list, mock_settings) -> None:
+    async def test_includes_correct_urls(
+        self, mock_checkout_settings: MagicMock, mock_subscription_list: AsyncMock
+    ) -> None:
         """Checkout params include correct success and cancel URLs."""
 
-        mock_settings.stripe_toast_price_id = "price_test123"
-        mock_settings.frontend_url = "https://myapp.com"
-        mock_list.return_value = MagicMock(data=[])
+        mock_checkout_settings.frontend_url = "https://myapp.com"
 
         result = await build_checkout_params("cus_test")
 
@@ -76,14 +64,10 @@ class TestBuildCheckoutParams:
         assert result["cancel_url"] == "https://myapp.com/settings/premium?canceled=true"
 
     @pytest.mark.asyncio
-    @patch("app.payments.checkout.settings")
-    @patch("app.payments.checkout.stripe.Subscription.list_async", new_callable=AsyncMock)
-    async def test_uses_hosted_ui_mode(self, mock_list, mock_settings) -> None:
+    async def test_uses_hosted_ui_mode(
+        self, mock_checkout_settings: MagicMock, mock_subscription_list: AsyncMock
+    ) -> None:
         """Checkout params use hosted UI mode with auto locale."""
-
-        mock_settings.stripe_toast_price_id = "price_test123"
-        mock_settings.frontend_url = "https://example.com"
-        mock_list.return_value = MagicMock(data=[])
 
         result = await build_checkout_params("cus_test")
 

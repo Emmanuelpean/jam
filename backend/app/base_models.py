@@ -3,9 +3,24 @@ the database, with its fields defining the table's columns and relationships. Th
 to provide a shared structure for all models, including common attributes like `id`, `created_at`, and `created_by`."""
 
 import re
+from enum import StrEnum
 
 from sqlalchemy import Boolean, Column, Integer, ForeignKey, TIMESTAMP, text, func
 from sqlalchemy.ext.declarative import declared_attr
+
+
+class ProcessingStatus(StrEnum):
+    """Outcome of a processing pipeline (job scraping, job rating).
+
+    Stored as a VARCHAR (the enum value). ``PENDING`` covers "not yet finalised", including items
+    that failed transiently and are scheduled for retry; only exhausted retries reach ``FAILED``.
+    ``FILTERED`` is scraping-specific (the job matched an exclusion rule); job ratings never use it."""
+
+    PENDING = "pending"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+    FILTERED = "filtered"
 
 
 class CommonBase(object):

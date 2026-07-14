@@ -3,7 +3,7 @@ import { Config } from "../services/schemas/Base";
 import { configApi } from "../services/api/Others";
 
 export interface ConfigContextValue {
-	config: any;
+	config: Config | null;
 	isLoading: boolean;
 	error: Error | null;
 }

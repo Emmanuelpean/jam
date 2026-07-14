@@ -2,7 +2,15 @@ import React, { JSX, useEffect, useState } from "react";
 import { JobScrapingServiceLogData, PlatformStat } from "../../../services/schemas/Services";
 import { SelectOption } from "../../../components/rendering/form/FormOptions";
 import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
-import { copiedColor, createSeries, failureColor, skippedColor, successColor } from "../ServiceUtils";
+import {
+	copiedColor,
+	createSeries,
+	failureColor,
+	findLogByX,
+	runDatetimeMs,
+	skippedColor,
+	successColor,
+} from "../ServiceUtils";
 import { ModalFormField } from "../../../components/rendering/form/FormRenders";
 import { SelectInput } from "../../../components/rendering/widgets/SelectWidget";
 import { useDelayedLoading } from "../../../hooks/useDelayedLoading";
@@ -14,6 +22,10 @@ interface RunHistoryChartProps {
 	onPlatformChange: (value: string) => void;
 	isRunning: boolean;
 	loading?: boolean;
+	/** Id of the run whose errors are being shown, or null when showing all. */
+	selectedLogId?: number | null;
+	/** Toggle the run selection when a chart point is clicked (null clears it). */
+	onSelectLog?: (logId: number | null) => void;
 }
 
 const getPlatformStat = (log: JobScrapingServiceLogData, platform: string, key: keyof PlatformStat): number => {
@@ -41,9 +53,20 @@ export const RunHistoryChart = ({
 	onPlatformChange,
 	isRunning,
 	loading = false,
+	selectedLogId = null,
+	onSelectLog,
 }: RunHistoryChartProps): JSX.Element => {
 	const visibleLoading = useDelayedLoading(loading);
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
+
+	const selectedLog = (serviceLogData || []).find((log: JobScrapingServiceLogData): boolean => log.id === selectedLogId);
+	const selectedX: number | null = selectedLog ? runDatetimeMs(selectedLog) : null;
+
+	const handlePointClick = (xMs: number): void => {
+		if (!onSelectLog || !serviceLogData) return;
+		const log = findLogByX(serviceLogData, xMs);
+		if (log) onSelectLog(log.id === selectedLogId ? null : log.id);
+	};
 
 	useEffect(() => {
 		if (!serviceLogData) return;
@@ -128,7 +151,7 @@ export const RunHistoryChart = ({
 	};
 
 	return (
-		<div className="status-card mt-4">
+		<div id="run-history-card" className="status-card mt-4">
 			<div className="history-chart-header d-flex justify-content-between align-items-center">
 				<h2 className="card-title mb-0">
 					<i className="bi bi-clock-history me-2"></i>
@@ -154,9 +177,22 @@ export const RunHistoryChart = ({
 				</div>
 			) : (
 				<div style={{ display: "flex" }}>
-					{logData && logData[0] && <LineChart data={logData[0]} yAxisLabel="Number of job alerts" />}
+					{logData && logData[0] && (
+						<LineChart
+							data={logData[0]}
+							yAxisLabel="Number of job alerts"
+							onPointClick={onSelectLog ? handlePointClick : undefined}
+							selectedX={selectedX}
+						/>
+					)}
 					{logData && logData[1] && (
-						<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
+						<LineChart
+							data={logData[1]}
+							xAxisLabel="Run date"
+							yAxisLabel="Run duration [h]"
+							onPointClick={onSelectLog ? handlePointClick : undefined}
+							selectedX={selectedX}
+						/>
 					)}
 				</div>
 			)}

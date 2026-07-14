@@ -34,7 +34,7 @@ export const useServiceLogs = <T>(
 
 	const fetchLatestLogs = async (): Promise<void> => {
 		if (!token || !dateRange) return;
-		const seq = ++fetchSeqRef.current;
+		const seq: number = ++fetchSeqRef.current;
 		setLoading(true);
 		try {
 			const logs: ApiResponse<T[]> = await logApi.getAll(token, {
@@ -57,11 +57,19 @@ export const useServiceLogs = <T>(
 		fetchLatestLogs().then();
 	}, [token, dateRange]);
 
+	const wasRunningRef = useRef<boolean>(false);
 	useEffect(() => {
-		if (!isServiceRunning) return;
-		fetchLatestServiceLog().then();
-		const interval = setInterval(fetchLatestServiceLog, 2000);
-		return (): void => clearInterval(interval);
+		if (isServiceRunning) {
+			wasRunningRef.current = true;
+			fetchLatestServiceLog().then();
+			const interval = setInterval(fetchLatestServiceLog, 2000);
+			return (): void => clearInterval(interval);
+		}
+		if (wasRunningRef.current) {
+			wasRunningRef.current = false;
+			fetchLatestServiceLog().then();
+			fetchLatestLogs().then();
+		}
 	}, [isServiceRunning, token]);
 
 	useEffect(() => {

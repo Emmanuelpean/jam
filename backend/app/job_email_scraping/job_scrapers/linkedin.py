@@ -9,6 +9,7 @@ class LinkedinBrightdataJobScraper(BrightdataJobScraper):
 
     base_url = "https://www.linkedin.com/jobs/view/"
     name = "linkedin"
+    dataset_id = "gd_lpfll7v5hcqtkxl6l"
     poll_interval: int | float = 2
     max_attempts: int = 60
 
@@ -38,6 +39,7 @@ class LinkedinBrightdataJobScraper(BrightdataJobScraper):
                 title=job_data.get("job_title"),
                 description=job_data.get("job_summary", "").strip("Show more Show less") or None,
                 url=job_data.get("url"),
+                is_closed=job_data.get("is_closed", False),
                 salary=Salary(
                     min_amount=min_amount,
                     max_amount=max_amount,
@@ -49,6 +51,6 @@ class LinkedinBrightdataJobScraper(BrightdataJobScraper):
 
 
 if __name__ == "__main__":
-    scraper = LinkedinBrightdataJobScraper(["4384261503"])
+    scraper = LinkedinBrightdataJobScraper(["4435691854"])
     job_data1 = scraper.scrape_job()
-    # print(job_data1[0])
+    print(job_data1[0])

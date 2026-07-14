@@ -15,15 +15,14 @@ Tour step order (speculative-applications):
 """
 
 from app import models
-from base_test import BaseTest
-from select_utils import Select
-
+from frontend_base_test import BaseTest
+from helpers.select_utils import Select
 
 TOUR_ID = "speculative-applications"
 
 
 class TestSpeculativeApplicationsTour(BaseTest):
-    user_index = 0
+    user_fixture = "test_regular_user"
     page_url = "speculative-applications"
 
     def setup_function(self, request) -> None:
@@ -418,7 +417,7 @@ class TestSpeculativeApplicationsTour(BaseTest):
         ReactSelect for contacts shows only persons created during the tour (none here).
         After the tour ends the pre-existing person is unaffected.
         """
-        pre_existing = self._make_person(first_name="Pre", last_name="Existing")
+        pre_existing = self.user.create_person(first_name="Pre", last_name="Existing")
         initial_persons = self.db.query(models.Person).filter_by(owner_id=self.user.id).count()
 
         self._start_tour_and_open_form()
