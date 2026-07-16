@@ -41,7 +41,7 @@ class Setting(CommonBase, Base):
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
 
 
-def get_setting_value(db, name: str, default: Any):
+def get_setting_value(db: Session, name: str, default: Any):
     """Retrieve a setting value from the database by its name.
     :param db: Database session.
     :param name: The name of the setting to retrieve.

@@ -29,6 +29,7 @@ class ApifyBalance(BaseModel):
 def fetch_apify_balance(
     db: Session | None = None,
     logger: logging.Logger | None = None,
+    service_log_id: int | None = None,
 ) -> ApifyBalance:
     """Hit /v2/users/me and return the `plan` dict (used to discover the cycle limit)."""
 
@@ -48,7 +49,7 @@ def fetch_apify_balance(
     entry = ApifyBalance(limit_usd=limit_usd)
 
     if db:
-        db.add(models.ApifyBalance(**entry.model_dump()))
+        db.add(models.ApifyBalance(**entry.model_dump(), service_log_id=service_log_id))
         db.commit()
     return entry
 
@@ -56,6 +57,7 @@ def fetch_apify_balance(
 def fetch_apify_daily_usage(
     db: Session | None = None,
     logger: logging.Logger | None = None,
+    service_log_id: int | None = None,
 ) -> list[ApifyDailyUsage]:
     """Hit /v2/users/me/usage/monthly and return the `data` dict (used for daily + cycle total)."""
 
@@ -71,5 +73,5 @@ def fetch_apify_daily_usage(
     data = resp.json().get("data") or {}
     entries = [ApifyDailyUsage.model_validate(entry) for entry in data.get("dailyServiceUsages") or []]
     if db:
-        upsert(db, models.ApifyDailyUsage, entries, ["date"])
+        upsert(db, models.ApifyDailyUsage, entries, ["date"], extra={"service_log_id": service_log_id})
     return entries

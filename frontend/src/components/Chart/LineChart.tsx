@@ -89,7 +89,7 @@ export const LineChart = ({
 		);
 	}
 
-	if (!data || data.length === 0 || data[0]?.data.length === 0) {
+	if (!data || data.length === 0 || data.every((series: SeriesData): boolean => series.data.length === 0)) {
 		return (
 			<div
 				className="d-flex flex-column justify-content-center align-items-center text-muted"
@@ -109,16 +109,18 @@ export const LineChart = ({
 		return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
 	};
 
-	const transformedData: ChartRow[] =
-		data[0]?.data.map((_: DataPoint, index: number): ChartRow => {
-			const point: ChartRow = {
-				x: toMs(data[0]!.data[index]!.x),
-			};
-			data.forEach((series: SeriesData): void => {
-				point[series.id] = series.data[index]?.y;
-			});
-			return point;
-		}) || [];
+	const rowsByX = new Map<number, ChartRow>();
+	data.forEach((series: SeriesData): void => {
+		series.data.forEach((pt: DataPoint): void => {
+			const xMs: number = toMs(pt.x);
+			const row: ChartRow = rowsByX.get(xMs) ?? { x: xMs };
+			row[series.id] = pt.y;
+			rowsByX.set(xMs, row);
+		});
+	});
+	const transformedData: ChartRow[] = Array.from(rowsByX.values()).sort(
+		(a: ChartRow, b: ChartRow): number => a.x - b.x
+	);
 
 	const handleLegendClick = (e: LegendPayload): void => {
 		const seriesId: string = String(e.dataKey);
@@ -229,6 +231,7 @@ export const LineChart = ({
 							stroke={series.color ?? CHART_PALETTE[index % CHART_PALETTE.length]}
 							hide={hiddenSeries.has(series.id)}
 							strokeWidth={2}
+							connectNulls
 							isAnimationActive={false}
 						/>
 					)

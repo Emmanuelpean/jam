@@ -25,6 +25,7 @@ class JobRatingOut(BaseModel):
     user_qualification_id: int | None
     system_prompt_id: int | None
     job_prompt_template_id: int | None
+    service_log_id: int | None
     job_prompt: str | None
     notes: list[str] = []
     rating_retry_count: int = 0

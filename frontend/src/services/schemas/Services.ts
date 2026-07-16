@@ -120,6 +120,7 @@ export interface JobRatingData extends BaseOut {
 	user_qualification_id: number | null;
 	job_prompt_template_id: number | null;
 	system_prompt_id: number | null;
+	service_log_id: number | null;
 	job_prompt: string | null;
 	notes: string[];
 	rating_retry_count: number;

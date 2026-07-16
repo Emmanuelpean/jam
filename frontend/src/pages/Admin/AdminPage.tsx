@@ -13,6 +13,8 @@ import {
 	jobScraperServiceApi,
 	jobScraperServiceLogApi,
 	SchedulerStatus,
+	serviceErrorApi,
+	ServiceErrorCounts,
 	ServiceStatus,
 	ServiceUpdatePayload,
 } from "../../services/api/Services";
@@ -179,9 +181,10 @@ interface AdminCardProps {
 	onClick: () => void;
 	children: ReactNode;
 	headerExtra?: ReactNode;
+	errorCount?: number;
 }
 
-const AdminCard = ({ id, title, icon, onClick, children, headerExtra }: AdminCardProps): JSX.Element => {
+const AdminCard = ({ id, title, icon, onClick, children, headerExtra, errorCount }: AdminCardProps): JSX.Element => {
 	return (
 		<div
 			id={id}
@@ -201,7 +204,18 @@ const AdminCard = ({ id, title, icon, onClick, children, headerExtra }: AdminCar
 					<i className={`bi bi-${icon} me-2`} />
 					{title}
 				</h2>
-				{headerExtra ?? <i className="bi bi-chevron-right admin-card-arrow" />}
+				<div className="admin-card-header-end">
+					{!!errorCount && (
+						<span
+							className="admin-card-error-badge"
+							title={`${errorCount} unacknowledged error${errorCount === 1 ? "" : "s"}`}
+						>
+							<i className="bi bi-exclamation-triangle-fill me-1" />
+							{errorCount}
+						</span>
+					)}
+					{headerExtra ?? <i className="bi bi-chevron-right admin-card-arrow" />}
+				</div>
 			</div>
 			<div className="admin-card-body">{children}</div>
 		</div>
@@ -340,6 +354,23 @@ const AdminPage = (): JSX.Element => {
 	const [ratedSeries, setRatedSeries] = useState<SparklinePoint[]>([]);
 	const [balanceSeries, setBalanceSeries] = useState<SparklinePoint[]>([]);
 	const [sparklinesLoading, setSparklinesLoading] = useState<boolean>(true);
+	const [errorCounts, setErrorCounts] = useState<ServiceErrorCounts | null>(null);
+
+	useEffect((): (() => void) | void => {
+		if (!token) return;
+		let cancelled = false;
+		serviceErrorApi
+			.getUnacknowledgedCounts(token)
+			.then((res): void => {
+				if (!cancelled) setErrorCounts(res.data);
+			})
+			.catch((): void => {
+				// Leave counts null on error; no badge is shown.
+			});
+		return (): void => {
+			cancelled = true;
+		};
+	}, [token]);
 
 	useEffect((): (() => void) | void => {
 		if (!token) return;
@@ -449,6 +480,7 @@ const AdminPage = (): JSX.Element => {
 						title="Job Scraping"
 						icon={getTableIcon("Job Scraping Dashboard")}
 						onClick={(): void => openModal("scraping")}
+						errorCount={errorCounts?.job_email_scraping}
 					>
 						<ServiceStatusBody status={scraping.serviceStatus} remainingTime={scraping.remainingTime} />
 						<div className="admin-card-sparkline">
@@ -467,6 +499,7 @@ const AdminPage = (): JSX.Element => {
 						title="Job Rating"
 						icon={getTableIcon("Job Rating Dashboard")}
 						onClick={(): void => openModal("rating")}
+						errorCount={errorCounts?.job_rating}
 					>
 						<ServiceStatusBody status={rating.serviceStatus} remainingTime={rating.remainingTime} />
 						<div className="admin-card-sparkline">
@@ -485,6 +518,7 @@ const AdminPage = (): JSX.Element => {
 						title="Provider Monitoring"
 						icon={getTableIcon("ESM")}
 						onClick={(): void => openModal("usage")}
+						errorCount={errorCounts?.provider_monitoring}
 					>
 						<ServiceStatusBody status={monitoring.serviceStatus} remainingTime={monitoring.remainingTime} />
 						<div className="admin-card-sparkline">

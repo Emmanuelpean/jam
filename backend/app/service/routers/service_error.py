@@ -1,13 +1,14 @@
 """Admin endpoints for listing and acknowledging unified service errors."""
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.core.oauth2 import get_current_user
 from app.models import User, ServiceError
 from app.routers.utility import assert_admin
-from app.service.schemas import ServiceErrorOut, ErrorAcknowledgeRequest
+from app.service.schemas import ServiceErrorOut, ErrorAcknowledgeRequest, ServiceErrorCounts
 
 service_error_router = APIRouter(prefix="/service-errors", tags=["service-errors"])
 
@@ -42,6 +43,30 @@ def list_service_errors(
     if limit:
         query = query.limit(limit)
     return query.all()
+
+
+@service_error_router.get("/counts", response_model=ServiceErrorCounts)
+def unacknowledged_error_counts(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ServiceErrorCounts:
+    """Count unacknowledged errors raised since the admin's previous login, per service. Admin only."""
+
+    assert_admin(current_user)
+
+    query = db.query(
+        func.count(ServiceError.job_email_scraping_service_log_id),
+        func.count(ServiceError.job_rating_service_log_id),
+        func.count(ServiceError.provider_monitoring_service_log_id),
+    ).filter(ServiceError.is_acknowledged.is_(False))
+    if current_user.previous_login:
+        query = query.filter(ServiceError.created_at >= current_user.previous_login)
+    scraping, rating, monitoring = query.one()
+    return ServiceErrorCounts(
+        job_email_scraping=scraping,
+        job_rating=rating,
+        provider_monitoring=monitoring,
+    )
 
 
 @service_error_router.put("/acknowledge", response_model=list[ServiceErrorOut])

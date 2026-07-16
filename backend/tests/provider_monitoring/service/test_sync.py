@@ -25,15 +25,15 @@ def _is_success(service_log: models.ProviderMonitoringServiceLog) -> bool:
     return ProviderMonitoringServiceLogOut.model_validate(service_log, from_attributes=True).is_finished
 
 
-def _boom(db, logger) -> None:
+def _boom(db, logger, service_log_id=None) -> None:
     """A fetcher that always fails."""
-    _ = db, logger
+    _ = db, logger, service_log_id
     raise RuntimeError("boom")
 
 
-def _ok(db, logger) -> None:
+def _ok(db, logger, service_log_id=None) -> None:
     """A fetcher that always succeeds."""
-    _ = db, logger
+    _ = db, logger, service_log_id
     return None
 
 
@@ -70,13 +70,25 @@ class TestServiceMonitorRun:
         assert _is_success(service_log) is True
         assert session.query(models.ServiceError).count() == 0
 
+    def test_fetchers_receive_run_id(self, session: Session) -> None:
+        """Each fetcher is passed the current run's id so it can stamp records with service_log_id."""
+
+        received: list[int | None] = []
+
+        def _capture(db, logger, service_log_id=None) -> None:
+            _ = db, logger
+            received.append(service_log_id)
+
+        service_log = _make_service({"a": [_capture]}).run()
+        assert received == [service_log.id]
+
     def test_one_failure_does_not_abort_other_fetchers(self, session: Session) -> None:
         """A failing fetcher does not prevent the remaining fetchers from running."""
 
         calls: list[str] = []
 
-        def _record_ok(db, logger) -> None:
-            _ = db, logger
+        def _record_ok(db, logger, service_log_id=None) -> None:
+            _ = db, logger, service_log_id
             calls.append("ok")
 
         service_log = _make_service({"a": [_boom], "b": [_record_ok]}).run()

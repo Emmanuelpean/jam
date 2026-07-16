@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, Float, String, UniqueConstraint
+from sqlalchemy import Column, Date, Float, ForeignKey, Integer, String, UniqueConstraint
 
 from app.base_models import CommonBase
 from app.database import Base
@@ -12,6 +12,9 @@ class BrightdataDailyUsage(CommonBase, Base):
     date = Column(Date, nullable=False)
     dataset = Column(String, nullable=False)
     usage_usd = Column(Float, nullable=False)
+    service_log_id = Column(
+        Integer, ForeignKey("provider_monitoring_service_log.id", ondelete="SET NULL"), nullable=True
+    )
 
     __table_args__ = (UniqueConstraint("date", "dataset", name="brightdata_usage_history_date_dataset_uq"),)
 
@@ -23,3 +26,6 @@ class BrightdataBalance(CommonBase, Base):
 
     balance_usd = Column(Float, nullable=True)
     pending_costs_usd = Column(Float, nullable=True)
+    service_log_id = Column(
+        Integer, ForeignKey("provider_monitoring_service_log.id", ondelete="SET NULL"), nullable=True
+    )

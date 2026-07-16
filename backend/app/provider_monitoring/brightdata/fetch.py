@@ -37,6 +37,7 @@ class BrightdataBalance(BaseModel):
 def fetch_brightdata_balance(
     db: Session | None = None,
     logger: logging.Logger | None = None,
+    service_log_id: int | None = None,
 ) -> BrightdataBalance:
     """Hit /customer/balance and return the current account balance + pending costs."""
 
@@ -55,7 +56,7 @@ def fetch_brightdata_balance(
         pending_costs_usd=payload.get("pending_costs"),
     )
     if db:
-        db.add(models.BrightdataBalance(**entry.model_dump()))
+        db.add(models.BrightdataBalance(**entry.model_dump(), service_log_id=service_log_id))
         db.commit()
     return entry
 
@@ -63,6 +64,7 @@ def fetch_brightdata_balance(
 def fetch_brightdata_daily_usage(
     db: Session | None = None,
     logger: logging.Logger | None = None,
+    service_log_id: int | None = None,
 ) -> list[BrightdataDailyUsage]:
     """Hit /costs/export/json for the current calendar month and return one row per (date, dataset).
 
@@ -115,5 +117,5 @@ def fetch_brightdata_daily_usage(
             entries.append(BrightdataDailyUsage(date=day, dataset=label, usage_usd=usage))
 
     if db:
-        upsert(db, models.BrightdataDailyUsage, entries, ["date", "dataset"])
+        upsert(db, models.BrightdataDailyUsage, entries, ["date", "dataset"], extra={"service_log_id": service_log_id})
     return entries

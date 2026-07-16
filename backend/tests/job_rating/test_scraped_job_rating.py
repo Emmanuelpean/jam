@@ -288,6 +288,7 @@ class TestScrapedJobRaterRateJob(BaseTest):
         assert rating.status == ProcessingStatus.COMPLETED
         assert rating.overall_score is not None
         assert rating.job_prompt is not None
+        assert rating.service_log_id == test_rating_service_log.id
         assert scraped_job.id in test_rating_service_log.job_succeeded_ids
 
     def test_failed_rating(

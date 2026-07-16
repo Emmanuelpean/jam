@@ -26,6 +26,7 @@ class StripeDailyIncome(BaseModel):
 def fetch_stripe_daily_income(
     db: Session | None = None,
     logger: logging.Logger | None = None,
+    service_log_id: int | None = None,
 ) -> list[StripeDailyIncome]:
     """Fetch per-day Stripe income for the current calendar month.
 
@@ -63,5 +64,5 @@ def fetch_stripe_daily_income(
         for day in days
     ]
     if db:
-        upsert(db, models.StripeDailyIncome, entries, ["date"])
+        upsert(db, models.StripeDailyIncome, entries, ["date"], extra={"service_log_id": service_log_id})
     return entries
