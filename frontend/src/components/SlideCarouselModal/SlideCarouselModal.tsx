@@ -9,7 +9,7 @@ import { ReleaseSlide } from "../../releaseNotes/versions";
 import "./SlideCarouselModal.scss";
 
 export interface SlideCarouselModalHandle {
-	show: () => void;
+	show: (options?: { updateVersion?: boolean }) => void;
 	hide: () => void;
 }
 
@@ -33,6 +33,7 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 		const { updateCurrentUser } = useAuth();
 		const [slideHeight, setSlideHeight] = useState<number | undefined>(undefined);
 		const measureRef = useRef<HTMLDivElement | null>(null);
+		const updateVersionRef = useRef<boolean>(true);
 
 		const measureSlides = useCallback((): void => {
 			if (!measureRef.current) return;
@@ -53,7 +54,8 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 		const slide: ReleaseSlide | undefined = slides[currentStep];
 
 		useImperativeHandle(ref, () => ({
-			show: (): void => {
+			show: (options?: { updateVersion?: boolean }): void => {
+				updateVersionRef.current = options?.updateVersion ?? true;
 				setCurrentStep(0);
 				setDirection(null);
 				setShow(true);
@@ -62,13 +64,15 @@ export const SlideCarouselModal = forwardRef<SlideCarouselModalHandle, SlideCaro
 		}));
 
 		const markAsSeen = async (): Promise<void> => {
-			setLoading(true);
-			try {
-				await updateCurrentUser({ app_version: packageJson.version });
-			} catch (error) {
-				console.log("Error updating app version:", error);
-			} finally {
-				setLoading(false);
+			if (updateVersionRef.current) {
+				setLoading(true);
+				try {
+					await updateCurrentUser({ app_version: packageJson.version });
+				} catch (error) {
+					console.log("Error updating app version:", error);
+				} finally {
+					setLoading(false);
+				}
 			}
 			setShow(false);
 			onFinish?.();

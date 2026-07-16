@@ -152,7 +152,11 @@ const AboutPage = (): JSX.Element => {
 								Discover JAM
 							</Button>
 							{(allToursCompleted || tourPanelDismissed) && (
-								<Button id="take-a-tour-btn" variant="outline-secondary" onClick={toggleTourSelect}>
+								<Button
+								id="take-a-tour-btn"
+								variant="outline-secondary"
+								onClick={(): void => toggleTourSelect({ hideDismiss: true })}
+							>
 									<i className="bi bi-map me-2" />
 									Take a Tour
 								</Button>

@@ -7,7 +7,8 @@ import "./TourSelectPanel.scss";
 const CLOSE_ANIMATION_MS = 150;
 
 export function TourSelectPanel(): JSX.Element | null {
-	const { isTourSelectOpen, closeTourSelect, startTour, completedTourIds, isTourActive } = useTour();
+	const { isTourSelectOpen, closeTourSelect, startTour, completedTourIds, isTourActive, tourSelectHideDismiss } =
+		useTour();
 	const { currentUser, updateCurrentUser } = useAuth();
 	const isPremium = currentUser?.premium.is_active ?? false;
 	const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
@@ -111,11 +112,13 @@ export function TourSelectPanel(): JSX.Element | null {
 				>
 					{visibleTours.map((tour) => renderTourItem(tour))}
 				</ul>
-				<div className="tsp-footer">
-					<button id="tsp-dismiss-btn" className="tsp-dismiss-btn" onClick={handleDismissPanel}>
-						Don't show this again
-					</button>
-				</div>
+				{!tourSelectHideDismiss && (
+					<div className="tsp-footer">
+						<button id="tsp-dismiss-btn" className="tsp-dismiss-btn" onClick={handleDismissPanel}>
+							Don't show this again
+						</button>
+					</div>
+				)}
 			</div>
 		</>
 	);

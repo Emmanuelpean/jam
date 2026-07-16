@@ -75,6 +75,7 @@ const ISOLATED_TOURS = new Set([
 export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	const [activeTourId, setActiveTourId] = useState<string | null>(null);
 	const [isTourSelectOpen, setIsTourSelectOpen] = useState<boolean>(false);
+	const [tourSelectHideDismiss, setTourSelectHideDismiss] = useState<boolean>(false);
 	const [isCleaningUp, setIsCleaningUp] = useState<boolean>(false);
 	const [completedTourIds, setCompletedTourIds] = useState<Set<string>>(new Set());
 	const [demoJobId, setDemoJobId] = useState<number | null>(null);
@@ -140,11 +141,8 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 		if (newJob) setDemoJobId(newJob.id);
 	}, [activeTourId, jobs, demoJobId]);
 
-	// True whenever the user has created at least one top-level entity during the tour
-	// that can meaningfully be kept (not a child of a JAM-created entity that will be deleted).
-	// During a tour, all visible entities have is_tour=true, so we just check against jamCreatedIds.
 	const hasUserCreatedData: boolean = useMemo((): boolean => {
-		if (!isTourActive) return false;
+		if (!isTourActive || activeTourId === null || !ISOLATED_TOURS.has(activeTourId)) return false;
 		const jamIds: TourSnapshot = jamCreatedIds.current;
 		return (
 			jobs.some((j: EnrichedJobData): boolean => !jamIds.jobIds.has(j.id)) ||
@@ -157,7 +155,16 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 					!jamIds.speculativeApplicationIds.has(s.id) && !jamIds.companyIds.has(s.company_id)
 			)
 		);
-	}, [isTourActive, jobs, companies, persons, keywords, scrapingExclusionFilters, speculativeApplications]);
+	}, [
+		isTourActive,
+		activeTourId,
+		jobs,
+		companies,
+		persons,
+		keywords,
+		scrapingExclusionFilters,
+		speculativeApplications,
+	]);
 
 	const startTour = useCallback(
 		async (tourId: string): Promise<void> => {
@@ -214,9 +221,6 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				void updateCurrentUser({ preferences: { completed_tours: newIds } });
 			}
 
-			// Only isolated tours filter the DataContext to is_tour=true, so their closure arrays
-			// contain only tour entities that are safe to delete. Non-isolated tours (e.g. app-overview)
-			// leave the closure holding real user data — skip cleanup entirely for those.
 			const jamIds: TourSnapshot = jamCreatedIds.current;
 
 			if (ISOLATED_TOURS.has(tourId)) {
@@ -323,9 +327,6 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 	const startTourRef = useRef(startTour);
 	startTourRef.current = startTour;
 
-	// After endTour cleanup completes, start the next tour with fresh entity state.
-	// Using an effect (rather than Promise chaining) ensures startTour reads the correct
-	// post-cleanup visibleData snapshot instead of stale filtered data from Tour A.
 	useEffect((): void => {
 		if (!isTourActive && !isCleaningUp && pendingNextTourId !== null) {
 			const nextId: string = pendingNextTourId;
@@ -344,9 +345,17 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 		[endTour]
 	);
 
-	const openTourSelect = useCallback((): void => setIsTourSelectOpen(true), []);
+	const openTourSelect = useCallback((options?: { hideDismiss?: boolean }): void => {
+		setTourSelectHideDismiss(options?.hideDismiss ?? false);
+		setIsTourSelectOpen(true);
+	}, []);
 	const closeTourSelect = useCallback((): void => setIsTourSelectOpen(false), []);
-	const toggleTourSelect = useCallback((): void => setIsTourSelectOpen((prev) => !prev), []);
+	const toggleTourSelect = useCallback((options?: { hideDismiss?: boolean }): void => {
+		setIsTourSelectOpen((prev: boolean): boolean => {
+			if (!prev) setTourSelectHideDismiss(options?.hideDismiss ?? false);
+			return !prev;
+		});
+	}, []);
 
 	return (
 		<TourContext.Provider
@@ -362,6 +371,7 @@ export function TourProvider({ children }: TourProviderProps): JSX.Element {
 				openTourSelect,
 				closeTourSelect,
 				toggleTourSelect,
+				tourSelectHideDismiss,
 				hasUserCreatedData,
 				demoJobId,
 				demoScrapedJobId,
