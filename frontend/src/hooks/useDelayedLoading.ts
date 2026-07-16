@@ -5,46 +5,34 @@ const MIN_DISPLAY_MS = 500;
 
 export const useDelayedLoading = (loading: boolean): boolean => {
 	const [visibleLoading, setVisibleLoading] = useState(false);
-	const showTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const shownAtRef = useRef<number | null>(null);
 
 	useEffect(() => {
 		if (loading) {
-			if (hideTimerRef.current) {
-				clearTimeout(hideTimerRef.current);
-				hideTimerRef.current = null;
-			}
-			showTimerRef.current = setTimeout(() => {
+			const showTimer = setTimeout(() => {
 				setVisibleLoading(true);
 				shownAtRef.current = Date.now();
-				showTimerRef.current = null;
 			}, SHOW_DELAY);
-		} else {
-			if (showTimerRef.current) {
-				clearTimeout(showTimerRef.current);
-				showTimerRef.current = null;
-				return;
-			}
-			if (shownAtRef.current) {
-				const elapsed = Date.now() - shownAtRef.current;
-				const remaining = MIN_DISPLAY_MS - elapsed;
-				if (remaining > 0) {
-					hideTimerRef.current = setTimeout(() => {
-						setVisibleLoading(false);
-						shownAtRef.current = null;
-						hideTimerRef.current = null;
-					}, remaining);
-				} else {
-					setVisibleLoading(false);
-					shownAtRef.current = null;
-				}
-			}
+			return (): void => clearTimeout(showTimer);
 		}
-		return () => {
-			if (showTimerRef.current) clearTimeout(showTimerRef.current);
-			if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-		};
+
+		if (shownAtRef.current === null) {
+			setVisibleLoading(false);
+			return;
+		}
+
+		const remaining: number = MIN_DISPLAY_MS - (Date.now() - shownAtRef.current);
+		if (remaining <= 0) {
+			setVisibleLoading(false);
+			shownAtRef.current = null;
+			return;
+		}
+
+		const hideTimer = setTimeout(() => {
+			setVisibleLoading(false);
+			shownAtRef.current = null;
+		}, remaining);
+		return (): void => clearTimeout(hideTimer);
 	}, [loading]);
 
 	return visibleLoading;
