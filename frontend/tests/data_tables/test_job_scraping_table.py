@@ -9,7 +9,6 @@ from frontend_base_test import BaseTest, models
 
 
 class TestJobScrapingTable(BaseTest):
-
     user_fixture = "test_regular_user"
     page_url = "job-alerts/jobs"
 
@@ -289,7 +288,13 @@ class TestJobScrapingTable(BaseTest):
             title="Retry Pending Test Job",
             scraping_retry_count=1,
         )
-        self.create_service_error(self.db, message="Simulated scraping failure", scraped_job_id=scraped_job.id)
+        service_log = self.create_email_scraping_service_log(self.db)
+        self.create_service_error(
+            self.db,
+            message="Simulated scraping failure",
+            scraped_job_id=scraped_job.id,
+            job_email_scraping_service_log_id=service_log.id,
+        )
         self.driver.refresh()
         self.show_job(scraped_job)
 
@@ -305,8 +310,14 @@ class TestJobScrapingTable(BaseTest):
             title="Retry Warning Test Job",
             scraping_retry_count=2,
         )
-        self.create_service_error(self.db, message="First failure", scraped_job_id=scraped_job.id)
-        self.create_service_error(self.db, message="Second failure", scraped_job_id=scraped_job.id)
+        service_log = self.create_email_scraping_service_log(self.db)
+        kwargs = dict(
+            session=self.db,
+            scraped_job_id=scraped_job.id,
+            job_email_scraping_service_log_id=service_log.id,
+        )
+        self.create_service_error(message="First failure", **kwargs)
+        self.create_service_error(message="Second failure", **kwargs)
         self.driver.refresh()
         self.show_job(scraped_job)
         self.scrapedJob_table_utils.table_row(scraped_job.id).click()
@@ -364,8 +375,12 @@ class TestJobScrapingTable(BaseTest):
 
         scraped_job = self.user.create_scraped_job(status=ProcessingStatus.COMPLETED, title="Failed Rating Test Job")
         rating = self.user.create_job_rating(scraped_job, status=ProcessingStatus.FAILED, llm_model="chatgpt")
+        service_log = self.create_job_rating_service_log(self.db)
         self.create_service_error(
-            self.db, message="Failed to scrape job details: Page not found", job_rating_id=rating.id
+            self.db,
+            message="Failed to scrape job details: Page not found",
+            job_rating_id=rating.id,
+            job_rating_service_log_id=service_log.id,
         )
         self.driver.refresh()
         self.show_job(scraped_job)
@@ -425,7 +440,6 @@ class TestJobScrapingTable(BaseTest):
 
 
 class TestScrapingFilters(BaseTest):
-
     user_fixture = "test_regular_user"
     page_url = "job-alerts/jobs"
     test_data = dict(type="Attendance Type", operator="Contains", value="In Person")
@@ -500,7 +514,6 @@ class TestScrapingFilters(BaseTest):
 
 
 class TestDismissExpiredBulkAction(BaseTest):
-
     user_fixture = "test_regular_user"
     page_url = "job-alerts/jobs"
 
@@ -586,7 +599,6 @@ class TestDismissExpiredBulkAction(BaseTest):
 
 
 class TestBulkDeleteSelectedAction(BaseTest):
-
     user_fixture = "test_regular_user"
     page_url = "job-alerts/jobs"
 
@@ -658,7 +670,6 @@ class TestBulkDeleteSelectedAction(BaseTest):
 
 
 class TestJobEmailInteraction(BaseTest):
-
     user_fixture = "test_regular_user"
     page_url = "job-alerts/jobs"
 
