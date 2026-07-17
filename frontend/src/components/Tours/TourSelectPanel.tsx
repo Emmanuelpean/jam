@@ -7,8 +7,9 @@ import "./TourSelectPanel.scss";
 const CLOSE_ANIMATION_MS = 150;
 
 export function TourSelectPanel(): JSX.Element | null {
-	const { isTourSelectOpen, closeTourSelect, startTour, completedTourIds, isTourActive } = useTour();
-	const { currentUser } = useAuth();
+	const { isTourSelectOpen, closeTourSelect, startTour, completedTourIds, isTourActive, tourSelectHideDismiss } =
+		useTour();
+	const { currentUser, updateCurrentUser } = useAuth();
 	const isPremium = currentUser?.premium.is_active ?? false;
 	const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
 	const [panelTop, setPanelTop] = useState<number>(0);
@@ -54,6 +55,11 @@ export function TourSelectPanel(): JSX.Element | null {
 
 	const visibleTours = TOURS.filter((t) => isPremium || !t.premium);
 	const completedCount = visibleTours.filter((t) => completedTourIds.has(t.id)).length;
+
+	const handleDismissPanel = (): void => {
+		closeTourSelect();
+		void updateCurrentUser({ preferences: { tour_panel_dismissed: true } });
+	};
 
 	const renderTourItem = (tour: TourDefinition): JSX.Element => {
 		const completed = completedTourIds.has(tour.id);
@@ -106,6 +112,13 @@ export function TourSelectPanel(): JSX.Element | null {
 				>
 					{visibleTours.map((tour) => renderTourItem(tour))}
 				</ul>
+				{!tourSelectHideDismiss && (
+					<div className="tsp-footer">
+						<button id="tsp-dismiss-btn" className="tsp-dismiss-btn" onClick={handleDismissPanel}>
+							Don't show this again
+						</button>
+					</div>
+				)}
 			</div>
 		</>
 	);

@@ -72,6 +72,7 @@ class TestAppOverviewTour(BaseTest):
         self.tour_utils.wait_for_popover()
         assert f"STEP {TOTAL_STEPS} OF {TOTAL_STEPS}" in self.tour_utils.step_counter_text().upper()
         assert "Done" in self.get_element(self.tour_utils.TOUR_NEXT).text
+        assert not self.check_element_exists("tour-keep-data"), "Keep my data toggle must not appear"
         self.tour_utils.click_next()
 
         self.tour_utils.wait_for_popover_gone()

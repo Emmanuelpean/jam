@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.provider_monitoring.anthropic.fetch import sum_bucket_amount, fetch_anthropic_daily_usage
+from tests.utils.create_data.utils import create_db_entries
 
 
 def _response(payload: dict) -> MagicMock:
@@ -223,6 +224,24 @@ class TestFetchAnthropic:
         rows = session.query(models.AnthropicDailyUsage).order_by(models.AnthropicDailyUsage.date).all()
         assert [r.date for r in rows] == [dt.date(2026, 6, 1), dt.date(2026, 6, 2), dt.date(2026, 6, 3)]
         assert rows[0].usage_usd == pytest.approx(0.016385)
+
+    def test_stamps_service_log_id_when_passed(
+        self,
+        mock_request: MagicMock,
+        mock_settings_and_window: tuple[MagicMock, MagicMock],
+        anthropic_payload: dict,
+        session: Session,
+    ) -> None:
+        """The originating run id is stamped onto each upserted row."""
+
+        mock_request.return_value = _response(anthropic_payload)
+        run = create_db_entries(session, models.ProviderMonitoringServiceLog, {})[0]
+
+        fetch_anthropic_daily_usage(session, service_log_id=run.id)
+
+        rows = session.query(models.AnthropicDailyUsage).all()
+        assert rows
+        assert all(r.service_log_id == run.id for r in rows)
 
     def test_upsert_overwrites_existing_day(
         self,

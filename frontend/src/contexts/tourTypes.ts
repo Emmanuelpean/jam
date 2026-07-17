@@ -27,9 +27,11 @@ export interface TourContextType {
 	isCleaningUp: boolean;
 	completedTourIds: Set<string>;
 	isTourSelectOpen: boolean;
-	openTourSelect: () => void;
+	openTourSelect: (options?: { hideDismiss?: boolean }) => void;
 	closeTourSelect: () => void;
-	toggleTourSelect: () => void;
+	toggleTourSelect: (options?: { hideDismiss?: boolean }) => void;
+	/** When true, the tour select panel hides its "Don't show this again" option */
+	tourSelectHideDismiss: boolean;
 	/** True when the user has created entities during the tour that can meaningfully be kept */
 	hasUserCreatedData: boolean;
 	/** ID of the demo job created for the follow-up-email tour, null otherwise */

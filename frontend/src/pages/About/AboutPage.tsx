@@ -31,6 +31,7 @@ const AboutPage = (): JSX.Element => {
 	const allToursCompleted: boolean =
 		implementedTours.length > 0 &&
 		implementedTours.every((t: TourDefinition): boolean => completedTourIds.has(t.id));
+	const tourPanelDismissed: boolean = currentUser?.preferences.tour_panel_dismissed ?? false;
 
 	const features: Feature[] = [
 		{
@@ -150,8 +151,12 @@ const AboutPage = (): JSX.Element => {
 								<i className="bi bi-stars me-2" />
 								Discover JAM
 							</Button>
-							{allToursCompleted && (
-								<Button id="take-a-tour-btn" variant="outline-secondary" onClick={toggleTourSelect}>
+							{(allToursCompleted || tourPanelDismissed) && (
+								<Button
+								id="take-a-tour-btn"
+								variant="outline-secondary"
+								onClick={(): void => toggleTourSelect({ hideDismiss: true })}
+							>
 									<i className="bi bi-map me-2" />
 									Take a Tour
 								</Button>

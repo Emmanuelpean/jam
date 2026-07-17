@@ -220,6 +220,7 @@ class ScrapedJobRatingService(BaseService[models.JobRatingServiceLog]):
                 job_prompt_template_id=job_prompt_template.id,
                 system_prompt_id=system_prompt.id,
                 user_qualification_id=user_qualification.id,
+                service_log_id=service_log.id,
             )
             db.add(job_rating)
             db.flush()

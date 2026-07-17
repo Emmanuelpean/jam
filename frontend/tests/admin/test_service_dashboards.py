@@ -234,6 +234,37 @@ class TestServiceDashboardErrorGrouping(ServiceDashboardBase):
         assert self.service_dashboard_utils.expand_error_group(self.OCCASIONAL_ERROR) == 2
 
 
+class TestAdminCardErrorBadges(ServiceDashboardBase):
+    """The service admin cards show a badge counting their unacknowledged errors."""
+
+    def setup_function(self, request) -> None:
+        service_log = self.create_email_scraping_service_log(self.db, run_duration=30.0)
+        for _ in range(3):
+            self.create_service_error(
+                self.db, error_type="TimeoutError", message="boom", job_email_scraping_service_log_id=service_log.id
+            )
+        # Acknowledged errors are not counted.
+        self.create_service_error(
+            self.db,
+            error_type="TimeoutError",
+            message="acked",
+            job_email_scraping_service_log_id=service_log.id,
+            is_acknowledged=True,
+        )
+        self.login()
+
+    def test_badge_shows_unacknowledged_count(self) -> None:
+        """The Job Scraping card badge counts its unacknowledged errors; error-free cards show none."""
+
+        badge = self.service_dashboard_utils.wait_for_error_badge("admin-card-job-scraping")
+        assert badge.text.strip() == "3"
+
+        # Waiting on the scraping badge means the counts response has loaded; the other
+        # services have no errors, so their cards show no badge.
+        assert not self.service_dashboard_utils.has_error_badge("admin-card-job-rating")
+        assert not self.service_dashboard_utils.has_error_badge("admin-card-usage")
+
+
 class TestJobRatingDashboardErrors(ServiceDashboardBase):
     """Tests that critical and rating errors display correctly on the rating modal."""
 

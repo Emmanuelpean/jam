@@ -38,6 +38,7 @@ export const PlatformStatsTable = ({ platformStats, latestLog }: PlatformStatsTa
 					<th>Succeeded</th>
 					<th>Failed</th>
 					<th>Skipped</th>
+					<th>Copied</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -50,6 +51,7 @@ export const PlatformStatsTable = ({ platformStats, latestLog }: PlatformStatsTa
 							<td>{getPlatformStat(latestLog, platformStat.name, "job_scrape_succeeded_ids")}</td>
 							<td>{getPlatformStat(latestLog, platformStat.name, "job_scrape_failed_ids")}</td>
 							<td>{getPlatformStat(latestLog, platformStat.name, "job_scrape_skipped_ids")}</td>
+							<td>{getPlatformStat(latestLog, platformStat.name, "job_scrape_copied_ids")}</td>
 						</tr>
 					)
 				)}

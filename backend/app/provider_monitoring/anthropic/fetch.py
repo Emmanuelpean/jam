@@ -37,6 +37,7 @@ def sum_bucket_amount(bucket: dict) -> float:
 def fetch_anthropic_daily_usage(
     db: Session | None = None,
     logger: logging.Logger | None = None,
+    service_log_id: int | None = None,
 ) -> list[AnthropicDailyUsage]:
     """Fetch per-day Anthropic organisation cost for the current calendar month.
 
@@ -80,5 +81,5 @@ def fetch_anthropic_daily_usage(
         entries.append(AnthropicDailyUsage(date=date, usage_usd=sum_bucket_amount(bucket)))
 
     if db:
-        upsert(db, models.AnthropicDailyUsage, entries, ["date"])
+        upsert(db, models.AnthropicDailyUsage, entries, ["date"], extra={"service_log_id": service_log_id})
     return entries

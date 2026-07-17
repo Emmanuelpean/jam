@@ -28,3 +28,15 @@ class AdminPageUtils(JamTestUtils):
         card = self.get_element(card_id, enabled=False)
         self.get_element("card-title", By.CLASS_NAME, parent=card).click()
         assert self.admin_page_modal
+
+    def wait_for_error_badge(self, card_id: str) -> WebElement:
+        """Wait for and return the unacknowledged-error badge within an admin card."""
+
+        card = self.get_element(card_id, enabled=False)
+        return self.get_element("admin-card-error-badge", By.CLASS_NAME, parent=card, enabled=False)
+
+    def has_error_badge(self, card_id: str) -> bool:
+        """Whether the given admin card shows an unacknowledged-error badge."""
+
+        card = self.get_element(card_id, enabled=False)
+        return len(card.find_elements(By.CLASS_NAME, "admin-card-error-badge")) > 0

@@ -37,6 +37,7 @@ class TourUtils(JamTestUtils):
     TAKE_A_TOUR_BTN = "take-a-tour-btn"
     TSP_PANEL = "tsp-panel"
     TSP_PROGRESS = "tsp-progress"
+    TSP_DISMISS_BTN = "tsp-dismiss-btn"
 
     TOTAL_STEPS = 6  # intro, dashboard-overview, dashboard-customise, sidebar, premium, command-palette
     TOUR_NAME = "App Overview"
@@ -52,6 +53,12 @@ class TourUtils(JamTestUtils):
         self.get_element(self.TAKE_A_TOUR_BTN, enabled=False)  # wait for element to exist
         self.driver.execute_script(f"document.getElementById('{self.TAKE_A_TOUR_BTN}').click();")
         self.get_element(self.TSP_PANEL, enabled=False, timeout=5)
+
+    def dismiss_tour_panel(self) -> None:
+        """Open the tour select panel and click 'Don't show this again'."""
+        self.open_tour_select()
+        self.get_element(self.TSP_DISMISS_BTN).click()
+        self.wait_for_disappear(self.TSP_PANEL)
 
     def start_tour(self, tour_id: str = TOUR_ID, popover_timeout: float = 10.0) -> None:
         """Open the tour select panel and start the given tour."""

@@ -4,7 +4,7 @@ import datetime as dt
 import traceback as _traceback
 from enum import StrEnum
 
-from sqlalchemy import Column, String, Float, Boolean, TIMESTAMP, Integer, ForeignKey, JSON
+from sqlalchemy import Column, String, Float, Boolean, TIMESTAMP, Integer, ForeignKey, JSON, CheckConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Session, relationship
 from sqlalchemy.sql import expression
@@ -160,6 +160,31 @@ class ServiceError(CommonBase, Base):
     job_email_scraping_service_log = relationship("JobEmailScrapingServiceLog", back_populates="service_errors")
     job_rating_service_log = relationship("JobRatingServiceLog", back_populates="service_errors")
     provider_monitoring_service_log = relationship("ProviderMonitoringServiceLog", back_populates="service_errors")
+
+    __table_args__ = (
+        # A per-job scraping error always carries its scraping run.
+        CheckConstraint(
+            "scraped_job_id IS NULL OR job_email_scraping_service_log_id IS NOT NULL",
+            name="ck_service_error_scraped_job_requires_scraping_log",
+        ),
+        # A per-job rating error always carries its rating run.
+        CheckConstraint(
+            "job_rating_id IS NULL OR job_rating_service_log_id IS NOT NULL",
+            name="ck_service_error_rating_requires_rating_log",
+        ),
+        # Every error is attributed to something (never fully orphaned).
+        CheckConstraint(
+            "num_nonnulls(scraped_job_id, job_rating_id, job_email_scraping_service_log_id, "
+            "job_rating_service_log_id, provider_monitoring_service_log_id) >= 1",
+            name="ck_service_error_at_least_one_fk",
+        ),
+        # An error belongs to at most one run — the three service-log FKs are mutually exclusive.
+        CheckConstraint(
+            "num_nonnulls(job_email_scraping_service_log_id, job_rating_service_log_id, "
+            "provider_monitoring_service_log_id) <= 1",
+            name="ck_service_error_single_service_log",
+        ),
+    )
 
 
 def record_error(

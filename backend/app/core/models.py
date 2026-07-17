@@ -5,9 +5,19 @@ import math
 from enum import Enum
 from typing import Any
 
-from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, CheckConstraint, JSON, Text, event
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Boolean,
+    TIMESTAMP,
+    CheckConstraint,
+    JSON,
+    Text,
+    event,
+)
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Session
 from sqlalchemy.sql import expression
 
 from app.base_models import CommonBase, Owned
@@ -31,7 +41,7 @@ class Setting(CommonBase, Base):
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
 
 
-def get_setting_value(db, name: str, default: Any):
+def get_setting_value(db: Session, name: str, default: Any):
     """Retrieve a setting value from the database by its name.
     :param db: Database session.
     :param name: The name of the setting to retrieve.
@@ -157,7 +167,8 @@ class UserPreferences(Owned, Base):
     - `table_columns` (dict, optional): The table column configurations.
     - `table_sort` (dict, optional): The sort configuration for tables.
     - `extension_banner_dismissed` (bool): Indicates whether the extension banner has been dismissed.
-    - `completed_tours` (list, optional): A list of completed guided tours.`"""
+    - `completed_tours` (list, optional): A list of completed guided tours.
+    - `tour_panel_dismissed` (bool): Indicates whether the "Take a Tour" sidebar entry has been dismissed."""
 
     theme = Column(String, nullable=False, server_default="mixed-berry")
     dark_mode = Column(String, nullable=False, server_default="system")
@@ -167,6 +178,7 @@ class UserPreferences(Owned, Base):
     table_sort = Column(JSON, nullable=True)
     extension_banner_dismissed = Column(Boolean, nullable=False, server_default="false")
     completed_tours = Column(JSON, nullable=True)
+    tour_panel_dismissed = Column(Boolean, nullable=False, server_default="false")
 
 
 class StripeDetails(Owned, Base):
@@ -249,7 +261,7 @@ class UserToken(Owned, Base):
 
 
 @event.listens_for(UserToken, "before_insert")
-def delete_existing_tokens_of_same_type(mapper, connection, target):
+def delete_existing_tokens_of_same_type(mapper, connection: Session, target: UserToken):
     """Delete existing tokens of the same type for the same user before inserting a new one."""
 
     _ = mapper

@@ -93,6 +93,7 @@ class UserPreferencesCreate(BaseModel):
     default_currency: str | None = None
     extension_banner_dismissed: bool = False
     completed_tours: list[TourId] | None = Field(default=None, max_length=COLUMN_LIMITS.completed_tours)
+    tour_panel_dismissed: bool = False
     dashboard_layout: str | None = Field(default=None, max_length=COLUMN_LIMITS.dashboard_layout)
     table_columns: dict[EntityType, _ColumnList] | None = Field(
         default=None, max_length=COLUMN_LIMITS.table_entity_types

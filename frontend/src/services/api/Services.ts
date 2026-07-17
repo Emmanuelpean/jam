@@ -42,15 +42,24 @@ export const scrapedJobApi: ScrapedJobCrudApi = {
 };
 
 // Service Error API
+export interface ServiceErrorCounts {
+	job_email_scraping: number;
+	job_rating: number;
+	provider_monitoring: number;
+}
+
 export interface ServiceErrorApi {
 	getAll: (token: string, queryParams?: QueryParams | null) => ApiResponsePromise<ServiceError[]>;
 	acknowledge: (ids: number[], isAcknowledged: boolean, token: string) => ApiResponsePromise<ServiceError[]>;
+	getUnacknowledgedCounts: (token: string) => ApiResponsePromise<ServiceErrorCounts>;
 }
 
 export const serviceErrorApi: ServiceErrorApi = {
 	getAll: createCrudApi<ServiceError>("service-errors").getAll,
 	acknowledge: (ids: number[], isAcknowledged: boolean, token: string): ApiResponsePromise<ServiceError[]> =>
 		baseApi.put("service-errors/acknowledge", { ids, is_acknowledged: isAcknowledged }, token),
+	getUnacknowledgedCounts: (token: string): ApiResponsePromise<ServiceErrorCounts> =>
+		baseApi.get("service-errors/counts", token),
 };
 
 // Service Log APIs

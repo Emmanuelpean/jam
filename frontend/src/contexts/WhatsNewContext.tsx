@@ -37,6 +37,7 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 	const { isTourSelectOpen } = useTour();
 	const [slides, setSlides] = useState<ReleaseSlide[]>([]);
 	const [showTourHint, setShowTourHint] = useState<boolean>(false);
+	const suppressTourHintRef = useRef<boolean>(false);
 
 	useEffect(() => {
 		if (isTourSelectOpen) setShowTourHint(false);
@@ -49,7 +50,8 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 	}, []);
 
 	const showWelcome = useCallback((): void => {
-		welcomeRef.current?.show();
+		suppressTourHintRef.current = true;
+		welcomeRef.current?.show({ updateVersion: false });
 	}, []);
 
 	// Show the appropriate modal automatically on login
@@ -59,6 +61,7 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 		if (currentUser.app_version === null) {
 			// New user — show the welcome carousel
 			const timer = setTimeout((): void => {
+				suppressTourHintRef.current = false;
 				welcomeRef.current?.show();
 			}, 500);
 			return (): void => clearTimeout(timer);
@@ -84,6 +87,10 @@ export function WhatsNewProvider({ children }: WhatsNewProviderProps): JSX.Eleme
 			<WelcomeModal
 				ref={welcomeRef}
 				onFinish={(): void => {
+					if (suppressTourHintRef.current) {
+						suppressTourHintRef.current = false;
+						return;
+					}
 					setShowTourHint(true);
 				}}
 			/>

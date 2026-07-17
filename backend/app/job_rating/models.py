@@ -83,6 +83,7 @@ class JobRating(Owned, Base):
     - `user_qualification_id` (int): Identifier for the user qualification entry used to rate the job
     - `system_prompt_id` (int, optional): Identifier for the AI system prompt used to rate the job.
     - `job_prompt_template_id` (int, optional): Identifier for the AI job prompt template used to rate the job.
+    - `service_log_id` (int, optional): Identifier for the rating run that created this rating.
 
     Relationships:
     --------------
@@ -90,6 +91,7 @@ class JobRating(Owned, Base):
     - `use_qualification` (UserQualification): UserQualification object related to the rating.
     - `system_prompt` (AiSystemPrompt, optional): AiSystemPrompt object related to the rating.
     - `job_prompt_template` (AiJobPromptTemplate, optional): AiJobPromptTemplate object related to the rating.
+    - `service_log` (JobRatingServiceLog, optional): the rating run that created this rating.
     - `rating_errors` (list of Error): Errors raised while rating this job."""
 
     overall_score = Column(Integer, nullable=True)
@@ -113,12 +115,14 @@ class JobRating(Owned, Base):
     job_prompt_template_id = Column(
         Integer, ForeignKey("ai_job_prompt_template.id", ondelete="SET NULL"), nullable=True
     )
+    service_log_id = Column(Integer, ForeignKey("job_rating_service_log.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     scraped_job = relationship("ScrapedJob", back_populates="job_rating")
     user_qualification = relationship("UserQualification", back_populates="job_ratings")
     system_prompt = relationship("AiSystemPrompt", back_populates="job_ratings")
     job_prompt_template = relationship("AiJobPromptTemplate", back_populates="job_ratings")
+    service_log = relationship("JobRatingServiceLog", back_populates="job_ratings")
     rating_errors = relationship("ServiceError", foreign_keys="ServiceError.job_rating_id", back_populates="job_rating")
 
     def __init__(self, **kwargs) -> None:
@@ -171,6 +175,7 @@ class JobRatingServiceLog(ServiceLog, Base):
 
     # Relationships
     service_errors = relationship("ServiceError", back_populates="job_rating_service_log", cascade="all, delete-orphan")
+    job_ratings = relationship("JobRating", back_populates="service_log")
 
     def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""

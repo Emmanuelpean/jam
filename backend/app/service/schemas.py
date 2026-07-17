@@ -30,6 +30,14 @@ class ErrorAcknowledgeRequest(BaseModel):
     is_acknowledged: bool = True
 
 
+class ServiceErrorCounts(BaseModel):
+    """Number of unacknowledged errors per service."""
+
+    job_email_scraping: int = 0
+    job_rating: int = 0
+    provider_monitoring: int = 0
+
+
 class ServiceLogOut(Out):
     """Base output schema for service logs."""
 

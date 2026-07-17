@@ -44,6 +44,17 @@ export const PreferencesTab: React.FC = () => {
 		}
 	};
 
+	const tourPanelDismissed: boolean = currentUser?.preferences.tour_panel_dismissed ?? false;
+
+	const handleTourShortcutToggle = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+		try {
+			await updateCurrentUser({ preferences: { tour_panel_dismissed: !e.target.checked } });
+		} catch (error) {
+			showToastError("Failed to update preferences.");
+			console.error("Error saving tour preference:", error);
+		}
+	};
+
 	const handleInputChange = async (e: SyntheticEvent): Promise<void> => {
 		const { name, value } = e.target;
 		setFormData((prev: PreferencesFormData): PreferencesFormData => ({ ...prev, [name]: value }));
@@ -104,6 +115,21 @@ export const PreferencesTab: React.FC = () => {
 				<label className="form-label">Mode</label>
 				<DarkModeToggle />
 			</div>
+			<hr className="my-4" />
+			<h5 className="mb-3">
+				<i className="bi bi-map"></i> Guided Tours
+			</h5>
+			<Form.Check
+				type="switch"
+				id="tour-shortcut-toggle"
+				label="Show the &ldquo;Take a Tour&rdquo; shortcut in the sidebar"
+				checked={!tourPanelDismissed}
+				onChange={handleTourShortcutToggle}
+			/>
+			<Form.Text className="text-muted">
+				The shortcut appears in the sidebar while there are tours left to take. You can always start a tour from
+				the About page.
+			</Form.Text>
 		</Form>
 	);
 };

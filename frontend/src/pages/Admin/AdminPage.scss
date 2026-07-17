@@ -25,6 +25,25 @@
 	transition: color 0.15s ease;
 }
 
+.admin-card-header-end {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.admin-card-error-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 1.8px 9px;
+	border-radius: 999px;
+	font-size: 12.6px;
+	font-weight: 700;
+	line-height: 1.4;
+	color: #fff;
+	white-space: nowrap;
+	background: var(--bs-danger, #ef4444);
+}
+
 .admin-card-body {
 	display: flex;
 	flex-direction: column;
