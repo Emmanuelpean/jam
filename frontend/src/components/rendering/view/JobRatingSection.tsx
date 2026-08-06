@@ -33,7 +33,6 @@ const JobRatingSection = ({ scrapedJob }: JobRatingSectionProps): JSX.Element | 
 		return (
 			<>
 				<JobRatingCard jobRating={rating} />
-				// Display the notes
 				{rating.notes.length > 0 && (
 					<div className="text-muted small mt-2">
 						<i className="bi bi-info-circle me-1" />
