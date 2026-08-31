@@ -54,7 +54,7 @@ def downgrade() -> None:
         ["external_email_id", "owner_id"],
         postgresql_nulls_not_distinct=False,
     )
-    op.drop_constraint(None, "job", type_="foreignkey")
+    op.drop_constraint(op.f("job_scraped_job_id_fkey"), "job", type_="foreignkey")
     op.drop_index(op.f("ix_job_scraped_job_id"), table_name="job")
     op.drop_column("job", "scraped_job_id")
     op.drop_column("job", "is_favourite")

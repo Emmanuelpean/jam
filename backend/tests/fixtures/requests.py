@@ -45,33 +45,6 @@ def block_real_brightdata_requests():
 
 
 @pytest.fixture(autouse=True)
-def block_real_openai_client():
-    """Safety net: no test may reach the live OpenAI API. Tests that exercise job rating patch the
-    client themselves; this makes an un-mocked chat completion fail loudly instead of hitting the network.
-
-    Guards both the already-constructed module-level client and the ``OpenAI`` class itself, so any
-    client built during a test (now or in future code paths) is also a loud mock."""
-
-    def fail(*_args, **_kwargs):
-        """Raise an exception when OpenAI requests are made."""
-        raise RuntimeError(
-            "Real OpenAI request in a test - patch 'app.job_rating.chatgpt.client' in your test or fixture."
-        )
-
-    def make_loud_client(*_args, **_kwargs):
-        """Make a loud mock of the OpenAI client."""
-        mock_client = MagicMock()
-        mock_client.chat.completions.create.side_effect = fail
-        return mock_client
-
-    with (
-        patch("app.job_rating.chatgpt.client", make_loud_client()),
-        patch("openai.OpenAI", side_effect=make_loud_client),
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
 def block_real_anthropic_client():
     """Safety net: no test may reach the live Anthropic API. Tests that exercise job rating patch the
     client themselves; this makes an un-mocked message create fail loudly instead of hitting the network.

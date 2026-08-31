@@ -8,6 +8,7 @@ from sqlalchemy import text, inspect, Engine
 from sqlalchemy.orm import Session
 
 from app.database import engine, session_local, Base
+from tests.utils.create_tables import stamp_alembic_head
 from tests.utils.create_data.core import (
     create_users,
     create_settings,
@@ -131,6 +132,8 @@ def seed_database() -> None:
 
     # Reset the database
     reset_database(engine)
+    stamp_alembic_head()
+    print("Stamped the database at the Alembic head.")
 
     # Create a database session
     db = session_local()

@@ -72,9 +72,6 @@ class Settings(BaseSettings):
     # BrightData
     brightdata_api_key: str
 
-    # OpenAI
-    openai_api_key: str
-
     # Anthropic
     anthropic_api_key: str
     anthropic_admin_key: str

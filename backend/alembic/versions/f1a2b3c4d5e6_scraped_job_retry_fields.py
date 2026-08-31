@@ -37,14 +37,16 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_column("scraped_job", "retry_count")
     op.drop_column("scraped_job", "next_retry_at")
+    # Postgres rejects a subquery in an ALTER ... USING expression, so the JSONB array is flattened
+    # through a temporary column instead.
+    op.execute("ALTER TABLE scraped_job ADD COLUMN scrape_error_text VARCHAR")
     op.execute("""
-        ALTER TABLE scraped_job
-        ALTER COLUMN scrape_error TYPE VARCHAR
-        USING CASE
-            WHEN jsonb_array_length(scrape_error) = 0 THEN NULL
-            ELSE (SELECT string_agg(elem->>'error', E'\\n\\n') FROM jsonb_array_elements(scrape_error) AS elem)
-        END
+        UPDATE scraped_job
+        SET scrape_error_text = (
+            SELECT string_agg(elem->>'error', E'\\n\\n') FROM jsonb_array_elements(scrape_error) AS elem
+        )
+        WHERE jsonb_array_length(scrape_error) > 0
         """)
-    op.execute("ALTER TABLE scraped_job ALTER COLUMN scrape_error DROP NOT NULL")
-    op.execute("ALTER TABLE scraped_job ALTER COLUMN scrape_error DROP DEFAULT")
+    op.execute("ALTER TABLE scraped_job DROP COLUMN scrape_error")
+    op.execute("ALTER TABLE scraped_job RENAME COLUMN scrape_error_text TO scrape_error")
     op.drop_column("scraped_job", "is_closed")

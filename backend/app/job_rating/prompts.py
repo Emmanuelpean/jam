@@ -2,7 +2,6 @@
 
 from sqlalchemy.orm import Session
 
-from app.job_rating.chatgpt import openai_query
 from app.job_rating.claude import claude_query
 from app.job_rating.models import AiSystemPrompt, AiJobPromptTemplate
 
@@ -216,5 +215,4 @@ if __name__ == "__main__":  # pragma: no cover
         interests,
     )
     job_prompt = create_job_only_prompt(JOB_ONLY_PROMPT_TEMPLATE_V2, title, company, description)
-    print(openai_query(SYSTEM_PROMPT_V1, user_system_prompt + "\n" + job_prompt))
     print(claude_query(user_system_prompt, job_prompt))

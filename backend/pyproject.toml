@@ -23,7 +23,6 @@ dependencies = [
     "gunicorn==26.0.0",
     "beautifulsoup4==4.15.0",
     "apify-client==3.0.3",
-    "openai==2.43.0",
     "anthropic==0.111.0",
     "stripe==15.2.1",
     "python-dateutil==2.9.0.post0",
