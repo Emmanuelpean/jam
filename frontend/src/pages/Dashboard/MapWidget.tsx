@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, CircleMarker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useDataContext } from "../../contexts/DataContext";
+import { MAP_ATTRIBUTION, MAP_TILES } from "../../components/Maps/tiles";
 import { MapConfig, MapGranularity, MapMetric } from "./widgetRegistry";
 import { Tooltip, TITLE_TOOLTIP_DELAY } from "../../components/Tooltip/Tooltip";
 import { DashboardCard } from "./DashboardCard";
@@ -20,13 +21,6 @@ interface MapDataPoint {
 	topKeywords: string[];
 	jobs: EnrichedJobData[];
 }
-
-const MAP_TILES = {
-	light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-	dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-};
-const ATTRIBUTION =
-	'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
 const lerp = (a: number, b: number, t: number): number => Math.round(a + (b - a) * t);
 
@@ -228,7 +222,7 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange, isEditMod
 	};
 
 	const meta = METRIC_META[config.metric];
-	const tileUrl = isDarkMode ? MAP_TILES.dark : MAP_TILES.light;
+	const tileUrl: string = isDarkMode ? MAP_TILES.dark : MAP_TILES.light;
 
 	const granularityToggle =
 		onConfigChange && isEditMode ? (
@@ -275,7 +269,7 @@ const MapWidget: React.FC<MapWidgetProps> = ({ config, onConfigChange, isEditMod
 								style={{ width: "100%", height: "100%" }}
 								scrollWheelZoom={false}
 							>
-								<TileLayer attribution={ATTRIBUTION} url={tileUrl} />
+								<TileLayer attribution={MAP_ATTRIBUTION} url={tileUrl} />
 								<MapFitter points={points} />
 								<MapCenterer point={selectedPoint} />
 								<MapResizer trigger={selectedPoint?.key} />

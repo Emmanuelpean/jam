@@ -6,6 +6,7 @@ import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { GeoLocationData } from "../../services/schemas/Base";
+import { MAP_ATTRIBUTION, MAP_TILES } from "./tiles";
 import "./LocationMap.scss";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -80,11 +81,6 @@ const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpd
 	return null;
 };
 
-const MAP_TILES = {
-	light: { url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" },
-	dark: { url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" },
-};
-
 const LocationMap: React.FC<LocationMapProps> = ({
 	geolocatedEntry = [],
 	height = "360px",
@@ -115,7 +111,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
 	}, []);
 
 	const mappableLocations: MappableLocation[] = geolocatedEntry.filter(isMappable);
-	const currentTileConfig = isDarkMode ? MAP_TILES.dark : MAP_TILES.light;
+	const tileUrl: string = isDarkMode ? MAP_TILES.dark : MAP_TILES.light;
 
 	if (mappableLocations.length === 0) {
 		let icon = "bi-compass";
@@ -151,9 +147,6 @@ const LocationMap: React.FC<LocationMapProps> = ({
 		);
 	}
 
-	const attribution: string =
-		'&copy; <a href="https://www.openstreetmap.org/copyright"> OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
-
 	return (
 		<div>
 			<div
@@ -171,7 +164,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
 					style={{ height: "100%", width: "100%" }}
 					scrollWheelZoom={scrollWheelZoom}
 				>
-					<TileLayer attribution={attribution} url={currentTileConfig.url} />
+					<TileLayer attribution={MAP_ATTRIBUTION} url={tileUrl} />
 					<MapViewUpdater locations={mappableLocations} />
 					{mappableLocations.map(
 						(location: MappableLocation): JSX.Element => (
