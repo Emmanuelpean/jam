@@ -75,7 +75,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 		let companyString: string | null = null;
 		if (contact?.is_recruiter && contact.company_id !== job.company_id) {
 			companyString =
-				dataContext.companies.find((c: CompanyData): boolean => c.id === contact?.company_id)?.name ||
+				dataContext.companies.find((c: CompanyData): boolean => c.id === job.company_id)?.name ||
 				"[Company Name]";
 		}
 		return jobFollowUpEmail(
