@@ -235,7 +235,7 @@ class EmailService(object):
             support_email=settings.support_email,
         )
 
-        subject = "Your TOAST Free Trial is Ending Soon"
+        subject = "Your JAM Premium Free Trial is Ending Soon"
         self.send_email(
             recipient,
             subject,

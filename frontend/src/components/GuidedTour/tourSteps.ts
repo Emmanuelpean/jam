@@ -586,7 +586,7 @@ const IMPORT_SCRAPED_JOB_STEPS: TourStep[] = [
 		targetId: null,
 		title: "Job Alert Scraping",
 		content:
-			"TOAST (JAM Premium) automatically scans your email alert subscriptions from LinkedIn, Indeed, and similar platforms -" +
+			"JAM Premium automatically scans your email alert subscriptions from LinkedIn, Indeed, and similar platforms -" +
 			"pulling matching jobs straight into JAM so you never miss an opportunity. " +
 			"We've added a demo alert so you can try it out.",
 		route: "/job-alerts/jobs",

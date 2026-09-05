@@ -92,47 +92,6 @@ USER_DATA = [
     NON_PREMIUM_USER,
 ]
 
-# Regular user
-REGULAR_USER_INDEX = 0
-assert (
-    USER_DATA[REGULAR_USER_INDEX]["is_verified"]
-    and not USER_DATA[REGULAR_USER_INDEX].get("is_demo")
-    and not USER_DATA[REGULAR_USER_INDEX].get("is_admin")
-)
-
-# Admin user
-ADMIN_USER_INDEX = 1
-assert USER_DATA[ADMIN_USER_INDEX]["is_admin"], "ADMIN_USER_INDEX does not point to an admin user"
-
-# Inactive user (e.g. deactivated by admin)
-INACTIVE_USER_INDEX = 2
-assert not USER_DATA[INACTIVE_USER_INDEX]["is_active"], "INACTIVE_USER_INDEX does not point to an inactive user"
-
-# Unverified user (i.e. email address not verified)
-UNVERIFIED_USER_INDEX = 3
-assert not USER_DATA[UNVERIFIED_USER_INDEX]["is_verified"], "UNVERIFIED_USER_INDEX does not point to an unverified user"
-
-# Test user (for demo)
-DEMO_USER_INDEX = 4
-assert USER_DATA[DEMO_USER_INDEX]["is_demo"], "DEMO_USER_INDEX does not point to a demo user"
-
-# TOAST user 1
-TOAST_USER_1_INDEX = 5
-assert USER_DATA[TOAST_USER_1_INDEX]["premium"]
-
-# TOAST user 2
-TOAST_USER_INDEX_2 = 6
-assert USER_DATA[TOAST_USER_INDEX_2]["premium"]
-
-# Stripe user
-STRIPE_USER_INDEX = 7
-assert USER_DATA[STRIPE_USER_INDEX]["stripe_details"], "STRIPE_USER_INDEX does not point to a stripe_details user"
-
-# Non premium used
-NON_PREMIUM_USER_INDEX = 8
-assert not USER_DATA[NON_PREMIUM_USER_INDEX].get(
-    "premium"
-), "NON_PREMIUM_USER_INDEX does not point to a non premium user"
 
 # ------------------------------------------------------ SETTINGS ------------------------------------------------------
 

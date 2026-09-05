@@ -3,7 +3,7 @@
 Python equivalent of frontend releaseSlides from versions.ts.
 """
 
-PREMIUM_PRICE = "£8"
+PREMIUM_PRICE = "£7"
 
 RELEASE_SLIDES: dict[str, list[dict]] = {
     "1.0.0": [
@@ -31,7 +31,7 @@ RELEASE_SLIDES: dict[str, list[dict]] = {
     "1.1.0": [
         {
             "title": "Job Scraping & Rating (Alpha)",
-            "description": "TOAST extracts job alert data from your emails and rates each job using AI.",
+            "description": "JAM Premium extracts job alert data from your emails and rates each job using AI.",
         },
         {
             "title": "AI Job Rating",

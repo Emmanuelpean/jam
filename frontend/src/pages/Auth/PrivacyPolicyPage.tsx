@@ -85,7 +85,7 @@ export function PrivacyContent(): JSX.Element {
 						<li>You retain full ownership of this data at all times</li>
 					</ul>
 				</PrivacySubsection>
-				<PrivacySubsection title="2.4 Email Content (Premium - TOAST)">
+				<PrivacySubsection title="2.4 Email Content (Premium)">
 					<ul className="terms-list">
 						<li>
 							Job alert emails you forward to your designated JAM address are parsed to extract structured
@@ -124,9 +124,8 @@ export function PrivacyContent(): JSX.Element {
 						patterns to improve the service. No personal data is shared externally for this purpose.
 					</li>
 					<li>
-						<strong>Consent (Article 6(1)(a)):</strong> For premium email processing (TOAST), you explicitly
-						enable this feature. You can withdraw consent at any time by cancelling your premium
-						subscription.
+						<strong>Consent (Article 6(1)(a)):</strong> For premium email processing, you explicitly enable
+						this feature. You can withdraw consent at any time by cancelling your premium subscription.
 					</li>
 				</ul>
 			</PrivacySection>
@@ -185,8 +184,7 @@ export function PrivacyContent(): JSX.Element {
 						<strong>Account data:</strong> Retained until you delete it or close your account.
 					</li>
 					<li>
-						<strong>Processed email content (TOAST):</strong> Raw email content is discarded after
-						processing.
+						<strong>Processed email content:</strong> Raw email content is discarded after processing.
 					</li>
 					<li>
 						<strong>Payment records:</strong> Stripe retains billing records subject to their own retention

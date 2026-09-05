@@ -76,7 +76,7 @@ jobs:
       # Payment Configuration
       STRIPE_API_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
       STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
-      STRIPE_TOAST_PRICE_ID: ${{ secrets.STRIPE_TOAST_PRICE_ID }}
+      STRIPE_PREMIUM_PRICE_ID: ${{ secrets.STRIPE_TOAST_PRICE_ID }}
 
       # Frontend Config
       REACT_APP_API_BASE_URL: ${{ vars.REACT_APP_API_BASE_URL }}

@@ -16,7 +16,7 @@ async def build_checkout_params(customer_id: str) -> dict:
         "customer": customer_id,
         "line_items": [
             {
-                "price": settings.stripe_toast_price_id,
+                "price": settings.stripe_premium_price_id,
                 "quantity": 1,
             }
         ],

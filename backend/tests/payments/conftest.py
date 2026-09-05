@@ -101,7 +101,7 @@ def mock_customer_settings() -> Iterator[MagicMock]:
 def mock_checkout_settings() -> Iterator[MagicMock]:
     """Patch the checkout module's settings with test price id and frontend url."""
     with patch("app.payments.checkout.settings") as mock:
-        mock.stripe_toast_price_id = "price_test123"
+        mock.stripe_premium_price_id = "price_test123"
         mock.frontend_url = "https://example.com"
         yield mock
 

@@ -16,7 +16,7 @@ import { ForwardingConfirmationLinkData } from "../../services/schemas/Services"
 import { PremiumDetails, UserQualification } from "../../services/schemas/Core";
 import { userQualificationApi } from "../../services/api/Users";
 
-export const PREMIUM_PRICE = "£8";
+export const PREMIUM_PRICE = "£7";
 
 interface SubscriptionStatusDisplay {
 	title: string;

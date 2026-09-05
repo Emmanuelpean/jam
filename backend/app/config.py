@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     # Stripe
     stripe_api_key: str
     stripe_webhook_secret: str
-    stripe_toast_price_id: str
+    stripe_premium_price_id: str
 
     # Cloudflare Turnstile
     turnstile_site_key: str

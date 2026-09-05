@@ -498,7 +498,7 @@ class JobEmailScrapingService(EmailService, BaseService[JobEmailScrapingServiceL
         :param timedelta_days: Number of days to search for emails
         :param service_log: JobEmailScrapingServiceLog entry"""
 
-        # Get the list of active users with TOAST active
+        # Get the list of active users with premium active
         users = (
             db.query(models.User)
             .filter(models.User.premium.has(is_active=True, job_scraping_active=True))

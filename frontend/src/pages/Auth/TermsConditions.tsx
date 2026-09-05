@@ -66,7 +66,7 @@ export function TermsContent(): JSX.Element {
 						<li>Export all your data at any time</li>
 					</ul>
 				</TermsSubsection>
-				<TermsSubsection title="2.2 Premium Features (TOAST Subscription)">
+				<TermsSubsection title="2.2 Premium Features">
 					<ul className="terms-list">
 						<li>
 							<strong>Automated Email Scraping:</strong> Extract job postings from LinkedIn, Indeed, NHS
@@ -92,7 +92,7 @@ export function TermsContent(): JSX.Element {
 			</TermsSection>
 
 			<TermsSection number={3} title="Subscription and Payment">
-				<TermsSubsection title="3.1 TOAST Premium Subscription">
+				<TermsSubsection title="3.1 JAM Premium Subscription">
 					<ul className="terms-list">
 						<li>
 							<strong>Price:</strong> {PREMIUM_PRICE} per month (GBP)
