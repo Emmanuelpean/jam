@@ -794,23 +794,26 @@ function DataTableComponent<T extends JamData>(
 					<PageHeader title={title} count={totalFilteredCount || data.length} icon={getTableIcon(title)} />
 				)}
 				<div className="table-container table-container--full-height">
-					<div className="datatable-empty-state">
+					<div
+						className="datatable-empty-state"
+						role="button"
+						tabIndex={0}
+						id={`add-${entityType}-button`}
+						onClick={() => openAddModal()}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault();
+								openAddModal();
+							}
+						}}
+					>
 						<i className={`bi bi-${getEntityIcon(entityType) || "inbox"} datatable-empty-state-icon`}></i>
 						<h3 className="datatable-empty-state-title">
 							{emptyMessage || `No ${pluralize(entityName)} yet`}
 						</h3>
 						<p className="datatable-empty-state-subtext">
-							{`Get started by adding your first ${entityName.toLowerCase()}.`}
+							{`Click here to add your first ${entityName.toLowerCase()}.`}
 						</p>
-						<Button
-							variant="primary"
-							size="lg"
-							onClick={() => openAddModal()}
-							id={`add-${entityType}-button`}
-						>
-							<i className="bi-plus-circle me-2"></i>
-							{`Add ${entityName}`}
-						</Button>
 					</div>
 				</div>
 				<Modal

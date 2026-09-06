@@ -78,8 +78,21 @@ thead.custom-header th {
     text-align: center;
     flex: 1;
     padding: 4rem 1.5rem;
-    border: 3.5px solid var(--bs-border-color);
+    border: 3.5px solid var(--bs-border-color-translucent);
     border-radius: 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background-color 0.15s;
+
+    &:hover,
+    &:focus-visible {
+        border-color: var(--primary-mid);
+        background-color: rgba(var(--bs-primary-rgb), 0.03);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--primary-start);
+        outline-offset: 2px;
+    }
 
     .datatable-empty-state-icon {
         font-size: 4rem;
