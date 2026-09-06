@@ -73,6 +73,7 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 						{isMobile && (
 							<button
 								type="button"
+								id="page-header-menu-toggle"
 								className={`page-header-menu-toggle ${menuOpen ? "open" : ""}`}
 								aria-label="Open navigation menu"
 								aria-expanded={menuOpen}
