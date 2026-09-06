@@ -1040,8 +1040,10 @@ export const tableColumns = {
 		label: "Used in",
 		sortable: true,
 		searchable: false,
-		sortField: (item, ctx) => ctx.jobs.filter((j) => j.cv_id === item.id || j.cover_letter_id === item.id).length,
-		render: (params: RenderParams) => renderFunctions.fileUsages(params),
+		sortField: (item: T, ctx: DataContextValue): number =>
+			ctx.jobs.filter((j: EnrichedJobData): boolean => j.cv_id === item.id || j.cover_letter_id === item.id)
+				.length,
+		render: renderFunctions.fileUsages,
 		...overrides,
 	}),
 };

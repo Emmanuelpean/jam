@@ -70,6 +70,34 @@ thead.custom-header th {
     flex-shrink: 0;
 }
 
+.datatable-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex: 1;
+    padding: 4rem 1.5rem;
+    border: 3.5px solid var(--bs-border-color);
+    border-radius: 16px;
+
+    .datatable-empty-state-icon {
+        font-size: 4rem;
+        opacity: 0.35;
+        margin-bottom: 0.5rem;
+    }
+
+    .datatable-empty-state-title {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .datatable-empty-state-subtext {
+        margin: 1rem 0 1.5rem;
+        color: var(--bs-secondary-color);
+    }
+}
+
 .config-btn {
     position: relative;
     height: 100% !important;

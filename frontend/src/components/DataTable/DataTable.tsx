@@ -21,7 +21,7 @@ import {
 	useDataContext,
 } from "../../contexts/DataContext";
 import { ApiResponse, baseApi } from "../../services/api/Base";
-import { getTableIcon } from "../rendering/view/Icons";
+import { getEntityIcon, getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
 import { accessAttribute } from "../../utils/Utils";
 import { pluralize } from "../../utils/StringUtils";
@@ -118,6 +118,9 @@ export interface GenericTableProps<T extends JamData = JamData> {
 	children?: (data: T[]) => ReactNode;
 	toolbarAddon?: React.ReactNode;
 	filterSidebarExtra?: React.ReactNode;
+	// Count of filter-like controls (e.g. a sidebarExtra toggle) not tracked by useTableFilters,
+	// added to the filter button's badge count.
+	extraActiveFilterCount?: number;
 	reloadTrigger?: number;
 	queryParams?: Record<string, string>;
 
@@ -166,6 +169,7 @@ function DataTableComponent<T extends JamData>(
 		rowMode,
 		toolbarAddon,
 		filterSidebarExtra,
+		extraActiveFilterCount = 0,
 		reloadTrigger,
 		queryParams,
 		defaultModalMode = "view",
@@ -759,6 +763,8 @@ function DataTableComponent<T extends JamData>(
 
 	// Whether to split toolbar into two rows on mobile (search on top, actions below)
 	const showAddButton = showAdd && mode !== "import";
+	// Main (non-compact, addable) tables show a nicer prompt in place of the table when there is no data at all
+	const isEmptyState = showAddButton && !compact && totalCount === 0 && !showSpinner;
 	const hasSecondRow = isTablet && !compact && !smallSearch && (showAddButton || !!toolbarAddon || enableMultiSelect);
 	const hasToolbarContent =
 		(showSearch && !compact) ||
@@ -778,6 +784,40 @@ function DataTableComponent<T extends JamData>(
 				<i className="bi bi-exclamation-triangle-fill me-2"></i>
 				{loadError}
 			</div>
+		);
+	}
+
+	if (isEmptyState) {
+		return (
+			<>
+				<div className="table-container table-container--full-height">
+					<div className="datatable-empty-state">
+						<i className={`bi bi-${getEntityIcon(entityType) || "inbox"} datatable-empty-state-icon`}></i>
+						<h3 className="datatable-empty-state-title">
+							{emptyMessage || `No ${pluralize(entityName)} yet`}
+						</h3>
+						<p className="datatable-empty-state-subtext">
+							{`Get started by adding your first ${entityName.toLowerCase()}.`}
+						</p>
+						<Button
+							variant="primary"
+							size="lg"
+							onClick={() => openAddModal()}
+							id={`add-${entityType}-button`}
+						>
+							<i className="bi-plus-circle me-2"></i>
+							{`Add ${entityName}`}
+						</Button>
+					</div>
+				</div>
+				<Modal
+					ref={modalRef}
+					onSuccess={handleSuccess}
+					onDelete={handleDeleteSuccess}
+					size={modalSize}
+					{...modalProps}
+				/>
+			</>
 		);
 	}
 
@@ -902,8 +942,9 @@ function DataTableComponent<T extends JamData>(
 									>
 										<i className="bi bi-funnel"></i>
 									</Button>
-									{activeFilterCount > 0 && (
+									{activeFilterCount + extraActiveFilterCount > 0 && (
 										<span
+											id="filter-button-count"
 											className="filter-button-count"
 											style={{
 												position: "absolute",
@@ -913,7 +954,7 @@ function DataTableComponent<T extends JamData>(
 												pointerEvents: "none",
 											}}
 										>
-											{activeFilterCount}
+											{activeFilterCount + extraActiveFilterCount}
 										</span>
 									)}
 								</div>

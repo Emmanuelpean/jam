@@ -119,6 +119,7 @@ const JobsPage = (): JSX.Element => {
 					return allowedContextMenuActions ? all.filter((a) => allowedContextMenuActions.includes(a)) : all;
 				}}
 				enableColumnConfig={true}
+				extraActiveFilterCount={hideRejected ? 1 : 0}
 			/>
 			<ExtensionJobModal ref={extensionModalRef} />
 		</>

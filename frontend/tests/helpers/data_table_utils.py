@@ -211,6 +211,18 @@ class DataTableUtils(JamTestUtils):
         except (ValueError, IndexError):
             return 0
 
+    def get_active_count_from_toolbar(self) -> int:
+        """Return the count shown in the toolbar filter button's badge (0 if the badge is absent)"""
+
+        try:
+            badge = self.get_element("filter-button-count", enabled=False, timeout=1.0)
+        except AssertionError:
+            return 0
+        try:
+            return int(badge.text)
+        except ValueError:
+            return 0
+
     def select_from_react_select_filter(self, column_key: str, visible_text: str) -> None:
         """Select an option from a react-select filter by its visible label"""
 
