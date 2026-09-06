@@ -4,8 +4,6 @@ from frontend_base_test import BaseTest
 
 class TestDemoLogin(BaseTest):
 
-    user_fixture = "test_demo_user"
-
     def setup_function(self, request) -> None:
         """Setup for each test method."""
 

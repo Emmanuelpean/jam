@@ -12,6 +12,18 @@ from tests.utils.create_data.utils import create_db_entries
 from tests.utils.test_data import data_tables
 
 _DEMO_SETUP_LOCK_ID = 987_654_321
+DEMO_SCHEMA = "demo"
+
+
+def assert_demo_schema(db: Session) -> None:
+    """Guard a bulk delete against running on real accounts. Demo users are identified by the schema
+    they live in, so a session pointed anywhere else must not be swept.
+    :param db: The session to check
+    :raises RuntimeError: If the session does not target the demo schema"""
+
+    schema = db.execute(text("SELECT current_schema()")).scalar()
+    if schema != DEMO_SCHEMA:
+        raise RuntimeError(f"Refusing to delete users: session targets the '{schema}' schema, not '{DEMO_SCHEMA}'.")
 
 
 def setup_demo_schema() -> None:
@@ -52,10 +64,10 @@ def seed_demo_ai_prompts(db: Session) -> None:
 def cleanup_stale_demo_users(db: Session) -> None:
     """Delete demo users older than 24 hours from the demo schema."""
 
+    assert_demo_schema(db)
+
     cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=24)
-    stale_users = (
-        db.query(models.User).filter(models.User.is_demo.is_(True)).filter(models.User.created_at < cutoff).all()
-    )
+    stale_users = db.query(models.User).filter(models.User.created_at < cutoff).all()
     for user in stale_users:
         db.delete(user)
     if stale_users:

@@ -63,7 +63,6 @@ class User(CommonBase, Base):
     - `email` (str, unique): User's email address.
     - `is_active` (bool): Indicates whether the user account is active.
     - `is_admin` (bool): Indicates whether the user is an administrator.
-    - `is_demo` (bool): Indicates whether the user is a demo account.
     - `is_verified` (bool): Indicates whether the user's email is verified.
     - `last_login` (datetime, optional): The timestamp of the last login.
     - `previous_login` (datetime, optional): The timestamp of the previous login.
@@ -84,7 +83,6 @@ class User(CommonBase, Base):
     email = Column(String, nullable=False, unique=True)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
     is_admin = Column(Boolean, nullable=False, server_default=expression.false())
-    is_demo = Column(Boolean, nullable=False, server_default=expression.false())
     is_verified = Column(Boolean, nullable=False, server_default=expression.false())
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
     previous_login = Column(TIMESTAMP(timezone=True), nullable=True)

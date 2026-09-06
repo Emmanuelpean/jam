@@ -1,9 +1,10 @@
 """Tests for the demo user functionality."""
 
 import datetime as dt
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import jwt
+import pytest
 from sqlalchemy import Engine
 from sqlalchemy import orm
 from sqlalchemy.orm import Session
@@ -12,7 +13,7 @@ from starlette.testclient import TestClient
 from app import models
 from app.config import settings
 from app.core.oauth2 import create_access_token
-from app.demo.setup import cleanup_stale_demo_users, setup_demo_schema
+from app.demo.setup import assert_demo_schema, cleanup_stale_demo_users, setup_demo_schema
 from app.demo.setup import seed_demo_ai_prompts
 from tests.demo.conftest import create_demo_user
 from tests.fixtures.users import FixtureUser
@@ -22,12 +23,12 @@ from tests.utils.create_data.core import create_users
 class TestDemoLogin:
 
     def test_login_creates_ephemeral_user_in_demo_schema(
-        self, test_demo_user: FixtureUser, demo_login_client: TestClient, demo_session: Session
+        self, demo_login_client: TestClient, demo_session: Session
     ) -> None:
         """Logging in with the demo account must create exactly one ephemeral user
         in the demo schema and return a JWT stamped with is_demo=True."""
 
-        response = demo_login_client.post("/login", data={"username": test_demo_user.email, "password": "A"})
+        response = demo_login_client.post("/login", data={"username": settings.demo_user_email, "password": "A"})
 
         assert response.status_code == 200
 
@@ -41,7 +42,7 @@ class TestDemoLogin:
 
         # Exactly one ephemeral user must exist in the demo DB
         demo_session.expire_all()
-        demo_users = demo_session.query(models.User).filter(models.User.is_demo.is_(True)).all()
+        demo_users = demo_session.query(models.User).all()
         assert len(demo_users) == 1
         user = demo_users[0]
         assert "@demo.jam" in user.email
@@ -52,12 +53,10 @@ class TestDemoLogin:
         assert user.premium is not None
         assert user.premium.is_active is True
 
-    def test_login_seeds_data_for_ephemeral_user(
-        self, test_demo_user: FixtureUser, demo_login_client: TestClient, demo_session: Session
-    ) -> None:
+    def test_login_seeds_data_for_ephemeral_user(self, demo_login_client: TestClient, demo_session: Session) -> None:
         """After demo login the ephemeral user must have seeded jobs and companies."""
 
-        response = demo_login_client.post("/login", data={"username": test_demo_user.email, "password": "A"})
+        response = demo_login_client.post("/login", data={"username": settings.demo_user_email, "password": "A"})
 
         assert response.status_code == 200
 
@@ -123,12 +122,12 @@ class TestDemoSchemaSetup:
 
 class TestMultipleDemoUsers:
     def test_two_logins_create_two_independent_users(
-        self, test_demo_user: FixtureUser, demo_login_client: TestClient, demo_session: Session
+        self, demo_login_client: TestClient, demo_session: Session
     ) -> None:
         """Two concurrent demo logins must create two distinct ephemeral users."""
 
-        res1 = demo_login_client.post("/login", data={"username": test_demo_user.email, "password": "A"})
-        res2 = demo_login_client.post("/login", data={"username": test_demo_user.email, "password": "A"})
+        res1 = demo_login_client.post("/login", data={"username": settings.demo_user_email, "password": "A"})
+        res2 = demo_login_client.post("/login", data={"username": settings.demo_user_email, "password": "A"})
 
         assert res1.status_code == 200
         assert res2.status_code == 200
@@ -139,18 +138,18 @@ class TestMultipleDemoUsers:
         assert payload1["user_id"] != payload2["user_id"], "Each login must produce a distinct user ID"
 
         demo_session.expire_all()
-        users = demo_session.query(models.User).filter(models.User.is_demo.is_(True)).all()
+        users = demo_session.query(models.User).all()
         assert len(users) == 2
         emails = {u.email for u in users}
         assert len(emails) == 2, "Each ephemeral user must have a unique email"
 
     def test_each_session_data_belongs_only_to_its_user(
-        self, test_demo_user: FixtureUser, demo_login_client: TestClient, demo_session: Session
+        self, demo_login_client: TestClient, demo_session: Session
     ) -> None:
         """Data seeded for session A must not appear under session B's user ID."""
 
-        res1 = demo_login_client.post("/login", data={"username": test_demo_user.email, "password": "A"})
-        res2 = demo_login_client.post("/login", data={"username": test_demo_user.email, "password": "A"})
+        res1 = demo_login_client.post("/login", data={"username": settings.demo_user_email, "password": "A"})
+        res2 = demo_login_client.post("/login", data={"username": settings.demo_user_email, "password": "A"})
 
         payload1 = jwt.decode(res1.json()["access_token"], settings.secret_key, algorithms=[settings.algorithm])
         payload2 = jwt.decode(res2.json()["access_token"], settings.secret_key, algorithms=[settings.algorithm])
@@ -266,6 +265,38 @@ class TestDemoCleanup:
             is None
         ), "UserPreferences must be cascade-deleted with the demo user"
 
+    def test_cleanup_does_not_affect_public_schema(
+        self, session: Session, demo_session: Session, demo_client: TestClient
+    ) -> None:
+        """Cleaning up a demo user must leave accounts in the public schema and their data alone."""
+
+        regular_user = create_users(session)[0]
+        public_job = models.Job(title="Public Job", owner_id=regular_user.id)
+        session.add(public_job)
+        session.commit()
+        session.refresh(public_job)
+        public_job_id = public_job.id
+
+        user = create_demo_user(demo_session)
+        token = create_access_token(
+            data={"user_id": user.id},
+            token_version=user.token_version,
+            is_demo=True,
+        )
+        response = demo_client.post("/demo/cleanup", headers={"Authorization": f"Bearer {token}"})
+
+        assert response.status_code == 200
+        demo_session.expire_all()
+        assert demo_session.query(models.User).filter(models.User.id == user.id).first() is None
+
+        session.expire_all()
+        assert (
+            session.query(models.User).filter(models.User.id == regular_user.id).first() is not None
+        ), "User in the public schema must survive a demo cleanup"
+        assert (
+            session.query(models.Job).filter(models.Job.id == public_job_id).first() is not None
+        ), "Job in the public schema must survive a demo cleanup"
+
     def test_cleanup_is_forbidden_for_non_demo_users(self, test_regular_user: FixtureUser) -> None:
         """Regular (non-demo) users must receive 403 from /demo/cleanup."""
 
@@ -357,3 +388,82 @@ class TestStaleDemoUserCleanup:
         assert (
             demo_session_untracked.query(models.User).filter(models.User.id == old_user_id).first() is None
         ), "setup_demo_schema must delete demo users older than 24 h"
+
+    def test_stale_cleanup_refuses_a_public_session(self, session: Session) -> None:
+        """The sweep deletes by age alone, so it must refuse any session outside the demo schema."""
+
+        user = create_users(session)[0]
+        cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=25)
+        session.query(models.User).filter(models.User.id == user.id).update(
+            {"created_at": cutoff}, synchronize_session=False
+        )
+        session.commit()
+
+        with pytest.raises(RuntimeError, match="public"):
+            cleanup_stale_demo_users(session)
+
+        session.expire_all()
+        assert (
+            session.query(models.User).filter(models.User.id == user.id).first() is not None
+        ), "A stale user in the public schema must never be swept"
+
+    def test_assert_demo_schema_accepts_the_demo_session(self, demo_session: Session) -> None:
+        """The guard must let the demo schema through."""
+
+        assert_demo_schema(demo_session)
+
+
+class TestDemoSessionGuards:
+    """A demo session cannot change the credentials of the account it was handed, nor delete it."""
+
+    @staticmethod
+    def _demo_headers(user: models.User) -> dict[str, str]:
+        """Build the authorization header for a demo user's session."""
+
+        token = create_access_token(data={"user_id": user.id}, token_version=user.token_version, is_demo=True)
+        return {"Authorization": f"Bearer {token}"}
+
+    def test_password_change_is_forbidden(
+        self, mock_password_notify: Mock, demo_session: Session, demo_client: TestClient
+    ) -> None:
+        """Demo users must not be able to change their password."""
+
+        user = create_demo_user(demo_session)
+        response = demo_client.put(
+            "/current-user/password",
+            json={"current_password": "hashed_password", "new_password": "newpassword1"},
+            headers=self._demo_headers(user),
+        )
+
+        assert response.status_code == 403
+        assert mock_password_notify.call_count == 0
+
+    def test_email_change_is_forbidden(
+        self, mock_email_verif: Mock, demo_session: Session, demo_client: TestClient
+    ) -> None:
+        """Demo users must not be able to change their email address."""
+
+        user = create_demo_user(demo_session)
+        response = demo_client.put(
+            "/current-user/email",
+            json={"email": "newemail@example.com", "current_password": "hashed_password"},
+            headers=self._demo_headers(user),
+        )
+
+        assert response.status_code == 403
+        assert mock_email_verif.call_count == 0
+
+    def test_account_deletion_is_forbidden(self, demo_session: Session, demo_client: TestClient) -> None:
+        """Demo users must not be able to delete their account."""
+
+        user = create_demo_user(demo_session)
+        response = demo_client.request(
+            "DELETE",
+            "/current-user",
+            json={"password": "hashed_password"},
+            headers=self._demo_headers(user),
+        )
+
+        assert response.status_code == 403
+        demo_session.expire_all()
+        assert demo_session.query(models.User).filter(models.User.id == user.id).first() is not None

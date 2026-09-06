@@ -17,6 +17,7 @@ from app.core.utils import (
     get_token,
     verify_captcha_token,
 )
+from app.demo import is_demo_email
 from app.demo.seed import seed_demo_data
 from app.emails.email_service import email_service
 from app.utilities import security
@@ -69,18 +70,14 @@ def login(
             detail="Internal server error",
         )
 
-    # Find the user in the list based on the email provided
-    user = db.query(models.User).filter(models.User.email == user_email).first()
-
-    # Handle demo user login: create a temp user in the demo schema with seeded data
-    if user is not None and user.is_demo:
+    # Handle demo login: create a temp user in the demo schema with seeded data
+    if is_demo_email(user_email):
         _assert_not_maintenance(db)
         try:
             demo_email = f"demo-{uuid.uuid4().hex[:12]}@demo.jam"
             demo_user = models.User(
                 email=demo_email,
                 password=security.hash_password(uuid.uuid4().hex),
-                is_demo=True,
                 is_active=True,
                 is_verified=True,
                 first_name="Demo",
@@ -107,6 +104,9 @@ def login(
         except Exception:
             demo_db.rollback()
             raise
+
+    # Find the user in the list based on the email provided
+    user = db.query(models.User).filter(models.User.email == user_email).first()
 
     # Check that the user exists and verify the password
     if user is None or not security.verify_password(user_credentials.password, user.password):
@@ -180,6 +180,12 @@ def create_user(
     :raises HTTPException with a 401 status code if the user is not allowed to sign up"""
 
     _assert_not_maintenance(db)
+
+    if is_demo_email(user_register.email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This email address is reserved.",
+        )
 
     # Verify CAPTCHA before doing any DB / email work
     if not verify_captcha_token(user_register.captcha_token):
@@ -329,13 +335,6 @@ def request_password_reset(
             detail="User account is not active.",
         )
 
-    # Prevent test users from resetting password
-    if user.is_demo:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Test users cannot reset their password.",
-        )
-
     # Send password reset email with rate limiting
     result = send_rate_limited_tokenized_password_reset_email(user, db)
     if not result.success:
@@ -380,13 +379,6 @@ def reset_password(
     user = db.query(models.User).filter(models.User.id == token_entry.owner_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not found")
-
-    # Prevent test users from resetting password
-    if user.is_demo:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Test users cannot reset their password.",
-        )
 
     # Hash the new password
     hashed_password = security.hash_password(reset_data.new_password)

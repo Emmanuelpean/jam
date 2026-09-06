@@ -146,14 +146,6 @@ class TestUpdateCurrentUserEmail(BaseTest):
         assert response.status_code == 401
         assert mock_email_verif.call_count == 0
 
-    def test_update_email_demo_fail(self, mock_email_verif: Mock, test_demo_user: models.User) -> None:
-        """Test updating own email as demo user (should fail)."""
-
-        update_data = {"email": "newemail@example.com", "current_password": test_demo_user.plain_password}
-        response = test_demo_user.client.put(self.endpoint, json=update_data)
-        assert response.status_code == 403
-        assert mock_email_verif.call_count == 0
-
     def test_update_incorrect_email_format(self, mock_email_verif: Mock, test_regular_user: models.User) -> None:
         """Test updating with invalid email."""
 
@@ -217,14 +209,6 @@ class TestUpdateCurrentUserPassword(BaseTest):
         assert response.status_code == 429
         assert "wait" in response.json()["detail"].lower()
         assert mock_password_notify.call_count == 1
-
-    def test_update_password_demo_fail(self, mock_password_notify: Mock, test_demo_user: models.User) -> None:
-        """Test updating own password as demo user (should fail)."""
-
-        update_data = {"current_password": test_demo_user.plain_password, "new_password": "newpassword1"}
-        response = test_demo_user.client.put(self.endpoint, json=update_data)
-        assert response.status_code == 403
-        assert mock_password_notify.call_count == 0
 
     def test_update_password_revokes_token(self, mock_password_notify: Mock, test_regular_user: models.User) -> None:
         """Test that updating password invalidates current token."""
@@ -460,16 +444,6 @@ class TestEmailVerification(BaseTest):
         assert mock_email_notify.call_count == 1
         assert mock_email_notify.call_args[0][0] == pending_email
 
-    def test_verify_email_demo_fail(
-        self, mock_email_notify: Mock, client: TestClient, test_demo_user: models.User
-    ) -> None:
-        """Test email change fails for demo user."""
-
-        plain_token = test_demo_user.create_token(TokenType.EMAIL_CHANGE, pending_email="newemail@test.com")[0]
-        response = client.get(f"{self.endpoint}/{plain_token}")
-        assert response.status_code == 403
-        assert mock_email_notify.call_count == 0
-
     def test_verify_email_invalid_token(self, mock_email_notify: Mock, client: TestClient) -> None:
         """Test email verification with invalid token."""
 
@@ -574,16 +548,6 @@ class TestDeleteAccount(BaseTest):
         assert response.status_code == 401
         assert "incorrect" in response.json()["detail"].lower()
         assert self.get_user(session, test_regular_user.id) == test_regular_user
-
-    def test_delete_account_demo_user_fails(self, test_demo_user: models.User, session: Session) -> None:
-        """Test that demo users cannot delete their account."""
-
-        delete_data = {"password": test_demo_user.plain_password}
-        response = test_demo_user.client.request("DELETE", self.endpoint, json=delete_data)
-
-        assert response.status_code == 403
-        assert "test users cannot delete" in response.json()["detail"].lower()
-        assert self.get_user(session, test_demo_user.id) is not None
 
     def test_delete_account_unauthenticated(self, client: TestClient) -> None:
         """Test that unauthenticated users cannot delete accounts."""
@@ -695,11 +659,10 @@ class TestSendReleaseEmail(BaseTest):
         test_admin_user: models.User,
         test_inactive_user: models.User,
         test_unverified_user: models.User,
-        test_demo_user: models.User,
     ) -> list[models.User]:
-        """Two eligible recipients (regular, admin) plus one each excluded by inactive/unverified/demo."""
+        """Two eligible recipients (regular, admin) plus one each excluded by inactive/unverified."""
 
-        return [test_regular_user, test_admin_user, test_inactive_user, test_unverified_user, test_demo_user]
+        return [test_regular_user, test_admin_user, test_inactive_user, test_unverified_user]
 
     def test_send_release_email_success(
         self,
@@ -716,8 +679,8 @@ class TestSendReleaseEmail(BaseTest):
         assert data["success"] is True
         assert "1.2.0" in data["message"]
 
-        # Should only send to active, verified, non-demo users
-        expected_recipients = [u for u in test_users if u.is_active and u.is_verified and not u.is_demo]
+        # Should only send to active, verified users
+        expected_recipients = [u for u in test_users if u.is_active and u.is_verified]
         assert mock_release_email.call_count == len(expected_recipients)
 
     def test_send_release_email_invalid_version(self, mock_release_email: Mock, test_admin_user: models.User) -> None:
@@ -759,7 +722,7 @@ class TestSendReleaseEmail(BaseTest):
         data = response.json()
         assert data["success"] is True
 
-        expected_recipients = [u for u in test_users if u.is_active and u.is_verified and not u.is_demo]
+        expected_recipients = [u for u in test_users if u.is_active and u.is_verified]
         # One failed, so sent_count should be total - 1
         assert f"{len(expected_recipients) - 1}/{len(expected_recipients)}" in data["message"]
 

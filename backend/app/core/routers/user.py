@@ -15,6 +15,7 @@ from app.core.utils import (
     send_rate_limited_tokenized_email_change_email,
     send_tokenized_password_changed_email_with_rate_limit,
 )
+from app.demo import is_demo_session
 from app.emails.email_service import email_service
 from app.emails.release_data import get_release_slides
 from app.payments import stripe
@@ -94,11 +95,7 @@ def send_release_email(
 
     logger = AppLogger.create_service_logger("release_email", "INFO")
 
-    users = (
-        db.query(models.User)
-        .filter(models.User.is_active, models.User.is_verified, models.User.is_demo.is_(False))
-        .all()
-    )
+    users = db.query(models.User).filter(models.User.is_active, models.User.is_verified).all()
 
     sent_count = 0
     for user in users:
@@ -188,12 +185,13 @@ current_user_router = APIRouter(prefix="/current-user", tags=["current-user"])
 @current_user_router.get("/", response_model=schemas.UserOut)
 def get_current_user_profile(
     current_user: models.User = Depends(oauth2.get_current_user),
-) -> models.User:
+) -> schemas.UserOut:
     """Get the current user's profile.
     :param current_user: The current authenticated user.
     :returns: The current user."""
 
-    return current_user
+    profile = schemas.UserOut.model_validate(current_user, from_attributes=True)
+    return profile.model_copy(update={"is_demo": is_demo_session()})
 
 
 @current_user_router.post("/heartbeat")
@@ -253,7 +251,7 @@ def update_password(
     :param db: The database session.
     :returns: A dictionary with the result of the password update."""
 
-    if current_user.is_demo:
+    if is_demo_session():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Demo users cannot change their password.",
@@ -299,7 +297,7 @@ def update_email(
     :param db: The database session.
     :returns: A success message."""
 
-    if current_user.is_demo:
+    if is_demo_session():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Demo users cannot change their email address.",
@@ -379,13 +377,6 @@ def verify_email_change(
     user = db.query(models.User).filter(models.User.id == token_entry.owner_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not found.")
-
-    # Check if demo user
-    if user.is_demo:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Test users cannot change their email address.",
-        )
 
     # Check if email is already taken
     other_users = (
@@ -475,7 +466,7 @@ def delete_account(
     :returns: A message indicating the result of the account deletion."""
 
     # Prevent demo users from deleting their account
-    if current_user.is_demo:
+    if is_demo_session():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Test users cannot delete their account.",

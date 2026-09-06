@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     max_scraping_description_length: int
     max_scraping_title_length: int
     max_scraping_company_length: int
+    demo_user_email: str = "demo@jam.com"
 
     # Other settings
     log_directory: str

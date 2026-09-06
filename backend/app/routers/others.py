@@ -2,9 +2,8 @@
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
 
-from app import models, database
+from app import database
 from app.base_schemas import COLUMN_LIMITS
 from app.config import settings
 from app.core.models import get_setting_value
@@ -25,17 +24,8 @@ def get_currencies() -> list[dict]:
 config_router = APIRouter(prefix="/config", tags=["config"])
 
 
-def get_demo_credentials(db: Session) -> str:
-    """Return the demo user's email, or an empty string when no demo user exists"""
-
-    user = db.query(models.User).filter(models.User.is_demo).first()
-    return user.email if user else ""
-
-
 @config_router.get("/", response_model=ConfigOut)
-def get_config(
-    db=Depends(database.get_db),
-) -> dict:
+def get_config() -> dict:
     """Get the application configuration."""
 
     return {
@@ -43,7 +33,7 @@ def get_config(
         "support_email": settings.support_email,
         "platform_sender_emails": {value: key for key, value in PLATFORM_SENDER_EMAILS.items()},
         "min_password_length": settings.min_password_length,
-        "app_demo_username": get_demo_credentials(db),
+        "app_demo_username": settings.demo_user_email,
         "scrape_max_retry": settings.scrape_max_retry,
         "max_file_size_mb": settings.max_file_size_mb,
         "monthly_scrape_quota": settings.monthly_scrape_quota,

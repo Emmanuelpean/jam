@@ -253,12 +253,6 @@ def test_admin_user(session: Session, request) -> FixtureUser:
 
 
 @pytest.fixture
-def test_demo_user(session: Session, request) -> FixtureUser:
-    """Fixture for a demo user."""
-    return _single_user(session, request, td.DEMO_USER)
-
-
-@pytest.fixture
 def test_inactive_user(session: Session, request) -> FixtureUser:
     """Fixture for an inactive user."""
     return _single_user(session, request, td.INACTIVE_USER)

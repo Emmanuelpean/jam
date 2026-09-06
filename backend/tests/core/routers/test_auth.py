@@ -143,13 +143,11 @@ class TestLogin(BaseTest):
         response = client.post(self.endpoint, data=data)
         assert response.status_code == 200
 
-    def test_demo_user_login_not_allowed_when_maintenance(
-        self, session: Session, test_demo_user: models.User, client: TestClient
-    ) -> None:
-        """Demo users cannot log in when maintenance is active."""
+    def test_demo_login_not_allowed_when_maintenance(self, session: Session, client: TestClient) -> None:
+        """The demo account cannot log in when maintenance is active."""
 
         self._create_maintenance_setting(session, minutes_offset=-30)
-        data = {"username": test_demo_user.email, "password": "demo"}
+        data = {"username": settings.demo_user_email, "password": "demo"}
         response = client.post(self.endpoint, data=data)
         assert response.status_code == 401
 
@@ -178,6 +176,24 @@ class TestRegister(BaseTest):
         user = session.query(models.User).first()
         assert user
         assert user.email == user_data["email"].lower()
+
+    def test_register_demo_email_rejected(
+        self, mock_verification_email: Mock, client: TestClient, session: Session
+    ) -> None:
+        """The demo address is reserved: registering it would create an unreachable account."""
+
+        user_data = {
+            "email": settings.demo_user_email.upper(),
+            "password": "test_password",
+            "first_name": "Test",
+            "last_name": "User",
+        }
+        response = client.post(self.endpoint, json=user_data)
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "This email address is reserved."
+        assert mock_verification_email.call_count == 0
+        assert session.query(models.User).count() == 0
 
     def test_register_user_exist(
         self, mock_verification_email: Mock, client: TestClient, test_regular_user: models.User
@@ -410,16 +426,6 @@ class TestRequestPasswordReset(BaseTest):
         assert response.json()["message"] == "Password reset email sent successfully."
         assert mock_password_reset_email.call_count == 1
 
-    def test_request_password_reset_fail_demo(
-        self, mock_password_reset_email: Mock, client: TestClient, test_demo_user: FixtureUser
-    ) -> None:
-        """Test that a demo user cannot request a password reset."""
-
-        response = client.post(self.endpoint, json={"email": test_demo_user.email})
-
-        assert response.status_code == 403
-        assert mock_password_reset_email.call_count == 0
-
     def test_request_password_reset_case_insensitive(
         self, mock_password_reset_email: Mock, client: TestClient, test_regular_user: FixtureUser
     ) -> None:
@@ -500,13 +506,6 @@ class TestResetPassword(BaseTest):
         assert test_regular_user and test_regular_user.password != old_password_hash
         assert test_regular_user.get_token(TokenType.PASSWORD_RESET) is None
         assert mock_password_changed_email.call_count == 1
-
-    def test_reset_password_demo_fail(self, client: TestClient, test_demo_user: FixtureUser) -> None:
-        """Test that a demo user cannot reset their password."""
-
-        plain_token = test_demo_user.create_token(TokenType.PASSWORD_RESET)[0]
-        response = client.post(self.endpoint, json={"token": plain_token, "new_password": "new_secure_password"})
-        assert response.status_code == 403
 
     def test_reset_password_invalid_token(self, client: TestClient) -> None:
         """Test password reset with invalid token."""

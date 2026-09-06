@@ -41,14 +41,6 @@ UNVERIFIED_USER = {
 }
 
 
-DEMO_USER = {
-    "email": "demo@example.com",
-    "password": "demo_password",
-    "is_verified": True,
-    "is_demo": True,
-}
-
-
 PREMIUM_USER_1 = {
     "email": "emmanuelpean@gmail.com",
     "password": "test_password",
@@ -85,7 +77,6 @@ USER_DATA = [
     ADMIN_USER,
     INACTIVE_USER,
     UNVERIFIED_USER,
-    DEMO_USER,
     PREMIUM_USER_1,
     PREMIUM_USER_2,
     STRIPE_USER,
@@ -114,14 +105,14 @@ USER_QUALIFICATION_DATA = [
     {"owner_id": 2, "education": "BSc Computer Science"},
     {"owner_id": 2, "education": "MSc Computer Science"},
     {
-        "owner_id": 6,
+        "owner_id": 5,
         "education": "BSc in physics; MSc in Nanosciences; PhD in photochemistry of perovksite solar cells",
         "experience": "12 years Python",
         "skills": "3D printing",
         "interests": "software engineering",
     },
     {
-        "owner_id": 7,
+        "owner_id": 6,
         "education": "Nutritionist",
         "interests": "Animal rights",
     },

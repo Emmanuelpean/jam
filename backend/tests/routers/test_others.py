@@ -5,7 +5,6 @@ from starlette.testclient import TestClient
 
 from app.config import settings
 from tests.base_test import BaseTest
-from tests.fixtures.users import FixtureUser
 
 
 class TestCurrencies(BaseTest):
@@ -34,7 +33,7 @@ class TestConfig(BaseTest):
 
     endpoint = "/config/"
 
-    def test_get_config_success(self, client: TestClient, test_demo_user: FixtureUser) -> None:
+    def test_get_config_success(self, client: TestClient) -> None:
         """Test that the config endpoint returns expected keys."""
         response = client.get(self.endpoint)
         assert response.status_code == 200
@@ -46,7 +45,7 @@ class TestConfig(BaseTest):
         assert "app_demo_username" in data
         assert "scrape_max_retry" in data
 
-    def test_get_config_values(self, client: TestClient, test_demo_user: FixtureUser) -> None:
+    def test_get_config_values(self, client: TestClient) -> None:
         """Test that config values match application settings."""
         response = client.get(self.endpoint)
         assert response.status_code == 200
@@ -56,14 +55,14 @@ class TestConfig(BaseTest):
         assert data["min_password_length"] == settings.min_password_length
         assert data["scrape_max_retry"] == settings.scrape_max_retry
 
-    def test_get_config_demo_username(self, client: TestClient, test_demo_user: FixtureUser) -> None:
-        """Test that config returns the demo user's email."""
+    def test_get_config_demo_username(self, client: TestClient) -> None:
+        """Test that config returns the hard-coded demo address."""
         response = client.get(self.endpoint)
         assert response.status_code == 200
         data = response.json()
-        assert data["app_demo_username"] == test_demo_user.email
+        assert data["app_demo_username"] == settings.demo_user_email
 
-    def test_get_config_platform_sender_emails_is_dict(self, client: TestClient, test_demo_user: FixtureUser) -> None:
+    def test_get_config_platform_sender_emails_is_dict(self, client: TestClient) -> None:
         """Test that platform_sender_emails is a dict mapping email -> platform name."""
         response = client.get(self.endpoint)
         data = response.json()

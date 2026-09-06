@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import models, database, base_schemas
 from app.core.oauth2 import get_current_user
+from app.demo import is_demo_session
 from app.demo.seed import delete_user
 
 demo_router = APIRouter(prefix="/demo", tags=["Demo"])
@@ -21,7 +22,7 @@ def demo_cleanup(
     :param db: The database session (demo schema)
     :returns: Success response"""
 
-    if not current_user.is_demo:
+    if not is_demo_session():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This endpoint is only available for demo users.",

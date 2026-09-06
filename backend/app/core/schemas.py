@@ -167,7 +167,6 @@ class UserCreate(BaseModel):
     password: str = Field(max_length=COLUMN_LIMITS.password)
     is_active: bool = True
     is_admin: bool = False
-    is_demo: bool = False
     first_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.first_name)
     last_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.last_name)
     premium: PremiumDetailsCreate | None = None
@@ -180,7 +179,7 @@ class UserOut(Out):
     email: EmailField
     is_active: bool
     is_admin: bool
-    is_demo: bool
+    is_demo: bool = False
     is_verified: bool
     last_login: dt.datetime | None
     previous_login: dt.datetime | None
@@ -202,7 +201,6 @@ class UserUpdate(BaseModel):
     password: str | None = Field(default=None, max_length=COLUMN_LIMITS.password)
     is_active: bool = True
     is_admin: bool = False
-    is_demo: bool = False
     first_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.first_name)
     last_name: str | None = Field(default=None, max_length=COLUMN_LIMITS.last_name)
     preferences: UserPreferencesUpdate | None = None

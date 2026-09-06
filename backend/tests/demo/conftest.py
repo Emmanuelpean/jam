@@ -72,7 +72,8 @@ def demo_session(demo_session_raw):
 def demo_session_untracked(engine, demo_engine):
     """Non-transactional demo session that commits for real, for tests that exercise the DDL lifecycle
     (setup_demo_schema drops/recreates the schema and so cannot run inside the rollback fixture).
-    Recreates the schema on entry so the test starts clean and leaves a valid schema for later tests."""
+    The schema is recreated on entry and on exit: these tests commit for real, and the rows they
+    leave behind would collide with the seeding done by the transactional fixtures."""
 
     _recreate_demo_schema(engine)
     Base.metadata.create_all(bind=demo_engine)
@@ -82,6 +83,8 @@ def demo_session_untracked(engine, demo_engine):
         yield db
     finally:
         db.close()
+        _recreate_demo_schema(engine)
+        Base.metadata.create_all(bind=demo_engine)
 
 
 @pytest.fixture
@@ -131,7 +134,6 @@ def create_demo_user(session: orm.Session) -> models.User:
     user = models.User(
         email=f"demo-{uuid.uuid4().hex[:12]}@demo.jam",
         password="hashed_password",
-        is_demo=True,
         is_active=True,
         is_verified=True,
         first_name="Demo",
