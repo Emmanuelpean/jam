@@ -763,8 +763,8 @@ function DataTableComponent<T extends JamData>(
 
 	// Whether to split toolbar into two rows on mobile (search on top, actions below)
 	const showAddButton = showAdd && mode !== "import";
-	// Main (non-compact, addable) tables show a nicer prompt in place of the table when there is no data at all
-	const isEmptyState = showAddButton && !compact && totalCount === 0 && !showSpinner;
+	const hasNoData = isServerPagination ? totalCount === 0 : data.length === 0;
+	const isEmptyState = showAddButton && !compact && hasNoData && !showSpinner;
 	const hasSecondRow = isTablet && !compact && !smallSearch && (showAddButton || !!toolbarAddon || enableMultiSelect);
 	const hasToolbarContent =
 		(showSearch && !compact) ||
@@ -790,6 +790,9 @@ function DataTableComponent<T extends JamData>(
 	if (isEmptyState) {
 		return (
 			<>
+				{title && (
+					<PageHeader title={title} count={totalFilteredCount || data.length} icon={getTableIcon(title)} />
+				)}
 				<div className="table-container table-container--full-height">
 					<div className="datatable-empty-state">
 						<i className={`bi bi-${getEntityIcon(entityType) || "inbox"} datatable-empty-state-icon`}></i>
