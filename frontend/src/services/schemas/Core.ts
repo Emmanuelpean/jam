@@ -46,6 +46,7 @@ export interface UserPreferences {
 	dashboard_layout: string | null;
 	table_columns: Record<string, string[]> | null;
 	table_sort: TableSortConfigs | null;
+	table_page_size: Record<string, number> | null;
 }
 
 export type UserPreferencesUpdate = Partial<UserPreferences>;

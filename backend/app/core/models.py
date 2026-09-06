@@ -166,6 +166,7 @@ class UserPreferences(Owned, Base):
     - `dashboard_layout` (str, optional): The layout of the dashboard.
     - `table_columns` (dict, optional): The table column configurations.
     - `table_sort` (dict, optional): The sort configuration for tables.
+    - `table_page_size` (dict, optional): The number of entries shown per page for each table.
     - `extension_banner_dismissed` (bool): Indicates whether the extension banner has been dismissed.
     - `completed_tours` (list, optional): A list of completed guided tours.
     - `tour_panel_dismissed` (bool): Indicates whether the "Take a Tour" sidebar entry has been dismissed."""
@@ -176,6 +177,7 @@ class UserPreferences(Owned, Base):
     dashboard_layout = Column(Text, nullable=True)
     table_columns = Column(JSON, nullable=True)
     table_sort = Column(JSON, nullable=True)
+    table_page_size = Column(JSON, nullable=True)
     extension_banner_dismissed = Column(Boolean, nullable=False, server_default="false")
     completed_tours = Column(JSON, nullable=True)
     tour_panel_dismissed = Column(Boolean, nullable=False, server_default="false")

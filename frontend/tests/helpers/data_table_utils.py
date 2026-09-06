@@ -144,10 +144,19 @@ class DataTableUtils(JamTestUtils):
 
     def set_page_item_select(self, value: str) -> None:
         """Set the number of items to display per page
-        :param value: Value to select (e.g. "20", "40")"""
+        :param value: Number of entries to select (e.g. "20", "40"), or "fit" for Fit to Screen"""
 
-        if len(self.table_rows) >= 20:
-            Select(self.get_element("page-items-select")).select_by_visible_text(f"Show {value} Entries")
+        label = "Fit to Screen" if value == "fit" else f"Show {value} Entries"
+        Select(self.get_element("page-items-select")).select_by_visible_text(label)
+        time.sleep(0.5)
+
+    @property
+    def page_item_select_value(self) -> str:
+        """Get the option currently selected in the page size select"""
+
+        selected = Select(self.get_element("page-items-select")).selected_options_on_line
+        assert isinstance(selected, WebElement)
+        return selected.text
 
     def table_row_click(self, row_index: int) -> None:
         """Click on a table row by its index (0-based)"""

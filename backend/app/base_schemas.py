@@ -24,12 +24,13 @@ class ColumnLimits(BaseModel):
     tour_id: int = 128
     completed_tours: int = 20
     dashboard_layout: int = 100_000
-    table_entity_type: int = 20
+    table_entity_type: int = 50  # longest entity type is 'speculativeApplication'
     table_entity_types: int = 500
     table_column_key: int = 100
     table_columns: int = 300
     table_sort_value: int = 500
     table_sort_entry_keys: int = 2
+    table_page_size_max: int = 200
     # User profile
     experience: int = 10_000
     education: int = 3_500

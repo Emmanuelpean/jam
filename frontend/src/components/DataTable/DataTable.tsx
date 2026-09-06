@@ -43,6 +43,7 @@ import { useContextMenu } from "../../contexts/ContextMenuContext";
 import PageHeader from "../../pages/PageHeader/PageHeader";
 import FilterPillsRow from "./FilterPillsRow";
 import { ColumnConfig, useColumnConfig } from "../../hooks/useColumnConfig";
+import { FIT_TO_SCREEN, TablePageSize, useTablePageSize } from "../../hooks/useTablePageSize";
 import ColumnConfigSidebar from "./ColumnConfigSidebar";
 import FilterSidebar from "./FilterSidebar";
 import ClearButton from "./ClearButton";
@@ -272,7 +273,17 @@ function DataTableComponent<T extends JamData>(
 	// UI state
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [currentPage, setCurrentPage] = useState<number>(0);
-	const [pageSize, setPageSize] = useState<number>(defaultPageSize);
+	const fitPageSizeToScreen: boolean = !compact && !showAllEntries;
+	const {
+		pageSize,
+		selectedValue: selectedPageSize,
+		setPageSizeChoice,
+		tableRef,
+	}: TablePageSize = useTablePageSize(entityType, defaultPageSize, pageSizeOptions, fitPageSizeToScreen);
+	const pageSizeSelectOptions: SelectOption[] = [
+		...(fitPageSizeToScreen ? [{ value: FIT_TO_SCREEN, label: "Fit to Screen" }] : []),
+		...pageSizeOptions.map((s: number): SelectOption => ({ value: String(s), label: `Show ${s} Entries` })),
+	];
 	const [totalCount, setTotalCount] = useState<number>(0);
 	const [totalFilteredCount, setTotalFilteredCount] = useState<number>(0);
 	const [showSpinner, setShowSpinner] = useState<boolean>(false);
@@ -931,6 +942,7 @@ function DataTableComponent<T extends JamData>(
 							<div
 								className="table-responsive"
 								id={`${entityType}-data-table`}
+								ref={tableRef}
 								style={{ minWidth: 0, width: "100%" }}
 							>
 								<table
@@ -1225,16 +1237,15 @@ function DataTableComponent<T extends JamData>(
 									</span>
 									<CustomSelect
 										id="page-items-select"
-										options={pageSizeOptions.map(
-											(s: number): SelectOption => ({
-												value: String(s),
-												label: `Show ${s} Entries`,
-											})
-										)}
-										value={{ value: String(pageSize), label: `Show ${pageSize} Entries` }}
+										options={pageSizeSelectOptions}
+										value={
+											pageSizeSelectOptions.find(
+												(opt: SelectOption): boolean => opt.value === selectedPageSize
+											) ?? { value: String(pageSize), label: `Show ${pageSize} Entries` }
+										}
 										onChange={(opt: SelectOption | SelectOption[] | null): void => {
 											if (opt && !Array.isArray(opt))
-												setPageSize(Number((opt as SelectOption).value));
+												setPageSizeChoice((opt as SelectOption).value).then(() => null);
 										}}
 										isSearchable={false}
 										isClearable={false}

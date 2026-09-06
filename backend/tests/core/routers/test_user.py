@@ -323,6 +323,27 @@ class TestUpdateCurrentUser(BaseTest):
         # Verify token version NOT incremented (no password/email change)
         assert test_regular_user.token_version == initial_token_version
 
+    def test_update_table_page_size(self, test_regular_user: models.User) -> None:
+        """Test storing, clearing and validating the per-table page size preference."""
+
+        assert test_regular_user.preferences.table_page_size is None
+
+        # "speculativeApplication" is the longest entity type the frontend sends
+        page_sizes = {"job": 50, "speculativeApplication": 30}
+        response = test_regular_user.client.put(self.endpoint, json={"preferences": {"table_page_size": page_sizes}})
+        assert response.status_code == 200
+        test_regular_user.refresh()
+        assert test_regular_user.preferences.table_page_size == page_sizes
+
+        response = test_regular_user.client.put(self.endpoint, json={"preferences": {"table_page_size": None}})
+        assert response.status_code == 200
+        test_regular_user.refresh()
+        assert test_regular_user.preferences.table_page_size is None
+
+        for invalid in ({"job": 0}, {"job": 201}, {"job": "many"}):
+            response = test_regular_user.client.put(self.endpoint, json={"preferences": {"table_page_size": invalid}})
+            assert response.status_code == 422
+
     def test_update_premium(self, test_regular_user: models.User) -> None:
         """Test updating user premium details that don't require password."""
 

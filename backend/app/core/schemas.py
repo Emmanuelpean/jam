@@ -82,6 +82,7 @@ ColumnName = Annotated[str, Field(max_length=COLUMN_LIMITS.table_column_key)]
 _ColumnList = Annotated[list[ColumnName], Field(max_length=COLUMN_LIMITS.table_columns)]
 _SortEntryValue = Annotated[str, Field(max_length=COLUMN_LIMITS.table_sort_value)]
 _SortEntry = Annotated[dict[str, _SortEntryValue], Field(max_length=COLUMN_LIMITS.table_sort_entry_keys)]
+_PageSize = Annotated[int, Field(ge=1, le=COLUMN_LIMITS.table_page_size_max)]
 
 
 class UserPreferencesCreate(BaseModel):
@@ -99,6 +100,9 @@ class UserPreferencesCreate(BaseModel):
         default=None, max_length=COLUMN_LIMITS.table_entity_types
     )
     table_sort: dict[EntityType, _SortEntry] | None = Field(default=None, max_length=COLUMN_LIMITS.table_entity_types)
+    table_page_size: dict[EntityType, _PageSize] | None = Field(
+        default=None, max_length=COLUMN_LIMITS.table_entity_types
+    )
 
 
 class UserPreferencesUpdate(UserPreferencesCreate):
