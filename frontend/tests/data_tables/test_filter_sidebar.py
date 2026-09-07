@@ -326,27 +326,34 @@ class TestFilterSidebar(BaseTest):
         self.user.create_job(title="Withdrawn Job", application_status="withdrawn")
         self.refresh()
 
-        # On by default -- rejected and withdrawn are hidden
+        # On by default -- rejected and withdrawn are hidden, and it counts towards the toolbar badge
         self.job_table_utils.open_filter_sidebar()
         toggle = self.get_element("hide-rejected-toggle", enabled=False)
         assert toggle.is_selected()
+        assert self.job_table_utils.get_active_count_from_toolbar() == 1
         titles = self.job_table_utils.get_column_values("title")
         assert "Active Job" in titles
         assert "Rejected Job" not in titles
         assert "Withdrawn Job" not in titles
 
-        # Turn off -- all three jobs appear
+        # Turn off -- all three jobs appear, and the badge drops to 0
         toggle.click()
         time.sleep(0.3)
+        assert self.job_table_utils.get_active_count_from_toolbar() == 0
         titles = self.job_table_utils.get_column_values("title")
         assert "Active Job" in titles
         assert "Rejected Job" in titles
         assert "Withdrawn Job" in titles
 
-        # Turn back on -- rejected and withdrawn are hidden again
+        # Turn back on -- rejected and withdrawn are hidden again, and the badge is back to 1
         toggle.click()
         time.sleep(0.3)
+        assert self.job_table_utils.get_active_count_from_toolbar() == 1
         titles = self.job_table_utils.get_column_values("title")
         assert "Active Job" in titles
         assert "Rejected Job" not in titles
         assert "Withdrawn Job" not in titles
+
+        # Combined with a real column filter, the badge counts both
+        self.filter_sidebar_utils.apply_text_filter("title", "Active")
+        assert self.job_table_utils.get_active_count_from_toolbar() == 2

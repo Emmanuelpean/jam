@@ -6,7 +6,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 
 from frontend_base_test import BaseTest
-from helpers.command_palette_utils import CommandPaletteUtils
 
 
 class TestCommandPalette(BaseTest):

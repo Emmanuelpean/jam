@@ -42,7 +42,16 @@ export const MobileNavMenu = ({ open, onClose }: MobileNavMenuProps): JSX.Elemen
 		const className = `nav-item ${active ? "active" : ""} ${extraClass}`.trim();
 		if (path) {
 			return (
-				<Link key={key} to={path} id={id} className={className} onClick={onClose}>
+				<Link
+					key={key}
+					to={path}
+					id={id}
+					className={className}
+					onClick={(e: React.MouseEvent): void => {
+						e.stopPropagation();
+						onClose();
+					}}
+				>
 					{inner}
 				</Link>
 			);
@@ -54,12 +63,14 @@ export const MobileNavMenu = ({ open, onClose }: MobileNavMenuProps): JSX.Elemen
 				className={className}
 				role="button"
 				tabIndex={0}
-				onClick={(): void => {
+				onClick={(e: React.MouseEvent): void => {
+					e.stopPropagation();
 					onClick?.();
 					onClose();
 				}}
 				onKeyDown={(e: React.KeyboardEvent): void => {
 					if (e.key === "Enter" || e.key === " ") {
+						e.stopPropagation();
 						onClick?.();
 						onClose();
 					}
@@ -75,17 +86,18 @@ export const MobileNavMenu = ({ open, onClose }: MobileNavMenuProps): JSX.Elemen
 			return (
 				<div key={`group-${item.text}`} className="mobile-nav-group">
 					<div className="mobile-nav-group-label">{item.text}</div>
-					{item.submenu.map((sub: NavigationSubItem): JSX.Element =>
-						renderLeaf(
-							sub.text,
-							sub.text,
-							sub.icon ?? "",
-							isSubItemActive(sub),
-							"submenu-item",
-							sub.path,
-							sub.onClick,
-							sub.id
-						)
+					{item.submenu.map(
+						(sub: NavigationSubItem): JSX.Element =>
+							renderLeaf(
+								sub.text,
+								sub.text,
+								sub.icon ?? "",
+								isSubItemActive(sub),
+								"submenu-item",
+								sub.path,
+								sub.onClick,
+								sub.id
+							)
 					)}
 				</div>
 			);
@@ -103,7 +115,7 @@ export const MobileNavMenu = ({ open, onClose }: MobileNavMenuProps): JSX.Elemen
 	};
 
 	return (
-		<div className="mobile-nav-menu" role="menu">
+		<div id="mobile-nav-menu" className="mobile-nav-menu" role="menu">
 			<nav className="mobile-nav-section">{topItems.map(renderItem)}</nav>
 			<div className="mobile-nav-divider" />
 			<nav className="mobile-nav-section">{bottomItems.map(renderItem)}</nav>

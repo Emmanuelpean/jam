@@ -75,7 +75,7 @@ export const useNavigation = (): UseNavigationResult => {
 	};
 
 	const navigationItems: NavigationItem[] = [
-		{ path: "/dashboard", text: "Dashboard", position: "top" },
+		{ path: "/dashboard", text: "Dashboard", position: "top", id: "nav-dashboard" },
 		{ path: "/jobs", text: "Jobs", position: "top", id: "nav-jobs", tourId: "nav-jobs" },
 		{
 			path: "/job-alerts/jobs",
@@ -92,17 +92,18 @@ export const useNavigation = (): UseNavigationResult => {
 			id: "nav-speculative-applications",
 			tourId: "nav-speculative-applications",
 		},
-		{ path: "/contacts", text: "Contacts", position: "top" },
-		{ path: "/companies", text: "Companies", position: "top" },
+		{ path: "/contacts", text: "Contacts", position: "top", id: "nav-contacts" },
+		{ path: "/companies", text: "Companies", position: "top", id: "nav-companies" },
 		{
 			text: "Other",
 			position: "top",
+			id: "nav-other",
 			submenu: [
-				{ path: "/aggregators", text: "Job Aggregators" },
-				{ path: "/keywords", text: "Tags" },
-				{ path: "/interviews", text: "Interviews" },
-				{ path: "/job-application-updates", text: "Job Application Updates" },
-				{ path: "/files", text: "Files" },
+				{ path: "/aggregators", text: "Job Aggregators", id: "nav-aggregators" },
+				{ path: "/keywords", text: "Tags", id: "nav-tags" },
+				{ path: "/interviews", text: "Interviews", id: "nav-interviews" },
+				{ path: "/job-application-updates", text: "Job Application Updates", id: "nav-job-application-updates" },
+				{ path: "/files", text: "Files", id: "nav-files" },
 			],
 		},
 		{ path: "/settings", text: "My Account", id: "nav-user-settings", position: "bottom" },
@@ -111,8 +112,8 @@ export const useNavigation = (): UseNavigationResult => {
 			position: "bottom",
 			id: "nav-about",
 			submenu: [
-				{ path: "/about", text: "About JAM" },
-				{ path: "/browser-extension", text: "Browser Extension" },
+				{ path: "/about", text: "About JAM", id: "nav-about-jam" },
+				{ path: "/browser-extension", text: "Browser Extension", id: "nav-browser-extension" },
 				{
 					text: "Contact Support",
 					icon: "envelope",
@@ -130,6 +131,7 @@ export const useNavigation = (): UseNavigationResult => {
 			text: "Admin",
 			condition: (user: UserData): boolean => user.is_admin,
 			position: "bottom",
+			id: "nav-admin",
 		},
 		...(!allToursCompleted && !tourPanelDismissed && !isMobile
 			? [

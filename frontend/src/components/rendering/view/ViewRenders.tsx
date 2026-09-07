@@ -900,7 +900,9 @@ export const renderFunctions = {
 
 	fileUsages: (param: RenderParams): ReactNode => {
 		const fileId: number = param.item?.id;
-		const count = param.dataContext.jobs.filter((j) => j.cv_id === fileId || j.cover_letter_id === fileId).length;
+		const count: number = param.dataContext.jobs.filter(
+			(j: EnrichedJobData): boolean => j.cv_id === fileId || j.cover_letter_id === fileId
+		).length;
 		if (!count) return <span className="text-muted">—</span>;
 		return <span>{count}</span>;
 	},
