@@ -1,4 +1,4 @@
-import React, { JSX } from "react";
+import React, { JSX, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getTableIcon } from "../rendering/view/Icons";
 import { NavigationItem, NavigationSubItem, useNavigation } from "./useNavigation";
@@ -16,8 +16,19 @@ interface MobileNavMenuProps {
  */
 export const MobileNavMenu = ({ open, onClose }: MobileNavMenuProps): JSX.Element | null => {
 	const { topItems, bottomItems, isMenuActive, isSubItemActive } = useNavigation();
+	const [rendered, setRendered] = useState<boolean>(open);
+	const [closing, setClosing] = useState<boolean>(false);
 
-	if (!open) return null;
+	useEffect(() => {
+		if (open) {
+			setRendered(true);
+			setClosing(false);
+		} else if (rendered) {
+			setClosing(true);
+		}
+	}, [open, rendered]);
+
+	if (!rendered) return null;
 
 	const renderLeaf = (
 		key: string,
@@ -106,7 +117,7 @@ export const MobileNavMenu = ({ open, onClose }: MobileNavMenuProps): JSX.Elemen
 			item.text,
 			item.text,
 			item.icon ?? "",
-			item.path ? isMenuActive(item.path) : false,
+			isMenuActive(item),
 			item.className ?? "",
 			item.path,
 			item.onClick,
@@ -115,7 +126,17 @@ export const MobileNavMenu = ({ open, onClose }: MobileNavMenuProps): JSX.Elemen
 	};
 
 	return (
-		<div id="mobile-nav-menu" className="mobile-nav-menu" role="menu">
+		<div
+			id="mobile-nav-menu"
+			className={`mobile-nav-menu ${closing ? "closing" : ""}`}
+			role="menu"
+			onAnimationEnd={(e: React.AnimationEvent): void => {
+				if (e.animationName === "mobile-nav-menu-close") {
+					setRendered(false);
+					setClosing(false);
+				}
+			}}
+		>
 			<nav className="mobile-nav-section">{topItems.map(renderItem)}</nav>
 			<div className="mobile-nav-divider" />
 			<nav className="mobile-nav-section">{bottomItems.map(renderItem)}</nav>

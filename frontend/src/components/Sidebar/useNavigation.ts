@@ -27,6 +27,7 @@ export interface NavigationItem {
 	className?: string;
 	id?: string;
 	tourId?: string;
+	alsoActiveFor?: string[];
 }
 
 interface UseNavigationResult {
@@ -34,7 +35,7 @@ interface UseNavigationResult {
 	topItems: NavigationItem[];
 	bottomItems: NavigationItem[];
 	toggleTourSelect: () => void;
-	isMenuActive: (path: string) => boolean;
+	isMenuActive: (item: NavigationItem) => boolean;
 	isSubItemActive: (item: NavigationSubItem) => boolean;
 }
 
@@ -84,6 +85,14 @@ export const useNavigation = (): UseNavigationResult => {
 			id: "nav-scraped-jobs",
 			tourId: "nav-scraped-jobs",
 			condition: (user: UserData): boolean => user.premium.is_active,
+			alsoActiveFor: isMobile ? undefined : ["/job-alerts/emails"],
+		},
+		{
+			path: "/job-alerts/emails",
+			text: "Job Emails",
+			position: "top",
+			id: "nav-job-emails",
+			condition: (user: UserData): boolean => isMobile && user.premium.is_active,
 		},
 		{
 			path: "/speculative-applications",
@@ -154,14 +163,10 @@ export const useNavigation = (): UseNavigationResult => {
 		},
 	];
 
-	const isMenuActive = (path: string): boolean => {
-		if (location.pathname.startsWith(path)) return true;
-		const parts = path.split("/").filter(Boolean);
-		if (parts.length > 1) {
-			const parent = "/" + parts.slice(0, -1).join("/") + "/";
-			return location.pathname.startsWith(parent);
-		}
-		return false;
+	const isMenuActive = (item: NavigationItem): boolean => {
+		if (!item.path) return false;
+		if (location.pathname.startsWith(item.path)) return true;
+		return item.alsoActiveFor?.some((p: string): boolean => location.pathname.startsWith(p)) ?? false;
 	};
 
 	const isSubItemActive = (item: NavigationSubItem): boolean => {

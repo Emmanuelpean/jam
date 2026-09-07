@@ -194,7 +194,7 @@ export const Sidebar = (): JSX.Element | null => {
 				<Link
 					key={item.text}
 					to={item.path!}
-					className={`nav-item ${isMenuActive(item.path!) ? "active" : ""} ${item.className || ""}`}
+					className={`nav-item ${isMenuActive(item) ? "active" : ""} ${item.className || ""}`}
 					onClick={item.onClick}
 					id={item.id}
 					{...(item.tourId ? { "data-tour": item.tourId } : {})}

@@ -12,6 +12,18 @@
     }
 }
 
+@keyframes mobile-nav-menu-close {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.99);
+    }
+}
+
 /* Dropdown that replaces the sidebar on mobile. Anchored under a PageHeader. */
 .mobile-nav-menu {
     position: absolute;
@@ -28,6 +40,11 @@
     background: var(--bs-body-bg);
     box-shadow: 0 12px 28px rgb(0 0 0 / 22%);
     animation: mobile-nav-menu-open 0.16s ease forwards;
+
+    &.closing {
+        pointer-events: none;
+        animation: mobile-nav-menu-close 0.14s ease forwards;
+    }
 
     .nav-item {
         position: relative;
