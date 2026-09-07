@@ -43,7 +43,7 @@ body[data-mode="light"] {
     --bs-form-control-border-color: #ced4da;
 
     /* Custom app variables */
-    --bg-primary: #f8f9fa;
+    --bg-primary: #f4f4f4;
     --bg-secondary: #f0f2f4;
     --bg-tertiary: #f8f9fa;
     --input-background-color: #ffffff;
@@ -51,8 +51,8 @@ body[data-mode="light"] {
 
     /* Table */
     --table-row-bg: #f8f9fa;
-    --table-row-striped-bg: #f2f3f5;
-    --table-row-hover-bg: #e9ecef;
+    --table-row-striped-bg: #ececec;
+    --table-row-hover-bg: #e7ecf1;
 }
 
 body[data-mode="dark"] {
