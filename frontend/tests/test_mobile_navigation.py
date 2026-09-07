@@ -1,5 +1,6 @@
 """Test the mobile navigation menu: opening/closing it from the page header, navigating between
 pages, and landing on a data-table page that has no data yet."""
+import time
 
 from frontend_base_test import BaseTest
 
@@ -41,6 +42,7 @@ class TestMobileNavigation(BaseTest):
         self._open_menu()
         self.get_element(nav_id).click()
         self.wait_for_page(page)
+        time.sleep(0.2)
 
     # ------------------------------------------------------- TESTS ------------------------------------------------
 
@@ -51,6 +53,7 @@ class TestMobileNavigation(BaseTest):
         self._open_menu()
         assert self._menu_open()
         self.get_element(MENU_TOGGLE).click()
+        time.sleep(0.2)
         assert not self._menu_open()
 
     def test_navigate_between_pages(self) -> None:
