@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTour } from "../../contexts/TourContext";
 import JamLogo from "../../assets/Logo.svg?react";
-import { getTableIcon } from "../rendering/view/Icons";
 import { ThemeSelector } from "./ThemeSelector";
 import "./Sidebar.scss";
 import { DEFAULT_THEME } from "../../utils/Theme";
@@ -104,7 +103,7 @@ export const Sidebar = (): JSX.Element | null => {
 							style={{ cursor: isExpanded ? "pointer" : "default" }}
 						>
 							<span className="nav-icon">
-								<i className={`bi bi-${item?.icon || getTableIcon(item.text)}`}></i>
+								<i className={`bi bi-${item.icon}`}></i>
 							</span>
 							<span className="nav-text-container">
 								<span className="nav-text">{item.text}</span>
@@ -125,7 +124,7 @@ export const Sidebar = (): JSX.Element | null => {
 								const inner = (
 									<>
 										<span className="nav-icon">
-											<i className={`bi bi-${subItem?.icon || getTableIcon(subItem.text)}`}></i>
+											<i className={`bi bi-${subItem.icon}`}></i>
 										</span>
 										<span className="nav-text-container">
 											<span className="nav-text">{subItem.text}</span>
@@ -181,7 +180,7 @@ export const Sidebar = (): JSX.Element | null => {
 						}}
 					>
 						<span className="nav-icon">
-							<i className={`bi bi-${item?.icon || getTableIcon(item.text)}`}></i>
+							<i className={`bi bi-${item.icon}`}></i>
 						</span>
 						<span className="nav-text-container">
 							<span className="nav-text">{item.text}</span>
@@ -200,7 +199,7 @@ export const Sidebar = (): JSX.Element | null => {
 					{...(item.tourId ? { "data-tour": item.tourId } : {})}
 				>
 					<span className="nav-icon">
-						<i className={`bi bi-${item?.icon || getTableIcon(item.text)}`}></i>
+						<i className={`bi bi-${item.icon}`}></i>
 					</span>
 					<span className="nav-text-container">
 						<span className="nav-text">{item.text}</span>

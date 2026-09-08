@@ -22,8 +22,9 @@ import { formatTimedelta, toDdMmYyyy, toDdMmYyyyHhMm } from "../../../utils/Time
 import {
 	getAdminIcon,
 	getApplicationStatusBadgeClass,
+	getEntityIcon,
 	getLocationIcon,
-	getTableIcon,
+	getPageIcon,
 	getTrueFalseBadge,
 	getUpdateTypeIcon,
 } from "./Icons";
@@ -778,7 +779,7 @@ export const renderFunctions = {
 				<AccordionTable
 					title={label || "Jobs"}
 					data={jobs}
-					icon={getTableIcon("Jobs")}
+					icon={getEntityIcon("job")}
 					helpText={param.helpText}
 				>
 					{(data: EnrichedJobData[]) => <JobsTable data={data} columns={param.columns} />}
@@ -797,7 +798,7 @@ export const renderFunctions = {
 				<AccordionTable
 					title={label || "Interviews"}
 					data={interviews}
-					icon={getTableIcon("Interviews")}
+					icon={getEntityIcon("interview")}
 					helpText={param.helpText}
 				>
 					{(data: InterviewData[]) => <InterviewsTable data={data} showAdd={false} columns={param.columns} />}
@@ -816,7 +817,7 @@ export const renderFunctions = {
 				<AccordionTable
 					title={param.label || "Job Applications"}
 					data={jobs}
-					icon={getTableIcon("Job Applications")}
+					icon={getPageIcon("jobApplications")}
 					helpText={param.helpText}
 				>
 					{(data: EnrichedJobData[]) => <JobsTable data={data} columns={param.columns} />}
@@ -835,7 +836,7 @@ export const renderFunctions = {
 				<AccordionTable
 					title={param.label || "Contacts"}
 					data={persons}
-					icon={getTableIcon("Contacts")}
+					icon={getEntityIcon("person")}
 					helpText={param.helpText}
 				>
 					{(data: PersonData[]) => <PersonTable data={data} columns={param.columns} />}
@@ -860,7 +861,7 @@ export const renderFunctions = {
 		const jobs: EnrichedJobData[] = ctx.jobs.filter((j) => j.cv_id === fileId || j.cover_letter_id === fileId);
 		if (!jobs.length) return "";
 		return (
-			<AccordionTable title="Jobs" data={jobs} icon={getTableIcon("Jobs")} helpText={param.helpText}>
+			<AccordionTable title="Jobs" data={jobs} icon={getEntityIcon("job")} helpText={param.helpText}>
 				{(data: EnrichedJobData[]) => <JobsTable data={data} columns={param.columns} />}
 			</AccordionTable>
 		);
@@ -1031,7 +1032,7 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 		<AccordionTable
 			title="Filtered Jobs"
 			data={data}
-			icon={getTableIcon("Job Alerts")}
+			icon={getEntityIcon("scrapedJob")}
 			helpText="Job Alerts that were filtered by this filter."
 		>
 			{(rows: ScrapedJobData[]) => <ScrapedJobsTableReadOnly data={rows} columns={param.columns} />}

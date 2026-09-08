@@ -1,6 +1,6 @@
 import React, { JSX, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getEntityIcon, getTableIcon } from "../rendering/view/Icons";
+import { getEntityIcon, getPageIcon } from "../rendering/view/Icons";
 import { EntityType, useDataContextOptional } from "../../contexts/DataContext";
 import "./CommandPalette.scss";
 import {
@@ -79,49 +79,49 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 			{
 				id: "goto-dashboard",
 				label: "Dashboard",
-				icon: getTableIcon("Dashboard"),
+				icon: getPageIcon("dashboard"),
 				group: "Pages",
 				action: () => goTo("/dashboard"),
 			},
 			{
 				id: "goto-jobs",
 				label: "Jobs",
-				icon: getTableIcon("Jobs"),
+				icon: getEntityIcon("job"),
 				group: "Pages",
 				action: () => goTo("/jobs"),
 			},
 			{
 				id: "goto-persons",
 				label: "Contacts",
-				icon: getTableIcon("Contacts"),
+				icon: getEntityIcon("person"),
 				group: "Pages",
 				action: () => goTo("/contacts"),
 			},
 			{
 				id: "goto-companies",
 				label: "Companies",
-				icon: getTableIcon("Companies"),
+				icon: getEntityIcon("company"),
 				group: "Pages",
 				action: () => goTo("/companies"),
 			},
 			{
 				id: "goto-interviews",
 				label: "Interviews",
-				icon: getTableIcon("Interviews"),
+				icon: getEntityIcon("interview"),
 				group: "Pages",
 				action: () => goTo("/interviews"),
 			},
 			{
 				id: "goto-speculative",
 				label: "Speculative Applications",
-				icon: getTableIcon("Speculative Applications"),
+				icon: getEntityIcon("speculativeApplication"),
 				group: "Pages",
 				action: () => goTo("/speculative-applications"),
 			},
 			{
 				id: "goto-aggregators",
 				label: "Job Aggregators",
-				icon: getTableIcon("Job Aggregators"),
+				icon: getEntityIcon("aggregator"),
 				group: "Pages",
 				action: () => goTo("/aggregators"),
 			},
@@ -135,7 +135,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 			{
 				id: "goto-settings",
 				label: "My Account",
-				icon: getTableIcon("My Account"),
+				icon: getPageIcon("myAccount"),
 				group: "Pages",
 				action: () => goTo("/settings"),
 			},

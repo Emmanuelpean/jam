@@ -26,61 +26,78 @@ export function getUpdateTypeIcon(type: string): string {
 	}
 }
 
-export function getTableIcon(title: string): string {
-	const iconMap: Record<string, string> = {
-		Jobs: getEntityIcon("job"),
-		Companies: getEntityIcon("company"),
-		Contacts: getEntityIcon("person"),
-		Tags: getEntityIcon("keyword"),
-		"Job Application Updates": getEntityIcon("jobApplicationUpdate"),
-		Interviews: getEntityIcon("interview"),
-		"Job Aggregators": getEntityIcon("aggregator"),
-		"Speculative Applications": getEntityIcon("speculativeApplication"),
-		Dashboard: "house-door",
-		"Job Applications": "person-workspace",
-		Users: getEntityIcon("user"),
-		Settings: getEntityIcon("setting"),
-		"Job Alerts": getEntityIcon("scrapedJob"),
-		"Job Emails": getEntityIcon("jobEmail"),
-		"My Account": "gear",
-		"Job Scraping Dashboard": "envelope-arrow-down",
-		About: "info-circle",
-		Admin: "person-gear",
-		"Job Rating Dashboard": "star-half",
-		"Email Templates": "envelope-open",
-		Other: "three-dots",
-		"Release Notes": "file-earmark-text",
-		"Browser Extension": "puzzle-fill",
-		"About JAM": "window-sidebar",
-		"Service Dashboards": "stack",
-		"App Management": "terminal",
-		Files: "folder2-open",
-		CVs: "folder2-open",
-		"Cover Letters": "files",
-		ESM: "bank",
-	};
-	return iconMap[title] || "bi-table";
-}
+// Single source of truth for entity icons — keyed by EntityType so the compiler enforces
+// coverage of every entity and catches stale/misspelled keys when the union changes.
+const ENTITY_ICONS: Record<EntityType, string> = {
+	job: "briefcase",
+	company: "building",
+	person: "people",
+	geolocation: "geo-alt",
+	keyword: "tags",
+	interview: "calendar-event",
+	jobApplicationUpdate: "bell",
+	aggregator: "linkedin",
+	user: "person-lines-fill",
+	setting: "database-gear",
+	speculativeApplication: "envelope-paper",
+	scrapedJob: "inboxes",
+	scrapingExclusionFilter: "funnel",
+	scrapingFavouriteFilter: "funnel-fill",
+	jobEmail: "envelope-open",
+	file: "files",
+};
 
 export function getEntityIcon(entityType: EntityType): string {
-	const iconMap: Record<string, string> = {
-		job: "briefcase",
-		company: "building",
-		person: "people",
-		location: "geo-alt",
-		keyword: "tags",
-		interview: "calendar-event",
-		jobApplicationUpdate: "bell",
-		aggregator: "linkedin",
-		user: "person-lines-fill",
-		setting: "database-gear",
-		speculativeApplication: "envelope-paper",
-		scrapedJob: "inboxes",
-		scrapingFilter: "funnel",
-		jobEmail: "envelope-open",
-		file: "files",
-	};
-	return iconMap[entityType] || "";
+	return ENTITY_ICONS[entityType];
+}
+
+// Single source of truth for icons of pages/sections that aren't backed by a single
+// EntityType (dashboards, account/admin pages, static content, tabs that split one
+// entity into sub-views). Keyed by a semantic id — never by display title — so renaming
+// a label can't silently break its icon, and adding a page requires adding an entry here.
+export type PageIconKey =
+	| "dashboard"
+	| "myAccount"
+	| "admin"
+	| "about"
+	| "aboutJam"
+	| "browserExtension"
+	| "contactSupport"
+	| "jobScrapingDashboard"
+	| "jobRatingDashboard"
+	| "providerMonitoring"
+	| "serviceScheduler"
+	| "emailTemplates"
+	| "otherMenu"
+	| "cvFiles"
+	| "coverLetterFiles"
+	| "jobApplications"
+	| "takeATour"
+	| "logout";
+
+const PAGE_ICONS: Record<PageIconKey, string> = {
+	dashboard: "house-door",
+	myAccount: "gear",
+	admin: "person-gear",
+	about: "info-circle",
+	aboutJam: "window-sidebar",
+	browserExtension: "puzzle-fill",
+	contactSupport: "envelope",
+	jobScrapingDashboard: "envelope-arrow-down",
+	jobRatingDashboard: "star-half",
+	providerMonitoring: "stack",
+	serviceScheduler: "clock-history",
+	emailTemplates: "envelope-open",
+	otherMenu: "three-dots",
+	cvFiles: "folder2-open",
+	coverLetterFiles: "files",
+	jobApplications: "person-workspace",
+	takeATour: "map",
+	logout: "box-arrow-right",
+};
+
+export function getPageIcon(key: PageIconKey): string {
+	return PAGE_ICONS[key];
 }
 
 export const getAdminIcon = (isAdmin: boolean): string => {

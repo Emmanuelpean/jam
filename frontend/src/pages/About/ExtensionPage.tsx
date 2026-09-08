@@ -5,7 +5,7 @@ import "./AboutPage.scss";
 import AppFeaturesList, { Feature } from "./AppFeaturesList";
 import { useViewport } from "../../contexts/ViewportContext";
 import PageHeader from "../PageHeader/PageHeader";
-import { getTableIcon } from "../../components/rendering/view/Icons";
+import { getPageIcon } from "../../components/rendering/view/Icons";
 
 const extensionFeatures: Feature[] = [
 	{
@@ -34,7 +34,7 @@ const ExtensionPage = (): JSX.Element => {
 	const { isMobile } = useViewport();
 	return (
 		<div style={{ flex: 1 }}>
-			{isMobile && <PageHeader title="Browser Extension" icon={getTableIcon("Browser Extension")} />}
+			{isMobile && <PageHeader title="Browser Extension" icon={getPageIcon("browserExtension")} />}
 			<div className="about-container d-flex flex-column align-items-center justify-content-center">
 				<div className="hero-overlay">
 					<Container className="py-5">

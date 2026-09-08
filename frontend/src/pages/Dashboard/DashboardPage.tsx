@@ -22,7 +22,7 @@ import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
 import FavouriteJobsTable from "../../components/DataTable/FavouriteJobsTable";
 import FailedScrapedJobsTable from "../../components/DataTable/FailedScrapedJobsTable";
 import RecentUpdatesTable from "../../components/DataTable/RecentUpdatesTable";
-import { getEntityIcon, getTableIcon } from "../../components/rendering/view/Icons";
+import { getEntityIcon, getPageIcon } from "../../components/rendering/view/Icons";
 import PageHeader from "../PageHeader/PageHeader";
 import {
 	buildWidgetSettings,
@@ -705,7 +705,7 @@ const Dashboard: React.FC = () => {
 				data-tour="dashboard-stats"
 				ref={containerRef as React.RefObject<HTMLDivElement>}
 			>
-				{isMobile && <PageHeader title="Dashboard" icon={getTableIcon("Dashboard")} />}
+				{isMobile && <PageHeader title="Dashboard" icon={getPageIcon("dashboard")} />}
 				<ExtensionBanner />
 				<div
 					ref={gridWrapperRef}

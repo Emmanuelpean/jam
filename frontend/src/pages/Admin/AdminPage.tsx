@@ -1,7 +1,7 @@
 import React, { JSX, ReactNode, useEffect, useMemo, useState } from "react";
 import { Col, Modal, Row } from "react-bootstrap";
 import PageHeader from "../PageHeader/PageHeader";
-import { getTableIcon } from "../../components/rendering/view/Icons";
+import { getEntityIcon, getPageIcon } from "../../components/rendering/view/Icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDataContext } from "../../contexts/DataContext";
 import { useServiceRunnerStatus } from "../../hooks/useServiceRunnerStatus";
@@ -38,21 +38,21 @@ import "./AdminPage.scss";
 type AdminPageKey = "users" | "settings" | "email" | "scraping" | "rating" | "usage" | "scheduler";
 
 const ADMIN_PAGES: Record<AdminPageKey, { title: string; icon: string; render: () => JSX.Element }> = {
-	users: { title: "Users", icon: getTableIcon("Users"), render: () => <UsersPage /> },
-	settings: { title: "Settings", icon: getTableIcon("Settings"), render: () => <AppSettingsPage /> },
-	email: { title: "Email Templates", icon: getTableIcon("Email Templates"), render: () => <EmailTemplatesPage /> },
+	users: { title: "Users", icon: getEntityIcon("user"), render: () => <UsersPage /> },
+	settings: { title: "Settings", icon: getEntityIcon("setting"), render: () => <AppSettingsPage /> },
+	email: { title: "Email Templates", icon: getPageIcon("emailTemplates"), render: () => <EmailTemplatesPage /> },
 	scraping: {
 		title: "Job Scraping",
-		icon: getTableIcon("Job Scraping Dashboard"),
+		icon: getPageIcon("jobScrapingDashboard"),
 		render: () => <JobScrapingPage />,
 	},
-	rating: { title: "Job Rating", icon: getTableIcon("Job Rating Dashboard"), render: () => <JobRatingPage /> },
+	rating: { title: "Job Rating", icon: getPageIcon("jobRatingDashboard"), render: () => <JobRatingPage /> },
 	usage: {
 		title: "Provider Monitoring",
-		icon: getTableIcon("ESM"),
+		icon: getPageIcon("providerMonitoring"),
 		render: () => <UsagePage />,
 	},
-	scheduler: { title: "Service Scheduler", icon: "clock-history", render: () => <SchedulerPage /> },
+	scheduler: { title: "Service Scheduler", icon: getPageIcon("serviceScheduler"), render: () => <SchedulerPage /> },
 };
 
 interface ServiceControlConfig {
@@ -417,14 +417,14 @@ const AdminPage = (): JSX.Element => {
 
 	return (
 		<div className="scraped-jobs-page">
-			<PageHeader title="Admin" icon={getTableIcon("Admin")} />
+			<PageHeader title="Admin" icon={getPageIcon("admin")} />
 
 			<Row className="g-3">
 				<Col xs={12} md={6} xl={4}>
 					<AdminCard
 						id="admin-card-users"
-						title="Users"
-						icon={getTableIcon("Users")}
+						title={ADMIN_PAGES.users.title}
+						icon={ADMIN_PAGES.users.icon}
 						onClick={(): void => openModal("users")}
 					>
 						<StatList
@@ -441,8 +441,8 @@ const AdminPage = (): JSX.Element => {
 				<Col xs={12} md={6} xl={4}>
 					<AdminCard
 						id="admin-card-settings"
-						title="Settings"
-						icon={getTableIcon("Settings")}
+						title={ADMIN_PAGES.settings.title}
+						icon={ADMIN_PAGES.settings.icon}
 						onClick={(): void => openModal("settings")}
 					>
 						<StatList primary={activeSettings} caption="Active settings" />
@@ -452,8 +452,8 @@ const AdminPage = (): JSX.Element => {
 				<Col xs={12} md={6} xl={4}>
 					<AdminCard
 						id="admin-card-email-templates"
-						title="Email Templates"
-						icon={getTableIcon("Email Templates")}
+						title={ADMIN_PAGES.email.title}
+						icon={ADMIN_PAGES.email.icon}
 						onClick={(): void => openModal("email")}
 					>
 						<StatList primary={emailTemplates.length} caption="Email templates" />
@@ -463,8 +463,8 @@ const AdminPage = (): JSX.Element => {
 				<Col xs={12}>
 					<AdminCard
 						id="admin-card-scheduler"
-						title="Service Scheduler"
-						icon="clock-history"
+						title={ADMIN_PAGES.scheduler.title}
+						icon={ADMIN_PAGES.scheduler.icon}
 						onClick={(): void => openModal("scheduler")}
 					>
 						<SchedulerStatusBody status={scheduler.schedulerStatus} />
@@ -477,8 +477,8 @@ const AdminPage = (): JSX.Element => {
 				<Col xs={12} md={6} xl={4}>
 					<AdminCard
 						id="admin-card-job-scraping"
-						title="Job Scraping"
-						icon={getTableIcon("Job Scraping Dashboard")}
+						title={ADMIN_PAGES.scraping.title}
+						icon={ADMIN_PAGES.scraping.icon}
 						onClick={(): void => openModal("scraping")}
 						errorCount={errorCounts?.job_email_scraping}
 					>
@@ -496,8 +496,8 @@ const AdminPage = (): JSX.Element => {
 				<Col xs={12} md={6} xl={4}>
 					<AdminCard
 						id="admin-card-job-rating"
-						title="Job Rating"
-						icon={getTableIcon("Job Rating Dashboard")}
+						title={ADMIN_PAGES.rating.title}
+						icon={ADMIN_PAGES.rating.icon}
 						onClick={(): void => openModal("rating")}
 						errorCount={errorCounts?.job_rating}
 					>
@@ -515,8 +515,8 @@ const AdminPage = (): JSX.Element => {
 				<Col xs={12} md={6} xl={4}>
 					<AdminCard
 						id="admin-card-usage"
-						title="Provider Monitoring"
-						icon={getTableIcon("ESM")}
+						title={ADMIN_PAGES.usage.title}
+						icon={ADMIN_PAGES.usage.icon}
 						onClick={(): void => openModal("usage")}
 						errorCount={errorCounts?.provider_monitoring}
 					>

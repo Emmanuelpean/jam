@@ -3,7 +3,7 @@
 import platform
 import time
 
-from selenium.common import TimeoutException
+from selenium.common import StaleElementReferenceException, TimeoutException
 from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
@@ -15,8 +15,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 class SeleniumUtils(object):
     """Mixin providing Selenium utilities. Consumers must set self.driver and self.wait directly."""
 
-    driver: WebDriver = None
-    wait: WebDriverWait = None
+    driver: WebDriver
+    wait: WebDriverWait
 
     def get_webdriver_wait(
         self,
@@ -85,10 +85,14 @@ class SeleniumUtils(object):
         # Find all elements that have an ID attribute
         elements_with_id = self.driver.find_elements(By.XPATH, "//*[@id]")
 
-        # Extract the ID values
+        # Extract the ID values. Elements can go stale mid-scan if the page is re-rendering
+        # (e.g. right after a row deletion), so skip any that disappear underneath us.
         element_ids = []
         for element in elements_with_id:
-            element_id = element.get_attribute("id")
+            try:
+                element_id = element.get_attribute("id")
+            except StaleElementReferenceException:
+                continue
             if element_id:
                 element_ids.append(element_id)
 

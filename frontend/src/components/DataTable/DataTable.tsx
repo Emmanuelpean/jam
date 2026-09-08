@@ -21,7 +21,7 @@ import {
 	useDataContext,
 } from "../../contexts/DataContext";
 import { ApiResponse, baseApi } from "../../services/api/Base";
-import { getEntityIcon, getTableIcon } from "../rendering/view/Icons";
+import { getEntityIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
 import { accessAttribute } from "../../utils/Utils";
 import { pluralize } from "../../utils/StringUtils";
@@ -791,7 +791,7 @@ function DataTableComponent<T extends JamData>(
 		return (
 			<>
 				{title && (
-					<PageHeader title={title} count={totalFilteredCount || data.length} icon={getTableIcon(title)} />
+					<PageHeader title={title} count={totalFilteredCount || data.length} icon={getEntityIcon(entityType)} />
 				)}
 				<div className="table-container table-container--full-height">
 					<div
@@ -807,7 +807,7 @@ function DataTableComponent<T extends JamData>(
 							}
 						}}
 					>
-						<i className={`bi bi-${getEntityIcon(entityType) || "inbox"} datatable-empty-state-icon`}></i>
+						<i className={`bi bi-${getEntityIcon(entityType)} datatable-empty-state-icon`}></i>
 						<h3 className="datatable-empty-state-title">
 							{emptyMessage || `No ${pluralize(entityName)} yet`}
 						</h3>
@@ -829,7 +829,7 @@ function DataTableComponent<T extends JamData>(
 
 	return (
 		<>
-			{title && <PageHeader title={title} count={totalFilteredCount || data.length} icon={getTableIcon(title)} />}
+			{title && <PageHeader title={title} count={totalFilteredCount || data.length} icon={getEntityIcon(entityType)} />}
 
 			<div className={`table-container${!compact ? " table-container--full-height" : ""}`}>
 				{hasToolbarContent && (

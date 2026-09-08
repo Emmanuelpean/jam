@@ -16,7 +16,7 @@ import { releaseNotes as releaseNotesRegistry, version, VERSIONS } from "../../r
 import { Accordion } from "../../components/Accordion/Accordion";
 import { useViewport } from "../../contexts/ViewportContext";
 import PageHeader from "../PageHeader/PageHeader";
-import { getTableIcon } from "../../components/rendering/view/Icons";
+import { getPageIcon } from "../../components/rendering/view/Icons";
 
 const AboutPage = (): JSX.Element => {
 	const { showWelcome } = useWhatsNew();
@@ -68,7 +68,7 @@ const AboutPage = (): JSX.Element => {
 
 	return (
 		<div style={{ flex: 1 }}>
-			{isMobile && <PageHeader title="About JAM" icon={getTableIcon("About JAM")} />}
+			{isMobile && <PageHeader title="About JAM" icon={getPageIcon("aboutJam")} />}
 			<div className="about-container d-flex flex-column align-items-center justify-content-center">
 				{/* Hero Section */}
 				<div className="hero-overlay">

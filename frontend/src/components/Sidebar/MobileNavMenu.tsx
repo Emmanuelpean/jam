@@ -1,6 +1,5 @@
 import React, { JSX, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getTableIcon } from "../rendering/view/Icons";
 import { NavigationItem, NavigationSubItem, useNavigation } from "./useNavigation";
 import "./MobileNavMenu.scss";
 
@@ -43,7 +42,7 @@ export const MobileNavMenu = ({ open, onClose }: MobileNavMenuProps): JSX.Elemen
 		const inner = (
 			<>
 				<span className="nav-icon">
-					<i className={`bi bi-${icon || getTableIcon(text)}`}></i>
+					<i className={`bi bi-${icon}`}></i>
 				</span>
 				<span className="nav-text-container">
 					<span className="nav-text">{text}</span>
@@ -102,7 +101,7 @@ export const MobileNavMenu = ({ open, onClose }: MobileNavMenuProps): JSX.Elemen
 							renderLeaf(
 								sub.text,
 								sub.text,
-								sub.icon ?? "",
+								sub.icon,
 								isSubItemActive(sub),
 								"submenu-item",
 								sub.path,
@@ -116,7 +115,7 @@ export const MobileNavMenu = ({ open, onClose }: MobileNavMenuProps): JSX.Elemen
 		return renderLeaf(
 			item.text,
 			item.text,
-			item.icon ?? "",
+			item.icon,
 			isMenuActive(item),
 			item.className ?? "",
 			item.path,

@@ -5,7 +5,7 @@ import { PreferencesTab } from "./PreferencesTab";
 import { QualificationsTab } from "./QualificationsTab";
 import { PremiumTab } from "./PremiumTab";
 import "./UserSettingsPage.scss";
-import { getTableIcon } from "../../components/rendering/view/Icons";
+import { getPageIcon } from "../../components/rendering/view/Icons";
 import { useAuth } from "../../contexts/AuthContext";
 import PageHeader from "../PageHeader/PageHeader";
 
@@ -57,7 +57,7 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 
 	return (
 		<div className="container-fluid d-flex flex-column settings-page-container">
-			<PageHeader title={"My Account"} icon={getTableIcon("My Account")} />
+			<PageHeader title={"My Account"} icon={getPageIcon("myAccount")} />
 			<div className="settings-layout">
 				<div className="settings-sidebar-col">
 					<div className="settings-sidebar">

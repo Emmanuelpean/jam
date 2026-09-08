@@ -6,7 +6,7 @@ import {
 	RenderViewFieldWithContext,
 	ViewField,
 } from "../../components/rendering/view/ViewRenders";
-import { getTableIcon } from "../../components/rendering/view/Icons";
+import { getEntityIcon, getPageIcon } from "../../components/rendering/view/Icons";
 import {
 	EnrichedInterviewData,
 	EnrichedJobApplicationUpdateData,
@@ -37,9 +37,9 @@ const getActivityBadge = (type: string): ((param: RenderParams) => ReactNode) =>
 
 const getActivityIcon = (type: string): string => {
 	const iconMap: Record<string, string> = {
-		Application: getTableIcon("Job Applications"),
-		Interview: getTableIcon("Interviews"),
-		"Job Application Update": getTableIcon("Job Application Updates"),
+		Application: getPageIcon("jobApplications"),
+		Interview: getEntityIcon("interview"),
+		"Job Application Update": getEntityIcon("jobApplicationUpdate"),
 	};
 	return iconMap[type] || "bi-plus-circle-fill";
 };

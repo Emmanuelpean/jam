@@ -3,9 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ScrapedJobsTable from "../../components/DataTable/ScrapedJobTable";
 import JobEmailTable from "../../components/DataTable/JobEmailTable";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
-import PageHeader from "../PageHeader/PageHeader";
+import PageHeaderGroup, { PageHeaderTab } from "../PageHeader/PageHeaderGroup";
 import { useTour } from "../../contexts/TourContext";
-import { useViewport } from "../../contexts/ViewportContext";
 
 type ActiveTab = "alerts" | "emails";
 
@@ -13,7 +12,6 @@ export const ScrapedJobsPage = (): JSX.Element => {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const activeTab: ActiveTab = location.pathname === "/job-alerts/emails" ? "emails" : "alerts";
-	const { isMobile } = useViewport();
 	const { isTourActive } = useTour();
 	const tourQueryParams = isTourActive ? { tour_only: "true" } : undefined;
 	const [alertsCount, setAlertsCount] = useState<number>(0);
@@ -28,36 +26,32 @@ export const ScrapedJobsPage = (): JSX.Element => {
 		previousTabRef.current = activeTab;
 	}, [activeTab]);
 
-	const switchTab = (tab: ActiveTab): void => {
-		navigate(tab === "alerts" ? "/job-alerts/jobs" : "/job-alerts/emails", { replace: true });
-	};
+	const tabs: PageHeaderTab[] = [
+		{
+			id: "alerts",
+			headerId: "scraped-jobs-header",
+			title: "Job Alerts",
+			icon: getEntityIcon("scrapedJob"),
+			count: alertsCount,
+		},
+		{
+			id: "emails",
+			headerId: "job-emails-header",
+			title: "Job Emails",
+			icon: getEntityIcon("jobEmail"),
+			count: emailsCount,
+		},
+	];
+
+	const tabPaths: Record<ActiveTab, string> = { alerts: "/job-alerts/jobs", emails: "/job-alerts/emails" };
 
 	return (
 		<>
-			<div className="d-flex gap-3 page-headers-row">
-				{(!isMobile || activeTab === "alerts") && (
-					<PageHeader
-						id="scraped-jobs-header"
-						className="flex-fill"
-						title="Job Alerts"
-						icon={getEntityIcon("scrapedJob")}
-						count={alertsCount}
-						onClick={isMobile ? undefined : (): void => switchTab("alerts")}
-						active={activeTab === "alerts"}
-					/>
-				)}
-				{(!isMobile || activeTab === "emails") && (
-					<PageHeader
-						id="job-emails-header"
-						className="flex-fill"
-						title="Job Emails"
-						icon={getEntityIcon("jobEmail")}
-						count={emailsCount}
-						onClick={isMobile ? undefined : (): void => switchTab("emails")}
-						active={activeTab === "emails"}
-					/>
-				)}
-			</div>
+			<PageHeaderGroup
+				tabs={tabs}
+				activeId={activeTab}
+				onSelect={(tab: PageHeaderTab): void => void navigate(tabPaths[tab.id as ActiveTab], { replace: true })}
+			/>
 
 			<div style={{ display: activeTab === "alerts" ? "contents" : "none" }}>
 				<ScrapedJobsTable

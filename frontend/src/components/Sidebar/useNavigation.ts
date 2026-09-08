@@ -6,10 +6,11 @@ import { useConfig } from "../../contexts/ConfigContext";
 import { useViewport } from "../../contexts/ViewportContext";
 import { TOURS } from "../GuidedTour/tourSteps";
 import { UserData } from "../../services/schemas/Core";
+import { getEntityIcon, getPageIcon } from "../rendering/view/Icons";
 
 export interface NavigationSubItem {
 	path?: string;
-	icon?: string;
+	icon: string;
 	text: string;
 	alsoActiveFor?: string[];
 	onClick?: () => void;
@@ -18,7 +19,7 @@ export interface NavigationSubItem {
 
 export interface NavigationItem {
 	path?: string;
-	icon?: string;
+	icon: string;
 	text: string;
 	submenu?: NavigationSubItem[];
 	condition?: (user: UserData) => boolean;
@@ -76,11 +77,12 @@ export const useNavigation = (): UseNavigationResult => {
 	};
 
 	const navigationItems: NavigationItem[] = [
-		{ path: "/dashboard", text: "Dashboard", position: "top", id: "nav-dashboard" },
-		{ path: "/jobs", text: "Jobs", position: "top", id: "nav-jobs", tourId: "nav-jobs" },
+		{ path: "/dashboard", text: "Dashboard", icon: getPageIcon("dashboard"), position: "top", id: "nav-dashboard" },
+		{ path: "/jobs", text: "Jobs", icon: getEntityIcon("job"), position: "top", id: "nav-jobs", tourId: "nav-jobs" },
 		{
 			path: "/job-alerts/jobs",
 			text: "Job Alerts",
+			icon: getEntityIcon("scrapedJob"),
 			position: "top",
 			id: "nav-scraped-jobs",
 			tourId: "nav-scraped-jobs",
@@ -90,6 +92,7 @@ export const useNavigation = (): UseNavigationResult => {
 		{
 			path: "/job-alerts/emails",
 			text: "Job Emails",
+			icon: getEntityIcon("jobEmail"),
 			position: "top",
 			id: "nav-job-emails",
 			condition: (user: UserData): boolean => isMobile && user.premium.is_active,
@@ -97,45 +100,75 @@ export const useNavigation = (): UseNavigationResult => {
 		{
 			path: "/speculative-applications",
 			text: "Speculative Applications",
+			icon: getEntityIcon("speculativeApplication"),
 			position: "top",
 			id: "nav-speculative-applications",
 			tourId: "nav-speculative-applications",
 		},
-		{ path: "/contacts", text: "Contacts", position: "top", id: "nav-contacts" },
-		{ path: "/companies", text: "Companies", position: "top", id: "nav-companies" },
+		{ path: "/contacts", text: "Contacts", icon: getEntityIcon("person"), position: "top", id: "nav-contacts" },
+		{ path: "/companies", text: "Companies", icon: getEntityIcon("company"), position: "top", id: "nav-companies" },
 		{
 			text: "Other",
+			icon: getPageIcon("otherMenu"),
 			position: "top",
 			id: "nav-other",
 			submenu: [
-				{ path: "/aggregators", text: "Job Aggregators", id: "nav-aggregators" },
-				{ path: "/keywords", text: "Tags", id: "nav-tags" },
-				{ path: "/interviews", text: "Interviews", id: "nav-interviews" },
+				{
+					path: "/aggregators",
+					text: "Job Aggregators",
+					icon: getEntityIcon("aggregator"),
+					id: "nav-aggregators",
+				},
+				{ path: "/keywords", text: "Tags", icon: getEntityIcon("keyword"), id: "nav-tags" },
+				{ path: "/interviews", text: "Interviews", icon: getEntityIcon("interview"), id: "nav-interviews" },
 				{
 					path: "/job-application-updates",
 					text: "Job Application Updates",
+					icon: getEntityIcon("jobApplicationUpdate"),
 					id: "nav-job-application-updates",
 				},
 				{
 					path: "/files/cv",
 					text: isMobile ? "CVs" : "Files",
+					icon: getPageIcon("cvFiles"),
 					id: "nav-files",
 					alsoActiveFor: isMobile ? undefined : ["/files/cover-letters"],
 				},
-				...(isMobile ? [{ path: "/files/cover-letters", text: "Cover Letters", id: "nav-cover-letters" }] : []),
+				...(isMobile
+					? [
+							{
+								path: "/files/cover-letters",
+								text: "Cover Letters",
+								icon: getPageIcon("coverLetterFiles"),
+								id: "nav-cover-letters",
+							},
+						]
+					: []),
 			],
 		},
-		{ path: "/settings", text: "My Account", id: "nav-user-settings", position: "bottom" },
+		{
+			path: "/settings",
+			text: "My Account",
+			icon: getPageIcon("myAccount"),
+			id: "nav-user-settings",
+			position: "bottom",
+		},
 		{
 			text: "About",
+			icon: getPageIcon("about"),
 			position: "bottom",
 			id: "nav-about",
 			submenu: [
-				{ path: "/about", text: "About JAM", id: "nav-about-jam" },
-				{ path: "/browser-extension", text: "Browser Extension", id: "nav-browser-extension" },
+				{ path: "/about", text: "About JAM", icon: getPageIcon("aboutJam"), id: "nav-about-jam" },
+				{
+					path: "/browser-extension",
+					text: "Browser Extension",
+					icon: getPageIcon("browserExtension"),
+					id: "nav-browser-extension",
+				},
 				{
 					text: "Contact Support",
-					icon: "envelope",
+					icon: getPageIcon("contactSupport"),
 					id: "nav-contact-support",
 					onClick: (): void => {
 						if (config?.support_email) {
@@ -148,6 +181,7 @@ export const useNavigation = (): UseNavigationResult => {
 		{
 			path: "/admin",
 			text: "Admin",
+			icon: getPageIcon("admin"),
 			condition: (user: UserData): boolean => user.is_admin,
 			position: "bottom",
 			id: "nav-admin",
@@ -155,7 +189,7 @@ export const useNavigation = (): UseNavigationResult => {
 		...(!allToursCompleted && !tourPanelDismissed && !isMobile
 			? [
 					{
-						icon: "map",
+						icon: getPageIcon("takeATour"),
 						text: "Take a Tour",
 						position: "bottom" as const,
 						id: "take-a-tour-btn",
@@ -164,7 +198,7 @@ export const useNavigation = (): UseNavigationResult => {
 				]
 			: []),
 		{
-			icon: "box-arrow-right",
+			icon: getPageIcon("logout"),
 			text: "Logout",
 			position: "bottom",
 			onClick: handleLogoutClick,
