@@ -6,6 +6,9 @@ import "./MobileNavMenu.scss";
 interface MobileNavMenuProps {
 	open: boolean;
 	onClose: () => void;
+	/** Screen position to anchor the menu under, in viewport pixels. The menu stretches from
+	 * `anchor.top` down to the bottom of the viewport so it opens at full height. */
+	anchor: { top: number; left: number; right: number };
 }
 
 /**
@@ -13,7 +16,7 @@ interface MobileNavMenuProps {
  * underneath a PageHeader and opened by tapping the header. Submenu groups are
  * flattened into an indented section since a dropdown can show everything at once.
  */
-export const MobileNavMenu = ({ open, onClose }: MobileNavMenuProps): JSX.Element | null => {
+export const MobileNavMenu = ({ open, onClose, anchor }: MobileNavMenuProps): JSX.Element | null => {
 	const { topItems, bottomItems, isMenuActive, isSubItemActive } = useNavigation();
 	const [rendered, setRendered] = useState<boolean>(open);
 	const [closing, setClosing] = useState<boolean>(false);
@@ -129,6 +132,7 @@ export const MobileNavMenu = ({ open, onClose }: MobileNavMenuProps): JSX.Elemen
 			id="mobile-nav-menu"
 			className={`mobile-nav-menu ${closing ? "closing" : ""}`}
 			role="menu"
+			style={{ top: anchor.top, left: anchor.left, right: anchor.right }}
 			onAnimationEnd={(e: React.AnimationEvent): void => {
 				if (e.animationName === "mobile-nav-menu-close") {
 					setRendered(false);

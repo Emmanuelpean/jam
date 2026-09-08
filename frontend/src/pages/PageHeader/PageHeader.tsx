@@ -27,7 +27,18 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 }: TableHeaderProps): JSX.Element => {
 	const { isMobile } = useViewport();
 	const [menuOpen, setMenuOpen] = useState<boolean>(false);
+	const [menuAnchor, setMenuAnchor] = useState<{ top: number; left: number; right: number }>({
+		top: 0,
+		left: 0,
+		right: 0,
+	});
 	const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+	const updateMenuAnchor = (): void => {
+		if (!wrapperRef.current) return;
+		const rect = wrapperRef.current.getBoundingClientRect();
+		setMenuAnchor({ top: rect.bottom + 4, left: rect.left, right: window.innerWidth - rect.right });
+	};
 
 	useEffect(() => {
 		if (!menuOpen) return;
@@ -37,10 +48,19 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 			}
 		};
 		document.addEventListener("mousedown", handleClickOutside);
-		return () => document.removeEventListener("mousedown", handleClickOutside);
+		window.addEventListener("resize", updateMenuAnchor);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+			window.removeEventListener("resize", updateMenuAnchor);
+		};
 	}, [menuOpen]);
 
-	const toggleMenu = (): void => setMenuOpen((prev: boolean): boolean => !prev);
+	const toggleMenu = (): void =>
+		setMenuOpen((prev: boolean): boolean => {
+			const next = !prev;
+			if (next) updateMenuAnchor();
+			return next;
+		});
 
 	const headerOpensMenu: boolean = isMobile && !onClick;
 
@@ -90,7 +110,7 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 					{statusContent}
 				</div>
 			</Card>
-			{isMobile && <MobileNavMenu open={menuOpen} onClose={() => setMenuOpen(false)} />}
+			{isMobile && <MobileNavMenu open={menuOpen} onClose={() => setMenuOpen(false)} anchor={menuAnchor} />}
 		</div>
 	);
 };

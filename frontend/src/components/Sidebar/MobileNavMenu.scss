@@ -24,15 +24,13 @@
     }
 }
 
-/* Dropdown that replaces the sidebar on mobile. Anchored under a PageHeader. */
+/* Dropdown that replaces the sidebar on mobile. Anchored under a PageHeader, but
+   fixed to the viewport so it fills all the way down to the bottom of the screen. */
 .mobile-nav-menu {
-    position: absolute;
+    position: fixed;
     z-index: 1100;
-    top: calc(100% + 4px);
-    right: 0;
-    left: 0;
+    bottom: 20px;
     overflow-y: auto;
-    max-height: min(70vh, 560px);
     padding: 0.4rem;
     transform-origin: top center;
     border: 1px solid var(--bs-card-border-color);
