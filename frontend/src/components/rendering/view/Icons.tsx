@@ -55,6 +55,7 @@ export function getTableIcon(title: string): string {
 		"Service Dashboards": "stack",
 		"App Management": "terminal",
 		Files: "folder2-open",
+		CVs: "folder2-open",
 		"Cover Letters": "files",
 		ESM: "bank",
 	};
