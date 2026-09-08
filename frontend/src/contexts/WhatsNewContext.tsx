@@ -1,4 +1,4 @@
-import React, { createContext, JSX, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { JSX, ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { useTour } from "./TourContext";
 import { WhatsNewModal, WhatsNewModalHandle } from "../components/WhatsNewModal/WhatsNewModal";
@@ -10,21 +10,10 @@ import {
 	LAST_VERSION,
 	ReleaseSlide,
 } from "../releaseNotes/versions";
+import { WhatsNewContext } from "./WhatsNewContext.context";
 
-interface WhatsNewContextType {
-	showWhatsNew: () => void;
-	showWelcome: () => void;
-}
-
-const WhatsNewContext = createContext<WhatsNewContextType | undefined>(undefined);
-
-export function useWhatsNew(): WhatsNewContextType {
-	const context: WhatsNewContextType | undefined = useContext(WhatsNewContext);
-	if (context === undefined) {
-		throw new Error("useWhatsNew must be used within a WhatsNewProvider");
-	}
-	return context;
-}
+export { useWhatsNew } from "./WhatsNewContext.context";
+export type { WhatsNewContextType } from "./WhatsNewContext.context";
 
 interface WhatsNewProviderProps {
 	children: ReactNode;

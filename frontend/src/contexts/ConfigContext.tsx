@@ -1,14 +1,10 @@
-import React, { createContext, JSX, ReactNode, useContext, useEffect, useState } from "react";
+import React, { JSX, ReactNode, useEffect, useState } from "react";
 import { Config } from "../services/schemas/Base";
 import { configApi } from "../services/api/Others";
+import { ConfigContext } from "./ConfigContext.context";
 
-export interface ConfigContextValue {
-	config: Config | null;
-	isLoading: boolean;
-	error: Error | null;
-}
-
-const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);
+export { useConfig } from "./ConfigContext.context";
+export type { ConfigContextValue } from "./ConfigContext.context";
 
 export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }): JSX.Element => {
 	const [config, setConfig] = useState<Config | null>(null);
@@ -31,10 +27,4 @@ export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }):
 	}, []);
 
 	return <ConfigContext.Provider value={{ config, isLoading, error }}>{children}</ConfigContext.Provider>;
-};
-
-export const useConfig = (): ConfigContextValue => {
-	const context: ConfigContextValue | undefined = useContext(ConfigContext);
-	if (!context) throw new Error("useConfig must be used within a ConfigProvider");
-	return context;
 };

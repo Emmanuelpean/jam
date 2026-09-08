@@ -1,46 +1,14 @@
-import React, { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi, GenericResponse, LoginResponse, UpdateCurrentUserResponse } from "../services/api/Users";
 import { ApiResponse } from "../services/api/Base";
 import { DEFAULT_THEME } from "../utils/Theme";
 import { UserData, UserDataUpdate } from "../services/schemas/Core";
 import { handleApiError } from "../services/api/ApiError";
+import { AuthContext, AuthContextType, AuthProviderProps, CurrentUser } from "./AuthContext.context";
 
-export interface CurrentUser extends UserData {
-	token: string | null;
-}
-
-export interface AuthContextType {
-	currentUser: CurrentUser | null;
-	token: string | null;
-	login: (email: string, password: string, rememberMe?: boolean) => Promise<GenericResponse>;
-	updateCurrentUser: (userData: UserDataUpdate) => Promise<ApiResponse<UpdateCurrentUserResponse> | null>;
-	fetchUserInfo: (authToken: string) => Promise<void>;
-	logout: () => void;
-	isAuthenticated: boolean;
-}
-
-export interface AuthProviderProps {
-	children: ReactNode;
-}
-
-export interface FormData {
-	email: string;
-	password: string;
-	confirmPassword: string;
-	firstName: string;
-	lastName: string;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function useAuth(): AuthContextType {
-	const context = useContext(AuthContext);
-	if (context === undefined) {
-		throw new Error("useAuth must be used within an AuthProvider");
-	}
-	return context;
-}
+export { useAuth } from "./AuthContext.context";
+export type { AuthContextType, AuthProviderProps, CurrentUser, FormData } from "./AuthContext.context";
 
 export function AuthProvider({ children }: AuthProviderProps) {
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);

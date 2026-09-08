@@ -1,14 +1,4 @@
-import React, {
-	createContext,
-	JSX,
-	ReactNode,
-	useCallback,
-	useContext,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import React, { JSX, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { EntityType, useDataContext } from "./DataContext";
@@ -25,18 +15,10 @@ import {
 import { ScrapingFilterData } from "../services/schemas/Services";
 import { DemoIds, TourContextType, TourSnapshot } from "./tourTypes";
 import { runTourSetup } from "./tourSetups";
+import { TourContext } from "./TourContext.context";
 
 export type { TourSnapshot, TourContextType };
-
-const TourContext = createContext<TourContextType | undefined>(undefined);
-
-export function useTour(): TourContextType {
-	const context = useContext(TourContext);
-	if (context === undefined) {
-		throw new Error("useTour must be used within a TourProvider");
-	}
-	return context;
-}
+export { useTour } from "./TourContext.context";
 
 interface TourProviderProps {
 	children: ReactNode;

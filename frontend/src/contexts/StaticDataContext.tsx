@@ -1,12 +1,10 @@
-import React, { createContext, JSX, ReactNode, useContext, useEffect, useState } from "react";
+import React, { JSX, ReactNode, useEffect, useState } from "react";
 import { currenciesApi } from "../services/api/DataTables";
 import { Currency } from "../services/schemas/Others";
+import { StaticDataContext } from "./StaticDataContext.context";
 
-interface StaticData {
-	currencies: Currency[];
-}
-
-const StaticDataContext = createContext<StaticData>({ currencies: [] });
+export { useStaticData } from "./StaticDataContext.context";
+export type { StaticData } from "./StaticDataContext.context";
 
 export const StaticDataProvider = ({ children }: { children: ReactNode }): JSX.Element => {
 	const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -17,5 +15,3 @@ export const StaticDataProvider = ({ children }: { children: ReactNode }): JSX.E
 
 	return <StaticDataContext.Provider value={{ currencies }}>{children}</StaticDataContext.Provider>;
 };
-
-export const useStaticData = (): StaticData => useContext(StaticDataContext);

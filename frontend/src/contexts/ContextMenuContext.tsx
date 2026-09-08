@@ -1,7 +1,11 @@
-import React, { createContext, JSX, MouseEvent, ReactNode, useContext, useState } from "react";
+import React, { JSX, MouseEvent, ReactNode, useState } from "react";
 import { ContextMenu, MenuItem } from "../components/ContextMenu/ContextMenu";
 import { JamData } from "./DataContext";
 import { useProgressOverlay } from "./useProgressOverlayContext";
+import { ContextMenuContext } from "./ContextMenuContext.context";
+
+export { useContextMenu } from "./ContextMenuContext.context";
+export type { ContextMenuContextType } from "./ContextMenuContext.context";
 
 interface ContextMenuState {
 	position: { x: number; y: number };
@@ -10,13 +14,6 @@ interface ContextMenuState {
 	show: boolean;
 	compact?: boolean;
 }
-
-interface ContextMenuContextType {
-	openContextMenu: (e: MouseEvent, menuItems: MenuItem[], selectedItem: JamData, compact?: boolean) => void;
-	closeContextMenu: () => void;
-}
-
-const ContextMenuContext = createContext<ContextMenuContextType | undefined>(undefined);
 
 export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ children }): JSX.Element => {
 	const { showProgress, hideProgress } = useProgressOverlay();
@@ -84,12 +81,4 @@ export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ childre
 			)}
 		</ContextMenuContext.Provider>
 	);
-};
-
-export const useContextMenu = (): ContextMenuContextType => {
-	const context = useContext(ContextMenuContext);
-	if (!context) {
-		throw new Error("useContextMenu must be used within a ContextMenuProvider");
-	}
-	return context;
 };

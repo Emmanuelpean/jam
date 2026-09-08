@@ -1,17 +1,13 @@
-import React, { createContext, JSX, ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import React, { JSX, ReactNode, useEffect, useMemo, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { useGlobalToast } from "../hooks/useNotificationToast";
 import { ThemeMode } from "../services/schemas/Core";
+import { ThemeContext } from "./ThemeContext.context";
 
-interface ThemeContextType {
-	themeMode: ThemeMode;
-	isDarkMode: boolean;
-	setThemeMode: (mode: ThemeMode) => void;
-}
+export { useTheme } from "./ThemeContext.context";
+export type { ThemeContextType } from "./ThemeContext.context";
 
 type AppliedMode = "light" | "dark";
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const getSystemPreference = (): boolean => window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
 
@@ -79,12 +75,4 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }): 
 	};
 
 	return <ThemeContext.Provider value={{ themeMode, isDarkMode, setThemeMode }}>{children}</ThemeContext.Provider>;
-};
-
-export const useTheme = () => {
-	const context = useContext(ThemeContext);
-	if (!context) {
-		throw new Error("useTheme must be used within ThemeProvider");
-	}
-	return context;
 };

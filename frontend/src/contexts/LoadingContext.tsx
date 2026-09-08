@@ -1,27 +1,12 @@
-import React, { createContext, JSX, ReactNode, useContext, useState } from "react";
+import React, { JSX, ReactNode, useState } from "react";
+import { LoadingContext, LoadingContextType } from "./LoadingContext.context";
 
-interface LoadingContextType {
-	isLoading: boolean;
-	loadingMessage: string;
-	progress: number | undefined;
-	showLoading: (message?: string, progress?: number) => void;
-	hideLoading: () => void;
-	updateProgress: (progress: number, message?: string) => void;
-}
+export { useLoading } from "./LoadingContext.context";
+export type { LoadingContextType } from "./LoadingContext.context";
 
 interface LoadingProviderProps {
 	children: ReactNode;
 }
-
-const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
-
-export const useLoading = (): LoadingContextType => {
-	const context: LoadingContextType | undefined = useContext(LoadingContext);
-	if (!context) {
-		throw new Error("useLoading must be used within a LoadingProvider");
-	}
-	return context;
-};
 
 export const LoadingProvider = ({ children }: LoadingProviderProps): JSX.Element => {
 	const [isLoading, setIsLoading] = useState<boolean>(false);

@@ -1,17 +1,8 @@
-import React, { createContext, JSX, ReactNode, useContext, useState } from "react";
+import React, { JSX, ReactNode, useState } from "react";
+import { CommandPaletteContext } from "./CommandPaletteContext.context";
 
-interface CommandPaletteContextType {
-	isOpen: boolean;
-	setIsOpen: (open: boolean) => void;
-}
-
-const CommandPaletteContext = createContext<CommandPaletteContextType | undefined>(undefined);
-
-export const useCommandPaletteContext = (): CommandPaletteContextType => {
-	const context = useContext(CommandPaletteContext);
-	if (!context) throw new Error("useCommandPaletteContext must be used within CommandPaletteProvider");
-	return context;
-};
+export { useCommandPaletteContext } from "./CommandPaletteContext.context";
+export type { CommandPaletteContextType } from "./CommandPaletteContext.context";
 
 export const CommandPaletteProvider = ({ children }: { children: ReactNode }): JSX.Element => {
 	const [isOpen, setIsOpen] = useState(false);

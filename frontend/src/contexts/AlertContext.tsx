@@ -1,32 +1,9 @@
-import { createContext, JSX, ReactNode, useContext, useState } from "react";
+import { JSX, ReactNode, useState } from "react";
 import AlertModal, { AlertState } from "../components/AlertModal/AlertModal";
+import { AlertConfig, AlertContext, AlertContextType } from "./AlertContext.context";
 
-interface AlertConfig {
-	title?: string;
-	message: string | ReactNode;
-	type?: "info" | "success" | "danger" | "warning" | "primary";
-	confirmText?: string;
-	cancelText?: string | null;
-	icon?: string | null;
-	size?: "sm" | "md" | "lg" | "xl";
-	id?: string | null;
-	onSuccess?: (() => void | Promise<void>) | null;
-}
-
-interface AlertContextType {
-	alertState: AlertState;
-	showAlert: (config: AlertConfig) => Promise<boolean>;
-	hideAlert: () => void;
-	showSuccess: (config?: Partial<AlertConfig>) => Promise<boolean>;
-	showError: (config?: Partial<AlertConfig>) => Promise<boolean>;
-	showWarning: (config?: Partial<AlertConfig>) => Promise<boolean>;
-	showInfo: (config?: Partial<AlertConfig>) => Promise<boolean>;
-	showConfirm: (config?: Partial<AlertConfig>) => Promise<boolean>;
-	showDelete: (config?: Partial<AlertConfig>) => Promise<boolean>;
-	showLogout: (config?: Partial<AlertConfig>) => Promise<boolean>;
-}
-
-const AlertContext = createContext<AlertContextType | null>(null);
+export { useAlert } from "./AlertContext.context";
+export type { AlertContextType, AlertConfig } from "./AlertContext.context";
 
 export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Element => {
 	const [alertState, setAlertState] = useState<AlertState>({
@@ -253,12 +230,4 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</AlertContext.Provider>
 	);
-};
-
-export const useAlert = (): AlertContextType => {
-	const context: AlertContextType | null = useContext(AlertContext);
-	if (!context) {
-		throw new Error("useAlert must be used within AlertProvider");
-	}
-	return context;
 };

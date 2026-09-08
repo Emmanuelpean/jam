@@ -1,15 +1,13 @@
-import React, { createContext, JSX, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import React, { JSX, ReactNode, useCallback, useEffect, useState } from "react";
 import { Status } from "../services/schemas/Base";
 import { configApi } from "../services/api/Others";
+import { StatusContext } from "./StatusContext.context";
 
-export interface StatusContextValue extends Status {
-	isLoading: boolean;
-}
+export { useStatus } from "./StatusContext.context";
+export type { StatusContextValue } from "./StatusContext.context";
 
 const STATUS_POLL_INTERVAL_MS = 30_000;
 const TEST_MODE_POLL_INTERVAL_MS = 2_000;
-
-const StatusContext = createContext<StatusContextValue | undefined>(undefined);
 
 export const StatusProvider: React.FC<{ children: ReactNode }> = ({ children }): JSX.Element => {
 	const [status, setStatus] = useState<Status>({ maintenance_scheduled_at: null, test_mode: false });
@@ -40,10 +38,4 @@ export const StatusProvider: React.FC<{ children: ReactNode }> = ({ children }):
 	}, [fetchStatus, pollInterval]);
 
 	return <StatusContext.Provider value={{ ...status, isLoading }}>{children}</StatusContext.Provider>;
-};
-
-export const useStatus = (): StatusContextValue => {
-	const context: StatusContextValue | undefined = useContext(StatusContext);
-	if (!context) throw new Error("useStatus must be used within a StatusProvider");
-	return context;
 };

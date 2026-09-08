@@ -1,14 +1,10 @@
-import React, { createContext, JSX, ReactNode, useContext, useState } from "react";
+import React, { JSX, ReactNode, useState } from "react";
 import { ProgressOverlay } from "../components/ProgressOverlay/ProgressOverlay";
 import { useDelayedLoading } from "../hooks/useDelayedLoading";
+import { ProgressOverlayContext } from "./ProgressOverlayContext.context";
 
-interface ProgressOverlayContextType {
-	showProgress: (message?: string, title?: string) => void;
-	hideProgress: () => void;
-	isShowing: boolean;
-}
-
-const ProgressOverlayContext = createContext<ProgressOverlayContextType | undefined>(undefined);
+export { useProgressOverlay } from "./ProgressOverlayContext.context";
+export type { ProgressOverlayContextType } from "./ProgressOverlayContext.context";
 
 interface ProgressOverlayProviderProps {
 	children: ReactNode;
@@ -37,12 +33,4 @@ export const ProgressOverlayProvider: React.FC<ProgressOverlayProviderProps> = (
 			<ProgressOverlay show={show} title={title} message={message} />
 		</ProgressOverlayContext.Provider>
 	);
-};
-
-export const useProgressOverlay = (): ProgressOverlayContextType => {
-	const context = useContext(ProgressOverlayContext);
-	if (!context) {
-		throw new Error("useProgressOverlay must be used within a ProgressOverlayProvider");
-	}
-	return context;
 };

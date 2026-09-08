@@ -1,13 +1,4 @@
-import React, {
-	createContext,
-	useCallback,
-	useContext,
-	useEffect,
-	useLayoutEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
 	aggregatorsApi,
 	companiesApi,
@@ -59,6 +50,10 @@ import { JobEmailData, ScrapedJobData, ScrapingFilterCreate, ScrapingFilterData 
 import { ApiError } from "../services/api/ApiError";
 import { GeoLocationData } from "../services/schemas/Base";
 import { emailApi, EmailTemplate, tourApi } from "../services/api/Others";
+import { DataContext, DataContextValue } from "./DataContext.context";
+
+export { useDataContext, useDataContextOptional } from "./DataContext.context";
+export type { DataContextValue } from "./DataContext.context";
 
 export type EntityType =
 	| "job"
@@ -222,40 +217,6 @@ interface TypedFetchOperation<T> {
 	promise: ApiResponsePromise<T>;
 	label: string;
 }
-
-export interface DataContextValue {
-	// Data arrays
-	jobs: EnrichedJobData[];
-	companies: CompanyData[];
-	persons: PersonData[];
-	interviews: EnrichedInterviewData[];
-	jobApplicationUpdates: EnrichedJobApplicationUpdateData[];
-	aggregators: AggregatorData[];
-	keywords: KeywordData[];
-	speculativeApplications: SpeculativeApplicationData[];
-	settings: SettingData[];
-	scrapingExclusionFilters: ScrapingFilterData[];
-	scrapingFavouriteFilters: ScrapingFilterData[];
-	users: UserData[];
-	files: FileData[];
-	emailTemplates: EmailTemplate[];
-
-	error: ApiError | null;
-
-	setIsInTour: (isInTour: boolean) => void;
-
-	// Generic update functions
-	addEntity: <T extends EntityType>(type: T, data: EntityCreateDataMap[T]) => ApiResponsePromise<EntityRawDataMap[T]>;
-	updateEntity: <T extends EntityType>(
-		type: T,
-		id: number,
-		data: Partial<JamData>
-	) => ApiResponsePromise<EntityRawDataMap[T]>;
-	deleteEntity: <T extends EntityType>(type: T, id: number) => Promise<void>;
-	getEntityData: <T extends EntityType>(type: T) => EntityTypeDataMap[T][];
-}
-
-const DataContext = createContext<DataContextValue | undefined>(undefined);
 
 export const DataProvider: React.FC<{ token: string; children: React.ReactNode }> = ({ token, children }) => {
 	const { currentUser } = useAuth();
@@ -690,12 +651,3 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		</DataContext.Provider>
 	);
 };
-
-export const useDataContext = (): DataContextValue => {
-	const context: DataContextValue | undefined = useContext(DataContext);
-	if (!context) throw new Error("useDataContext must be used within a DataProvider");
-	return context;
-};
-
-// Non-throwing variant for components that render outside the DataProvider (e.g. when logged out).
-export const useDataContextOptional = (): DataContextValue | undefined => useContext(DataContext);

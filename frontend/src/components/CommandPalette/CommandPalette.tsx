@@ -3,6 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { getEntityIcon, getTableIcon } from "../rendering/view/Icons";
 import { EntityType, useDataContextOptional } from "../../contexts/DataContext";
 import "./CommandPalette.scss";
+import {
+	AggregatorData,
+	CompanyData,
+	EnrichedJobData,
+	KeywordData,
+	PersonData,
+} from "../../services/schemas/DataTables";
 
 interface CommandItem {
 	id: string;
@@ -112,13 +119,6 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 				action: () => goTo("/speculative-applications"),
 			},
 			{
-				id: "goto-updates",
-				label: "Job Application Updates",
-				icon: getTableIcon("Job Application Updates"),
-				group: "Pages",
-				action: () => goTo("/job-application-updates"),
-			},
-{
 				id: "goto-aggregators",
 				label: "Job Aggregators",
 				icon: getTableIcon("Job Aggregators"),
@@ -170,13 +170,41 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 				});
 		};
 
-		addMatches(dataContext.jobs, (j) => j.title, "Jobs", getEntityIcon("job"), "/jobs", "job");
-		addMatches(dataContext.companies, (c) => c.name, "Companies", getEntityIcon("company"), "/companies", "company");
-		addMatches(dataContext.persons, (p) => p.name, "Contacts", getEntityIcon("person"), "/contacts", "person");
-		addMatches(dataContext.keywords, (k) => k.name, "Tags", getEntityIcon("keyword"), "/keywords", "keyword");
+		addMatches(
+			dataContext.jobs,
+			(j: EnrichedJobData): string => j.title,
+			"Jobs",
+			getEntityIcon("job"),
+			"/jobs",
+			"job"
+		);
+		addMatches(
+			dataContext.companies,
+			(c: CompanyData): string => c.name,
+			"Companies",
+			getEntityIcon("company"),
+			"/companies",
+			"company"
+		);
+		addMatches(
+			dataContext.persons,
+			(p: PersonData): string => p.name,
+			"Contacts",
+			getEntityIcon("person"),
+			"/contacts",
+			"person"
+		);
+		addMatches(
+			dataContext.keywords,
+			(k: KeywordData): string => k.name,
+			"Tags",
+			getEntityIcon("keyword"),
+			"/keywords",
+			"keyword"
+		);
 		addMatches(
 			dataContext.aggregators,
-			(a) => a.name,
+			(a: AggregatorData): string => a.name,
 			"Aggregators",
 			getEntityIcon("aggregator"),
 			"/aggregators",
@@ -185,10 +213,12 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 		return results;
 	}, [query, dataContext]); // eslint-disable-line react-hooks/exhaustive-deps
 
-	const filtered = useMemo<CommandItem[]>(() => {
+	const filtered: CommandItem[] = useMemo<CommandItem[]>(() => {
 		if (!query.trim()) return items;
-		const q = query.toLowerCase();
-		const staticMatches = items.filter((item) => item.label.toLowerCase().includes(q));
+		const q: string = query.toLowerCase();
+		const staticMatches: CommandItem[] = items.filter((item: CommandItem): boolean =>
+			item.label.toLowerCase().includes(q)
+		);
 		return [...staticMatches, ...recordResults];
 	}, [items, query, recordResults]);
 
