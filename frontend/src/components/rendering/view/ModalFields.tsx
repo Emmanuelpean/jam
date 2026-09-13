@@ -374,6 +374,7 @@ export const modalViewFields = {
 		key: "is_favourite",
 		label: "Favourite",
 		render: renderFunctions.isFavourite,
+		hasData: (item: any): boolean => Boolean(item?.is_favourite),
 		...overrides,
 	}),
 

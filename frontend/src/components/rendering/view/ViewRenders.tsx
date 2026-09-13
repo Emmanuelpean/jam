@@ -87,6 +87,10 @@ export interface ViewField {
 	render?: (params: RenderParams) => ReactNode; // render function to use
 	columns?: TableColumn[]; // columns for rendered tables
 	helpText?: string; // help text
+	// Overrides the null-render check used to decide whether a section containing this field has data
+	// (e.g. for collapsing empty sections). Needed for fields that always render something (like a
+	// toggle icon) even when their underlying value is empty/false.
+	hasData?: (item: any) => boolean;
 }
 
 function filterByKey<T>(items: T[], key: string, id: number | undefined): T[] {

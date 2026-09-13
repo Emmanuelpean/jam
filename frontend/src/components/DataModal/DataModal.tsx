@@ -146,6 +146,7 @@ function DataModalComponent<T extends JamData>(
 		showView: async (data: T): Promise<void> => {
 			setMode("view");
 			resetExpandedStates();
+			resetActiveTab();
 			setInternalShow(true);
 			if (transformInputData) {
 				setInputDataLoading(true);
@@ -159,6 +160,7 @@ function DataModalComponent<T extends JamData>(
 		showEdit: async (data: T): Promise<void> => {
 			setMode("edit");
 			resetExpandedStates();
+			resetActiveTab();
 			setInternalShow(true);
 			if (transformInputData) {
 				setInputDataLoading(true);
@@ -173,6 +175,7 @@ function DataModalComponent<T extends JamData>(
 			setMode("add");
 			setOnSuccessCallback(() => successCallback || null);
 			resetExpandedStates();
+			resetActiveTab();
 			setInternalShow(true);
 			if (transformInputData) {
 				setInputDataLoading(true);
@@ -186,6 +189,7 @@ function DataModalComponent<T extends JamData>(
 		showImport: async (data: T): Promise<void> => {
 			setMode("import");
 			resetExpandedStates();
+			resetActiveTab();
 			setInternalShow(true);
 			if (transformInputData) {
 				setInputDataLoading(true);
@@ -265,7 +269,9 @@ function DataModalComponent<T extends JamData>(
 	// Check if a field has displayable data
 	const fieldHasData = (field: Field, data: any): boolean => {
 		if (!data) return false;
-		return !IsViewNull(dataContext, "", field as ViewField, data, "check");
+		const viewField = field as ViewField;
+		if (viewField.hasData) return viewField.hasData(data);
+		return !IsViewNull(dataContext, "", viewField, data, "check");
 	};
 
 	// Check if a section has any fields with data
@@ -298,6 +304,12 @@ function DataModalComponent<T extends JamData>(
 
 	const resetExpandedStates = (): void => {
 		setExpandedSections({});
+	};
+
+	const resetActiveTab = (): void => {
+		if (hasTabs) {
+			setActiveTab(defaultActiveTab || tabs[0]!.key);
+		}
 	};
 
 	// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
@@ -423,10 +435,6 @@ function DataModalComponent<T extends JamData>(
 			setIsEditing(false);
 		}
 		setErrors({});
-
-		if (hasTabs) {
-			setActiveTab(defaultActiveTab || tabs[0]!.key);
-		}
 	}, [internalShow, mode, defaultActiveTab, effectiveData]);
 
 	// Run field-level liveValidation while the user types or when data loads into the form

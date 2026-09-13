@@ -490,6 +490,28 @@ class TestJobPage(BaseTablePage):
         # Verify the update view modal displays the updated information
         self.jobApplicationUpdate_modal_utils.check_update_view_modal(update, False)
 
+    def test_edit_confirm_keeps_active_tab(self) -> None:
+        """Confirming an edit must keep whichever tab the user switched to, not reset to the modal's default tab.
+
+        Regression test: the Job modal defaults to the "Job Details" tab. Switching to
+        "Job Application" and confirming an edit used to snap the modal back to "Job
+        Details" because a data-refresh effect unconditionally reset the active tab."""
+
+        job = self.load_entries()[0]
+
+        self.table_utils.table_row_click(job.id)
+        self.modal_utils.wait_for_view_modal()
+        self.get_element("application-tab").click()
+        assert "active" in self.get_element("application-tab").get_attribute("class")
+
+        self.modal_utils.edit_button("view").click()
+        self.modal_utils._fill_modal(application_note="Updated via active-tab regression test")
+        self.modal_utils.confirm_button("edit").click()
+        self.modal_utils.wait_for_edit_modal_close()
+
+        assert "active" in self.get_element("application-tab").get_attribute("class")
+        assert "active" not in self.get_element("job-tab").get_attribute("class")
+
 
 class TestSpeculativeApplicationPage(BaseTablePage):
     """Test class for Job Application Update Page functionalities"""
