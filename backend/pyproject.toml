@@ -26,6 +26,7 @@ dependencies = [
     "anthropic==0.111.0",
     "stripe==15.2.1",
     "python-dateutil==2.9.0.post0",
+    "nh3==0.3.7",
 ]
 
 [project.optional-dependencies]

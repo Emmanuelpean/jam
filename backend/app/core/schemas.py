@@ -10,7 +10,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
-from app.base_schemas import Out, OwnedOut, EmailField, ColumnLimits, COLUMN_LIMITS
+from app.base_schemas import Out, OwnedOut, EmailField, ColumnLimits, COLUMN_LIMITS, RichDescriptionField
 
 # ------------------------------------------------------- SETTINGS ------------------------------------------------------
 
@@ -20,7 +20,7 @@ class SettingCreate(BaseModel):
 
     name: str
     value: str
-    description: str | None = None
+    description: RichDescriptionField | None = None
     is_active: bool = True
 
 

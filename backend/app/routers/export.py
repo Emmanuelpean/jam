@@ -5,11 +5,14 @@ import io
 import zipfile
 from typing import Iterable, Any
 
+from bs4 import BeautifulSoup
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from app import database, models
 from app.core import oauth2
+
+JOB_HTML_FIELDS = frozenset({"description", "note", "application_note"})
 
 export_router = APIRouter(prefix="/export", tags=["export"])
 
@@ -115,16 +118,39 @@ def write_csv(
     return output.getvalue()
 
 
+HTML_BLOCK_TAGS = ["p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "br"]
+
+
+def strip_html(value: str) -> str:
+    """Convert rich-text HTML content to plain text, preserving line breaks between blocks while keeping
+    inline formatting (bold, links, ...) inline.
+    :param value: Raw field value, HTML or plain text
+    :return: Plain text with HTML tags removed"""
+
+    if not value or "<" not in value:
+        return value
+    soup = BeautifulSoup(value, "html.parser")
+    for tag in soup.find_all(HTML_BLOCK_TAGS):
+        tag.append("\n")
+    return soup.get_text().strip()
+
+
 def get_model_rows(
     instance,
     fields: dict,
+    html_fields: frozenset[str] = frozenset(),
 ) -> list[Any]:
     """Extract ordered field values from a SQLAlchemy model.
     :param instance: SQLAlchemy model instance
     :param fields: Dictionary of field names to extract
+    :param html_fields: Field names whose values may contain rich-text HTML and should be exported as plain text
     :return: List of field values in the order of the fields dictionary"""
 
-    return [getattr(instance, field) for field in fields]
+    values = []
+    for field in fields:
+        value = getattr(instance, field)
+        values.append(strip_html(value) if field in html_fields and isinstance(value, str) else value)
+    return values
 
 
 @export_router.get("/")
@@ -145,7 +171,7 @@ def export_all(
         job_rows = []
         for job in jobs:
             job_rows.append(
-                get_model_rows(job, JOB_FIELDS)
+                get_model_rows(job, JOB_FIELDS, html_fields=JOB_HTML_FIELDS)
                 + [
                     job.company.name if job.company else "",
                     job.location or "",

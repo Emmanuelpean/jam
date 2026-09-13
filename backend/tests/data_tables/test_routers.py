@@ -99,6 +99,15 @@ class TestCompanyCRUD(CRUDTestBase[models.Company]):
         assert response.status_code == 200
         assert len(response.json()) == 0
 
+    def test_post_sanitises_description(self, authorised_user: FixtureUser) -> None:
+        """description is sanitised server-side, stripping any tag/attribute the rich text editor can't produce."""
+        response = self.post(
+            authorised_user.client,
+            {"name": "Acme", "description": '<p onclick="alert(1)">About us</p>'},
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["description"] == "<p>About us</p>"
+
 
 class TestFileCRUD(CRUDTestBase[models.File]):
     endpoint = "/files"
@@ -347,6 +356,27 @@ class TestJobCRUD(CRUDTestBase[models.Job]):
         company = other.create_company()
         return {"title": "New Job", "company_id": company.id}
 
+    def test_post_sanitises_rich_text_fields(self, session: Session, authorised_user: FixtureUser) -> None:
+        """description/note/application_note are sanitised server-side: a request that bypasses the frontend
+        editor can't store an XSS payload, while formatting the editor can actually produce is preserved."""
+        company = authorised_user.create_company()
+        response = self.post(
+            authorised_user.client,
+            {
+                "title": "New Job",
+                "company_id": company.id,
+                "description": "<p>Great role <strong>in Python</strong></p><script>alert(1)</script>",
+                "note": '<img src=x onerror="alert(document.cookie)">Remote friendly',
+                "application_note": '<a href="javascript:alert(1)">Apply here</a>',
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+        assert body["description"] == "<p>Great role <strong>in Python</strong></p>"
+        assert body["note"] == "Remote friendly"
+        assert "javascript:" not in body["application_note"]
+        assert "Apply here" in body["application_note"]
+
 
 class TestJobApplicationUpdateCRUD(CRUDTestBase[models.JobApplicationUpdate]):
     endpoint = "/job-application-updates"
@@ -366,6 +396,21 @@ class TestJobApplicationUpdateCRUD(CRUDTestBase[models.JobApplicationUpdate]):
     def create_unauthorised_payload(self, session: Session, owner: FixtureUser, other: FixtureUser) -> dict:
         job = other.create_job()
         return {"job_id": job.id, "type": "received", "date": "2024-01-01T00:00:00"}
+
+    def test_post_sanitises_note(self, authorised_user: FixtureUser) -> None:
+        """note is sanitised server-side, stripping any tag/attribute the rich text editor can't produce."""
+        job = authorised_user.create_job()
+        response = self.post(
+            authorised_user.client,
+            {
+                "job_id": job.id,
+                "type": "received",
+                "date": "2024-01-01T00:00:00",
+                "note": "<script>alert(1)</script>Application received",
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["note"] == "Application received"
 
 
 class TestInterviewCRUD(CRUDTestBase[models.Interview]):
@@ -394,6 +439,21 @@ class TestInterviewCRUD(CRUDTestBase[models.Interview]):
         job = other.create_job()
         return {"job_id": job.id, "type": "technical", "date": "2024-01-20T10:00:00"}
 
+    def test_post_sanitises_note(self, authorised_user: FixtureUser) -> None:
+        """note is sanitised server-side, stripping any tag/attribute the rich text editor can't produce."""
+        job = authorised_user.create_job()
+        response = self.post(
+            authorised_user.client,
+            {
+                "job_id": job.id,
+                "type": "technical",
+                "date": "2024-01-20T10:00:00",
+                "note": '<img src=x onerror="alert(1)">Went well',
+            },
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["note"] == "Went well"
+
 
 class TestSpeculativeApplicationCRUD(CRUDTestBase[models.SpeculativeApplication]):
     endpoint = "/speculative-applications"
@@ -413,6 +473,16 @@ class TestSpeculativeApplicationCRUD(CRUDTestBase[models.SpeculativeApplication]
     def create_unauthorised_payload(self, session: Session, owner: FixtureUser, other: FixtureUser) -> dict:
         company = other.create_company(name=f"Company {uuid.uuid4()}")
         return {"company_id": company.id}
+
+    def test_post_sanitises_note(self, authorised_user: FixtureUser) -> None:
+        """note is sanitised server-side, stripping any tag/attribute the rich text editor can't produce."""
+        company = authorised_user.create_company(name=f"Company {uuid.uuid4()}")
+        response = self.post(
+            authorised_user.client,
+            {"company_id": company.id, "note": "<script>alert(1)</script>Cold outreach"},
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json()["note"] == "Cold outreach"
 
 
 # ------------------------------------------------- GEOLOCATION CASCADE ------------------------------------------------

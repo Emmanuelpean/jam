@@ -24,3 +24,16 @@ class TestSettingsCRUD(CRUDTestBase[models.Setting]):
 
     def create_payload(self, session: Session, owner: FixtureUser) -> dict:
         return {"name": f"setting_{uuid.uuid4()}", "value": "some value"}
+
+    def test_post_sanitises_description(self, authorised_user: FixtureUser) -> None:
+        """description is sanitised server-side, stripping any tag/attribute the rich text editor can't produce."""
+        response = self.post(
+            authorised_user.client,
+            {
+                "name": f"setting_{uuid.uuid4()}",
+                "value": "some value",
+                "description": "<script>alert(1)</script>Allow only these emails.",
+            },
+        )
+        assert response.status_code == 201
+        assert response.json()["description"] == "Allow only these emails."

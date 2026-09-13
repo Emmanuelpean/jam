@@ -1,4 +1,6 @@
 import React, { ReactNode, useEffect, useState, JSX } from "react";
+import DOMPurify from "dompurify";
+import "./RichTextView.scss";
 import { DataContextValue, JamData, useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../DataTable/InterviewTable";
 import JobApplicationUpdateTable from "../../DataTable/JobApplicationUpdateTable";
@@ -163,10 +165,17 @@ export const renderFunctions = {
 	_longText: (param: RenderParams, key: string): ReactNode => {
 		const text: string | undefined | null = param.item?.[key];
 		if (text) {
+			const isHtml: boolean = /<[a-z][\s\S]*>/i.test(text);
 			if (param.view) {
+				if (isHtml) {
+					return (
+						<div className="rich-text-view" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(text) }} />
+					);
+				}
 				return <p style={{ whiteSpace: "pre-line" }}>{text}</p>;
 			} else {
-				const words: string[] = text.split(" ");
+				const plainText: string = isHtml ? DOMPurify.sanitize(text, { ALLOWED_TAGS: [] }) : text;
+				const words: string[] = plainText.split(" ");
 				const truncated: string = words.slice(0, 12).join(" ");
 				const needsEllipsis: boolean = words.length > 12;
 

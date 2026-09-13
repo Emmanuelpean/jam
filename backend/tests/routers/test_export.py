@@ -8,7 +8,10 @@ import zipfile
 from sqlalchemy.orm import Session
 from starlette.testclient import TestClient
 
+import pytest
+
 from app.base_models import ProcessingStatus
+from app.routers.export import strip_html
 from tests.base_test import BaseTest
 from tests.fixtures.users import FixtureUser
 
@@ -138,3 +141,79 @@ class TestExport(BaseTest):
         """The export endpoint requires authentication."""
 
         assert client.get(self.endpoint).status_code == 401
+
+    def test_export_job_rich_text_fields_as_plain_text(self, test_regular_user: FixtureUser) -> None:
+        """Description/note/application_note HTML from the rich text editor is exported as plain text, with block
+        tags turned into line breaks and inline formatting collapsed."""
+
+        test_regular_user.create_job(
+            title="Backend Engineer",
+            description="<p>We need a <strong>Python</strong> engineer.</p><ul><li>3+ years</li><li>Django</li></ul>",
+            note="<p>Line one</p><p>Line two</p>",
+            application_note='<p>Applied via <a href="https://example.com">referral</a>.</p>',
+        )
+
+        zf = self.get_export_zip(test_regular_user)
+        [job_row] = self.read_csv(zf, "jobs.csv")
+
+        assert job_row["Job Description"] == "We need a Python engineer.\n3+ years\nDjango"
+        assert job_row["Note"] == "Line one\nLine two"
+        assert job_row["Application Note"] == "Applied via referral."
+        assert "<" not in job_row["Job Description"]
+        assert "<" not in job_row["Note"]
+        assert "<" not in job_row["Application Note"]
+
+    def test_export_job_plain_text_fields_unchanged(self, test_regular_user: FixtureUser) -> None:
+        """Legacy jobs whose description/note/application_note were never edited with the rich text editor (plain
+        text, no HTML markup) are exported unchanged."""
+
+        test_regular_user.create_job(
+            title="Backend Engineer",
+            description="We need a Python engineer.\n3+ years experience.",
+            note="Some plain notes",
+            application_note="Applied via referral",
+        )
+
+        zf = self.get_export_zip(test_regular_user)
+        [job_row] = self.read_csv(zf, "jobs.csv")
+
+        assert job_row["Job Description"] == "We need a Python engineer.\n3+ years experience."
+        assert job_row["Note"] == "Some plain notes"
+        assert job_row["Application Note"] == "Applied via referral"
+
+    def test_export_job_other_fields_not_stripped(self, test_regular_user: FixtureUser) -> None:
+        """Fields outside the HTML fields set are exported as-is, even if they happen to contain a "<" character."""
+
+        test_regular_user.create_job(title="<Backend> Engineer", attendance_type="remote")
+
+        zf = self.get_export_zip(test_regular_user)
+        [job_row] = self.read_csv(zf, "jobs.csv")
+
+        assert job_row["Job Title"] == "<Backend> Engineer"
+
+
+class TestStripHtml:
+    """Unit tests for the strip_html helper used by the export endpoint."""
+
+    @pytest.mark.parametrize(
+        "value, expected",
+        [
+            (None, None),
+            ("", ""),
+            ("Plain text, no html", "Plain text, no html"),
+            ("<p>Single paragraph</p>", "Single paragraph"),
+            ("<p>Line one</p><p>Line two</p>", "Line one\nLine two"),
+            ("<p>Bold <strong>word</strong> stays inline</p>", "Bold word stays inline"),
+            ("<ul><li>one</li><li>two</li></ul>", "one\ntwo"),
+            ('<p>Has a <a href="https://example.com">link</a> in it.</p>', "Has a link in it."),
+            ("<p>Trailing break<br></p>", "Trailing break"),
+            ("<p>XSS: <script>alert(1)</script></p>", "XSS:"),
+        ],
+    )
+    def test_strip_html(self, value: str | None, expected: str | None) -> None:
+        assert strip_html(value) == expected
+
+    def test_strip_html_drops_script_content(self) -> None:
+        """<script> tag content is dropped entirely, not just unwrapped into plain text."""
+
+        assert "alert" not in strip_html("<p>XSS: <script>alert(document.cookie)</script></p>")

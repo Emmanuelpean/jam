@@ -7,7 +7,15 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.base_schemas import OwnedOut, EmailField, serialise_relationships, OwnedCreate, COLUMN_LIMITS
+from app.base_schemas import (
+    OwnedOut,
+    EmailField,
+    serialise_relationships,
+    OwnedCreate,
+    COLUMN_LIMITS,
+    RichDescriptionField,
+    RichNoteField,
+)
 from app.config import settings
 
 # ------------------------------------------------------- KEYWORD ------------------------------------------------------
@@ -60,7 +68,7 @@ class CompanyCreate(OwnedCreate):
     """Company create schema"""
 
     name: str = Field(max_length=COLUMN_LIMITS.name)
-    description: str | None = Field(default=None, max_length=COLUMN_LIMITS.description)
+    description: RichDescriptionField | None = None
     url: str | None = Field(default=None, max_length=COLUMN_LIMITS.url)
 
 
@@ -166,19 +174,19 @@ class JobCreate(OwnedCreate):
 
     title: str = Field(max_length=COLUMN_LIMITS.job_title)
     is_favourite: bool = False
-    description: str | None = Field(default=None, max_length=COLUMN_LIMITS.description)
+    description: RichDescriptionField | None = None
     salary_min: float | None = None
     salary_max: float | None = None
     salary_currency: str | None = Field(default=None, max_length=COLUMN_LIMITS.currency)
     personal_rating: int | None = None
     url: str | None = Field(default=None, max_length=COLUMN_LIMITS.url)
     deadline: datetime | None = None
-    note: str | None = Field(default=None, max_length=COLUMN_LIMITS.note)
+    note: RichNoteField | None = None
     attendance_type: str | None = Field(default=None, max_length=COLUMN_LIMITS.attendance_type)
     application_date: datetime | None = None
     application_url: str | None = Field(default=None, max_length=COLUMN_LIMITS.url)
     application_status: str | None = Field(default=None, max_length=COLUMN_LIMITS.application_status)
-    application_note: str | None = Field(default=None, max_length=COLUMN_LIMITS.note)
+    application_note: RichNoteField | None = None
     applied_via: str | None = Field(default=None, max_length=COLUMN_LIMITS.applied_via)
     source_type: str | None = Field(default=None, max_length=COLUMN_LIMITS.source_type)
     followup_snooze_datetime: datetime | None = None
@@ -230,7 +238,7 @@ class InterviewCreate(OwnedCreate):
     job_id: int
     attendance_type: str | None = Field(default=None, max_length=COLUMN_LIMITS.attendance_type)
     location: str | None = Field(default=None, max_length=COLUMN_LIMITS.location)
-    note: str | None = Field(default=None, max_length=COLUMN_LIMITS.note)
+    note: RichNoteField | None = None
     interviewers: list[int] | None = None
 
 
@@ -263,7 +271,7 @@ class JobApplicationUpdateCreate(OwnedCreate):
     date: datetime
     type: str = Field(max_length=COLUMN_LIMITS.update_type)
     job_id: int
-    note: str | None = Field(default=None, max_length=COLUMN_LIMITS.note)
+    note: RichNoteField | None = None
 
 
 class JobApplicationUpdateOut(JobApplicationUpdateCreate, OwnedOut):
@@ -287,7 +295,7 @@ class SpeculativeApplicationCreate(OwnedCreate):
     """Speculative application create schema"""
 
     date: datetime | None = None
-    note: str | None = Field(default=None, max_length=COLUMN_LIMITS.note)
+    note: RichNoteField | None = None
     contact_email: EmailField | None = None
     company_id: int
     contacts: list[int] = []

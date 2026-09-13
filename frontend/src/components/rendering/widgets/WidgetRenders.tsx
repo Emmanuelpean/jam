@@ -2,6 +2,7 @@ import { Form } from "react-bootstrap";
 import { StarRating } from "./StarRating";
 import { SalaryInput } from "./SalaryInput";
 import { Textarea } from "./TextArea";
+import { RichTextEditor } from "./RichTextEditor";
 import { LocalDatetimeInput } from "./Datetime";
 import { PasswordInput } from "./PasswordInput";
 import { Checkbox } from "./Checkbox";
@@ -120,6 +121,8 @@ export const renderFormField = (
 				return <Toggle {...widgetProps} />;
 			case "textarea":
 				return <Textarea {...widgetProps} />;
+			case "richtext":
+				return <RichTextEditor {...widgetProps} />;
 			case "select":
 			case "multiselect":
 				return <SelectInput {...widgetProps} />;

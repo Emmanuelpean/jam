@@ -5,7 +5,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, EmailStr, BeforeValidator, Field
 
-from app.utilities.strings import clean_email
+from app.utilities.strings import clean_email, sanitize_rich_text
 
 # --------------------------------------------------- COLUMN LIMITS ----------------------------------------------------
 
@@ -67,6 +67,11 @@ COLUMN_LIMITS = ColumnLimits()
 # ----------------------------------------------------------------------------------------------------------------------
 
 EmailField = Annotated[EmailStr, BeforeValidator(clean_email), Field(max_length=COLUMN_LIMITS.email)]
+
+# Rich-text fields (edited via the frontend's Tiptap editor): sanitised server-side on every write so that a
+# request bypassing the editor can't store an XSS payload, regardless of what max_length happens to be for the field.
+RichDescriptionField = Annotated[str, BeforeValidator(sanitize_rich_text), Field(max_length=COLUMN_LIMITS.description)]
+RichNoteField = Annotated[str, BeforeValidator(sanitize_rich_text), Field(max_length=COLUMN_LIMITS.note)]
 
 
 def serialise_relationships(value: list) -> list[int]:

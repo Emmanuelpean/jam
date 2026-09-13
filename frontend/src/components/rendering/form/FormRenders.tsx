@@ -99,7 +99,7 @@ const createFormFields = (limits: Partial<ColumnLimits>) => {
 	const descriptionField = (overrides: FormFieldOverride = {}): ModalFormField => ({
 		key: "description",
 		label: "Description",
-		type: "textarea",
+		type: "richtext",
 		rows: 4,
 		placeholder: "Enter description...",
 		maxChars: limits.description,
@@ -119,7 +119,7 @@ const createFormFields = (limits: Partial<ColumnLimits>) => {
 	const noteField = (overrides: FormFieldOverride = {}): ModalFormField => ({
 		key: "note",
 		label: "Notes",
-		type: "textarea",
+		type: "richtext",
 		rows: 4,
 		placeholder: "Add your notes...",
 		maxChars: limits.note,
