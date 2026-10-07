@@ -32,8 +32,18 @@ class TestPremiumSettingsPage(BaseTest):
             subprocess.run("pkill -f 'stripe listen'", shell=True, capture_output=True)
 
         stripe_cmd = r'"C:\Program Files\Stripe\stripe.exe"' if os.name == "nt" else "stripe"
+        events = ",".join(
+            [
+                "customer.created",
+                "customer.subscription.created",
+                "customer.subscription.updated",
+                "customer.subscription.deleted",
+                "customer.subscription.trial_will_end",
+                "billing_portal.session.created",
+            ]
+        )
         listener = subprocess.Popen(
-            f"{stripe_cmd} listen --forward-to {test_backend_server}/payments/webhooks",
+            f"{stripe_cmd} listen --events {events} --forward-to {test_backend_server}/payments/webhooks",
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             shell=True,
