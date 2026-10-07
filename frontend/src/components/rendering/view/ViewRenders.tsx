@@ -161,6 +161,26 @@ export const getTotalJobApplicationUpdateCount = (dataContext: DataContextValue)
 	return numbers.length === 0 ? 0 : Math.max(...numbers);
 };
 
+export type ScrapedJobOutcome = "imported" | "deleted" | "filtered" | "new";
+
+export const getScrapedJobOutcome = (item: {
+	is_imported: boolean;
+	is_active: boolean;
+	status: ProcessingStatus;
+}): ScrapedJobOutcome => {
+	if (item.is_imported) return "imported";
+	if (!item.is_active) return "deleted";
+	if (item.status === ProcessingStatus.FILTERED) return "filtered";
+	return "new";
+};
+
+const SCRAPED_JOB_OUTCOME_BADGES: Record<ScrapedJobOutcome, { label: string; icon: string; className: string }> = {
+	imported: { label: "Imported", icon: "check-circle", className: "bg-success" },
+	deleted: { label: "Deleted", icon: "trash", className: "bg-secondary" },
+	filtered: { label: "Filtered", icon: "funnel", className: "border border-secondary text-secondary" },
+	new: { label: "New", icon: "stars", className: "bg-primary" },
+};
+
 export const renderFunctions = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
@@ -396,6 +416,18 @@ export const renderFunctions = {
 
 	isImported: (param: RenderParams): ReactNode => {
 		return getTrueFalseBadge(param.item?.is_imported);
+	},
+
+	scrapedJobOutcome: (param: RenderParams): ReactNode => {
+		if (!param.item) return null;
+		const outcome: ScrapedJobOutcome = getScrapedJobOutcome(param.item);
+		const { label, icon, className } = SCRAPED_JOB_OUTCOME_BADGES[outcome];
+		return (
+			<span id={`scraped-job-outcome-badge-${param.item.id}`} className={`badge ${className}`}>
+				<i className={`bi bi-${icon} me-1`}></i>
+				{label}
+			</span>
+		);
 	},
 
 	isRecruiter: (param: RenderParams): ReactNode => {

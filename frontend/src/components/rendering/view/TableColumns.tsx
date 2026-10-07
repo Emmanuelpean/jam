@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import {
 	getInterviewCount,
 	getJobApplicationUpdateCount,
+	getScrapedJobOutcome,
 	getTotalInterviewCount,
 	getTotalJobApplicationUpdateCount,
 	renderFunctions,
@@ -964,6 +965,21 @@ export const tableColumns = {
 		sortable: true,
 		searchable: false,
 		render: renderFunctions.scrapingStatus,
+		...overrides,
+	}),
+
+	scrapedJobOutcomeColumn: <
+		T extends JamData & { is_imported: boolean; is_active: boolean; status: ProcessingStatus },
+	>(
+		overrides: ColumnOverrides<T> = {}
+	): TableColumn<T> => ({
+		key: "outcome",
+		label: "Status",
+		sortable: true,
+		searchable: false,
+		type: "text",
+		render: renderFunctions.scrapedJobOutcome,
+		sortField: (item): string => getScrapedJobOutcome(item),
 		...overrides,
 	}),
 

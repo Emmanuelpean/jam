@@ -3,7 +3,6 @@ import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../DataModal/ScrapedJobModal";
 import { ScrapedJobData } from "../../services/schemas/Services";
-
 interface ScrapedJobsTableReadOnlyProps extends DataTableProps {
 	viewOnly?: boolean;
 }
@@ -22,8 +21,7 @@ const ScrapedJobsTableReadOnly: React.FC<ScrapedJobsTableReadOnlyProps> = ({
 					tableColumns.scrapedCompanyColumn<ScrapedJobData>(),
 					tableColumns.locationBadgeColumn<ScrapedJobData>(),
 					tableColumns.salaryRangeColumn<ScrapedJobData>(),
-					tableColumns.isImportedColumn<ScrapedJobData>(),
-					tableColumns.isActiveColumn<ScrapedJobData>({ label: "Deleted" }),
+					tableColumns.scrapedJobOutcomeColumn<ScrapedJobData>(),
 					tableColumns.urlGenericColumn<ScrapedJobData>(),
 					tableColumns.createdAtColumn<ScrapedJobData>({ label: "Date Received" }),
 				];
