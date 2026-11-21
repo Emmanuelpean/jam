@@ -1,6 +1,7 @@
 """Tests for email service."""
 
 import smtplib
+from datetime import datetime, timezone
 from unittest.mock import patch, MagicMock
 
 import pytest
@@ -207,6 +208,45 @@ class TestEmailServiceIMAP:
         assert "This is the email body" in content.body
         mock_mail.close.assert_called_once()
         mock_mail.logout.assert_called_once()
+
+    @pytest.mark.parametrize(
+        "date_header, expected",
+        [
+            ("Sat, 21 Nov 2026 13:57:55 +0000 (GMT)", datetime(2026, 11, 21, 13, 57, 55, tzinfo=timezone.utc)),
+            ("Thu, 14 Aug 2025 02:25:53 +0000 (UTC)", datetime(2025, 8, 14, 2, 25, 53, tzinfo=timezone.utc)),
+            ("Thu, 14 Aug 2025 02:25:53 +0100", datetime(2025, 8, 14, 1, 25, 53, tzinfo=timezone.utc)),
+            ("14 Aug 2025 02:25:53 +0000", datetime(2025, 8, 14, 2, 25, 53, tzinfo=timezone.utc)),
+            ("Thu, 14 Aug 2025 02:25:53 GMT", datetime(2025, 8, 14, 2, 25, 53, tzinfo=timezone.utc)),
+            ("Thu, 14 Aug 2025 02:25:53 UTC", datetime(2025, 8, 14, 2, 25, 53, tzinfo=timezone.utc)),
+            ("Thu, 14 Aug 2025 02:25:53", datetime(2025, 8, 14, 2, 25, 53)),
+        ],
+    )
+    @patch("imaplib.IMAP4_SSL")
+    def test_get_email_data_date_formats(
+        self, mock_imap: MagicMock, email_svc: EmailService, date_header: str, expected: datetime
+    ) -> None:
+        """Date headers in the various formats sent by email providers are all parsed."""
+
+        mock_mail = MagicMock()
+        mock_imap.return_value = mock_mail
+        raw_email = f"From: sender@example.com\r\nSubject: Dates\r\nDate: {date_header}\r\n\r\nbody".encode()
+        mock_mail.uid.return_value = ("OK", [(b"5", raw_email)])
+
+        content = email_svc.get_email_data("5")
+
+        assert content.date == expected
+
+    @patch("imaplib.IMAP4_SSL")
+    def test_get_email_data_invalid_date_raises(self, mock_imap: MagicMock, email_svc: EmailService) -> None:
+        """An unparseable Date header raises an exception naming the date."""
+
+        mock_mail = MagicMock()
+        mock_imap.return_value = mock_mail
+        raw_email = b"From: sender@example.com\r\nSubject: Dates\r\nDate: not a date\r\n\r\nbody"
+        mock_mail.uid.return_value = ("OK", [(b"6", raw_email)])
+
+        with pytest.raises(Exception, match="Failed to parse date: not a date"):
+            email_svc.get_email_data("6")
 
     @patch("imaplib.IMAP4_SSL")
     def test_get_email_data_multipart(self, mock_imap: MagicMock, email_svc: EmailService) -> None:

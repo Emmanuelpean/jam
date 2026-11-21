@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from email.header import decode_header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import parsedate_to_datetime
 
 from app.config import settings
 from app.emails.schemas import EmailData
@@ -395,23 +396,9 @@ class EmailService(object):
 
             # Extract date
             date = msg["Date"]
-            date_formats = [
-                "%a, %d %b %Y %H:%M:%S %z",  # Standard RFC 2822: "Thu, 14 Aug 2025 02:25:53 +0000"
-                "%a, %d %b %Y %H:%M:%S %z (UTC)",  # Original format with (UTC)
-                "%a, %d %b %Y %H:%M:%S",  # Without timezone
-                "%d %b %Y %H:%M:%S %z",  # Without day name
-                "%a, %d %b %Y %H:%M:%S GMT",  # GMT timezone
-                "%a, %d %b %Y %H:%M:%S UTC",  # UTC timezone
-            ]
-
-            date_received = None
-            for date_format in date_formats:
-                try:
-                    date_received = datetime.strptime(date, date_format)
-                    break
-                except ValueError:
-                    continue
-            if not date_received:
+            try:
+                date_received = parsedate_to_datetime(date)
+            except (TypeError, ValueError):
                 raise ValueError(f"Failed to parse date: {date}")
 
             body_text = ""
